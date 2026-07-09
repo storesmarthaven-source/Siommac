@@ -150,6 +150,77 @@ After building ANY backend route or feature, immediately add/extend its suite to
 `scripts/e2e/README.md`. The whole E2E run must be green before a module is considered
 complete or committed as "done".
 
+## Module Completion Audit — run ON REQUEST (enterprise Definition of Done)
+This is the gate the user runs when they believe a module is complete. **Do NOT run it
+unprompted** — only when the user says "audit <module>" / "is <module> complete" / "run the
+completion checklist". It is the union of **Feature Completeness** + **Testing Standard** +
+**§2**, turned into a walk-every-control audit. This is enterprise software — a single dead
+button, unvalidated field, ungated sensitive mutation, or missing audit row is a FAIL, not a
+nit. Produce a written report: for EACH item below → ✅ pass (with proof: file:line / test
+name / DB assertion), ⚠️ gap (with the exact risk), or ❌ fail. Fix every ❌/⚠️ or list it as a
+known gap the user must accept. "It renders / it navigates / typecheck passes" is NOT a pass.
+
+Walk the WHOLE module against these — leave nothing out:
+
+**A. Every interactive control (walk each one).** Every button performs its labelled action
+(no `onClick`-less, no toast-only, no `setTab`-as-action); search filters real data; every
+basic + advanced filter/facet applies AND clears AND shows an active-chip; sort on every
+sortable column; row ⋮ menus, bulk actions, drill-through, import/export, pagination + rows-
+per-page all hit a real endpoint; tabs and drawers open/close and load their own data. A
+control that can't be finished is REMOVED, not stubbed.
+
+**B. Every input & form.** EVERY real field present (never a one-field dialog for a multi-field
+contract); inline per-field validation (required, **min/max length**, numeric range, format/
+regex, date sanity) shown on the field (not just a toast); FK'd entities use pickers not free-
+text; cross-field & cross-entity rules enforced (selection A constrains B; value X forces field
+Y; **FE gate ⇒ matching BE gate**); the FULL backend contract is sent (never a hardcoded subset
+like `method:'eft'`); real empty / loading / error / disabled states; submit disabled until
+valid; no silent truncation.
+
+**C. Mutations & §2 side-effects (assert, don't assume).** Every mutation writes the business
+row → `app_events` → `audit_logs`, and — where rules require — `notifications` / `messages` /
+`tickets` / `workflow_tasks` / `handoff_outbox`, AND raises a success/failure **toast**.
+Atomicity: multi-row writes go through the transactional path or a **compensating rollback** (no
+swallowed errors, no partial state, no dup-on-retry). Cross-module actions call the OTHER
+module's real endpoint, never a local no-op.
+
+**D. Approval / maker-checker for sensitive data.** Anything financial, statutory, payroll,
+security, or access-control MUST be gated: draft → submit → approve → activate, with
+**segregation of duties** (creator ≠ approver, enforced server-side), correct state guards
+(can't approve a non-pending row, can't edit an approved/active record without re-approval),
+and the approval routed through the **central workflow engine** + binding — not an ad-hoc flag.
+No sensitive value takes effect on a single actor's say-so.
+
+**E. Access control (test the NEGATIVE path).** Authorized role passes AND unauthorized / non-
+participant is DENIED with the correct HTTP code — provisioned as a REAL user of that role (not
+the superadmin harness). Permission keys match the catalogue EXACTLY; read-gates & record-
+inheritance verified.
+
+**F. Data integrity & display.** No raw UUIDs/IDs in the UI (resolve to names/pickers); correct
+units/rounding/currency; immutable-after-activation honored; idempotent seed ships so the page
+renders populated.
+
+**G. E2E proof (the contract).** `scripts/e2e/suites/<module>.mjs` covers every endpoint, every
+flow/wizard/transition, both access-control paths, the exact **response shape** the FE consumes,
+and asserts the §2 side-effects via the service-role client. Rows tagged `h.TAG` + cleaned up.
+Full E2E green.
+
+**H. UX polish.** Instant-from-cache where possible; skeletons on cold path (never a fake "0");
+toasts on every success/failure; a11y (aria, keyboard, focus); responsive.
+
+**Questions to ask on every module (the gap-finders):**
+1. Which button/field/filter is NOT wired to a real endpoint — and did I click every one?
+2. Which mutation does NOT emit its `app_events` + `audit_logs` (+ required notifications/
+   handoffs)? Prove each with a DB assertion, not a claim.
+3. Which sensitive change can take effect WITHOUT approval or without creator≠approver?
+4. Which FE validation/gate has NO matching BE gate (or vice-versa)?
+5. Which field has no min/max length, format, or cross-field rule that it should?
+6. What's the unauthorized-user result for each endpoint — tested explicitly?
+7. What happens on partial failure mid-transaction — rollback or orphaned rows?
+8. What does each empty / loading / error state actually show?
+9. Which value is faked, hardcoded, defaulted, or silently dropped instead of honored?
+10. What did the E2E NOT cover that a user could actually do?
+
 ## Tech Stack
 - Frontend: Preact + Vite + TypeScript, path alias `@/` → `src/`, `noUncheckedIndexedAccess: true`
 - Backend: Netlify Functions / Hono, POST-only pattern, all routes protected via `requirePermission()`
