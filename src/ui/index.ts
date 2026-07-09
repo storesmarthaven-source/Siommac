@@ -20,6 +20,7 @@ export {
   type ModuleTab, type AreaTab, type ModuleTabsProps,
 } from './components/ModuleTabs';
 export { PageHeader, type PageHeaderProps, type PageMetaChip } from './components/PageHeader';
+export { Stepper, type StepperProps, type StepperStep } from './components/Stepper';
 export { SectionHead, type SectionHeadProps } from './components/SectionHead';
 export { MetricRow, ReorderableRow, type MetricRowProps, type MetricCardItem } from './components/MetricRow';
 export { NewMenu, type NewMenuProps, type NewMenuItem } from './components/NewMenu';

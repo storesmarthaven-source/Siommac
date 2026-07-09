@@ -305,7 +305,7 @@ body[data-theme="dark"] .hero-footer {
 .ui-stat-spacer { flex: 1 1 auto; min-height: 6px; }
 
 .ui-stat-metric-row { display: flex; align-items: baseline; gap: 8px; }
-.ui-stat-metric { font-size: 2.4rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; color: var(--siomac-navy); }
+.ui-stat-metric { font-size: 2.4rem; font-weight: 600; line-height: 1; letter-spacing: -0.03em; color: var(--siomac-navy); }
 .ui-stat-card--navy .ui-stat-metric { color: #fff; }
 .ui-stat-metric-unit { font-size: 0.65rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .05em; }
 .ui-stat-card--navy .ui-stat-metric-unit { color: rgba(255,255,255,0.5); }
@@ -465,7 +465,7 @@ body[data-theme="dark"] .hero-footer {
   text-transform: uppercase; letter-spacing: 0.06em;
 }
 .hse-spark-card .hse-spark-val {
-  font-size: 1.6rem; font-weight: 800; font-family: var(--font-mono);
+  font-size: 1.6rem; font-weight: 600; font-family: var(--font-mono);
   line-height: 1; color: var(--siomac-navy); letter-spacing: -0.03em;
   margin-bottom: 4px;
 }
@@ -876,6 +876,35 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 /* Bare tab bar (no header card) sits directly under a PageHeader. */
 .hse-tabs-container--bare { margin-top: 0; }
 
+/* ── Standard wizard stepper (Stepper @ui) — a separate boxed nav, marker + title +
+      subtext per step. Ported from the Onboarding wizard's `.ob-stepper`. ─────────── */
+.ui-stepper {
+  display: flex; gap: 8px; align-items: stretch;
+  background: #ffffff; border: 1px solid #dce4f1; border-radius: 14px;
+  padding: 10px; margin-bottom: 16px; overflow-x: auto;
+}
+.ui-stepper-step {
+  flex: 1 1 0; min-width: 150px; display: flex; align-items: center; gap: 11px;
+  padding: 10px 12px; border: 1px solid transparent; border-radius: 10px;
+  background: none; font: inherit; text-align: left; color: #53617f; cursor: pointer;
+  transition: background-color 140ms ease, border-color 140ms ease;
+}
+.ui-stepper-step:hover { background: #f8fbff; }
+.ui-stepper-step.is-active { background: #f5f7fa; border-color: #eaedf3; }
+.ui-stepper-marker {
+  flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
+  font-size: 13px; font-weight: 500; background: #f8fbff; color: #7c879d; border: 1px solid #dce4f1;
+}
+.ui-stepper-step.is-active .ui-stepper-marker { background: #364263; color: #fff; border-color: #e0e5fb; }
+.ui-stepper-step.is-complete .ui-stepper-marker { background: #128a3e; color: #fff; border-color: #128a3e; }
+.ui-stepper-copy { display: flex; flex-direction: column; min-width: 0; }
+.ui-stepper-copy strong { color: #0d1b35; font-size: 13.5px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-stepper-copy span { color: #7c879d; font-size: 11.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-stepper-step.is-active .ui-stepper-copy strong { color: #384260; }
+.ui-stepper-step.is-locked { cursor: not-allowed; opacity: 0.55; }
+.ui-stepper-step.is-locked:hover { background: none; }
+@media (max-width: 720px) { .ui-stepper-step { min-width: 56px; } .ui-stepper-copy { display: none; } }
+
 /* ── Standard wizard (wz-*) — the app-wide multi-step dialog (Wizard @ui) ── */
 /* ── Incident Report Wizard (wz-*) ──────────────────────────────────────── */
 .wz-backdrop {
@@ -903,7 +932,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   display: flex; align-items: center; justify-content: center;
   font-size: 1.05rem; flex-shrink: 0;
 }
-.wz-header-title { font-size: 1rem; font-weight: 800; color: #092d4d; letter-spacing: -.01em; }
+.wz-header-title { font-size: 1rem; font-weight: 600; color: #092d4d; letter-spacing: -.01em; }
 .wz-header-sub   { font-size: 0.72rem; color: #617086; margin-top: 2px; }
 .wz-close {
   width: 32px; height: 32px; border-radius: 8px; border: 1px solid #d9e1ea;
@@ -935,14 +964,14 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   display: inline-grid; place-items: center;
   width: 24px; height: 24px; border-radius: 999px;
   background: #c5cdd8; color: #fff;
-  font-size: 0.68rem; font-weight: 900;
+  font-size: 0.68rem; font-weight: 600;
   margin-bottom: 8px; flex-shrink: 0;
 }
 .wz-step-tab.done   .wz-step-num { background: #1b2d54; }
 .wz-step-tab.active .wz-step-num { background: #1b2d54; }
 
 .wz-step-tab-label {
-  display: block; font-size: 0.74rem; font-weight: 800;
+  display: block; font-size: 0.74rem; font-weight: 600;
   color: #102033; line-height: 1.2;
 }
 .wz-step-tab-sub {
@@ -993,7 +1022,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 .wz-tooltip-icon {
   width: 16px; height: 16px; border-radius: 50%;
   background: #fff; color: var(--siomac-navy);
-  font-size: 0.58rem; font-weight: 900; display: inline-flex;
+  font-size: 0.58rem; font-weight: 600; display: inline-flex;
   align-items: center; justify-content: center;
   cursor: help; flex-shrink: 0;
   box-shadow: 0 1px 3px rgba(0,0,0,.15);
@@ -1059,7 +1088,7 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   padding: 8px 10px; border-bottom: 1px solid rgba(255,255,255,.1);
 }
 .wz-approval-step:last-child { border-bottom: 0; }
-.wz-approval-step b    { font-size: 0.7rem; color: #fff; font-weight: 800; }
+.wz-approval-step b    { font-size: 0.7rem; color: #fff; font-weight: 600; }
 .wz-approval-step span { font-size: 0.67rem; color: rgba(255,255,255,.5); grid-column: 1; }
 
 /* Guide rows (on dark navy sidebar) */
@@ -1075,13 +1104,13 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 /* Review grid */
 .wz-review-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
 .wz-review-row  { display: flex; flex-direction: column; gap: 1px; background: #f5f7fa; border: 1px solid #d9e1ea; border-radius: 8px; padding: 7px 10px; }
-.wz-review-key  { font-size: 0.62rem; color: #617086; text-transform: uppercase; letter-spacing: .05em; font-weight: 900; }
+.wz-review-key  { font-size: 0.62rem; color: #617086; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
 .wz-review-val  { font-size: 0.77rem; font-weight: var(--font-weight-bold); color: #102033; margin-top: 3px; }
 
 /* Routing chips */
 .wz-route-chips { display: flex; flex-direction: column; gap: 5px; margin-top: 4px; }
 .wz-route-chip  { display: flex; align-items: center; gap: 10px; padding: 8px 12px; background: #f5f7fa; border: 1px solid #d9e1ea; border-radius: 8px; }
-.wz-route-num   { width: 22px; height: 22px; border-radius: 50%; background: #092d4d; color: #fff; font-size: 0.66rem; font-weight: 900; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+.wz-route-num   { width: 22px; height: 22px; border-radius: 50%; background: #092d4d; color: #fff; font-size: 0.66rem; font-weight: 600; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .wz-route-chip span:last-child { font-size: 0.76rem; font-weight: 600; color: #102033; }
 
 /* Missing / error banner */

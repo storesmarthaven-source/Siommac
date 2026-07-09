@@ -300,6 +300,48 @@ export default async function run(h) {
     expect('employerWeekly' in c1, 'NIS class missing employerWeekly');
   });
 
+  // --- Edit NIS Contribution Band page contract (design pivot 2026-07-08) ---
+  await test('single-band upsert (Edit Band page contract): {classes:[one]} updates in place + full row shape', async () => {
+    // The full-page NIS band editor sends EXACTLY this shape via financeStatutoryApi.upsertNisClass.
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: ctx.sv1Id,
+      classes: [{ classNo: 2, weeklyMin: 300, weeklyMax: 399.99, employeeWeekly: 18.00, employerWeekly: 27.00 }],
+    });
+    ok(r, `single-band upsert failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'upsert should return an array');
+    expect(r.body.data.length === 1, `expected 1 upserted row, got ${r.body.data.length}`);
+    const row = r.body.data[0];
+    for (const k of ['id', 'statutoryVersionId', 'classNo', 'weeklyMin', 'weeklyMax', 'employeeWeekly', 'employerWeekly', 'createdAt']) {
+      expect(k in row, `upsert row missing ${k}`);
+    }
+    expect(row.classNo === 2, 'classNo mismatch');
+    expect(Number(row.employeeWeekly) === 18.00, `employeeWeekly not updated, got ${row.employeeWeekly}`);
+
+    // Idempotent update on class_no — list still has 3 (no duplicate band).
+    const l = await api('finance/statutory/nis-classes/list', fmgr1Token, { statutoryVersionId: ctx.sv1Id });
+    ok(l, 'list after single upsert failed');
+    expect(l.body.data.length === 3, `expected 3 bands after in-place update, got ${l.body.data.length}`);
+    const c2 = l.body.data.find(c => c.classNo === 2);
+    expect(Number(c2.employerWeekly) === 27.00, `employerWeekly not persisted, got ${c2.employerWeekly}`);
+  });
+
+  await test('§2 side-effects: nis_classes.updated app_event + hr_audit_log row', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events')
+        .select('id').eq('source_module', 'finance_statutory')
+        .eq('event_type', 'finance.statutory.nis_classes.updated')
+        .eq('source_entity_id', ctx.sv1Id).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'finance.statutory.nis_classes.updated app_event not found');
+
+    const { data: audit } = await sb.from('hr_audit_log')
+      .select('id').eq('submodule_key', 'finance_statutory')
+      .eq('action', 'statutory_version.nis_classes_updated')
+      .eq('record_id', ctx.sv1Id).limit(1);
+    expect((audit ?? []).length > 0, 'hr_audit_log statutory_version.nis_classes_updated not found');
+  });
+
   // --- Submit (draft → pending_approval) ---
   await test('finance_manager (creator) can submit the version for approval', async () => {
     const r = await api('finance/statutory/versions/submit', fmgr1Token, { id: ctx.sv1Id });
@@ -376,6 +418,16 @@ export default async function run(h) {
     expect(gotHandoff, 'handoff_outbox payroll config update handoff not found for approved version');
   });
 
+  // Editability includes APPROVED — mirrors the FE canEdit gate (draft || approved).
+  await test('editability: NIS bands ARE upsertable on an APPROVED (not-yet-active) version', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: ctx.sv1Id,
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
+    });
+    ok(r, `upsert on approved version should be allowed: ${r.body.message}`);
+    expect(Number(r.body.data[0].employeeWeekly) === 13.50, 'approved-version band update not applied');
+  });
+
   // --- Activate (approved → active, creator SoD still applies) ---
   await test('CREATOR cannot activate (SoD: creator cannot activate)', async () => {
     const r = await api('finance/statutory/versions/activate', fmgr1Token, { id: ctx.sv1Id });
@@ -428,6 +480,27 @@ export default async function run(h) {
       .select('id').eq('jurisdiction', 'TT').eq('is_active', true);
     expect((activeVersions ?? []).length === 1, `expected 1 active version, got ${(activeVersions ?? []).length}`);
     expect(activeVersions[0].id === ctx.sv2Id, 'active version should be sv2');
+  });
+
+  // Editability gate: bands are LOCKED once a version leaves draft/approved (active/retired).
+  await test('editability gate: NIS band upsert on a RETIRED version is denied (422)', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: ctx.sv1Id, // sv1 was retired when sv2 activated
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 99.99, employerWeekly: 99.99 }],
+    });
+    fails(r, 'upsert on retired version should fail');
+    expect(r.status === 422, `expected 422 on retired version, got ${r.status}`);
+    expect(r.body.message?.toLowerCase().includes('draft or approved'),
+      `expected editability message, got: ${r.body.message}`);
+  });
+
+  await test('editability gate: NIS band upsert on an ACTIVE version is denied (422)', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: ctx.sv2Id, // sv2 is active
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 1, employerWeekly: 1 }],
+    });
+    fails(r, 'upsert on active version should fail');
+    expect(r.status === 422, `expected 422 on active version, got ${r.status}`);
   });
 
   // --- Reports ---

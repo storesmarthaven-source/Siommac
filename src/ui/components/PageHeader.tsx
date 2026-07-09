@@ -17,7 +17,8 @@ import { ProfilePill } from '@shared/ProfilePill';
 export interface PageMetaChip { icon?: string; label: string; }
 
 export interface PageHeaderProps {
-  icon: string;
+  /** FontAwesome class string (e.g. 'fa-users'), OR a custom icon node (e.g. a Lucide SVG). */
+  icon: string | ComponentChildren;
   title: string;
   /** Short description shown under the title. */
   sub?: string;
@@ -42,7 +43,7 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
   return (
     <div class="ui-page-header">
       <div class="ui-page-head-main">
-        <span class="ui-page-head-icon"><i class={`fas ${icon}`} /></span>
+        <span class="ui-page-head-icon">{typeof icon === 'string' ? <i class={`fas ${icon}`} /> : icon}</span>
         <div class="ui-page-head-text">
           {trail.length > 0 && (
             <div class="ui-page-crumb">

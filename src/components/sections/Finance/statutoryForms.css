@@ -1,0 +1,328 @@
+/**
+ * statutoryForms.css — Statutory full-page design system ("SFP")
+ *
+ * Faithful port of the 2026-07 mockup design language (Siomac UI - Mockups):
+ * light theme, white card, icon+title header, two-pane form + context sidebar,
+ * sticky action footer, per-field validation states. Replaces the Aurora `.hrfin`
+ * look for the Statutory full pages (design pivot, 2026-07-08).
+ *
+ * ALL selectors are scoped under `.sfp` and use the `sfp-` prefix + local
+ * `--sfp-*` variables, so this system is fully self-contained and cannot collide
+ * with — or inherit from — the surrounding (dark) app shell / Aurora styles.
+ * Reused across every Statutory full page (Edit Band, Pay Component, Import,
+ * New Rate Version).
+ */
+
+.sfp {
+  /* Palette — self-contained; do NOT reference global app vars here. */
+  --sfp-page:#eef1f7; --sfp-card:#fff; --sfp-ink:#1f2a44; --sfp-ink-strong:#16213d;
+  --sfp-label:#334155; --sfp-muted:#9aa4b2; --sfp-muted-2:#64748b;
+  --sfp-line:#eaeef4; --sfp-line-input:#dde3ec;
+  --sfp-primary:#2f6bff; --sfp-primary-600:#2563eb; --sfp-primary-700:#1d4ed8;
+  /* Standard input focus (light grey, not blue) — used by every .sfp input. */
+  --sfp-focus:#c3ccd9; --sfp-focus-ring:rgba(148,163,184,.2);
+  --sfp-req:#ef4444;
+  --sfp-green:#15a34a; --sfp-green-bg:#e8f7ee; --sfp-green-bd:#c9ecd6; --sfp-green-ic:#16b364;
+  --sfp-amber:#d97706; --sfp-amber-bg:#fef3e2; --sfp-amber-bd:#f6e0bd;
+  --sfp-info:#3b6fe0; --sfp-info-bg:#eef3fe; --sfp-info-bd:#d9e4fb;
+  --sfp-err:#e5484d; --sfp-err-bg:#fdeceb;
+  --sfp-gray-bg:#eef1f6; --sfp-gray-tx:#475569; --sfp-toggle-off:#cbd5e1;
+  --sfp-shadow:0 24px 60px -20px rgba(24,39,75,.30), 0 8px 24px -12px rgba(24,39,75,.16);
+
+  font-family:"Inter",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+  color:var(--sfp-ink); -webkit-font-smoothing:antialiased;
+  font-size:14px; line-height:1.45;
+  /* Renders as a NORMAL content-area page (right of the nav), NOT a centred card on
+     a grey letterbox — the standard PageHeader sits at the top. */
+  padding:2px 0 26px;
+}
+.sfp *{box-sizing:border-box}
+.sfp input,.sfp textarea,.sfp select,.sfp button{font-family:inherit;font-size:inherit}
+
+.sfp-wrap{width:100%;max-width:1300px}
+/* Form panel: a normal content-area card (subtle), moved down below the back-button row. */
+.sfp-card{background:var(--sfp-card);border:1px solid #e7ebf3;border-radius:16px;box-shadow:0 1px 2px rgba(16,24,40,.05);margin-top:20px}
+
+/* ── Back button — its own row below the header, right-aligned (onboarding-wizard ghost
+      style: white, bordered, rounded, blue arrow icon). ────────────────────────────── */
+/* Nudge the page-header main block (icon + title) further down from the top bar. */
+.sfp .ui-page-head-main{margin-top:14px}
+/* Header icon chip: light background, dark icon. */
+.sfp .ui-page-head-icon{background:#eef1f6;border:1px solid #e2e8f0;color:var(--siomac-navy,#16213d)}
+/* Back button — absolutely positioned in the top-right of the header (out of flow, so
+   it sits up by the header without shifting the stepper/form). Onboarding-wizard ghost
+   style: white, bordered, rounded, blue arrow icon. */
+.sfp-headwrap{position:relative}
+.sfp-back{position:absolute;top:28px;right:0;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 16px 0 10px;border-radius:10px;border:1px solid var(--sfp-line-input);background:#fff;color:var(--sfp-ink-strong);font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:background .15s,border-color .15s}
+.sfp-back:hover{background:#f8fafc;border-color:#cdd6e3}
+/* Extra space below the header so the stepper + form card sit lower. */
+.sfp-headwrap{margin-bottom:44px}
+.sfp .ui-stepper{margin-top:4px}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.sfp-head{display:flex;align-items:flex-start;gap:16px;padding:22px 26px 18px}
+.sfp-head-icon{width:48px;height:48px;flex:0 0 48px;border-radius:12px;background:#eef1fb;border:1px solid #e0e7f9;
+  display:flex;align-items:center;justify-content:center;color:#3f5bd0}
+.sfp-head-text h1{margin:1px 0 3px;font-size:21px;font-weight: 500;color:var(--sfp-ink-strong);letter-spacing:-.01em}
+.sfp-head-text p{margin:0;color:var(--sfp-muted-2);font-size:13px;max-width:560px}
+.sfp-head-status{margin-left:auto;display:flex;align-items:center;gap:14px}
+.sfp-head-x{border:0;background:transparent;color:#9aa4b2;cursor:pointer;padding:6px;border-radius:8px;display:inline-flex}
+.sfp-head-x:hover{background:#f1f4f9;color:#475569}
+.sfp-divider{height:1px;background:var(--sfp-line);margin:0 26px}
+
+/* ── Pills ──────────────────────────────────────────────────────────────── */
+.sfp-pill{font-size:11px;font-weight:600;padding:4px 11px;border-radius:20px;white-space:nowrap;display:inline-flex;align-items:center;gap:6px}
+.sfp-pill .sfp-dot{width:7px;height:7px;border-radius:50%;background:currentColor}
+.sfp-pill.active{background:var(--sfp-green-bg);color:var(--sfp-green);border:1px solid var(--sfp-green-bd)}
+.sfp-pill.pending{background:var(--sfp-amber-bg);color:var(--sfp-amber);border:1px solid var(--sfp-amber-bd)}
+.sfp-pill.approved{background:var(--sfp-info-bg);color:var(--sfp-info);border:1px solid var(--sfp-info-bd)}
+.sfp-pill.locked,.sfp-pill.retired,.sfp-pill.draft{background:#eff1f5;color:#6b7688;border:1px solid #e2e6ec}
+
+/* ── Body layout ────────────────────────────────────────────────────────── */
+.sfp-body{display:grid;grid-template-columns:minmax(0,1.95fr) minmax(0,1fr);gap:26px;padding:22px 26px}
+.sfp-form{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;align-content:start}
+.sfp-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.sfp-field.wide{grid-column:1 / -1}
+.sfp-lab{font-size:12.5px;font-weight:600;color:var(--sfp-label);display:flex;align-items:center;gap:5px}
+.sfp-req{color:var(--sfp-req)}
+.sfp-hint{font-size:11.5px;color:var(--sfp-muted)}
+/* Field info (i) icon — a CUSTOM styled tooltip (data-tip), shown on hover/focus.
+   Only rendered when it carries a hint (no dead, tooltip-less icons). */
+.sfp-info{position:relative;color:#b3bdca;display:inline-flex;cursor:help;border-radius:50%;transition:color .12s}
+.sfp-info:hover,.sfp-info:focus-visible{color:#7c879d;outline:none}
+.sfp-info[data-tip]::after{
+  content:attr(data-tip);
+  position:absolute;bottom:calc(100% + 8px);left:50%;
+  transform:translateX(-50%) translateY(3px);
+  background:#212b45;color:#eef1f8;
+  padding:6px 10px;border-radius:7px;font-size:11px;font-weight:500;line-height:1.45;letter-spacing:.01em;
+  width:max-content;max-width:210px;white-space:normal;text-align:center;
+  box-shadow:0 3px 10px -3px rgba(16,24,40,.22);
+  opacity:0;pointer-events:none;transition:opacity .13s ease,transform .13s ease;z-index:200;
+}
+.sfp-info[data-tip]::before{
+  content:'';position:absolute;bottom:calc(100% + 3px);left:50%;
+  transform:translateX(-50%) translateY(3px);
+  border:5px solid transparent;border-top-color:#212b45;
+  opacity:0;pointer-events:none;transition:opacity .13s ease,transform .13s ease;z-index:200;
+}
+.sfp-info[data-tip]:hover::after,.sfp-info[data-tip]:focus-visible::after,
+.sfp-info[data-tip]:hover::before,.sfp-info[data-tip]:focus-visible::before{
+  opacity:1;transform:translateX(-50%) translateY(0);
+}
+.sfp-err-msg{font-size:11.5px;color:var(--sfp-err);font-weight:500}
+
+/* ── Inputs ─────────────────────────────────────────────────────────────── */
+.sfp-ctl{position:relative;display:flex;align-items:center}
+.sfp-inp{height:44px;border:1px solid var(--sfp-line-input);border-radius:9px;background:#fff;padding:0 38px 0 13px;
+  font-size:14px;color:var(--sfp-ink);width:100%;outline:none;transition:border-color .15s,box-shadow .15s}
+.sfp-inp::placeholder{color:#aeb7c4}
+.sfp-inp:focus{border-color:var(--sfp-focus);box-shadow:0 0 0 3px var(--sfp-focus-ring)}
+.sfp-inp:disabled{background:#f6f8fb;color:#8590a2;cursor:not-allowed}
+.sfp-ctl .sfp-state{position:absolute;right:12px;display:inline-flex;pointer-events:none}
+.sfp-state.ok{color:var(--sfp-green-ic)} .sfp-state.bad{color:var(--sfp-err)}
+/* Validation tick/x pops in when it appears. */
+@keyframes sfp-pop{0%{opacity:0;transform:scale(.3)}55%{opacity:1;transform:scale(1.2)}100%{opacity:1;transform:scale(1)}}
+@keyframes sfp-pop-y{0%{opacity:0;transform:translateY(-50%) scale(.3)}55%{opacity:1;transform:translateY(-50%) scale(1.2)}100%{opacity:1;transform:translateY(-50%) scale(1)}}
+.sfp-ctl .sfp-state{animation:sfp-pop .24s cubic-bezier(.2,.9,.3,1.25)}
+.sfp-cur-grp .sfp-state{animation:sfp-pop-y .24s cubic-bezier(.2,.9,.3,1.25)}
+.sfp-inp.is-ok{border-color:#bfe6cd} .sfp-inp.is-bad{border-color:#f2b6b6;background:#fff8f8}
+
+/* Currency-prefix group */
+.sfp-cur-grp{display:flex;align-items:stretch;border:1px solid var(--sfp-line-input);border-radius:9px;overflow:hidden;background:#fff;position:relative;transition:border-color .15s,box-shadow .15s}
+.sfp-cur-grp.is-ok{border-color:#bfe6cd} .sfp-cur-grp.is-bad{border-color:#f2b6b6;background:#fff8f8}
+.sfp-cur-grp:focus-within{border-color:var(--sfp-focus);box-shadow:0 0 0 3px var(--sfp-focus-ring)}
+.sfp-cur-grp .sfp-cur{display:flex;align-items:center;padding:0 11px;background:#f6f8fb;border-right:1px solid var(--sfp-line-input);font-size:12.5px;font-weight:600;color:#64748b}
+.sfp-cur-grp input{flex:1;border:0;height:44px;padding:0 38px 0 12px;font-size:14px;color:var(--sfp-ink);outline:none;min-width:0;background:transparent}
+.sfp-cur-grp input:disabled{color:#8590a2;cursor:not-allowed}
+.sfp-cur-grp .sfp-state{position:absolute;right:12px;top:50%;transform:translateY(-50%)}
+
+/* ── Read-only / info banner ────────────────────────────────────────────── */
+.sfp-banner{grid-column:1 / -1;display:flex;gap:10px;align-items:flex-start;padding:12px 14px;border-radius:11px;font-size:12.5px;line-height:1.5}
+.sfp-banner.info{background:var(--sfp-info-bg);border:1px solid var(--sfp-info-bd);color:#2a4a86}
+.sfp-banner.warn{background:var(--sfp-amber-bg);border:1px solid var(--sfp-amber-bd);color:#8a5a12}
+.sfp-banner .ic{flex:0 0 auto;margin-top:1px}
+.sfp-banner b{font-weight: 500}
+
+/* ── Right sidebar ──────────────────────────────────────────────────────── */
+.sfp-aside{display:flex;flex-direction:column;gap:14px}
+.sfp-panel{border:1px solid var(--sfp-line);border-radius:13px;background:#fbfcfe;padding:15px 16px}
+.sfp-panel-head{display:flex;align-items:center;gap:9px;font-size:14px;font-weight: 500;color:var(--sfp-ink-strong);margin-bottom:14px}
+.sfp-panel-head .ic{color:#7986a0;display:inline-flex}
+.sfp-big{font-size:26px;font-weight: 500;color:var(--sfp-ink-strong);margin:8px 0 1px}
+.sfp-sub{font-size:12px;color:var(--sfp-muted-2)}
+.sfp-xs{font-size:11px;color:var(--sfp-muted);margin-top:2px}
+.sfp-mrow{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-top:1px solid #eef1f6;font-size:12.5px;color:#3f4a63;gap:12px}
+.sfp-mrow:first-of-type{border-top:0}
+.sfp-mrow .k{color:var(--sfp-muted-2)}
+.sfp-mrow .v{font-weight:600;color:var(--sfp-ink-strong);text-align:right}
+.sfp-mrow .v.est{color:#3f4a63}
+
+/* ── Footer ─────────────────────────────────────────────────────────────── */
+/* Matches the app's .ob-step-nav: full-width grey bar, top border, rounded bottom. */
+.sfp-footer{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:16px 24px;
+  background:rgb(244 246 249);border-top:1px solid rgba(27,45,84,.10);border-radius:0 0 16px 16px}
+.sfp-footer .right{margin-left:auto;display:flex;gap:12px}
+.sfp-btn{height:44px;padding:0 20px;border-radius:10px;font-size:14px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:8px;border:1px solid transparent}
+/* Button labels are always Title Case. */
+.sfp-btn,.sfp-back,.sfp-browse{text-transform:capitalize}
+.sfp-btn:disabled{opacity:.55;cursor:not-allowed;box-shadow:none}
+.sfp-btn-ghost{background:#fff;border-color:var(--sfp-line-input);color:#475569;box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.sfp-btn-ghost:hover:not(:disabled){background:#f8fafc}
+.sfp-btn-danger{background:#fff;border-color:#f3c4c5;color:var(--sfp-err);box-shadow:0 1px 2px rgba(16,24,40,.05)}
+.sfp-btn-danger:hover:not(:disabled){background:#fdf1f1}
+.sfp-btn-primary{background:var(--siomac-navy,#1b2d54);color:#fff}
+.sfp-btn-primary:hover:not(:disabled){background:#16233f}
+
+/* spinner for pending actions */
+.sfp-spin{width:15px;height:15px;border:2px solid rgba(255,255,255,.45);border-top-color:#fff;border-radius:50%;animation:sfp-spin .7s linear infinite}
+@keyframes sfp-spin{to{transform:rotate(360deg)}}
+
+/* ── Select (native, styled as an input) ────────────────────────────────── */
+.sfp-select{height:44px;border:1px solid var(--sfp-line-input);border-radius:9px;background:#fff;padding:0 38px 0 13px;
+  font-size:14px;color:var(--sfp-ink);width:100%;outline:none;cursor:pointer;
+  appearance:none;-webkit-appearance:none;-moz-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%239aa4b2' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 12px center;transition:border-color .15s,box-shadow .15s}
+.sfp-select:focus{border-color:var(--sfp-focus);box-shadow:0 0 0 3px var(--sfp-focus-ring)}
+.sfp-select:disabled{background:#f6f8fb;color:#8590a2;cursor:not-allowed}
+.sfp-select.is-bad{border-color:#f2b6b6;background:#fff8f8}
+.sfp-select.is-ok{border-color:#bfe6cd}
+.sfp-select.has-state{padding-right:56px}
+
+/* ── Toggle switch (label left · switch + Yes/No right) ──────────────────── */
+.sfp-toggle-row{display:flex;align-items:center;justify-content:space-between;gap:10px;height:44px;
+  border:1px solid var(--sfp-line-input);border-radius:9px;padding:0 13px;background:#fff}
+.sfp-switch{width:44px;height:25px;border-radius:20px;background:var(--sfp-toggle-off);position:relative;flex:0 0 auto;transition:background .18s;cursor:pointer;border:0;padding:0}
+.sfp-switch .knob{position:absolute;top:3px;left:3px;width:19px;height:19px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(16,24,40,.3);transition:transform .18s}
+.sfp-switch.on{background:var(--sfp-primary)} .sfp-switch.on .knob{transform:translateX(19px)}
+.sfp-switch:disabled{opacity:.6;cursor:not-allowed}
+.sfp-sw-wrap{display:flex;align-items:center;gap:9px}
+.sfp-sw-txt{font-size:12.5px;font-weight:600;color:var(--sfp-primary)}
+.sfp-sw-txt.off{color:#94a3b8}
+
+/* ── Gradient header-icon variant (Pay Component) ───────────────────────── */
+.sfp-head-icon.grad{background:var(--siomac-navy,#16213d);border-color:transparent;color:#fff}
+
+/* pill variants used by derived compliance/treatment rows */
+.sfp-pill.yes{background:var(--sfp-green-bg);color:var(--sfp-green);border:1px solid var(--sfp-green-bd)}
+.sfp-pill.no{background:var(--sfp-gray-bg);color:#6b7688;border:1px solid #e2e6ec}
+.sfp-pill.earn{background:var(--sfp-info-bg);color:var(--sfp-primary-600);border:1px solid var(--sfp-info-bd)}
+.sfp-pill.deduct{background:var(--sfp-amber-bg);color:var(--sfp-amber);border:1px solid var(--sfp-amber-bd)}
+
+/* ── Wizard stepper ─────────────────────────────────────────────────────── */
+.sfp-stepper{display:flex;align-items:center;padding:4px 26px 18px;gap:0}
+.sfp-step{display:flex;align-items:center;gap:10px;flex:0 0 auto}
+.sfp-step .num{width:30px;height:30px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight: 500;flex:0 0 auto}
+.sfp-step.done .num{background:var(--sfp-primary-600);color:#fff}
+.sfp-step.active .num{background:var(--sfp-primary-600);color:#fff;box-shadow:0 0 0 4px rgba(47,107,255,.15)}
+.sfp-step.todo .num{background:#eef1f6;color:#94a3b8;border:1px solid #e2e6ec}
+.sfp-step .lbl{font-size:13px;font-weight:600;color:#94a3b8}
+.sfp-step.done .lbl{color:var(--sfp-ink-strong)}
+.sfp-step.active .lbl{color:var(--sfp-primary-600)}
+.sfp-step-line{flex:1;height:2px;background:#e6eaf1;margin:0 14px;min-width:24px}
+.sfp-step-line.on{background:var(--sfp-primary-600)}
+
+/* ── Cards (wizard panels) ──────────────────────────────────────────────── */
+.sfp-scard{border:1px solid var(--sfp-line);border-radius:13px;background:#fff;padding:16px}
+.sfp-scard + .sfp-scard{margin-top:16px}
+.sfp-scard h3{margin:0 0 13px;font-size:14px;font-weight: 500;color:var(--sfp-ink-strong)}
+.sfp-scard h3.sub{font-size:12.5px}
+
+/* dropzone + file card */
+.sfp-dropzone{border:1.5px dashed #cdd6e3;border-radius:11px;background:#fafbfd;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;padding:30px 12px;text-align:center;cursor:pointer;transition:border-color .15s,background .15s}
+.sfp-dropzone:hover,.sfp-dropzone.drag{border-color:var(--sfp-primary);background:#f4f8ff}
+.sfp-dropzone .cloud{color:#9aa4b2}
+.sfp-dropzone p{margin:0;font-size:12.5px;color:var(--sfp-muted-2)}
+.sfp-dz-or{font-size:11px;color:#aab3c0}
+.sfp-browse{border:1px solid var(--sfp-line-input);background:#fff;color:var(--sfp-primary-600);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer}
+.sfp-filecard{display:flex;align-items:center;gap:11px;border:1px solid var(--sfp-line-input);border-radius:10px;padding:12px 13px;background:#fff}
+.sfp-file-ic{width:34px;height:38px;border-radius:7px;background:#eafaf0;display:flex;align-items:center;justify-content:center;color:#22a35a;flex:0 0 auto}
+.sfp-file-meta{flex:1;min-width:0}
+.sfp-file-meta .fn{font-size:13px;font-weight:600;color:var(--sfp-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sfp-file-meta .fs{font-size:11.5px;color:var(--sfp-muted)}
+.sfp-textarea{width:100%;min-height:150px;border:1px solid var(--sfp-line-input);border-radius:9px;padding:11px 12px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:12.5px;color:var(--sfp-ink);outline:none;resize:vertical}
+.sfp-textarea:focus{border-color:var(--sfp-focus);box-shadow:0 0 0 3px var(--sfp-focus-ring)}
+
+/* validation stats */
+.sfp-stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.sfp-stat{border:1px solid var(--sfp-line);border-radius:11px;padding:13px;display:flex;align-items:center;gap:12px;background:#fff}
+.sfp-stat .sic{width:38px;height:38px;border-radius:9px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sfp-stat .sic.blue{background:var(--sfp-info-bg);color:var(--sfp-primary-600)}
+.sfp-stat .sic.green{background:var(--sfp-green-bg);color:var(--sfp-green)}
+.sfp-stat .sic.amber{background:var(--sfp-amber-bg);color:var(--sfp-amber)}
+.sfp-stat .sic.red{background:var(--sfp-err-bg);color:var(--sfp-err)}
+.sfp-stat .snum{font-size:22px;font-weight: 500;color:var(--sfp-ink-strong);line-height:1}
+.sfp-stat .slbl{font-size:11.5px;color:var(--sfp-muted-2);margin-top:3px}
+
+/* validation table */
+.sfp-vtable{width:100%;border-collapse:collapse}
+.sfp-vtable thead th{font-size:11px;font-weight: 500;color:#8590a2;text-align:left;padding:9px 12px;background:#f9fafc;border-top:1px solid var(--sfp-line);border-bottom:1px solid var(--sfp-line);white-space:nowrap}
+.sfp-vtable tbody td{padding:10px 12px;border-bottom:1px solid #f0f3f8;font-size:12.5px;color:#3f4a63;vertical-align:middle}
+.sfp-vtable tbody tr:last-child td{border-bottom:0}
+.sfp-vtable .rownum{color:#64748b;font-weight:600} .sfp-vtable .ccode{font-weight:600;color:#334155}
+.sfp-vtable .dash{color:#c2c9d6}
+.sfp-chip{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:4px 9px;border-radius:20px;white-space:nowrap}
+.sfp-chip.err{background:var(--sfp-err-bg);color:var(--sfp-err)} .sfp-chip.warn{background:var(--sfp-amber-bg);color:var(--sfp-amber)} .sfp-chip.ok{background:var(--sfp-green-bg);color:var(--sfp-green)}
+.sfp-stt{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600}
+.sfp-stt.err{color:var(--sfp-err)} .sfp-stt.warn{color:var(--sfp-amber)} .sfp-stt.ok{color:var(--sfp-green)}
+
+/* right-rail rule + mapping rows */
+.sfp-rule-row{display:flex;gap:11px;padding:11px 0;border-top:1px solid #eef1f6}
+.sfp-rule-row:first-of-type{border-top:0}
+.sfp-rule-ic{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sfp-rule-ic.red{background:var(--sfp-err-bg);color:var(--sfp-err)} .sfp-rule-ic.amber{background:var(--sfp-amber-bg);color:var(--sfp-amber)}
+.sfp-rule-ic.blue{background:var(--sfp-info-bg);color:var(--sfp-primary-600)} .sfp-rule-ic.violet{background:#eaeef4;color:#516080}
+.sfp-rule-nm{font-size:13px;font-weight:600;color:var(--sfp-ink-strong)} .sfp-rule-ds{font-size:11.5px;color:var(--sfp-muted-2);margin-top:1px}
+.sfp-map-row{display:grid;grid-template-columns:1fr 1fr 18px;align-items:center;padding:9px 0;border-top:1px solid #eef1f6;font-size:12.5px}
+.sfp-map-row:first-of-type{border-top:0}
+.sfp-map-row .csv{color:#334155;font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px}
+.sfp-map-row .to{color:#475569} .sfp-map-row .mok{color:#16b364;display:inline-flex;justify-self:end}
+
+/* ── Editable band table (New Rate Version NIS step) ────────────────────── */
+.sfp-cellinp{height:38px;border:1px solid var(--sfp-line-input);border-radius:8px;padding:0 10px;font-size:13px;color:var(--sfp-ink);width:100%;outline:none;background:#fff}
+.sfp-cellinp:focus{border-color:var(--sfp-focus);box-shadow:0 0 0 3px var(--sfp-focus-ring)}
+.sfp-cellinp.bad{border-color:#f2b6b6;background:#fff8f8}
+.sfp-iconbtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--sfp-line-input);background:#fff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;color:#64748b}
+.sfp-iconbtn:hover{background:#f8fafc}
+.sfp-iconbtn.del{color:#e5484d;border-color:#f6d6d7} .sfp-iconbtn.del:hover{background:#fdf1f1}
+.sfp-iconbtn:disabled{opacity:.4;cursor:not-allowed}
+
+/* ── Validation checklist + progress donut (right rail) ─────────────────── */
+.sfp-check{display:flex;align-items:center;gap:9px;padding:9px 0;border-top:1px solid #eef1f6;font-size:12.5px}
+.sfp-check:first-of-type{border-top:0}
+.sfp-check .ci{width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex:0 0 auto}
+.sfp-check .ci.ok{background:var(--sfp-green-bg);color:var(--sfp-green);animation:sfp-pop .26s cubic-bezier(.2,.9,.3,1.3)} .sfp-check .ci.pend{background:#eef1f6;color:#94a3b8} .sfp-check .ci.warn{background:var(--sfp-amber-bg);color:var(--sfp-amber);animation:sfp-pop .26s cubic-bezier(.2,.9,.3,1.3)}
+.sfp-check .ct{flex:1;color:#3f4a63} .sfp-check .cv{font-weight:600;font-size:11px;padding:2px 9px;border-radius:20px}
+.sfp-check .cv.ok{background:var(--sfp-green-bg);color:var(--sfp-green)} .sfp-check .cv.pend{background:#eef1f6;color:#94a3b8} .sfp-check .cv.warn{background:var(--sfp-amber-bg);color:var(--sfp-amber)}
+.sfp-donut-wrap{display:flex;align-items:center;gap:14px}
+.sfp-donut-txt .big{font-size:15px;font-weight: 500;color:var(--sfp-ink-strong)}
+.sfp-donut-txt .sm{font-size:12px;color:var(--sfp-muted-2);margin-top:2px}
+
+/* Configuration Progress — styled like the onboarding ob-preview-ring-card:
+   a white card with a navy uppercase "kicker" header over a navy hero holding
+   the ring. */
+.sfp-panel.sfp-panel-ring{padding:0;overflow:hidden;border-radius:22px;background:#fff;border:1px solid var(--sfp-line)}
+.sfp-panel-ring .sfp-panel-head{
+  margin:0;min-height:48px;padding:0 18px;gap:8px;
+  background:#374669;color:#fff;border-bottom:1px solid rgba(255,255,255,0.10);
+  font-size:11px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;
+}
+.sfp-panel-ring .sfp-panel-head .ic{color:#fff}
+.sfp-panel-ring .sfp-donut-wrap{margin:0 !important;padding:18px;background:#1b2d54;gap:16px}
+.sfp-panel-ring .sfp-donut-wrap svg circle:nth-of-type(1){stroke:rgba(255,255,255,0.15)}
+.sfp-panel-ring .sfp-donut-wrap svg circle:nth-of-type(2){stroke:#34d399}
+.sfp-panel-ring .sfp-donut-wrap svg text{fill:#fff}
+.sfp-panel-ring .sfp-donut-txt .big{color:#fff}
+.sfp-panel-ring .sfp-donut-txt .sm{color:rgba(255,255,255,0.62)}
+
+/* ── Loading / empty states ─────────────────────────────────────────────── */
+.sfp-loading{padding:60px 26px;text-align:center;color:var(--sfp-muted-2);font-size:14px}
+
+@media(max-width:1040px){
+  .sfp-body{grid-template-columns:1fr}
+  .sfp-form{grid-template-columns:1fr 1fr}
+}
+@media(max-width:560px){
+  .sfp-form{grid-template-columns:1fr}
+}

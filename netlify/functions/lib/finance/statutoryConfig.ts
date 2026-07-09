@@ -71,8 +71,12 @@ export interface NisClassRow {
   classNo: number;
   weeklyMin: number;
   weeklyMax: number | null;
+  /** NIBTT assumed average weekly earnings — the contribution + benefit basis. */
+  assumedAverageWeekly: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  /** Reduced weekly contribution for workers over pensionable age (injury portion only). */
+  classZWeekly: number | null;
   createdAt: string;
 }
 
@@ -96,8 +100,10 @@ export interface NisClassImportRow {
   classNo: number;
   weeklyMin: number;
   weeklyMax?: number | null;
+  assumedAverageWeekly?: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  classZWeekly?: number | null;
 }
 
 export interface NisClassImportResult {
@@ -129,7 +135,9 @@ interface DbVersionRow {
 interface DbNisRow {
   id: string; statutory_version_id: string; class_no: number;
   weekly_min: number; weekly_max: number | null;
-  employee_weekly: number; employer_weekly: number; created_at: string;
+  assumed_average_weekly: number | null;
+  employee_weekly: number; employer_weekly: number;
+  class_z_weekly: number | null; created_at: string;
 }
 
 function toVersionDto(r: DbVersionRow): StatutoryVersionDto {
@@ -155,7 +163,9 @@ function toNisDto(r: DbNisRow): NisClassRow {
   return {
     id: r.id, statutoryVersionId: r.statutory_version_id, classNo: r.class_no,
     weeklyMin: Number(r.weekly_min), weeklyMax: r.weekly_max !== null ? Number(r.weekly_max) : null,
+    assumedAverageWeekly: r.assumed_average_weekly !== null && r.assumed_average_weekly !== undefined ? Number(r.assumed_average_weekly) : null,
     employeeWeekly: Number(r.employee_weekly), employerWeekly: Number(r.employer_weekly),
+    classZWeekly: r.class_z_weekly !== null && r.class_z_weekly !== undefined ? Number(r.class_z_weekly) : null,
     createdAt: r.created_at,
   };
 }
@@ -368,6 +378,20 @@ export async function updateStatutoryVersion(
 
 // ── Submit (draft → pending_approval, starts workflow) ────────────────────────
 
+/**
+ * Resolve the finance managers who can approve a statutory version — the natural
+ * recipients of a "submitted for approval" notification. Excludes the submitter
+ * (segregation of duties: the creator cannot be their own approver).
+ */
+async function resolveStatutoryApproverIds(excludeUserId: string): Promise<string[]> {
+  const { data } = await sb
+    .from('app_users')
+    .select('id')
+    .in('role', ['finance_manager', 'admin'])
+    .eq('status', 'active');
+  return ((data ?? []) as Array<{ id: string }>).map(u => u.id).filter(uid => uid !== excludeUserId);
+}
+
 export async function submitStatutoryVersion(
   id: string,
   actorId: string,
@@ -413,6 +437,7 @@ export async function submitStatutoryVersion(
 
   // Backbone: audit (mandatory) + notification to approvers that a version needs review.
   // Compensating rollback: revert status to draft if backbone throws.
+  const approverIds = await resolveStatutoryApproverIds(actorId);
   try {
     await emitFinanceMutationBackbone({
       actorUserId: actorId,
@@ -431,6 +456,8 @@ export async function submitStatutoryVersion(
         actionRoute: '/finance/statutory',
         type: 'finance.statutory.version.submitted',
         severity: 'info',
+        // Notify the finance managers who can approve (excludes the submitter per SoD).
+        ...(approverIds.length ? { recipientUserIds: approverIds } : {}),
       },
     });
   } catch (backboneErr) {
@@ -483,6 +510,8 @@ export async function approveStatutoryVersion(
         actionRoute: '/finance/statutory',
         type: 'finance.statutory.version.approved',
         severity: 'success',
+        // Notify the creator that their submitted version was approved (mirrors reject).
+        ...(existing.createdBy && existing.createdBy !== actorId ? { recipientUserIds: [existing.createdBy] } : {}),
       },
       messageThread: {
         subject: `Statutory config update: ${row.label}`,
@@ -724,8 +753,10 @@ export interface UpsertNisClassInput {
   classNo: number;
   weeklyMin: number;
   weeklyMax?: number | null;
+  assumedAverageWeekly?: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  classZWeekly?: number | null;
 }
 
 export async function upsertNisClasses(
@@ -745,7 +776,7 @@ export async function upsertNisClasses(
   // Capture pre-existing rows for those class numbers (compensating rollback snapshot).
   const { data: preExisting } = await sb
     .from('finance_nis_classes')
-    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly')
+    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, assumed_average_weekly, employee_weekly, employer_weekly, class_z_weekly')
     .eq('statutory_version_id', statutoryVersionId)
     .in('class_no', classNos);
 
@@ -754,8 +785,10 @@ export async function upsertNisClasses(
     class_no: c.classNo,
     weekly_min: c.weeklyMin,
     weekly_max: c.weeklyMax ?? null,
+    assumed_average_weekly: c.assumedAverageWeekly ?? null,
     employee_weekly: c.employeeWeekly,
     employer_weekly: c.employerWeekly,
+    class_z_weekly: c.classZWeekly ?? null,
   }));
 
   const { data, error } = await sb.from('finance_nis_classes')
@@ -904,12 +937,14 @@ export async function deleteNisClass(id: string, actorId: string): Promise<void>
   // Fetch the full row up-front so we have data for the compensating re-insert if backbone fails.
   const { data: cls, error: getErr } = await sb
     .from('finance_nis_classes')
-    .select('id, class_no, statutory_version_id, weekly_min, weekly_max, employee_weekly, employer_weekly')
+    .select('id, class_no, statutory_version_id, weekly_min, weekly_max, assumed_average_weekly, employee_weekly, employer_weekly, class_z_weekly')
     .eq('id', id)
     .maybeSingle<{
       id: string; class_no: number; statutory_version_id: string;
       weekly_min: number; weekly_max: number | null;
+      assumed_average_weekly: number | null;
       employee_weekly: number; employer_weekly: number;
+      class_z_weekly: number | null;
     }>();
   if (getErr) throw Object.assign(new Error('deleteNisClass: ' + getErr.message), { status: 500 });
   if (!cls) throw Object.assign(new Error('NIS class not found.'), { status: 404 });
@@ -943,8 +978,10 @@ export async function deleteNisClass(id: string, actorId: string): Promise<void>
         class_no: cls.class_no,
         weekly_min: cls.weekly_min,
         weekly_max: cls.weekly_max,
+        assumed_average_weekly: cls.assumed_average_weekly,
         employee_weekly: cls.employee_weekly,
         employer_weekly: cls.employer_weekly,
+        class_z_weekly: cls.class_z_weekly,
       });
     } catch (_) { /* best-effort rollback */ }
     throw backboneErr;
@@ -999,7 +1036,7 @@ export async function importNisClasses(
   const importClassNos = rows.map(r => r.classNo);
   const { data: preExisting } = await sb
     .from('finance_nis_classes')
-    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly')
+    .select('id, statutory_version_id, class_no, weekly_min, weekly_max, assumed_average_weekly, employee_weekly, employer_weekly, class_z_weekly')
     .eq('statutory_version_id', statutoryVersionId)
     .in('class_no', importClassNos);
 
@@ -1008,8 +1045,10 @@ export async function importNisClasses(
     class_no: r.classNo,
     weekly_min: r.weeklyMin,
     weekly_max: r.weeklyMax ?? null,
+    assumed_average_weekly: r.assumedAverageWeekly ?? null,
     employee_weekly: r.employeeWeekly,
     employer_weekly: r.employerWeekly,
+    class_z_weekly: r.classZWeekly ?? null,
   }));
 
   const { error } = await sb

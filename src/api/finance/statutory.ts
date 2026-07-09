@@ -51,8 +51,12 @@ export interface NisClass {
   classNo: number;
   weeklyMin: number;
   weeklyMax: number | null;
+  /** NIBTT assumed average weekly earnings — the contribution + benefit basis. */
+  assumedAverageWeekly: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  /** Reduced weekly contribution for workers over pensionable age (injury portion only). */
+  classZWeekly: number | null;
   createdAt: string;
 }
 
@@ -95,16 +99,20 @@ export interface UpsertNisClassArgs {
   classNo: number;
   weeklyMin: number;
   weeklyMax?: number | null;
+  assumedAverageWeekly?: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  classZWeekly?: number | null;
 }
 
 export interface NisClassImportRow {
   classNo: number;
   weeklyMin: number;
   weeklyMax?: number | null;
+  assumedAverageWeekly?: number | null;
   employeeWeekly: number;
   employerWeekly: number;
+  classZWeekly?: number | null;
 }
 
 export interface NisClassImportResult {
@@ -173,7 +181,25 @@ export const financeStatutoryApi = {
 
   // NIS classes
   listNisClasses:    (a: { statutoryVersionId: string })                     => call<NisClass[]>('finance/statutory/nis-classes/list', a),
-  upsertNisClass:    (a: UpsertNisClassArgs)                                 => call<NisClass>('finance/statutory/nis-classes/upsert', a),
+  // The upsert route takes an ARRAY (`classes`) and returns the upserted rows —
+  // wrap the single-band form into that contract and unwrap the first row back.
+  upsertNisClass:    async (a: UpsertNisClassArgs): Promise<NisClass> => {
+    const rows = await call<NisClass[]>('finance/statutory/nis-classes/upsert', {
+      statutoryVersionId: a.statutoryVersionId,
+      classes: [{
+        classNo: a.classNo,
+        weeklyMin: a.weeklyMin,
+        weeklyMax: a.weeklyMax ?? null,
+        assumedAverageWeekly: a.assumedAverageWeekly ?? null,
+        employeeWeekly: a.employeeWeekly,
+        employerWeekly: a.employerWeekly,
+        classZWeekly: a.classZWeekly ?? null,
+      }],
+    });
+    const row = rows[0];
+    if (!row) throw new Error('Upsert returned no NIS band.');
+    return row;
+  },
   deleteNisClass:    (a: { id: string })                                     => call<{ id: string }>('finance/statutory/nis-classes/delete', a),
   importNisClasses:  (a: { statutoryVersionId: string; rows: NisClassImportRow[] }) => call<NisClassImportResult>('finance/statutory/nis-classes/import', a),
 

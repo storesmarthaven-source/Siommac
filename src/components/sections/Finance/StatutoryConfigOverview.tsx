@@ -1,13 +1,15 @@
 /**
  * src/components/sections/Finance/StatutoryConfigOverview.tsx
  *
- * Finance ▸ Statutory Configuration — Aurora .hrfin rebuild (Wave 2B).
+ * Finance ▸ Statutory Configuration — self-contained enterprise dashboard.
  * Surfaces: Rate Versions · NIS Classes · Pay Components · NIS Verification · Reports.
  *
- * Aurora shell: HrfinPageHeader + QuickActionStrip + 6-KPI strip +
- * AnalyticsRow (HorizontalBars) + HrfinTable (search/filter/sort/pager/⋮/CSV) +
- * detail Drawer (9 tabs) + 6-step New Rate Version wizard +
- * NIS Class add/import dialogs + Pay Component create/edit.
+ * A faithful, fully-scoped port of conv-statutory-config-dashboard.html:
+ * StatutoryDashboard (`.sdb` design system — header · 6 stat cards · combo chart ·
+ * readiness donut · upcoming dates · tabbed register + side stack) rendered as a
+ * normal page (NOT a widget-board tile). Every tab's register uses the scoped
+ * StatTable/StatBadge (no `.hrfin` dependency) so tables/badges/pager are styled
+ * standalone. The detail Drawer + Edit dialog remain self-scoped `.hrfin` overlays.
  * All mutations use the backbone server-side; FE raises toast on success/error.
  * SoD enforced server-side (assertDifferentApprover); FE reflects the 422 message.
  */
@@ -18,11 +20,11 @@ import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
-  HrfinPageHeader, QuickActionStrip, KpiCard, RailCard, InsightBanner, ActivityFeed,
-  HrfinPill, HrfinTable, HrfinWizardModal, Drawer, exportCsv,
-  HorizontalBars, TrendArea, type HrfinColumn, type HrfinTab, type RowActionItem,
-  type HBarItem, type ActivityItem,
+  HrfinPill, HrfinWizardModal, Drawer, exportCsv, PageHeader, NewMenu,
+  type RowActionItem, type ActivityItem,
 } from '@ui';
+import { StatTable, StatBadge, type StatColumn } from './StatTable';
+import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
 import {
   useStatutoryVersions, useNisClasses, usePayComponents, useVersionDetail,
   useStatutoryReport, useStatutoryMutation,
@@ -34,10 +36,23 @@ import {
   useNisProfiles, usePayrollMutation, financePayrollApi, type NisProfileRow,
 } from '@api/finance/payroll';
 import { useEmployeeNames } from '@api/finance/lookups';
+import { AppTopBar } from '@shared/AppTopBar';
 import { EmployeeCell, EmployeeCellResolved } from './_shared/EmployeeCell';
-import { fmtMoney, fmtPercent, fmtDate, humanize } from './financeShared';
+import { fmtMoney, fmtPercent, fmtDate, humanize, toRoman } from './financeShared';
 import { ReportPanel, type ReportColumn } from './_shared/reports';
+import { StatNisBandPage } from './StatNisBandPage';
+import { StatPayComponentPage } from './StatPayComponentPage';
+import { StatNisImportPage } from './StatNisImportPage';
+import { StatNewVersionPage } from './StatNewVersionPage';
 import './finance.css';
+
+// Full-page sub-views (design pivot): rendered in place of the register as a full-page
+// takeover, NOT modals. One discriminated union scales across the statutory forms.
+type StatSubView =
+  | { kind: 'nisBand'; versionId: string; edit?: NisClass }
+  | { kind: 'payComponent'; edit?: PayComponent }
+  | { kind: 'import'; versionId: string }
+  | { kind: 'newVersion' };
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -62,14 +77,8 @@ const PAGE_SIZE = 10;
 
 // ── Main tabs ─────────────────────────────────────────────────────────────────
 
-type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
-const MAIN_TABS: HrfinTab[] = [
-  { key: 'versions',    label: 'Rate Versions' },
-  { key: 'nis',         label: 'NIS Classes' },
-  { key: 'components',  label: 'Pay Components' },
-  { key: 'verify',      label: 'NIS Verification' },
-  { key: 'reports',     label: 'Reports' },
-];
+// Re-use the type exported by StatutoryDashboard so both files share the same literal.
+type MainTab = StatMainTab;
 
 // ── Page ──────────────────────────────────────────────────────────────────────
 
@@ -77,11 +86,8 @@ export function StatutoryConfigOverview(): VNode {
   const [tab, setTab] = useState<MainTab>('versions');
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [drawerInitialTab, setDrawerInitialTab] = useState<string>('summary');
-  const [showWizard, setShowWizard] = useState(false);
   const [editVersion, setEditVersion] = useState<StatutoryVersion | null>(null);
-  const [showNisForm, setShowNisForm] = useState<{ versionId: string; edit?: NisClass } | null>(null);
-  const [showNisImport, setShowNisImport] = useState<string | null>(null); // versionId
-  const [showCompForm, setShowCompForm] = useState<{ edit?: PayComponent } | null>(null);
+  const [subView, setSubView] = useState<StatSubView | null>(null);
 
   const openDrawer = (id: string) => { setDrawerInitialTab('summary'); setDrawerId(id); };
   const openDrawerAtRuns = (id: string) => { setDrawerInitialTab('runs'); setDrawerId(id); };
@@ -89,10 +95,15 @@ export function StatutoryConfigOverview(): VNode {
   const versionsQ   = useStatutoryVersions();
   const componentsQ = usePayComponents({ activeOnly: false });
   const nisProfilesQ = useNisProfiles({ status: 'pending_verification' });
+  const verifiedProfilesQ = useNisProfiles({ status: 'verified' });
 
   const versions   = versionsQ.data ?? [];
   const components = componentsQ.data ?? [];
   const activeVer  = versions.find(v => v.isActive) ?? null;
+
+  // NIS bands of the active version — powers the dashboard's NIS contribution chart.
+  const activeNisClassesQ = useNisClasses(activeVer?.id ?? null);
+  const activeNisClasses  = activeNisClassesQ.data ?? [];
 
   const canManage  = can('finance.statutory.manage');
   const canApprove = can('finance.statutory.approve');
@@ -103,45 +114,9 @@ export function StatutoryConfigOverview(): VNode {
   const pending   = versions.filter(v => v.status === 'pending_approval').length;
   const activeComponents = components.filter(c => c.isActive).length;
   const verifyQueue = nisProfilesQ.data?.length ?? 0;
+  const verifiedNisCount = verifiedProfilesQ.data?.length ?? 0;
 
-  // Analytics chart: version distribution by status
-  const statusLabels  = ['Active', 'Approved', 'Pending', 'Draft', 'Retired'];
-  const statusCounts  = [
-    versions.filter(v => v.status === 'active').length,
-    versions.filter(v => v.status === 'approved').length,
-    versions.filter(v => v.status === 'pending_approval').length,
-    drafts,
-    versions.filter(v => v.status === 'retired').length,
-  ];
-  const maxCount = Math.max(...statusCounts, 1);
-  const barItems: HBarItem[] = statusLabels.map((label, i) => ({
-    label,
-    value: String(statusCounts[i] ?? 0),
-    percent: Math.round(((statusCounts[i] ?? 0) / maxCount) * 100),
-    tone: i === 0 ? 'success' : i === 2 ? 'warning' : i === 4 ? undefined : 'accent',
-  }));
-
-  // Trend area: versions added by month (last 6 months)
-  const trendLabels = useMemo(() => {
-    const out: string[] = [];
-    const now = new Date();
-    for (let i = 5; i >= 0; i--) {
-      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      out.push(d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }));
-    }
-    return out;
-  }, []);
-
-  const trendSeries = useMemo(() => {
-    const now = new Date();
-    return trendLabels.map((_, relIdx) => {
-      const d = new Date(now.getFullYear(), now.getMonth() - (5 - relIdx), 1);
-      const mk = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
-      return versions.filter(v => dateMonthKey(v.createdAt) === mk).length;
-    });
-  }, [versions, trendLabels]);
-
-  // Recent activity from versions list
+  // Recent activity from versions list (passed into dashboard for the Activity feed)
   const activityItems: ActivityItem[] = useMemo(() =>
     versions.slice(0, 5).map(v => ({
       icon: v.isActive ? 'check' : v.status === 'pending_approval' ? 'gavel' : 'file',
@@ -150,133 +125,104 @@ export function StatutoryConfigOverview(): VNode {
     })),
   [versions]);
 
-  const quickActions = [
-    ...(canManage ? [{
-      key: 'new', label: 'New Rate Version', icon: 'plus' as const, variant: 'primary' as const,
-      onClick: () => setShowWizard(true),
-    }] : []),
-    ...(canManage ? [{
-      key: 'import-nis', label: 'Import NIS Classes', icon: 'upload' as const,
-      badge: activeVer ? undefined : '!',
-      onClick: () => setShowNisImport(activeVer?.id ?? ''),
-      disabled: !activeVer,
-    }] : []),
-    {
-      key: 'export', label: 'Export Versions', icon: 'download' as const,
-      onClick: () => {
-        exportCsv(versions, [
-          { header: 'Label',            value: r => r.label },
-          { header: 'Effective From',   value: r => r.effectiveFrom },
-          { header: 'Jurisdiction',     value: r => r.jurisdiction },
-          { header: 'Status',           value: r => r.status },
-          { header: 'PAYE Allowance',   value: r => r.payePersonalAllowance },
-          { header: 'Band 1 Rate',      value: r => fmtPercent(r.payeBand1Rate) },
-          { header: 'Band 2 Rate',      value: r => fmtPercent(r.payeBand2Rate) },
-          { header: 'HS Monthly',       value: r => r.hsMonthlyThreshold },
-          { header: 'Created At',       value: r => r.createdAt },
-        ], 'statutory-versions');
-        toast('Exported statutory versions CSV.');
-      },
-    },
-  ];
+  // Export handler — shared between header button and any future export entrypoint.
+  const handleExport = (): void => {
+    exportCsv(versions, [
+      { header: 'Label',          value: r => r.label },
+      { header: 'Effective From', value: r => r.effectiveFrom },
+      { header: 'Jurisdiction',   value: r => r.jurisdiction },
+      { header: 'Status',         value: r => r.status },
+      { header: 'PAYE Allowance', value: r => r.payePersonalAllowance },
+      { header: 'Band 1 Rate',    value: r => fmtPercent(r.payeBand1Rate) },
+      { header: 'Band 2 Rate',    value: r => fmtPercent(r.payeBand2Rate) },
+      { header: 'HS Monthly',     value: r => r.hsMonthlyThreshold },
+      { header: 'Created At',     value: r => r.createdAt },
+    ], 'statutory-versions');
+    toast('Exported statutory versions CSV.');
+  };
 
+  // Full-page sub-view takeover (design pivot): statutory editors are full pages, not
+  // modals. Rendered in place of the dashboard; Cancel/Close returns to the dashboard.
+  if (subView?.kind === 'nisBand') {
+    const vId = subView.versionId;
+    return (
+      <StatNisBandPage
+        versionId={subView.versionId}
+        edit={subView.edit}
+        onClose={() => setSubView(null)}
+        onViewVersion={() => { setSubView(null); openDrawer(vId); }}
+      />
+    );
+  }
+  if (subView?.kind === 'payComponent') {
+    return <StatPayComponentPage edit={subView.edit} onClose={() => setSubView(null)} />;
+  }
+  if (subView?.kind === 'import') {
+    return <StatNisImportPage versionId={subView.versionId} onClose={() => setSubView(null)} />;
+  }
+  if (subView?.kind === 'newVersion') {
+    return <StatNewVersionPage onClose={() => setSubView(null)} />;
+  }
+
+  // ── Tab content (computed here so tab sub-components keep closing over parent state) ─
+  const tabContent = (
+    <div>
+      {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onNew={() => setSubView({ kind: 'newVersion' })} onEdit={setEditVersion} />}
+      {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setSubView({ kind: 'nisBand', versionId: v })} onEdit={(v, c) => setSubView({ kind: 'nisBand', versionId: v, edit: c })} onImport={v => setSubView({ kind: 'import', versionId: v })} />}
+      {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManage} onNew={() => setSubView({ kind: 'payComponent' })} onEdit={c => setSubView({ kind: 'payComponent', edit: c })} />}
+      {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
+      {tab === 'reports'    && canView && <StatReportsTab />}
+    </div>
+  );
+
+  // ── Page: the dashboard is a self-contained enterprise page (its own `.sdb`
+  // design system), rendered directly — NOT wrapped in the widget board, which
+  // was pure ceremony that fought the background and clipped the height. ────────
   return (
-    <div class="hrfin">
-      <HrfinPageHeader
-        icon="book"
+    <>
+      <AppTopBar />
+      <PageHeader
+        icon="fa-scale-balanced"
+        module="Finance · Statutory Configuration"
         title="Statutory Configuration"
-        sub="NIS, PAYE and Health Surcharge rate versions, the pay-component catalogue, and NIS continuity verification."
-        chips={[
-          ...(activeVer ? [{ icon: 'check' as const, label: activeVer.label, tone: 'success' as const }] : []),
-          ...(pending > 0 ? [{ icon: 'gavel' as const, label: `${pending} pending approval`, tone: 'warning' as const }] : []),
-          ...(verifyQueue > 0 ? [{ icon: 'user' as const, label: `${verifyQueue} to verify`, tone: 'danger' as const }] : []),
-        ]}
+        sub="Manage Trinidad & Tobago statutory rate versions, NIS classes and pay components."
+        meta={activeVer
+          ? [{ icon: 'fa-circle-dot', label: `Active: ${activeVer.label}` }]
+          : [{ icon: 'fa-circle-exclamation', label: 'No active version' }]}
+        hidePill
+        actions={
+          <>
+            <button type="button" class="hse-btn" onClick={handleExport}><i class="fas fa-download" /> Export</button>
+            {canManage && (
+              <NewMenu items={[
+                { label: 'New Rate Version',  icon: 'fa-file-circle-plus', onSelect: () => setSubView({ kind: 'newVersion' }) },
+                { label: 'New Pay Component', icon: 'fa-layer-group',      onSelect: () => setSubView({ kind: 'payComponent' }) },
+                { label: 'Import NIS Classes', icon: 'fa-file-import', sub: activeVer ? undefined : 'Needs an active version',
+                  onSelect: () => { if (activeVer) setSubView({ kind: 'import', versionId: activeVer.id }); } },
+              ]} />
+            )}
+          </>
+        }
+      />
+      <StatutoryDashboard
+        versions={versions}
+        components={components}
+        activeVer={activeVer}
+        activeNisClasses={activeNisClasses}
+        verifiedNisCount={verifiedNisCount}
+        drafts={drafts}
+        pending={pending}
+        activeComponents={activeComponents}
+        verifyQueue={verifyQueue}
+        activityItems={activityItems}
+        versionsLoading={versionsQ.isLoading}
+        onVerifyNis={() => setTab('verify')}
+        tab={tab}
+        onTabChange={setTab}
+        tabContent={tabContent}
       />
 
-      <QuickActionStrip actions={quickActions} />
-
-      {/* KPI strip */}
-      <div class="hrfin-kpi-strip">
-        {/* wrap clickable cards; KpiCard has no onClick */}
-        <button type="button" class="hrfin-kpi-link" style={{ all: 'unset', cursor: activeVer ? 'pointer' : 'default', display: 'block', width: '100%' }} onClick={() => activeVer && setDrawerId(activeVer.id)} aria-label="Open active version detail">
-          <KpiCard label="Active Version" value={activeVer?.label ?? '—'} support={activeVer ? `Effective ${fmtDate(activeVer.effectiveFrom)}` : 'No active version'} loading={versionsQ.isLoading} tone="success" />
-        </button>
-        <KpiCard label="Draft Versions" value={String(drafts)} support="Awaiting submission" loading={versionsQ.isLoading} tone="accent" badge={drafts > 0 ? String(drafts) : undefined} badgeTone="warning" />
-        <KpiCard label="Pay Components" value={String(activeComponents)} support={`${components.length - activeComponents} retired`} loading={componentsQ.isLoading} tone="accent" />
-        <button type="button" class="hrfin-kpi-link" style={{ all: 'unset', cursor: 'pointer', display: 'block', width: '100%' }} onClick={() => setTab('nis')} aria-label="Go to NIS Classes tab">
-          <KpiCard label="NIS Classes" value={activeVer ? 'View ▸' : '—'} support={activeVer ? `In ${activeVer.label}` : 'Select a version'} loading={versionsQ.isLoading} />
-        </button>
-        <KpiCard label="Pending Approval" value={String(pending)} support="Awaiting finance manager" loading={versionsQ.isLoading} tone={pending > 0 ? 'danger' : 'accent'} />
-        <button type="button" class="hrfin-kpi-link" style={{ all: 'unset', cursor: verifyQueue > 0 ? 'pointer' : 'default', display: 'block', width: '100%' }} onClick={() => verifyQueue > 0 && setTab('verify')} aria-label="Go to NIS Verification tab">
-          <KpiCard label="Verification Queue" value={String(verifyQueue)} support="NIS profiles to verify" loading={nisProfilesQ.isLoading} tone={verifyQueue > 0 ? 'danger' : 'accent'} />
-        </button>
-      </div>
-
-      {/* Analytics row */}
-      {!versionsQ.isLoading && versions.length > 0 && (
-        <div class="hrfin-analytics-row">
-          <article class="hrfin-chart-card">
-            <div class="hrfin-card-head"><h2>Version Status Distribution</h2></div>
-            <HorizontalBars items={barItems} />
-          </article>
-          <article class="hrfin-chart-card">
-            <div class="hrfin-card-head"><h2>Versions Added (6 months)</h2></div>
-            <TrendArea labels={trendLabels} seriesA={trendSeries} seriesALabel="Versions" title="Versions added per month" />
-          </article>
-        </div>
-      )}
-
-      {/* Main grid: register + rail */}
-      <div class="hrfin-page-grid">
-        <div class="hrfin-register">
-          {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onNew={() => setShowWizard(true)} onEdit={setEditVersion} />}
-          {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setShowNisForm({ versionId: v })} onImport={setShowNisImport} />}
-          {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManage} onNew={() => setShowCompForm({})} onEdit={c => setShowCompForm({ edit: c })} />}
-          {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
-          {tab === 'reports'    && canView && <StatReportsTab />}
-        </div>
-
-        <aside class="hrfin-rail">
-          {activeVer && (
-            <InsightBanner
-              title={`Active: ${activeVer.label}`}
-              sub={`Effective ${fmtDate(activeVer.effectiveFrom)} · PAYE ${fmtPercent(activeVer.payeBand1Rate)} / ${fmtPercent(activeVer.payeBand2Rate)}`}
-              actions={[{ label: 'View details', onClick: () => setDrawerId(activeVer.id) }]}
-            />
-          )}
-          {pending > 0 && (
-            <InsightBanner
-              title={`${pending} version${pending !== 1 ? 's' : ''} awaiting approval`}
-              sub="A different finance manager must approve."
-              actions={canApprove ? [{ label: 'Review', primary: true, onClick: () => setTab('versions') }] : []}
-              dismissible
-            />
-          )}
-          <RailCard title="Quick Stats">
-            <div class="hrfin-metric-list">
-              <div class="hrfin-metric-row"><span>Total versions</span><b>{versions.length}</b></div>
-              <div class="hrfin-metric-row"><span>Pay components</span><b>{components.length}</b></div>
-              <div class="hrfin-metric-row"><span>Statutory components</span><b>{components.filter(c => c.isStatutory).length}</b></div>
-              <div class="hrfin-metric-row"><span>NIS verify queue</span><b>{verifyQueue}</b></div>
-            </div>
-          </RailCard>
-          <RailCard title="Recent Activity">
-            <ActivityFeed items={activityItems} />
-          </RailCard>
-        </aside>
-      </div>
-
-      {/* Tab switcher (rendered below analytics so it overlays the grid) */}
-      <div class="hrfin-tabs" style={{ marginBottom: '1rem', order: -1 }}>
-        {MAIN_TABS.map(t => (
-          <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setTab(t.key as MainTab)}>
-            {t.label}
-            {t.key === 'verify' && verifyQueue > 0 && <b style={{ marginLeft: 6, background: 'var(--hrfin-danger, #e53)', color: '#fff', borderRadius: 99, padding: '0 5px', fontSize: 11 }}>{verifyQueue}</b>}
-          </button>
-        ))}
-      </div>
-
-      {/* Detail drawer */}
+      {/* Detail drawer — rendered outside the board so it layers above */}
       <StatVersionDrawer
         id={drawerId}
         open={!!drawerId}
@@ -284,42 +230,14 @@ export function StatutoryConfigOverview(): VNode {
         onClose={() => setDrawerId(null)}
         canManage={canManage}
         canApprove={canApprove}
-        onShowNisForm={(vId) => setShowNisForm({ versionId: vId })}
+        onShowNisForm={(vId) => setSubView({ kind: 'nisBand', versionId: vId })}
       />
-
-      {/* New Rate Version wizard */}
-      {showWizard && <StatNewVersionWizard onClose={() => setShowWizard(false)} />}
 
       {/* Edit draft version dialog */}
       {editVersion && (
         <StatEditVersionDialog version={editVersion} onClose={() => setEditVersion(null)} />
       )}
-
-      {/* NIS Class add/edit dialog */}
-      {showNisForm && (
-        <StatNisClassDialog
-          versionId={showNisForm.versionId}
-          edit={showNisForm.edit}
-          onClose={() => setShowNisForm(null)}
-        />
-      )}
-
-      {/* NIS Classes import dialog */}
-      {showNisImport && (
-        <StatNisImportDialog
-          versionId={showNisImport}
-          onClose={() => setShowNisImport(null)}
-        />
-      )}
-
-      {/* Pay Component create/edit dialog */}
-      {showCompForm !== null && (
-        <StatPayComponentDialog
-          edit={showCompForm.edit}
-          onClose={() => setShowCompForm(null)}
-        />
-      )}
-    </div>
+    </>
   );
 }
 
@@ -384,13 +302,13 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     { key: 'active', label: 'Active' }, { key: 'retired', label: 'Retired' },
   ];
 
-  const columns: ReadonlyArray<HrfinColumn<StatutoryVersion>> = [
+  const columns: ReadonlyArray<StatColumn<StatutoryVersion>> = [
     {
       key: 'label', label: 'Version', sortable: true,
       render: v => (
         <div>
-          <div style={{ fontWeight: 600 }}>{v.label}</div>
-          <div style={{ fontSize: 12, opacity: 0.65 }}>{v.jurisdiction} · {v.currency}</div>
+          <div class="sdb-vname">{v.label}</div>
+          <div class="sdb-cell-sub">{v.jurisdiction} · {v.currency}</div>
         </div>
       ),
     },
@@ -401,9 +319,9 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     {
       key: 'paye', label: 'PAYE Bands',
       render: v => (
-        <div style={{ fontSize: 13 }}>
+        <div>
           <div>Allow: {fmtMoney(v.payePersonalAllowance)}</div>
-          <div style={{ opacity: 0.7 }}>{fmtPercent(v.payeBand1Rate)} / {fmtPercent(v.payeBand2Rate)}</div>
+          <div class="sdb-cell-sub">{fmtPercent(v.payeBand1Rate)} / {fmtPercent(v.payeBand2Rate)}</div>
         </div>
       ),
     },
@@ -414,9 +332,9 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     {
       key: 'status', label: 'Status', sortable: true,
       render: v => (
-        <HrfinPill tone={statusTone(v.status)}>
+        <StatBadge tone={statusTone(v.status)}>
           {v.isActive ? 'Active' : humanize(v.status)}
-        </HrfinPill>
+        </StatBadge>
       ),
     },
     // §11 / §20 mandated columns ──────────────────────────────────────────────
@@ -424,7 +342,7 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
       key: 'owner', label: 'Owner',
       render: v => v.createdBy
         ? <EmployeeCellResolved resolved={nameMap?.get(v.createdBy)} fallbackId={v.createdBy} />
-        : <span style={{ opacity: 0.5 }}>—</span>,
+        : <span class="sdb-muted-txt">—</span>,
     },
     {
       key: 'linkedRuns', label: 'Linked Runs',
@@ -432,30 +350,28 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
         const count = v.linkedPayrollRunCount ?? 0;
         return count > 0 ? (
           <button
-            type="button"
-            class="hrfin-link"
-            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--hrfin-accent)', fontSize: 13, padding: 0 }}
+            type="button" class="sdb-link"
             onClick={e => { e.stopPropagation(); onOpenDrawerAtRuns(v.id); }}
           >
             {count} run{count !== 1 ? 's' : ''}
           </button>
-        ) : <span style={{ opacity: 0.5 }}>—</span>;
+        ) : <span class="sdb-muted-txt">—</span>;
       },
     },
     {
       key: 'approvalState', label: 'Approval',
       render: v => {
-        if (v.status === 'draft') return <span style={{ opacity: 0.5, fontSize: 12 }}>Not submitted</span>;
-        if (v.status === 'pending_approval') return <HrfinPill tone="wn">Awaiting</HrfinPill>;
+        if (v.status === 'draft') return <span class="sdb-cell-sub">Not submitted</span>;
+        if (v.status === 'pending_approval') return <StatBadge tone="wn">Awaiting</StatBadge>;
         if (v.approvedBy) return (
           <div>
-            <HrfinPill tone="ok">Approved</HrfinPill>
-            <div style={{ marginTop: 3 }}>
+            <StatBadge tone="ok">Approved</StatBadge>
+            <div class="sdb-cell-sub" style={{ marginTop: 3 }}>
               <EmployeeCellResolved resolved={nameMap?.get(v.approvedBy)} fallbackId={v.approvedBy} />
             </div>
           </div>
         );
-        return <span style={{ opacity: 0.5 }}>—</span>;
+        return <span class="sdb-muted-txt">—</span>;
       },
     },
   ];
@@ -491,57 +407,49 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   ];
 
   return (
-    <div>
-      {/* Status filter strip */}
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap' }}>
-        {statusFilters.map(f => (
-          <button
-            key={f.key} type="button"
-            class={`hrfin-chip${statusFilter === f.key ? ' is-active' : ''}`}
-            onClick={() => { setStatusFilter(f.key); setPage(0); }}
-          >{f.label}</button>
-        ))}
-        {canManage && (
-          <button type="button" class="hrfin-action is-primary" style={{ marginLeft: 'auto' }} onClick={onNew}>
-            + New Rate Version
-          </button>
-        )}
-      </div>
-
-      <HrfinTable
-        searchValue={search}
-        onSearch={v => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Search by label or date…"
-        columns={columns}
-        rows={pageRows}
-        rowKey={v => v.id}
-        onRowClick={v => onOpenDrawer(v.id)}
-        rowActions={rowActions}
-        page={page}
-        pageCount={pageCount}
-        total={filtered.length}
-        pageSize={PAGE_SIZE}
-        onPage={setPage}
-        noun="versions"
-        loading={loading}
-        error={error}
-        sortField={sortField}
-        sortDir={sortDir}
-        onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
-        emptyMessage="No statutory versions match the current filter."
-      />
-
-    </div>
+    <StatTable
+      searchValue={search}
+      onSearch={v => { setSearch(v); setPage(0); }}
+      searchPlaceholder="Search by label or date…"
+      toolbarLeft={statusFilters.map(f => (
+        <button
+          key={f.key} type="button"
+          class={`sdb-chip${statusFilter === f.key ? ' sdb-chip--on' : ''}`}
+          onClick={() => { setStatusFilter(f.key); setPage(0); }}
+        >{f.label}</button>
+      ))}
+      toolbarRight={canManage
+        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Rate Version</button>
+        : undefined}
+      columns={columns}
+      rows={pageRows}
+      rowKey={v => v.id}
+      onRowClick={v => onOpenDrawer(v.id)}
+      rowActions={rowActions}
+      page={page}
+      pageCount={pageCount}
+      total={filtered.length}
+      pageSize={PAGE_SIZE}
+      onPage={setPage}
+      noun="versions"
+      loading={loading}
+      error={error}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
+      emptyMessage="No statutory versions match the current filter."
+    />
   );
 }
 
 // ── NIS Classes tab ───────────────────────────────────────────────────────────
 
-function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: {
+function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onImport }: {
   versions: StatutoryVersion[];
   versionsError?: string;
   canManage: boolean;
   onAdd: (versionId: string) => void;
+  onEdit: (versionId: string, cls: NisClass) => void;
   onImport: (versionId: string) => void;
 }): VNode {
   const [versionId, setVersionId] = useState<string>(() => versions.find(v => v.isActive)?.id ?? versions[0]?.id ?? '');
@@ -551,7 +459,8 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
   const classesQ   = useNisClasses(effectiveId || null);
   const allClasses = classesQ.data ?? [];
   const selectedVer = versions.find(v => v.id === effectiveId);
-  const canEdit    = canManage && selectedVer?.status === 'draft';
+  // Mirror the server gate (upsertNisClasses): bands are editable on draft OR approved.
+  const canEdit    = canManage && (selectedVer?.status === 'draft' || selectedVer?.status === 'approved');
 
   // §20: register has search — filter within the version's classes.
   const classes = useMemo(() => {
@@ -559,8 +468,10 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
     const q = search.toLowerCase();
     return allClasses.filter(c =>
       String(c.classNo).includes(q) ||
+      toRoman(c.classNo).toLowerCase().includes(q) ||
       String(c.weeklyMin).includes(q) ||
       (c.weeklyMax != null && String(c.weeklyMax).includes(q)) ||
+      (c.assumedAverageWeekly != null && String(c.assumedAverageWeekly).includes(q)) ||
       String(c.employeeWeekly).includes(q) ||
       String(c.employerWeekly).includes(q),
     );
@@ -568,21 +479,28 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
 
   const deleteMut = useStatutoryMutation(financeStatutoryApi.deleteNisClass);
   const handleDelete = async (id: string, classNo: number): Promise<void> => {
-    const confirmed = await dialog.confirm({ title: `Delete NIS Class ${classNo}?`, text: 'This cannot be undone.', danger: true, confirmText: 'Delete' });
+    const confirmed = await dialog.confirm({ title: `Delete NIS Contribution Band ${classNo}?`, text: 'This removes the band from this rate version. This cannot be undone.', danger: true, confirmText: 'Delete band' });
     if (!confirmed) return;
-    try { await deleteMut.mutateAsync({ id }); toast(`NIS Class ${classNo} deleted.`); }
+    try { await deleteMut.mutateAsync({ id }); toast(`NIS Contribution Band ${classNo} deleted.`); }
     catch (e) { toast.error((e as Error).message); }
   };
 
-  const columns: ReadonlyArray<HrfinColumn<NisClass>> = [
-    { key: 'classNo',        label: 'Class #',       render: c => <b>{c.classNo}</b> },
-    { key: 'weeklyMin',      label: 'Weekly Min',    render: c => fmtMoney(c.weeklyMin) },
-    { key: 'weeklyMax',      label: 'Weekly Max',    render: c => c.weeklyMax == null ? '∞' : fmtMoney(c.weeklyMax) },
-    { key: 'employeeWeekly', label: 'Employee / wk', render: c => fmtMoney(c.employeeWeekly) },
-    { key: 'employerWeekly', label: 'Employer / wk', render: c => fmtMoney(c.employerWeekly) },
+  const columns: ReadonlyArray<StatColumn<NisClass>> = [
+    { key: 'classNo',        label: 'Class',          render: c => <b>{toRoman(c.classNo)}</b> },
+    { key: 'weeklyMin',      label: 'Weekly Min',     render: c => fmtMoney(c.weeklyMin) },
+    { key: 'weeklyMax',      label: 'Weekly Max',     render: c => c.weeklyMax == null ? <span class="sdb-muted-txt">and over</span> : fmtMoney(c.weeklyMax) },
+    { key: 'assumedAvg',     label: 'Assumed Avg',    render: c => c.assumedAverageWeekly == null ? <span class="sdb-muted-txt">—</span> : fmtMoney(c.assumedAverageWeekly) },
+    { key: 'employeeWeekly', label: 'Employee / wk',  render: c => fmtMoney(c.employeeWeekly) },
+    { key: 'employerWeekly', label: 'Employer / wk',  render: c => fmtMoney(c.employerWeekly) },
+    { key: 'totalWeekly',    label: 'Total / wk',     render: c => <b>{fmtMoney(c.employeeWeekly + c.employerWeekly)}</b> },
+    { key: 'classZ',         label: 'Class Z / wk',   render: c => c.classZWeekly == null ? <span class="sdb-muted-txt">—</span> : <span class="sdb-muted-txt">{fmtMoney(c.classZWeekly)}</span> },
   ];
 
   const rowActions = (c: NisClass): RowActionItem[] => [
+    {
+      key: 'open', label: canEdit ? 'Edit band' : 'View band', icon: 'file' as const,
+      onClick: () => onEdit(effectiveId, c),
+    },
     ...(canEdit ? [{
       key: 'del', label: 'Delete', icon: 'close' as const, tone: 'danger' as const,
       onClick: () => handleDelete(c.id, c.classNo),
@@ -592,46 +510,51 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onImport }: 
   const pageCount = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 8, marginBottom: 10, alignItems: 'center', flexWrap: 'wrap' }}>
-        <select
-          class="hrfin-select"
-          value={effectiveId}
-          onChange={e => { setVersionId((e.currentTarget as HTMLSelectElement).value); setPage(0); }}
-          style={{ minWidth: 240 }}
-        >
-          {versions.map(v => (
-            <option key={v.id} value={v.id}>{v.label} · {humanize(v.status)}</option>
-          ))}
-        </select>
-        {selectedVer && <HrfinPill tone={statusTone(selectedVer.status)}>{humanize(selectedVer.status)}</HrfinPill>}
-        {canEdit && (
-          <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-            <button type="button" class="hrfin-action" onClick={() => onImport(effectiveId)}>Import CSV</button>
-            <button type="button" class="hrfin-action is-primary" onClick={() => onAdd(effectiveId)}>+ Add Class</button>
-          </div>
-        )}
-      </div>
-
-      <HrfinTable
+    <>
+      <StatTable
         searchValue={search}
         onSearch={v => { setSearch(v); setPage(0); }}
         searchPlaceholder="Search by class # or amount…"
+        toolbarLeft={
+          <>
+            <select
+              class="sdb-select"
+              value={effectiveId}
+              onChange={e => { setVersionId((e.currentTarget as HTMLSelectElement).value); setPage(0); }}
+              style={{ minWidth: 220 }}
+              aria-label="Rate version"
+            >
+              {versions.map(v => (
+                <option key={v.id} value={v.id}>{v.label} · {humanize(v.status)}</option>
+              ))}
+            </select>
+            {selectedVer && <StatBadge tone={statusTone(selectedVer.status)}>{humanize(selectedVer.status)}</StatBadge>}
+          </>
+        }
+        toolbarRight={canEdit
+          ? <>
+              <button type="button" class="sdb-btn" onClick={() => onImport(effectiveId)}>Import CSV</button>
+              <button type="button" class="sdb-btn sdb-btn--pri" onClick={() => onAdd(effectiveId)}>+ Add Band</button>
+            </>
+          : undefined}
         columns={columns}
         rows={classes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
-        rowActions={canEdit ? rowActions : undefined}
+        rowActions={rowActions}
         page={page}
         pageCount={pageCount}
         total={classes.length}
         pageSize={PAGE_SIZE}
         onPage={setPage}
-        noun="classes"
+        noun="bands"
         loading={classesQ.isLoading}
         error={versionsError ?? (classesQ.error ? String(classesQ.error) : undefined)}
-        emptyMessage="No NIS classes for this version."
+        emptyMessage="No NIS contribution bands for this version."
       />
-    </div>
+      <p class="sdb-note">
+        NIBTT weekly Earnings-Class schedule (contribution rate 16.2% — employee ⅓, employer ⅔). “Assumed Avg” is the earnings figure the contribution is based on. “Class Z” is the reduced weekly rate for workers over pensionable age (employment-injury portion only).
+      </p>
+    </>
   );
 }
 
@@ -679,15 +602,15 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
-  const columns: ReadonlyArray<HrfinColumn<PayComponent>> = [
+  const columns: ReadonlyArray<StatColumn<PayComponent>> = [
     { key: 'code',      label: 'Code',     sortable: true, render: c => <b style={{ fontFamily: 'monospace' }}>{c.code}</b> },
     { key: 'name',      label: 'Name',     sortable: true, render: c => c.name },
-    { key: 'kind',      label: 'Kind',     sortable: true, render: c => <HrfinPill tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</HrfinPill> },
-    { key: 'taxable',   label: 'Taxable',  render: c => c.isTaxable ? '✓' : '—' },
-    { key: 'statutory', label: 'Statutory',render: c => c.isStatutory ? '✓' : '—' },
+    { key: 'kind',      label: 'Kind',     sortable: true, render: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
+    { key: 'taxable',   label: 'Taxable',  align: 'center', render: c => c.isTaxable ? '✓' : '—' },
+    { key: 'statutory', label: 'Statutory', align: 'center', render: c => c.isStatutory ? '✓' : '—' },
     {
       key: 'isActive', label: 'Status', sortable: true,
-      render: c => <HrfinPill tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</HrfinPill>,
+      render: c => <StatBadge tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</StatBadge>,
     },
   ];
 
@@ -700,46 +623,43 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
   ];
 
   return (
-    <div>
-      <div style={{ display: 'flex', gap: 6, marginBottom: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-        {(['all', 'earning', 'deduction'] as const).map(k => (
-          <button key={k} type="button" class={`hrfin-chip${filter === k ? ' is-active' : ''}`} onClick={() => { setFilter(k); setPage(0); }}>
-            {k === 'all' ? 'All' : humanize(k)}
-          </button>
-        ))}
-        <label style={{ display: 'flex', alignItems: 'center', gap: 5, fontSize: 13, cursor: 'pointer', marginLeft: 8 }}>
-          <input type="checkbox" checked={showActive} onChange={e => setShowActive((e.currentTarget as HTMLInputElement).checked)} />
-          Active only
-        </label>
-        {canManage && (
-          <button type="button" class="hrfin-action is-primary" style={{ marginLeft: 'auto' }} onClick={onNew}>
-            + New Component
-          </button>
-        )}
-      </div>
-
-      <HrfinTable
-        searchValue={search}
-        onSearch={v => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Search by code or name…"
-        sortField={sortField}
-        sortDir={sortDir}
-        onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
-        columns={columns}
-        rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-        rowKey={c => c.id}
-        rowActions={canManage ? rowActions : undefined}
-        page={page}
-        pageCount={pageCount}
-        total={filtered.length}
-        pageSize={PAGE_SIZE}
-        onPage={setPage}
-        noun="components"
-        loading={loading}
-        error={error}
-        emptyMessage="No pay components match the current filter."
-      />
-    </div>
+    <StatTable
+      searchValue={search}
+      onSearch={v => { setSearch(v); setPage(0); }}
+      searchPlaceholder="Search by code or name…"
+      toolbarLeft={
+        <>
+          {(['all', 'earning', 'deduction'] as const).map(k => (
+            <button key={k} type="button" class={`sdb-chip${filter === k ? ' sdb-chip--on' : ''}`} onClick={() => { setFilter(k); setPage(0); }}>
+              {k === 'all' ? 'All' : humanize(k)}
+            </button>
+          ))}
+          <label class="sdb-check">
+            <input type="checkbox" checked={showActive} onChange={e => setShowActive((e.currentTarget as HTMLInputElement).checked)} />
+            Active only
+          </label>
+        </>
+      }
+      toolbarRight={canManage
+        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button>
+        : undefined}
+      sortField={sortField}
+      sortDir={sortDir}
+      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
+      columns={columns}
+      rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
+      rowKey={c => c.id}
+      rowActions={canManage ? rowActions : undefined}
+      page={page}
+      pageCount={pageCount}
+      total={filtered.length}
+      pageSize={PAGE_SIZE}
+      onPage={setPage}
+      noun="components"
+      loading={loading}
+      error={error}
+      emptyMessage="No pay components match the current filter."
+    />
   );
 }
 
@@ -811,13 +731,13 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     });
   }, [profiles, search, sortField, sortDir]);
 
-  const columns: ReadonlyArray<HrfinColumn<NisProfileRow>> = [
+  const columns: ReadonlyArray<StatColumn<NisProfileRow>> = [
     {
       key: 'employeeId', label: 'Employee', sortable: true,
       render: r => {
         const empId = dv(r, 'employeeId', 'employee_id');
         return empId === '—'
-          ? <span style={{ opacity: 0.5 }}>—</span>
+          ? <span class="sdb-muted-txt">—</span>
           : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
       },
     },
@@ -826,7 +746,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     { key: 'openingYtd',  label: 'Opening YTD (EE)',   render: r => dv(r, 'openingYtdNisEmployee', 'opening_ytd_nis_employee') },
     {
       key: 'nisStatus', label: 'Status', sortable: true,
-      render: r => <HrfinPill tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</HrfinPill>,
+      render: r => <StatBadge tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</StatBadge>,
     },
   ];
 
@@ -841,7 +761,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
 
   return (
-    <HrfinTable
+    <StatTable
       searchValue={search}
       onSearch={v => { setSearch(v); setPage(0); }}
       searchPlaceholder="Search by NIS #, employee or employer…"
@@ -1205,195 +1125,6 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   );
 }
 
-// ── New Rate Version Wizard (6 steps) ─────────────────────────────────────────
-
-const EMPTY_VERSION: CreateStatutoryVersionArgs = {
-  effectiveFrom: '', label: '', jurisdiction: 'TT', currency: 'TTD',
-  payePersonalAllowance: 84000, payeBand1Ceiling: 1000000,
-  payeBand1Rate: 0.25, payeBand2Rate: 0.30,
-  hsMonthlyThreshold: 469.99, hsWeeklyHigh: 4.80, hsWeeklyLow: 2.40,
-  nisMonthyCeiling: null,
-};
-
-const STEP_LABELS = ['Metadata', 'PAYE Bands', 'Health Surcharge', 'NIS Config', 'Components', 'Review'];
-
-function StatNewVersionWizard({ onClose }: { onClose: () => void }): VNode {
-  const [step, setStep] = useState(0);
-  const [f, setF] = useState<CreateStatutoryVersionArgs>({ ...EMPTY_VERSION });
-  const createMut = useStatutoryMutation(financeStatutoryApi.createVersion);
-  const componentsQ = usePayComponents({ isStatutory: true });
-
-  const set = <K extends keyof CreateStatutoryVersionArgs>(k: K, v: CreateStatutoryVersionArgs[K]) =>
-    setF(prev => ({ ...prev, [k]: v }));
-  const numField = (k: keyof CreateStatutoryVersionArgs) => (e: Event) =>
-    set(k, num((e.currentTarget as HTMLInputElement).value) as CreateStatutoryVersionArgs[typeof k]);
-
-  const canNext = step === 0 ? !!(f.effectiveFrom && f.label.trim()) : true;
-
-  const submit = async (): Promise<void> => {
-    try {
-      await createMut.mutateAsync({ ...f, label: f.label.trim() });
-      toast('Rate version created as draft. Submit it for approval when ready.');
-      onClose();
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
-  const fieldStyle = { display: 'flex', flexDirection: 'column' as const, gap: 4 };
-  const labelStyle = { fontSize: 12, fontWeight: 600, color: 'var(--muted)' };
-  const inputStyle = { padding: '7px 10px', border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, background: 'var(--hrfin-surface-2, #1e2535)', color: 'var(--hrfin-text-primary, #e8eaf2)', fontSize: 14, width: '100%' };
-
-  return (
-    <HrfinWizardModal
-      open
-      title="New Rate Version"
-      stepCount={STEP_LABELS.length}
-      activeStep={step}
-      onClose={onClose}
-      onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
-      primaryLabel={step < STEP_LABELS.length - 1 ? `Next: ${STEP_LABELS[step + 1]}` : 'Create draft'}
-      onPrimary={() => { if (step < STEP_LABELS.length - 1) setStep(s => s + 1); else void submit(); }}
-      primaryDisabled={!canNext || createMut.isPending}
-      primaryLoading={createMut.isPending}
-    >
-      {step === 0 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 1 — Metadata</h3>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Effective from *</label>
-            <input type="date" style={inputStyle} value={f.effectiveFrom} onInput={e => set('effectiveFrom', (e.currentTarget as HTMLInputElement).value)} />
-          </div>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>Version label *</label>
-            <input type="text" style={inputStyle} placeholder="e.g. TT 2026 Statutory" value={f.label} onInput={e => set('label', (e.currentTarget as HTMLInputElement).value)} />
-          </div>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Jurisdiction</label>
-              <select style={inputStyle} value={f.jurisdiction} onChange={e => set('jurisdiction', (e.currentTarget as HTMLSelectElement).value as 'TT')}>
-                <option value="TT">Trinidad and Tobago (TT)</option>
-              </select>
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Currency</label>
-              <select style={inputStyle} value={f.currency} onChange={e => set('currency', (e.currentTarget as HTMLSelectElement).value as 'TTD')}>
-                <option value="TTD">TTD</option>
-              </select>
-            </div>
-          </div>
-          {!f.effectiveFrom && <p style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>Effective date is required.</p>}
-          {!f.label.trim() && <p style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>Label is required.</p>}
-        </div>
-      )}
-
-      {step === 1 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 2 — PAYE Bands</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Personal Allowance (annual, TTD)</label>
-              <input type="number" style={inputStyle} step="0.01" value={f.payePersonalAllowance} onInput={numField('payePersonalAllowance')} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Band 1 Ceiling (annual, TTD)</label>
-              <input type="number" style={inputStyle} step="0.01" value={f.payeBand1Ceiling} onInput={numField('payeBand1Ceiling')} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Band 1 Rate (fraction, e.g. 0.25 = 25%)</label>
-              <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand1Rate} onInput={numField('payeBand1Rate')} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Band 2 Rate (fraction)</label>
-              <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand2Rate} onInput={numField('payeBand2Rate')} />
-            </div>
-          </div>
-          {(f.payeBand1Rate > 1 || f.payeBand2Rate > 1) && (
-            <p style={{ fontSize: 12, color: 'var(--warning-fg, #f90)', margin: 0 }}>Rates are stored as fractions (0.25 = 25%). A value greater than 1 looks incorrect.</p>
-          )}
-        </div>
-      )}
-
-      {step === 2 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 3 — Health Surcharge</h3>
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Monthly Threshold (TTD)</label>
-              <input type="number" style={inputStyle} step="0.01" value={f.hsMonthlyThreshold} onInput={numField('hsMonthlyThreshold')} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Weekly Rate — High (TTD)</label>
-              <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyHigh} onInput={numField('hsWeeklyHigh')} />
-            </div>
-            <div style={fieldStyle}>
-              <label style={labelStyle}>Weekly Rate — Low (TTD)</label>
-              <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyLow} onInput={numField('hsWeeklyLow')} />
-            </div>
-          </div>
-          <p style={{ fontSize: 12, opacity: 0.65, margin: 0 }}>Health Surcharge applies to employee earnings above the monthly threshold. High rate applies to earnings ≥ threshold; low rate below.</p>
-        </div>
-      )}
-
-      {step === 3 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 4 — NIS Configuration</h3>
-          <div style={fieldStyle}>
-            <label style={labelStyle}>NIS Monthly Ceiling (TTD, leave blank for no ceiling)</label>
-            <input
-              type="number" style={inputStyle} step="0.01"
-              value={f.nisMonthyCeiling ?? ''}
-              placeholder="Optional"
-              onInput={e => {
-                const v = (e.currentTarget as HTMLInputElement).value;
-                set('nisMonthyCeiling', v === '' ? null : num(v));
-              }}
-            />
-          </div>
-          <p style={{ fontSize: 12, opacity: 0.65, margin: 0 }}>NIS class bands are configured after the version is created (in the NIS Classes tab). You can also import them via CSV.</p>
-        </div>
-      )}
-
-      {step === 4 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 5 — Pay Component Mappings</h3>
-          <p style={{ fontSize: 13, opacity: 0.7, margin: 0 }}>The following statutory pay components are currently active in the catalogue. They will be available for mapping in payroll runs using this version.</p>
-          {(componentsQ.data ?? []).filter(c => c.isStatutory && c.isActive).length === 0 ? (
-            <div class="hrfin-empty">No statutory pay components defined. Add them in the Pay Components tab after creating this version.</div>
-          ) : (
-            <div class="hrfin-metric-list">
-              {(componentsQ.data ?? []).filter(c => c.isStatutory && c.isActive).map(c => (
-                <div key={c.id} class="hrfin-metric-row">
-                  <span><b style={{ fontFamily: 'monospace' }}>{c.code}</b> — {c.name}</span>
-                  <HrfinPill tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</HrfinPill>
-                </div>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
-
-      {step === 5 && (
-        <div style={{ display: 'grid', gap: 14 }}>
-          <h3 style={{ margin: 0, fontSize: 14, fontWeight: 700 }}>Step 6 — Review &amp; Create</h3>
-          <div class="hrfin-metric-list">
-            <div class="hrfin-metric-row"><span>Label</span><b>{f.label}</b></div>
-            <div class="hrfin-metric-row"><span>Effective from</span><b>{fmtDate(f.effectiveFrom)}</b></div>
-            <div class="hrfin-metric-row"><span>Jurisdiction</span><b>{f.jurisdiction} — {f.currency}</b></div>
-            <div class="hrfin-metric-row"><span>PAYE Allowance</span><b>{fmtMoney(f.payePersonalAllowance)}</b></div>
-            <div class="hrfin-metric-row"><span>Band 1 Ceiling</span><b>{fmtMoney(f.payeBand1Ceiling)}</b></div>
-            <div class="hrfin-metric-row"><span>Band 1 / 2 Rate</span><b>{fmtPercent(f.payeBand1Rate)} / {fmtPercent(f.payeBand2Rate)}</b></div>
-            <div class="hrfin-metric-row"><span>HS Monthly Threshold</span><b>{fmtMoney(f.hsMonthlyThreshold)}</b></div>
-            <div class="hrfin-metric-row"><span>HS Weekly (High / Low)</span><b>{fmtMoney(f.hsWeeklyHigh)} / {fmtMoney(f.hsWeeklyLow)}</b></div>
-            <div class="hrfin-metric-row"><span>NIS Monthly Ceiling</span><b>{f.nisMonthyCeiling != null ? fmtMoney(f.nisMonthyCeiling) : 'None'}</b></div>
-          </div>
-          <p style={{ fontSize: 12, opacity: 0.65, margin: 0 }}>
-            The version will be created as <b>Draft</b>. Submit it for approval, and a different finance manager must approve before it can be activated. NIS class bands are added after creation.
-          </p>
-        </div>
-      )}
-    </HrfinWizardModal>
-  );
-}
-
 // ── Edit draft Rate Version dialog ────────────────────────────────────────────
 //
 // Surfaces the /versions/update backend route — corrects Gap 2 (accept-and-drop:
@@ -1473,7 +1204,7 @@ function StatEditVersionDialog({ version, onClose }: {
         </div>
 
         <fieldset style={{ border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, padding: '12px 14px', margin: 0 }}>
-          <legend style={{ fontSize: 12, fontWeight: 700, padding: '0 6px', color: 'var(--muted)' }}>PAYE Bands</legend>
+          <legend style={{ fontSize: 12, fontWeight: 500, padding: '0 6px', color: 'var(--muted)' }}>PAYE Bands</legend>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12 }}>
             <div style={fieldStyle}>
               <label style={labelStyle}>Personal Allowance (annual, TTD)</label>
@@ -1499,7 +1230,7 @@ function StatEditVersionDialog({ version, onClose }: {
         </fieldset>
 
         <fieldset style={{ border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, padding: '12px 14px', margin: 0 }}>
-          <legend style={{ fontSize: 12, fontWeight: 700, padding: '0 6px', color: 'var(--muted)' }}>Health Surcharge</legend>
+          <legend style={{ fontSize: 12, fontWeight: 500, padding: '0 6px', color: 'var(--muted)' }}>Health Surcharge</legend>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 12 }}>
             <div style={fieldStyle}>
               <label style={labelStyle}>Monthly Threshold (TTD)</label>
@@ -1526,262 +1257,6 @@ function StatEditVersionDialog({ version, onClose }: {
             onInput={e => setF(p => ({ ...p, nisMonthyCeiling: (e.currentTarget as HTMLInputElement).value }))} />
         </div>
 
-        {fieldErrors.map((e, i) => (
-          <p key={i} style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>{e}</p>
-        ))}
-      </div>
-    </HrfinWizardModal>
-  );
-}
-
-// ── NIS Class add/edit dialog ─────────────────────────────────────────────────
-
-function StatNisClassDialog({ versionId, edit, onClose }: {
-  versionId: string;
-  edit?: NisClass;
-  onClose: () => void;
-}): VNode {
-  const [f, setF] = useState({
-    classNo:        edit ? String(edit.classNo) : '',
-    weeklyMin:      edit ? String(edit.weeklyMin) : '',
-    weeklyMax:      edit?.weeklyMax != null ? String(edit.weeklyMax) : '',
-    employeeWeekly: edit ? String(edit.employeeWeekly) : '',
-    employerWeekly: edit ? String(edit.employerWeekly) : '',
-  });
-  const upsertMut = useStatutoryMutation(financeStatutoryApi.upsertNisClass);
-
-  const fieldErrors: string[] = [];
-  if (!f.classNo || num(f.classNo) < 1) fieldErrors.push('Class number is required and must be ≥ 1.');
-  if (f.weeklyMin === '' || isNaN(Number(f.weeklyMin))) fieldErrors.push('Weekly min is required.');
-  if (f.weeklyMax !== '' && num(f.weeklyMax) < num(f.weeklyMin)) fieldErrors.push('Weekly max must be ≥ weekly min.');
-
-  const submit = async (): Promise<void> => {
-    if (fieldErrors.length) return;
-    try {
-      await upsertMut.mutateAsync({
-        statutoryVersionId: versionId,
-        classNo: num(f.classNo), weeklyMin: num(f.weeklyMin),
-        weeklyMax: f.weeklyMax === '' ? null : num(f.weeklyMax),
-        employeeWeekly: num(f.employeeWeekly), employerWeekly: num(f.employerWeekly),
-      });
-      toast(edit ? 'NIS class updated.' : 'NIS class added.');
-      onClose();
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
-  const inputStyle = { padding: '7px 10px', border: `1px solid var(--hrfin-border, #2a3347)`, borderRadius: 6, background: 'var(--hrfin-surface-2, #1e2535)', color: 'var(--hrfin-text-primary, #e8eaf2)', fontSize: 14, width: '100%' };
-
-  return (
-    <HrfinWizardModal
-      open
-      title={edit ? 'Edit NIS Class' : 'Add NIS Class'}
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={edit ? 'Save changes' : 'Add class'}
-      onPrimary={() => void submit()}
-      primaryDisabled={fieldErrors.length > 0 || upsertMut.isPending}
-      primaryLoading={upsertMut.isPending}
-    >
-      <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Class # *</label>
-            <input type="number" style={inputStyle} value={f.classNo} onInput={e => setF(p => ({ ...p, classNo: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Weekly Min (TTD) *</label>
-            <input type="number" step="0.01" style={inputStyle} value={f.weeklyMin} onInput={e => setF(p => ({ ...p, weeklyMin: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Weekly Max (TTD, blank=∞)</label>
-            <input type="number" step="0.01" style={inputStyle} value={f.weeklyMax} placeholder="No ceiling" onInput={e => setF(p => ({ ...p, weeklyMax: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Employee / wk (TTD) *</label>
-            <input type="number" step="0.01" style={inputStyle} value={f.employeeWeekly} onInput={e => setF(p => ({ ...p, employeeWeekly: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Employer / wk (TTD) *</label>
-            <input type="number" step="0.01" style={inputStyle} value={f.employerWeekly} onInput={e => setF(p => ({ ...p, employerWeekly: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-        </div>
-        {fieldErrors.map((e, i) => (
-          <p key={i} style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>{e}</p>
-        ))}
-      </div>
-    </HrfinWizardModal>
-  );
-}
-
-// ── NIS Classes import dialog ─────────────────────────────────────────────────
-
-function StatNisImportDialog({ versionId, onClose }: { versionId: string; onClose: () => void }): VNode {
-  const [csvText, setCsvText] = useState('');
-  const [parseErrors, setParseErrors] = useState<string[]>([]);
-  const [parsed, setParsed] = useState<Array<{ classNo: number; weeklyMin: number; weeklyMax: number | null; employeeWeekly: number; employerWeekly: number }>>([]);
-  const importMut = useStatutoryMutation(financeStatutoryApi.importNisClasses);
-
-  const TEMPLATE = 'classNo,weeklyMin,weeklyMax,employeeWeekly,employerWeekly\n1,0,299.99,12.95,19.40\n2,300,399.99,17.15,25.70\n3,400,,21.35,32.00';
-
-  const parseCSV = (text: string): void => {
-    const lines = text.trim().split('\n');
-    if (lines.length < 2) { setParseErrors(['No data rows found. Expected CSV with header row.']); setParsed([]); return; }
-    const header = lines[0]!.trim().toLowerCase().split(',');
-    const idx = (k: string) => header.indexOf(k);
-    const errors: string[] = [];
-    const rows: typeof parsed = [];
-    for (let i = 1; i < lines.length; i++) {
-      const cols = lines[i]!.trim().split(',');
-      const rn = i;
-      const classNo = parseInt(cols[idx('classno')] ?? '', 10);
-      const weeklyMin = parseFloat(cols[idx('weeklymin')] ?? '');
-      const weeklyMaxStr = (cols[idx('weeklymax')] ?? '').trim();
-      const weeklyMax = weeklyMaxStr === '' ? null : parseFloat(weeklyMaxStr);
-      const employeeWeekly = parseFloat(cols[idx('employeeweekly')] ?? '');
-      const employerWeekly = parseFloat(cols[idx('employerweekly')] ?? '');
-      if (isNaN(classNo) || classNo < 1) { errors.push(`Row ${rn}: classNo invalid`); continue; }
-      if (isNaN(weeklyMin) || weeklyMin < 0) { errors.push(`Row ${rn}: weeklyMin invalid`); continue; }
-      if (isNaN(employeeWeekly) || employeeWeekly < 0) { errors.push(`Row ${rn}: employeeWeekly invalid`); continue; }
-      if (isNaN(employerWeekly) || employerWeekly < 0) { errors.push(`Row ${rn}: employerWeekly invalid`); continue; }
-      rows.push({ classNo, weeklyMin, weeklyMax, employeeWeekly, employerWeekly });
-    }
-    setParseErrors(errors);
-    setParsed(rows);
-  };
-
-  const submit = async (): Promise<void> => {
-    if (!parsed.length || parseErrors.length) return;
-    try {
-      const result = await importMut.mutateAsync({ statutoryVersionId: versionId, rows: parsed });
-      if (result.errors.length > 0) {
-        setParseErrors(result.errors.map(e => e.message));
-        return;
-      }
-      toast(`${result.imported} NIS classes imported successfully.`);
-      onClose();
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
-  const inputStyle = { padding: '7px 10px', border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, background: 'var(--hrfin-surface-2, #1e2535)', color: 'var(--hrfin-text-primary, #e8eaf2)', fontSize: 13, width: '100%', fontFamily: 'monospace', minHeight: 160, resize: 'vertical' as const };
-
-  return (
-    <HrfinWizardModal
-      open
-      title="Import NIS Classes (CSV)"
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={`Import ${parsed.length > 0 ? `${parsed.length} class${parsed.length !== 1 ? 'es' : ''}` : ''}`}
-      onPrimary={() => void submit()}
-      primaryDisabled={!parsed.length || parseErrors.length > 0 || importMut.isPending}
-      primaryLoading={importMut.isPending}
-    >
-      <div style={{ display: 'grid', gap: 14 }}>
-        <p style={{ fontSize: 13, opacity: 0.7, margin: 0 }}>Paste CSV with columns: classNo, weeklyMin, weeklyMax (blank = no ceiling), employeeWeekly, employerWeekly. Existing class numbers will be updated.</p>
-        <div style={{ display: 'flex', gap: 6, justifyContent: 'flex-end' }}>
-          <button type="button" class="hrfin-action" onClick={() => { setCsvText(TEMPLATE); parseCSV(TEMPLATE); }}>Load template</button>
-        </div>
-        <textarea
-          style={inputStyle}
-          placeholder={TEMPLATE}
-          value={csvText}
-          onInput={e => { const v = (e.currentTarget as HTMLTextAreaElement).value; setCsvText(v); parseCSV(v); }}
-        />
-        {parseErrors.length > 0 && (
-          <div>
-            {parseErrors.map((e, i) => <p key={i} style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: '2px 0' }}>{e}</p>)}
-          </div>
-        )}
-        {parsed.length > 0 && parseErrors.length === 0 && (
-          <p style={{ fontSize: 12, color: 'var(--success-fg, #2d9)', margin: 0 }}>✓ {parsed.length} valid row{parsed.length !== 1 ? 's' : ''} ready to import.</p>
-        )}
-      </div>
-    </HrfinWizardModal>
-  );
-}
-
-// ── Pay Component create/edit dialog ─────────────────────────────────────────
-
-function StatPayComponentDialog({ edit, onClose }: { edit?: PayComponent; onClose: () => void }): VNode {
-  const [f, setF] = useState({
-    code:               edit?.code ?? '',
-    name:               edit?.name ?? '',
-    kind:               edit?.kind ?? 'earning',
-    isStatutory:        edit?.isStatutory ?? false,
-    isTaxable:          edit?.isTaxable ?? true,
-    reducesChargeable:  edit?.reducesChargeable ?? false,
-    glAccountCode:      edit?.glAccountCode ?? '',
-    costAllocationRequired: edit?.costAllocationRequired ?? false,
-  });
-
-  const createMut = useStatutoryMutation(financeStatutoryApi.createComponent);
-  const updateMut = useStatutoryMutation(financeStatutoryApi.updateComponent);
-
-  const fieldErrors: string[] = [];
-  if (!f.code.trim()) fieldErrors.push('Code is required.');
-  if (!f.name.trim()) fieldErrors.push('Name is required.');
-  if (!/^[A-Za-z0-9_]+$/.test(f.code.trim())) fieldErrors.push('Code must be alphanumeric or underscore only.');
-
-  const submit = async (): Promise<void> => {
-    if (fieldErrors.length) return;
-    try {
-      if (edit) {
-        await updateMut.mutateAsync({ id: edit.id, name: f.name.trim(), isStatutory: f.isStatutory, isTaxable: f.isTaxable, reducesChargeable: f.reducesChargeable, glAccountCode: f.glAccountCode.trim() || null, costAllocationRequired: f.costAllocationRequired });
-        toast('Pay component updated.');
-      } else {
-        await createMut.mutateAsync({ code: f.code.trim().toUpperCase(), name: f.name.trim(), kind: f.kind as 'earning' | 'deduction', isStatutory: f.isStatutory, isTaxable: f.isTaxable, reducesChargeable: f.reducesChargeable, glAccountCode: f.glAccountCode.trim() || null, costAllocationRequired: f.costAllocationRequired });
-        toast('Pay component created.');
-      }
-      onClose();
-    } catch (e) { toast.error((e as Error).message); }
-  };
-
-  const inputStyle = { padding: '7px 10px', border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, background: 'var(--hrfin-surface-2, #1e2535)', color: 'var(--hrfin-text-primary, #e8eaf2)', fontSize: 14, width: '100%' };
-  const checkStyle = { display: 'flex', alignItems: 'center', gap: 6, fontSize: 13, cursor: 'pointer' };
-
-  return (
-    <HrfinWizardModal
-      open
-      title={edit ? 'Edit Pay Component' : 'New Pay Component'}
-      stepCount={1}
-      activeStep={0}
-      onClose={onClose}
-      primaryLabel={edit ? 'Save changes' : 'Create component'}
-      onPrimary={() => void submit()}
-      primaryDisabled={fieldErrors.length > 0 || createMut.isPending || updateMut.isPending}
-      primaryLoading={createMut.isPending || updateMut.isPending}
-    >
-      <div style={{ display: 'grid', gap: 14 }}>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 2fr', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Code * (UPPERCASE)</label>
-            <input type="text" style={inputStyle} value={f.code} disabled={!!edit} placeholder="e.g. NIS_EE" onInput={e => setF(p => ({ ...p, code: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Name *</label>
-            <input type="text" style={inputStyle} value={f.name} placeholder="e.g. National Insurance — Employee" onInput={e => setF(p => ({ ...p, name: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>Kind</label>
-            <select style={inputStyle} value={f.kind} disabled={!!edit} onChange={e => setF(p => ({ ...p, kind: (e.currentTarget as HTMLSelectElement).value as 'earning' | 'deduction' }))}>
-              <option value="earning">Earning</option>
-              <option value="deduction">Deduction</option>
-            </select>
-          </div>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-            <label style={{ fontSize: 12, fontWeight: 600, color: 'var(--muted)' }}>GL Account Code (optional)</label>
-            <input type="text" style={inputStyle} value={f.glAccountCode} placeholder="Optional" onInput={e => setF(p => ({ ...p, glAccountCode: (e.currentTarget as HTMLInputElement).value }))} />
-          </div>
-        </div>
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-          <label style={checkStyle}><input type="checkbox" checked={f.isStatutory}    onChange={e => setF(p => ({ ...p, isStatutory: (e.currentTarget as HTMLInputElement).checked }))} />Statutory</label>
-          <label style={checkStyle}><input type="checkbox" checked={f.isTaxable}      onChange={e => setF(p => ({ ...p, isTaxable: (e.currentTarget as HTMLInputElement).checked }))} />Taxable</label>
-          <label style={checkStyle}><input type="checkbox" checked={f.reducesChargeable} onChange={e => setF(p => ({ ...p, reducesChargeable: (e.currentTarget as HTMLInputElement).checked }))} />Reduces chargeable income</label>
-          <label style={checkStyle}><input type="checkbox" checked={f.costAllocationRequired} onChange={e => setF(p => ({ ...p, costAllocationRequired: (e.currentTarget as HTMLInputElement).checked }))} />Cost allocation required</label>
-        </div>
         {fieldErrors.map((e, i) => (
           <p key={i} style={{ fontSize: 12, color: 'var(--danger, #e53)', margin: 0 }}>{e}</p>
         ))}

@@ -205,8 +205,10 @@ router.post('/statutory/nis-classes/upsert', async c => {
       classNo: z.number().int().positive(),
       weeklyMin: z.number().nonnegative(),
       weeklyMax: z.number().nonnegative().nullable().optional(),
+      assumedAverageWeekly: z.number().nonnegative().nullable().optional(),
       employeeWeekly: z.number().nonnegative(),
       employerWeekly: z.number().nonnegative(),
+      classZWeekly: z.number().nonnegative().nullable().optional(),
     })).min(1),
   }), b(c));
   if (!v.ok) return v.response;
@@ -242,8 +244,10 @@ router.post('/statutory/nis-classes/import', async c => {
       classNo: z.number().int().positive(),
       weeklyMin: z.number().nonnegative(),
       weeklyMax: z.number().nonnegative().nullable().optional(),
+      assumedAverageWeekly: z.number().nonnegative().nullable().optional(),
       employeeWeekly: z.number().nonnegative(),
       employerWeekly: z.number().nonnegative(),
+      classZWeekly: z.number().nonnegative().nullable().optional(),
     })).min(1),
   }), b(c));
   if (!v.ok) return v.response;

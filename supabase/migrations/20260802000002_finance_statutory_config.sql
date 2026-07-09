@@ -62,11 +62,17 @@ create table if not exists public.finance_nis_classes (
   class_no int not null,
   weekly_min numeric(12,2) not null,
   weekly_max numeric(12,2),                           -- null for the open-ended top class
+  assumed_average_weekly numeric(12,2),              -- NIBTT assumed average weekly earnings (contribution + benefit basis)
   employee_weekly numeric(12,2) not null,
   employer_weekly numeric(12,2) not null,
+  class_z_weekly numeric(12,2),                       -- reduced weekly contribution for workers over pensionable age (employment-injury portion only)
   created_at timestamptz not null default now(),
   unique(statutory_version_id, class_no)
 );
+
+-- Additive columns for DBs where finance_nis_classes already exists (idempotent forward-fix).
+alter table public.finance_nis_classes add column if not exists assumed_average_weekly numeric(12,2);
+alter table public.finance_nis_classes add column if not exists class_z_weekly numeric(12,2);
 
 create index if not exists finance_nis_classes_version_idx on public.finance_nis_classes(statutory_version_id);
 create index if not exists finance_nis_classes_range_idx   on public.finance_nis_classes(statutory_version_id, weekly_min, weekly_max);
@@ -97,30 +103,47 @@ values
    'active', true, '2026-01-05T00:00:00Z')
 on conflict (effective_from, jurisdiction) do nothing;
 
--- NIS earnings classes I–XVI (weekly EE / ER contributions), 16.2% schedule.
+-- NIS earnings classes I–XVI (weekly EE / ER contributions + assumed average
+-- weekly earnings + Class Z), 16.2% schedule from the official NIBTT PDF.
 insert into public.finance_nis_classes
-  (statutory_version_id, class_no, weekly_min, weekly_max, employee_weekly, employer_weekly)
-select v.id, c.class_no, c.weekly_min, c.weekly_max, c.employee_weekly, c.employer_weekly
+  (statutory_version_id, class_no, weekly_min, weekly_max, assumed_average_weekly, employee_weekly, employer_weekly, class_z_weekly)
+select v.id, c.class_no, c.weekly_min, c.weekly_max, c.assumed, c.employee_weekly, c.employer_weekly, c.classz
 from public.finance_statutory_versions v
 cross join (values
-  ( 1,  200.00,  339.99,  14.60,  29.20),
-  ( 2,  340.00,  449.99,  21.30,  42.60),
-  ( 3,  450.00,  609.99,  28.60,  57.20),
-  ( 4,  610.00,  759.99,  37.00,  74.00),
-  ( 5,  760.00,  929.99,  45.60,  91.20),
-  ( 6,  930.00, 1119.99,  55.40, 110.80),
-  ( 7, 1120.00, 1299.99,  65.30, 130.60),
-  ( 8, 1300.00, 1489.99,  75.30, 150.60),
-  ( 9, 1490.00, 1709.99,  86.40, 172.80),
-  (10, 1710.00, 1909.99,  97.70, 195.40),
-  (11, 1910.00, 2139.99, 109.40, 218.80),
-  (12, 2140.00, 2379.99, 122.00, 244.00),
-  (13, 2380.00, 2629.99, 135.30, 270.60),
-  (14, 2630.00, 2919.99, 149.90, 299.80),
-  (15, 2920.00, 3137.99, 163.60, 327.20),
-  (16, 3138.00, null,    169.50, 339.00)
-) as c(class_no, weekly_min, weekly_max, employee_weekly, employer_weekly)
+  ( 1,  200.00,  339.99,  270.00,  14.60,  29.20,  2.20),
+  ( 2,  340.00,  449.99,  395.00,  21.30,  42.60,  3.20),
+  ( 3,  450.00,  609.99,  530.00,  28.60,  57.20,  4.30),
+  ( 4,  610.00,  759.99,  685.00,  37.00,  74.00,  5.56),
+  ( 5,  760.00,  929.99,  845.00,  45.60,  91.20,  6.84),
+  ( 6,  930.00, 1119.99, 1025.00,  55.40, 110.80,  8.32),
+  ( 7, 1120.00, 1299.99, 1210.00,  65.30, 130.60,  9.80),
+  ( 8, 1300.00, 1489.99, 1395.00,  75.30, 150.60, 11.30),
+  ( 9, 1490.00, 1709.99, 1600.00,  86.40, 172.80, 12.96),
+  (10, 1710.00, 1909.99, 1810.00,  97.70, 195.40, 14.66),
+  (11, 1910.00, 2139.99, 2025.00, 109.40, 218.80, 16.42),
+  (12, 2140.00, 2379.99, 2260.00, 122.00, 244.00, 18.30),
+  (13, 2380.00, 2629.99, 2505.00, 135.30, 270.60, 20.30),
+  (14, 2630.00, 2919.99, 2775.00, 149.90, 299.80, 22.49),
+  (15, 2920.00, 3137.99, 3029.00, 163.60, 327.20, 24.55),
+  (16, 3138.00, null,    3138.00, 169.50, 339.00, 25.43)
+) as c(class_no, weekly_min, weekly_max, assumed, employee_weekly, employer_weekly, classz)
 where v.effective_from = '2026-01-05' and v.jurisdiction = 'TT'
 on conflict (statutory_version_id, class_no) do nothing;
+
+-- Backfill assumed_average_weekly + class_z_weekly on rows seeded before these
+-- columns existed (idempotent — only fills nulls, never clobbers manual edits).
+update public.finance_nis_classes n
+set assumed_average_weekly = coalesce(n.assumed_average_weekly, c.assumed),
+    class_z_weekly         = coalesce(n.class_z_weekly, c.classz)
+from public.finance_statutory_versions v
+cross join (values
+  ( 1, 270.00, 2.20), ( 2, 395.00, 3.20), ( 3, 530.00, 4.30), ( 4, 685.00, 5.56),
+  ( 5, 845.00, 6.84), ( 6, 1025.00, 8.32), ( 7, 1210.00, 9.80), ( 8, 1395.00, 11.30),
+  ( 9, 1600.00, 12.96), (10, 1810.00, 14.66), (11, 2025.00, 16.42), (12, 2260.00, 18.30),
+  (13, 2505.00, 20.30), (14, 2775.00, 22.49), (15, 3029.00, 24.55), (16, 3138.00, 25.43)
+) as c(class_no, assumed, classz)
+where n.statutory_version_id = v.id and n.class_no = c.class_no
+  and v.effective_from = '2026-01-05' and v.jurisdiction = 'TT'
+  and (n.assumed_average_weekly is null or n.class_z_weekly is null);
 
 -- After applying, run: NOTIFY pgrst, 'reload schema';
