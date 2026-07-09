@@ -22,6 +22,7 @@ export interface VisibilityItem {
 type Listener = (ns: string) => void;
 
 const STORAGE_PREFIX = 'siomac_nav_vis_';
+const ORDER_PREFIX   = 'siomac_nav_order_';
 const listeners = new Set<Listener>();
 
 /** Persisted override map for a namespace: id → visible (absent = use default). */
@@ -29,6 +30,26 @@ type OverrideMap = Record<string, boolean>;
 
 function storageKey(ns: string): string {
   return STORAGE_PREFIX + ns;
+}
+
+function orderKey(ns: string): string {
+  return ORDER_PREFIX + ns;
+}
+
+/** Persisted custom order (id list) for a namespace; absent = registry order. */
+function loadOrder(ns: string): string[] {
+  try {
+    const raw = localStorage.getItem(orderKey(ns));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw) as unknown;
+    return Array.isArray(parsed) ? (parsed as string[]) : [];
+  } catch {
+    return [];
+  }
+}
+
+function saveOrder(ns: string, ids: string[]): void {
+  try { localStorage.setItem(orderKey(ns), JSON.stringify(ids)); } catch (_) {}
 }
 
 function load(ns: string): OverrideMap {
@@ -88,8 +109,35 @@ export function toggleVisible(ns: string, items: readonly VisibilityItem[], id: 
   setVisible(ns, id, !isVisible(ns, items, id));
 }
 
-/** Reset a namespace back to registry defaults. */
+// ── Ordering ───────────────────────────────────────────────────────────────────
+// Persisted custom order for a namespace, applied on top of the registry order.
+// New items (added after the user saved an order) are appended in registry order,
+// so the sidebar never silently drops a freshly-added section.
+
+/** Return items reordered by the saved custom order; unsaved → registry order. */
+export function resolveOrder<T extends VisibilityItem>(ns: string, items: readonly T[]): T[] {
+  const saved = loadOrder(ns);
+  if (saved.length === 0) return items.slice();
+  const byId = new Map(items.map(i => [i.id, i]));
+  const out: T[] = [];
+  for (const id of saved) {
+    const it = byId.get(id);
+    if (it) { out.push(it); byId.delete(id); }
+  }
+  // Append any items not present in the saved order (newly-added), registry order.
+  for (const it of items) if (byId.has(it.id)) out.push(it);
+  return out;
+}
+
+/** Persist a custom order (full id list) for a namespace and notify subscribers. */
+export function setOrder(ns: string, ids: readonly string[]): void {
+  saveOrder(ns, ids.slice());
+  emit(ns);
+}
+
+/** Reset a namespace back to registry defaults (both visibility AND order). */
 export function resetVisibility(ns: string): void {
   try { localStorage.removeItem(storageKey(ns)); } catch (_) {}
+  try { localStorage.removeItem(orderKey(ns)); } catch (_) {}
   emit(ns);
 }

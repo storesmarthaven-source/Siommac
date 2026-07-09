@@ -12,7 +12,7 @@ import type { SiomacConfig, SectionItem, NavGroupItem, NavGroupId } from './type
 import { updateColorScheme, updateLayoutMode } from './api';
 import { navIconSvg } from './navIcons';
 import { getModulesForRole, getModuleForSection } from '@lib/moduleRegistry';
-import { resolveVisible } from '@lib/navVisibility';
+import { isVisible, resolveVisible, resolveOrder } from '@lib/navVisibility';
 import { setActivePanel } from '../../shell/sections/useActiveSection';
 
 // ── Config access (loaded by config.js before main.tsx) ──────────────────────
@@ -23,24 +23,172 @@ function cfg(): SiomacConfig {
 
 /**
  * Nav items contributed by registered feature modules for a role — flattened
- * to SectionItem[]. Toggleable children (with defaultVisible) are filtered by
- * the per-module visibility store, so the sidebar shows only the chosen subset.
+ * to SectionItem[], carrying each child's `defaultVisible`. Per-parent show/hide
+ * AND reorder is applied later in the render layer (see customizeChildren),
+ * keyed by parent id, so every collapsible sub-menu is customizable uniformly.
  */
 export function moduleSectionItems(role: string): SectionItem[] {
   const out: SectionItem[] = [];
   for (const mod of getModulesForRole(role)) {
-    const ns = mod.visibilityNamespace;
-    // Children that opt into visibility (have a defaultVisible flag).
-    const toggleable = mod.navItems.filter(i => i.defaultVisible !== undefined);
-    const visibleIds = ns && toggleable.length
-      ? new Set(resolveVisible(ns, toggleable.map(i => ({ id: i.id, defaultVisible: i.defaultVisible! }))))
-      : null;
     for (const it of mod.navItems) {
-      if (visibleIds && it.defaultVisible !== undefined && !visibleIds.has(it.id)) continue;
-      out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent });
+      out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent, defaultVisible: it.defaultVisible });
     }
   }
   return out;
+}
+
+/** Every nav item visible to a role (config + modules), flattened. */
+function allItemsForRole(role: string): SectionItem[] {
+  const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
+  const personal = isEmployeeRole() ? BASELINE_SECTIONS : [];
+  return ([] as SectionItem[]).concat(SECTION_DEFS[role] ?? [], personal, COMMON_ITEMS, moduleSectionItems(role));
+}
+
+// ── Global Nav Catalog (super-admin customizer) ───────────────────────────────
+
+/**
+ * Module ids that are system-essential and cannot be hidden by the super-admin.
+ * These items render with a lock affordance in the global customizer.
+ */
+export const REQUIRED_MODULE_IDS = new Set<string>([
+  's-settings',
+  's-profile',
+  's-about',
+]);
+
+export interface GlobalChildEntry {
+  id:          string;
+  label:       string;
+  icon:        string;
+  description: string;
+  visible:     boolean;
+  required:    boolean;
+}
+
+export interface GlobalModuleEntry {
+  id:             string;
+  label:          string;
+  icon:           string;
+  description:    string;
+  visible:        boolean;
+  required:       boolean;
+  defaultVisible: boolean;
+  /** The nav-group namespace that owns this top-level item's visibility/order. */
+  groupId:        string;
+  children:       GlobalChildEntry[] | null;
+}
+
+/** One sidebar group (HR, Finance, HSE, Settings…) with its top-level items. */
+export interface NavGlobalGroup {
+  id:    string;
+  label: string;
+  items: GlobalModuleEntry[];
+}
+
+export interface NavGlobalCatalog {
+  groups: NavGlobalGroup[];
+  stats: {
+    total:      number;
+    visible:    number;
+    hidden:     number;
+    groupCount: number;
+  };
+}
+
+/** Display label for a nav group — the flat 'overview' group carries no label. */
+function groupDisplayLabel(g: NavGroupItem): string {
+  const l = (g.label ?? '').trim();
+  if (l) return l;
+  if (g.id === 'overview') return 'Overview';
+  return g.id.charAt(0).toUpperCase() + g.id.slice(1);
+}
+
+/**
+ * Build the navigation catalog for the super-admin global customizer, ORGANISED
+ * BY SIDEBAR GROUP (HR shows all HR items, Finance all Finance, etc.) — the same
+ * grouping the sidebar itself uses, so the customizer mirrors what the user sees.
+ * Each group's items are top-level entries in their saved order; a parent item
+ * carries its (ordered) children. Visibility + order come from the localStorage
+ * store so the snapshot reflects the current customization.
+ */
+export function navGlobalCatalog(role: string): NavGlobalCatalog {
+  const all = allItemsForRole(role);
+  const { NAV_GROUPS } = cfg();
+  const groupDefs = mergeModuleGroups(NAV_GROUPS as NavGroupItem[], role);
+
+  const groups: NavGlobalGroup[] = [];
+  let total = 0, visible = 0;
+
+  for (const group of groupDefs) {
+    const groupItems = all.filter(i => (i.group ?? 'overview') === group.id);
+    const tops       = groupItems.filter(i => !i.parent);
+    if (tops.length === 0) continue;
+
+    const visItems = tops.map(t => ({ id: t.id, defaultVisible: t.defaultVisible ?? true }));
+    const orderedTops = resolveOrder(group.id, visItems);
+    const items: GlobalModuleEntry[] = [];
+
+    for (const v of orderedTops) {
+      const t = tops.find(x => x.id === v.id);
+      if (!t) continue;
+      const kids = groupItems.filter(i => i.parent === t.id);
+      const topVis = isVisible(group.id, visItems, t.id);
+
+      let children: GlobalChildEntry[] | null = null;
+      if (kids.length > 0) {
+        const kidVisItems = kids.map(k => ({ id: k.id, defaultVisible: k.defaultVisible ?? true }));
+        const orderedKids = resolveOrder(t.id, kidVisItems);
+        children = orderedKids.map(v2 => {
+          const k = kids.find(x => x.id === v2.id);
+          if (!k) return null;
+          return {
+            id:          k.id,
+            label:       k.label,
+            icon:        k.icon,
+            description: k.sub ?? '',
+            visible:     isVisible(t.id, kidVisItems, k.id),
+            required:    REQUIRED_MODULE_IDS.has(k.id),
+          } satisfies GlobalChildEntry;
+        }).filter((x): x is GlobalChildEntry => x !== null);
+      }
+
+      items.push({
+        id:             t.id,
+        label:          t.label,
+        icon:           t.icon,
+        description:    t.sub ?? '',
+        visible:        topVis,
+        required:       REQUIRED_MODULE_IDS.has(t.id),
+        defaultVisible: t.defaultVisible ?? true,
+        groupId:        group.id,
+        children,
+      });
+      total++;
+      if (topVis) visible++;
+    }
+
+    groups.push({ id: group.id, label: groupDisplayLabel(group), items });
+  }
+
+  return {
+    groups,
+    stats: { total, visible, hidden: total - visible, groupCount: groups.length },
+  };
+}
+
+/**
+ * Apply a namespace's custom order + show/hide to a list of items. Used for BOTH
+ * a group's top-level items (ns = group id) and a sub-menu's children (ns =
+ * parent id). Hidden items are dropped; the rest come back in the saved order
+ * (registry order if unsaved).
+ */
+function applyCustomization(ns: string, items: SectionItem[]): SectionItem[] {
+  if (items.length === 0) return items;
+  const visItems = items.map(k => ({ id: k.id, defaultVisible: k.defaultVisible ?? true }));
+  const ordered    = resolveOrder(ns, visItems);
+  const visibleIds = new Set(resolveVisible(ns, visItems));
+  const byId = new Map(items.map(k => [k.id, k]));
+  return ordered.filter(v => visibleIds.has(v.id)).map(v => byId.get(v.id)!);
 }
 
 /**
@@ -104,27 +252,17 @@ const renderNavItem = (it: SectionItem) =>
   `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button></li>`;
 
 /**
- * Whether a parent item's children are visibility-managed (its owning module
- * declares a visibilityNamespace + has toggleable children). Such parents get a
- * "customize" gear so the user can choose which sub-items show. Generic — any
- * module with a sub-menu gets this, no per-module code.
+ * Render a top-level item that may own collapsible children. Any parent with
+ * children (`hasChildren`) gets a chevron toggle (data-parent-toggle), a
+ * "customize" gear (data-nav-customize) to show/hide + reorder its sub-items,
+ * and a nested indented <ul>. `children` is the already-customized (ordered +
+ * visible) subset; `hasChildren` reflects the registry so the gear stays even
+ * when every child is hidden. Leaf items render as normal. One level of nesting.
  */
-function parentIsCustomizable(parentId: string): boolean {
-  const mod = getModuleForSection(parentId);
-  return !!mod?.visibilityNamespace && mod.navItems.some(i => i.parent === parentId && i.defaultVisible !== undefined);
-}
-
-/**
- * Render a top-level item that may own collapsible children. A parent with
- * children gets a chevron toggle (data-parent-toggle), an optional "customize"
- * gear (data-nav-customize) when its children are visibility-managed, and a
- * nested indented <ul>. Leaf items render as normal. One level of nesting.
- */
-function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boolean): string {
-  if (children.length === 0) return renderNavItem(it);
-  const gear = parentIsCustomizable(it.id)
-    ? `<button type="button" class="sb-parent-gear" data-nav-customize="${esc(it.id)}" title="Customize ${esc(it.label)} menu" aria-label="Customize ${esc(it.label)} menu"><i class="fas fa-gear"></i></button>`
-    : '';
+function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boolean, hasChildren: boolean): string {
+  if (!hasChildren) return renderNavItem(it);
+  // No per-sub-menu gear: customization is driven by ONE gear on the group header
+  // (see buildSidebar), which manages this sub-menu AND its siblings/children.
   // The main button navigates (icon + label); the chevron is a SEPARATE button
   // that toggles open/closed. Keeping them separate fixes the "expands but won't
   // collapse" issue (the nav click no longer forces-open) and lets the chevron
@@ -133,22 +271,26 @@ function renderNavTreeItem(it: SectionItem, children: SectionItem[], open: boole
     + `<div class="sb-parent-row">`
     + `<button class="sb-parent-main" data-section="${esc(it.id)}" title="${esc(it.label)}">`
     + `${navIconSvg(it.icon)}<span>${esc(it.label)}</span></button>`
-    + gear
     + `<button type="button" class="sb-parent-toggle" data-parent-toggle="${esc(it.id)}" aria-expanded="${open}" aria-label="${open ? 'Collapse' : 'Expand'} ${esc(it.label)}"><i class="fas fa-chevron-down sb-parent-chevron"></i></button>`
     + `</div>`
     + `<ul class="sb-children">` + children.map(renderNavItem).join('') + `</ul>`
     + `</li>`;
 }
 
-/** Render a group's items, nesting children under their parent. */
-function renderGroupItems(items: SectionItem[], expandedParents: Set<string>): string {
+/** Render a group's items, nesting children under their parent (customized). The
+ *  group's top-level order/visibility is keyed by groupId; each sub-menu's
+ *  children by parent id. */
+function renderGroupItems(items: SectionItem[], expandedParents: Set<string>, groupId: string): string {
   const childrenOf = new Map<string, SectionItem[]>();
   for (const it of items) {
     if (it.parent) (childrenOf.get(it.parent) ?? childrenOf.set(it.parent, []).get(it.parent)!).push(it);
   }
-  return items
-    .filter(it => !it.parent)   // top-level only; children are emitted under their parent
-    .map(it => renderNavTreeItem(it, childrenOf.get(it.id) ?? [], expandedParents.has(it.id)))
+  const tops = applyCustomization(groupId, items.filter(it => !it.parent));
+  return tops
+    .map(it => {
+      const allKids = childrenOf.get(it.id) ?? [];
+      return renderNavTreeItem(it, applyCustomization(it.id, allKids), expandedParents.has(it.id), allKids.length > 0);
+    })
     .join('');
 }
 
@@ -206,13 +348,13 @@ function _wireParentToggles(menu: HTMLElement, role: string): void {
     });
   });
 
-  // "Customize sub-menu" gear → open the reusable NavCustomizer for that parent.
+  // "Customize navigation" gear → open the GLOBAL NavCustomizer (all modules &
+  // sections across every group in one enterprise surface). No per-group panel.
   menu.querySelectorAll<HTMLButtonElement>('button[data-nav-customize]').forEach(gear => {
     gear.addEventListener('click', (e) => {
       e.preventDefault();
       e.stopPropagation();
-      const parentId = gear.dataset['navCustomize'] ?? '';
-      (window as unknown as { openNavCustomizer?: (p: string) => void }).openNavCustomizer?.(parentId);
+      (window as unknown as { openNavCustomizer?: () => void }).openNavCustomizer?.();
     });
   });
 }
@@ -275,17 +417,22 @@ export function buildSidebar(role: string): void {
     if (!g.label) {
       // Flat group (overview): items with no collapsible header.
       html += `<li class="sb-group sb-group--flat" data-group="${esc(g.id)}"><ul class="sb-group-items">`
-        + renderGroupItems(items, expandedParents) + `</ul></li>`;
+        + renderGroupItems(items, expandedParents, g.id) + `</ul></li>`;
       continue;
     }
     const isOpen = expanded.has(g.id);
+    // Header row: the expand/collapse button + a "customize" gear that opens the
+    // global navigation customizer (all modules & sections, every group).
     html += `<li class="sb-group${isOpen ? ' open' : ''}" data-group="${esc(g.id)}">`
+      + `<div class="sb-group-headrow">`
       + `<button type="button" class="sb-group-header" data-group-toggle="${esc(g.id)}" aria-expanded="${isOpen}">`
       + `<span class="sb-group-label">${esc(g.label)}</span>`
       + `<span class="sb-group-count">${topCount(g.id)}</span>`
       + `<i class="fas fa-chevron-down sb-group-chevron"></i>`
       + `</button>`
-      + `<ul class="sb-group-items">` + renderGroupItems(items, expandedParents) + `</ul>`
+      + `<button type="button" class="sb-group-gear" data-nav-customize title="Customize navigation" aria-label="Customize navigation"><i class="fas fa-gear"></i></button>`
+      + `</div>`
+      + `<ul class="sb-group-items">` + renderGroupItems(items, expandedParents, g.id) + `</ul>`
       + `</li>`;
   }
 

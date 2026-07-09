@@ -1,62 +1,403 @@
 /**
- * src/components/nav/NavCustomizer.css — reusable sub-menu visibility overlay.
+ * src/components/nav/NavCustomizer.css
+ *
+ * One customizer surface:
+ *   .navcfg-*   — global enterprise full-modal (super-admin)
+ *   .navcust-*  — two shared controls (icon chip + switch) reused by the modal
  */
 @layer sections {
 
-.navcust-backdrop {
-  position: fixed; inset: 0; z-index: 3500;
-  background: rgba(12, 20, 38, 0.5); backdrop-filter: blur(3px);
-  display: flex; align-items: flex-start; justify-content: center; padding-top: 12vh;
-  animation: navcustFade 0.12s ease;
-}
-@keyframes navcustFade { from { opacity: 0; } to { opacity: 1; } }
+/* ═══════════════════════════════════════════════════════════════════════════
+   SHARED CONTROLS (.navcust-*) — consumed by the global modal below via the
+   NavIcon chip (.navcust-row-icon) and the show/hide Switch (.navcust-switch).
+   The legacy per-group panel was removed; these two rule-sets are all that
+   remain of the .navcust- namespace.
+   ═══════════════════════════════════════════════════════════════════════════ */
 
-.navcust-panel {
-  width: min(440px, 92vw); max-height: 70vh; background: var(--bg-card);
-  border-radius: 16px; box-shadow: 0 24px 64px rgba(12,20,38,.32);
-  display: flex; flex-direction: column; overflow: hidden;
-  animation: navcustPop 0.14s cubic-bezier(0.2,0.8,0.2,1);
-}
-@keyframes navcustPop { from { transform: translateY(-8px) scale(.98); opacity: 0; } to { transform: none; opacity: 1; } }
-
-.navcust-head {
-  display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
-  padding: 18px 20px; border-bottom: 1px solid var(--border);
-}
-.navcust-title { font-size: 1rem; font-weight: var(--font-weight-bold); color: var(--siomac-navy); display: flex; align-items: center; gap: 9px; }
-.navcust-title i { color: var(--siomac-red); }
-.navcust-sub { font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; }
-.navcust-close { background: none; border: none; font-size: 1.5rem; line-height: 1; color: var(--text-muted); cursor: pointer; }
-.navcust-close:hover { color: var(--siomac-red); }
-
-.navcust-list { overflow-y: auto; padding: 8px; }
-.navcust-row {
-  display: flex; align-items: center; gap: 11px; padding: 9px 12px;
-  border-radius: 10px; cursor: pointer; transition: background .12s;
-}
-.navcust-row:hover { background: var(--bg-subtle, #F8FAFE); }
+/* Icon chip — base size; per-context overrides live in the .navcfg- section. */
 .navcust-row-icon {
-  width: 30px; height: 30px; flex-shrink: 0; border-radius: 8px;
-  background: var(--bg-subtle, #F8FAFE); color: var(--siomac-navy);
-  display: flex; align-items: center; justify-content: center; font-size: 0.82rem;
+  width: 34px; height: 34px; flex-shrink: 0; border-radius: 9px;
+  background: #f2f5fa; color: var(--siomac-navy, #1b2d54);
+  display: flex; align-items: center; justify-content: center;
 }
-.navcust-row-label { flex: 1; font-size: 0.88rem; font-weight: 600; color: var(--siomac-navy); }
-/* Visually-hidden native checkbox drives the switch. */
-.navcust-row-toggle { position: absolute; opacity: 0; width: 0; height: 0; }
+.navcust-row-icon svg { width: 18px; height: 18px; }
+
+/* Show/hide switch — shared by the legend and every module/section row. */
 .navcust-switch {
-  width: 38px; height: 22px; border-radius: 999px; background: #cbd5e1; position: relative;
-  flex-shrink: 0; transition: background .15s;
+  flex-shrink: 0; width: 42px; height: 24px; border-radius: 999px; background: #d0d5dd;
+  border: none; padding: 0; position: relative; cursor: pointer; transition: background .16s;
 }
 .navcust-switch::after {
-  content: ''; position: absolute; top: 2px; left: 2px; width: 18px; height: 18px;
-  border-radius: 50%; background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,.2); transition: transform .15s;
+  content: ''; position: absolute; top: 2px; left: 2px; width: 20px; height: 20px;
+  border-radius: 50%; background: #fff;
+  box-shadow: 0 1px 3px rgba(16,24,40,.28); transition: transform .16s;
 }
-.navcust-switch.on { background: var(--siomac-red); }
-.navcust-switch.on::after { transform: translateX(16px); }
+.navcust-switch.on { background: var(--siomac-navy, #1b2d54); }
+.navcust-switch.on::after { transform: translateX(18px); }
+.navcust-switch.locked { opacity: 0.45; cursor: not-allowed; }
 
-.navcust-foot {
-  display: flex; align-items: center; justify-content: space-between; gap: 10px;
-  padding: 14px 20px; border-top: 1px solid var(--border);
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   GLOBAL ENTERPRISE MODAL (.navcfg-*)
+   Full-screen, 2-column, super-admin navigation customizer.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Backdrop */
+.navcfg-backdrop {
+  position: fixed; inset: 0; z-index: 3600;
+  background: rgba(12, 20, 38, 0.52); backdrop-filter: blur(6px);
+  display: flex; align-items: center; justify-content: center;
+  padding: 24px 16px;
+  animation: navcfgFade 0.15s ease;
+}
+@keyframes navcfgFade { from { opacity: 0; } to { opacity: 1; } }
+
+/* Modal shell */
+.navcfg-modal {
+  width: min(1200px, 94vw);
+  max-height: min(88vh, 860px);
+  background: #fff;
+  border: 1px solid rgba(16,24,40,.07);
+  border-radius: 20px;
+  box-shadow: 0 40px 100px -28px rgba(12,20,38,.52), 0 16px 40px -20px rgba(12,20,38,.22);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: navcfgPop 0.18s cubic-bezier(0.2,0.8,0.2,1);
+}
+@keyframes navcfgPop {
+  from { transform: translateY(-12px) scale(.983); opacity: 0; }
+  to   { transform: none; opacity: 1; }
 }
 
+/* ── Header ── */
+.navcfg-hdr {
+  display: flex; align-items: center; gap: 16px;
+  padding: 24px 28px 20px;
+  border-bottom: 1px solid #eef1f6;
+  flex-shrink: 0;
 }
+.navcfg-hdr-icon {
+  flex-shrink: 0; width: 50px; height: 50px; border-radius: 14px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #eef2fb; color: var(--siomac-navy, #1b2d54);
+}
+.navcfg-hdr-icon svg { width: 22px; height: 22px; }
+.navcfg-hdr-text { flex: 1; min-width: 0; }
+.navcfg-title {
+  margin: 0; font-size: 1.72rem; font-weight: 700;
+  color: #1e293b; letter-spacing: -0.025em; line-height: 1.12;
+}
+.navcfg-subtitle { margin: 4px 0 0; font-size: 0.875rem; color: #667085; line-height: 1.5; }
+.navcfg-close-btn {
+  flex-shrink: 0; width: 36px; height: 36px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: transparent; border: none; border-radius: 10px;
+  color: #98a2b3; cursor: pointer; transition: background .12s, color .12s;
+}
+.navcfg-close-btn:hover { background: #f2f4f7; color: #344054; }
+
+/* ── Stats + search bar ── */
+.navcfg-statsbar {
+  display: flex; align-items: center; gap: 0;
+  margin: 16px 28px;
+  border: 1px solid #e7ebf3; border-radius: 14px;
+  background: #fbfcfe;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+}
+.navcfg-stats {
+  display: flex; align-items: center; flex: 1; min-width: 0;
+  padding: 0 4px;
+}
+.navcfg-stat {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 20px;
+  flex: 1; min-width: 0;
+}
+.navcfg-stat-div {
+  width: 1px; height: 36px; background: #e7ebf3; flex-shrink: 0;
+}
+.navcfg-stat-icon {
+  flex-shrink: 0; width: 32px; height: 32px; border-radius: 9px;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #eef2fb; color: var(--siomac-navy, #1b2d54);
+}
+.navcfg-stat-icon svg { width: 15px; height: 15px; }
+.navcfg-stat-icon--vis { background: #ecfdf5; color: #12b76a; }
+.navcfg-stat-icon--hid { background: #fef3f2; color: #f04438; }
+.navcfg-stat-icon--ms  { background: #f4f3ff; color: #7c3aed; }
+.navcfg-stat-num {
+  font-size: 1.4rem; font-weight: 700; color: #101828; line-height: 1; flex-shrink: 0;
+}
+.navcfg-stat-lbl {
+  font-size: 0.76rem; color: #98a2b3; font-weight: 500;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.navcfg-search-wrap {
+  position: relative; display: flex; align-items: center;
+  padding: 10px 16px; border-left: 1px solid #e7ebf3;
+  min-width: 260px;
+}
+.navcfg-search-ico {
+  position: absolute; left: 28px; display: inline-flex;
+  color: #98a2b3; pointer-events: none;
+}
+.navcfg-search-ico svg { width: 15px; height: 15px; }
+.navcfg-search {
+  width: 100%; padding: 8px 12px 8px 34px;
+  border: 1px solid #e7ebf3; border-radius: 10px;
+  font: inherit; font-size: 0.875rem; color: #344054;
+  background: #fff; outline: none;
+  transition: border-color .14s, box-shadow .14s;
+}
+.navcfg-search:focus { border-color: var(--siomac-navy, #1b2d54); box-shadow: 0 0 0 3px rgba(27,45,84,.1); }
+.navcfg-search::placeholder { color: #c8cfd9; }
+
+/* ── Body (2-column flex) ── */
+.navcfg-body {
+  display: flex; flex: 1; min-height: 0; overflow: hidden;
+}
+
+/* ── Left rail — filters only, wide enough for single-line labels ── */
+.navcfg-rail {
+  width: 268px; flex-shrink: 0;
+  border-right: 1px solid #eef1f6;
+  overflow-y: auto;
+  padding: 18px 14px;
+  display: flex; flex-direction: column; gap: 4px;
+  background: #fbfcfe;
+}
+.navcfg-rail-title {
+  padding: 6px 10px 10px;
+  font-size: 0.68rem; font-weight: 700; letter-spacing: 0.06em;
+  color: #98a2b3; text-transform: uppercase;
+}
+.navcfg-filter-row {
+  display: flex; align-items: center; gap: 11px;
+  width: 100%; padding: 10px 12px;
+  background: transparent; border: none; border-radius: 10px; cursor: pointer;
+  font: inherit; text-align: left;
+  transition: background .11s;
+}
+.navcfg-filter-row:hover { background: #eef2f8; }
+.navcfg-filter-row.active { background: var(--siomac-navy, #1b2d54); }
+.navcfg-filter-ico {
+  width: 28px; height: 28px; border-radius: 7px; flex-shrink: 0;
+  display: inline-flex; align-items: center; justify-content: center;
+  background: #eef1f6; color: #667085;
+  transition: background .11s, color .11s;
+}
+.navcfg-filter-ico svg { width: 14px; height: 14px; }
+.navcfg-filter-row.active .navcfg-filter-ico { background: rgba(255,255,255,.18); color: #fff; }
+.navcfg-filter-lbl { flex: 1; min-width: 0; font-size: 0.875rem; font-weight: 500; color: #344054; white-space: nowrap; }
+.navcfg-filter-row.active .navcfg-filter-lbl { color: #fff; }
+.navcfg-filter-badge {
+  flex-shrink: 0; font-size: 0.72rem; font-weight: 600;
+  background: #eef1f6; color: #667085;
+  border-radius: 20px; padding: 2px 9px;
+  transition: background .11s, color .11s;
+}
+.navcfg-filter-row.active .navcfg-filter-badge { background: #fff; color: var(--siomac-navy, #1b2d54); }
+
+/* ── Main content area ── */
+.navcfg-main {
+  flex: 1; min-width: 0; overflow-y: auto; padding: 20px 24px 28px;
+  display: flex; flex-direction: column; gap: 20px;
+}
+
+/* Guide banner (moved out of the rail — full text visible) */
+.navcfg-guide {
+  display: flex; align-items: flex-start; gap: 11px;
+  background: #eff6ff; border: 1px solid #cfe0fd;
+  border-radius: 12px; padding: 12px 15px;
+}
+.navcfg-guide-ico { flex-shrink: 0; color: #2f5fe0; margin-top: 1px; }
+.navcfg-guide-ico svg { width: 16px; height: 16px; }
+.navcfg-guide p { margin: 0; font-size: 0.83rem; line-height: 1.5; color: #1e40af; }
+.navcfg-guide strong { font-weight: 700; color: #1e3a8a; }
+
+.navcfg-empty {
+  padding: 28px 20px; text-align: center; color: #98a2b3;
+  font-size: 0.875rem; background: #fafbfc; border-radius: 12px;
+  border: 1px dashed #e7ebf3;
+}
+
+/* ── Group section (one per sidebar group) ── */
+.navcfg-group { display: flex; flex-direction: column; }
+.navcfg-group-hd { display: flex; align-items: center; gap: 10px; padding: 0 2px 10px; }
+.navcfg-group-name { font-size: 0.92rem; font-weight: 700; color: #101828; letter-spacing: -.01em; }
+.navcfg-count-pill {
+  font-size: 0.72rem; font-weight: 600; color: #667085;
+  background: #eef1f6; border-radius: 20px; padding: 3px 10px; flex-shrink: 0;
+}
+.navcfg-count-pill--sm { font-size: 0.68rem; padding: 2px 8px; }
+
+.navcfg-group-body {
+  border: 1px solid #e7ebf3; border-radius: 14px; overflow: hidden; background: #fff;
+}
+
+/* Module block (top-level item, optionally with children) */
+.navcfg-mod-block {
+  border-bottom: 1px solid #f2f4f7; background: #fff;
+  transition: transform .16s cubic-bezier(.2,.8,.3,1), box-shadow .14s;
+  will-change: transform;
+}
+.navcfg-mod-block:last-child { border-bottom: none; }
+.navcfg-group-body > .navcfg-mod-block:nth-child(even) { background: #fafbfc; }
+.navcfg-mod-block.is-dragging {
+  transition: none; z-index: 4; position: relative;
+  background: #fff; box-shadow: 0 12px 32px -10px rgba(16,24,40,.30);
+  border-radius: 10px; border-color: #dde2ec;
+}
+.navcfg-mod-block.is-hidden .navcfg-mod-name { color: #98a2b3; }
+.navcfg-mod-block.is-hidden .navcfg-mod-row .navcust-row-icon { opacity: .55; }
+
+.navcfg-mod-row {
+  display: grid;
+  grid-template-columns: 34px 24px minmax(190px, 1.5fr) 1fr 62px;
+  align-items: center; gap: 4px;
+  padding: 10px 14px; min-height: 54px;
+}
+.navcfg-mod-block.is-expanded .navcfg-mod-row { border-bottom: 1px solid #eef1f6; }
+.navcfg-mod-row:hover { background: rgba(47,95,224,.03); }
+
+.navcfg-order {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; border-radius: 7px;
+  border: 1px solid #e7ebf3; background: #f8fafc;
+  font-size: 0.74rem; font-weight: 600; color: #667085;
+}
+.navcfg-grip {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 28px; color: #c3cad6; cursor: grab; touch-action: none; flex-shrink: 0;
+}
+.navcfg-grip svg { width: 15px; height: 15px; }
+.navcfg-mod-block:hover .navcfg-grip { color: #94a3b8; }
+.navcfg-grip:active,
+.navcfg-mod-block.is-dragging .navcfg-grip { cursor: grabbing; }
+
+.navcfg-expand {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 24px; height: 24px; flex-shrink: 0;
+  border: 1px solid #e7ebf3; border-radius: 7px;
+  background: #fff; color: #667085; cursor: pointer;
+  transition: border-color .12s, background .12s, color .12s;
+}
+.navcfg-expand:hover { border-color: var(--siomac-navy, #1b2d54); color: var(--siomac-navy, #1b2d54); background: #f0f3fa; }
+.navcfg-expand svg { width: 13px; height: 13px; }
+
+.navcfg-mod-cell { display: flex; align-items: center; gap: 10px; min-width: 0; padding-right: 10px; }
+.navcfg-mod-cell .navcust-row-icon { width: 30px; height: 30px; border-radius: 8px; flex-shrink: 0; }
+.navcfg-mod-cell .navcust-row-icon svg { width: 15px; height: 15px; }
+.navcfg-mod-name {
+  font-size: 0.875rem; font-weight: 600; color: #1a2535;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.navcfg-desc-cell {
+  font-size: 0.8rem; color: #667085; padding-right: 12px;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.navcfg-vis-cell { display: flex; align-items: center; justify-content: center; }
+
+.navcfg-lock-wrap {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 28px; height: 28px; border-radius: 8px;
+  background: #f8fafc; border: 1px solid #e7ebf3; color: #98a2b3;
+}
+.navcfg-lock-wrap svg { width: 13px; height: 13px; }
+
+/* ── Child rows (sub-sections of a parent module) ── */
+.navcfg-child-list {
+  padding: 4px 14px 10px 44px; background: #fbfcfe; border-top: 1px solid #eef1f6;
+}
+.navcfg-child-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 10px; border-radius: 10px;
+  margin-left: 16px; position: relative;
+  transition: transform .15s cubic-bezier(.2,.8,.3,1), background .1s, opacity .12s;
+  will-change: transform; min-height: 40px;
+}
+.navcfg-child-row::before {
+  content: ''; position: absolute; left: -10px; top: 0; bottom: 0;
+  width: 1.5px; background: #eef1f6;
+}
+.navcfg-child-list .navcfg-child-row:first-child::before { top: 8px; }
+.navcfg-child-list .navcfg-child-row:last-child::before  { bottom: 8px; }
+.navcfg-child-row:hover { background: #f7f9fc; }
+.navcfg-child-row.is-hidden { opacity: 0.6; }
+.navcfg-child-row.is-inherited { opacity: 0.5; pointer-events: none; }
+.navcfg-child-row.is-dragging {
+  transition: none; z-index: 3; background: #fff;
+  box-shadow: 0 8px 24px -8px rgba(16,24,40,.28); border-radius: 10px;
+}
+
+.navcfg-grip--child {
+  color: #c3cad6; cursor: grab; touch-action: none; flex-shrink: 0;
+  display: inline-flex; align-items: center;
+  width: 18px; height: 20px;
+}
+.navcfg-grip--child svg { width: 13px; height: 13px; }
+.navcfg-child-row:hover .navcfg-grip--child { color: #94a3b8; }
+.navcfg-grip--child:active,
+.navcfg-child-row.is-dragging .navcfg-grip--child { cursor: grabbing; }
+
+.navcfg-child-row .navcust-row-icon { width: 26px; height: 26px; border-radius: 7px; flex-shrink: 0; }
+.navcfg-child-row .navcust-row-icon svg { width: 13px; height: 13px; }
+.navcfg-child-name {
+  flex: 1; min-width: 0; font-size: 0.845rem; font-weight: 500; color: #344054;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.navcfg-inherited-badge {
+  font-size: 0.68rem; font-weight: 600; letter-spacing: 0.02em;
+  color: #98a2b3; background: #f2f4f7; border-radius: 6px;
+  padding: 2px 7px; flex-shrink: 0; text-transform: uppercase;
+}
+.navcfg-child-row .navcfg-vis-cell { flex-shrink: 0; margin-left: auto; }
+
+/* ── Footer ── */
+.navcfg-footer {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 16px 28px;
+  border-top: 1px solid #eef1f6; background: #fbfcfe;
+  flex-shrink: 0;
+}
+.navcfg-footer-reset { flex: 1; min-width: 0; }
+.navcfg-reset-btn {
+  display: inline-flex; align-items: center; gap: 10px;
+  background: transparent; border: none; font: inherit;
+  cursor: pointer; padding: 8px 12px; border-radius: 10px;
+  transition: background .12s, color .12s; text-align: left;
+}
+.navcfg-reset-btn:hover { background: #fef2f2; }
+.navcfg-reset-btn svg { color: #f04438; flex-shrink: 0; }
+.navcfg-reset-label {
+  display: flex; flex-direction: column; gap: 2px;
+}
+.navcfg-reset-label > :first-child {
+  font-size: 0.875rem; font-weight: 600; color: #344054;
+}
+.navcfg-reset-btn:hover .navcfg-reset-label > :first-child { color: #d92d20; }
+.navcfg-reset-sub {
+  font-size: 0.77rem; color: #98a2b3; font-weight: 400;
+}
+
+.navcfg-footer-actions {
+  display: flex; align-items: center; gap: 10px; flex-shrink: 0;
+}
+.navcfg-cancel-btn {
+  background: #fff; color: #344054;
+  border: 1px solid #d0d5dd; border-radius: 11px;
+  font: inherit; font-size: 0.9rem; font-weight: 500;
+  padding: 10px 22px; cursor: pointer;
+  transition: background .12s, border-color .12s, color .12s;
+}
+.navcfg-cancel-btn:hover { background: #f9fafb; border-color: #98a2b3; }
+.navcfg-save-btn {
+  background: var(--siomac-navy, #1b2d54); color: #fff;
+  border: none; border-radius: 11px;
+  font: inherit; font-size: 0.9rem; font-weight: 600;
+  padding: 10px 24px; cursor: pointer;
+  transition: filter .12s;
+}
+.navcfg-save-btn:hover { filter: brightness(1.1); }
+
+} /* end @layer sections */

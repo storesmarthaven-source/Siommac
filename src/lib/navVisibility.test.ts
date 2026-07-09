@@ -6,6 +6,7 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   type VisibilityItem,
   isVisible, resolveVisible, setVisible, toggleVisible, resetVisibility, subscribeVisibility,
+  resolveOrder, setOrder,
 } from './navVisibility';
 
 const NS = 'test-ns';
@@ -58,6 +59,33 @@ describe('namespace isolation + reset', () => {
     setVisible(NS, 'a', false);
     resetVisibility(NS);
     expect(resolveVisible(NS, items)).toEqual(['a', 'c']);
+  });
+});
+
+describe('resolveOrder', () => {
+  it('returns registry order when no custom order is saved', () => {
+    expect(resolveOrder(NS, items).map(i => i.id)).toEqual(['a', 'b', 'c']);
+  });
+
+  it('applies a saved custom order', () => {
+    setOrder(NS, ['c', 'a', 'b']);
+    expect(resolveOrder(NS, items).map(i => i.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('appends newly-added items (absent from the saved order) in registry order', () => {
+    setOrder(NS, ['c', 'a']);   // saved before 'b' existed
+    expect(resolveOrder(NS, items).map(i => i.id)).toEqual(['c', 'a', 'b']);
+  });
+
+  it('ignores stale ids in the saved order that are no longer present', () => {
+    setOrder(NS, ['zz', 'b', 'a', 'c']);
+    expect(resolveOrder(NS, items).map(i => i.id)).toEqual(['b', 'a', 'c']);
+  });
+
+  it('reset clears the custom order too', () => {
+    setOrder(NS, ['c', 'b', 'a']);
+    resetVisibility(NS);
+    expect(resolveOrder(NS, items).map(i => i.id)).toEqual(['a', 'b', 'c']);
   });
 });
 
