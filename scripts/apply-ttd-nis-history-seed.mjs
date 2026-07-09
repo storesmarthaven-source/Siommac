@@ -75,7 +75,7 @@ function versionRow(v) {
   const active = v.effective_date === ACTIVE_DATE;
   return {
     effective_from: v.effective_date,
-    label: `TT Statutory Schedule — ${v.effective_date} (NIS ${v.contribution_rate_percent}%)`,
+    label: `NIS ${v.contribution_rate_percent}% · ${v.effective_date.slice(0, 4)}`,
     jurisdiction: 'TT',
     currency: 'TTD',
     paye_personal_allowance: p.pa,

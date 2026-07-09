@@ -292,7 +292,21 @@
 /* Widget-zone tiles own their height (RGL grid) — the card fills the tile so
    drag/resize behaves, and internal overflow scrolls instead of clipping. */
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
-.sdb-board-tools { display: flex; justify-content: flex-end; margin: 2px 0 10px; }
+.sdb-board-tools { display: flex; justify-content: flex-end; margin: 0 0 12px; }
+
+/* Redesigned full-width statutory summary bar (PAYE · NIS · Health Surcharge). */
+.sdb-sumbar { display: flex; align-items: stretch; padding: 0; overflow: hidden; }
+.sdb-sumbar-seg { flex: 1 1 0; display: flex; align-items: center; gap: 12px; padding: 14px 20px; min-width: 0; }
+.sdb-sumbar-seg + .sdb-sumbar-seg { border-left: 1px solid var(--sdb-line); }
+.sdb-sumbar-ic { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; }
+.sdb-sumbar-ic--blue  { background: var(--sdb-blue-bg);  color: #2563eb; }
+.sdb-sumbar-ic--teal  { background: var(--sdb-teal-bg);  color: var(--sdb-teal); }
+.sdb-sumbar-ic--amber { background: var(--sdb-amber-bg); color: #b7791f; }
+.sdb-sumbar-txt { min-width: 0; }
+.sdb-sumbar-k { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--sdb-muted); white-space: nowrap; }
+.sdb-sumbar-v { font-size: 16px; font-weight: 600; color: var(--sdb-ink); line-height: 1.2; margin-top: 2px; white-space: nowrap; }
+.sdb-sumbar-s { font-size: 11.5px; color: var(--sdb-body); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-sumbar-empty { padding: 18px 20px; color: var(--sdb-muted); font-size: 13px; }
 .sdb-ch { padding: 18px 20px; }
 .sdb-ch-hd {
   display: flex;
@@ -397,7 +411,7 @@
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
 .sdb-ready-score { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 2px; }
 .sdb-ready-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); }
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: 188px; margin: 0 auto; }
+.sdb-gauge-wrap { position: relative; width: 100%; max-width: min(90%, 300px); margin: 0 auto; }
 .sdb-gauge { width: 100%; aspect-ratio: 118 / 78; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 /* Fill sweep is driven by the Web Animations API in HalfGauge (left → right). */
@@ -484,6 +498,9 @@
 
 /* Tabbed table card */
 .sdb-table-card { padding: 0 20px 18px; overflow: hidden; }
+/* As a resizable widget the register fills its tile and scrolls internally. */
+.sdb-table-card.sdb-wgt-fill { display: flex; flex-direction: column; overflow: hidden; }
+.sdb-table-card.sdb-wgt-fill .sdb-tab-body { flex: 1 1 auto; overflow: auto; min-height: 0; }
 .sdb-tabs {
   display: flex; gap: 24px;
   padding: 2px 0 0;
@@ -555,7 +572,7 @@
   padding: 11px 14px; border-bottom: 1px solid var(--sdb-line); white-space: nowrap;
 }
 .sdb-tbl thead th.sdb-th--center { text-align: center; }
-.sdb-tbl tbody td { padding: 13px 14px; border-bottom: 1px solid var(--sdb-line2); vertical-align: middle; }
+.sdb-tbl tbody td { padding: 13px 14px; border-bottom: 1px solid var(--sdb-line2); vertical-align: middle; white-space: nowrap; }
 .sdb-tbl tbody td.sdb-td--center { text-align: center; }
 .sdb-tbl tbody tr:last-child td { border-bottom: 0; }
 .sdb-tbl tbody tr.is-clickable { cursor: pointer; }
@@ -574,8 +591,8 @@
 /* Status badge — used inside table cells (replaces foreign HrfinPill) */
 .sdb-badge {
   height: 22px; padding: 0 10px; border-radius: 20px;
-  font-size: 11px; font-weight: 700;
-  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 11px; font-weight: 500;
+  display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
 }
 .sdb-badge--green { background: var(--sdb-green-bg); color: var(--sdb-green); }
 .sdb-badge--blue  { background: var(--sdb-blue-bg);  color: #2563eb; }

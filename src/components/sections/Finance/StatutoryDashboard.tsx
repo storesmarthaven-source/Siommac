@@ -57,23 +57,43 @@ const TABS: { key: MainTab; label: string }[] = [
 // The middle band is a movable/resizable board (per-user layout). The KPI strip,
 // the NIS contribution chart and the register table stay FIXED (never widgets).
 const PAGE_KEY = 'finance.statutory';
+const W_SUMMARY   = 'finance.statutory.summary';
+const W_KPI_ACTIVE     = 'finance.statutory.kpi.activeVersion';
+const W_KPI_DRAFTS     = 'finance.statutory.kpi.drafts';
+const W_KPI_COMPONENTS = 'finance.statutory.kpi.components';
+const W_KPI_NIS        = 'finance.statutory.kpi.nisClasses';
+const W_KPI_VERIFY     = 'finance.statutory.kpi.verifyQueue';
+const W_KPI_APPROVALS  = 'finance.statutory.kpi.approvals';
+const W_CHART     = 'finance.statutory.nisChart';
 const W_READY     = 'finance.statutory.readiness';
 const W_DEADLINES = 'finance.statutory.deadlines';
 const W_VERIFY    = 'finance.statutory.verifyQueue';
 const W_ACTIVITY  = 'finance.statutory.activity';
+const W_REGISTER  = 'finance.statutory.register';
 
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
+// Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
+// chart + readiness → deadlines/verify/activity → the register (full width, tall).
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_READY,     0, 0, 4, 5, 'standard'),
-        defInst(W_DEADLINES, 4, 0, 4, 5, 'standard'),
-        defInst(W_VERIFY,    8, 0, 4, 5, 'standard'),
-        defInst(W_ACTIVITY,  0, 5, 12, 3, 'wide'),
+        defInst(W_SUMMARY,        0,  0, 12, 1, 'wide'),
+        defInst(W_KPI_ACTIVE,     0,  1,  2, 2, 'compact'),
+        defInst(W_KPI_DRAFTS,     2,  1,  2, 2, 'compact'),
+        defInst(W_KPI_COMPONENTS, 4,  1,  2, 2, 'compact'),
+        defInst(W_KPI_NIS,        6,  1,  2, 2, 'compact'),
+        defInst(W_KPI_VERIFY,     8,  1,  2, 2, 'compact'),
+        defInst(W_KPI_APPROVALS, 10,  1,  2, 2, 'compact'),
+        defInst(W_CHART,          0,  3,  8, 5, 'large'),
+        defInst(W_READY,          8,  3,  4, 5, 'standard'),
+        defInst(W_DEADLINES,      0,  8,  4, 4, 'standard'),
+        defInst(W_VERIFY,         4,  8,  4, 4, 'standard'),
+        defInst(W_ACTIVITY,       8,  8,  4, 4, 'standard'),
+        defInst(W_REGISTER,       0, 12, 12, 9, 'hero'),
       ],
     },
   };
@@ -295,6 +315,216 @@ export function StatutoryDashboard({
   function discardPreview(): void { setPreview(null); setLibOpen(true); }
   function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
 
+  // Full-width statutory summary bar (redesigned) — PAYE / NIS / Health Surcharge
+  // for the active version, as evenly-spread labelled segments.
+  const renderSummary = (): VNode => (
+    <div class="sdb-card sdb-sumbar sdb-wgt-fill">
+      {!activeVer ? (
+        <div class="sdb-sumbar-empty">No active statutory version — activate one to see the summary.</div>
+      ) : (
+        <>
+          <div class="sdb-sumbar-seg">
+            <span class="sdb-sumbar-ic sdb-sumbar-ic--blue"><i class="fa-solid fa-percent" /></span>
+            <div class="sdb-sumbar-txt">
+              <div class="sdb-sumbar-k">PAYE income tax</div>
+              <div class="sdb-sumbar-v">{Math.round(activeVer.payeBand1Rate * 100)}% / {Math.round(activeVer.payeBand2Rate * 100)}%</div>
+              <div class="sdb-sumbar-s">Personal allowance {fmtMoney(activeVer.payePersonalAllowance)}</div>
+            </div>
+          </div>
+          <div class="sdb-sumbar-seg">
+            <span class="sdb-sumbar-ic sdb-sumbar-ic--teal"><i class="fa-solid fa-scale-balanced" /></span>
+            <div class="sdb-sumbar-txt">
+              <div class="sdb-sumbar-k">National Insurance (NIS)</div>
+              <div class="sdb-sumbar-v">{nisRatePct != null ? `${nisRatePct}%` : '—'} · {nis.rows.length} classes</div>
+              <div class="sdb-sumbar-s">{activeVer.nisMonthyCeiling ? `Ceiling ${fmtMoney(activeVer.nisMonthyCeiling)}/mo` : 'No ceiling set'}</div>
+            </div>
+          </div>
+          <div class="sdb-sumbar-seg">
+            <span class="sdb-sumbar-ic sdb-sumbar-ic--amber"><i class="fa-solid fa-heart-pulse" /></span>
+            <div class="sdb-sumbar-txt">
+              <div class="sdb-sumbar-k">Health Surcharge</div>
+              <div class="sdb-sumbar-v">{fmtMoney(activeVer.hsWeeklyHigh)} / {fmtMoney(activeVer.hsWeeklyLow)}</div>
+              <div class="sdb-sumbar-s">per week (over / under {fmtMoney(activeVer.hsMonthlyThreshold)}/mo)</div>
+            </div>
+          </div>
+        </>
+      )}
+    </div>
+  );
+
+  const renderKpiActive = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-wgt-fill">
+      <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-regular fa-file-lines" /></div>
+      <div>
+        <div class="sdb-stat-label">Active Version</div>
+        <div class="sdb-stat-value">{versionsLoading ? '…' : (activeVer?.label ?? '—')}</div>
+        <div class="sdb-stat-sub">
+          {activeVer
+            ? <><span class="sdb-dot sdb-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
+            : 'No active version'}
+        </div>
+      </div>
+    </div>
+  );
+  const renderKpiDrafts = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-wgt-fill">
+      <div class="sdb-stat-ic sdb-stat-ic--purple"><i class="fa-regular fa-pen-to-square" /></div>
+      <div>
+        <div class="sdb-stat-label">Draft Versions</div>
+        <div class="sdb-stat-value">{versionsLoading ? '…' : drafts}</div>
+        <div class="sdb-stat-sub">{pending > 0 ? `${pending} awaiting review` : 'None awaiting review'}</div>
+      </div>
+    </div>
+  );
+  const renderKpiComponents = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-wgt-fill">
+      <div class="sdb-stat-ic sdb-stat-ic--teal"><i class="fa-solid fa-layer-group" /></div>
+      <div>
+        <div class="sdb-stat-label">Pay Components</div>
+        <div class="sdb-stat-value">{activeComponents}</div>
+        <div class="sdb-stat-sub">{inactiveComponents} inactive</div>
+      </div>
+    </div>
+  );
+  const renderKpiNis = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-stat--clickable sdb-wgt-fill" onClick={() => onTabChange('nis')} role="button" tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTabChange('nis'); }}>
+      <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-solid fa-users" /></div>
+      <div>
+        <div class="sdb-stat-label">NIS Classes</div>
+        <div class="sdb-stat-value">{activeVer ? activeNisClasses.length : '—'}</div>
+        <div class="sdb-stat-sub">
+          {activeVer
+            ? <><span class="sdb-dot sdb-dot--green" />On {activeVer.label}</>
+            : 'No active version'}
+        </div>
+      </div>
+    </div>
+  );
+  const renderKpiVerify = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-stat--clickable sdb-wgt-fill" onClick={() => verifyQueue > 0 && onTabChange('verify')} role="button" tabIndex={0}
+      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') verifyQueue > 0 && onTabChange('verify'); }}>
+      <div class="sdb-stat-ic sdb-stat-ic--amber"><i class="fa-regular fa-clock" /></div>
+      <div>
+        <div class="sdb-stat-label">Verification Queue</div>
+        <div class="sdb-stat-value">{verifyQueue}</div>
+        <div class="sdb-stat-sub">
+          {verifyQueue > 0 ? <><span class="sdb-dot sdb-dot--amber" />Needs attention</> : 'Queue clear'}
+        </div>
+      </div>
+    </div>
+  );
+  const renderKpiApprovals = (): VNode => (
+    <div class="sdb-card sdb-stat sdb-wgt-fill">
+      <div class="sdb-stat-ic sdb-stat-ic--coral"><i class="fa-solid fa-user-check" /></div>
+      <div>
+        <div class="sdb-stat-label">Pending Approvals</div>
+        <div class="sdb-stat-value">{pending}</div>
+        <div class="sdb-stat-sub">{pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'}</div>
+      </div>
+    </div>
+  );
+
+  const renderChart = (): VNode => (
+    <div class="sdb-card sdb-ch sdb-wgt-fill">
+      <div class="sdb-ch-hd">
+        <h2>NIS Contribution Schedule</h2>
+        <i class="fa-solid fa-circle-info sdb-info-ic" />
+        <div class="sdb-ch-tools">
+          <span class="sdb-pill-sel">
+            <i class="fa-solid fa-scale-balanced" /> {activeVer ? activeVer.label : 'No active version'}
+          </span>
+        </div>
+      </div>
+      <div class="sdb-sum-body">
+        {/* Stacked bar chart: employee ⅓ (bottom) + employer ⅔ (top) per class */}
+        <div>
+          {nis.rows.length === 0 ? (
+            <div class="sdb-up-empty" style={{ padding: '48px 0' }}>
+              No NIS earnings classes configured for the active version.
+            </div>
+          ) : (
+            <svg viewBox="0 0 520 300" width="100%" style={{ display: 'block' }}>
+              {/* Gridlines + left axis ($/wk) */}
+              <g fontSize="10" fill="#9aa4b6" textAnchor="end">
+                {nisGrid.map((g, i) => (
+                  <text key={i} x={NIS.x0 - 6} y={g.y + 3}>{Math.round(g.val)}</text>
+                ))}
+              </g>
+              <g stroke="#eef1f7" strokeWidth="1">
+                {nisGrid.map((g, i) => <line key={i} x1={NIS.x0} y1={g.y} x2={NIS.x1} y2={g.y} />)}
+              </g>
+              {/* Bars */}
+              {nis.rows.map((c, i) => {
+                const x = NIS.x0 + i * nisSlot + (nisSlot - nisBarW) / 2;
+                const eeH = nisH(c.employeeWeekly);
+                const erH = nisH(c.employerWeekly);
+                const eeY = NIS.yBase - eeH;
+                const erY = eeY - erH;
+                return (
+                  <g key={c.id}>
+                    <rect x={x} y={erY} width={nisBarW} height={erH} fill="#9cc0f7" rx="2" />
+                    <rect x={x} y={eeY} width={nisBarW} height={eeH} fill="#2f5fe0" rx="2" />
+                    <text x={x + nisBarW / 2} y={NIS.yBase + 12} textAnchor="middle" fontSize="7.5" fill="#8593a8">
+                      {toRoman(c.classNo)}
+                    </text>
+                  </g>
+                );
+              })}
+              <line x1={NIS.x0} y1={NIS.yBase} x2={NIS.x1} y2={NIS.yBase} stroke="#d7deea" strokeWidth="1" />
+              <text x={(NIS.x0 + NIS.x1) / 2} y="284" textAnchor="middle" fontSize="10.5" fill="#7a8698">
+                Earnings Class (I–{toRoman(nis.rows.length)}) · total weekly contribution ($)
+              </text>
+            </svg>
+          )}
+          <div class="sdb-legend">
+            <span><span class="sdb-lg-sq" style={{ background: '#2f5fe0' }} />Employee ⅓</span>
+            <span><span class="sdb-lg-sq" style={{ background: '#9cc0f7' }} />Employer ⅔</span>
+          </div>
+        </div>
+        {/* Compact NIS facts that AREN'T already in the summary strip / chart. */}
+        <div class="sdb-mini">
+          <div class="sdb-mini-item">
+            <span class="sdb-mini-k">Weekly contribution range</span>
+            <span class="sdb-mini-vv">{nis.botTotal ? fmtMoney(nis.botTotal) : '—'} – {nis.topTotal ? fmtMoney(nis.topTotal) : '—'}</span>
+          </div>
+          <div class="sdb-mini-item">
+            <span class="sdb-mini-k">Top band (Class {toRoman(nis.rows.length)}) split</span>
+            <span class="sdb-mini-vv">EE {fmtMoney(nis.topEmployee)} · ER {fmtMoney(nis.topEmployer)}</span>
+          </div>
+          {activeVer?.nisMonthyCeiling != null && (
+            <div class="sdb-mini-item">
+              <span class="sdb-mini-k">Max insurable earnings</span>
+              <span class="sdb-mini-vv">{fmtMoney(activeVer.nisMonthyCeiling)}/mo</span>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+
+  const renderRegister = (): VNode => (
+    <div class="sdb-card sdb-table-card sdb-wgt-fill">
+      {/* Tab strip */}
+      <div class="sdb-tabs">
+        {TABS.map(t => (
+          <button key={t.key} type="button"
+            class={`sdb-tab${tab === t.key ? ' sdb-tab--on' : ''}`}
+            onClick={() => onTabChange(t.key)}>
+            {t.label}
+            {t.key === 'verify' && verifyQueue > 0 && (
+              <span class="sdb-tab-badge">{verifyQueue}</span>
+            )}
+          </button>
+        ))}
+      </div>
+      {/* Tab content (rendered by parent) */}
+      <div class="sdb-tab-body">
+        {tabContent}
+      </div>
+    </div>
+  );
+
   const renderReadiness = (): VNode => (
     <div class="sdb-card sdb-ch sdb-ready sdb-wgt-fill">
       <div class="sdb-ready-head">
@@ -448,196 +678,25 @@ export function StatutoryDashboard({
   );
 
   const localWidgets: LocalWidgetMap = {
-    [W_READY]:     { render: renderReadiness,   chrome: 'none', title: 'Statutory Readiness' },
-    [W_DEADLINES]: { render: renderDeadlines,   chrome: 'none', title: 'Upcoming Deadlines' },
-    [W_VERIFY]:    { render: renderVerifyQueue, chrome: 'none', title: 'Verification Queue' },
-    [W_ACTIVITY]:  { render: renderActivity,    chrome: 'none', title: 'Recent Activity' },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary' },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version' },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions' },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components' },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes' },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)' },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals' },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness' },
+    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines' },
+    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue' },
+    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity' },
+    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register' },
   };
 
   return (
     <div class="sdb">
 
-      {/* ── T&T statutory summary — the active version at a glance ──────────── */}
-      {activeVer && (
-        <div class="sdb-taxline">
-          <span class="sdb-taxline-item">
-            <b>PAYE</b> {Math.round(activeVer.payeBand1Rate * 100)}% / {Math.round(activeVer.payeBand2Rate * 100)}% · allowance {fmtMoney(activeVer.payePersonalAllowance)}
-          </span>
-          <span class="sdb-taxline-item">
-            <b>NIS</b> {nisRatePct != null ? `${nisRatePct}%` : '—'} · {nis.rows.length} classes{activeVer.nisMonthyCeiling ? ` · ceiling ${fmtMoney(activeVer.nisMonthyCeiling)}/mo` : ''}
-          </span>
-          <span class="sdb-taxline-item">
-            <b>Health Surcharge</b> {fmtMoney(activeVer.hsWeeklyHigh)} / {fmtMoney(activeVer.hsWeeklyLow)} per wk
-          </span>
-        </div>
-      )}
-
-      {/* ── 6-card stat row ────────────────────────────────────────────────── */}
-      <div class="sdb-stats">
-
-        {/* 1. Active Version — REAL */}
-        <div class="sdb-card sdb-stat">
-          <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-regular fa-file-lines" /></div>
-          <div>
-            <div class="sdb-stat-label">Active Version</div>
-            <div class="sdb-stat-value">{versionsLoading ? '…' : (activeVer?.label ?? '—')}</div>
-            <div class="sdb-stat-sub">
-              {activeVer
-                ? <><span class="sdb-dot sdb-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
-                : 'No active version'}
-            </div>
-          </div>
-        </div>
-
-        {/* 2. Draft Versions — REAL */}
-        <div class="sdb-card sdb-stat">
-          <div class="sdb-stat-ic sdb-stat-ic--purple"><i class="fa-regular fa-pen-to-square" /></div>
-          <div>
-            <div class="sdb-stat-label">Draft Versions</div>
-            <div class="sdb-stat-value">{versionsLoading ? '…' : drafts}</div>
-            <div class="sdb-stat-sub">
-              {pending > 0 ? `${pending} awaiting review` : 'None awaiting review'}
-            </div>
-          </div>
-        </div>
-
-        {/* 3. Pay Components — REAL */}
-        <div class="sdb-card sdb-stat">
-          <div class="sdb-stat-ic sdb-stat-ic--teal"><i class="fa-solid fa-layer-group" /></div>
-          <div>
-            <div class="sdb-stat-label">Pay Components</div>
-            <div class="sdb-stat-value">{activeComponents}</div>
-            <div class="sdb-stat-sub">{inactiveComponents} inactive</div>
-          </div>
-        </div>
-
-        {/* 4. NIS Classes — REAL (earnings-class count on the active version) */}
-        <div class="sdb-card sdb-stat sdb-stat--clickable" onClick={() => onTabChange('nis')} role="button" tabIndex={0}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTabChange('nis'); }}>
-          <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-solid fa-users" /></div>
-          <div>
-            <div class="sdb-stat-label">NIS Classes</div>
-            <div class="sdb-stat-value">{activeVer ? activeNisClasses.length : '—'}</div>
-            <div class="sdb-stat-sub">
-              {activeVer
-                ? <><span class="sdb-dot sdb-dot--green" />Earnings classes on {activeVer.label}</>
-                : 'No active version'}
-            </div>
-          </div>
-        </div>
-
-        {/* 5. Verification Queue — REAL */}
-        <div class="sdb-card sdb-stat sdb-stat--clickable" onClick={() => verifyQueue > 0 && onTabChange('verify')} role="button" tabIndex={0}
-          onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') verifyQueue > 0 && onTabChange('verify'); }}>
-          <div class="sdb-stat-ic sdb-stat-ic--amber"><i class="fa-regular fa-clock" /></div>
-          <div>
-            <div class="sdb-stat-label">Verification Queue</div>
-            <div class="sdb-stat-value">{verifyQueue}</div>
-            <div class="sdb-stat-sub">
-              {verifyQueue > 0
-                ? <><span class="sdb-dot sdb-dot--amber" />Needs attention</>
-                : 'Queue clear'}
-            </div>
-          </div>
-        </div>
-
-        {/* 6. Pending Approvals — REAL */}
-        <div class="sdb-card sdb-stat">
-          <div class="sdb-stat-ic sdb-stat-ic--coral"><i class="fa-solid fa-user-check" /></div>
-          <div>
-            <div class="sdb-stat-label">Pending Approvals</div>
-            <div class="sdb-stat-value">{pending}</div>
-            <div class="sdb-stat-sub">
-              {pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'}
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* ── NIS contribution chart (FIXED, full width) ─────────────────────── */}
-      <div class="sdb-chartrow">
-
-        {/* NIS Contribution Schedule — REAL: the active version's earnings-class bands. */}
-        <div class="sdb-card sdb-ch">
-          <div class="sdb-ch-hd">
-            <h2>NIS Contribution Schedule</h2>
-            <i class="fa-solid fa-circle-info sdb-info-ic" />
-            <div class="sdb-ch-tools">
-              <span class="sdb-pill-sel">
-                <i class="fa-solid fa-scale-balanced" /> {activeVer ? activeVer.label : 'No active version'}
-              </span>
-            </div>
-          </div>
-          <div class="sdb-sum-body">
-            {/* Stacked bar chart: employee ⅓ (bottom) + employer ⅔ (top) per class */}
-            <div>
-              {nis.rows.length === 0 ? (
-                <div class="sdb-up-empty" style={{ padding: '48px 0' }}>
-                  No NIS earnings classes configured for the active version.
-                </div>
-              ) : (
-                <svg viewBox="0 0 520 300" width="100%" style={{ display: 'block' }}>
-                  {/* Gridlines + left axis ($/wk) */}
-                  <g fontSize="10" fill="#9aa4b6" textAnchor="end">
-                    {nisGrid.map((g, i) => (
-                      <text key={i} x={NIS.x0 - 6} y={g.y + 3}>{Math.round(g.val)}</text>
-                    ))}
-                  </g>
-                  <g stroke="#eef1f7" strokeWidth="1">
-                    {nisGrid.map((g, i) => <line key={i} x1={NIS.x0} y1={g.y} x2={NIS.x1} y2={g.y} />)}
-                  </g>
-                  {/* Bars */}
-                  {nis.rows.map((c, i) => {
-                    const x = NIS.x0 + i * nisSlot + (nisSlot - nisBarW) / 2;
-                    const eeH = nisH(c.employeeWeekly);
-                    const erH = nisH(c.employerWeekly);
-                    const eeY = NIS.yBase - eeH;
-                    const erY = eeY - erH;
-                    return (
-                      <g key={c.id}>
-                        <rect x={x} y={erY} width={nisBarW} height={erH} fill="#9cc0f7" rx="2" />
-                        <rect x={x} y={eeY} width={nisBarW} height={eeH} fill="#2f5fe0" rx="2" />
-                        <text x={x + nisBarW / 2} y={NIS.yBase + 12} textAnchor="middle" fontSize="7.5" fill="#8593a8">
-                          {toRoman(c.classNo)}
-                        </text>
-                      </g>
-                    );
-                  })}
-                  <line x1={NIS.x0} y1={NIS.yBase} x2={NIS.x1} y2={NIS.yBase} stroke="#d7deea" strokeWidth="1" />
-                  <text x={(NIS.x0 + NIS.x1) / 2} y="284" textAnchor="middle" fontSize="10.5" fill="#7a8698">
-                    Earnings Class (I–{toRoman(nis.rows.length)}) · total weekly contribution ($)
-                  </text>
-                </svg>
-              )}
-              <div class="sdb-legend">
-                <span><span class="sdb-lg-sq" style={{ background: '#2f5fe0' }} />Employee ⅓</span>
-                <span><span class="sdb-lg-sq" style={{ background: '#9cc0f7' }} />Employer ⅔</span>
-              </div>
-            </div>
-            {/* Compact NIS facts that AREN'T already in the summary strip / chart. */}
-            <div class="sdb-mini">
-              <div class="sdb-mini-item">
-                <span class="sdb-mini-k">Weekly contribution range</span>
-                <span class="sdb-mini-vv">{nis.botTotal ? fmtMoney(nis.botTotal) : '—'} – {nis.topTotal ? fmtMoney(nis.topTotal) : '—'}</span>
-              </div>
-              <div class="sdb-mini-item">
-                <span class="sdb-mini-k">Top band (Class {toRoman(nis.rows.length)}) split</span>
-                <span class="sdb-mini-vv">EE {fmtMoney(nis.topEmployee)} · ER {fmtMoney(nis.topEmployer)}</span>
-              </div>
-              {activeVer?.nisMonthyCeiling != null && (
-                <div class="sdb-mini-item">
-                  <span class="sdb-mini-k">Max insurable earnings</span>
-                  <span class="sdb-mini-vv">{fmtMoney(activeVer.nisMonthyCeiling)}/mo</span>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-      </div>{/* /sdb-chartrow */}
-
-      {/* ── Statutory widget zone — movable/resizable (Readiness · Upcoming
-             Deadlines · Verification Queue · Recent Activity) ───────────────── */}
+      {/* ── Customize toolbar at the TOP of the page ───────────────────────── */}
       {canEditBoard && (
         <div class="sdb-board-tools">
           <WidgetBoardToolbar
@@ -658,32 +717,6 @@ export function StatutoryDashboard({
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
-
-      {/* ── Register (FIXED, full width) ───────────────────────────────────── */}
-      <div class="sdb-bot sdb-bot--full">
-
-        {/* Tabbed table card */}
-        <div class="sdb-card sdb-table-card">
-          {/* Tab strip */}
-          <div class="sdb-tabs">
-            {TABS.map(t => (
-              <button key={t.key} type="button"
-                class={`sdb-tab${tab === t.key ? ' sdb-tab--on' : ''}`}
-                onClick={() => onTabChange(t.key)}>
-                {t.label}
-                {t.key === 'verify' && verifyQueue > 0 && (
-                  <span class="sdb-tab-badge">{verifyQueue}</span>
-                )}
-              </button>
-            ))}
-          </div>
-          {/* Tab content (rendered by parent) */}
-          <div class="sdb-tab-body">
-            {tabContent}
-          </div>
-        </div>
-
-      </div>{/* /sdb-bot */}
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
         placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
