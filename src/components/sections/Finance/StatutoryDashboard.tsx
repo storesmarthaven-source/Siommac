@@ -324,28 +324,22 @@ export function StatutoryDashboard({
       ) : (
         <>
           <div class="sdb-sumbar-seg">
-            <span class="sdb-sumbar-ic sdb-sumbar-ic--blue"><i class="fa-solid fa-percent" /></span>
-            <div class="sdb-sumbar-txt">
-              <div class="sdb-sumbar-k">PAYE income tax</div>
-              <div class="sdb-sumbar-v">{Math.round(activeVer.payeBand1Rate * 100)}% / {Math.round(activeVer.payeBand2Rate * 100)}%</div>
-              <div class="sdb-sumbar-s">Personal allowance {fmtMoney(activeVer.payePersonalAllowance)}</div>
-            </div>
+            <i class="fa-solid fa-percent sdb-sumbar-i sdb-sumbar-i--blue" />
+            <span class="sdb-sumbar-k">PAYE</span>
+            <span class="sdb-sumbar-v">{Math.round(activeVer.payeBand1Rate * 100)}% / {Math.round(activeVer.payeBand2Rate * 100)}%</span>
+            <span class="sdb-sumbar-s">allowance {fmtMoney(activeVer.payePersonalAllowance)}</span>
           </div>
           <div class="sdb-sumbar-seg">
-            <span class="sdb-sumbar-ic sdb-sumbar-ic--teal"><i class="fa-solid fa-scale-balanced" /></span>
-            <div class="sdb-sumbar-txt">
-              <div class="sdb-sumbar-k">National Insurance (NIS)</div>
-              <div class="sdb-sumbar-v">{nisRatePct != null ? `${nisRatePct}%` : '—'} · {nis.rows.length} classes</div>
-              <div class="sdb-sumbar-s">{activeVer.nisMonthyCeiling ? `Ceiling ${fmtMoney(activeVer.nisMonthyCeiling)}/mo` : 'No ceiling set'}</div>
-            </div>
+            <i class="fa-solid fa-scale-balanced sdb-sumbar-i sdb-sumbar-i--teal" />
+            <span class="sdb-sumbar-k">NIS</span>
+            <span class="sdb-sumbar-v">{nisRatePct != null ? `${nisRatePct}%` : '—'} · {nis.rows.length} classes</span>
+            <span class="sdb-sumbar-s">{activeVer.nisMonthyCeiling ? `ceiling ${fmtMoney(activeVer.nisMonthyCeiling)}/mo` : 'no ceiling'}</span>
           </div>
           <div class="sdb-sumbar-seg">
-            <span class="sdb-sumbar-ic sdb-sumbar-ic--amber"><i class="fa-solid fa-heart-pulse" /></span>
-            <div class="sdb-sumbar-txt">
-              <div class="sdb-sumbar-k">Health Surcharge</div>
-              <div class="sdb-sumbar-v">{fmtMoney(activeVer.hsWeeklyHigh)} / {fmtMoney(activeVer.hsWeeklyLow)}</div>
-              <div class="sdb-sumbar-s">per week (over / under {fmtMoney(activeVer.hsMonthlyThreshold)}/mo)</div>
-            </div>
+            <i class="fa-solid fa-heart-pulse sdb-sumbar-i sdb-sumbar-i--amber" />
+            <span class="sdb-sumbar-k">Health Surcharge</span>
+            <span class="sdb-sumbar-v">{fmtMoney(activeVer.hsWeeklyHigh)} / {fmtMoney(activeVer.hsWeeklyLow)}/wk</span>
+            <span class="sdb-sumbar-s">over / under {fmtMoney(activeVer.hsMonthlyThreshold)}/mo</span>
           </div>
         </>
       )}

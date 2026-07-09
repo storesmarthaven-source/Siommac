@@ -294,19 +294,19 @@
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
 .sdb-board-tools { display: flex; justify-content: flex-end; margin: 0 0 12px; }
 
-/* Redesigned full-width statutory summary bar (PAYE · NIS · Health Surcharge). */
-.sdb-sumbar { display: flex; align-items: stretch; padding: 0; overflow: hidden; }
-.sdb-sumbar-seg { flex: 1 1 0; display: flex; align-items: center; gap: 12px; padding: 14px 20px; min-width: 0; }
+/* Thin full-width statutory summary strip (PAYE · NIS · Health Surcharge) —
+   every fact on ONE inline row per segment. */
+.sdb-sumbar { display: flex; align-items: center; padding: 0; overflow: hidden; }
+.sdb-sumbar-seg { flex: 1 1 0; display: flex; align-items: baseline; gap: 8px; padding: 10px 18px; min-width: 0; white-space: nowrap; }
 .sdb-sumbar-seg + .sdb-sumbar-seg { border-left: 1px solid var(--sdb-line); }
-.sdb-sumbar-ic { flex: 0 0 auto; width: 38px; height: 38px; border-radius: 10px; display: grid; place-items: center; font-size: 15px; }
-.sdb-sumbar-ic--blue  { background: var(--sdb-blue-bg);  color: #2563eb; }
-.sdb-sumbar-ic--teal  { background: var(--sdb-teal-bg);  color: var(--sdb-teal); }
-.sdb-sumbar-ic--amber { background: var(--sdb-amber-bg); color: #b7791f; }
-.sdb-sumbar-txt { min-width: 0; }
-.sdb-sumbar-k { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--sdb-muted); white-space: nowrap; }
-.sdb-sumbar-v { font-size: 16px; font-weight: 600; color: var(--sdb-ink); line-height: 1.2; margin-top: 2px; white-space: nowrap; }
-.sdb-sumbar-s { font-size: 11.5px; color: var(--sdb-body); margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-sumbar-empty { padding: 18px 20px; color: var(--sdb-muted); font-size: 13px; }
+.sdb-sumbar-i { flex: 0 0 auto; font-size: 12.5px; align-self: center; }
+.sdb-sumbar-i--blue  { color: #2563eb; }
+.sdb-sumbar-i--teal  { color: var(--sdb-teal); }
+.sdb-sumbar-i--amber { color: #b7791f; }
+.sdb-sumbar-k { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em; color: var(--sdb-muted); flex: 0 0 auto; }
+.sdb-sumbar-v { font-size: 13.5px; font-weight: 600; color: var(--sdb-ink); flex: 0 0 auto; }
+.sdb-sumbar-s { font-size: 12px; color: var(--sdb-body); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
+.sdb-sumbar-empty { padding: 12px 18px; color: var(--sdb-muted); font-size: 13px; }
 .sdb-ch { padding: 18px 20px; }
 .sdb-ch-hd {
   display: flex;
