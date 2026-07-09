@@ -677,7 +677,7 @@ export function StatutoryDashboard({
     [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', allowedSizes: floor('compact', 4, 8) },
     [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        allowedSizes: floor('compact', 4, 8) },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 8, 14) },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 6, 20) },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 6, 24) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 6, 12) },
     [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 6, 12) },
     [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',          allowedSizes: floor('standard', 6, 12) },
