@@ -1,0 +1,16 @@
+/* src/ui/table/personCell.css — layout for PersonCell (avatar + name + meta/sub).
+   Used by any DataTable column that shows a person, and by module adapters
+   (Finance EmployeeCellResolved) that delegate their rendering here. */
+.pc-root { display: inline-flex; align-items: center; gap: 9px; min-width: 0; vertical-align: middle; text-align: left; }
+.pc-avatar { flex: 0 0 auto; }
+.pc-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.25; }
+.pc-primary { display: flex; align-items: baseline; min-width: 0; }
+.pc-name { font-weight: 600; color: #1f2a44; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pc-meta { font-size: 11px; color: #8390a6; flex: 0 0 auto; margin-left: 2px; white-space: nowrap; }
+.pc-sub { font-size: 11px; color: #8390a6; margin-top: 1px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+/* Loading skeleton — avatar circle + a name bar. */
+.pc-skel { display: inline-block; border-radius: 6px; background: linear-gradient(90deg, #eef1f6 25%, #f6f8fb 37%, #eef1f6 63%); background-size: 400% 100%; animation: pc-shimmer 1.2s ease-in-out infinite; }
+.pc-skel-avatar { border-radius: 50%; flex: 0 0 auto; }
+.pc-skel-name { width: 100px; height: 12px; }
+@keyframes pc-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }

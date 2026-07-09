@@ -19,6 +19,7 @@ import {
   Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
   PersonSearchSelect, type PersonSearchOption,
+  PersonCell, TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, type AdvTab,
   RegisterTable, Tabs,
   Skeleton, SkeletonText, TableSkeleton, ListSkeleton, SkeletonFields, SkeletonStatGrid,
   Spinner, EmptyState,
@@ -99,6 +100,30 @@ export function UIKitPage(): VNode {
   const [search, setSearch]   = useState('');
   const [filter, setFilter]   = useState('');
   const [personId, setPersonId] = useState('');
+
+  // Table toolbox demo state — PersonCell + the shared @ui/table filter toolbar.
+  const { openId, setOpenId } = useFilterDropdowns();
+  const [kitSearch, setKitSearch] = useState('');
+  const [kitStatus, setKitStatus] = useState<string[]>([]);
+  const [kitDept, setKitDept]     = useState<string[]>([]);
+  const [kitFrom, setKitFrom]     = useState('');
+  const [kitTo, setKitTo]         = useState('');
+  const [kitMin, setKitMin]       = useState('');
+  const [kitMax, setKitMax]       = useState('');
+  const cap = (s: string): string => s.charAt(0).toUpperCase() + s.slice(1);
+  const kitAdvTabs: AdvTab[] = [
+    { name: 'Organization', blurb: 'Filter by department.', sections: [
+      { type: 'checklist', title: 'Department', options: ['Operations', 'Finance', 'HR'], selected: kitDept, onChange: setKitDept },
+    ] },
+    { name: 'Dates & range', sections: [
+      { type: 'dateRange', title: 'Hired between', from: kitFrom, to: kitTo, onChange: (f, t) => { setKitFrom(f); setKitTo(t); } },
+      { type: 'numberRange', title: 'Rate', unit: '%', min: kitMin, max: kitMax, onChange: (mn, mx) => { setKitMin(mn); setKitMax(mx); } },
+    ] },
+  ];
+  const kitChips = [
+    ...kitStatus.map(s => ({ label: cap(s), onRemove: () => setKitStatus(kitStatus.filter(x => x !== s)) })),
+    ...kitDept.map(d => ({ label: d, onRemove: () => setKitDept(kitDept.filter(x => x !== d)) })),
+  ];
 
   const [modalOpen, setModalOpen]   = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
@@ -401,6 +426,31 @@ export function UIKitPage(): VNode {
         <div style={{ height: 'var(--space-3)' }} />
         <Demo label="Tabs — in-panel bar" wide>
           <Tabs tabs={DRAWER_TABS} active={drawerTab} onChange={setDrawerTab} />
+        </Demo>
+      </Section>
+
+      {/* TABLE TOOLBOX -------------------------------------------------------- */}
+      <Section id="uikit-tabletoolbox" title="Table toolbox" sub="Person cells and the shared filter toolbar (search · basic filter · advanced filter · active chips) — one source of truth for every register table (Employee Master, the statutory registers, DataTable).">
+        <Demo label="PersonCell — profile photo (or coloured initials) + name, optional meta / sub. Drop into any DataTable column.">
+          <div style={{ display: 'grid', gap: '10px' }}>
+            <PersonCell name="Camille Rampersad" meta="· EMP-FIN01" />
+            <PersonCell name="Amara Diallo" sub="Field Engineer · Operations" meta="· EMP-0010" />
+            <PersonCell name="" loading />
+          </div>
+        </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="Filter toolbar — TableSearch · FilterDropdown (basic) · AdvancedFilter (tabbed) · ActiveFilters chips" wide>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <TableSearch value={kitSearch} onChange={setKitSearch} placeholder="Search records…" />
+            <FilterDropdown id="kit-status" label="Status" options={['active', 'pending', 'retired']} selected={kitStatus}
+              onChange={setKitStatus} openId={openId} setOpenId={setOpenId} labelFn={cap} />
+            <AdvancedFilter id="kit-adv" tabs={kitAdvTabs} openId={openId} setOpenId={setOpenId}
+              onReset={() => { setKitDept([]); setKitFrom(''); setKitTo(''); setKitMin(''); setKitMax(''); }} />
+          </div>
+          <div style={{ height: 'var(--space-2)' }} />
+          {kitChips.length
+            ? <ActiveFilters chips={kitChips} onClearAll={() => { setKitStatus([]); setKitDept([]); }} />
+            : <p style={{ fontSize: '0.75rem', color: 'var(--text-muted)', margin: 0 }}>Pick a Status or Department to see active-filter chips.</p>}
         </Demo>
       </Section>
 

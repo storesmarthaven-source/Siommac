@@ -1,0 +1,37 @@
+/* src/ui/InfoTip.css — the standard info-icon + tooltip (see InfoTip.tsx).
+   Matches the wizard forms' .sfp-info hint icon so the whole app shares one design. */
+.ui-infotip {
+  position: relative; display: inline-flex; align-items: center; justify-content: center;
+  color: #b3bdca; cursor: help; border-radius: 50%; outline: none; transition: color .12s;
+}
+.ui-infotip:hover, .ui-infotip:focus-visible { color: #7c879d; }
+
+.ui-infotip[data-tip]::after {
+  content: attr(data-tip);
+  position: absolute; left: 50%; z-index: var(--z-tooltip, 200);
+  background: #212b45; color: #eef1f8;
+  padding: 6px 10px; border-radius: 7px;
+  font-size: 11px; font-weight: 500; line-height: 1.45; letter-spacing: .01em;
+  width: max-content; max-width: 220px; white-space: normal; text-align: center;
+  box-shadow: 0 3px 10px -3px rgba(16, 24, 40, .22);
+  opacity: 0; pointer-events: none; transition: opacity .13s ease, transform .13s ease;
+}
+.ui-infotip[data-tip]::before {
+  content: ''; position: absolute; left: 50%; z-index: var(--z-tooltip, 200);
+  border: 5px solid transparent;
+  opacity: 0; pointer-events: none; transition: opacity .13s ease, transform .13s ease;
+}
+
+/* Top placement (default) — bubble above the icon. */
+.ui-infotip--top[data-tip]::after  { bottom: calc(100% + 8px); transform: translateX(-50%) translateY(3px); }
+.ui-infotip--top[data-tip]::before { bottom: calc(100% + 3px); transform: translateX(-50%) translateY(3px); border-top-color: #212b45; }
+
+/* Bottom placement — bubble below the icon (use near a container's top edge). */
+.ui-infotip--bottom[data-tip]::after  { top: calc(100% + 8px); transform: translateX(-50%) translateY(-3px); }
+.ui-infotip--bottom[data-tip]::before { top: calc(100% + 3px); transform: translateX(-50%) translateY(-3px); border-bottom-color: #212b45; }
+
+/* Reveal on hover/focus. */
+.ui-infotip[data-tip]:hover::after, .ui-infotip[data-tip]:focus-visible::after,
+.ui-infotip[data-tip]:hover::before, .ui-infotip[data-tip]:focus-visible::before { opacity: 1; }
+.ui-infotip[data-tip]:hover::after, .ui-infotip[data-tip]:focus-visible::after,
+.ui-infotip[data-tip]:hover::before, .ui-infotip[data-tip]:focus-visible::before { transform: translateX(-50%) translateY(0); }

@@ -14,6 +14,13 @@
       "runtimeArgs": ["design-preview/server.mjs"],
       "port": 4599,
       "autoPort": false
+    },
+    {
+      "name": "vite-dev",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["run", "dev", "--", "--port", "5241", "--strictPort"],
+      "port": 5241,
+      "autoPort": false
     }
   ]
 }

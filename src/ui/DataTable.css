@@ -1,0 +1,73 @@
+/* src/ui/DataTable.css — styling for the reusable DataTable (DataTable.tsx).
+   Light, flat, enterprise; modelled on the Employee Master register. */
+.dt { --dt-line: #e6e9f1; --dt-line2: #eef1f7; --dt-ink: #1f2a44; --dt-ink2: #3f4a63;
+  --dt-muted: #8390a6; --dt-primary: #2f5fe0; --dt-hover: #f7f9fc; --dt-sel: #eef4ff;
+  display: flex; flex-direction: column; min-height: 0; }
+
+/* ── Toolbar (search left → basic filters → advanced filter · actions pushed right) ── */
+.dt-toolbar { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; padding: 0 0 12px; }
+.dt-toolbar-main { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; flex: 1 1 auto; min-width: 0; }
+.dt-toolbar-end { display: flex; align-items: center; gap: 9px; flex: 0 0 auto; margin-left: auto; }
+
+/* ── Active-filter bar ───────────────────────────────────────────────────── */
+.dt-active-filters { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; padding: 0 0 12px; font-size: 12.5px; color: var(--dt-ink2); }
+.dt-active-filters strong { font-weight: 600; color: var(--dt-muted); font-size: 11.5px; }
+.dt-fchip { display: inline-flex; align-items: center; gap: 6px; height: 26px; padding: 0 10px; border: 1px solid #cdd8ea; border-radius: 20px;
+  background: #f2f6fc; color: #1f3b6d; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; }
+.dt-fchip:hover { background: #e6eefa; } .dt-fchip i { font-size: 10px; }
+.dt-clear { border: 0; background: none; color: var(--dt-primary); font: inherit; font-size: 12.5px; font-weight: 500; cursor: pointer; padding: 0 4px; }
+.dt-clear:hover { text-decoration: underline; }
+
+/* ── Table ───────────────────────────────────────────────────────────────── */
+.dt-scroll { overflow-x: auto; border: 1px solid var(--dt-line); border-radius: 13px; background: #fff; }
+.dt-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.dt-table thead th { position: sticky; top: 0; z-index: 1; background: #fbfcfe; text-align: left; white-space: nowrap;
+  padding: 11px 14px; font-size: 11px; font-weight: 600; letter-spacing: .03em; text-transform: uppercase; color: var(--dt-muted);
+  border-bottom: 1px solid var(--dt-line); }
+.dt-sort { display: inline-flex; align-items: center; gap: 5px; border: 0; background: none; font: inherit; font-size: 11px; font-weight: 600;
+  letter-spacing: .03em; text-transform: uppercase; color: var(--dt-muted); cursor: pointer; padding: 0; }
+.dt-sort:hover { color: var(--dt-ink2); }
+.dt-caret { font-size: 8px; color: var(--dt-primary); width: 8px; }
+
+.dt-table tbody td { padding: 12px 14px; border-top: 1px solid var(--dt-line2); color: var(--dt-ink); vertical-align: middle; }
+.dt-table tbody tr:first-child td { border-top: 0; }
+/* Column alignment — qualified under `.dt-table` so header (th) and body (td) share the
+   same edge. Without the `.dt-table` qualifier these lose the specificity race against
+   `.dt-table thead th { text-align:left }`, leaving right/centre headers stuck on the left. */
+.dt-table .dt-al-left { text-align: left; }
+.dt-table .dt-al-center { text-align: center; }
+.dt-table .dt-al-right { text-align: right; }
+
+.dt-row.dt-clickable { cursor: pointer; }
+.dt-row:hover td { background: var(--dt-hover); }
+.dt-row.is-selected td { background: var(--dt-sel); }
+
+/* Pinned first column (sticky on x-scroll). */
+.dt-pin { position: sticky; left: 0; z-index: 2; background: #fff; }
+.dt-table thead th.dt-pin { z-index: 3; background: #fbfcfe; }
+.dt-row:hover td.dt-pin { background: var(--dt-hover); }
+.dt-row.is-selected td.dt-pin { background: var(--dt-sel); }
+
+/* ── Row actions ─────────────────────────────────────────────────────────── */
+.dt-col-actions { width: 1%; white-space: nowrap; }
+.dt-actions { display: inline-flex; align-items: center; gap: 4px; }
+.dt-act { width: 30px; height: 30px; border: 1px solid var(--dt-line); border-radius: 8px; background: #fff; color: var(--dt-muted);
+  display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
+.dt-act:hover { background: #f2f6fc; border-color: #cdd8ea; color: var(--dt-ink2); }
+.dt-act-danger:hover { background: #fdecec; border-color: #f2b6b6; color: #dc2626; }
+
+/* ── Empty ───────────────────────────────────────────────────────────────── */
+.dt-empty { padding: 30px 12px; display: flex; justify-content: center; }
+
+/* ── Pagination ──────────────────────────────────────────────────────────── */
+.dt-pagination { display: flex; align-items: center; gap: 16px; padding: 12px 2px 0; font-size: 12.5px; color: var(--dt-muted); }
+.dt-page-info { flex: 1 1 auto; }
+.dt-pages { display: inline-flex; align-items: center; gap: 3px; }
+.dt-page-btn { min-width: 30px; height: 30px; padding: 0 7px; border: 1px solid var(--dt-line); border-radius: 8px; background: #fff;
+  color: var(--dt-ink2); font: inherit; font-size: 12.5px; cursor: pointer; }
+.dt-page-btn:hover:not(:disabled) { background: var(--dt-hover); border-color: #cdd8ea; }
+.dt-page-btn.is-on { background: var(--dt-primary); border-color: var(--dt-primary); color: #fff; font-weight: 600; }
+.dt-page-btn:disabled { opacity: .45; cursor: default; }
+.dt-page-gap { padding: 0 3px; color: var(--dt-muted); }
+.dt-rows-sel { display: inline-flex; align-items: center; gap: 7px; }
+.dt-rows-sel select { height: 30px; border: 1px solid var(--dt-line); border-radius: 8px; background: #fff; padding: 0 7px; font: inherit; font-size: 12.5px; color: var(--dt-ink2); cursor: pointer; }
