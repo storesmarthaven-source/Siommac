@@ -276,7 +276,7 @@ export default async function run(h) {
     const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
       statutoryVersionId: ctx.sv1Id,
       classes: [
-        { classNo: 1, weeklyMin: 0,    weeklyMax: 299.99, employeeWeekly: 12.95, employerWeekly: 19.40 },
+        { classNo: 1, weeklyMin: 0,    weeklyMax: 299.99, assumedAverageWeekly: 200, employeeWeekly: 12.95, employerWeekly: 19.40 },
         { classNo: 2, weeklyMin: 300,  weeklyMax: 399.99, employeeWeekly: 17.15, employerWeekly: 25.70 },
         { classNo: 3, weeklyMin: 400,  weeklyMax: null,   employeeWeekly: 21.35, employerWeekly: 32.00 },
       ],
@@ -284,6 +284,16 @@ export default async function run(h) {
     ok(r, `upsert NIS classes failed: ${r.body.message}`);
     expect(r.body.data.length === 3, `expected 3 NIS classes, got ${r.body.data.length}`);
     ctx.nisVersionId = ctx.sv1Id;
+  });
+
+  await test('versions/list returns the derived nisRatePercent (dashboard rate-trend chart)', async () => {
+    const r = await api('finance/statutory/versions/list', fmgr1Token, {});
+    ok(r, `list failed: ${r.body.message}`);
+    const v = r.body.data.find(x => x.id === ctx.sv1Id);
+    expect(v, 'created version not in list');
+    expect('nisRatePercent' in v, 'version row missing nisRatePercent (chart contract)');
+    // rate = (employee + employer weekly) ÷ assumed-average weekly = (12.95 + 19.40) / 200 = 16.2%.
+    expect(v.nisRatePercent === 16.2, `expected nisRatePercent 16.2, got ${v.nisRatePercent}`);
   });
 
   await test('finance_manager can list NIS classes', async () => {

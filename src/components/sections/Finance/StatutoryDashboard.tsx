@@ -40,7 +40,7 @@ import {
 } from '@ui/widgets';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
-import { fmtDate, fmtMoney, humanize, toRoman } from './financeShared';
+import { fmtDate, fmtMoney } from './financeShared';
 
 // Re-export so the parent can reference the same literal type without a second import.
 export type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
@@ -266,29 +266,25 @@ export function StatutoryDashboard({
   }, [activeVer, activeNisClasses.length, components, activeComponents, verifiedNisCount, verifyQueue, onTabChange, onVerifyNis]);
   const lens = readiness[readyLens] ?? readiness[0]!;
 
-  // ── NIS contribution schedule (REAL — the active version's earnings-class bands) ─
-  const nis = useMemo(() => {
-    const rows = [...activeNisClasses].sort((a, b) => a.classNo - b.classNo);
-    const totals = rows.map(c => c.employeeWeekly + c.employerWeekly);
-    const maxTotal = Math.max(1, ...totals);
-    const top = rows[rows.length - 1];
-    const bot = rows[0];
-    return {
-      rows, maxTotal,
-      topTotal:    top ? top.employeeWeekly + top.employerWeekly : 0,
-      topEmployee: top ? top.employeeWeekly : 0,
-      topEmployer: top ? top.employerWeekly : 0,
-      botTotal:    bot ? bot.employeeWeekly + bot.employerWeekly : 0,
-    };
-  }, [activeNisClasses]);
+  // Active version's earnings classes (sorted) — powers the summary class count and
+  // the active-rate figure below.
+  const nis = useMemo(() => ({ rows: [...activeNisClasses].sort((a, b) => a.classNo - b.classNo) }), [activeNisClasses]);
 
-  // SVG plot geometry — 16 stacked bars (employee ⅓ bottom, employer ⅔ top).
-  const NIS = { x0: 46, x1: 494, yTop: 22, yBase: 250 };
-  const nisH = (v: number): number => Math.round((v / nis.maxTotal) * (NIS.yBase - NIS.yTop));
-  const nisSlot = nis.rows.length > 0 ? (NIS.x1 - NIS.x0) / nis.rows.length : 0;
-  const nisBarW = Math.min(20, Math.max(6, nisSlot * 0.6));
-  const nisGrid = [0, 0.25, 0.5, 0.75, 1].map(f => ({ f, y: NIS.yBase - f * (NIS.yBase - NIS.yTop), val: nis.maxTotal * f }));
-  // Contribution rate derived from the data (total ÷ assumed average), not hardcoded.
+  // ── NIS contribution-rate trend across ALL versions (rate over time) ────────
+  // Real historical data — each version's headline rate (nisRatePercent, computed
+  // server-side from its earnings classes), plotted by schedule year.
+  const rateTrend = useMemo(() => {
+    const pts = versions
+      .filter(v => v.nisRatePercent != null)
+      .map(v => ({ id: v.id, year: v.effectiveFrom.slice(0, 4), rate: v.nisRatePercent as number, isActive: v.isActive }))
+      .sort((a, b) => (a.year < b.year ? -1 : a.year > b.year ? 1 : 0));
+    const rates = pts.map(p => p.rate);
+    const lo = rates.length ? Math.floor(Math.min(...rates)) - 1 : 0;
+    const hi = rates.length ? Math.ceil(Math.max(...rates)) + 1 : 20;
+    return { pts, lo, hi };
+  }, [versions]);
+
+  // Active-version contribution rate derived from the data (total ÷ assumed average).
   const nisRatePct = (() => {
     const c = nis.rows.find(r => r.assumedAverageWeekly && r.assumedAverageWeekly > 0);
     if (!c || !c.assumedAverageWeekly) return null;
@@ -404,83 +400,83 @@ export function StatutoryDashboard({
       sub={pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'} />
   );
 
-  const renderChart = (): VNode => (
-    <div class="sdb-card sdb-ch sdb-wgt-fill">
-      <div class="sdb-ch-hd">
-        <h2>NIS Contribution Schedule</h2>
-        <i class="fa-solid fa-circle-info sdb-info-ic" />
-        <div class="sdb-ch-tools">
-          <span class="sdb-pill-sel">
-            <i class="fa-solid fa-scale-balanced" /> {activeVer ? activeVer.label : 'No active version'}
-          </span>
+  // NIS contribution RATE over time — a real trend across the seeded schedule history
+  // (10.5% 2008 → 16.2% 2026), which a per-class bar chart could never show.
+  const renderChart = (): VNode => {
+    const P = { x0: 58, x1: 496, yTop: 34, yBase: 244 };
+    const { pts, lo, hi } = rateTrend;
+    const span = Math.max(1, hi - lo);
+    const yFor = (r: number): number => P.yBase - ((r - lo) / span) * (P.yBase - P.yTop);
+    const xFor = (i: number): number => pts.length <= 1 ? (P.x0 + P.x1) / 2 : P.x0 + (i / (pts.length - 1)) * (P.x1 - P.x0);
+    const grid = Array.from({ length: 5 }, (_, i) => { const val = lo + (span * i) / 4; return { val, y: yFor(val) }; });
+    const first = pts[0];
+    const last = pts[pts.length - 1];
+    const areaD = pts.length
+      ? `M ${xFor(0)} ${P.yBase} ` + pts.map((p, i) => `L ${xFor(i)} ${yFor(p.rate)}`).join(' ') + ` L ${xFor(pts.length - 1)} ${P.yBase} Z`
+      : '';
+    const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i)} ${yFor(p.rate)}`).join(' ');
+    return (
+      <div class="sdb-card sdb-ch sdb-wgt-fill">
+        <div class="sdb-ch-hd">
+          <h2>NIS Contribution Rate</h2>
+          <i class="fa-solid fa-circle-info sdb-info-ic" />
+          <div class="sdb-ch-tools">
+            <span class="sdb-pill-sel">
+              <i class="fa-solid fa-arrow-trend-up" /> {first && last ? `${first.year}–${last.year}` : 'History'}
+            </span>
+          </div>
         </div>
-      </div>
-      <div class="sdb-sum-body">
-        {/* Stacked bar chart: employee ⅓ (bottom) + employer ⅔ (top) per class */}
-        <div>
-          {nis.rows.length === 0 ? (
-            <div class="sdb-up-empty" style={{ padding: '48px 0' }}>
-              No NIS earnings classes configured for the active version.
-            </div>
-          ) : (
-            <svg viewBox="0 0 520 300" width="100%" style={{ display: 'block' }}>
-              {/* Gridlines + left axis ($/wk) */}
-              <g fontSize="10" fill="#9aa4b6" textAnchor="end">
-                {nisGrid.map((g, i) => (
-                  <text key={i} x={NIS.x0 - 6} y={g.y + 3}>{Math.round(g.val)}</text>
-                ))}
-              </g>
-              <g stroke="#eef1f7" strokeWidth="1">
-                {nisGrid.map((g, i) => <line key={i} x1={NIS.x0} y1={g.y} x2={NIS.x1} y2={g.y} />)}
-              </g>
-              {/* Bars */}
-              {nis.rows.map((c, i) => {
-                const x = NIS.x0 + i * nisSlot + (nisSlot - nisBarW) / 2;
-                const eeH = nisH(c.employeeWeekly);
-                const erH = nisH(c.employerWeekly);
-                const eeY = NIS.yBase - eeH;
-                const erY = eeY - erH;
-                return (
-                  <g key={c.id}>
-                    <rect x={x} y={erY} width={nisBarW} height={erH} fill="#9cc0f7" rx="2" />
-                    <rect x={x} y={eeY} width={nisBarW} height={eeH} fill="#2f5fe0" rx="2" />
-                    <text x={x + nisBarW / 2} y={NIS.yBase + 12} textAnchor="middle" fontSize="7.5" fill="#8593a8">
-                      {toRoman(c.classNo)}
-                    </text>
+        <div class="sdb-sum-body">
+          <div>
+            {pts.length === 0 ? (
+              <div class="sdb-up-empty" style={{ padding: '48px 0' }}>No NIS schedules on record yet.</div>
+            ) : (
+              <svg viewBox="0 0 520 300" width="100%" style={{ display: 'block' }}>
+                {/* Gridlines + left axis (%) */}
+                <g fontSize="10" fill="#9aa4b6" textAnchor="end">
+                  {grid.map((g, i) => <text key={i} x={P.x0 - 8} y={g.y + 3}>{g.val.toFixed(1)}%</text>)}
+                </g>
+                <g stroke="#eef1f7" strokeWidth="1">
+                  {grid.map((g, i) => <line key={i} x1={P.x0} y1={g.y} x2={P.x1} y2={g.y} />)}
+                </g>
+                {/* Area + trend line */}
+                {areaD && <path d={areaD} fill="rgba(47,95,224,.09)" />}
+                <path d={lineD} fill="none" stroke="#2f5fe0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
+                {/* Points + labels (active version highlighted) */}
+                {pts.map((p, i) => (
+                  <g key={p.id}>
+                    <circle cx={xFor(i)} cy={yFor(p.rate)} r={p.isActive ? 6 : 4}
+                      fill={p.isActive ? '#2f5fe0' : '#ffffff'} stroke="#2f5fe0" strokeWidth="2" />
+                    <text x={xFor(i)} y={yFor(p.rate) - 12} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#1f3b6d">{p.rate}%</text>
+                    <text x={xFor(i)} y={P.yBase + 18} textAnchor="middle" fontSize="10" fill="#8593a8">{p.year}</text>
                   </g>
-                );
-              })}
-              <line x1={NIS.x0} y1={NIS.yBase} x2={NIS.x1} y2={NIS.yBase} stroke="#d7deea" strokeWidth="1" />
-              <text x={(NIS.x0 + NIS.x1) / 2} y="284" textAnchor="middle" fontSize="10.5" fill="#7a8698">
-                Earnings Class (I–{toRoman(nis.rows.length)}) · total weekly contribution ($)
-              </text>
-            </svg>
-          )}
-          <div class="sdb-legend">
-            <span><span class="sdb-lg-sq" style={{ background: '#2f5fe0' }} />Employee ⅓</span>
-            <span><span class="sdb-lg-sq" style={{ background: '#9cc0f7' }} />Employer ⅔</span>
+                ))}
+                <line x1={P.x0} y1={P.yBase} x2={P.x1} y2={P.yBase} stroke="#d7deea" strokeWidth="1" />
+                <text x={(P.x0 + P.x1) / 2} y="286" textAnchor="middle" fontSize="10.5" fill="#7a8698">NIS contribution rate by schedule year</text>
+              </svg>
+            )}
           </div>
-        </div>
-        {/* Compact NIS facts that AREN'T already in the summary strip / chart. */}
-        <div class="sdb-mini">
-          <div class="sdb-mini-item">
-            <span class="sdb-mini-k">Weekly contribution range</span>
-            <span class="sdb-mini-vv">{nis.botTotal ? fmtMoney(nis.botTotal) : '—'} – {nis.topTotal ? fmtMoney(nis.topTotal) : '—'}</span>
-          </div>
-          <div class="sdb-mini-item">
-            <span class="sdb-mini-k">Top band (Class {toRoman(nis.rows.length)}) split</span>
-            <span class="sdb-mini-vv">EE {fmtMoney(nis.topEmployee)} · ER {fmtMoney(nis.topEmployer)}</span>
-          </div>
-          {activeVer?.nisMonthyCeiling != null && (
+          {/* Compact facts derived from the trend. */}
+          <div class="sdb-mini">
             <div class="sdb-mini-item">
-              <span class="sdb-mini-k">Max insurable earnings</span>
-              <span class="sdb-mini-vv">{fmtMoney(activeVer.nisMonthyCeiling)}/mo</span>
+              <span class="sdb-mini-k">Active rate</span>
+              <span class="sdb-mini-vv">{nisRatePct != null ? `${nisRatePct}%` : '—'}</span>
             </div>
-          )}
+            {first && last && last.rate !== first.rate && (
+              <div class="sdb-mini-item">
+                <span class="sdb-mini-k">Since {first.year}</span>
+                <span class="sdb-mini-vv">{last.rate > first.rate ? '+' : ''}{(last.rate - first.rate).toFixed(1)} pts</span>
+              </div>
+            )}
+            <div class="sdb-mini-item">
+              <span class="sdb-mini-k">Schedules on record</span>
+              <span class="sdb-mini-vv">{pts.length}</span>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   const renderRegister = (): VNode => (
     <div class="sdb-card sdb-table-card sdb-wgt-fill">

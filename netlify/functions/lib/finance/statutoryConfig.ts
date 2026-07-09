@@ -63,6 +63,10 @@ export interface StatutoryVersionDto {
   updatedAt: string;
   /** Number of payroll runs that reference this version. Populated by listStatutoryVersions. */
   linkedPayrollRunCount?: number;
+  /** Headline NIS contribution rate (%) for this schedule — derived from its earnings
+   *  classes: (employee + employer weekly) ÷ assumed-average weekly. Populated by
+   *  listStatutoryVersions; null if the version has no NIS classes yet. */
+  nisRatePercent?: number | null;
 }
 
 export interface NisClassRow {
@@ -183,10 +187,13 @@ export async function listStatutoryVersions(opts: {
   if (opts.status) q = q.eq('status', opts.status);
   if (opts.activeOnly) q = q.eq('is_active', true);
 
-  // Batch-load payroll run counts alongside the version list (§11 register column).
-  const [versionsResult, runsResult] = await Promise.all([
+  // Batch-load payroll run counts (§11 register column) AND the headline NIS rate per
+  // version (from any earnings class — the rate is a flat % of assumed earnings, so
+  // class 1 is representative) alongside the version list.
+  const [versionsResult, runsResult, nisResult] = await Promise.all([
     q,
     sb.from('finance_payroll_runs').select('statutory_version_id'),
+    sb.from('finance_nis_classes').select('statutory_version_id, employee_weekly, employer_weekly, assumed_average_weekly').eq('class_no', 1),
   ]);
   if (versionsResult.error) throw Object.assign(new Error('listStatutoryVersions: ' + versionsResult.error.message), { status: 500 });
 
@@ -198,9 +205,19 @@ export async function listStatutoryVersions(opts: {
     }
   }
 
+  // Build NIS-rate map: rate = (employee + employer weekly) ÷ assumed-average weekly.
+  const rateMap = new Map<string, number>();
+  if (!nisResult.error) {
+    for (const c of (nisResult.data ?? []) as { statutory_version_id: string; employee_weekly: number; employer_weekly: number; assumed_average_weekly: number | null }[]) {
+      const assumed = Number(c.assumed_average_weekly);
+      if (assumed > 0) rateMap.set(c.statutory_version_id, Math.round(((Number(c.employee_weekly) + Number(c.employer_weekly)) / assumed) * 1000) / 10);
+    }
+  }
+
   return ((versionsResult.data ?? []) as DbVersionRow[]).map(r => ({
     ...toVersionDto(r),
     linkedPayrollRunCount: runCountMap.get(r.id) ?? 0,
+    nisRatePercent: rateMap.get(r.id) ?? null,
   }));
 }
 

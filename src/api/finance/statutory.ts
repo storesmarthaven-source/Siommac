@@ -43,6 +43,9 @@ export interface StatutoryVersion {
   updatedAt: string;
   /** Payroll runs referencing this version. Populated by listVersions endpoint. */
   linkedPayrollRunCount?: number;
+  /** Headline NIS contribution rate (%) — derived from the version's earnings classes.
+   *  Populated by listVersions; null if the version has no NIS classes. */
+  nisRatePercent?: number | null;
 }
 
 export interface NisClass {
