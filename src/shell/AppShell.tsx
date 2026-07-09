@@ -59,11 +59,21 @@ function CommsBridge() {
 // ── Sidebar ───────────────────────────────────────────────────────────────────
 
 function Sidebar() {
+  // Render the brand from the already-hydrated session at first paint (read-once,
+  // NOT subscribed — subscribing would re-render and wipe the imperatively-built
+  // #sidebarMenu). This shows the real company logo immediately instead of flashing
+  // the default building icon before domSync swaps it in on a hard reload.
+  const persisted = useSessionStore.getState();
+  const brandLogo = persisted.companyLogoUrl ?? '';
+  const brandName = persisted.companyName || 'My Company';
   return (
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">
-        <i class="fas fa-building" />
-        <span class="sidebar-brand-text" id="companyName">My Company</span>
+        {brandLogo && (
+          <img class="sb-brand-img" alt={brandName} src={brandLogo}
+            style="height:72px;max-width:180px;width:auto;object-fit:contain;display:block;" />
+        )}
+        <span class="sidebar-brand-text" id="companyName" style={brandLogo ? 'display:none;' : undefined}>{brandName}</span>
       </div>
 
       <div class="sidebar-avatar" id="sidebarAvatar" style="display:none;">U</div>
@@ -71,16 +81,7 @@ function Sidebar() {
         <ul class="sidebar-menu" id="sidebarMenu" />
       </div>
 
-      <div class="sidebar-session hidden" id="sessionTimer" title="Session time remaining">
-        <i class="fas fa-clock" />
-        <span class="sidebar-session-label">Session</span>
-        <span class="sidebar-session-time" id="sessionTimerText">--</span>
-      </div>
-      <div class="sidebar-logout">
-        <button id="logoutBtn" title="Logout">
-          <i class="fas fa-sign-out-alt" /> <span id="logoutText">Logout</span>
-        </button>
-      </div>
+      <div class="sidebar-powered">Powered by <strong>Siomac</strong></div>
     </aside>
   );
 }

@@ -18,7 +18,7 @@
   box-shadow: 0 4px 12px rgba(27, 45, 84, 0.18);
 }
 .em-headrow-text { min-width: 0; }
-.em-headrow-name { font-size: 1.2rem; font-weight: 800; color: var(--text-primary); line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.em-headrow-name { font-size: 1.2rem; font-weight: 600; color: var(--text-primary); line-height: 1.2; letter-spacing: -0.01em; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .em-headrow-sub { font-size: 0.78rem; color: var(--text-muted); line-height: 1.3; margin-top: 2px; }
 
 .app-topbar {
@@ -39,7 +39,7 @@
 .app-topbar-title { align-self: center; min-width: 0; flex: 0 1 auto; margin-right: 8px; }
 .app-topbar-title-text {
   display: flex; align-items: center; gap: 9px;
-  color: #fff; font-size: 1rem; font-weight: 700; line-height: 1.25;
+  color: #fff; font-size: 1rem; font-weight: 600; line-height: 1.25;
   white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
 .app-topbar-title-icon { font-size: 0.92rem; color: rgba(255,255,255,0.75); flex-shrink: 0; }
@@ -91,7 +91,7 @@
 }
 /* Profile pill button — rounded with a light highlight on hover (was flush/square). */
 .app-topbar .pnp-profile {
-  border-radius: 12px; padding: 5px 12px 5px 5px; gap: 13px;
+  border-radius: 12px; padding: 5px 12px 5px 14px; gap: 13px;
   transition: background 0.15s ease;
 }
 .app-topbar .pnp-profile:hover { background: rgba(255,255,255,0.10); }
@@ -106,11 +106,33 @@
 .app-topbar .pnp-profile:hover .pnp-avatar {
   box-shadow: 0 0 0 2px var(--siomac-navy), 0 0 0 4px #7d8cad, 0 0 10px rgba(100, 115, 148, 0.40);
 }
-.app-topbar .pnp-name { font-size: 0.78rem; font-weight: 700; }
-.app-topbar .pnp-role { font-size: 0.62rem; }
+/* Fixed-width identity column so the pill (and therefore its dropdown) is a
+   constant width regardless of name length — long names ellipsize instead of
+   widening the pill. */
+.app-topbar .pnp-info { width: 132px; min-width: 132px; overflow: hidden; }
+.app-topbar .pnp-name { font-size: 0.78rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+.app-topbar .pnp-role { font-size: 0.62rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+/* Chevron sectioned into its own right region — a divider + subtle background that
+   fills the full pill height (negative margins cancel the button padding to reach the
+   rounded right edge). */
+.app-topbar .pnp-caret-box {
+  align-self: stretch;
+  display: inline-flex; align-items: center; justify-content: center;
+  margin: -5px -12px -5px 4px; padding: 0 13px;
+  border-left: 1px solid rgba(255,255,255,0.14);
+  background: rgba(255,255,255,0.11);
+  border-radius: 0 12px 12px 0;
+  transition: background 0.15s ease;
+}
+.app-topbar .pnp-profile:hover .pnp-caret-box { background: rgba(255,255,255,0.17); }
+.app-topbar .pnp-caret { font-size: 0.66rem; opacity: 0.9; margin: 0; color: #fff; }
+/* When the menu is open, square the pill's BOTTOM corners + keep the highlight so it
+   merges flush into the square-topped menu (no navy notches between them). */
+.app-topbar .pnp-profile[aria-expanded="true"] { border-radius: 12px 12px 0 0; background: rgba(255,255,255,0.10); }
+.app-topbar .pnp-profile[aria-expanded="true"] .pnp-caret-box { border-radius: 0 12px 0 0; background: rgba(255,255,255,0.17); }
 .app-topbar .pnp-divider { height: 32px; margin: 0; }
 .app-topbar .pnp-icons { gap: 10px; padding-right: 0; }
-.app-topbar .pnp-icon-btn { width: 36px; height: 36px; font-size: 1.02rem; }
+.app-topbar .pnp-icon-btn { width: 39px; height: 39px; font-size: 1.2rem; }
 .app-topbar .pnp-badge { min-width: 16px; height: 16px; font-size: 0.55rem; padding: 0 4px; }
 
 /* Footer strip — breadcrumb (left) + meta chips (right), sits on a subtly darker
@@ -205,3 +227,39 @@
   .app-topbar-search { flex: 0 0 auto; min-width: 0; width: auto; padding: 0 6px 0 12px; }
   .app-topbar-meta { display: none; }   /* keep the footer strip to the breadcrumb on small screens */
 }
+
+/* ── Account dropdown — a proper rounded floating card (position:fixed so it escapes
+      the top bar's overflow:hidden). Header (avatar + identity) + grouped items with
+      Lucide line-icons + hairline dividers. ─────────────────────────────────────── */
+.pnp-profile-wrap { position: relative; }
+.pnp-caret { font-size: 0.62rem; opacity: 0.8; margin-left: 3px; }
+.pnp-menu {
+  position: fixed; z-index: 2400;
+  padding: 8px; background: #fff;   /* width is set inline to match the pill exactly — no
+                                       min-width, which would floor it wider than a narrow
+                                       pill and spill past the right edge */
+  box-sizing: border-box;   /* border stays inside the width so edges align with the pill */
+  border: 1px solid rgba(16,24,40,.10);
+  border-top: none;   /* flush against the pill above — only the bottom/side borders show */
+  border-radius: 0 0 14px 14px;   /* squared top — attaches flush under the pill/bar */
+  box-shadow: 0 4px 12px -5px rgba(16,24,40,.20), 0 1px 3px -1px rgba(16,24,40,.10);
+  transform-origin: top center;   /* grow from the attached top edge, not the middle */
+  animation: pnp-menu-in .16s cubic-bezier(.2,.8,.3,1);
+}
+@keyframes pnp-menu-in { from { opacity: 0; transform: translateY(-6px); } to { opacity: 1; transform: translateY(0); } }
+
+.pnp-menu-group { display: flex; flex-direction: column; gap: 2px; }
+.pnp-menu-sep { height: 1px; background: #eef0f4; margin: 7px 6px; }
+.pnp-menu-item {
+  display: flex; align-items: center; gap: 12px; width: 100%;
+  padding: 10px 12px; border: none; background: transparent; border-radius: 10px;
+  font: inherit; font-size: 14px; font-weight: 500; color: #1f2a3d;
+  cursor: pointer; text-align: left;
+}
+.pnp-menu-item span { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.pnp-menu-item svg { flex-shrink: 0; color: #667085; }
+.pnp-menu-item:hover { background: #f5f7fa; }
+.pnp-menu-item:hover svg { color: #475467; }
+.pnp-menu-item.pnp-menu-danger { color: #d13438; }
+.pnp-menu-item.pnp-menu-danger svg { color: #d13438; }
+.pnp-menu-item.pnp-menu-danger:hover { background: #fdf2f2; }

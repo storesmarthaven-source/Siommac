@@ -28,7 +28,6 @@
 .sidebar.collapsed .sidebar-user-role,
 .sidebar.collapsed .sidebar-menu-title,
 .sidebar.collapsed .sidebar-menu-divider,
-.sidebar.collapsed .sidebar-session-label,
 .sidebar.collapsed button span,
 .sidebar.collapsed .logout-text { display: none; }
 
@@ -58,23 +57,6 @@
 }
 .sidebar.collapsed .sidebar-menu-section { padding: 14px 0; }
 
-/* Collapsed logout — small icon-only square button */
-.sidebar.collapsed .sidebar-logout {
-  padding: 10px 0 14px !important;
-  align-items: center !important;
-}
-.sidebar.collapsed .sidebar-logout button {
-  width: 42px !important;
-  height: 42px !important;
-  padding: 0 !important;
-  border-radius: 50% !important;
-  justify-content: center !important;
-  gap: 0 !important;
-  margin: 0 auto !important;
-}
-.sidebar.collapsed .sidebar-logout i { font-size: 16px !important; margin: 0 !important; }
-.sidebar.collapsed .sidebar-session { padding: 10px 0; justify-content: center; flex-direction: column; gap: 2px; }
-.sidebar.collapsed .sidebar-session-time { font-size: 10px; }
 .sidebar.collapsed .sidebar-brand { display: none; }
 
 /* Collapsed tooltip */
@@ -92,8 +74,7 @@
   pointer-events: none; z-index: 1000;
 }
 @keyframes tipIn { from { opacity:0; transform: translateY(-50%) translateX(-4px); } to { opacity:1; transform: translateY(-50%) translateX(0); } }
-.sidebar.collapsed .sidebar-menu li,
-.sidebar.collapsed .sidebar-logout button { position: relative; }
+.sidebar.collapsed .sidebar-menu li { position: relative; }
 
 /* ── Toggle button ── */
 
@@ -135,7 +116,10 @@
 }
 
 /* ── Nav menu ── */
-.sidebar-menu-section { flex: 1; padding: 10px 12px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
+/* min-height:0 lets this flex child shrink below its content height so overflow-y
+   actually scrolls HERE — otherwise the list grows past 100vh and shoves the pinned
+   .sidebar-powered footer off the bottom. */
+.sidebar-menu-section { flex: 1; min-height: 0; padding: 10px 12px; overflow-x: hidden; overflow-y: auto; scrollbar-width: none; }
 .sidebar-menu-section::-webkit-scrollbar { display: none; }
 .sidebar-menu-title {
   font-size: 0.65rem; font-weight: var(--font-weight-bold); letter-spacing: 1.2px;
@@ -149,11 +133,22 @@
 /* Accordion group (Meridian-style) */
 .sb-group { list-style: none; margin-bottom: 2px; }
 .sb-group--flat { margin-bottom: 6px; }
+/* Header row = expand/collapse button (flex:1) + a hover-revealed customize gear. */
+.sb-group-headrow { display: flex; align-items: center; margin-top: 4px; }
 .sb-group-header {
-  width: 100%; display: flex; align-items: center; gap: 8px;
-  padding: 9px 10px 7px; margin-top: 4px;
+  flex: 1; min-width: 0; display: flex; align-items: center; gap: 8px;
+  padding: 9px 10px 7px;
   background: transparent; border: none; cursor: pointer; font-family: inherit;
 }
+.sb-group-gear {
+  flex-shrink: 0; background: none; border: none; cursor: pointer; padding: 5px 7px; margin-right: 4px;
+  color: rgba(255,255,255,0.34); font-size: 0.72rem; border-radius: 6px;
+  opacity: 0; transition: opacity .15s, color .15s, background .15s;
+}
+.sb-group-headrow:hover .sb-group-gear,
+.sb-group-gear:focus-visible { opacity: 1; }
+.sb-group-gear:hover { color: #fff; background: rgba(255,255,255,0.12); }
+.sidebar.collapsed .sb-group-gear { display: none; }
 .sb-group-label {
   flex: 1; text-align: left;
   /* Meridian nav token: section label 11px / 600 / +13% tracking / uppercase */
@@ -279,44 +274,17 @@
 .sidebar.collapsed .sidebar-user-card-info,
 .sidebar.collapsed .sidebar-user-card-chev { display: none; }
 
-/* ── Session timer ── */
-.sidebar-session {
-  display: flex; align-items: center; gap: 9px;
-  padding: 10px 14px; margin: 0 10px 8px;
-  background: rgba(255,255,255,0.06);
-  border-radius: var(--radius-md);
-  font-size: 0.75rem; color: rgba(255,255,255,0.85);
-}
-.sidebar-session.hidden { display: none !important; }
-.sidebar-session i { font-size: 12px; color: var(--siomac-gold); }
-.sidebar-session-label { flex: 1; font-weight: 500; }
-.sidebar-session-time {
-  font-weight: var(--font-weight-bold); font-variant-numeric: tabular-nums;
-  color: white; background: rgba(0,0,0,0.25);
-  padding: 2px 8px; border-radius: 6px; font-size: 0.7rem;
-}
-.sidebar-session.warn { background: rgba(228,12,12,0.2); }
-.sidebar-session.warn i { color: #ff8a80; }
-.sidebar-session.warn .sidebar-session-time { background: var(--siomac-red); }
-
-/* ── Logout ── */
-.sidebar-logout {
-  padding: 12px 12px 16px;
+/* ── Sidebar footer brand — pinned to the bottom (flex-shrink:0 so it never
+      scrolls with the menu). ── */
+.sidebar-powered {
+  margin-top: auto; flex-shrink: 0;
+  padding: 14px 16px 18px;
   border-top: 1px solid rgba(255,255,255,0.08);
-  background: rgba(0,0,0,0.15);
-  display: flex; flex-direction: column; gap: 6px;
+  font-size: 0.72rem; letter-spacing: .01em;
+  color: rgba(255,255,255,0.55); text-align: center;
 }
-.sidebar-logout button {
-  width: 100%; padding: 10px 14px;
-  background: rgba(255,255,255,0.06); border: none; color: white;
-  cursor: pointer; border-radius: 40px;
-  font-size: 0.85rem; font-weight: 600; font-family: inherit;
-  display: flex; align-items: center; justify-content: center; gap: 8px;
-  transition: all 0.2s;
-}
-.sidebar-logout button:hover { background: rgba(255,255,255,0.12); }
-.sidebar-logout #logoutBtn { background: rgba(228,12,12,0.22); }
-.sidebar-logout #logoutBtn:hover { background: var(--siomac-red); }
+.sidebar-powered strong { color: rgba(255,255,255,0.92); font-weight: 500; }
+.sidebar.collapsed .sidebar-powered { display: none; }
 
 /* ═══════════════════════════════════════════
    MAIN CONTENT

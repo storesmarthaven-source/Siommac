@@ -550,13 +550,15 @@ function handleSessionExpired(): void {
 }
 
 function updateSessionWidget(): void {
+  const s = loadSession();
+  // Expiry auto-logout must run even when the timer widget is not rendered
+  // (the sidebar timer was replaced by "Powered by Siomac").
+  if (s && s.expiresAt - Date.now() <= 0) { handleSessionExpired(); return; }
   const widget = document.getElementById('sessionTimer');
   if (!widget) return;
-  const s = loadSession();
   if (!s) { widget.classList.add('hidden'); return; }
   widget.classList.remove('hidden');
   const msLeft = s.expiresAt - Date.now();
-  if (msLeft <= 0) { handleSessionExpired(); return; }
   const totalMins = Math.floor(msLeft / 60000);
   const secs      = Math.floor((msLeft % 60000) / 1000);
   let txt: string;
@@ -968,8 +970,6 @@ function setupEventListeners(): void {
   const payroll = _Payroll();
   const attView = _AttView();
   const sv      = _SettingsView();
-
-  document.getElementById('logoutBtn')?.addEventListener('click', handleLogout);
 
   // Mark attendance
   document.addEventListener('click', (e) => {

@@ -35,6 +35,23 @@
     })();
   </script>
 
+  <!-- Preload the company logo the same way, so the sidebar brand renders the
+       real logo on a hard reload instead of flashing the default building icon. -->
+  <script>
+    (function () {
+      try {
+        var raw = localStorage.getItem('siomac_session_v1');
+        if (!raw) return;
+        var s = JSON.parse(raw);
+        if (!s || !s.companyLogoUrl || s.expiresAt < Date.now()) return;
+        var link = document.createElement('link');
+        link.rel = 'preload'; link.as = 'image'; link.href = s.companyLogoUrl;
+        document.head.appendChild(link);
+        var img = new Image(); img.src = s.companyLogoUrl;
+      } catch (_) {}
+    })();
+  </script>
+
   <!-- Restore dashboard panel theme before first paint to avoid flash -->
   <script>(function(){try{var t=localStorage.getItem('siomac-theme');if(t==='dark')document.body.setAttribute('data-theme','dark');}catch(_){}})();</script>
 

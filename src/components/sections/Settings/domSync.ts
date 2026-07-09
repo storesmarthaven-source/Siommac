@@ -21,12 +21,17 @@ export function applyCompanyNameToDom(name: string): void {
 }
 
 export function applyCompanyLogoToDom(url: string): void {
-  // Login screen logo
+  // Login screen logo — only the configured company logo, never a hardcoded asset.
   const loginLogo = document.getElementById('loginLogo') as HTMLImageElement | null;
   if (loginLogo) {
-    loginLogo.src            = url || 'assets/images/logo.png';
-    loginLogo.style.display  = '';
-    loginLogo.style.borderRadius = '';
+    if (url) {
+      loginLogo.src            = url;
+      loginLogo.style.display  = '';
+      loginLogo.style.borderRadius = '';
+    } else {
+      loginLogo.removeAttribute('src');
+      loginLogo.style.display  = 'none';
+    }
   }
 
   // About section logo
