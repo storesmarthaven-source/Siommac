@@ -28,7 +28,7 @@
  *                                                       active version's real config
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useMemo, useState, useEffect, useRef } from 'preact/hooks';
 import {
   type StatutoryVersion, type PayComponent, type NisClass,
@@ -82,18 +82,18 @@ function defaultStatutoryLayout(): BoardLayout {
     zones: {
       main: [
         defInst(W_SUMMARY,        0,  0, 12, 1, 'wide'),
-        defInst(W_KPI_ACTIVE,     0,  1,  2, 2, 'compact'),
-        defInst(W_KPI_DRAFTS,     2,  1,  2, 2, 'compact'),
-        defInst(W_KPI_COMPONENTS, 4,  1,  2, 2, 'compact'),
-        defInst(W_KPI_NIS,        6,  1,  2, 2, 'compact'),
-        defInst(W_KPI_VERIFY,     8,  1,  2, 2, 'compact'),
-        defInst(W_KPI_APPROVALS, 10,  1,  2, 2, 'compact'),
-        defInst(W_CHART,          0,  3,  8, 5, 'large'),
-        defInst(W_READY,          8,  3,  4, 5, 'standard'),
-        defInst(W_DEADLINES,      0,  8,  4, 4, 'standard'),
-        defInst(W_VERIFY,         4,  8,  4, 4, 'standard'),
-        defInst(W_ACTIVITY,       8,  8,  4, 4, 'standard'),
-        defInst(W_REGISTER,       0, 12, 12, 9, 'hero'),
+        defInst(W_KPI_ACTIVE,     0,  1,  3, 2, 'compact'),
+        defInst(W_KPI_DRAFTS,     3,  1,  3, 2, 'compact'),
+        defInst(W_KPI_COMPONENTS, 6,  1,  3, 2, 'compact'),
+        defInst(W_KPI_NIS,        9,  1,  3, 2, 'compact'),
+        defInst(W_KPI_VERIFY,     0,  3,  3, 2, 'compact'),
+        defInst(W_KPI_APPROVALS,  3,  3,  3, 2, 'compact'),
+        defInst(W_CHART,          0,  5,  8, 5, 'large'),
+        defInst(W_READY,          8,  5,  4, 5, 'standard'),
+        defInst(W_DEADLINES,      0, 10,  4, 4, 'standard'),
+        defInst(W_VERIFY,         4, 10,  4, 4, 'standard'),
+        defInst(W_ACTIVITY,       8, 10,  4, 4, 'standard'),
+        defInst(W_REGISTER,       0, 14, 12, 9, 'hero'),
       ],
     },
   };
@@ -346,77 +346,59 @@ export function StatutoryDashboard({
     </div>
   );
 
-  const renderKpiActive = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-wgt-fill">
-      <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-regular fa-file-lines" /></div>
-      <div>
-        <div class="sdb-stat-label">Active Version</div>
-        <div class="sdb-stat-value">{versionsLoading ? '…' : (activeVer?.label ?? '—')}</div>
-        <div class="sdb-stat-sub">
-          {activeVer
-            ? <><span class="sdb-dot sdb-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
-            : 'No active version'}
-        </div>
+  // Rich KPI tile (onboarding-sized) — colored icon chip + uppercase caption,
+  // large value, context sub-line with a status dot. `text` variant sizes the
+  // value down for label-style values (e.g. the active version name).
+  const Kpi = (p: {
+    icon: string; color: string; cap: string; value: ComponentChildren; sub: ComponentChildren;
+    text?: boolean; onClick?: () => void;
+  }): VNode => (
+    <div
+      class={`sdb-card sdb-kpi sdb-wgt-fill sdb-kpi--${p.color}${p.text ? ' sdb-kpi--text' : ''}${p.onClick ? ' sdb-kpi--clickable' : ''}`}
+      {...(p.onClick ? { role: 'button', tabIndex: 0, onClick: p.onClick,
+        onKeyDown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') p.onClick!(); } } : {})}>
+      <div class="sdb-kpi-top">
+        <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
+        <span class="sdb-kpi-cap">{p.cap}</span>
       </div>
+      <div class="sdb-kpi-val">{p.value}</div>
+      <div class="sdb-kpi-sub">{p.sub}</div>
     </div>
+  );
+
+  const renderKpiActive = (): VNode => (
+    <Kpi icon="fa-file-lines" color="blue" cap="Active Version" text
+      value={versionsLoading ? '…' : (activeVer?.label ?? '—')}
+      sub={activeVer
+        ? <><span class="sdb-dot sdb-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
+        : 'No active version'} />
   );
   const renderKpiDrafts = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-wgt-fill">
-      <div class="sdb-stat-ic sdb-stat-ic--purple"><i class="fa-regular fa-pen-to-square" /></div>
-      <div>
-        <div class="sdb-stat-label">Draft Versions</div>
-        <div class="sdb-stat-value">{versionsLoading ? '…' : drafts}</div>
-        <div class="sdb-stat-sub">{pending > 0 ? `${pending} awaiting review` : 'None awaiting review'}</div>
-      </div>
-    </div>
+    <Kpi icon="fa-pen-to-square" color="purple" cap="Draft Versions"
+      value={versionsLoading ? '…' : drafts}
+      sub={pending > 0 ? `${pending} awaiting review` : 'None awaiting review'} />
   );
   const renderKpiComponents = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-wgt-fill">
-      <div class="sdb-stat-ic sdb-stat-ic--teal"><i class="fa-solid fa-layer-group" /></div>
-      <div>
-        <div class="sdb-stat-label">Pay Components</div>
-        <div class="sdb-stat-value">{activeComponents}</div>
-        <div class="sdb-stat-sub">{inactiveComponents} inactive</div>
-      </div>
-    </div>
+    <Kpi icon="fa-layer-group" color="teal" cap="Pay Components"
+      value={activeComponents} sub={`${inactiveComponents} inactive`} />
   );
   const renderKpiNis = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-stat--clickable sdb-wgt-fill" onClick={() => onTabChange('nis')} role="button" tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') onTabChange('nis'); }}>
-      <div class="sdb-stat-ic sdb-stat-ic--blue"><i class="fa-solid fa-users" /></div>
-      <div>
-        <div class="sdb-stat-label">NIS Classes</div>
-        <div class="sdb-stat-value">{activeVer ? activeNisClasses.length : '—'}</div>
-        <div class="sdb-stat-sub">
-          {activeVer
-            ? <><span class="sdb-dot sdb-dot--green" />On {activeVer.label}</>
-            : 'No active version'}
-        </div>
-      </div>
-    </div>
+    <Kpi icon="fa-users" color="blue" cap="NIS Classes" onClick={() => onTabChange('nis')}
+      value={activeVer ? activeNisClasses.length : '—'}
+      sub={activeVer
+        ? <><span class="sdb-dot sdb-dot--green" />On {activeVer.label}</>
+        : 'No active version'} />
   );
   const renderKpiVerify = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-stat--clickable sdb-wgt-fill" onClick={() => verifyQueue > 0 && onTabChange('verify')} role="button" tabIndex={0}
-      onKeyDown={e => { if (e.key === 'Enter' || e.key === ' ') verifyQueue > 0 && onTabChange('verify'); }}>
-      <div class="sdb-stat-ic sdb-stat-ic--amber"><i class="fa-regular fa-clock" /></div>
-      <div>
-        <div class="sdb-stat-label">Verification Queue</div>
-        <div class="sdb-stat-value">{verifyQueue}</div>
-        <div class="sdb-stat-sub">
-          {verifyQueue > 0 ? <><span class="sdb-dot sdb-dot--amber" />Needs attention</> : 'Queue clear'}
-        </div>
-      </div>
-    </div>
+    <Kpi icon="fa-clock" color="amber" cap="Verification Queue"
+      onClick={verifyQueue > 0 ? () => onTabChange('verify') : undefined}
+      value={verifyQueue}
+      sub={verifyQueue > 0 ? <><span class="sdb-dot sdb-dot--amber" />Needs attention</> : 'Queue clear'} />
   );
   const renderKpiApprovals = (): VNode => (
-    <div class="sdb-card sdb-stat sdb-wgt-fill">
-      <div class="sdb-stat-ic sdb-stat-ic--coral"><i class="fa-solid fa-user-check" /></div>
-      <div>
-        <div class="sdb-stat-label">Pending Approvals</div>
-        <div class="sdb-stat-value">{pending}</div>
-        <div class="sdb-stat-sub">{pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'}</div>
-      </div>
-    </div>
+    <Kpi icon="fa-user-check" color="coral" cap="Pending Approvals"
+      value={pending}
+      sub={pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'} />
   );
 
   const renderChart = (): VNode => (

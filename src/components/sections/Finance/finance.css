@@ -307,6 +307,30 @@
 .sdb-sumbar-v { font-size: 13.5px; font-weight: 600; color: var(--sdb-ink); flex: 0 0 auto; }
 .sdb-sumbar-s { font-size: 12px; color: var(--sdb-body); overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .sdb-sumbar-empty { padding: 12px 18px; color: var(--sdb-muted); font-size: 13px; }
+
+/* Rich KPI tile (onboarding-sized) — icon chip + uppercase caption, large value
+   (scales with the tile via container queries), context sub-line + accent bar. */
+.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; position: relative; overflow: hidden; container-type: inline-size; }
+.sdb-kpi::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--sdb-kpi-accent, transparent); }
+.sdb-kpi--blue   { --sdb-kpi-accent: var(--sdb-blue); }
+.sdb-kpi--purple { --sdb-kpi-accent: var(--sdb-purple); }
+.sdb-kpi--teal   { --sdb-kpi-accent: var(--sdb-teal); }
+.sdb-kpi--amber  { --sdb-kpi-accent: var(--sdb-amber); }
+.sdb-kpi--coral  { --sdb-kpi-accent: var(--sdb-coral); }
+.sdb-kpi--clickable { cursor: pointer; transition: background-color .12s ease; }
+.sdb-kpi--clickable:hover { background: #f9fbfe; }
+.sdb-kpi-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 14px; }
+.sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
+.sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
+.sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
+.sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
+.sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
+.sdb-kpi-cap { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(24px, 13cqw, 33px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(15px, 7.5cqw, 19px); font-weight: 700; line-height: 1.2; white-space: normal; }
+.sdb-kpi-sub { font-size: 12px; color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-sub .sdb-dot { flex: none; }
 .sdb-ch { padding: 18px 20px; }
 .sdb-ch-hd {
   display: flex;
