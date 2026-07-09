@@ -76,24 +76,28 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 }
 // Everything is a widget (per user): full-width summary bar → 6 KPI tiles → NIS
 // chart + readiness → deadlines/verify/activity → the register (full width, tall).
+// Heights are in the board's FINE rowHeight units (cellHeight=12): summary + KPIs
+// are sizeToContent so their h is just an initial hint the fit-pass overrides; the
+// draggable widgets (chart/readiness/deadlines/verify/activity/register) carry real
+// pixel-ish heights (≈ 17·h − 5 px).
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,        0,  0, 12, 1, 'wide'),
-        defInst(W_KPI_ACTIVE,     0,  1,  3, 2, 'compact'),
-        defInst(W_KPI_DRAFTS,     3,  1,  3, 2, 'compact'),
-        defInst(W_KPI_COMPONENTS, 6,  1,  3, 2, 'compact'),
-        defInst(W_KPI_NIS,        9,  1,  3, 2, 'compact'),
-        defInst(W_KPI_VERIFY,     0,  3,  3, 2, 'compact'),
-        defInst(W_KPI_APPROVALS,  3,  3,  3, 2, 'compact'),
-        defInst(W_CHART,          0,  5,  8, 5, 'large'),
-        defInst(W_READY,          8,  5,  4, 5, 'standard'),
-        defInst(W_DEADLINES,      0, 10,  4, 4, 'standard'),
-        defInst(W_VERIFY,         4, 10,  4, 4, 'standard'),
-        defInst(W_ACTIVITY,       8, 10,  4, 4, 'standard'),
-        defInst(W_REGISTER,       0, 14, 12, 9, 'hero'),
+        defInst(W_SUMMARY,        0,  0, 12,  4, 'wide'),
+        defInst(W_KPI_ACTIVE,     0,  4,  3,  7, 'compact'),
+        defInst(W_KPI_DRAFTS,     3,  4,  3,  7, 'compact'),
+        defInst(W_KPI_COMPONENTS, 6,  4,  3,  7, 'compact'),
+        defInst(W_KPI_NIS,        9,  4,  3,  7, 'compact'),
+        defInst(W_KPI_VERIFY,     0, 11,  3,  7, 'compact'),
+        defInst(W_KPI_APPROVALS,  3, 11,  3,  7, 'compact'),
+        defInst(W_CHART,          0, 18,  8, 27, 'large'),
+        defInst(W_READY,          8, 18,  4, 27, 'standard'),
+        defInst(W_DEADLINES,      0, 45,  4, 20, 'standard'),
+        defInst(W_VERIFY,         4, 45,  4, 20, 'standard'),
+        defInst(W_ACTIVITY,       8, 45,  4, 20, 'standard'),
+        defInst(W_REGISTER,       0, 65, 12, 43, 'hero'),
       ],
     },
   };
@@ -653,14 +657,17 @@ export function StatutoryDashboard({
     </div>
   );
 
+  // The summary strip and the 6 KPI tiles are `sizeToContent` — their tiles hug
+  // the card's natural height (no oversized empty tile). Paired with a fine board
+  // rowHeight (cellHeight=12 below) so the hug is tight, not quantized-up.
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary' },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version' },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions' },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components' },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes' },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)' },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals' },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary', sizeToContent: true },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',    sizeToContent: true },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',    sizeToContent: true },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',    sizeToContent: true },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',       sizeToContent: true },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', sizeToContent: true },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals', sizeToContent: true },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness' },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines' },
@@ -691,6 +698,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
+        cellHeight={12}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
