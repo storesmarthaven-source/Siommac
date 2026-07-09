@@ -316,7 +316,7 @@
 
 /* Rich KPI tile (onboarding-sized) — icon chip + uppercase caption, large value
    (scales with the tile via container queries), context sub-line + accent bar. */
-.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; position: relative; overflow: hidden; container-type: inline-size; }
+.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: clamp(6px, 5cqh, 16px); padding: clamp(12px, 9cqh, 26px) 18px; position: relative; overflow: hidden; container-type: size; }
 .sdb-kpi::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--sdb-kpi-accent, transparent); }
 .sdb-kpi--blue   { --sdb-kpi-accent: var(--sdb-blue); }
 .sdb-kpi--purple { --sdb-kpi-accent: var(--sdb-purple); }
@@ -326,17 +326,24 @@
 .sdb-kpi--clickable { cursor: pointer; transition: background-color .12s ease; }
 .sdb-kpi--clickable:hover { background: #f9fbfe; }
 .sdb-kpi-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 14px; }
+.sdb-kpi-ic { width: clamp(30px, 26cqh, 54px); height: clamp(30px, 26cqh, 54px); flex: none; border-radius: 9px; display: grid; place-items: center; font-size: clamp(13px, 11cqh, 22px); }
 .sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
 .sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
 .sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
 .sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
 .sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(24px, 13cqw, 33px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(15px, 7.5cqw, 19px); font-weight: 700; line-height: 1.2; white-space: normal; }
-.sdb-kpi-sub { font-size: 12px; color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-cap { font-size: clamp(10px, 8cqh, 14px); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(22px, 26cqh, 56px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(14px, 13cqh, 28px); font-weight: 700; line-height: 1.2; white-space: normal; }
+.sdb-kpi-sub { font-size: clamp(11px, 9cqh, 15px); color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sdb-kpi-sub .sdb-dot { flex: none; }
+
+/* List cards (Verification Queue, Recent Activity) fill their tile: header fixed,
+   the body/rows flex to fill so resizing grows the content region, not blank space. */
+.sdb-listcard { display: flex; flex-direction: column; }
+.sdb-listcard .sdb-sc-hd { flex: 0 0 auto; }
+.sdb-listcard .sdb-q-total { margin-top: auto; }
+.sdb-listcard-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
 .sdb-ch { padding: 18px 20px; display: flex; flex-direction: column; min-height: 0; }
 .sdb-ch .sdb-ch-hd { flex: 0 0 auto; }
 .sdb-ch-hd {
@@ -431,7 +438,7 @@
 }
 
 /* ── Statutory Readiness card (switchable gauge) ─────────────────────────────── */
-.sdb-ready { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-height: 0; }
+.sdb-ready { display: flex; flex-direction: column; justify-content: space-between; gap: 8px; min-height: 0; container-type: size; }
 .sdb-ready-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .sdb-ready-icon {
   width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%;
@@ -447,9 +454,10 @@
   display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
 }
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
-.sdb-ready-score { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 2px; }
+.sdb-ready-score { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 6px 0 2px; flex: 1 1 auto; min-height: 0; }
 .sdb-ready-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); }
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: 168px; margin: 0 auto; }
+/* Gauge scales with the tile height so resizing the widget grows the gauge. */
+.sdb-gauge-wrap { position: relative; width: 100%; max-width: clamp(130px, 46cqh, 300px); margin: 0 auto; }
 .sdb-gauge { width: 100%; aspect-ratio: 118 / 78; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 /* Fill sweep is driven by the Web Animations API in HalfGauge (left → right). */
@@ -492,7 +500,7 @@
 .sdb-cal-day.is-on { background: var(--sdb-primary); border-color: var(--sdb-primary); }
 .sdb-cal-day.is-on > span, .sdb-cal-day.is-on > strong { color: #fff; }
 .sdb-cal-day.is-on.has-deadline::after { background: #fff; }
-.sdb-cal-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; }
+.sdb-cal-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; flex: 1 1 auto; min-height: 0; overflow: auto; }
 .sdb-cal-item { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--sdb-line); border-radius: 11px; }
 .sdb-cal-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
 .sdb-cal-dot.sdb-tag--upcoming { background: #2563eb; }

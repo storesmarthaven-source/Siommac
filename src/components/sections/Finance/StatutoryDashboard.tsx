@@ -605,7 +605,7 @@ export function StatutoryDashboard({
   );
 
   const renderVerifyQueue = (): VNode => (
-    <div class="sdb-card sdb-wgt-fill">
+    <div class="sdb-card sdb-listcard sdb-wgt-fill">
       <div class="sdb-sc-hd">
         <i class="fa-regular fa-circle-check sdb-sc-lead" />
         <h3>Verification Queue</h3>
@@ -639,29 +639,31 @@ export function StatutoryDashboard({
   );
 
   const renderActivity = (): VNode => (
-    <div class="sdb-card sdb-wgt-fill">
+    <div class="sdb-card sdb-listcard sdb-wgt-fill">
       <div class="sdb-sc-hd">
         <i class="fa-regular fa-calendar sdb-sc-lead" />
         <h3>Recent Activity</h3>
       </div>
-      {activityItems.length === 0 ? (
-        <div class="sdb-act-empty">No recent activity.</div>
-      ) : (
-        activityItems.slice(0, 5).map((item, i) => {
-          const ic = actIcon(item.icon ?? '');
-          return (
-            <div key={i} class="sdb-act">
-              <span class="sdb-act-ic" style={{ background: ic.bg, color: ic.color }}>
-                <i class={`fa-solid ${ic.fa}`} />
-              </span>
-              <div style={{ flex: 1 }}>
-                <div class="sdb-act-t">{item.title}</div>
-                <div class="sdb-act-s">{item.meta}</div>
+      <div class="sdb-listcard-body">
+        {activityItems.length === 0 ? (
+          <div class="sdb-act-empty">No recent activity.</div>
+        ) : (
+          activityItems.slice(0, 5).map((item, i) => {
+            const ic = actIcon(item.icon ?? '');
+            return (
+              <div key={i} class="sdb-act">
+                <span class="sdb-act-ic" style={{ background: ic.bg, color: ic.color }}>
+                  <i class={`fa-solid ${ic.fa}`} />
+                </span>
+                <div style={{ flex: 1 }}>
+                  <div class="sdb-act-t">{item.title}</div>
+                  <div class="sdb-act-s">{item.meta}</div>
+                </div>
               </div>
-            </div>
-          );
-        })
-      )}
+            );
+          })
+        )}
+      </div>
     </div>
   );
 
