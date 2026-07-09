@@ -36,7 +36,7 @@ import {
 import { type ActivityItem } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
-  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
+  type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
@@ -672,20 +672,26 @@ export function StatutoryDashboard({
   // their resize handles). Each card's content FILLS + SCALES with its tile instead:
   // the chart/gauge scale, KPI text scales via cqh (stable because RGL gives the tile
   // a definite px height), lists flex to fill and scroll past their fit.
+  //
+  // Every widget declares a resize FLOOR (allowedSizes → minGridFor). Without one the
+  // generic floor is 2 cells ≈ 22px on this fine 6px grid, so a card could be dragged
+  // far below its content and the centered text clipped away ("text hides").
+  const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
+    [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary' },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version' },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions' },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components' },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes' },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)' },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals' },
-    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule' },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness' },
-    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines' },
-    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue' },
-    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity' },
-    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register' },
+    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', allowedSizes: floor('compact', 2, 8) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        allowedSizes: floor('compact', 2, 8) },
+    [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 4, 14) },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 20) },
+    [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
+    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 3, 12) },
+    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',          allowedSizes: floor('standard', 3, 12) },
+    [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
   };
 
   return (
