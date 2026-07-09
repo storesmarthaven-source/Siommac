@@ -26,6 +26,8 @@ export interface EmployeeResolved {
   /** Human-readable department name (joined from departments table). */
   department: string | null;
   position: string | null;
+  /** Public avatar URL, or null → the cell renders initials. */
+  imageUrl: string | null;
 }
 
 export interface EmployeePickerOption {
@@ -70,6 +72,7 @@ interface DbUserRow {
   department_id: string | null;
   position: string | null;
   status: string;
+  profile_image_url: string | null;
 }
 
 interface DbDeptRow {
@@ -107,7 +110,7 @@ export async function resolveEmployees(ids: string[]): Promise<Map<string, Emplo
 
   const { data: users, error: usrErr } = await sb
     .from('app_users')
-    .select('id, full_name, employee_number, department_id, position, status')
+    .select('id, full_name, employee_number, department_id, position, status, profile_image_url')
     .in('id', unique);
   if (usrErr) throw Object.assign(new Error('resolveEmployees/users: ' + usrErr.message), { status: 500 });
 
@@ -139,6 +142,7 @@ export async function resolveEmployees(ids: string[]): Promise<Map<string, Emplo
       employeeNo:  r.employee_number ?? null,
       department:  r.department_id ? (deptMap.get(r.department_id) ?? null) : null,
       position:    r.position ?? null,
+      imageUrl:    r.profile_image_url ?? null,
     });
   }
   return result;

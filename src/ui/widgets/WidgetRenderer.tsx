@@ -18,27 +18,31 @@ export function WidgetRenderer({ item, preview, local, demo }: { item: BoardWidg
   const resolved = resolveBoardWidget(item.widgetId, local);
   if (!resolved) return <EmptyState icon="fa-puzzle-piece" title="Widget unavailable" text={`Unknown widget: ${item.widgetId}`} />;
   const def = findWidgetDef(item.widgetId);
+  const merged = { ...(def?.defaultConfig ?? {}), ...item.config };
+  const props = {
+    widgetId: item.widgetId, instanceId: item.instanceId, pageKey: item.pageKey, zoneId: item.zoneId,
+    sizeKey: item.sizeKey, config: merged, preview,
+  };
 
-  // Page-local widgets (e.g. the employee register) are gated by the page that placed
-  // them, not by this generic mechanism — only registry widgets carry dataSource.permissions.
+  // PAGE-LOCAL widget: CALL the render fn so its output DIFFS in place. The page rebuilds
+  // its localWidgets map (and thus this closure) on every render, so mounting it as a
+  // component TYPE (`<Live/>`) would give Preact a new type each render → the whole subtree
+  // REMOUNTS every parent re-render (replaying mount animations, resetting child state,
+  // e.g. a hovered chart re-triggering a sibling gauge). Local widgets are permission-gated
+  // by the page that placed them, not by this generic mechanism.
+  const localDef = local?.[item.widgetId];
+  if (localDef) return localDef.render(props);
+
+  // Registry widget — stable render reference, so mounting as a component is safe and lets
+  // it own its data hooks. Gate on the viewer's permissions at every render.
   const required = def?.permissions?.requiredPermissions ?? def?.dataSource.permissions ?? [];
   if (required.length && !required.every(can)) {
     return <EmptyState icon="fa-lock" title="No permission" text="You don't have permission to view this widget." />;
   }
-
-  const merged = { ...(def?.defaultConfig ?? {}), ...item.config };
-
-  // Demo data: show the representative static sample (registry widgets only; local widgets
-  // like the register have no renderPreview and fall through to their live render).
+  // Demo data: show the representative static sample (registry widgets only).
   if (demo && def?.renderPreview) {
     return def.renderPreview({ widgetId: item.widgetId, sizeKey: item.sizeKey, config: merged });
   }
-
   const Live = resolved.render;
-  return (
-    <Live
-      widgetId={item.widgetId} instanceId={item.instanceId} pageKey={item.pageKey} zoneId={item.zoneId}
-      sizeKey={item.sizeKey} config={merged} preview={preview}
-    />
-  );
+  return <Live {...props} />;
 }

@@ -30,6 +30,7 @@
 import type { VNode } from 'preact';
 import { useEmployeeNames } from '@api/finance/lookups';
 import type { EmployeeResolved } from '@api/finance/lookups';
+import { PersonCell } from '@ui';
 
 // ── EmployeeCellResolved ───────────────────────────────────────────────────────
 
@@ -50,8 +51,9 @@ export interface EmployeeCellResolvedProps {
 }
 
 /**
- * Renders pre-resolved employee display data.
- * Shows a text skeleton while resolved is undefined (loading state).
+ * Renders pre-resolved employee display data. This is the Finance adapter: it maps an
+ * `EmployeeResolved` (id → name / photo / dept) onto the shared @ui `PersonCell`, so the
+ * avatar + name + meta layout lives in exactly one place. Shows a skeleton while loading.
  */
 export function EmployeeCellResolved({
   resolved,
@@ -61,13 +63,7 @@ export function EmployeeCellResolved({
   class: extraClass,
 }: EmployeeCellResolvedProps): VNode {
   if (!resolved) {
-    // Skeleton: matches a typical "Name · EMP-0001" width
-    return (
-      <span class={`ec-loading${extraClass ? ` ${extraClass}` : ''}`} aria-busy="true">
-        <span class="ec-skeleton ec-skeleton--name" aria-hidden="true" />
-        <span class="ec-skeleton ec-skeleton--no"   aria-hidden="true" />
-      </span>
-    );
+    return <PersonCell name="" loading class={extraClass} />;
   }
 
   const displayName = resolved.fullName !== resolved.id
@@ -76,23 +72,20 @@ export function EmployeeCellResolved({
       ? `[${fallbackId.slice(0, 8)}…]`
       : '—';
 
+  const subParts: string[] = [];
+  if (showDept && resolved.department) subParts.push(resolved.department);
+  if (showPosition && resolved.position) subParts.push(resolved.position);
+
   return (
-    <span class={`ec-root${extraClass ? ` ${extraClass}` : ''}`}>
-      <span class="ec-primary">
-        <span class="ec-name">{displayName}</span>
-        {resolved.employeeNo && (
-          <span class="ec-no hse-muted" title="Employee number">
-            {' · '}{resolved.employeeNo}
-          </span>
-        )}
-      </span>
-      {showDept && resolved.department && (
-        <span class="ec-sub hse-muted ec-dept">{resolved.department}</span>
-      )}
-      {showPosition && resolved.position && (
-        <span class="ec-sub hse-muted ec-pos">{resolved.position}</span>
-      )}
-    </span>
+    <PersonCell
+      name={displayName}
+      image={resolved.imageUrl}
+      meta={resolved.employeeNo
+        ? <span title="Employee number">{'· '}{resolved.employeeNo}</span>
+        : undefined}
+      sub={subParts.length ? subParts.join(' · ') : undefined}
+      class={extraClass}
+    />
   );
 }
 

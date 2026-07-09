@@ -4,9 +4,9 @@
  * Statutory Configuration dashboard — a self-contained enterprise page (its own
  * `.sdb` design system) rendered directly by StatutoryConfigOverview. Not a widget.
  *
- * Layout (matches conv-statutory-config-dashboard.html mockup):
- *   Header  →  6 stat cards  →  middle row (combo chart | readiness donut | upcoming dates)
- *   Bottom  →  tabbed table (Rate Versions / NIS / Components / Verify / Reports) + side stack
+ * Layout: movable board — summary strip · 6 KPI cards · full-width NIS rate chart ·
+ *   readiness (Config Completeness) + upcoming deadlines · then the tabbed register
+ *   (Rate Versions / NIS / Components / Verify / Reports).
  *
  * Data binding notes (be honest — no fake numbers):
  *   REAL:
@@ -16,11 +16,8 @@
  *     - Verification Queue count                      ← verifyQueue
  *     - Pending Approvals count                       ← pending
  *     - Upcoming Effective Dates list                 ← versions with future effectiveFrom
- *     - Recent Activity list                          ← activityItems
- *     - Readiness donut segments                      ← version status distribution
+ *     - Readiness gauge + 2 stats                     ← version status / config ratios
  *     - NIS Classes count in stat card                ← activeNisClasses.length
- *     - Verification-queue breakdown (Missing NIS Numbers / Opening-Balance
- *       Anomalies)                                    ← derived from pending profiles
  *
  *   DERIVED (computed from real data, not server-authored — clearly labelled):
  *     - Readiness lenses (Config Completeness / NIS Verification / Payroll)
@@ -29,16 +26,20 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
+import { memo } from 'preact/compat';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import {
   type StatutoryVersion, type PayComponent, type NisClass,
 } from '@api/finance/statutory';
-import { type ActivityItem } from '@ui';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
+import { LucideIcon } from '@ui/LucideIcon';
+import { InfoTip } from '@ui/InfoTip';
 import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
+import { toast } from '@store';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, fmtMoney, humanize } from './financeShared';
 
@@ -67,35 +68,54 @@ const W_KPI_APPROVALS  = 'finance.statutory.kpi.approvals';
 const W_CHART     = 'finance.statutory.nisChart';
 const W_READY     = 'finance.statutory.readiness';
 const W_DEADLINES = 'finance.statutory.deadlines';
-const W_VERIFY    = 'finance.statutory.verifyQueue';
-const W_ACTIVITY  = 'finance.statutory.activity';
 const W_REGISTER  = 'finance.statutory.register';
+
+// Reverse map (widget id → source constant NAME) — powers the "Copy layout" capture
+// button, which emits ready-to-paste `defInst(...)` lines for `defaultStatutoryLayout()`.
+const WIDGET_CONST: Record<string, string> = {
+  [W_SUMMARY]: 'W_SUMMARY',
+  [W_KPI_ACTIVE]: 'W_KPI_ACTIVE', [W_KPI_DRAFTS]: 'W_KPI_DRAFTS', [W_KPI_COMPONENTS]: 'W_KPI_COMPONENTS',
+  [W_KPI_NIS]: 'W_KPI_NIS', [W_KPI_VERIFY]: 'W_KPI_VERIFY', [W_KPI_APPROVALS]: 'W_KPI_APPROVALS',
+  [W_CHART]: 'W_CHART', [W_READY]: 'W_READY', [W_DEADLINES]: 'W_DEADLINES',
+  [W_REGISTER]: 'W_REGISTER',
+};
+
+// Serialize a live board zone into the exact `defInst(...)` code block used by
+// `defaultStatutoryLayout()`, so a hand-arranged board can be captured verbatim.
+function serializeLayout(items: WidgetInstance[]): string {
+  const rows = [...items]
+    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
+    .map(w => {
+      const name = (WIDGET_CONST[w.widgetId] ?? `'${w.widgetId}'`).padEnd(17);
+      const n = (v: number) => String(v).padStart(2);
+      return `        defInst(${name}, ${n(w.x)}, ${n(w.y)}, ${n(w.w)}, ${n(w.h)}, '${w.sizeKey}'),`;
+    });
+  return `      main: [\n${rows.join('\n')}\n      ],`;
+}
 
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// 12-COLUMN grid. Summary strip → 6 compact KPI cards on ONE row (w2, fixed h7 ≈ 114px,
-// pinned/locked) → FULL-WIDTH NIS rate chart → readiness/deadlines/verify/activity on
-// one row (w3 each) → the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
+// 12-COLUMN grid. 6 compact KPI cards on the TOP row (w2 each) → thin summary strip →
+// a row of chart (left half, w6) · Upcoming Deadlines (w3) · Config Completeness (w3) →
+// the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
 // Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_SUMMARY,         0,   0, 12,  4, 'wide'),      // ≈ 60px  thin strip
-        defInst(W_KPI_ACTIVE,      0,   4,  2,  7, 'compact'),   // ≈ 114px  6 KPIs, ONE row
-        defInst(W_KPI_DRAFTS,      2,   4,  2,  7, 'compact'),
-        defInst(W_KPI_COMPONENTS,  4,   4,  2,  7, 'compact'),
-        defInst(W_KPI_NIS,         6,   4,  2,  7, 'compact'),
-        defInst(W_KPI_VERIFY,      8,   4,  2,  7, 'compact'),
-        defInst(W_KPI_APPROVALS,  10,   4,  2,  7, 'compact'),
-        defInst(W_CHART,           0,  11, 12, 30, 'large'),     // FULL WIDTH ≈ 528px
-        defInst(W_READY,           0,  41,  3, 24, 'standard'),  // info row (4 × w3)
-        defInst(W_DEADLINES,       3,  41,  3, 24, 'standard'),
-        defInst(W_VERIFY,          6,  41,  3, 24, 'standard'),
-        defInst(W_ACTIVITY,        9,  41,  3, 24, 'standard'),
-        defInst(W_REGISTER,        0,  65, 12, 46, 'hero'),      // ≈ 816px
+        defInst(W_KPI_ACTIVE,      0,   0,  2,  6, 'compact'),   // 6 compact KPIs, top row
+        defInst(W_KPI_DRAFTS,      2,   0,  2,  6, 'compact'),
+        defInst(W_KPI_COMPONENTS,  4,   0,  2,  6, 'compact'),
+        defInst(W_KPI_NIS,         6,   0,  2,  6, 'compact'),
+        defInst(W_KPI_VERIFY,      8,   0,  2,  6, 'compact'),
+        defInst(W_KPI_APPROVALS,  10,   0,  2,  6, 'compact'),
+        defInst(W_SUMMARY,         0,   6, 12,  4, 'wide'),      // thin summary strip
+        defInst(W_CHART,           0,  10,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
+        defInst(W_DEADLINES,       6,  10,  3, 24, 'standard'),
+        defInst(W_READY,           9,  10,  3, 24, 'standard'),
+        defInst(W_REGISTER,        0,  34, 12, 40, 'hero'),      // register table
       ],
     },
   };
@@ -108,18 +128,11 @@ export interface StatutoryDashboardProps {
   activeVer: StatutoryVersion | null;
   /** NIS bands of the active version — powers the NIS contribution schedule chart. */
   activeNisClasses: NisClass[];
-  /** Count of verified NIS profiles — for the NIS Verification readiness lens. */
-  verifiedNisCount: number;
   drafts: number;
   pending: number;
   activeComponents: number;
   verifyQueue: number;
-  /** Real sub-counts of the pending verification queue (derived in the parent). */
-  verifyBreakdown: { missingNisNumbers: number; openingAnomalies: number };
-  activityItems: ActivityItem[];
   versionsLoading: boolean;
-  // ── Quick-action handler — the readiness card's CTA opens the Verify tab. ──
-  onVerifyNis: () => void;
   // ── Tab state (owned by parent so drawer/edit dialogs stay synced) ────────
   tab: MainTab;
   onTabChange: (t: MainTab) => void;
@@ -131,7 +144,9 @@ export interface StatutoryDashboardProps {
 
 /** Semicircle gauge (solid track + colored fill) — matches the obv MetricGauge.
  *  The fill sweeps LEFT→RIGHT from 0 to the value; the value shows in the copy. */
-function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
+// `memo` so unrelated parent re-renders (e.g. hovering a chart point → setChartHover)
+// never re-run the fill animation — it only re-animates when pct/color actually change.
+const HalfGauge = memo(function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
   const p = Math.max(0, Math.min(100, pct));
   const rest = 100 - p; // dashoffset that reveals exactly the first p units (left→right)
   const ARC = 'M17 62 A42 42 0 0 1 101 62';
@@ -142,7 +157,9 @@ function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
     if (!el) return;
     const reduce = typeof window !== 'undefined' && window.matchMedia
       && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) return; // element already rests at the correct offset via the attribute
+    if (reduce) { el.style.strokeDashoffset = String(rest); return; } // jump to final, no motion
+    // Always sweep LEFT→RIGHT from empty (offset 100) to the value — the static attribute
+    // stays at 100 so there's no flash of the filled arc before the animation starts.
     const anim = el.animate(
       [{ strokeDashoffset: 100 }, { strokeDashoffset: rest }],
       { duration: 1300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', delay: 80, fill: 'forwards' },
@@ -155,36 +172,17 @@ function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
       <svg viewBox="0 0 118 78">
         <path d={ARC} pathLength={100} fill="none" stroke="#e9edf4" strokeWidth={13} strokeLinecap="round" />
         <path ref={fillRef} d={ARC} pathLength={100} fill="none" stroke={color} strokeWidth={13}
-          strokeLinecap="round" strokeDasharray="100" strokeDashoffset={rest} />
+          strokeLinecap="round" strokeDasharray="100" strokeDashoffset={100} />
       </svg>
     </div>
   );
-}
-
-// ── Activity icon helper ────────────────────────────────────────────────────────
-
-function actIcon(icon: string): { bg: string; color: string; fa: string } {
-  switch (icon) {
-    case 'check':  return { bg: '#e4f8ea', color: '#16a34a', fa: 'fa-bolt' };
-    case 'upload': return { bg: '#eaf1fe', color: '#2563eb', fa: 'fa-file-import' };
-    case 'gavel':  return { bg: '#f2effe', color: '#8b5cf6', fa: 'fa-layer-group' };
-    default:       return { bg: '#fdf3e0', color: '#f59e0b', fa: 'fa-clock' };
-  }
-}
-
-// ── Time-ago helper ────────────────────────────────────────────────────────────
-
-function timeAgo(isoOrLabel: string): string {
-  // activityItems already have a `meta` string like "Active · 01 Jan 2025" — just show it
-  return isoOrLabel;
-}
+});
 
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function StatutoryDashboard({
-  versions, components, activeVer, activeNisClasses, verifiedNisCount, drafts, pending, activeComponents, verifyQueue,
-  verifyBreakdown, activityItems, versionsLoading,
-  onVerifyNis,
+  versions, components, activeVer, activeNisClasses, drafts, pending, activeComponents, verifyQueue,
+  versionsLoading,
   tab, onTabChange, tabContent,
 }: StatutoryDashboardProps): VNode {
 
@@ -220,50 +218,33 @@ export function StatutoryDashboard({
     setWeekStart(d); setSelectedDay(d);
   };
 
-  // ── Statutory readiness lenses (switchable via ‹ ›) ─────────────────────────
-  const [readyLens, setReadyLens] = useState(0);
-  const readiness = useMemo(() => {
-    // Config completeness — booleans over the active version's configuration.
-    const checks = [
-      !!activeVer,
-      activeNisClasses.length > 0,
-      !!activeVer && activeVer.payePersonalAllowance > 0 && activeVer.payeBand1Rate > 0 && activeVer.payeBand2Rate > 0,
-      !!activeVer && activeVer.hsWeeklyHigh >= 0 && activeVer.hsWeeklyLow >= 0 && activeVer.hsMonthlyThreshold > 0,
-      !!activeVer && activeVer.nisMonthyCeiling != null,
-      components.some(c => c.isStatutory && c.isActive),
-    ];
+  // ── Config Completeness — the single readiness lens. Booleans over the active
+  //    version's configuration; drives the gauge, subtext, and the two info stats.
+  const lens = useMemo(() => {
+    const hasVer     = !!activeVer;
+    const hasPaye    = !!activeVer && activeVer.payePersonalAllowance > 0 && activeVer.payeBand1Rate > 0 && activeVer.payeBand2Rate > 0;
+    const hasCeiling = !!activeVer && activeVer.nisMonthyCeiling != null;
+    const hasNis     = activeNisClasses.length > 0 && hasCeiling;
+    const hasHs      = !!activeVer && activeVer.hsWeeklyHigh >= 0 && activeVer.hsWeeklyLow >= 0 && activeVer.hsMonthlyThreshold > 0;
+    const hasComp    = components.some(c => c.isStatutory && c.isActive);
+    // Six real gates behind the % and the "X of 6" line. The four cards below show WHICH
+    // config DOMAINS are set — actionable and non-duplicative of the KPI counts.
+    const checks = [hasVer, activeNisClasses.length > 0, hasPaye, hasHs, hasCeiling, hasComp];
     const passed = checks.filter(Boolean).length;
     const configPct = Math.round((passed / checks.length) * 100);
-    // NIS verification — verified vs (verified + pending) among submitted profiles.
-    const verifyTotal = verifiedNisCount + verifyQueue;
-    const verifyPct = verifyTotal === 0 ? 100 : Math.round((verifiedNisCount / verifyTotal) * 100);
-    // Payroll readiness — the weakest gate (both must be high to run cleanly).
-    const payrollPct = Math.min(configPct, verifyPct);
-    return [
-      {
-        title: 'Config Completeness', color: '#16a34a', icon: 'fa-clipboard-check', pct: configPct,
-        subtitle: 'PAYE, NIS & Health Surcharge on the active version.',
-        sub: `${passed} of ${checks.length} configuration items set`,
-        stats: [{ label: 'NIS Classes', value: String(activeNisClasses.length) }, { label: 'Pay Components', value: String(activeComponents) }],
-        cta: 'Open active version', onCta: () => onTabChange('nis'),
-      },
-      {
-        title: 'NIS Verification', color: '#2f5fe0', icon: 'fa-user-check', pct: verifyPct,
-        subtitle: 'Employee NIS profiles cleared for payroll.',
-        sub: verifyTotal === 0 ? 'No profiles awaiting verification' : `${verifiedNisCount} verified · ${verifyQueue} pending`,
-        stats: [{ label: 'Verified', value: String(verifiedNisCount) }, { label: 'Pending', value: String(verifyQueue) }],
-        cta: 'Open verification', onCta: onVerifyNis,
-      },
-      {
-        title: 'Payroll Readiness', color: '#12b3a6', icon: 'fa-money-check-dollar', pct: payrollPct,
-        subtitle: 'Ready to run a clean payroll cycle.',
-        sub: `Config ${configPct}% · Verification ${verifyPct}%`,
-        stats: [{ label: 'Config', value: `${configPct}%` }, { label: 'Verified NIS', value: `${verifyPct}%` }],
-        cta: 'Review readiness', onCta: onVerifyNis,
-      },
-    ];
-  }, [activeVer, activeNisClasses.length, components, activeComponents, verifiedNisCount, verifyQueue, onTabChange, onVerifyNis]);
-  const lens = readiness[readyLens] ?? readiness[0]!;
+    return {
+      title: 'Readiness', color: '#16a34a', pct: configPct,
+      subtitle: 'PAYE, NIS & Health Surcharge',
+      sub: `${passed} of ${checks.length} configuration items set`,
+      gates: [
+        { label: 'PAYE Bands',       ok: hasPaye },
+        { label: 'NIS Schedule',     ok: hasNis },
+        { label: 'Health Surcharge', ok: hasHs },
+        { label: 'Pay Components',   ok: hasComp },
+      ],
+      cta: 'Open active version', onCta: () => onTabChange('nis'),
+    };
+  }, [activeVer, activeNisClasses.length, components, onTabChange]);
 
   // Active version's earnings classes (sorted) — powers the summary class count and
   // the active-rate figure below.
@@ -317,10 +298,7 @@ export function StatutoryDashboard({
     return Math.round(((c.employeeWeekly + c.employerWeekly) / c.assumedAverageWeekly) * 1000) / 10;
   })();
 
-  // ── Activity icon lookup ──────────────────────────────────────────────────────
-  // activityItems come from parent (derived from versions list)
-
-  // ── Widget board (Readiness / Upcoming Deadlines / Verify Queue / Activity) ──
+  // ── Widget board (Readiness / Upcoming Deadlines) ──
   // Per-user movable/resizable zone. Only managers/admins may customize it.
   const canEditBoard = useSessionStore(selectIsManager);
   const isAdmin      = useSessionStore(selectIsAdmin);
@@ -337,6 +315,19 @@ export function StatutoryDashboard({
     () => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can),
     [],
   );
+  // Capture the CURRENT board arrangement as ready-to-paste `defInst(...)` code, so a
+  // hand-tuned layout can be hard-coded into `defaultStatutoryLayout()` verbatim. The
+  // page + board share one query cache, so `boardItems` reflects live drag/resize.
+  async function captureLayout(): Promise<void> {
+    const code = serializeLayout(boardItems);
+    try { await navigator.clipboard.writeText(code); toast.success('Layout copied — paste it to Claude'); }
+    catch { toast('Copied below — select and copy it'); }
+    await dialog.prompt({
+      title: 'Board layout coordinates',
+      text: 'This is the exact arrangement on screen. It is already on your clipboard — paste it to Claude to hard-code as the default.',
+      type: 'textarea', value: code, confirmText: 'Done', cancelText: 'Close',
+    });
+  }
   function discardPreview(): void { setPreview(null); setLibOpen(true); }
   function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
 
@@ -451,7 +442,7 @@ export function StatutoryDashboard({
       <div class="sdb-card sdb-ch sdb-wgt-fill">
         <div class="sdb-ch-hd">
           <h2>NIS Contribution Rate</h2>
-          <i class="fa-solid fa-circle-info sdb-info-ic" />
+          <InfoTip placement="bottom" tip="The headline NIS rate for each schedule version on record — (employee + employer weekly) as a % of the assumed average earnings. The trend shows every version, active and retired." />
           <div class="sdb-ch-tools">
             <span class="sdb-pill-sel">
               <i class="fa-solid fa-arrow-trend-up" /> {first && last ? `${first.year}–${last.year}` : 'History'}
@@ -512,32 +503,6 @@ export function StatutoryDashboard({
               </svg>
             )}
           </div>
-          {/* Compact info cards (right of the chart) — icon + label + value. */}
-          <div class="sdb-mini">
-            <div class="sdb-mini-item">
-              <span class="sdb-fact-ic sdb-fact-ic--blue"><i class="fa-solid fa-percent" /></span>
-              <div class="sdb-mini-txt">
-                <span class="sdb-mini-k">Active rate</span>
-                <span class="sdb-mini-vv">{nisRatePct != null ? `${nisRatePct}%` : '—'}</span>
-              </div>
-            </div>
-            {first && last && last.rate !== first.rate && (
-              <div class="sdb-mini-item">
-                <span class="sdb-fact-ic sdb-fact-ic--teal"><i class="fa-solid fa-arrow-trend-up" /></span>
-                <div class="sdb-mini-txt">
-                  <span class="sdb-mini-k">Since {first.year}</span>
-                  <span class="sdb-mini-vv">{last.rate > first.rate ? '+' : ''}{(last.rate - first.rate).toFixed(1)} pts</span>
-                </div>
-              </div>
-            )}
-            <div class="sdb-mini-item">
-              <span class="sdb-fact-ic sdb-fact-ic--amber"><i class="fa-solid fa-layer-group" /></span>
-              <div class="sdb-mini-txt">
-                <span class="sdb-mini-k">Schedules on record</span>
-                <span class="sdb-mini-vv">{pts.length}</span>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     );
@@ -565,37 +530,39 @@ export function StatutoryDashboard({
     </div>
   );
 
+  // Readiness card — rebuilt to the Onboarding `obv-activation-side-card` model: a
+  // FIXED-content grid (head → score-row with a fixed-size gauge → 2-stat grid → CTA),
+  // so it scales predictably in the board instead of stretch-growing a blank gauge.
+  // Readiness card — tight, gauge-centric: head (icon · title · ‹ ›) → a FIXED-size
+  // semicircle gauge with the % overlaid → one subtext line → lens dots → CTA. Compact
+  // and top-aligned; no stretch, no dead space.
   const renderReadiness = (): VNode => (
-    <div class="sdb-card sdb-ch sdb-ready sdb-wgt-fill">
-      <div class="sdb-ready-head">
-        <span class="sdb-ready-icon" style={{ color: lens.color }}><i class={`fa-solid ${lens.icon}`} /></span>
-        <div class="sdb-ready-htext">
-          <h2>{lens.title}</h2>
-          <p>{lens.subtitle}</p>
-        </div>
-        <div class="sdb-ready-nav-group">
-          <button type="button" class="sdb-ready-nav" aria-label="Previous readiness view"
-            onClick={() => setReadyLens(l => (l + readiness.length - 1) % readiness.length)}>
-            <i class="fa-solid fa-chevron-left" />
-          </button>
-          <button type="button" class="sdb-ready-nav" aria-label="Next readiness view"
-            onClick={() => setReadyLens(l => (l + 1) % readiness.length)}>
-            <i class="fa-solid fa-chevron-right" />
-          </button>
-        </div>
+    <div class="sdb-card sdb-ready sdb-wgt-fill">
+      <div class="sdb-ch-hd">
+        <i class="fa-regular fa-circle-check" style={{ color: lens.color }} />
+        <h2>{lens.title}</h2>
       </div>
+      <div class="sdb-ready-subtitle">{lens.subtitle}</div>
+
       <div class="sdb-ready-score">
         <div class="sdb-gauge-wrap">
-          <HalfGauge key={readyLens} pct={lens.pct} color={lens.color} />
+          <HalfGauge pct={lens.pct} color={lens.color} />
           <div class="sdb-gauge-val" style={{ color: lens.color }}>{lens.pct}%</div>
         </div>
       </div>
+
       <div class="sdb-ready-sub">{lens.sub}</div>
-      <div class="sdb-ready-dots" aria-hidden="true">
-        {readiness.map((_, i) => (
-          <span key={i} class={`sdb-ready-dot${i === readyLens ? ' is-on' : ''}`} />
+
+      <div class="sdb-ready-gates">
+        {lens.gates.map((g, i) => (
+          <div key={i} class={`sdb-gate ${g.ok ? 'ok' : 'warn'}`}>
+            <span class="sdb-gate-ci"><LucideIcon name={g.ok ? 'Check' : 'Minus'} size={13} strokeWidth={2.4} /></span>
+            <span class="sdb-gate-l">{g.label}</span>
+            <span class="sdb-gate-v">{g.ok ? 'Set' : 'Open'}</span>
+          </div>
         ))}
       </div>
+
       <button type="button" class="sdb-ready-cta" onClick={lens.onCta}>{lens.cta}</button>
     </div>
   );
@@ -604,7 +571,7 @@ export function StatutoryDashboard({
     <div class="sdb-card sdb-ch sdb-cal sdb-wgt-fill">
       <div class="sdb-ch-hd">
         <i class="fa-regular fa-calendar" style={{ color: '#2f5fe0' }} />
-        <h2 style={{ fontSize: 14 }}>Upcoming Deadlines</h2>
+        <h2>Upcoming Deadlines</h2>
         <div class="sdb-ch-tools">
           <button type="button" class="sdb-ready-nav" aria-label="Previous week" onClick={() => shiftWeek(-1)}><i class="fa-solid fa-chevron-left" /></button>
           <button type="button" class="sdb-ready-nav" aria-label="Next week" onClick={() => shiftWeek(1)}><i class="fa-solid fa-chevron-right" /></button>
@@ -628,8 +595,10 @@ export function StatutoryDashboard({
       </div>
       <div class="sdb-cal-list">
         {selectedDeadlines.length === 0 ? (
-          <div class="sdb-up-empty">
-            No statutory deadlines on {selectedDay.toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}. NIS &amp; PAYE fall on the 15th; TD4 by 28 Feb.
+          <div class="sdb-cal-empty">
+            <LucideIcon name="CalendarCheck" size={52} strokeWidth={1.5} class="sdb-cal-empty-ic" />
+            <div class="sdb-cal-empty-t">No Filings Due on {selectedDay.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+            <div class="sdb-cal-empty-s">NIS and PAYE remittances are due on the 15th; the TD4 return by 28 February.</div>
           </div>
         ) : (
           selectedDeadlines.map((d, i) => (
@@ -647,69 +616,6 @@ export function StatutoryDashboard({
     </div>
   );
 
-  const renderVerifyQueue = (): VNode => (
-    <div class="sdb-card sdb-listcard sdb-wgt-fill">
-      <div class="sdb-sc-hd">
-        <i class="fa-regular fa-circle-check sdb-sc-lead" />
-        <h3>Verification Queue</h3>
-        <span class="sdb-view-all" onClick={() => onTabChange('verify')} role="button" tabIndex={0}>View all</span>
-      </div>
-      {verifyQueue === 0 ? (
-        <div class="sdb-act-empty">Queue clear — all NIS profiles verified.</div>
-      ) : (
-        <>
-          <div class="sdb-q-row">
-            <span class="sdb-q-ic"><i class="fa-regular fa-circle-user" /></span>
-            <span class="sdb-q-l">NIS Profiles Pending</span>
-            <span class="sdb-q-n">{verifyQueue}</span>
-          </div>
-          <div class="sdb-q-row sdb-q-row--muted">
-            <span class="sdb-q-ic"><i class="fa-solid fa-hashtag" /></span>
-            <span class="sdb-q-l">Missing NIS Numbers</span>
-            <span class="sdb-q-n">{verifyBreakdown.missingNisNumbers}</span>
-          </div>
-          <div class="sdb-q-row sdb-q-row--muted">
-            <span class="sdb-q-ic"><i class="fa-solid fa-chart-line" /></span>
-            <span class="sdb-q-l">Opening-Balance Anomalies</span>
-            <span class="sdb-q-n">{verifyBreakdown.openingAnomalies}</span>
-          </div>
-          <div class="sdb-q-total">
-            <span>Total pending</span><span>{verifyQueue}</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
-
-  const renderActivity = (): VNode => (
-    <div class="sdb-card sdb-listcard sdb-wgt-fill">
-      <div class="sdb-sc-hd">
-        <i class="fa-regular fa-calendar sdb-sc-lead" />
-        <h3>Recent Activity</h3>
-      </div>
-      <div class="sdb-listcard-body">
-        {activityItems.length === 0 ? (
-          <div class="sdb-act-empty">No recent activity.</div>
-        ) : (
-          activityItems.slice(0, 5).map((item, i) => {
-            const ic = actIcon(item.icon ?? '');
-            return (
-              <div key={i} class="sdb-act">
-                <span class="sdb-act-ic" style={{ background: ic.bg, color: ic.color }}>
-                  <i class={`fa-solid ${ic.fa}`} />
-                </span>
-                <div style={{ flex: 1 }}>
-                  <div class="sdb-act-t">{item.title}</div>
-                  <div class="sdb-act-s">{item.meta}</div>
-                </div>
-              </div>
-            );
-          })
-        )}
-      </div>
-    </div>
-  );
-
   // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): compact uniform
   // size (w2 × h7 ≈ 114px), one row, and they never move, resize, or get displaced by
   // other tiles. The remaining widgets ARE resizable and each declares a resize FLOOR
@@ -718,17 +624,15 @@ export function StatutoryDashboard({
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
     [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           locked: true, allowedSizes: floor('compact', 2, 7) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           locked: true, allowedSizes: floor('compact', 2, 7) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           locked: true, allowedSizes: floor('compact', 2, 7) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              locked: true, allowedSizes: floor('compact', 2, 7) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', locked: true, allowedSizes: floor('compact', 2, 7) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        locked: true, allowedSizes: floor('compact', 2, 7) },
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        resizable: false, allowedSizes: floor('compact', 2, 6) },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
-    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 24) },
+    [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 16) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
-    [W_VERIFY]:         { render: renderVerifyQueue,  chrome: 'none', title: 'Verification Queue',       allowedSizes: floor('standard', 3, 12) },
-    [W_ACTIVITY]:       { render: renderActivity,     chrome: 'none', title: 'Recent Activity',          allowedSizes: floor('standard', 3, 12) },
     [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
   };
 
@@ -745,6 +649,12 @@ export function StatutoryDashboard({
             onReset={() => void resetLayout()}
             onSetDefault={() => void setAsDefault()}
           />
+          {editing && (
+            <button type="button" class="sdb-capture-btn" onClick={() => void captureLayout()}
+              title="Copy the current board arrangement as code to hard-code as the default">
+              <i class="fa-solid fa-crosshairs" /> Copy layout
+            </button>
+          )}
         </div>
       )}
       {preview && (

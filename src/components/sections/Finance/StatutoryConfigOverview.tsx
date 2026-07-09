@@ -17,13 +17,16 @@
 import { type VNode } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { toast } from '@store';
+import { useSessionStore, selectUserId } from '@store/session';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
   HrfinPill, HrfinWizardModal, Drawer, exportCsv, PageHeader, NewMenu,
-  type RowActionItem, type ActivityItem,
+  DataTable, type DtColumn, type DtAction,
+  FilterDropdown, AdvancedFilter, useFilterDropdowns,
+  type RowActionItem,
 } from '@ui';
-import { StatTable, StatBadge, type StatColumn } from './StatTable';
+import { StatTable, StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
 import {
   useStatutoryVersions, useNisClasses, usePayComponents, useVersionDetail,
@@ -95,7 +98,6 @@ export function StatutoryConfigOverview(): VNode {
   const versionsQ   = useStatutoryVersions();
   const componentsQ = usePayComponents({ activeOnly: false });
   const nisProfilesQ = useNisProfiles({ status: 'pending_verification' });
-  const verifiedProfilesQ = useNisProfiles({ status: 'verified' });
 
   const versions   = versionsQ.data ?? [];
   const components = componentsQ.data ?? [];
@@ -114,39 +116,6 @@ export function StatutoryConfigOverview(): VNode {
   const pending   = versions.filter(v => v.status === 'pending_approval').length;
   const activeComponents = components.filter(c => c.isActive).length;
   const verifyQueue = nisProfilesQ.data?.length ?? 0;
-  const verifiedNisCount = verifiedProfilesQ.data?.length ?? 0;
-
-  // Verification-queue breakdown — REAL sub-counts derived from the pending
-  // profiles already fetched (no extra endpoint). Only the categories the
-  // hr_employee_statutory_profiles schema actually supports:
-  //   Missing NIS Numbers      — an applicable profile with no NIS number captured.
-  //   Opening-Balance Anomalies — YTD insurable earnings vs YTD NIS contributions
-  //                               are inconsistent (one present while the other is 0).
-  // (A per-employee "class mismatch" is NOT derivable here — the earnings class is
-  //  resolved at payroll time from earnings vs the schedule, never stored on the
-  //  profile — so that category is deliberately omitted rather than faked.)
-  const verifyBreakdown = useMemo(() => {
-    const rows = (nisProfilesQ.data ?? []) as Array<Record<string, unknown>>;
-    const num = (x: unknown): number => (typeof x === 'number' ? x : Number(x)) || 0;
-    const str = (x: unknown): string => (typeof x === 'string' ? x : x == null ? '' : String(x));
-    let missingNisNumbers = 0, openingAnomalies = 0;
-    for (const p of rows) {
-      const applicable = p.nisApplicable !== false;
-      if (applicable && !str(p.nisNumber).trim()) missingNisNumbers++;
-      const e = num(p.openingYtdInsurableEarnings), ee = num(p.openingYtdNisEmployee), er = num(p.openingYtdNisEmployer);
-      if ((e > 0 && ee === 0 && er === 0) || ((ee > 0 || er > 0) && e === 0)) openingAnomalies++;
-    }
-    return { missingNisNumbers, openingAnomalies };
-  }, [nisProfilesQ.data]);
-
-  // Recent activity from versions list (passed into dashboard for the Activity feed)
-  const activityItems: ActivityItem[] = useMemo(() =>
-    versions.slice(0, 5).map(v => ({
-      icon: v.isActive ? 'check' : v.status === 'pending_approval' ? 'gavel' : 'file',
-      title: v.label,
-      meta: `${humanize(v.status)} · ${fmtDate(v.effectiveFrom)}`,
-    })),
-  [versions]);
 
   // Export handler — shared between header button and any future export entrypoint.
   const handleExport = (): void => {
@@ -232,15 +201,11 @@ export function StatutoryConfigOverview(): VNode {
         components={components}
         activeVer={activeVer}
         activeNisClasses={activeNisClasses}
-        verifiedNisCount={verifiedNisCount}
         drafts={drafts}
         pending={pending}
         activeComponents={activeComponents}
         verifyQueue={verifyQueue}
-        verifyBreakdown={verifyBreakdown}
-        activityItems={activityItems}
         versionsLoading={versionsQ.isLoading}
-        onVerifyNis={() => setTab('verify')}
         tab={tab}
         onTabChange={setTab}
         tabContent={tabContent}
@@ -279,16 +244,23 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   onEdit: (v: StatutoryVersion) => void;
 }): VNode {
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [status, setStatus] = useState<string[]>([]);      // basic filter (multi-select)
+  const [effFrom, setEffFrom] = useState('');              // advanced: effective-date range
+  const [effTo, setEffTo] = useState('');
+  const [rateMin, setRateMin] = useState('');              // advanced: NIS-rate range
+  const [rateMax, setRateMax] = useState('');
+  const [owner, setOwner] = useState<string[]>([]);        // advanced: owner
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState<string>('effectiveFrom');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+  const { openId, setOpenId } = useFilterDropdowns();
 
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
   const rejectMut   = useStatutoryMutation(financeStatutoryApi.rejectVersion);
   const activateMut = useStatutoryMutation(financeStatutoryApi.activateVersion);
   const retireMut   = useStatutoryMutation(financeStatutoryApi.retireVersion);
+  const currentUserId = useSessionStore(selectUserId);
 
   // Batch-resolve createdBy + approvedBy IDs for Owner and Approval State columns (§20).
   const actorIds = useMemo(
@@ -301,167 +273,155 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
     try { await p; toast(ok); } catch (e) { toast.error((e as Error).message); }
   };
 
+  const ownerOptions = useMemo(
+    () => [...new Set(versions.map(v => v.createdBy).filter((x): x is string => !!x))],
+    [versions],
+  );
+
   const filtered = useMemo(() => {
     let rows = versions;
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(v => v.label.toLowerCase().includes(q) || v.effectiveFrom.includes(q) || v.jurisdiction.toLowerCase().includes(q));
     }
-    if (statusFilter !== 'all') rows = rows.filter(v => v.status === statusFilter);
-    // Apply sort
+    if (status.length) rows = rows.filter(v => status.includes(v.status));
+    if (effFrom) rows = rows.filter(v => v.effectiveFrom >= effFrom);
+    if (effTo)   rows = rows.filter(v => v.effectiveFrom <= effTo);
+    if (rateMin) rows = rows.filter(v => v.nisRatePercent != null && v.nisRatePercent >= Number(rateMin));
+    if (rateMax) rows = rows.filter(v => v.nisRatePercent != null && v.nisRatePercent <= Number(rateMax));
+    if (owner.length) rows = rows.filter(v => v.createdBy != null && owner.includes(v.createdBy));
     rows = [...rows].sort((a, b) => {
       const aVal = String(a[sortField as keyof StatutoryVersion] ?? '');
       const bVal = String(b[sortField as keyof StatutoryVersion] ?? '');
       return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     });
     return rows;
-  }, [versions, search, statusFilter, sortField, sortDir]);
+  }, [versions, search, status, effFrom, effTo, rateMin, rateMax, owner, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const pageRows  = filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE);
 
-  const statusFilters = [
-    { key: 'all', label: 'All' }, { key: 'draft', label: 'Draft' },
-    { key: 'pending_approval', label: 'Pending' }, { key: 'approved', label: 'Approved' },
-    { key: 'active', label: 'Active' }, { key: 'retired', label: 'Retired' },
-  ];
-
-  const columns: ReadonlyArray<StatColumn<StatutoryVersion>> = [
+  // Locked register columns (T&T-tailored): Version · Effective · NIS Rate · Status ·
+  // Owner · Linked Runs · Approval. PAYE bands + Health Surcharge tiers live in the
+  // version drawer, not the list. NIS Rate is the headline effective-rate marker.
+  const columns: DtColumn<StatutoryVersion>[] = [
     {
-      key: 'label', label: 'Version', sortable: true,
-      render: v => (
-        <div>
-          <div class="sdb-vname">{v.label}</div>
-          <div class="sdb-cell-sub">{v.jurisdiction} · {v.currency}</div>
-        </div>
-      ),
+      key: 'label', label: 'Version', isPinned: true, sortAccessor: v => v.label,
+      renderCell: v => <span class="sdb-vname">{v.label}</span>,
     },
     {
-      key: 'effectiveFrom', label: 'Effective', sortable: true,
-      render: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v.effectiveFrom)}</span>,
+      key: 'effectiveFrom', label: 'Effective', sortAccessor: v => v.effectiveFrom,
+      renderCell: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v.effectiveFrom)}</span>,
     },
     {
-      key: 'paye', label: 'PAYE Bands',
-      render: v => (
-        <div>
-          <div>Allow: {fmtMoney(v.payePersonalAllowance)}</div>
-          <div class="sdb-cell-sub">{fmtPercent(v.payeBand1Rate)} / {fmtPercent(v.payeBand2Rate)}</div>
-        </div>
-      ),
+      key: 'nisRatePercent', label: 'NIS Rate', align: 'right', sortAccessor: v => v.nisRatePercent ?? -1,
+      renderCell: v => v.nisRatePercent != null
+        ? <b style={{ fontVariantNumeric: 'tabular-nums' }}>{v.nisRatePercent}%</b>
+        : <span class="sdb-muted-txt">—</span>,
     },
     {
-      key: 'hs', label: 'HS Threshold',
-      render: v => <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(v.hsMonthlyThreshold)}/mo</span>,
+      key: 'status', label: 'Status', sortAccessor: v => v.status,
+      renderCell: v => <StatBadge tone={statusTone(v.status)}>{v.isActive ? 'Active' : humanize(v.status)}</StatBadge>,
     },
-    {
-      key: 'status', label: 'Status', sortable: true,
-      render: v => (
-        <StatBadge tone={statusTone(v.status)}>
-          {v.isActive ? 'Active' : humanize(v.status)}
-        </StatBadge>
-      ),
-    },
-    // §11 / §20 mandated columns ──────────────────────────────────────────────
     {
       key: 'owner', label: 'Owner',
-      render: v => v.createdBy
+      renderCell: v => v.createdBy
         ? <EmployeeCellResolved resolved={nameMap?.get(v.createdBy)} fallbackId={v.createdBy} />
         : <span class="sdb-muted-txt">—</span>,
     },
     {
-      key: 'linkedRuns', label: 'Linked Runs',
-      render: v => {
+      key: 'linkedRuns', label: 'Linked Runs', align: 'center',
+      renderCell: v => {
         const count = v.linkedPayrollRunCount ?? 0;
-        return count > 0 ? (
-          <button
-            type="button" class="sdb-link"
-            onClick={e => { e.stopPropagation(); onOpenDrawerAtRuns(v.id); }}
-          >
-            {count} run{count !== 1 ? 's' : ''}
-          </button>
-        ) : <span class="sdb-muted-txt">—</span>;
+        return count > 0
+          ? <button type="button" class="sdb-link" onClick={e => { e.stopPropagation(); onOpenDrawerAtRuns(v.id); }}>{count} run{count !== 1 ? 's' : ''}</button>
+          : <span class="sdb-muted-txt">—</span>;
       },
     },
     {
       key: 'approvalState', label: 'Approval',
-      render: v => {
+      renderCell: v => {
+        // Retired versions are superseded — approval state no longer applies.
+        if (v.status === 'retired') return <span class="sdb-muted-txt">—</span>;
         if (v.status === 'draft') return <span class="sdb-cell-sub">Not submitted</span>;
         if (v.status === 'pending_approval') return <StatBadge tone="wn">Awaiting</StatBadge>;
-        if (v.approvedBy) return (
-          <div>
-            <StatBadge tone="ok">Approved</StatBadge>
-            <div class="sdb-cell-sub" style={{ marginTop: 3 }}>
-              <EmployeeCellResolved resolved={nameMap?.get(v.approvedBy)} fallbackId={v.approvedBy} />
-            </div>
-          </div>
-        );
+        if (v.approvedBy) return <StatBadge tone="ok">Approved</StatBadge>;
         return <span class="sdb-muted-txt">—</span>;
       },
     },
   ];
 
-  const rowActions = (v: StatutoryVersion): RowActionItem[] => [
-    { key: 'view', label: 'View details', icon: 'file', onClick: () => onOpenDrawer(v.id) },
-    ...(canManage && v.status === 'draft' ? [
-      {
-        key: 'edit', label: 'Edit rates', icon: 'refresh' as const,
-        onClick: () => onEdit(v),
-      },
-      {
-        key: 'submit', label: 'Submit for approval', icon: 'send' as const,
-        onClick: () => run(submitMut.mutateAsync({ id: v.id }), 'Submitted for approval.'),
-      },
-    ] : []),
-    ...(canApprove && v.status === 'pending_approval' ? [
-      { key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') },
-      { key: 'reject',  label: 'Reject',  icon: 'close' as const, tone: 'danger' as const, onClick: async () => {
-        const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
-        if (!reason?.trim()) return;
-        await run(rejectMut.mutateAsync({ id: v.id, reason }), 'Version returned to draft.');
-      } },
-    ] : []),
-    ...(canApprove && v.status === 'approved' ? [{
-      key: 'activate', label: 'Activate', icon: 'check' as const,
-      onClick: () => run(activateMut.mutateAsync({ id: v.id }), 'Version activated.'),
-    }] : []),
-    ...(canManage && v.status === 'active' ? [{
-      key: 'retire', label: 'Retire', icon: 'close' as const, tone: 'danger' as const,
-      onClick: () => run(retireMut.mutateAsync({ id: v.id }), 'Version retired.'),
-    }] : []),
-  ];
+  const rowActions = (v: StatutoryVersion): RowActionItem[] => {
+    // Segregation of duties (mirrors the backend `assertDifferentApprover`): the creator
+    // of a version must not see Approve on their own submission — they'd only hit a 422.
+    const isOwnVersion = !!currentUserId && v.createdBy === currentUserId;
+    return [
+      { key: 'view', label: 'View details', icon: 'file', onClick: () => onOpenDrawer(v.id) },
+      ...(canManage && v.status === 'draft' ? [
+        { key: 'edit', label: 'Edit rates', icon: 'refresh' as const, onClick: () => onEdit(v) },
+        { key: 'submit', label: 'Submit for approval', icon: 'send' as const, onClick: () => run(submitMut.mutateAsync({ id: v.id }), 'Submitted for approval.') },
+      ] : []),
+      ...(canApprove && v.status === 'pending_approval' ? [
+        ...(!isOwnVersion ? [{ key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') }] : []),
+        { key: 'reject', label: 'Reject', icon: 'close' as const, tone: 'danger' as const, onClick: async () => {
+          const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
+          if (!reason?.trim()) return;
+          await run(rejectMut.mutateAsync({ id: v.id, reason }), 'Version returned to draft.');
+        } },
+      ] : []),
+      ...(canApprove && v.status === 'approved' ? [{
+        key: 'activate', label: 'Activate', icon: 'check' as const,
+        onClick: async () => {
+          const ok = await dialog.confirm({ title: `Activate "${v.label}"?`, text: 'This becomes the active statutory configuration and retires the currently-active version. All new payroll runs will use these rates.', confirmText: 'Activate' });
+          if (!ok) return;
+          await run(activateMut.mutateAsync({ id: v.id }), 'Version activated.');
+        },
+      }] : []),
+      ...(canManage && v.status === 'active' ? [{
+        key: 'retire', label: 'Retire', icon: 'close' as const, tone: 'danger' as const,
+        onClick: async () => {
+          const ok = await dialog.confirm({ title: `Retire "${v.label}"?`, text: 'The active version will be retired and no longer used for new payroll runs. Activate another version to replace it.', danger: true, confirmText: 'Retire' });
+          if (!ok) return;
+          await run(retireMut.mutateAsync({ id: v.id }), 'Version retired.');
+        },
+      }] : []),
+    ];
+  };
 
   return (
-    <StatTable
-      searchValue={search}
-      onSearch={v => { setSearch(v); setPage(0); }}
-      searchPlaceholder="Search by label or date…"
-      toolbarLeft={statusFilters.map(f => (
-        <button
-          key={f.key} type="button"
-          class={`sdb-chip${statusFilter === f.key ? ' sdb-chip--on' : ''}`}
-          onClick={() => { setStatusFilter(f.key); setPage(0); }}
-        >{f.label}</button>
-      ))}
-      toolbarRight={canManage
-        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Rate Version</button>
-        : undefined}
+    <DataTable<StatutoryVersion>
       columns={columns}
       rows={pageRows}
       rowKey={v => v.id}
-      onRowClick={v => onOpenDrawer(v.id)}
       rowActions={rowActions}
-      page={page}
-      pageCount={pageCount}
-      total={filtered.length}
-      pageSize={PAGE_SIZE}
-      onPage={setPage}
-      noun="versions"
+      onRowClick={v => onOpenDrawer(v.id)}
       loading={loading}
-      error={error}
-      sortField={sortField}
-      sortDir={sortDir}
-      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
-      emptyMessage="No statutory versions match the current filter."
+      emptyState={{ icon: 'fa-file-invoice-dollar', title: error ? 'Could not load versions' : 'No rate versions', text: error ?? 'Create a rate version to configure PAYE, NIS and Health Surcharge.' }}
+      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by label or date…' }}
+      filterChips={
+        <FilterDropdown id="ver-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+          options={['draft', 'pending_approval', 'approved', 'active', 'retired']}
+          selected={status} onChange={v => { setStatus(v); setPage(0); }} />
+      }
+      advancedFilter={
+        <AdvancedFilter openId={openId} setOpenId={setOpenId}
+          onReset={() => { setEffFrom(''); setEffTo(''); setRateMin(''); setRateMax(''); setOwner([]); setPage(0); }}
+          tabs={[
+            { name: 'Version', blurb: 'Filter by effective date and NIS rate.', sections: [
+              { type: 'dateRange', title: 'Effective date', from: effFrom, to: effTo, onChange: (f, t) => { setEffFrom(f); setEffTo(t); setPage(0); } },
+              { type: 'numberRange', title: 'NIS rate', unit: '%', step: '0.1', min: rateMin, max: rateMax, onChange: (mn, mx) => { setRateMin(mn); setRateMax(mx); setPage(0); } },
+            ] },
+            { name: 'Owner', blurb: 'Filter by who created the version.', sections: [
+              { type: 'checklist', title: 'Owner', options: ownerOptions, selected: owner, onChange: v => { setOwner(v); setPage(0); }, labelFn: id => nameMap?.get(id)?.fullName ?? id },
+            ] },
+          ]} />
+      }
+      toolbarRight={canManage
+        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Rate Version</button>
+        : undefined}
+      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
+      pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
+      noun="versions"
     />
   );
 }
@@ -479,12 +439,16 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
   const [versionId, setVersionId] = useState<string>(() => versions.find(v => v.isActive)?.id ?? versions[0]?.id ?? '');
   const [page, setPage] = useState(0);
   const [search, setSearch] = useState('');
+  const { openId, setOpenId } = useFilterDropdowns();
   const effectiveId = versionId || (versions[0]?.id ?? '');
   const classesQ   = useNisClasses(effectiveId || null);
   const allClasses = classesQ.data ?? [];
   const selectedVer = versions.find(v => v.id === effectiveId);
-  // Mirror the server gate (upsertNisClasses): bands are editable on draft OR approved.
-  const canEdit    = canManage && (selectedVer?.status === 'draft' || selectedVer?.status === 'approved');
+  // Mirror the server gates exactly: bands are EDITABLE on draft OR approved
+  // (upsertNisClasses), but DELETE + IMPORT are draft-only (deleteNisClass /
+  // importNisClasses). Splitting these avoids showing buttons the server will 422.
+  const canEdit      = canManage && (selectedVer?.status === 'draft' || selectedVer?.status === 'approved');
+  const canDraftOps  = canManage && selectedVer?.status === 'draft';
 
   // §20: register has search — filter within the version's classes.
   const classes = useMemo(() => {
@@ -509,71 +473,77 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
     catch (e) { toast.error((e as Error).message); }
   };
 
-  const columns: ReadonlyArray<StatColumn<NisClass>> = [
-    { key: 'classNo',        label: 'Class',          render: c => <b>{toRoman(c.classNo)}</b> },
-    { key: 'weeklyMin',      label: 'Weekly Min',     render: c => fmtMoney(c.weeklyMin) },
-    { key: 'weeklyMax',      label: 'Weekly Max',     render: c => c.weeklyMax == null ? <span class="sdb-muted-txt">and over</span> : fmtMoney(c.weeklyMax) },
-    { key: 'assumedAvg',     label: 'Assumed Avg',    render: c => c.assumedAverageWeekly == null ? <span class="sdb-muted-txt">—</span> : fmtMoney(c.assumedAverageWeekly) },
-    { key: 'employeeWeekly', label: 'Employee / wk',  render: c => fmtMoney(c.employeeWeekly) },
-    { key: 'employerWeekly', label: 'Employer / wk',  render: c => fmtMoney(c.employerWeekly) },
-    { key: 'totalWeekly',    label: 'Total / wk',     render: c => <b>{fmtMoney(c.employeeWeekly + c.employerWeekly)}</b> },
-    { key: 'classZ',         label: 'Class Z / wk',   render: c => c.classZWeekly == null ? <span class="sdb-muted-txt">—</span> : <span class="sdb-muted-txt">{fmtMoney(c.classZWeekly)}</span> },
+  // NIBTT schedule reference — kept complete (Assumed Avg is the contribution basis,
+  // Class Z is the over-pensionable-age rate). Weekly Min/Max merged into one range.
+  const tnum = { fontVariantNumeric: 'tabular-nums' as const };
+  const columns: DtColumn<NisClass>[] = [
+    { key: 'classNo', label: 'Class', isPinned: true, align: 'center', renderCell: c => <b>{toRoman(c.classNo)}</b> },
+    {
+      key: 'weeklyEarnings', label: 'Weekly Earnings',
+      renderCell: c => <span style={tnum}>{fmtMoney(c.weeklyMin)} {c.weeklyMax == null ? <span class="sdb-muted-txt">and over</span> : <>– {fmtMoney(c.weeklyMax)}</>}</span>,
+    },
+    { key: 'assumedAvg', label: 'Assumed Avg', align: 'right', renderCell: c => c.assumedAverageWeekly == null ? <span class="sdb-muted-txt">—</span> : <span style={tnum}>{fmtMoney(c.assumedAverageWeekly)}</span> },
+    { key: 'employeeWeekly', label: 'Employee', align: 'right', renderCell: c => <span style={tnum}>{fmtMoney(c.employeeWeekly)}</span> },
+    { key: 'employerWeekly', label: 'Employer', align: 'right', renderCell: c => <span style={tnum}>{fmtMoney(c.employerWeekly)}</span> },
+    { key: 'totalWeekly', label: 'Total', align: 'right', renderCell: c => <b style={tnum}>{fmtMoney(c.employeeWeekly + c.employerWeekly)}</b> },
+    { key: 'classZ', label: 'Class Z', align: 'right', renderCell: c => c.classZWeekly == null ? <span class="sdb-muted-txt">—</span> : <span class="sdb-muted-txt" style={tnum}>{fmtMoney(c.classZWeekly)}</span> },
   ];
 
-  const rowActions = (c: NisClass): RowActionItem[] => [
-    {
-      key: 'open', label: canEdit ? 'Edit band' : 'View band', icon: 'file' as const,
-      onClick: () => onEdit(effectiveId, c),
-    },
-    ...(canEdit ? [{
-      key: 'del', label: 'Delete', icon: 'close' as const, tone: 'danger' as const,
-      onClick: () => handleDelete(c.id, c.classNo),
-    }] : []),
-  ];
+  // Delete is draft-only (server gate) — do NOT offer it on approved versions.
+  const rowActions = canDraftOps
+    ? (c: NisClass): DtAction<NisClass>[] => [{ key: 'del', label: 'Delete band', icon: 'close', tone: 'danger', onClick: () => handleDelete(c.id, c.classNo) }]
+    : undefined;
 
   const pageCount = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
 
   return (
     <>
-      <StatTable
-        searchValue={search}
-        onSearch={v => { setSearch(v); setPage(0); }}
-        searchPlaceholder="Search by class # or amount…"
-        toolbarLeft={
-          <>
-            <select
-              class="sdb-select"
-              value={effectiveId}
-              onChange={e => { setVersionId((e.currentTarget as HTMLSelectElement).value); setPage(0); }}
-              style={{ minWidth: 220 }}
-              aria-label="Rate version"
-            >
-              {versions.map(v => (
-                <option key={v.id} value={v.id}>{v.label} · {humanize(v.status)}</option>
-              ))}
-            </select>
-            {selectedVer && <StatBadge tone={statusTone(selectedVer.status)}>{humanize(selectedVer.status)}</StatBadge>}
-          </>
-        }
-        toolbarRight={canEdit
-          ? <>
-              <button type="button" class="sdb-btn" onClick={() => onImport(effectiveId)}>Import CSV</button>
-              <button type="button" class="sdb-btn sdb-btn--pri" onClick={() => onAdd(effectiveId)}>+ Add Band</button>
-            </>
-          : undefined}
+      <DataTable<NisClass>
         columns={columns}
         rows={classes.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
         rowKey={c => c.id}
         rowActions={rowActions}
-        page={page}
-        pageCount={pageCount}
-        total={classes.length}
-        pageSize={PAGE_SIZE}
-        onPage={setPage}
-        noun="bands"
+        onRowClick={c => onEdit(effectiveId, c)}
         loading={classesQ.isLoading}
-        error={versionsError ?? (classesQ.error ? String(classesQ.error) : undefined)}
-        emptyMessage="No NIS contribution bands for this version."
+        emptyState={{ icon: 'fa-layer-group', title: 'No contribution bands', text: versionsError ?? (classesQ.error ? String(classesQ.error) : 'This version has no NIS bands yet.') }}
+        globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by class # or amount…' }}
+        filterChips={
+          <div class="tf-wrap">
+            <button type="button" class="tf-select" style={{ minWidth: 240 }} aria-haspopup="menu" aria-expanded={openId === 'nis-version'}
+              onClick={e => { e.stopPropagation(); setOpenId(openId === 'nis-version' ? null : 'nis-version'); }}>
+              <span class="tf-select-text">
+                <span class="tf-select-label">Rate Version</span>
+                <span class="tf-select-value">{selectedVer ? selectedVer.label : '—'}</span>
+              </span>
+              {selectedVer && <StatBadge tone={statusTone(selectedVer.status)}>{humanize(selectedVer.status)}</StatBadge>}
+            </button>
+            {openId === 'nis-version' && (
+              <div class="tf-menu" role="menu" aria-label="Rate version" onClick={e => e.stopPropagation()}>
+                <div class="tf-menu-head"><strong>Rate Version</strong><span>Select a version to view its bands.</span></div>
+                <div class="tf-menu-list">
+                  {versions.map(v => (
+                    <button key={v.id} type="button" role="menuitemradio" aria-checked={v.id === effectiveId}
+                      class={`tf-check ${v.id === effectiveId ? 'active' : ''}`}
+                      onClick={() => { setVersionId(v.id); setPage(0); setOpenId(null); }}>
+                      <span class="tf-radio" aria-hidden="true" />
+                      <span class="tf-check-label">{v.label}</span>
+                      <StatBadge tone={statusTone(v.status)}>{humanize(v.status)}</StatBadge>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        }
+        toolbarRight={canEdit
+          ? <>
+              {/* Import CSV is draft-only (server gate); Add Band works on draft + approved. */}
+              {canDraftOps && <button type="button" class="sdb-btn" onClick={() => onImport(effectiveId)}>Import CSV</button>}
+              <button type="button" class="sdb-btn sdb-btn--pri" onClick={() => onAdd(effectiveId)}>+ Add Band</button>
+            </>
+          : undefined}
+        pagination={{ page, pageCount, total: classes.length, onPage: setPage }}
+        noun="bands"
       />
       <p class="sdb-note">
         NIBTT weekly Earnings-Class schedule (contribution rate 16.2% — employee ⅓, employer ⅔). “Assumed Avg” is the earnings figure the contribution is based on. “Class Z” is the reduced weekly rate for workers over pensionable age (employment-injury portion only).
@@ -593,11 +563,12 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
   onEdit: (c: PayComponent) => void;
 }): VNode {
   const [search, setSearch] = useState('');
-  const [filter, setFilter] = useState<'all' | 'earning' | 'deduction'>('all');
-  const [showActive, setShowActive] = useState(true);
+  const [kinds, setKinds] = useState<string[]>([]);        // Category basic filter (multi-select)
+  const [statuses, setStatuses] = useState<string[]>(['active']); // Status basic filter
   const [page, setPage] = useState(0);
   const [sortField, setSortField] = useState<string>('code');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
+  const { openId, setOpenId } = useFilterDropdowns();
 
   const retireMut = useStatutoryMutation(financeStatutoryApi.retireComponent);
   const handleRetire = async (c: PayComponent): Promise<void> => {
@@ -609,8 +580,8 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
 
   const filtered = useMemo(() => {
     let rows = components;
-    if (showActive) rows = rows.filter(c => c.isActive);
-    if (filter !== 'all') rows = rows.filter(c => c.kind === filter);
+    if (kinds.length) rows = rows.filter(c => kinds.includes(c.kind));
+    if (statuses.length) rows = rows.filter(c => statuses.includes(c.isActive ? 'active' : 'retired'));
     if (search.trim()) {
       const q = search.toLowerCase();
       rows = rows.filter(c => c.code.toLowerCase().includes(q) || c.name.toLowerCase().includes(q));
@@ -622,67 +593,55 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
       return sortDir === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
     });
     return rows;
-  }, [components, showActive, filter, search, sortField, sortDir]);
+  }, [components, kinds, statuses, search, sortField, sortDir]);
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
-  const columns: ReadonlyArray<StatColumn<PayComponent>> = [
-    { key: 'code',      label: 'Code',     sortable: true, render: c => <b style={{ fontFamily: 'monospace' }}>{c.code}</b> },
-    { key: 'name',      label: 'Name',     sortable: true, render: c => c.name },
-    { key: 'kind',      label: 'Kind',     sortable: true, render: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
-    { key: 'taxable',   label: 'Taxable',  align: 'center', render: c => c.isTaxable ? '✓' : '—' },
-    { key: 'statutory', label: 'Statutory', align: 'center', render: c => c.isStatutory ? '✓' : '—' },
+  const columns: DtColumn<PayComponent>[] = [
     {
-      key: 'isActive', label: 'Status', sortable: true,
-      render: c => <StatBadge tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</StatBadge>,
+      key: 'name', label: 'Component', isPinned: true, sortAccessor: c => c.name,
+      renderCell: c => <div><div class="sdb-vname">{c.name}</div><div class="sdb-cell-sub" style={{ fontFamily: 'monospace' }}>{c.code}</div></div>,
     },
+    { key: 'kind', label: 'Category', sortAccessor: c => c.kind, renderCell: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
+    { key: 'taxable', label: 'Taxable', align: 'center', renderCell: c => c.isTaxable ? <span class="sdb-ck tax">Taxable</span> : <span class="sdb-muted-txt">—</span> },
+    { key: 'statutory', label: 'Statutory', align: 'center', renderCell: c => c.isStatutory ? <span class="sdb-ck stat">Statutory</span> : <span class="sdb-muted-txt">—</span> },
+    {
+      key: 'calculation', label: 'Calculation', align: 'center',
+      renderCell: c => c.kind === 'deduction'
+        ? (c.reducesChargeable ? <span class="sdb-ck pre">Pre-tax</span> : <span class="sdb-ck post">Post-tax</span>)
+        : <span class="sdb-muted-txt">—</span>,
+    },
+    { key: 'isActive', label: 'Status', sortAccessor: c => c.isActive ? '1' : '0', renderCell: c => <StatBadge tone={c.isActive ? 'ok' : 'dr'}>{c.isActive ? 'Active' : 'Retired'}</StatBadge> },
   ];
 
-  const rowActions = (c: PayComponent): RowActionItem[] => [
-    ...(canManage ? [{ key: 'edit', label: 'Edit', icon: 'refresh' as const, onClick: () => onEdit(c) }] : []),
-    ...(canManage && c.isActive && !c.isStatutory ? [{
-      key: 'retire', label: 'Retire', icon: 'close' as const, tone: 'danger' as const,
-      onClick: () => handleRetire(c),
-    }] : []),
-  ];
+  const rowActions = canManage
+    ? (c: PayComponent): DtAction<PayComponent>[] => (c.isActive && !c.isStatutory
+        ? [{ key: 'retire', label: 'Retire', icon: 'close', tone: 'danger', onClick: () => handleRetire(c) }]
+        : [])
+    : undefined;
 
   return (
-    <StatTable
-      searchValue={search}
-      onSearch={v => { setSearch(v); setPage(0); }}
-      searchPlaceholder="Search by code or name…"
-      toolbarLeft={
-        <>
-          {(['all', 'earning', 'deduction'] as const).map(k => (
-            <button key={k} type="button" class={`sdb-chip${filter === k ? ' sdb-chip--on' : ''}`} onClick={() => { setFilter(k); setPage(0); }}>
-              {k === 'all' ? 'All' : humanize(k)}
-            </button>
-          ))}
-          <label class="sdb-check">
-            <input type="checkbox" checked={showActive} onChange={e => setShowActive((e.currentTarget as HTMLInputElement).checked)} />
-            Active only
-          </label>
-        </>
-      }
-      toolbarRight={canManage
-        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button>
-        : undefined}
-      sortField={sortField}
-      sortDir={sortDir}
-      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
+    <DataTable<PayComponent>
       columns={columns}
       rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
       rowKey={c => c.id}
-      rowActions={canManage ? rowActions : undefined}
-      page={page}
-      pageCount={pageCount}
-      total={filtered.length}
-      pageSize={PAGE_SIZE}
-      onPage={setPage}
-      noun="components"
+      rowActions={rowActions}
+      onRowClick={canManage ? (c => onEdit(c)) : undefined}
       loading={loading}
-      error={error}
-      emptyMessage="No pay components match the current filter."
+      emptyState={{ icon: 'fa-money-bill-wave', title: error ? 'Could not load components' : 'No pay components', text: error ?? 'Add earnings and deductions to build the payroll catalogue.' }}
+      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by code or name…' }}
+      filterChips={
+        <>
+          <FilterDropdown id="pc-kind" label="Category" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+            options={['earning', 'deduction']} selected={kinds} onChange={v => { setKinds(v); setPage(0); }} />
+          <FilterDropdown id="pc-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+            options={['active', 'retired']} selected={statuses} onChange={v => { setStatuses(v); setPage(0); }} />
+        </>
+      }
+      toolbarRight={canManage ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button> : undefined}
+      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
+      pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
+      noun="components"
     />
   );
 }
@@ -710,8 +669,15 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   const verify = async (r: NisProfileRow): Promise<void> => {
     const id = String(r['id'] ?? '');
     if (!id || !canVerify) return;
+    // Compliance sign-off: confirm, and capture an optional verification note for the audit trail.
+    const note = await dialog.prompt({
+      title: 'Verify NIS profile',
+      text: 'Confirm this NIS profile is correct and cleared for payroll. Add an optional note.',
+      placeholder: 'Verification note (optional)', confirmText: 'Verify', type: 'textarea',
+    });
+    if (note === null) return; // cancelled
     try {
-      await verifyMut.mutateAsync({ id, verificationNote: null });
+      await verifyMut.mutateAsync({ id, verificationNote: note.trim() || null });
       toast('NIS profile verified.');
     } catch (e) { toast.error((e as Error).message); }
   };
@@ -755,56 +721,52 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     });
   }, [profiles, search, sortField, sortDir]);
 
-  const columns: ReadonlyArray<StatColumn<NisProfileRow>> = [
+  const columns: DtColumn<NisProfileRow>[] = [
     {
-      key: 'employeeId', label: 'Employee', sortable: true,
-      render: r => {
+      key: 'employeeId', label: 'Employee', isPinned: true, sortAccessor: r => dv(r, 'employeeId', 'employee_id'),
+      renderCell: r => {
         const empId = dv(r, 'employeeId', 'employee_id');
-        return empId === '—'
-          ? <span class="sdb-muted-txt">—</span>
-          : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
+        return empId === '—' ? <span class="sdb-muted-txt">—</span> : <EmployeeCellResolved resolved={nameMap?.get(empId)} fallbackId={empId} />;
       },
     },
-    { key: 'nisNumber',    label: 'NIS #',             sortable: true, render: r => dv(r, 'nisNumber', 'nis_number') },
-    { key: 'prevEmployer', label: 'Previous Employer',  sortable: true, render: r => dv(r, 'previousEmployerName', 'previous_employer_name') },
-    { key: 'openingYtd',  label: 'Opening YTD (EE)',   render: r => dv(r, 'openingYtdNisEmployee', 'opening_ytd_nis_employee') },
+    { key: 'nisNumber', label: 'NIS #', sortAccessor: r => dv(r, 'nisNumber', 'nis_number'), renderCell: r => dv(r, 'nisNumber', 'nis_number') },
     {
-      key: 'nisStatus', label: 'Status', sortable: true,
-      render: r => <StatBadge tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</StatBadge>,
+      key: 'prevEmployer', label: 'Previous Employer', sortAccessor: r => dv(r, 'previousEmployerName', 'previous_employer_name'),
+      renderCell: r => { const v = dv(r, 'previousEmployerName', 'previous_employer_name'); return v === '—' ? <span class="sdb-muted-txt">—</span> : v; },
+    },
+    { key: 'nisStatus', label: 'Status', sortAccessor: r => String(r['nisStatus'] ?? r['nis_status'] ?? ''), renderCell: r => <StatBadge tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</StatBadge> },
+    {
+      key: 'lastVerified', label: 'Last Verified',
+      renderCell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
+    },
+    {
+      key: 'action', label: 'Action', align: 'right',
+      renderCell: r => {
+        const id = String(r['id'] ?? '');
+        if (!canVerify || !id) return <span class="sdb-muted-txt">—</span>;
+        return (
+          <div class="sdb-vactions">
+            <button type="button" class="sdb-vbtn ok" onClick={e => { e.stopPropagation(); void verify(r); }}>Verify</button>
+            <button type="button" class="sdb-vbtn bad" onClick={e => { e.stopPropagation(); void reject(r); }}>Reject</button>
+          </div>
+        );
+      },
     },
   ];
-
-  const rowActions = (r: NisProfileRow): RowActionItem[] => {
-    const id = String(r['id'] ?? '');
-    return canVerify && id ? [
-      { key: 'verify', label: 'Verify', icon: 'check',  onClick: () => verify(r) },
-      { key: 'reject', label: 'Reject', icon: 'close', tone: 'danger', onClick: () => reject(r) },
-    ] : [];
-  };
 
   const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
 
   return (
-    <StatTable
-      searchValue={search}
-      onSearch={v => { setSearch(v); setPage(0); }}
-      searchPlaceholder="Search by NIS #, employee or employer…"
-      sortField={sortField}
-      sortDir={sortDir}
-      onSort={(f, d) => { setSortField(f); setSortDir(d); setPage(0); }}
+    <DataTable<NisProfileRow>
       columns={columns}
       rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) as NisProfileRow[]}
-      rowKey={(r: NisProfileRow) => String(r['id'] ?? Math.random())}
-      rowActions={canVerify ? rowActions : undefined}
-      page={page}
-      pageCount={pageCount}
-      total={filteredProfiles.length}
-      pageSize={PAGE_SIZE}
-      onPage={setPage}
-      noun="profiles"
+      rowKey={r => String(r['id'] ?? '')}
       loading={profilesQ.isLoading}
-      error={profilesQ.error ? String(profilesQ.error) : undefined}
-      emptyMessage="No NIS continuity profiles are awaiting verification."
+      emptyState={{ icon: 'fa-user-check', title: 'Queue clear', text: profilesQ.error ? String(profilesQ.error) : 'No NIS profiles are awaiting verification.' }}
+      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by NIS #, employee or employer…' }}
+      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
+      pagination={{ page, pageCount, total: filteredProfiles.length, onPage: setPage }}
+      noun="profiles"
     />
   );
 }
@@ -921,7 +883,10 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
 
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
+  const rejectMut   = useStatutoryMutation(financeStatutoryApi.rejectVersion);
+  const activateMut = useStatutoryMutation(financeStatutoryApi.activateVersion);
   const retireMut   = useStatutoryMutation(financeStatutoryApi.retireVersion);
+  const currentUserId = useSessionStore(selectUserId);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
     try { await p; toast(ok); onClose(); }
@@ -931,18 +896,37 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const drawerTitle = d?.label ?? 'Statutory Version';
   const drawerSub   = d ? `${d.jurisdiction} · ${humanize(d.status)} · Effective ${fmtDate(d.effectiveFrom)}` : '';
 
+  const isOwnVersion = !!d && !!currentUserId && d.createdBy === currentUserId;
   const footer = d ? (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {canManage && d.status === 'draft' && (
-        <button class="hrfin-action is-primary" type="button" onClick={() => run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit</button>
+        <button class="hrfin-action is-primary" type="button" onClick={() => run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
       )}
       {canApprove && d.status === 'pending_approval' && (
         <>
-          <button class="hrfin-action is-primary" type="button" onClick={() => run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
+          {!isOwnVersion && (
+            <button class="hrfin-action is-primary" type="button" onClick={() => run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
+          )}
+          <button class="hrfin-action is-danger" type="button" onClick={async () => {
+            const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
+            if (!reason?.trim()) return;
+            await run(rejectMut.mutateAsync({ id: d.id, reason }), 'Version returned to draft.');
+          }}>Reject</button>
         </>
       )}
+      {canApprove && d.status === 'approved' && (
+        <button class="hrfin-action is-primary" type="button" onClick={async () => {
+          const ok = await dialog.confirm({ title: `Activate "${d.label}"?`, text: 'This becomes the active statutory configuration and retires the currently-active version. All new payroll runs will use these rates.', confirmText: 'Activate' });
+          if (!ok) return;
+          await run(activateMut.mutateAsync({ id: d.id }), 'Version activated.');
+        }}>Activate</button>
+      )}
       {canManage && d.status === 'active' && (
-        <button class="hrfin-action is-danger" type="button" style={{ marginLeft: 'auto' }} onClick={() => run(retireMut.mutateAsync({ id: d.id }), 'Version retired.')}>Retire</button>
+        <button class="hrfin-action is-danger" type="button" style={{ marginLeft: 'auto' }} onClick={async () => {
+          const ok = await dialog.confirm({ title: `Retire "${d.label}"?`, text: 'The active version will be retired and no longer used for new payroll runs. Activate another version to replace it.', danger: true, confirmText: 'Retire' });
+          if (!ok) return;
+          await run(retireMut.mutateAsync({ id: d.id }), 'Version retired.');
+        }}>Retire</button>
       )}
     </div>
   ) : undefined;

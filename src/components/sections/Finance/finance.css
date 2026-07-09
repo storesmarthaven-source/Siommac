@@ -292,7 +292,14 @@
 /* Widget-zone tiles own their height (RGL grid) — the card fills the tile so
    drag/resize behaves, and internal overflow scrolls instead of clipping. */
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
-.sdb-board-tools { display: flex; align-items: center; justify-content: flex-end; margin: 0 0 12px; }
+.sdb-board-tools { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 0 0 12px; }
+.sdb-capture-btn {
+  display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 9px;
+  border: 1px solid #cdd8ea; background: #f2f6fc; color: #1f3b6d; font-size: 13px; font-weight: 600;
+  cursor: pointer; transition: background .15s, border-color .15s;
+}
+.sdb-capture-btn:hover { background: #e6eefa; border-color: #9db6dc; }
+.sdb-capture-btn i { font-size: 12px; }
 
 /* Thin full-width statutory summary strip (PAYE · NIS · Health Surcharge) —
    every fact on ONE inline row per segment. */
@@ -316,29 +323,23 @@
    text at smaller sizes.) */
 /* KPI card — clean & compact (onboarding-style): white card, icon chip + label, big
    bold number, muted context line. Fixed uniform size, pinned at the top (widget map). */
-.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 6px; padding: 14px 16px; overflow: hidden; container-type: inline-size;
-  background: #fff; border: 1px solid #e3e9f2; border-radius: 11px; }
+.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 11px 14px; overflow: hidden; container-type: inline-size;
+  background: #fff; border: 1px solid #e3e9f2; border-radius: 10px; }
 .sdb-kpi--clickable { cursor: pointer; transition: border-color .14s ease, box-shadow .14s ease; }
 .sdb-kpi--clickable:hover { border-color: #c9d6ec; box-shadow: 0 3px 10px rgba(16, 35, 68, .06); }
-.sdb-kpi-top { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.sdb-kpi-ic { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center; font-size: 13px; }
+.sdb-kpi-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
+.sdb-kpi-ic { width: 26px; height: 26px; flex: none; border-radius: 7px; display: grid; place-items: center; font-size: 12px; }
 .sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
 .sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
 .sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
 .sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
 .sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: 12px; font-weight: 600; color: #56637b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(22px, 12cqw, 28px); font-weight: 800; letter-spacing: -.03em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(14px, 7cqw, 17px); font-weight: 700; line-height: 1.2; white-space: normal; }
-.sdb-kpi-sub { font-size: 11px; color: #7a8698; display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-cap { font-size: 11px; font-weight: 600; color: #56637b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(19px, 11cqw, 24px); font-weight: 800; letter-spacing: -.03em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(13px, 6cqw, 15px); font-weight: 700; line-height: 1.15; white-space: normal; }
+.sdb-kpi-sub { font-size: 10.5px; color: #7a8698; display: flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sdb-kpi-sub .sdb-dot { flex: none; }
 
-/* List cards (Verification Queue, Recent Activity) fill their tile: header fixed,
-   the body/rows flex to fill so resizing grows the content region, not blank space. */
-.sdb-listcard { display: flex; flex-direction: column; }
-.sdb-listcard .sdb-sc-hd { flex: 0 0 auto; }
-.sdb-listcard .sdb-q-total { margin-top: auto; }
-.sdb-listcard-body { flex: 1 1 auto; min-height: 0; overflow: auto; display: flex; flex-direction: column; }
 .sdb-ch { padding: 18px 20px; display: flex; flex-direction: column; min-height: 0; }
 .sdb-ch .sdb-ch-hd { flex: 0 0 auto; }
 .sdb-ch-hd {
@@ -348,7 +349,6 @@
   margin-bottom: 6px;
 }
 .sdb-ch-hd h2 { margin: 0; font-size: 15.5px; font-weight: 700; color: var(--sdb-ink); }
-.sdb-info-ic { color: var(--sdb-muted); font-size: 13px; }
 .sdb-ch-tools { margin-left: auto; display: flex; gap: 8px; align-items: center; }
 .sdb-pill-sel {
   height: 30px; padding: 0 11px;
@@ -370,12 +370,9 @@
   cursor: pointer;
 }
 
-/* combo chart + mini-rows layout */
+/* Chart body — the plot fills the full width of the card. */
 .sdb-sum-body {
-  display: grid;
-  grid-template-columns: 1fr 136px;   /* chart (big, left) · info cards (small, right) */
-  gap: 18px;
-  align-items: stretch;
+  display: flex;
   margin-top: 8px;
   flex: 1 1 auto;
   min-height: 0;
@@ -383,7 +380,7 @@
 /* The NIS bar chart SCALES to fill the tile — resizing the widget resizes the chart
    (viewBox + default preserveAspectRatio keep proportions). Scoped so the readiness
    gauge is untouched. min-height:0 lets the flex/grid child actually shrink. */
-.sdb-chart-plot { display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+.sdb-chart-plot { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
 .sdb-chart-plot svg { width: 100%; height: 100%; flex: 1 1 auto; min-height: 0; display: block; }
 .sdb-legend {
   display: flex; gap: 18px;
@@ -394,36 +391,6 @@
 .sdb-legend span { display: inline-flex; align-items: center; gap: 7px; }
 .sdb-lg-sq { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
 .sdb-lg-ln { width: 16px; height: 3px; border-radius: 3px; display: inline-block; }
-/* Chart side facts — small INFO cards on the RIGHT of the (now full-width) chart:
-   icon chip + label + value. */
-.sdb-mini { display: flex; flex-direction: column; gap: 9px; justify-content: center; }
-.sdb-mini-item { display: flex; align-items: center; gap: 9px; padding: 9px 10px; border: 1px solid var(--sdb-line); border-radius: 9px; background: #fbfcfe; }
-.sdb-fact-ic { width: 28px; height: 28px; flex: none; border-radius: 7px; display: grid; place-items: center; font-size: 12px; }
-.sdb-fact-ic--blue  { background: var(--sdb-blue-bg);  color: var(--sdb-blue); }
-.sdb-fact-ic--teal  { background: var(--sdb-teal-bg);  color: var(--sdb-teal); }
-.sdb-fact-ic--amber { background: var(--sdb-amber-bg); color: var(--sdb-amber); }
-.sdb-mini-txt { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
-.sdb-mini-k { font-size: 10px; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-mini-vv { font-size: 15px; font-weight: 800; color: var(--sdb-ink); letter-spacing: -.02em; }
-.sdb-mini-row {
-  display: flex; align-items: center; gap: 13px;
-  padding: 12px;
-  border: 1px solid var(--sdb-line);
-  border-radius: 12px;
-  cursor: pointer;
-}
-.sdb-mini-row:hover { background: #f9fbfe; }
-.sdb-mini-ic {
-  width: 38px; height: 38px;
-  border-radius: 10px;
-  background: #f1f5fb;
-  color: var(--sdb-primary);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 15px; flex: 0 0 38px;
-}
-.sdb-mini-v  { font-size: 16px; font-weight: 800; color: var(--sdb-ink); }
-.sdb-mini-l  { font-size: 12.5px; font-weight: 600; color: var(--sdb-ink2); }
-.sdb-mini-s  { font-size: 11px; color: var(--sdb-muted); margin-top: 1px; }
 .sdb-chevr   { margin-left: auto; color: #c4cdda; font-size: 11px; }
 
 /* Readiness donut */
@@ -438,69 +405,80 @@
   margin-top: 14px; cursor: pointer;
 }
 
-/* ── Statutory Readiness card — gauge scales to fill; compact text; no dead space ── */
-.sdb-ready { display: flex; flex-direction: column; gap: 6px; container-type: size; }
-.sdb-ready-head { display: flex; align-items: center; gap: 10px; flex: 0 0 auto; }
-.sdb-ready-icon {
-  width: 34px; height: 34px; flex: 0 0 34px; border-radius: 9px;
-  background: #f2f5f9; display: grid; place-items: center; font-size: 14px;
-}
-.sdb-ready-htext { flex: 1; min-width: 0; }
-.sdb-ready-htext h2 { margin: 0; font-size: 13.5px; font-weight: 700; color: var(--sdb-ink); letter-spacing: -.02em; line-height: 1.15; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-ready-htext p { margin: 1px 0 0; font-size: 10.5px; color: var(--sdb-muted); line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-ready-nav-group { display: flex; gap: 5px; flex: 0 0 auto; }
+/* ── Statutory Readiness card — header matches the deadlines card (.sdb-ch-hd), then a
+   subtitle line, a fixed-size gauge (% overlaid), the "X of 6" subtext, the two info
+   stats pushed to the bottom, and a CTA. gap:0 + explicit margins so it always fits the
+   tile (overflow:hidden — never scrolls). */
+.sdb-ready { display: flex; flex-direction: column; gap: 0; padding: 15px 18px; overflow: hidden; }
+.sdb-ready-subtitle { flex: 0 0 auto; font-size: 12px; font-weight: 450; color: var(--sdb-muted); line-height: 1.3; margin: 0 0 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+/* Week-nav buttons on the deadlines card reuse this. */
 .sdb-ready-nav {
-  width: 24px; height: 24px; border: 1px solid var(--sdb-line); border-radius: 7px;
+  width: 26px; height: 26px; border: 1px solid var(--sdb-line); border-radius: 8px;
   background: #fff; color: var(--sdb-muted); cursor: pointer;
-  display: inline-flex; align-items: center; justify-content: center; font-size: 10px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
 }
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
-/* The gauge grows to fill the card height (aspect-locked, centered) — the score area
-   absorbs the free vertical space so there's no dead white space. */
-.sdb-ready-score { flex: 1 1 auto; min-height: 0; display: flex; align-items: center; justify-content: center; }
-/* Width-driven with an aspect ratio + a height cap → contain-fits the score area
-   (grows the gauge without the height:100%/aspect conflict that broke it before). */
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: 240px; max-height: 100%; aspect-ratio: 118 / 78; margin: 0 auto; }
+
+/* Fixed-size gauge, centered — no flex-grow, so the card never balloons blank space. */
+.sdb-ready-score { flex: 0 0 auto; display: flex; justify-content: center; padding: 0 0 3px; }
+.sdb-gauge-wrap { position: relative; width: 195px; max-width: 100%; aspect-ratio: 118 / 78; }
 .sdb-gauge { width: 100%; height: 100%; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
-/* Fill sweep is driven by the Web Animations API in HalfGauge (left → right).
-   The % scales with the card (cqmin) — smaller by default than before. */
 .sdb-gauge-val {
-  position: absolute; left: 50%; bottom: 4%; transform: translateX(-50%);
-  font-size: clamp(20px, 9cqmin, 44px); font-weight: 800; letter-spacing: -.02em; line-height: 1;
+  position: absolute; left: 50%; bottom: 3%; transform: translateX(-50%);
+  font-size: 23px; font-weight: 650; letter-spacing: -.02em; line-height: 1;
 }
-.sdb-ready-sub { font-size: 11px; color: var(--sdb-body); text-align: center; flex: 0 0 auto; }
-.sdb-ready-dots { display: flex; gap: 5px; justify-content: center; flex: 0 0 auto; }
-.sdb-ready-dot { width: 6px; height: 6px; border-radius: 50%; background: #d7deea; transition: width .15s; }
-.sdb-ready-dot.is-on { background: var(--sdb-primary); width: 16px; border-radius: 3px; }
+.sdb-ready-sub { flex: 0 0 auto; margin: 12px 0 10px; font-size: 13px; font-weight: 550; color: var(--sdb-ink2); text-align: center; line-height: 1.35; text-transform: capitalize; }
+
+/* Config-gate status rows (lens.gates) — each config domain with a Set/Open badge.
+   Pushed down (margin-top:auto) so it sits low with the CTA beneath. */
+/* Config-gate rows — the wizard's Validation Checklist look (statutoryForms .sfp-check):
+   round status badge + label + a status pill. Status pill is NOT bold. */
+.sdb-ready-gates { flex: 0 0 auto; margin-top: auto; display: flex; flex-direction: column; }
+.sdb-gate { display: flex; align-items: center; gap: 9px; min-height: 32px; padding: 5px 0; border-top: 1px solid var(--sdb-line2); }
+.sdb-gate:first-child { border-top: 0; }
+.sdb-gate-ci { width: 20px; height: 20px; border-radius: 50%; display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.sdb-gate.ok .sdb-gate-ci   { background: #e8f7ee; color: #15a34a; }
+.sdb-gate.warn .sdb-gate-ci { background: #fef3e2; color: #d97706; }
+.sdb-gate-l { flex: 1; min-width: 0; font-size: 12.5px; color: #3f4a63; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-gate.warn .sdb-gate-l { color: var(--sdb-muted); }
+.sdb-gate-v { flex: 0 0 auto; font-size: 11px; font-weight: 500; padding: 2px 10px; border-radius: 20px; }
+.sdb-gate.ok .sdb-gate-v   { background: #e8f7ee; color: #15a34a; }
+.sdb-gate.warn .sdb-gate-v { background: #fef3e2; color: #d97706; }
 .sdb-ready-cta {
-  flex: 0 0 auto; width: 100%; padding: 8px 12px; border-radius: 9px; border: 1px solid var(--sdb-line);
-  background: #f4f7fc; color: var(--sdb-primary); font: inherit; font-size: 12px; font-weight: 700;
-  cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  flex: 0 0 auto; margin-top: 14px; width: 100%; height: 38px; border: 0; border-radius: 10px;
+  background: #1f3b6d; color: #fff; font: inherit; font-size: 12.5px; font-weight: 650;
+  letter-spacing: -.01em; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.sdb-ready-cta:hover { background: #eaf1fe; }
+.sdb-ready-cta:hover { background: #18305a; }
 
 /* ── Statutory deadlines calendar ────────────────────────────────────────────── */
-.sdb-cal { display: flex; flex-direction: column; }
+.sdb-cal { display: flex; flex-direction: column; overflow: hidden; }
 .sdb-cal-month { font-size: 12px; font-weight: 600; color: var(--sdb-ink2); margin: 4px 0 10px; }
-.sdb-cal-strip { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; }
+.sdb-cal-strip { display: grid; grid-template-columns: repeat(7, minmax(0, 1fr)); gap: 4px; }
 .sdb-cal-day {
-  display: flex; flex-direction: column; align-items: center; gap: 3px;
-  padding: 7px 0 9px; border: 1px solid transparent; border-radius: 10px;
-  background: #f6f8fc; cursor: pointer; font: inherit; position: relative;
+  display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px;
+  aspect-ratio: 1 / 1; padding: 0; border: 1px solid var(--sdb-line); border-radius: 13px;
+  background: #fff; cursor: pointer; font: inherit; position: relative; overflow: hidden;
 }
-.sdb-cal-day:hover { background: #eef2f9; }
-.sdb-cal-day > span { font-size: 10px; font-weight: 600; text-transform: uppercase; color: var(--sdb-muted); }
-.sdb-cal-day > strong { font-size: 14px; font-weight: 700; color: var(--sdb-ink); }
+.sdb-cal-day:hover { background: #f4f7fc; border-color: #cdd8ea; }
+.sdb-cal-day.is-today { border-color: var(--sdb-primary); }
+.sdb-cal-day > span { font-size: 8.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--sdb-muted); line-height: 1; }
+.sdb-cal-day > strong { font-size: 13px; font-weight: 700; color: var(--sdb-ink); line-height: 1; }
 .sdb-cal-day.is-today > strong { color: var(--sdb-primary); }
 .sdb-cal-day.has-deadline::after {
-  content: ''; position: absolute; bottom: 4px; left: 50%; transform: translateX(-50%);
-  width: 5px; height: 5px; border-radius: 50%; background: var(--sdb-amber);
+  content: ''; position: absolute; left: 7px; right: 7px; bottom: 4px;
+  height: 2px; border-radius: 2px; background: var(--sdb-amber);
 }
 .sdb-cal-day.is-on { background: var(--sdb-primary); border-color: var(--sdb-primary); }
 .sdb-cal-day.is-on > span, .sdb-cal-day.is-on > strong { color: #fff; }
 .sdb-cal-day.is-on.has-deadline::after { background: #fff; }
-.sdb-cal-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; flex: 1 1 auto; min-height: 0; overflow: auto; }
+.sdb-cal-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
+/* Large empty state — centered in the list area. */
+.sdb-cal-empty { margin: auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px; }
+.sdb-cal-empty-ic { color: #c3ccdb; }
+.sdb-cal-empty-t { font-size: 13px; font-weight: 650; color: var(--sdb-ink2); }
+.sdb-cal-empty-s { font-size: 11.5px; color: var(--sdb-muted); line-height: 1.35; }
 .sdb-cal-item { display: flex; align-items: center; gap: 11px; padding: 10px 12px; border: 1px solid var(--sdb-line); border-radius: 11px; }
 .sdb-cal-dot { width: 8px; height: 8px; border-radius: 50%; flex: 0 0 8px; }
 .sdb-cal-dot.sdb-tag--upcoming { background: #2563eb; }
@@ -508,7 +486,6 @@
 .sdb-cal-dot.sdb-tag--planned  { background: #64748b; }
 
 /* Upcoming dates */
-.sdb-view-all { margin-left: auto; font-size: 12px; font-weight: 600; color: var(--sdb-primary); cursor: pointer; }
 .sdb-up-empty { padding: 16px 0; font-size: 12.5px; color: var(--sdb-muted); text-align: center; }
 .sdb-up-item {
   display: flex; gap: 13px;
@@ -542,14 +519,15 @@
 /* Register-only bottom row (the verify/activity side stack became widgets). */
 .sdb-bot--full { grid-template-columns: 1fr; }
 
-/* Tabbed table card */
-.sdb-table-card { padding: 0 20px 18px; overflow: hidden; }
+/* Tabbed table card — no side padding; the tabs, toolbar, table and pagination each
+   carry a consistent 20px inset so everything lines up and the table is full width. */
+.sdb-table-card { padding: 0 0 18px; overflow: hidden; }
 /* As a resizable widget the register fills its tile and scrolls internally. */
 .sdb-table-card.sdb-wgt-fill { display: flex; flex-direction: column; overflow: hidden; }
 .sdb-table-card.sdb-wgt-fill .sdb-tab-body { flex: 1 1 auto; overflow: auto; min-height: 0; }
 .sdb-tabs {
   display: flex; gap: 24px;
-  padding: 2px 0 0;
+  padding: 2px 20px 0;
   border-bottom: 1px solid var(--sdb-line);
   margin: 0 0 0;
   overflow-x: auto;
@@ -577,6 +555,16 @@
   font-weight: 700;
 }
 .sdb-tab-body { padding-top: 4px; }
+/* Register fills the full card width. The card has no side padding; instead the toolbar,
+   active-filter bar, pagination and the first/last table cells each carry the SAME 20px
+   inset, so the search field, first column and everything below line up on one edge.
+   The table's own rounded box/side borders are dropped — the register card frames it. */
+.sdb-table-card .dt-toolbar        { padding: 0 20px 12px; }
+.sdb-table-card .dt-active-filters { padding: 0 20px 12px; }
+.sdb-table-card .dt-pagination     { padding: 12px 20px 0; }
+.sdb-table-card .dt-scroll { border-left: 0; border-right: 0; border-radius: 0; }
+.sdb-table-card .dt-table th:first-child, .sdb-table-card .dt-table td:first-child { padding-left: 20px; }
+.sdb-table-card .dt-table th:last-child,  .sdb-table-card .dt-table td:last-child  { padding-right: 20px; }
 
 /* ── Register table (tab content) — faithful to the mockup's bottom table ──── */
 .sdb-toolbar {
@@ -686,56 +674,17 @@
 @keyframes sdbShimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
 .sdb-note { font-size: 11.5px; color: var(--sdb-muted); margin: 8px 2px 0; }
 .sdb-muted-txt { color: var(--sdb-muted); }
-
-/* ── Side stack ──────────────────────────────────────────────────────────── */
-.sdb-side { display: flex; flex-direction: column; gap: 16px; }
-.sdb-sc-hd {
-  display: flex; align-items: center; gap: 9px;
-  padding: 16px 18px 12px;
-}
-.sdb-sc-hd h3 { margin: 0; font-size: 14px; font-weight: 700; color: var(--sdb-ink); }
-.sdb-sc-lead { color: var(--sdb-primary); font-size: 14px; }
-
-/* Verification queue rows */
-.sdb-q-row {
-  display: flex; align-items: center; gap: 11px;
-  padding: 11px 18px;
-  border-top: 1px solid var(--sdb-line2);
-}
-.sdb-q-row--muted { opacity: 0.6; }
-.sdb-q-ic {
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  background: #f2f5fb;
-  color: var(--sdb-body);
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; flex: 0 0 30px;
-}
-.sdb-q-l { flex: 1; font-size: 12.5px; font-weight: 500; color: var(--sdb-ink2); }
-.sdb-q-n { font-weight: 700; color: var(--sdb-ink); }
-.sdb-placeholder-val { color: var(--sdb-muted); font-style: italic; }
-.sdb-q-total {
-  display: flex; justify-content: space-between;
-  padding: 12px 18px;
-  border-top: 1px solid var(--sdb-line);
-  font-weight: 700; color: var(--sdb-ink); font-size: 12.5px;
-}
-
-/* Recent Activity */
-.sdb-act-empty { padding: 14px 18px; font-size: 12.5px; color: var(--sdb-muted); }
-.sdb-act {
-  display: flex; gap: 12px;
-  padding: 12px 18px;
-  border-top: 1px solid var(--sdb-line2);
-}
-.sdb-act-ic {
-  width: 30px; height: 30px;
-  border-radius: 8px;
-  display: flex; align-items: center; justify-content: center;
-  font-size: 12px; flex: 0 0 30px;
-}
-.sdb-act-t { font-size: 12.5px; color: var(--sdb-ink); line-height: 1.35; font-weight: 600; }
-.sdb-act-s { font-size: 11px; color: var(--sdb-muted); margin-top: 2px; }
+/* Semantic component chips (Pay Components: Taxable / Statutory / Pre-tax / Post-tax). */
+.sdb-ck { display: inline-flex; align-items: center; padding: 2px 9px; border-radius: 20px; font-size: 11px; font-weight: 500; white-space: nowrap; }
+.sdb-ck.tax  { background: #fef3e2; color: #b45309; }
+.sdb-ck.stat { background: #eef2ff; color: #3538cd; }
+.sdb-ck.pre  { background: #e8f7ee; color: #15803d; }
+.sdb-ck.post { background: #f1f5f9; color: #475569; }
+/* Inline Verify / Reject buttons (NIS Verification Action column). */
+.sdb-vactions { display: inline-flex; gap: 6px; justify-content: flex-end; }
+.sdb-vbtn { height: 28px; padding: 0 12px; border-radius: 8px; border: 1px solid; background: #fff; font: inherit; font-size: 12px; font-weight: 500; cursor: pointer; transition: background .12s; }
+.sdb-vbtn.ok  { border-color: #bfe6cd; color: #15803d; } .sdb-vbtn.ok:hover  { background: #eafaf1; }
+.sdb-vbtn.bad { border-color: #f2b6b6; color: #dc2626; } .sdb-vbtn.bad:hover { background: #fdecec; }
 
 /* ── Responsive ──────────────────────────────────────────────────────────── */
 @media (max-width: 1200px) {
@@ -746,7 +695,6 @@
 @media (max-width: 900px) {
   .sdb-mid   { grid-template-columns: 1fr; }
   .sdb-bot   { grid-template-columns: 1fr; }
-  .sdb-sum-body { grid-template-columns: 1fr; }
 }
 @media (max-width: 640px) {
   .sdb-stats { grid-template-columns: repeat(2, 1fr); }

@@ -35,6 +35,8 @@ export interface EmployeeResolved {
   employeeNo: string | null;
   department: string | null;
   position: string | null;
+  /** Public avatar URL, or null → the cell renders initials. */
+  imageUrl: string | null;
 }
 
 export interface EmployeePickerOption {

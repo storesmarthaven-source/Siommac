@@ -3,6 +3,7 @@
 // are never passed here. Optimistic update so drag/resize/add reflects immediately.
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { getInstanceLayout, saveInstanceLayout, saveInstanceLayoutDefault, resetInstanceLayout } from '@api/layout';
+import { toast } from '@store';
 import type { BoardLayout, WidgetInstance } from './types';
 
 const emptyLayout = (pageKey: string): BoardLayout => ({ pageKey, zones: {} });
@@ -53,8 +54,19 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout): Us
   async function removeWidget(zoneId: string, instanceId: string): Promise<void> {
     await updateZoneLayout(zoneId, (layout.zones[zoneId] ?? []).filter(w => w.instanceId !== instanceId));
   }
+  // Save the CURRENT arrangement as the org-wide default. Then clear THIS admin's own
+  // override so they immediately SEE the new default take effect (otherwise their personal
+  // override masks it and it looks like nothing happened). Surfaces success/failure — no
+  // silent swallow.
   async function setAsDefault(): Promise<void> {
-    await saveInstanceLayoutDefault(pageKey, layout);
+    try {
+      await saveInstanceLayoutDefault(pageKey, layout);
+      await resetInstanceLayout(pageKey);
+      await qc.invalidateQueries({ queryKey: key });
+      toast.success('Saved as the default layout for this page.');
+    } catch (e) {
+      toast.error((e as Error).message || 'Failed to save the default layout.');
+    }
   }
   async function resetLayout(): Promise<void> {
     await resetInstanceLayout(pageKey);
