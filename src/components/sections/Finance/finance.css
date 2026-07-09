@@ -310,10 +310,11 @@
 
 /* Rich KPI tile (onboarding-sized) — icon chip + uppercase caption, large value
    (scales with the tile via container queries), context sub-line + accent bar. */
-/* KPI content SCALES with the tile (cqh = 1% of the card's height). Safe here because
-   the tile height is definite (RGL sets px height; card is height:100%) — cqh with an
-   auto-height tile is circular and collapses, which is why sizeToContent + cqh failed. */
-.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: clamp(6px, 6cqh, 14px); padding: clamp(12px, 11cqh, 26px) 18px; position: relative; overflow: hidden; container-type: size; }
+/* KPI value scales with tile WIDTH (cqw — always stable). Font sizes are FIXED so the
+   caption/sub are always legible; the resize floor (allowedSizes) guarantees the card is
+   tall enough to show all three lines. (Height-based cqh was removed — it clipped the
+   text at smaller sizes.) */
+.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 8px; padding: 16px 18px; position: relative; overflow: hidden; container-type: inline-size; }
 .sdb-kpi::before { content: ''; position: absolute; top: 0; bottom: 0; left: 0; width: 3px; background: var(--sdb-kpi-accent, transparent); }
 .sdb-kpi--blue   { --sdb-kpi-accent: var(--sdb-blue); }
 .sdb-kpi--purple { --sdb-kpi-accent: var(--sdb-purple); }
@@ -323,16 +324,16 @@
 .sdb-kpi--clickable { cursor: pointer; transition: background-color .12s ease; }
 .sdb-kpi--clickable:hover { background: #f9fbfe; }
 .sdb-kpi-top { display: flex; align-items: center; gap: 10px; min-width: 0; }
-.sdb-kpi-ic { width: clamp(30px, 27cqh, 52px); height: clamp(30px, 27cqh, 52px); flex: none; border-radius: 9px; display: grid; place-items: center; font-size: clamp(13px, 11cqh, 20px); }
+.sdb-kpi-ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; font-size: 14px; }
 .sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
 .sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
 .sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
 .sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
 .sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: clamp(10px, 9cqh, 15px); font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(24px, 26cqh, 52px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(15px, 14cqh, 30px); font-weight: 700; line-height: 1.2; white-space: normal; }
-.sdb-kpi-sub { font-size: clamp(11px, 9.5cqh, 15px); color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-cap { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi-val { font-size: clamp(24px, 13cqw, 34px); font-weight: 800; letter-spacing: -.03em; color: var(--sdb-ink); line-height: 1.02; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sdb-kpi--text .sdb-kpi-val { font-size: clamp(15px, 7.5cqw, 20px); font-weight: 700; line-height: 1.2; white-space: normal; }
+.sdb-kpi-sub { font-size: 12px; color: var(--sdb-body); display: flex; align-items: center; gap: 6px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .sdb-kpi-sub .sdb-dot { flex: none; }
 
 /* List cards (Verification Queue, Recent Activity) fill their tile: header fixed,
@@ -435,7 +436,7 @@
 }
 
 /* ── Statutory Readiness card (switchable gauge) ─────────────────────────────── */
-.sdb-ready { display: flex; flex-direction: column; container-type: size; }
+.sdb-ready { display: flex; flex-direction: column; }
 .sdb-ready-head { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
 .sdb-ready-icon {
   width: 44px; height: 44px; flex: 0 0 44px; border-radius: 50%;
@@ -451,17 +452,15 @@
   display: inline-flex; align-items: center; justify-content: center; font-size: 11px;
 }
 .sdb-ready-nav:hover { background: #f8fafd; color: var(--sdb-ink2); }
-/* Score area flexes to absorb extra tile height; the gauge scales with it (cqh is
-   stable here — the tile has a definite RGL-set height). */
-.sdb-ready-score { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 4px; margin: 6px 0 2px; flex: 1 1 auto; min-height: 0; }
+.sdb-ready-score { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 6px 0 2px; }
 .sdb-ready-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .05em; color: var(--sdb-muted); }
-.sdb-gauge-wrap { position: relative; width: 100%; max-width: clamp(150px, 45cqh, 340px); margin: 0 auto; }
+.sdb-gauge-wrap { position: relative; width: 100%; max-width: 200px; margin: 0 auto; }
 .sdb-gauge { width: 100%; aspect-ratio: 118 / 78; }
 .sdb-gauge svg { width: 100%; height: 100%; overflow: visible; display: block; }
 /* Fill sweep is driven by the Web Animations API in HalfGauge (left → right). */
 .sdb-gauge-val {
   position: absolute; left: 50%; bottom: 8%; transform: translateX(-50%);
-  font-size: clamp(22px, 8cqh, 44px); font-weight: 800; letter-spacing: -.02em; line-height: 1;
+  font-size: 30px; font-weight: 800; letter-spacing: -.02em; line-height: 1;
 }
 .sdb-ready-sub { font-size: 13px; color: var(--sdb-body); text-align: center; margin-top: 2px; }
 .sdb-ready-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
