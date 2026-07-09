@@ -430,7 +430,10 @@ export function StatutoryDashboard({
     const { pts, lo, hi } = rateTrend;
     const span = Math.max(1, hi - lo);
     const yFor = (r: number): number => P.yBase - ((r - lo) / span) * (P.yBase - P.yTop);
-    const xFor = (i: number): number => pts.length <= 1 ? (P.x0 + P.x1) / 2 : P.x0 + (i / (pts.length - 1)) * (P.x1 - P.x0);
+    // Inset the points from the plot edges so the first/last value labels clear the
+    // y-axis labels on the left (and the card edge on the right).
+    const xL = P.x0 + 28, xR = P.x1 - 22;
+    const xFor = (i: number): number => pts.length <= 1 ? (xL + xR) / 2 : xL + (i / (pts.length - 1)) * (xR - xL);
     const grid = Array.from({ length: 5 }, (_, i) => { const val = lo + (span * i) / 4; return { val, y: yFor(val) }; });
     const first = pts[0];
     const last = pts[pts.length - 1];
