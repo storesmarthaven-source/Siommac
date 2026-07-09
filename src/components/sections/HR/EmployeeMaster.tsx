@@ -42,6 +42,7 @@ import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
 } from '@ui/widgets';
+import { TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, type AdvTab } from '@ui';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import './HR.css';
@@ -54,153 +55,6 @@ const PAGE_KEY = 'hr.employees.overview';
 // labels are resolved via the `meta.departments` id→name map returned by the list endpoint.
 interface Filters { query: string; status: string[]; department: string[]; employmentType: string[]; training: string[]; }
 const EMPTY_FILTERS: Filters = { query: '', status: [], department: [], employmentType: [], training: [] };
-
-function toggle(list: string[], v: string): string[] {
-  return list.includes(v) ? list.filter(x => x !== v) : [...list, v];
-}
-
-function MultiDropdown(
-  { id, label, options, selected, onChange, openId, setOpenId, labelFn }:
-  { id: string; label: string; options: string[]; selected: string[]; onChange: (v: string[]) => void;
-    openId: string | null; setOpenId: (v: string | null) => void; labelFn: (o: string) => string },
-): VNode {
-  const isOpen = openId === id;
-  const menuId = `${id}-menu`;
-  const value = selected.length
-    ? selected.slice(0, 2).map(labelFn).join(', ') + (selected.length > 2 ? ` +${selected.length - 2}` : '')
-    : 'All';
-  return (
-    <div class="dropdown-wrap">
-      <button type="button" class="multi-select" aria-haspopup="menu" aria-expanded={isOpen} aria-controls={menuId}
-        onClick={e => { e.stopPropagation(); setOpenId(isOpen ? null : id); }}>
-        <span class="multi-select-text"><span class="multi-select-label">{label}</span><span class="multi-select-value">{value}</span></span>
-        {selected.length ? <span class="multi-select-count">{selected.length}</span> : <span aria-hidden="true">⌄</span>}
-      </button>
-      {isOpen && (
-        <div id={menuId} class="dropdown-menu" role="menu" aria-label={label} onClick={e => e.stopPropagation()}>
-          <div class="dropdown-head"><strong>{label}</strong><span>Select one or more values.</span></div>
-          <div class="dropdown-list">
-            {options.length ? options.map(opt => (
-              <button type="button" role="menuitemcheckbox" aria-checked={selected.includes(opt)}
-                class={`check-row ${selected.includes(opt) ? 'active' : ''}`} onClick={() => onChange(toggle(selected, opt))}>
-                <span class="check-box" aria-hidden="true">{selected.includes(opt) ? '✓' : ''}</span><span>{labelFn(opt)}</span>
-              </button>
-            )) : <div class="em-empty">No values</div>}
-          </div>
-          <div class="dropdown-foot">
-            <button type="button" onClick={() => onChange([])}>Clear</button>
-            <button type="button" class="apply" onClick={() => setOpenId(null)}>Apply</button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-function OptionSet(
-  { title, options, selected, onChange, labelFn }:
-  { title: string; options: string[]; selected: string[]; onChange: (v: string[]) => void; labelFn: (o: string) => string },
-): VNode {
-  return (
-    <div class="advanced-section">
-      <div class="advanced-section-title"><strong>{title}</strong><span>{selected.length ? `${selected.length} selected` : 'All'}</span></div>
-      <div class="compact-checks">
-        {options.length ? options.map(opt => (
-          <button type="button" role="menuitemcheckbox" aria-checked={selected.includes(opt)}
-            class={`check-row ${selected.includes(opt) ? 'active' : ''}`}
-            onClick={e => { e.stopPropagation(); onChange(toggle(selected, opt)); }}>
-            <span class="check-box" aria-hidden="true">{selected.includes(opt) ? '✓' : ''}</span><span>{labelFn(opt)}</span>
-          </button>
-        )) : <div class="em-empty">No values</div>}
-      </div>
-    </div>
-  );
-}
-
-const ADV_TABS = ['Organization', 'Employment', 'Compliance'] as const;
-type AdvTab = typeof ADV_TABS[number];
-
-function AdvancedFilters(
-  { filters, setFilters, openId, setOpenId, deptOptions, deptLabelFn, typeOptions, trainingOptions }:
-  { filters: Filters; setFilters: (f: Filters) => void; openId: string | null; setOpenId: (v: string | null) => void;
-    deptOptions: string[]; deptLabelFn: (id: string) => string; typeOptions: string[]; trainingOptions: string[] },
-): VNode {
-  const isOpen = openId === 'advanced-filters';
-  const menuId = 'advanced-filters-menu';
-  const [tab, setTab] = useState<AdvTab>('Organization');
-  const count = filters.department.length + filters.employmentType.length + filters.training.length;
-  const clearAdvanced = () => setFilters({ ...filters, department: [], employmentType: [], training: [] });
-  const trainingLabel = (t: string) => TRAINING_LABEL[t as TrainingStatus] ?? humanize(t);
-  return (
-    <div class="dropdown-wrap" onClick={e => e.stopPropagation()}>
-      <button type="button" class="advanced-filter-btn" aria-haspopup="menu" aria-expanded={isOpen} aria-controls={menuId}
-        onClick={e => { e.stopPropagation(); setOpenId(isOpen ? null : 'advanced-filters'); }}>
-        <span class="left">
-          <span class="sliders" aria-hidden="true">≡</span>
-          <span><small>Advanced</small><strong>{count ? `${count} filters active` : 'Advanced filters'}</strong></span>
-        </span>
-        <span class="adv-right">
-          {count ? <span class="advanced-count">{count}</span> : null}
-          <span class="adv-caret"><i class="fas fa-chevron-down" aria-hidden="true" /></span>
-        </span>
-      </button>
-      {isOpen && (
-        <div id={menuId} class="dropdown-menu advanced-menu right" role="menu" aria-label="Advanced filters" onClick={e => e.stopPropagation()}>
-          <div class="dropdown-head"><strong>Advanced Filters</strong><span>Filters backed by real Employee Master data.</span></div>
-          <div class="advanced-panel tabbed">
-            <div class="advanced-tabs" role="tablist" aria-label="Advanced filter categories">
-              {ADV_TABS.map(name => (
-                <button type="button" role="tab" aria-selected={tab === name} class={`advanced-tab ${tab === name ? 'active' : ''}`} onClick={e => { e.stopPropagation(); setTab(name); }}>{name}</button>
-              ))}
-            </div>
-            <div class="advanced-tab-body" role="tabpanel">
-              {tab === 'Organization' && (
-                <div>
-                  <div class="advanced-tab-title">
-                    <div><strong>Organization filters</strong><span>Filter by department assignment.</span></div>
-                    <span class="setting-pill">Multi-select</span>
-                  </div>
-                  <div class="filter-tab-grid">
-                    <OptionSet title="Department" options={deptOptions} selected={filters.department}
-                      onChange={v => setFilters({ ...filters, department: v })} labelFn={deptLabelFn} />
-                  </div>
-                </div>
-              )}
-              {tab === 'Employment' && (
-                <div>
-                  <div class="advanced-tab-title">
-                    <div><strong>Employment filters</strong><span>Filter by employee / worker type.</span></div>
-                    <span class="setting-pill">Multi-select</span>
-                  </div>
-                  <div class="filter-tab-grid">
-                    <OptionSet title="Employment Type" options={typeOptions} selected={filters.employmentType}
-                      onChange={v => setFilters({ ...filters, employmentType: v })} labelFn={humanize} />
-                  </div>
-                </div>
-              )}
-              {tab === 'Compliance' && (
-                <div>
-                  <div class="advanced-tab-title">
-                    <div><strong>Compliance filters</strong><span>Filter by training readiness.</span></div>
-                    <span class="setting-pill">Multi-select</span>
-                  </div>
-                  <div class="filter-tab-grid">
-                    <OptionSet title="Training Status" options={trainingOptions} selected={filters.training}
-                      onChange={v => setFilters({ ...filters, training: v })} labelFn={trainingLabel} />
-                  </div>
-                </div>
-              )}
-            </div>
-            <div class="advanced-footer">
-              <button class="secondary-btn" type="button" onClick={clearAdvanced}>Reset Advanced</button>
-              <button class="primary-btn" type="button" onClick={() => setOpenId(null)}>Apply Filters</button>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
 
 // ── register table ─────────────────────────────────────────────────────────────
 
@@ -322,7 +176,7 @@ function defaultEmployeeLayout(): BoardLayout {
 
 export function EmployeeMaster(): VNode {
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
-  const [openId, setOpenId] = useState<string | null>(null);
+  const { openId, setOpenId } = useFilterDropdowns();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(25);
@@ -438,21 +292,34 @@ export function EmployeeMaster(): VNode {
     ...filters.training.map(s => ({ label: TRAINING_LABEL[s as TrainingStatus] ?? humanize(s), onRemove: () => setFiltersReset({ ...filters, training: filters.training.filter(x => x !== s) }) })),
   ];
 
+  const trainingLabel = (t: string): string => TRAINING_LABEL[t as TrainingStatus] ?? humanize(t);
+  // Advanced-filter tabs (Organization / Employment / Compliance), backed by real meta lists.
+  const advTabs: AdvTab[] = [
+    { name: 'Organization', blurb: 'Filter by department assignment.', sections: [
+      { type: 'checklist', title: 'Department', options: deptOptions, selected: filters.department,
+        onChange: v => setFiltersReset({ ...filters, department: v }), labelFn: deptLabelFn },
+    ] },
+    { name: 'Employment', blurb: 'Filter by employee / worker type.', sections: [
+      { type: 'checklist', title: 'Employment Type', options: typeOptions, selected: filters.employmentType,
+        onChange: v => setFiltersReset({ ...filters, employmentType: v }), labelFn: humanize },
+    ] },
+    { name: 'Compliance', blurb: 'Filter by training readiness.', sections: [
+      { type: 'checklist', title: 'Training Status', options: trainingOptions, selected: filters.training,
+        onChange: v => setFiltersReset({ ...filters, training: v }), labelFn: trainingLabel },
+    ] },
+  ];
+  const clearAdvanced = (): void => setFiltersReset({ ...filters, department: [], employmentType: [], training: [] });
+
   // The register (toolbar + filters + table + pagination) as a PAGE-LOCAL widget — its
   // render closes over current filters/selection/modal state (rebuilt each render).
   const renderRegister = (): VNode => (
       <div class="table-card">
         <div class="employee-toolbar compact">
-          <div class="table-search">
-            <span class="magnify" aria-hidden="true">⌕</span>
-            <label class="sr-only" for="employee-search">Search employees</label>
-            <input id="employee-search" value={searchDraft} placeholder="Search employee, email, employee no, position…"
-              onInput={e => setSearchDraft(e.currentTarget.value)} />
-          </div>
-          <MultiDropdown id="status-filter" label="Status" options={statusOptions} selected={filters.status}
+          <TableSearch value={searchDraft} onChange={setSearchDraft}
+            placeholder="Search employee, email, employee no, position…" ariaLabel="Search employees" />
+          <FilterDropdown id="status-filter" label="Status" options={statusOptions} selected={filters.status}
             onChange={v => setFiltersReset({ ...filters, status: v })} openId={openId} setOpenId={setOpenId} labelFn={humanize} />
-          <AdvancedFilters filters={filters} setFilters={setFiltersReset} openId={openId} setOpenId={setOpenId}
-            deptOptions={deptOptions} deptLabelFn={deptLabelFn} typeOptions={typeOptions} trainingOptions={trainingOptions} />
+          <AdvancedFilter id="advanced-filters" tabs={advTabs} onReset={clearAdvanced} openId={openId} setOpenId={setOpenId} />
           <div class="dropdown-wrap">
             <button class="hse-btn accent" type="button" onClick={e => { e.stopPropagation(); setOpenId(openId === 'new-menu' ? null : 'new-menu'); }}>
               <i class="fas fa-circle-plus" /> New Employee <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
@@ -479,13 +346,11 @@ export function EmployeeMaster(): VNode {
           </div>
         </div>
 
-        {(chipDefs.length || searchDraft) ? (
-          <div class="active-filter-bar">
-            {chipDefs.length ? <strong>Active filters:</strong> : null}
-            {chipDefs.map(c => <button class="chip-btn" type="button" onClick={() => c.onRemove()}>{c.label} ×</button>)}
-            <button class="ghost-btn" type="button" onClick={() => { setSearchDraft(''); setFiltersReset(EMPTY_FILTERS); }}>Clear all</button>
-          </div>
-        ) : null}
+        {chipDefs.length > 0
+          ? <ActiveFilters chips={chipDefs} onClearAll={() => { setSearchDraft(''); setFiltersReset(EMPTY_FILTERS); }} />
+          : searchDraft
+            ? <div class="tf-active"><button type="button" class="tf-clear" onClick={() => { setSearchDraft(''); setFiltersReset(EMPTY_FILTERS); }}>Clear all</button></div>
+            : null}
 
         <div class="table-scroll" role="region" aria-label="Employee register table, scrollable" tabIndex={0}>
           <table>
