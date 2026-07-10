@@ -54,16 +54,16 @@ const TABS: ConsoleTab[] = [
   },
   {
     id:    'modules',
-    label: 'Modules',
+    label: 'Overview',
     icon:  'fa-th-large',
-    desc:  'Control which feature modules are visible to each role and individual manager. Changes take effect at next login.',
+    desc:  'A read-only rollup of the permission catalogue — how much of each module every role can access. Edit capabilities in Users (per user) or Roles (per role).',
     body:  ModulesTab,
   },
   {
     id:    'permissions',
-    label: 'Permissions',
+    label: 'Users',
     icon:  'fa-user-lock',
-    desc:  'Grant or revoke individual capabilities per user. Overrides take priority over role defaults; clearing an override reverts to the role default.',
+    desc:  'Pick a user to see and edit their effective capabilities — the role default, any per-user override, and the resulting access. Overrides take priority; "Role default" clears the override.',
     body:  PermissionsTab,
   },
   {
