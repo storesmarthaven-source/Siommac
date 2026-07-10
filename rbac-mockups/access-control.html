@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Access Control — SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar (shared shell) -->
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo"><i class="fa-solid fa-hexagon-nodes"></i></span><span class="brand-name">SIOMAC</span></div>
+    <div class="brand-sub">Superadmin Console</div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-table-columns"></i> Overview</div>
+      <div class="nav-item"><i class="fa-regular fa-user"></i> Users</div>
+      <div class="nav-item"><i class="fa-solid fa-users-gear"></i> Roles</div>
+      <div class="nav-item active"><i class="fa-solid fa-shield-halved"></i> Access Control <i class="fa-solid fa-chevron-down chev"></i></div>
+      <div class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <span class="avatar">ER</span>
+        <span class="side-user-txt"><div class="side-user-name">Emma Rodriguez</div><div class="side-user-role">Super Administrator</div></span>
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#8895b6;font-size:11px"></i>
+      </div>
+      <div class="side-status"><span class="dot"></span> All systems operational</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search console…"><kbd>⌘K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip"><span class="avatar">ER</span><span><div class="user-chip-name">Emma Rodriguez</div><div class="user-chip-role">Super Administrator</div></span><i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i></div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <h1 class="page-title">Access Control</h1>
+        <p class="page-sub">Manage roles, users, and capability coverage across the organization.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats">
+        <div class="stat"><div class="stat-top"><span class="stat-ico purple"><i class="fa-solid fa-users-gear"></i></span><div><div class="stat-lbl">Roles</div><div class="stat-val">18</div><div class="stat-sub">System &amp; custom roles</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico green"><i class="fa-regular fa-user"></i></span><div><div class="stat-lbl">Users</div><div class="stat-val">342</div><div class="stat-sub">Active users</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico red"><i class="fa-solid fa-shield-halved"></i></span><div><div class="stat-lbl">High-Risk Capabilities</div><div class="stat-val">27</div><div class="stat-sub">Require approval</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico blue"><i class="fa-solid fa-arrows-rotate"></i></span><div><div class="stat-lbl">Active Overrides</div><div class="stat-val">12</div><div class="stat-sub">Across 7 users</div></div></div></div>
+      </div>
+
+      <div style="display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:20px;align-items:start">
+
+        <!-- Matrix -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Module-by-Role Coverage</div>
+            <div class="row" style="gap:16px;font-size:12px;color:var(--muted)">
+              <span class="row" style="gap:6px"><span class="acc-dot full" style="width:14px;height:14px"></span> Full Access</span>
+              <span class="row" style="gap:6px"><span class="acc-half" style="width:13px;height:13px"></span> Partial Access</span>
+              <span class="row" style="gap:6px"><span class="acc-dot restricted" style="width:14px;height:14px"></span> Restricted</span>
+              <span class="row" style="gap:6px"><span class="acc-dot none" style="width:14px;height:14px"></span> No Access</span>
+            </div>
+          </div>
+          <table class="tbl" style="text-align:center">
+            <thead><tr>
+              <th style="text-align:left">Module</th><th>Superadmin</th><th>Admin</th><th>Manager</th><th>Supervisor</th><th>Employee</th><th>Viewer</th>
+            </tr></thead>
+            <tbody id="matrix"></tbody>
+          </table>
+          <div style="padding:16px;text-align:center;border-top:1px solid var(--line)"><button class="btn">View all modules &amp; roles <i class="fa-solid fa-arrow-right"></i></button></div>
+        </div>
+
+        <!-- Right column -->
+        <div style="display:flex;flex-direction:column;gap:20px">
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">High-Risk Capabilities</div><span class="link">View all</span></div>
+            <div style="padding:6px 10px">
+              <div class="hr-item"><span class="hr-ico"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="grow"><div class="hr-name">Approve Statutory Version</div></div><span class="muted" style="font-size:12.5px">4 roles</span><i class="fa-solid fa-chevron-right sub"></i></div>
+              <div class="hr-item"><span class="hr-ico"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="grow"><div class="hr-name">Manage System Settings</div></div><span class="muted" style="font-size:12.5px">3 roles</span><i class="fa-solid fa-chevron-right sub"></i></div>
+              <div class="hr-item"><span class="hr-ico"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="grow"><div class="hr-name">User Role Management</div></div><span class="muted" style="font-size:12.5px">2 roles</span><i class="fa-solid fa-chevron-right sub"></i></div>
+              <div class="hr-item"><span class="hr-ico"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="grow"><div class="hr-name">Override User Access</div></div><span class="muted" style="font-size:12.5px">5 roles</span><i class="fa-solid fa-chevron-right sub"></i></div>
+              <div class="hr-item"><span class="hr-ico"><i class="fa-solid fa-triangle-exclamation"></i></span><div class="grow"><div class="hr-name">Delete Audit Logs</div></div><span class="muted" style="font-size:12.5px">1 role</span><i class="fa-solid fa-chevron-right sub"></i></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">Recent Access Changes</div><span class="link">View all</span></div>
+            <div style="padding:10px">
+              <div class="rc-item"><span class="avatar" style="width:32px;height:32px">OB</span><div class="grow"><div class="hr-name">Olivia Bennett</div><div class="sub">Override applied: Terminate Employee</div></div><span class="sub">2h ago</span></div>
+              <div class="rc-item"><span class="avatar" style="width:32px;height:32px">NW</span><div class="grow"><div class="hr-name">Noah Williams</div><div class="sub">Role changed: Employee → Manager</div></div><span class="sub">5h ago</span></div>
+              <div class="rc-item"><span class="avatar" style="width:32px;height:32px">ED</span><div class="grow"><div class="hr-name">Emma Rodriguez</div><div class="sub">Override removed: Edit Payroll</div></div><span class="sub">1d ago</span></div>
+              <div class="rc-item"><span class="avatar" style="width:32px;height:32px">LJ</span><div class="grow"><div class="hr-name">Liam Johnson</div><div class="sub">New user added</div></div><span class="sub">2d ago</span></div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-head"><div class="card-title">Access Summary</div><span class="link">View report</span></div>
+            <div class="card-pad" style="display:flex;align-items:center;gap:18px">
+              <svg width="120" height="120" viewBox="0 0 42 42" style="flex:none">
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#eef1f5" stroke-width="6"></circle>
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#16a34a" stroke-width="6" stroke-dasharray="43 57" stroke-dashoffset="0" transform="rotate(-90 21 21)"></circle>
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#d97706" stroke-width="6" stroke-dasharray="26 74" stroke-dashoffset="-43" transform="rotate(-90 21 21)"></circle>
+                <circle cx="21" cy="21" r="15.9" fill="none" stroke="#dc2626" stroke-width="6" stroke-dasharray="10 90" stroke-dashoffset="-69" transform="rotate(-90 21 21)"></circle>
+                <text x="21" y="20" text-anchor="middle" font-size="7" font-weight="700" fill="#111827">372</text>
+                <text x="21" y="26" text-anchor="middle" font-size="3" fill="#6b7280">Total</text>
+              </svg>
+              <div style="flex:1;display:flex;flex-direction:column;gap:9px;font-size:12.5px">
+                <div class="between"><span class="row" style="gap:7px"><span class="acc-dot full" style="width:11px;height:11px"></span> Full Access</span><span><b>162</b> <span class="sub">(43%)</span></span></div>
+                <div class="between"><span class="row" style="gap:7px"><span class="acc-dot partial" style="width:11px;height:11px"></span> Partial Access</span><span><b>96</b> <span class="sub">(26%)</span></span></div>
+                <div class="between"><span class="row" style="gap:7px"><span class="acc-dot restricted" style="width:11px;height:11px"></span> Restricted</span><span><b>38</b> <span class="sub">(10%)</span></span></div>
+                <div class="between"><span class="row" style="gap:7px"><span class="acc-dot none" style="width:11px;height:11px"></span> No Access</span><span><b>76</b> <span class="sub">(21%)</span></span></div>
+              </div>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<style>
+  .hr-item { display:flex; align-items:center; gap:11px; padding:11px 10px; border-bottom:1px solid var(--line-2); }
+  .hr-item:last-child { border-bottom:0; }
+  .hr-ico { width:30px; height:30px; border-radius:8px; background:var(--red-bg); color:var(--red); display:grid; place-items:center; font-size:13px; flex:none; }
+  .hr-name { font-size:13.5px; font-weight:600; }
+  .rc-item { display:flex; align-items:center; gap:11px; padding:10px; border-bottom:1px solid var(--line-2); }
+  .rc-item:last-child { border-bottom:0; }
+  .tbl td.cell { padding:14px 8px; }
+</style>
+
+<script>
+  // Access matrix — F=full, P=partial, R=restricted, N=none
+  const rows = [
+    ['fa-user',            'HR',         ['F','F','P','F','P','R']],
+    ['fa-shield-halved',   'HSE',        ['F','F','F','P','P','R']],
+    ['fa-dollar-sign',     'Finance',    ['F','F','P','F','P','N']],
+    ['fa-gear',            'Operations', ['F','F','F','P','P','N']],
+    ['fa-file-lines',      'Documents',  ['F','F','P','N','P','N']],
+    ['fa-diagram-project', 'Projects',   ['F','F','F','P','P','N']],
+    ['fa-sliders',         'System',     ['F','F','P','N','N','N']],
+  ];
+  const cell = c =>
+    c === 'F' ? '<span class="acc-dot full"><i class="fa-solid fa-check"></i></span>' :
+    c === 'P' ? '<span class="acc-half"></span>' :
+    c === 'R' ? '<span class="acc-dot restricted"><i class="fa-solid fa-minus"></i></span>' :
+                '<span class="acc-dot none"><i class="fa-solid fa-minus"></i></span>';
+  document.getElementById('matrix').innerHTML = rows.map(([ic,name,cs]) =>
+    `<tr><td style="text-align:left"><span class="row" style="gap:9px"><i class="fa-solid ${ic}" style="color:#6b7280;width:16px"></i> <b>${name}</b></span></td>` +
+    cs.map(c => `<td class="cell">${cell(c)}</td>`).join('') + '</tr>').join('');
+</script>
+</body>
+</html>

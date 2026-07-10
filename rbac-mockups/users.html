@@ -1,0 +1,892 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Users — SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo"><i class="fa-solid fa-hexagon-nodes"></i></span><span class="brand-name">SIOMAC</span></div>
+    <div class="brand-sub">Superadmin Console</div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-table-columns"></i> Overview</div>
+      <div class="nav-item active"><i class="fa-regular fa-user"></i> Users</div>
+      <div class="nav-item"><i class="fa-solid fa-users-gear"></i> Roles</div>
+      <div class="nav-item"><i class="fa-solid fa-shield-halved"></i> Access Control <i class="fa-solid fa-chevron-down chev"></i></div>
+      <div class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <span class="avatar">ER</span>
+        <span class="side-user-txt"><div class="side-user-name">Emma Rodriguez</div><div class="side-user-role">Super Administrator</div></span>
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#8895b6;font-size:11px"></i>
+      </div>
+      <div class="side-status"><span class="dot"></span> All systems operational</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search console…"><kbd>⌘K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip"><span class="avatar">ER</span><span><div class="user-chip-name">Emma Rodriguez</div><div class="user-chip-role">Super Administrator</div></span><i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i></div>
+    </div>
+
+    <div class="content">
+
+      <!-- Page header -->
+      <div class="page-head">
+        <h1 class="page-title">Users <span class="tag">User Access Overrides</span></h1>
+        <p class="page-sub">Manage per-user access exceptions. Changes here apply only to this user and do not modify role permissions. <a href="#" style="color:var(--accent);font-weight:600">Learn more</a></p>
+      </div>
+
+      <!-- Three-column layout -->
+      <div class="u-layout">
+
+        <!-- ── LEFT RAIL ─────────────────────────────────────────────────── -->
+        <div class="card u-rail">
+
+          <div class="u-rail-head">
+            <span style="font-size:14px;font-weight:700">Users <span style="color:var(--muted);font-weight:500">(342)</span></span>
+            <button class="icon-btn" style="width:30px;height:30px;border-radius:8px;flex:none">
+              <i class="fa-solid fa-filter" style="font-size:11px"></i>
+            </button>
+          </div>
+
+          <div class="u-rail-search">
+            <div style="position:relative">
+              <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:12px;pointer-events:none"></i>
+              <input class="input" placeholder="Search users…" style="padding-left:32px;height:36px;font-size:13px">
+            </div>
+          </div>
+
+          <div class="u-user-list">
+
+            <!-- 1. Alicia Bennett — SELECTED -->
+            <div class="u-user-item selected">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#2563eb">AB</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Alicia Bennett</div>
+                <div class="u-user-sub">Manager · Finance</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">8</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 2. Noah Williams -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#7c3aed">NW</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Noah Williams</div>
+                <div class="u-user-sub">Manager · Operations</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">3</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 3. Emma Rodriguez -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#0d9488">ER</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Emma Rodriguez</div>
+                <div class="u-user-sub">Director · HR</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">12</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 4. Liam Johnson -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#d97706">LJ</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Liam Johnson</div>
+                <div class="u-user-sub">Analyst · Finance</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">1</span>
+                <span class="u-ovr-lbl">Override</span>
+              </div>
+            </div>
+
+            <!-- 5. David Martinez — zero -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#6b7280">DM</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">David Martinez</div>
+                <div class="u-user-sub">Supervisor · Operations</div>
+              </div>
+              <div class="u-ovr zero">
+                <span class="u-ovr-num">0</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 6. Sophia Chen -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#db2777">SC</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Sophia Chen</div>
+                <div class="u-user-sub">Manager · Procurement</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">5</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 7. Michael Johnson — zero -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#6b7280">MJ</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Michael Johnson</div>
+                <div class="u-user-sub">Analyst · Finance</div>
+              </div>
+              <div class="u-ovr zero">
+                <span class="u-ovr-num">0</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 8. Thomas Kim -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#2563eb">TK</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Thomas Kim</div>
+                <div class="u-user-sub">Analyst · IT</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">2</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 9. Ava Patel — zero -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#6b7280">AP</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">Ava Patel</div>
+                <div class="u-user-sub">Specialist · HR</div>
+              </div>
+              <div class="u-ovr zero">
+                <span class="u-ovr-num">0</span>
+                <span class="u-ovr-lbl">Overrides</span>
+              </div>
+            </div>
+
+            <!-- 10. James Roberts -->
+            <div class="u-user-item">
+              <span class="avatar" style="width:36px;height:36px;font-size:12px;flex:none;background:#16a34a">JR</span>
+              <div style="min-width:0;flex:1">
+                <div class="u-user-name">James Roberts</div>
+                <div class="u-user-sub">Supervisor · Projects</div>
+              </div>
+              <div class="u-ovr">
+                <span class="u-ovr-num">1</span>
+                <span class="u-ovr-lbl">Override</span>
+              </div>
+            </div>
+
+          </div><!-- end u-user-list -->
+
+          <!-- Pagination -->
+          <div class="u-pager">
+            <button class="u-pager-btn">‹</button>
+            <button class="u-pager-btn active">1</button>
+            <button class="u-pager-btn">2</button>
+            <button class="u-pager-btn">3</button>
+            <span class="u-pager-ell">…</span>
+            <button class="u-pager-btn">35</button>
+            <button class="u-pager-btn">›</button>
+          </div>
+
+        </div><!-- end left rail -->
+
+
+        <!-- ── CENTER ─────────────────────────────────────────────────────── -->
+        <div class="u-center">
+
+          <!-- User header card -->
+          <div class="card">
+            <div style="padding:18px 20px;display:flex;align-items:center;gap:18px;flex-wrap:wrap">
+              <span class="avatar" style="width:56px;height:56px;font-size:18px;font-weight:700;flex:none;background:#2563eb">AB</span>
+              <div style="min-width:0;flex:1">
+                <div style="display:flex;align-items:center;gap:10px;margin-bottom:5px">
+                  <span style="font-size:19px;font-weight:700;letter-spacing:-.01em;line-height:1">Alicia Bennett</span>
+                  <span class="badge green"><i class="fa-solid fa-circle" style="font-size:6px"></i> Active</span>
+                </div>
+                <div style="font-size:13.5px;color:var(--ink-2);margin-bottom:3px">Manager · Finance Department</div>
+                <div style="font-size:12.5px;color:var(--faint)">alicia.bennett@siomac.com &nbsp;·&nbsp; Member since Apr 12, 2023</div>
+              </div>
+              <!-- mini stat tiles -->
+              <div style="display:flex;gap:12px;flex:none">
+                <div class="u-mini-stat">
+                  <div class="u-mini-ico blue"><i class="fa-solid fa-table-cells-large"></i></div>
+                  <div class="u-mini-val">8</div>
+                  <div class="u-mini-lbl">Overrides</div>
+                  <a href="#" style="color:var(--accent);font-size:11px;font-weight:600;margin-top:3px">View details →</a>
+                </div>
+                <div class="u-mini-stat">
+                  <div class="u-mini-ico red"><i class="fa-solid fa-shield-halved"></i></div>
+                  <div class="u-mini-val" style="color:var(--red)">2</div>
+                  <div class="u-mini-lbl">High-Risk Access</div>
+                  <a href="#" style="color:var(--accent);font-size:11px;font-weight:600;margin-top:3px">View details →</a>
+                </div>
+                <div class="u-mini-stat">
+                  <div class="u-mini-ico green"><i class="fa-solid fa-circle-check"></i></div>
+                  <div class="u-mini-val" style="color:var(--green)">126</div>
+                  <div class="u-mini-lbl">Effective Capabilities</div>
+                  <a href="#" style="color:var(--accent);font-size:11px;font-weight:600;margin-top:3px">View details →</a>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info banner -->
+          <div class="u-info-banner">
+            <div style="flex:1;font-size:13.5px;color:var(--ink-2)">
+              <strong>You are editing user-level overrides.</strong> Changes you make here create exceptions for this user only and do not affect the underlying role.
+            </div>
+            <button class="btn" style="flex:none;gap:7px">
+              <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:12px"></i> View Role Permissions
+            </button>
+          </div>
+
+          <!-- Filter row -->
+          <div style="display:flex;gap:10px;align-items:center">
+            <select class="select" style="width:158px;height:38px;font-size:13px">
+              <option>All Modules</option>
+              <option>Finance</option>
+              <option>Operations</option>
+              <option>Projects</option>
+            </select>
+            <select class="select" style="width:158px;height:38px;font-size:13px">
+              <option>All Risk Levels</option>
+              <option>High</option>
+              <option>Medium</option>
+              <option>Low</option>
+            </select>
+            <input class="input" placeholder="Search capabilities…" style="flex:1;height:38px;font-size:13px">
+          </div>
+
+          <!-- Capability table card -->
+          <div class="card" style="overflow:hidden">
+            <table class="tbl" style="table-layout:fixed">
+              <colgroup>
+                <col style="width:27%">
+                <col style="width:13%">
+                <col style="width:13%">
+                <col style="width:15%">
+                <col style="width:14%">
+                <col style="width:50px">
+              </colgroup>
+              <thead>
+                <tr>
+                  <th>Capability <i class="fa-regular fa-circle-info" style="color:var(--faint);font-size:10px;margin-left:2px"></i></th>
+                  <th>Role Default <i class="fa-regular fa-circle-info" style="color:var(--faint);font-size:10px;margin-left:2px"></i></th>
+                  <th>User Override <i class="fa-regular fa-circle-info" style="color:var(--faint);font-size:10px;margin-left:2px"></i></th>
+                  <th>Effective Result <i class="fa-regular fa-circle-info" style="color:var(--faint);font-size:10px;margin-left:2px"></i></th>
+                  <th>Source <i class="fa-regular fa-circle-info" style="color:var(--faint);font-size:10px;margin-left:2px"></i></th>
+                  <th style="text-align:center">Reset</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <!-- ── FINANCE group header ── -->
+                <tr class="grp">
+                  <td colspan="6" style="padding:9px 16px;background:#f9fafb">
+                    <span style="display:flex;align-items:center;gap:9px">
+                      <span style="width:22px;height:22px;border-radius:6px;background:var(--green-bg);color:var(--green);display:inline-grid;place-items:center;font-size:11px;flex:none"><i class="fa-solid fa-dollar-sign"></i></span>
+                      <span style="font-size:13px;font-weight:700">Finance</span>
+                      <span class="badge grey" style="font-size:10.5px;padding:1px 8px">4</span>
+                      <i class="fa-solid fa-chevron-up" style="color:var(--faint);font-size:10px;margin-left:auto"></i>
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Finance 1: View Financial Reports — Role Default -->
+                <tr>
+                  <td style="font-weight:500">View Financial Reports</td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td>
+                    <select class="u-cap-sel">
+                      <option selected>Allow</option>
+                      <option>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td><span class="badge grey" style="font-size:11px">Role Default</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Finance 2: Edit Financial Reports — Role Default -->
+                <tr>
+                  <td style="font-weight:500">Edit Financial Reports</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel">
+                      <option>Allow</option>
+                      <option selected>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td><span class="badge grey" style="font-size:11px">Role Default</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Finance 3: Approve Invoices — OVERRIDE (Allow→Deny) -->
+                <tr class="u-row-override">
+                  <td style="font-weight:500">Approve Invoices</td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td>
+                    <select class="u-cap-sel u-cap-sel-ovr">
+                      <option>Allow</option>
+                      <option selected>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td><span class="badge amber" style="font-size:11px">Override</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn u-reset-btn-ovr"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Finance 4: Manage Budgets — OVERRIDE (Deny→Allow) -->
+                <tr class="u-row-override">
+                  <td style="font-weight:500">Manage Budgets</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel u-cap-sel-ovr">
+                      <option selected>Allow</option>
+                      <option>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td><span class="badge amber" style="font-size:11px">Override</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn u-reset-btn-ovr"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- ── OPERATIONS group header ── -->
+                <tr class="grp">
+                  <td colspan="6" style="padding:9px 16px;background:#f9fafb">
+                    <span style="display:flex;align-items:center;gap:9px">
+                      <span style="width:22px;height:22px;border-radius:6px;background:var(--accent-bg);color:var(--accent);display:inline-grid;place-items:center;font-size:11px;flex:none"><i class="fa-solid fa-gear"></i></span>
+                      <span style="font-size:13px;font-weight:700">Operations</span>
+                      <span class="badge grey" style="font-size:10.5px;padding:1px 8px">5</span>
+                      <i class="fa-solid fa-chevron-up" style="color:var(--faint);font-size:10px;margin-left:auto"></i>
+                    </span>
+                  </td>
+                </tr>
+
+                <!-- Ops 1: View Operations Dashboard — Role Default -->
+                <tr>
+                  <td style="font-weight:500">View Operations Dashboard</td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td>
+                    <select class="u-cap-sel">
+                      <option selected>Allow</option>
+                      <option>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td><span class="badge grey" style="font-size:11px">Role Default</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Ops 2: Edit Operations Data — Role Default -->
+                <tr>
+                  <td style="font-weight:500">Edit Operations Data</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel">
+                      <option>Allow</option>
+                      <option selected>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td><span class="badge grey" style="font-size:11px">Role Default</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Ops 3: Create Work Orders — OVERRIDE -->
+                <tr class="u-row-override">
+                  <td style="font-weight:500">Create Work Orders</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel u-cap-sel-ovr">
+                      <option selected>Allow</option>
+                      <option>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td><span class="badge amber" style="font-size:11px">Override</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn u-reset-btn-ovr"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Ops 4: Close Work Orders — OVERRIDE -->
+                <tr class="u-row-override">
+                  <td style="font-weight:500">Close Work Orders</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel u-cap-sel-ovr">
+                      <option selected>Allow</option>
+                      <option>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-allow"><i class="fa-solid fa-check"></i> Allow</span></td>
+                  <td><span class="badge amber" style="font-size:11px">Override</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn u-reset-btn-ovr"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- Ops 5: Delete Work Orders — disabled/greyed -->
+                <tr>
+                  <td style="font-weight:500;color:var(--muted)">Delete Work Orders</td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td>
+                    <select class="u-cap-sel" disabled style="background:#f4f5f7;color:var(--muted);cursor:not-allowed;border-color:#d8dce6">
+                      <option>Allow</option>
+                      <option selected>Deny</option>
+                    </select>
+                  </td>
+                  <td><span class="cap-deny"><i class="fa-solid fa-xmark"></i> Deny</span></td>
+                  <td><span class="badge grey" style="font-size:11px">Role Default</span></td>
+                  <td style="text-align:center"><button class="u-reset-btn" style="opacity:.35;cursor:not-allowed"><i class="fa-solid fa-rotate-right" style="font-size:11px"></i></button></td>
+                </tr>
+
+                <!-- ── PROJECTS group header — COLLAPSED ── -->
+                <tr class="grp">
+                  <td colspan="6" style="padding:9px 16px;background:#f9fafb">
+                    <span style="display:flex;align-items:center;gap:9px">
+                      <span style="width:22px;height:22px;border-radius:6px;background:var(--purple-bg);color:var(--purple);display:inline-grid;place-items:center;font-size:11px;flex:none"><i class="fa-solid fa-diagram-project"></i></span>
+                      <span style="font-size:13px;font-weight:700">Projects</span>
+                      <span class="badge grey" style="font-size:10.5px;padding:1px 8px">6</span>
+                      <i class="fa-solid fa-chevron-right" style="color:var(--faint);font-size:10px;margin-left:auto"></i>
+                    </span>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+
+            <!-- Table footer -->
+            <div class="u-tbl-foot">
+              <span style="display:flex;align-items:center;gap:14px;font-size:12px">
+                <span style="display:flex;align-items:center;gap:5px;color:var(--green);font-weight:600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Allow</span>
+                <span style="display:flex;align-items:center;gap:5px;color:var(--red);font-weight:600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Deny</span>
+                <span style="display:flex;align-items:center;gap:5px;color:var(--faint);font-weight:600"><i class="fa-solid fa-circle" style="font-size:7px"></i> Not Set</span>
+              </span>
+              <span style="font-size:12px;color:var(--muted)">Showing 2 of 9 modules</span>
+              <span style="font-size:12px;color:var(--muted)">42 capabilities</span>
+              <a href="#" style="color:var(--accent);font-size:12.5px;font-weight:600;margin-left:auto">Collapse All</a>
+            </div>
+          </div><!-- end capability table card -->
+
+          <!-- Sticky action bar -->
+          <div class="u-action-bar">
+            <button class="btn">Discard Changes</button>
+            <span style="display:flex;align-items:center;gap:7px;font-size:13.5px;font-weight:600;color:var(--amber)">
+              <i class="fa-solid fa-triangle-exclamation"></i>
+              <span style="color:var(--ink-2)">8 unsaved change(s)</span>
+            </span>
+            <button class="btn primary">Save Changes</button>
+          </div>
+
+        </div><!-- end center -->
+
+
+        <!-- ── RIGHT SIDEBAR ──────────────────────────────────────────────── -->
+        <div class="card u-sidebar-right">
+
+          <div class="card-head" style="padding:14px 16px">
+            <div style="font-size:14px;font-weight:700">Recent Override Changes</div>
+            <a href="#" style="color:var(--accent);font-size:12px;font-weight:600;white-space:nowrap">View Full Audit Log →</a>
+          </div>
+
+          <div class="u-timeline">
+
+            <!-- TODAY -->
+            <div class="u-tl-group">
+              <div class="u-tl-date">Today</div>
+
+              <div class="u-tl-entry">
+                <div class="u-tl-meta">
+                  <span class="avatar" style="width:26px;height:26px;font-size:9.5px;flex:none;background:#0d9488">ER</span>
+                  <span class="u-tl-time">10:23 AM</span>
+                </div>
+                <div class="u-tl-body">
+                  <div class="u-tl-name">Emma Rodriguez</div>
+                  <div class="u-tl-action"><span style="color:var(--red);font-weight:600">Deny</span> · Approve Invoices</div>
+                  <div class="u-tl-module">Finance</div>
+                  <span class="badge amber" style="font-size:10px;padding:2px 7px;margin-top:5px;display:inline-flex">Override Created</span>
+                </div>
+              </div>
+
+              <div class="u-tl-entry">
+                <div class="u-tl-meta">
+                  <span class="avatar" style="width:26px;height:26px;font-size:9.5px;flex:none;background:#0d9488">ER</span>
+                  <span class="u-tl-time">10:21 AM</span>
+                </div>
+                <div class="u-tl-body">
+                  <div class="u-tl-name">Emma Rodriguez</div>
+                  <div class="u-tl-action"><span style="color:var(--green);font-weight:600">Allow</span> · Manage Budgets</div>
+                  <div class="u-tl-module">Finance</div>
+                  <span class="badge amber" style="font-size:10px;padding:2px 7px;margin-top:5px;display:inline-flex">Override Created</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- YESTERDAY -->
+            <div class="u-tl-group">
+              <div class="u-tl-date">Yesterday</div>
+
+              <div class="u-tl-entry">
+                <div class="u-tl-meta">
+                  <span class="avatar" style="width:26px;height:26px;font-size:9.5px;flex:none;background:#7c3aed">NW</span>
+                  <span class="u-tl-time">4:05 PM</span>
+                </div>
+                <div class="u-tl-body">
+                  <div class="u-tl-name">Noah Williams</div>
+                  <div class="u-tl-action"><span style="color:var(--green);font-weight:600">Allow</span> · Create Work Orders</div>
+                  <div class="u-tl-module">Operations</div>
+                  <span class="badge amber" style="font-size:10px;padding:2px 7px;margin-top:5px;display:inline-flex">Override Created</span>
+                </div>
+              </div>
+
+              <div class="u-tl-entry">
+                <div class="u-tl-meta">
+                  <span class="avatar" style="width:26px;height:26px;font-size:9.5px;flex:none;background:#7c3aed">NW</span>
+                  <span class="u-tl-time">3:47 PM</span>
+                </div>
+                <div class="u-tl-body">
+                  <div class="u-tl-name">Noah Williams</div>
+                  <div class="u-tl-action"><span style="color:var(--green);font-weight:600">Allow</span> · Close Work Orders</div>
+                  <div class="u-tl-module">Operations</div>
+                  <span class="badge amber" style="font-size:10px;padding:2px 7px;margin-top:5px;display:inline-flex">Override Created</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- MAY 20, 2024 -->
+            <div class="u-tl-group">
+              <div class="u-tl-date">May 20, 2024</div>
+
+              <div class="u-tl-entry">
+                <div class="u-tl-meta">
+                  <span class="avatar" style="width:26px;height:26px;font-size:9.5px;flex:none;background:#0d9488">ER</span>
+                  <span class="u-tl-time">11:32 AM</span>
+                </div>
+                <div class="u-tl-body">
+                  <div class="u-tl-name">Emma Rodriguez</div>
+                  <div class="u-tl-action"><span style="color:var(--red);font-weight:600">Deny</span> · Edit Financial Reports</div>
+                  <div class="u-tl-module">Finance</div>
+                  <span class="badge amber" style="font-size:10px;padding:2px 7px;margin-top:5px;display:inline-flex">Override Created</span>
+                </div>
+              </div>
+            </div>
+
+          </div><!-- end u-timeline -->
+
+          <!-- Audit info box -->
+          <div class="u-audit-info">
+            All override changes are logged. Use the Audit Log for a complete history including bulk actions and resets.
+            <a href="#" style="color:var(--accent);font-size:12.5px;font-weight:600;display:block;margin-top:8px">Go to Audit Log →</a>
+          </div>
+
+        </div><!-- end right sidebar -->
+
+      </div><!-- end u-layout -->
+    </div><!-- end content -->
+  </div><!-- end main -->
+</div><!-- end app -->
+
+<style>
+/* ── Three-column layout ─────────────────────────────────────────────────── */
+.u-layout {
+  display: grid;
+  grid-template-columns: 300px minmax(0, 1fr) 300px;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Left rail ───────────────────────────────────────────────────────────── */
+.u-rail {
+  position: sticky;
+  top: 73px;
+  max-height: calc(100vh - 96px);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.u-rail-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 13px 16px 10px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.u-rail-search {
+  padding: 10px 12px 8px;
+  flex: none;
+}
+.u-user-list {
+  flex: 1;
+  overflow-y: auto;
+}
+.u-user-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line-2);
+  cursor: pointer;
+  border-left: 3px solid transparent;
+  transition: background .1s;
+}
+.u-user-item:last-child { border-bottom: 0; }
+.u-user-item:hover:not(.selected) { background: #f7f9fc; }
+.u-user-item.selected {
+  background: var(--accent-bg);
+  border-left-color: var(--accent);
+}
+.u-user-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.u-user-sub { font-size: 11.5px; color: var(--muted); }
+
+.u-ovr { text-align: right; flex: none; }
+.u-ovr-num { display: block; font-size: 14px; font-weight: 700; color: var(--accent); line-height: 1.1; }
+.u-ovr.zero .u-ovr-num { color: var(--faint); }
+.u-ovr-lbl { display: block; font-size: 10.5px; color: var(--faint); margin-top: 1px; }
+
+/* Pagination */
+.u-pager {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  padding: 10px 12px;
+  border-top: 1px solid var(--line);
+  flex: none;
+}
+.u-pager-btn {
+  min-width: 30px;
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 7px;
+  background: #fff;
+  color: var(--ink-2);
+  font: inherit;
+  font-size: 13px;
+  cursor: pointer;
+  display: grid;
+  place-items: center;
+  padding: 0 6px;
+}
+.u-pager-btn:hover { background: #f3f5f9; }
+.u-pager-btn.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 700; }
+.u-pager-ell { font-size: 13px; color: var(--faint); padding: 0 3px; }
+
+/* ── Center column ───────────────────────────────────────────────────────── */
+.u-center {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Mini stat tiles */
+.u-mini-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  min-width: 96px;
+  padding: 11px 14px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  background: #fff;
+  gap: 2px;
+}
+.u-mini-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.u-mini-ico.blue  { background: var(--accent-bg); color: var(--accent); }
+.u-mini-ico.red   { background: var(--red-bg);    color: var(--red);    }
+.u-mini-ico.green { background: var(--green-bg);  color: var(--green);  }
+.u-mini-val {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1;
+  color: var(--ink);
+}
+.u-mini-lbl { font-size: 11px; color: var(--muted); white-space: nowrap; }
+
+/* Info banner */
+.u-info-banner {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 13px 16px;
+  background: var(--accent-bg);
+  border: 1px solid #c3d9fd;
+  border-left: 4px solid var(--accent);
+  border-radius: var(--radius-sm);
+}
+
+/* Capability cells */
+.cap-allow { color: var(--green); font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+.cap-deny  { color: var(--red);   font-weight: 600; font-size: 13px; display: inline-flex; align-items: center; gap: 5px; }
+
+/* Override rows — very subtle amber left tint */
+.u-row-override > td:first-child {
+  border-left: 3px solid var(--amber);
+}
+
+/* Capability selects */
+.u-cap-sel {
+  height: 30px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 0 22px 0 8px;
+  font: inherit;
+  font-size: 12.5px;
+  background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%236b7280' stroke-width='2'><path d='M2 3.5l3 3 3-3'/></svg>") no-repeat right 8px center;
+  appearance: none;
+  color: var(--ink);
+  outline: none;
+  cursor: pointer;
+  width: 88px;
+}
+.u-cap-sel-ovr {
+  border-color: var(--amber);
+  background-color: #fffbf4;
+}
+.u-cap-sel:disabled { background-color: #f4f5f7; color: var(--muted); cursor: not-allowed; }
+
+/* Reset button */
+.u-reset-btn {
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-grid;
+  place-items: center;
+}
+.u-reset-btn:hover { background: #f3f5f9; color: var(--ink); }
+.u-reset-btn-ovr { border-color: var(--amber); color: var(--amber); }
+.u-reset-btn-ovr:hover { background: var(--amber-bg); color: var(--amber); }
+
+/* Table footer */
+.u-tbl-foot {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 16px;
+  border-top: 1px solid var(--line);
+  flex-wrap: wrap;
+}
+
+/* Sticky action bar */
+.u-action-bar {
+  position: sticky;
+  bottom: 0;
+  z-index: 10;
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  padding: 14px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  box-shadow: 0 -4px 14px rgba(16,24,40,.08);
+}
+
+/* ── Right sidebar ───────────────────────────────────────────────────────── */
+.u-sidebar-right {
+  position: sticky;
+  top: 73px;
+  max-height: calc(100vh - 96px);
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Timeline */
+.u-timeline { flex: 1; }
+.u-tl-group { padding: 6px 16px 2px; }
+.u-tl-date {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  padding: 10px 0 8px;
+  border-bottom: 1px solid var(--line-2);
+  margin-bottom: 12px;
+}
+.u-tl-entry {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 14px;
+  align-items: flex-start;
+}
+.u-tl-meta {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  flex: none;
+}
+.u-tl-time { font-size: 10.5px; color: var(--faint); white-space: nowrap; }
+.u-tl-body { flex: 1; min-width: 0; }
+.u-tl-name { font-size: 12.5px; font-weight: 600; color: var(--ink); margin-bottom: 1px; }
+.u-tl-action { font-size: 12.5px; color: var(--ink-2); margin-bottom: 2px; }
+.u-tl-module { font-size: 11.5px; color: var(--muted); }
+
+/* Audit info box */
+.u-audit-info {
+  margin: 4px 14px 14px;
+  padding: 12px 14px;
+  background: var(--accent-bg);
+  border: 1px solid #c3d9fd;
+  border-radius: var(--radius-sm);
+  font-size: 12.5px;
+  color: var(--ink-2);
+  line-height: 1.55;
+  flex: none;
+}
+</style>
+
+</body>
+</html>

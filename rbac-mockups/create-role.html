@@ -1,0 +1,788 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Create Role — SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+<!-- Page shell (visible behind the overlay) -->
+<div class="app">
+
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo"><i class="fa-solid fa-hexagon-nodes"></i></span><span class="brand-name">SIOMAC</span></div>
+    <div class="brand-sub">Superadmin Console</div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-table-columns"></i> Overview</div>
+      <div class="nav-item"><i class="fa-regular fa-user"></i> Users</div>
+      <div class="nav-item"><i class="fa-solid fa-users-gear"></i> Roles</div>
+      <div class="nav-item active"><i class="fa-solid fa-shield-halved"></i> Access Control <i class="fa-solid fa-chevron-down chev"></i></div>
+      <div class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <span class="avatar">ER</span>
+        <span class="side-user-txt"><div class="side-user-name">Emma Rodriguez</div><div class="side-user-role">Super Administrator</div></span>
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#8895b6;font-size:11px"></i>
+      </div>
+      <div class="side-status"><span class="dot"></span> All systems operational</div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search console…"><kbd>⌘K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip"><span class="avatar">ER</span><span><div class="user-chip-name">Emma Rodriguez</div><div class="user-chip-role">Super Administrator</div></span><i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i></div>
+    </div>
+    <div class="content">
+      <div class="page-head">
+        <h1 class="page-title">Access Control</h1>
+        <p class="page-sub">Manage roles, users, and capability coverage across the organization.</p>
+      </div>
+      <div class="stats">
+        <div class="stat"><div class="stat-top"><span class="stat-ico purple"><i class="fa-solid fa-users-gear"></i></span><div><div class="stat-lbl">Roles</div><div class="stat-val">18</div><div class="stat-sub">System &amp; custom roles</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico green"><i class="fa-regular fa-user"></i></span><div><div class="stat-lbl">Users</div><div class="stat-val">342</div><div class="stat-sub">Active users</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico red"><i class="fa-solid fa-shield-halved"></i></span><div><div class="stat-lbl">High-Risk Capabilities</div><div class="stat-val">27</div><div class="stat-sub">Require approval</div></div></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico blue"><i class="fa-solid fa-arrows-rotate"></i></span><div><div class="stat-lbl">Active Overrides</div><div class="stat-val">12</div><div class="stat-sub">Across 7 users</div></div></div></div>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /.app -->
+
+<!-- ── Overlay + wizard modal ────────────────────────────────────────── -->
+<div class="cr-overlay">
+  <div class="cr-modal">
+
+    <!-- HEADER -->
+    <div class="cr-header">
+      <span class="cr-header-ico"><i class="fa-solid fa-user-gear"></i></span>
+      <div class="grow" style="min-width:0">
+        <div class="row" style="gap:10px;flex-wrap:nowrap;align-items:center">
+          <span class="cr-modal-title">Create Role / Edit Role</span>
+          <span class="badge grey">Draft</span>
+        </div>
+        <div class="cr-modal-sub">Define role details, assign capabilities, and publish with appropriate approvals.</div>
+      </div>
+      <button class="cr-close"><i class="fa-solid fa-xmark"></i></button>
+    </div>
+
+    <!-- BODY: rail | form | summary -->
+    <div class="cr-body">
+
+      <!-- ── LEFT STEP RAIL ──────────────────────────────────────────── -->
+      <div class="cr-rail">
+        <div class="cr-stepper">
+
+          <!-- Step 1 — active -->
+          <div class="cr-step-row">
+            <div class="cr-step-left">
+              <div class="cr-step-num cr-step-active">1</div>
+              <div class="cr-step-line"></div>
+            </div>
+            <div class="cr-step-info cr-step-info-active">
+              <div class="cr-step-title">Role Details</div>
+              <div class="cr-step-desc">Define role information and scope</div>
+            </div>
+          </div>
+
+          <!-- Step 2 -->
+          <div class="cr-step-row">
+            <div class="cr-step-left">
+              <div class="cr-step-num cr-step-inactive">2</div>
+              <div class="cr-step-line"></div>
+            </div>
+            <div class="cr-step-info">
+              <div class="cr-step-title">Capability Defaults</div>
+              <div class="cr-step-desc">Select default access capabilities</div>
+            </div>
+          </div>
+
+          <!-- Step 3 -->
+          <div class="cr-step-row">
+            <div class="cr-step-left">
+              <div class="cr-step-num cr-step-inactive">3</div>
+              <div class="cr-step-line"></div>
+            </div>
+            <div class="cr-step-info">
+              <div class="cr-step-title">High-Risk Review</div>
+              <div class="cr-step-desc">Review and confirm high-risk capabilities</div>
+            </div>
+          </div>
+
+          <!-- Step 4 — no line after -->
+          <div class="cr-step-row">
+            <div class="cr-step-left">
+              <div class="cr-step-num cr-step-inactive">4</div>
+            </div>
+            <div class="cr-step-info">
+              <div class="cr-step-title">Review &amp; Publish</div>
+              <div class="cr-step-desc">Review summary and publish role</div>
+            </div>
+          </div>
+
+        </div><!-- /stepper -->
+
+        <!-- Amber info box -->
+        <div class="cr-info-box">
+          <i class="fa-solid fa-triangle-exclamation"></i>
+          <div>
+            <div class="cr-info-title">Approval Required for Critical Capabilities</div>
+            <div class="cr-info-body">Roles with high-risk capabilities require approval (Maker-Checker) before access is granted.</div>
+            <a href="#" class="link" style="font-size:12px;margin-top:8px;display:inline-block">Learn more <i class="fa-solid fa-arrow-up-right-from-square" style="font-size:9px"></i></a>
+          </div>
+        </div>
+      </div><!-- /rail -->
+
+      <!-- ── CENTER FORM ─────────────────────────────────────────────── -->
+      <div class="cr-form">
+
+        <!-- Role Details section -->
+        <div class="cr-section-head">
+          <div class="cr-section-title">Role Details</div>
+          <div class="cr-section-sub">Provide basic information and scope for this role.</div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:16px">
+          <div>
+            <label class="field-lbl">Role Name <span class="req">*</span></label>
+            <input class="input" value="Finance Manager">
+          </div>
+          <div>
+            <label class="field-lbl">Role Type <span class="req">*</span></label>
+            <div class="cr-sel-wrap">
+              <i class="fa-solid fa-tag cr-sel-ico"></i>
+              <select class="select" style="padding-left:34px">
+                <option selected>Custom Role</option>
+                <option>System Role</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-bottom:16px">
+          <label class="field-lbl">Description</label>
+          <div style="position:relative">
+            <textarea class="input" style="resize:none;height:82px;padding-bottom:26px">Role for finance managers responsible for budgeting, reporting, and approvals.</textarea>
+            <span class="cr-char-count">78/250</span>
+          </div>
+        </div>
+
+        <div class="grid-2" style="margin-bottom:28px">
+          <div>
+            <label class="field-lbl">Assignment Scope <span class="req">*</span></label>
+            <div class="cr-sel-wrap">
+              <i class="fa-solid fa-globe cr-sel-ico"></i>
+              <select class="select" style="padding-left:34px">
+                <option selected>Global (All Organizations)</option>
+                <option>Department Scoped</option>
+              </select>
+            </div>
+          </div>
+          <div>
+            <label class="field-lbl">Approval Requirement <span class="req">*</span></label>
+            <div class="cr-sel-wrap">
+              <i class="fa-solid fa-shield-halved cr-sel-ico"></i>
+              <select class="select" style="padding-left:34px">
+                <option selected>Require Approval (Maker-Checker)</option>
+                <option>No Approval Required</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Capability Defaults section -->
+        <div class="between" style="margin-bottom:10px;align-items:flex-start">
+          <div>
+            <div class="cr-section-title">Capability Defaults</div>
+            <div class="cr-section-sub">Select the default access capabilities for this role.</div>
+          </div>
+          <a href="#" class="link" style="margin-top:3px;white-space:nowrap;flex:none">Expand All</a>
+        </div>
+
+        <div class="between" style="margin-bottom:12px;gap:10px">
+          <div style="position:relative;flex:1">
+            <i class="fa-solid fa-magnifying-glass" style="position:absolute;left:12px;top:50%;transform:translateY(-50%);color:var(--faint);font-size:12px;pointer-events:none"></i>
+            <input class="input" placeholder="Search capabilities…" style="padding-left:34px">
+          </div>
+          <div class="row" style="gap:8px;flex:none">
+            <span style="font-size:13px;color:var(--muted);white-space:nowrap">Select All</span>
+            <span class="check"><i class="fa-solid fa-check"></i></span>
+          </div>
+        </div>
+
+        <!-- Accordion -->
+        <div class="cr-accordion">
+
+          <!-- Human Resources — collapsed -->
+          <div class="cr-acc-group">
+            <div class="cr-acc-head">
+              <span class="cr-acc-ico" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-user"></i></span>
+              <div class="grow">
+                <div class="cr-acc-name">Human Resources</div>
+                <div class="cr-acc-desc">Employee data, profiles, and HR operations</div>
+              </div>
+              <span class="cr-acc-count">3 of 6 selected</span>
+              <i class="fa-solid fa-chevron-right cr-acc-chev"></i>
+            </div>
+          </div>
+
+          <!-- Finance — expanded -->
+          <div class="cr-acc-group cr-acc-open">
+            <div class="cr-acc-head">
+              <span class="cr-acc-ico" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-dollar-sign"></i></span>
+              <div class="grow">
+                <div class="cr-acc-name">Finance</div>
+                <div class="cr-acc-desc">Financial data, transactions, and reporting</div>
+              </div>
+              <span class="cr-acc-count cr-acc-count-active">5 of 8 selected</span>
+              <i class="fa-solid fa-chevron-down cr-acc-chev"></i>
+            </div>
+            <div class="cr-acc-body">
+              <div class="cr-cap-grid">
+                <div class="cr-cap-row"><span class="check on"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">View Financial Reports</span></div>
+                <div class="cr-cap-row"><span class="check on"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Edit Financial Data</span></div>
+                <div class="cr-cap-row"><span class="check on"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Create Budget</span></div>
+                <div class="cr-cap-row">
+                  <span class="check"><i class="fa-solid fa-check"></i></span>
+                  <span class="cr-cap-name">Delete Transactions</span>
+                  <span class="badge red" style="font-size:10.5px;padding:2px 7px;margin-left:5px">High Risk</span>
+                </div>
+                <div class="cr-cap-row"><span class="check on"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Approve Payments</span></div>
+                <div class="cr-cap-row"><span class="check on"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Export Financial Data</span></div>
+                <div class="cr-cap-row"><span class="check"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Manage Vendors</span></div>
+                <div class="cr-cap-row"><span class="check"><i class="fa-solid fa-check"></i></span><span class="cr-cap-name">Manage Chart of Accounts</span></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Operations — collapsed -->
+          <div class="cr-acc-group">
+            <div class="cr-acc-head">
+              <span class="cr-acc-ico" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-gears"></i></span>
+              <div class="grow">
+                <div class="cr-acc-name">Operations</div>
+                <div class="cr-acc-desc">Operations management and workflows</div>
+              </div>
+              <span class="cr-acc-count">2 of 7 selected</span>
+              <i class="fa-solid fa-chevron-right cr-acc-chev"></i>
+            </div>
+          </div>
+
+          <!-- Procurement — collapsed -->
+          <div class="cr-acc-group">
+            <div class="cr-acc-head">
+              <span class="cr-acc-ico" style="background:var(--amber-bg);color:var(--amber)"><i class="fa-solid fa-cart-shopping"></i></span>
+              <div class="grow">
+                <div class="cr-acc-name">Procurement</div>
+                <div class="cr-acc-desc">Purchase orders, suppliers, and contracts</div>
+              </div>
+              <span class="cr-acc-count">1 of 6 selected</span>
+              <i class="fa-solid fa-chevron-right cr-acc-chev"></i>
+            </div>
+          </div>
+
+        </div><!-- /accordion -->
+      </div><!-- /form -->
+
+      <!-- ── RIGHT SUMMARY ───────────────────────────────────────────── -->
+      <div class="cr-summary">
+        <div style="font-size:15px;font-weight:700;color:var(--ink);margin-bottom:14px">Role Summary</div>
+
+        <div class="cr-sum-tiles">
+          <!-- Selected Capabilities -->
+          <div class="cr-sum-tile">
+            <span class="cr-tile-ico blue"><i class="fa-solid fa-table-cells"></i></span>
+            <div>
+              <div class="cr-sum-val">26</div>
+              <div class="cr-sum-lbl">Selected Capabilities</div>
+              <div class="sub">Across 6 modules</div>
+            </div>
+          </div>
+          <!-- High-Risk -->
+          <div class="cr-sum-tile">
+            <span class="cr-tile-ico red"><i class="fa-solid fa-shield-halved"></i></span>
+            <div>
+              <div class="cr-sum-val" style="color:var(--red)">4</div>
+              <div class="cr-sum-lbl">High-Risk Capabilities</div>
+              <div class="sub">Require additional review</div>
+            </div>
+          </div>
+          <!-- Users Impacted -->
+          <div class="cr-sum-tile">
+            <span class="cr-tile-ico green"><i class="fa-solid fa-users"></i></span>
+            <div>
+              <div class="cr-sum-val">18</div>
+              <div class="cr-sum-lbl">Users Impacted</div>
+              <div class="sub">Estimated users</div>
+            </div>
+          </div>
+          <!-- Approval Workflow -->
+          <div class="cr-sum-tile">
+            <span class="cr-tile-ico amber"><i class="fa-solid fa-clock"></i></span>
+            <div>
+              <div class="cr-sum-val" style="font-size:15px;line-height:1.3;margin-top:2px">Maker-Checker</div>
+              <div class="cr-sum-lbl">Approval Workflow</div>
+              <div class="sub">2-step approval</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Members Preview -->
+        <div class="between" style="margin-bottom:10px">
+          <div style="font-size:14px;font-weight:700;color:var(--ink)">Members Preview <span style="color:var(--muted);font-weight:400;font-size:13px">(18)</span></div>
+        </div>
+
+        <div class="cr-members">
+          <div class="cr-member-row">
+            <span class="avatar" style="width:32px;height:32px;font-size:11px">LJ</span>
+            <div class="grow" style="min-width:0">
+              <div class="cr-member-name">Liam Johnson</div>
+              <div class="sub">Finance Manager</div>
+            </div>
+          </div>
+          <div class="cr-member-row">
+            <span class="avatar" style="width:32px;height:32px;font-size:11px;background:#7c3aed">OM</span>
+            <div class="grow" style="min-width:0">
+              <div class="cr-member-name">Olivia Martinez</div>
+              <div class="sub">Senior Financial Analyst</div>
+            </div>
+          </div>
+          <div class="cr-member-row">
+            <span class="avatar" style="width:32px;height:32px;font-size:11px;background:#16a34a">NW</span>
+            <div class="grow" style="min-width:0">
+              <div class="cr-member-name">Noah Williams</div>
+              <div class="sub">Budget Analyst</div>
+            </div>
+          </div>
+          <div class="cr-member-row">
+            <span class="avatar" style="width:32px;height:32px;font-size:11px;background:#d97706">AB</span>
+            <div class="grow" style="min-width:0">
+              <div class="cr-member-name">Ava Brown</div>
+              <div class="sub">Accounts Payable Lead</div>
+            </div>
+          </div>
+          <div style="padding:10px 12px;text-align:center;border-top:1px solid var(--line-2)">
+            <a href="#" class="link">+14 more users</a>
+          </div>
+        </div>
+
+      </div><!-- /summary -->
+
+    </div><!-- /body -->
+
+    <!-- FOOTER -->
+    <div class="cr-footer">
+      <button class="btn">Cancel</button>
+      <div class="row" style="gap:10px">
+        <button class="btn"><i class="fa-regular fa-floppy-disk"></i> Save Draft</button>
+        <button class="btn primary"><i class="fa-solid fa-paper-plane"></i> Submit for Approval</button>
+        <button class="btn" disabled style="opacity:.35;cursor:not-allowed"><i class="fa-solid fa-circle-check"></i> Publish Role</button>
+      </div>
+    </div>
+
+  </div><!-- /modal -->
+</div><!-- /overlay -->
+
+<style>
+/* ── Overlay ───────────────────────────────────────────────────────── */
+body { position: relative; }
+
+.cr-overlay {
+  position: absolute;
+  inset: 0;
+  min-height: 100vh;
+  background: rgba(15,23,42,.45);
+  backdrop-filter: blur(1px);
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 32px 20px 48px;
+}
+
+/* ── Modal shell ───────────────────────────────────────────────────── */
+.cr-modal {
+  width: 1080px;
+  max-width: calc(100vw - 40px);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 24px 64px rgba(15,23,42,.30), 0 4px 20px rgba(15,23,42,.14);
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 72px);
+  overflow: hidden;
+}
+
+/* ── Header ────────────────────────────────────────────────────────── */
+.cr-header {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 24px;
+  border-bottom: 1px solid var(--line);
+  flex: none;
+}
+.cr-header-ico {
+  width: 44px;
+  height: 44px;
+  border-radius: 11px;
+  background: var(--accent-bg);
+  color: var(--accent);
+  display: grid;
+  place-items: center;
+  font-size: 17px;
+  flex: none;
+}
+.cr-modal-title {
+  font-size: 17px;
+  font-weight: 700;
+  color: var(--ink);
+  white-space: nowrap;
+}
+.cr-modal-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.cr-close {
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  border: 1px solid var(--line);
+  background: #fff;
+  color: var(--muted);
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  font-size: 14px;
+  flex: none;
+  margin-left: 8px;
+}
+.cr-close:hover { background: #f7f9fc; }
+
+/* ── Body 3-col grid ───────────────────────────────────────────────── */
+.cr-body {
+  display: grid;
+  grid-template-columns: 230px 1fr 300px;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+}
+
+/* ── Left step rail ────────────────────────────────────────────────── */
+.cr-rail {
+  padding: 22px 16px 22px;
+  border-right: 1px solid var(--line);
+  background: #fafbfd;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.cr-stepper { display: flex; flex-direction: column; }
+
+.cr-step-row {
+  display: flex;
+  gap: 12px;
+}
+.cr-step-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: none;
+  width: 28px;
+}
+.cr-step-num {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 13px;
+  font-weight: 700;
+  flex: none;
+}
+.cr-step-active {
+  background: var(--accent);
+  color: #fff;
+}
+.cr-step-inactive {
+  background: #fff;
+  border: 2px solid #d1d9e6;
+  color: var(--faint);
+}
+.cr-step-line {
+  width: 2px;
+  min-height: 30px;
+  background: var(--line);
+  flex: 1;
+  margin: 4px 0;
+}
+.cr-step-info {
+  padding: 4px 0 26px;
+  min-width: 0;
+}
+.cr-step-info-active .cr-step-title {
+  color: var(--accent);
+}
+.cr-step-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink-2);
+  line-height: 1.3;
+}
+.cr-step-desc {
+  font-size: 11.5px;
+  color: var(--muted);
+  margin-top: 3px;
+  line-height: 1.4;
+}
+
+/* Amber info box */
+.cr-info-box {
+  margin-top: 4px;
+  padding: 12px 12px;
+  border-radius: 10px;
+  background: var(--amber-bg);
+  border-left: 3px solid var(--amber);
+  display: flex;
+  gap: 10px;
+}
+.cr-info-box > i {
+  color: var(--amber);
+  font-size: 14px;
+  margin-top: 1px;
+  flex: none;
+}
+.cr-info-title {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--ink-2);
+  margin-bottom: 5px;
+  line-height: 1.35;
+}
+.cr-info-body {
+  font-size: 11.5px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+/* ── Center form ───────────────────────────────────────────────────── */
+.cr-form {
+  overflow-y: auto;
+  padding: 22px 24px 28px;
+}
+.cr-section-head {
+  margin-bottom: 16px;
+}
+.cr-section-title {
+  font-size: 14.5px;
+  font-weight: 700;
+  color: var(--ink);
+}
+.cr-section-sub {
+  font-size: 13px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+
+/* Select with leading icon */
+.cr-sel-wrap { position: relative; }
+.cr-sel-ico {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  z-index: 1;
+  pointer-events: none;
+}
+
+/* Textarea char counter */
+.cr-char-count {
+  position: absolute;
+  bottom: 8px;
+  right: 10px;
+  font-size: 11.5px;
+  color: var(--faint);
+  pointer-events: none;
+}
+
+/* Accordion */
+.cr-accordion {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  overflow: hidden;
+}
+.cr-acc-group {
+  border-bottom: 1px solid var(--line);
+}
+.cr-acc-group:last-child {
+  border-bottom: 0;
+}
+.cr-acc-head {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  cursor: pointer;
+}
+.cr-acc-head:hover { background: #fafbfd; }
+.cr-acc-open .cr-acc-head {
+  background: #f4f7ff;
+  border-bottom: 1px solid var(--line);
+}
+.cr-acc-ico {
+  width: 34px;
+  height: 34px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  flex: none;
+}
+.cr-acc-name {
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--ink);
+}
+.cr-acc-desc {
+  font-size: 12px;
+  color: var(--muted);
+  margin-top: 2px;
+}
+.cr-acc-count {
+  font-size: 12px;
+  color: var(--muted);
+  white-space: nowrap;
+  flex: none;
+}
+.cr-acc-count-active {
+  color: var(--accent);
+  font-weight: 600;
+}
+.cr-acc-chev {
+  color: var(--faint);
+  font-size: 11px;
+  flex: none;
+}
+
+.cr-acc-body {
+  padding: 8px 16px 14px;
+}
+.cr-cap-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px 20px;
+}
+.cr-cap-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--ink-2);
+}
+.cr-cap-name {
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+/* ── Right summary ─────────────────────────────────────────────────── */
+.cr-summary {
+  padding: 20px 16px 22px;
+  border-left: 1px solid var(--line);
+  background: #fafbfd;
+  overflow-y: auto;
+}
+
+/* Icon tiles (used in summary) */
+.cr-tile-ico {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex: none;
+}
+.cr-tile-ico.blue  { background: var(--accent-bg); color: var(--accent); }
+.cr-tile-ico.red   { background: var(--red-bg);    color: var(--red); }
+.cr-tile-ico.green { background: var(--green-bg);  color: var(--green); }
+.cr-tile-ico.amber { background: var(--amber-bg);  color: var(--amber); }
+
+.cr-sum-tiles {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+.cr-sum-tile {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 12px 13px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+.cr-sum-val {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.15;
+  color: var(--ink);
+}
+.cr-sum-lbl {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--ink-2);
+  margin-top: 2px;
+}
+
+/* Members list */
+.cr-members {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+}
+.cr-member-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--line-2);
+}
+.cr-member-row:last-child { border-bottom: 0; }
+.cr-member-name {
+  font-size: 13px;
+  font-weight: 600;
+  color: var(--ink);
+}
+
+/* ── Footer ────────────────────────────────────────────────────────── */
+.cr-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 24px;
+  border-top: 1px solid var(--line);
+  background: #fff;
+  flex: none;
+}
+</style>
+
+</body>
+</html>

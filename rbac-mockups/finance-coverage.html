@@ -1,0 +1,519 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Finance Capability Coverage — SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar (shared shell) -->
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo"><i class="fa-solid fa-hexagon-nodes"></i></span><span class="brand-name">SIOMAC</span></div>
+    <div class="brand-sub">Superadmin Console</div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-table-columns"></i> Overview</div>
+      <div class="nav-item"><i class="fa-regular fa-user"></i> Users</div>
+      <div class="nav-item"><i class="fa-solid fa-users-gear"></i> Roles</div>
+      <div class="nav-item active"><i class="fa-solid fa-shield-halved"></i> Access Control <i class="fa-solid fa-chevron-down chev"></i></div>
+      <div class="nav-sub">
+        <a href="access-control.html">Overview</a>
+        <a href="#" class="active">Module Coverage</a>
+        <a href="#">Role Management</a>
+        <a href="#">Access Requests</a>
+      </div>
+      <div class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <span class="avatar">ER</span>
+        <span class="side-user-txt"><div class="side-user-name">Emma Rodriguez</div><div class="side-user-role">Super Administrator</div></span>
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#8895b6;font-size:11px"></i>
+      </div>
+      <div class="side-status"><span class="dot"></span> All systems operational</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search console…"><kbd>⌘K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip"><span class="avatar">ER</span><span><div class="user-chip-name">Emma Rodriguez</div><div class="user-chip-role">Super Administrator</div></span><i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i></div>
+    </div>
+
+    <div class="content">
+
+      <!-- Breadcrumb -->
+      <div class="crumb">
+        <a href="access-control.html" class="link">Access Control Overview</a>
+        <span class="sep">›</span>
+        <span>Finance</span>
+      </div>
+
+      <!-- Page header -->
+      <div class="page-head between" style="align-items:center">
+        <div style="display:flex;align-items:flex-start;gap:16px">
+          <span class="fc-page-icon"><i class="fa-solid fa-chart-bar"></i></span>
+          <div>
+            <h1 class="page-title">Finance Capability Coverage</h1>
+            <p class="page-sub">Drill-down view of access coverage for the Finance module.</p>
+          </div>
+        </div>
+        <button class="btn"><i class="fa-solid fa-download"></i> Export Report</button>
+      </div>
+
+      <!-- Stats row -->
+      <div class="stats">
+        <div class="stat">
+          <div class="stat-top">
+            <span class="stat-ico blue"><i class="fa-solid fa-shield-halved"></i></span>
+            <div>
+              <div class="stat-lbl">Total Capabilities</div>
+              <div class="stat-val">36</div>
+              <div class="stat-sub">Across 6 capability groups</div>
+            </div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">
+            <span class="stat-ico red"><i class="fa-solid fa-shield-halved"></i></span>
+            <div>
+              <div class="stat-lbl">High-Risk Capabilities</div>
+              <div class="stat-val">6</div>
+              <div class="stat-sub">Require attention</div>
+            </div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">
+            <span class="stat-ico green"><i class="fa-solid fa-users"></i></span>
+            <div>
+              <div class="stat-lbl">Fully Granted Roles</div>
+              <div class="stat-val">2</div>
+              <div class="stat-sub">Superadmin, Admin</div>
+            </div>
+          </div>
+        </div>
+        <div class="stat">
+          <div class="stat-top">
+            <span class="stat-ico purple"><i class="fa-solid fa-arrows-rotate"></i></span>
+            <div>
+              <div class="stat-lbl">Overrides Affecting This Module</div>
+              <div class="stat-val">12</div>
+              <div class="stat-sub">Across 8 roles</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Finance Capabilities by Group -->
+      <div class="card" style="margin-bottom:20px">
+        <div class="card-head">
+          <div class="card-title">Finance Capabilities by Group</div>
+          <div class="row" style="gap:16px">
+            <span class="fc-legend-item green"><i class="fa-solid fa-check"></i> Full Access</span>
+            <span class="fc-legend-item amber"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span>
+            <span class="fc-legend-item grey"><i class="fa-solid fa-minus"></i> No Access</span>
+            <span class="fc-legend-item blue"><i class="fa-solid fa-arrows-rotate"></i> Override</span>
+            <i class="fa-regular fa-circle-question" style="color:var(--faint);font-size:14px;cursor:pointer;margin-left:2px"></i>
+          </div>
+        </div>
+        <div style="overflow-x:auto">
+          <table class="tbl fc-tbl">
+            <thead>
+              <tr>
+                <th style="text-align:left;min-width:230px">Capability</th>
+                <th><span class="badge blue">Superadmin</span></th>
+                <th><span class="badge blue">Admin</span></th>
+                <th><span class="badge purple">Manager</span></th>
+                <th><span class="badge amber">Supervisor</span></th>
+                <th><span class="badge green">Employee</span></th>
+                <th><span class="badge grey">Viewer</span></th>
+                <th style="width:36px"></th>
+              </tr>
+            </thead>
+            <tbody>
+
+              <!-- Journals -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico"><i class="fa-solid fa-book-open"></i></span>
+                    <span class="fc-grp-name">Journals</span>
+                    <span class="fc-cap-ct">5 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+              <!-- Accounts Payable -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico"><i class="fa-solid fa-file-invoice"></i></span>
+                    <span class="fc-grp-name">Accounts Payable</span>
+                    <span class="fc-cap-ct">6 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+              <!-- Accounts Receivable -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico"><i class="fa-solid fa-file-invoice-dollar"></i></span>
+                    <span class="fc-grp-name">Accounts Receivable</span>
+                    <span class="fc-cap-ct">6 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+              <!-- Payroll (high-risk) -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico fc-grp-ico-red"><i class="fa-solid fa-money-check-dollar"></i></span>
+                    <span class="fc-grp-name">Payroll</span>
+                    <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:12px"></i>
+                    <span class="fc-cap-ct">7 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+              <!-- Budgets -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico"><i class="fa-solid fa-chart-pie"></i></span>
+                    <span class="fc-grp-name">Budgets</span>
+                    <span class="fc-cap-ct">5 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge partial"><i class="fa-solid fa-circle-half-stroke"></i> Partial Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+              <!-- Statutory Configuration (high-risk) -->
+              <tr class="fc-grp-row">
+                <td>
+                  <span class="row" style="gap:9px">
+                    <i class="fa-solid fa-chevron-right fc-chev"></i>
+                    <span class="fc-grp-ico fc-grp-ico-red"><i class="fa-solid fa-landmark"></i></span>
+                    <span class="fc-grp-name">Statutory Configuration</span>
+                    <i class="fa-solid fa-triangle-exclamation" style="color:var(--red);font-size:12px"></i>
+                    <span class="fc-cap-ct">7 capabilities</span>
+                  </span>
+                </td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge full"><i class="fa-solid fa-check"></i> Full Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-cell"><span class="acc-badge none"><i class="fa-solid fa-minus"></i> No Access</span></td>
+                <td class="fc-drill"><i class="fa-solid fa-chevron-right" style="color:var(--faint)"></i></td>
+              </tr>
+
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Bottom three cards -->
+      <div class="fc-btm">
+
+        <!-- Recent Changes -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Changes in Finance Access</div>
+            <span class="link">View All</span>
+          </div>
+          <div>
+
+            <div class="fc-tl-row">
+              <span class="avatar" style="width:34px;height:34px;flex:none;font-size:12px">EB</span>
+              <div class="grow">
+                <div class="fc-tl-name">Elena Brown</div>
+                <div class="sub">Manager role updated</div>
+                <div class="fc-tl-cap">Journals: View Journal Entries</div>
+              </div>
+              <div class="fc-tl-meta">
+                <span class="badge green">Granted</span>
+                <span class="sub fc-tl-time">20m ago</span>
+              </div>
+            </div>
+
+            <div class="fc-tl-row">
+              <span class="avatar" style="width:34px;height:34px;flex:none;font-size:12px;background:var(--purple)">RP</span>
+              <div class="grow">
+                <div class="fc-tl-name">Ravi Patel</div>
+                <div class="sub">Supervisor role updated</div>
+                <div class="fc-tl-cap">Payroll: Process Payroll</div>
+              </div>
+              <div class="fc-tl-meta">
+                <span class="badge red">Revoked</span>
+                <span class="sub fc-tl-time">1h ago</span>
+              </div>
+            </div>
+
+            <div class="fc-tl-row">
+              <span class="avatar" style="width:34px;height:34px;flex:none;font-size:12px;background:var(--amber)">NW</span>
+              <div class="grow">
+                <div class="fc-tl-name">Noah Williams</div>
+                <div class="sub">Access override added</div>
+                <div class="fc-tl-cap">AP: Vendor Bank Details</div>
+              </div>
+              <div class="fc-tl-meta">
+                <span class="badge blue">Override</span>
+                <span class="sub fc-tl-time">3h ago</span>
+              </div>
+            </div>
+
+            <div class="fc-tl-row">
+              <span class="avatar" style="width:34px;height:34px;flex:none;font-size:12px;background:var(--green)">ED</span>
+              <div class="grow">
+                <div class="fc-tl-name">Emma Davis</div>
+                <div class="sub">Employee role updated</div>
+                <div class="fc-tl-cap">AR: Create Invoices</div>
+              </div>
+              <div class="fc-tl-meta">
+                <span class="badge amber">Partial</span>
+                <span class="sub fc-tl-time">1d ago</span>
+              </div>
+            </div>
+
+            <div class="fc-tl-row fc-tl-last">
+              <span class="avatar" style="width:34px;height:34px;flex:none;font-size:12px;background:#6b7280">LJ</span>
+              <div class="grow">
+                <div class="fc-tl-name">Liam Johnson</div>
+                <div class="sub">Viewer role updated</div>
+                <div class="fc-tl-cap">Budgets: View Budgets</div>
+              </div>
+              <div class="fc-tl-meta">
+                <span class="badge grey">No Access</span>
+                <span class="sub fc-tl-time">2d ago</span>
+              </div>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- Module Notes -->
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Module Notes</div>
+            <span class="link">Edit</span>
+          </div>
+          <div class="card-pad" style="display:flex;flex-direction:column;gap:12px">
+            <div class="fc-note">
+              <p class="fc-note-text">Quarter-end close requires full access to Journals and Statutory Configuration for Finance team.</p>
+              <div class="fc-note-foot">Last updated by Super Administrator &middot; May 20, 2025</div>
+            </div>
+            <div class="fc-note">
+              <p class="fc-note-text">Payroll data access is restricted per compliance policy. Overrides require HR approval.</p>
+              <div class="fc-note-foot">Last updated by Super Administrator &middot; Apr 28, 2025</div>
+            </div>
+            <a href="#" class="link" style="font-size:13px;display:inline-flex;align-items:center;gap:6px"><i class="fa-solid fa-plus" style="font-size:11px"></i> Add Note</a>
+          </div>
+        </div>
+
+        <!-- Approval Required Changes -->
+        <div class="card" style="display:flex;flex-direction:column">
+          <div class="card-head">
+            <div class="card-title">Approval Required Changes</div>
+            <span class="link">View All</span>
+          </div>
+          <div style="flex:1">
+
+            <div class="fc-apv-row">
+              <span class="fc-apv-ico"><i class="fa-solid fa-shield-halved"></i></span>
+              <div class="grow">
+                <div class="fc-apv-title">Grant access to Statutory Configuration</div>
+                <div class="sub" style="margin:3px 0 1px">Manager role</div>
+                <div class="sub">Requested by Elena Brown</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none">
+                <span class="risk high">High</span>
+                <span class="sub fc-apv-time">2h ago</span>
+              </div>
+            </div>
+
+            <div class="fc-apv-row">
+              <span class="fc-apv-ico"><i class="fa-solid fa-arrows-rotate"></i></span>
+              <div class="grow">
+                <div class="fc-apv-title">Override request for Payroll: Process Payroll</div>
+                <div class="sub" style="margin:3px 0 1px">Employee role</div>
+                <div class="sub">Requested by Ravi Patel</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none">
+                <span class="risk medium">Medium</span>
+                <span class="sub fc-apv-time">5h ago</span>
+              </div>
+            </div>
+
+            <div class="fc-apv-row fc-apv-last">
+              <span class="fc-apv-ico"><i class="fa-solid fa-chart-pie"></i></span>
+              <div class="grow">
+                <div class="fc-apv-title">Grant access to Budgets: Edit Budgets</div>
+                <div class="sub" style="margin:3px 0 1px">Supervisor role</div>
+                <div class="sub">Requested by Noah Williams</div>
+              </div>
+              <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;flex:none">
+                <span class="risk medium">Medium</span>
+                <span class="sub fc-apv-time">1d ago</span>
+              </div>
+            </div>
+
+          </div>
+          <div style="padding:14px 20px;border-top:1px solid var(--line)">
+            <a href="#" class="link">Go to Access Requests <i class="fa-solid fa-arrow-right" style="font-size:11px"></i></a>
+          </div>
+        </div>
+
+      </div><!-- /fc-btm -->
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<style>
+/* ── Finance Coverage page-scoped styles (fc-*) ──────────────────────────── */
+
+/* Page header icon tile */
+.fc-page-icon {
+  width: 52px; height: 52px; border-radius: 14px;
+  background: var(--accent-bg); color: var(--accent);
+  display: inline-grid; place-items: center;
+  font-size: 22px; flex: none;
+}
+
+/* Legend items in card-head */
+.fc-legend-item {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 12px; font-weight: 600;
+}
+.fc-legend-item.green  { color: #157a3a; }
+.fc-legend-item.amber  { color: #9a5b06; }
+.fc-legend-item.grey   { color: #8a93a3; }
+.fc-legend-item.blue   { color: var(--accent-ink); }
+
+/* Coverage table */
+.fc-tbl th {
+  text-align: center; vertical-align: middle; padding: 12px 10px;
+}
+.fc-tbl th:first-child { text-align: left; }
+.fc-tbl td { padding: 14px 10px; vertical-align: middle; }
+.fc-tbl .fc-cell { text-align: center; padding: 12px 6px; }
+.fc-tbl .fc-drill { text-align: center; padding: 12px 10px; cursor: pointer; }
+.fc-tbl .fc-grp-row:hover td { background: #f9fbfe; cursor: pointer; }
+
+/* Tighter acc-badge for table cells */
+.fc-tbl .acc-badge { padding: 4px 10px; font-size: 12px; }
+
+/* Group row cells */
+.fc-grp-ico {
+  width: 30px; height: 30px; border-radius: 8px;
+  background: var(--accent-bg); color: var(--accent);
+  display: inline-grid; place-items: center; font-size: 13px; flex: none;
+}
+.fc-grp-ico-red { background: var(--red-bg); color: var(--red); }
+.fc-grp-name { font-weight: 600; font-size: 13.5px; white-space: nowrap; }
+.fc-cap-ct { font-size: 12px; color: var(--faint); white-space: nowrap; }
+.fc-chev { color: var(--faint); font-size: 11px; }
+
+/* Bottom 3-column grid */
+.fc-btm {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+/* Timeline rows */
+.fc-tl-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 12px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.fc-tl-last { border-bottom: 0; }
+.fc-tl-name { font-size: 13.5px; font-weight: 600; margin-bottom: 1px; }
+.fc-tl-cap { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.fc-tl-meta { display: flex; flex-direction: column; align-items: flex-end; gap: 4px; flex: none; }
+.fc-tl-time { white-space: nowrap; }
+
+/* Notes */
+.fc-note {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  padding: 13px 15px;
+  background: #fafbfe;
+}
+.fc-note-text {
+  font-size: 13px; color: var(--ink-2); line-height: 1.6;
+  margin: 0 0 8px;
+}
+.fc-note-foot { font-size: 11.5px; color: var(--faint); }
+
+/* Approval rows */
+.fc-apv-row {
+  display: flex; align-items: flex-start; gap: 12px;
+  padding: 13px 16px;
+  border-bottom: 1px solid var(--line-2);
+}
+.fc-apv-last { border-bottom: 0; }
+.fc-apv-ico {
+  width: 34px; height: 34px; border-radius: 9px;
+  background: var(--accent-bg); color: var(--accent);
+  display: inline-grid; place-items: center; font-size: 14px; flex: none;
+}
+.fc-apv-title { font-size: 13px; font-weight: 600; line-height: 1.4; }
+.fc-apv-time { white-space: nowrap; }
+</style>
+
+</body>
+</html>

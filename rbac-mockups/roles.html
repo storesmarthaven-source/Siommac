@@ -1,0 +1,727 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Roles — SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar (shared shell) -->
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo"><i class="fa-solid fa-hexagon-nodes"></i></span><span class="brand-name">SIOMAC</span></div>
+    <div class="brand-sub">Superadmin Console</div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-table-columns"></i> Overview</div>
+      <div class="nav-item"><i class="fa-regular fa-user"></i> Users</div>
+      <div class="nav-item active"><i class="fa-solid fa-users-gear"></i> Roles</div>
+      <div class="nav-item"><i class="fa-solid fa-shield-halved"></i> Access Control <i class="fa-solid fa-chevron-down chev"></i></div>
+      <div class="nav-item"><i class="fa-solid fa-clipboard-list"></i> Audit Log</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-user">
+        <span class="avatar">ER</span>
+        <span class="side-user-txt"><div class="side-user-name">Emma Rodriguez</div><div class="side-user-role">Super Administrator</div></span>
+        <i class="fa-solid fa-chevron-down" style="margin-left:auto;color:#8895b6;font-size:11px"></i>
+      </div>
+      <div class="side-status"><span class="dot"></span> All systems operational</div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search console…"><kbd>⌘K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip"><span class="avatar">ER</span><span><div class="user-chip-name">Emma Rodriguez</div><div class="user-chip-role">Super Administrator</div></span><i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i></div>
+    </div>
+
+    <div class="content">
+      <div class="page-head">
+        <h1 class="page-title">Roles</h1>
+        <p class="page-sub">Manage and edit role defaults for access to capabilities.</p>
+      </div>
+
+      <!-- Master-detail layout -->
+      <div class="rl-layout">
+
+        <!-- ───── LEFT RAIL ───── -->
+        <div class="card rl-rail">
+
+          <!-- Search + filter -->
+          <div class="rl-searchbar">
+            <div class="rl-searchwrap">
+              <i class="fa-solid fa-magnifying-glass"></i>
+              <input class="input" placeholder="Search roles…" style="height:36px;padding-left:32px;font-size:13px">
+            </div>
+            <button class="btn sm" style="padding:0 11px;flex:none"><i class="fa-solid fa-sliders" style="color:var(--muted)"></i></button>
+          </div>
+
+          <!-- Tabs -->
+          <div class="rl-tabs">
+            <div class="rl-tab active">System Roles</div>
+            <div class="rl-tab">Custom Roles</div>
+          </div>
+
+          <!-- Role list -->
+          <div class="role-list">
+
+            <!-- Superadmin — SELECTED -->
+            <div class="role-item selected">
+              <span class="role-icon" style="background:var(--red-bg);color:var(--red)"><i class="fa-solid fa-shield-halved"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Superadmin</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Full system access</div>
+              </div>
+              <span class="role-count">2 members</span>
+            </div>
+
+            <!-- Admin -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-sliders"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Admin</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Manage system settings</div>
+              </div>
+              <span class="role-count">6 members</span>
+            </div>
+
+            <!-- Manager -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-users"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Manager</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Manage team and operations</div>
+              </div>
+              <span class="role-count">18 members</span>
+            </div>
+
+            <!-- Supervisor -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="fa-solid fa-user-check"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Supervisor</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Oversee day-to-day activities</div>
+              </div>
+              <span class="role-count">34 members</span>
+            </div>
+
+            <!-- Employee -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-regular fa-user"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Employee</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Standard user access</div>
+              </div>
+              <span class="role-count">198 members</span>
+            </div>
+
+            <!-- Contractor -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-regular fa-clock"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Contractor</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Limited time access</div>
+              </div>
+              <span class="role-count">46 members</span>
+            </div>
+
+            <!-- Viewer -->
+            <div class="role-item">
+              <span class="role-icon" style="background:#f1f3f7;color:var(--muted)"><i class="fa-regular fa-eye"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Viewer</span><span class="badge grey" style="font-size:10.5px;padding:1px 7px">System</span></div>
+                <div class="role-desc">Read-only access</div>
+              </div>
+              <span class="role-count">38 members</span>
+            </div>
+
+            <!-- Custom roles subheader -->
+            <div class="role-section-head">
+              <span class="role-section-lbl">Custom Roles</span>
+              <button class="btn sm primary" style="height:30px;font-size:12px;padding:0 11px"><i class="fa-solid fa-plus" style="font-size:10px"></i> New Role</button>
+            </div>
+
+            <!-- Payroll Specialist -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--amber-bg);color:var(--amber)"><i class="fa-solid fa-dollar-sign"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Payroll Specialist</span><span class="badge blue" style="font-size:10.5px;padding:1px 7px">Custom</span></div>
+                <div class="role-desc">Manage payroll processes</div>
+              </div>
+              <span class="role-count">7 members</span>
+            </div>
+
+            <!-- HR Business Partner -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--green-bg);color:var(--green)"><i class="fa-solid fa-handshake"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">HR Business Partner</span><span class="badge blue" style="font-size:10.5px;padding:1px 7px">Custom</span></div>
+                <div class="role-desc">HRBP data access</div>
+              </div>
+              <span class="role-count">12 members</span>
+            </div>
+
+            <!-- Project Lead -->
+            <div class="role-item">
+              <span class="role-icon" style="background:var(--accent-bg);color:var(--accent)"><i class="fa-solid fa-diagram-project"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Project Lead</span><span class="badge blue" style="font-size:10.5px;padding:1px 7px">Custom</span></div>
+                <div class="role-desc">Project planning and tracking</div>
+              </div>
+              <span class="role-count">9 members</span>
+            </div>
+
+            <!-- Procurement Analyst -->
+            <div class="role-item" style="border-bottom:0">
+              <span class="role-icon" style="background:var(--purple-bg);color:var(--purple)"><i class="fa-solid fa-magnifying-glass-chart"></i></span>
+              <div class="role-info">
+                <div class="role-name-row"><span class="role-name">Procurement Analyst</span><span class="badge blue" style="font-size:10.5px;padding:1px 7px">Custom</span></div>
+                <div class="role-desc">Procurement reporting</div>
+              </div>
+              <span class="role-count">5 members</span>
+            </div>
+
+          </div><!-- /role-list -->
+
+          <div class="rl-foot">Showing 1–11 of 11 roles</div>
+        </div><!-- /rl-rail -->
+
+
+        <!-- ───── RIGHT DETAIL ───── -->
+        <div class="rl-detail">
+
+          <!-- Role header card -->
+          <div class="card">
+            <div style="padding:20px 22px;display:flex;align-items:flex-start;gap:18px">
+              <span class="rh-icon"><i class="fa-solid fa-shield-halved"></i></span>
+              <div class="grow">
+                <div class="row" style="gap:10px;margin-bottom:5px">
+                  <span style="font-size:21px;font-weight:700;letter-spacing:-.01em">Superadmin</span>
+                  <span class="badge grey">System</span>
+                </div>
+                <div style="font-size:14px;font-weight:500;color:var(--ink-2);margin-bottom:3px">Full system access with no restrictions.</div>
+                <div style="font-size:13px;color:var(--muted)">This role has all capabilities enabled by default.</div>
+              </div>
+              <button class="btn" style="flex:none;margin-top:2px">Role settings <i class="fa-solid fa-chevron-down" style="font-size:10px"></i></button>
+            </div>
+          </div>
+
+          <!-- Mini stat row -->
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <span class="stat-ico blue" style="width:42px;height:42px;font-size:16px"><i class="fa-solid fa-table-cells-large"></i></span>
+              <div>
+                <div class="stat-lbl">Total Capabilities</div>
+                <div class="mini-val">268</div>
+                <div class="sub">Across 5 modules</div>
+              </div>
+            </div>
+            <div class="mini-stat">
+              <span class="stat-ico red" style="width:42px;height:42px;font-size:16px"><i class="fa-solid fa-shield-halved"></i></span>
+              <div>
+                <div class="stat-lbl">High-Risk Capabilities</div>
+                <div class="mini-val">27</div>
+                <div class="sub">Require approval</div>
+              </div>
+            </div>
+            <div class="mini-stat">
+              <span class="stat-ico green" style="width:42px;height:42px;font-size:16px"><i class="fa-solid fa-users"></i></span>
+              <div>
+                <div class="stat-lbl">Members</div>
+                <div class="mini-val">2</div>
+                <div class="sub">Users assigned</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Capability Defaults -->
+          <div class="card">
+            <div class="card-head" style="align-items:flex-start;gap:16px">
+              <div>
+                <div class="card-title">Capability Defaults</div>
+                <div class="card-sub" style="max-width:560px">Set the default access for each capability. These defaults apply when users are assigned to this role.</div>
+              </div>
+              <button class="btn sm" style="flex:none;margin-top:2px">Expand All</button>
+            </div>
+            <table class="cap-tbl">
+              <thead>
+                <tr>
+                  <th style="width:30px;padding-left:18px"></th>
+                  <th style="min-width:190px">Capability</th>
+                  <th>Description</th>
+                  <th style="width:105px">Risk Level</th>
+                  <th style="width:115px;text-align:center">Default Access</th>
+                </tr>
+              </thead>
+              <tbody>
+
+                <!-- ▼ Human Resources — EXPANDED -->
+                <tr class="acc-head acc-open">
+                  <td colspan="5">
+                    <div class="acc-head-inner">
+                      <i class="fa-solid fa-chevron-down acc-chev open"></i>
+                      <span class="acc-mod-name">Human Resources</span>
+                      <span class="muted" style="font-size:12.5px;font-weight:400">— 8 capabilities</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">View Employee Profiles</td>
+                  <td class="cap-desc">View employee personal and job information</td>
+                  <td><span class="risk low">Low</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Edit Employee Profiles</td>
+                  <td class="cap-desc">Edit employee personal and job information</td>
+                  <td><span class="risk medium">Medium</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Manage Benefits</td>
+                  <td class="cap-desc">Create and manage employee benefits</td>
+                  <td><span class="risk medium">Medium</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">View Payroll Information</td>
+                  <td class="cap-desc">View payroll data and history</td>
+                  <td><span class="risk medium">Medium</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Edit Payroll Information</td>
+                  <td class="cap-desc">Edit payroll data and process payroll</td>
+                  <td><span class="risk high">High</span></td>
+                  <td class="toggle-cell"><span class="toggle"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Manage Performance Reviews</td>
+                  <td class="cap-desc">Create and manage performance reviews</td>
+                  <td><span class="risk medium">Medium</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Manage Employee Documents</td>
+                  <td class="cap-desc">Upload and manage employee documents</td>
+                  <td><span class="risk low">Low</span></td>
+                  <td class="toggle-cell"><span class="toggle on"></span></td>
+                </tr>
+                <tr class="acc-row" style="border-bottom:2px solid var(--line)">
+                  <td class="drag-cell"><i class="fa-solid fa-grip-vertical drag-ico"></i></td>
+                  <td class="cap-name">Delete Employee Records</td>
+                  <td class="cap-desc">Permanently delete employee records</td>
+                  <td><span class="risk high">High</span></td>
+                  <td class="toggle-cell"><span class="toggle"></span></td>
+                </tr>
+
+                <!-- ▶ Health & Safety — COLLAPSED -->
+                <tr class="acc-head acc-collapsed">
+                  <td colspan="5">
+                    <div class="acc-head-inner">
+                      <i class="fa-solid fa-chevron-right acc-chev"></i>
+                      <span class="acc-mod-name">Health &amp; Safety</span>
+                      <span class="muted" style="font-size:12.5px;font-weight:400">— 6 capabilities</span>
+                      <span class="acc-risk-count">1 High-Risk</span>
+                      <span style="margin-left:auto"><span class="badge green" style="font-size:11.5px">✓ All Enabled</span></span>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- ▶ Finance — COLLAPSED -->
+                <tr class="acc-head acc-collapsed">
+                  <td colspan="5">
+                    <div class="acc-head-inner">
+                      <i class="fa-solid fa-chevron-right acc-chev"></i>
+                      <span class="acc-mod-name">Finance</span>
+                      <span class="muted" style="font-size:12.5px;font-weight:400">— 7 capabilities</span>
+                      <span class="acc-risk-count">4 High-Risk</span>
+                      <span style="margin-left:auto"><span class="badge amber" style="font-size:11.5px">5 Enabled</span></span>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- ▶ Operations — COLLAPSED -->
+                <tr class="acc-head acc-collapsed">
+                  <td colspan="5">
+                    <div class="acc-head-inner">
+                      <i class="fa-solid fa-chevron-right acc-chev"></i>
+                      <span class="acc-mod-name">Operations</span>
+                      <span class="muted" style="font-size:12.5px;font-weight:400">— 9 capabilities</span>
+                      <span class="acc-risk-count">6 High-Risk</span>
+                      <span style="margin-left:auto"><span class="badge grey" style="font-size:11.5px">6 Enabled</span></span>
+                    </div>
+                  </td>
+                </tr>
+
+                <!-- ▶ System — COLLAPSED -->
+                <tr class="acc-head acc-collapsed" style="border-bottom:0">
+                  <td colspan="5" style="border-bottom:0">
+                    <div class="acc-head-inner">
+                      <i class="fa-solid fa-chevron-right acc-chev"></i>
+                      <span class="acc-mod-name">System</span>
+                      <span class="muted" style="font-size:12.5px;font-weight:400">— 4 capabilities</span>
+                      <span class="acc-risk-count">16 High-Risk</span>
+                      <span style="margin-left:auto"><span class="badge grey" style="font-size:11.5px">3 Enabled</span></span>
+                    </div>
+                  </td>
+                </tr>
+
+              </tbody>
+            </table>
+          </div><!-- /Capability Defaults -->
+
+          <!-- Bottom row: Users + Pending -->
+          <div class="grid-2">
+
+            <!-- Users with this role -->
+            <div class="card">
+              <div class="card-head">
+                <div class="card-title">Users with this role <span style="font-weight:400;color:var(--muted)">(2)</span></div>
+                <span class="link">View all</span>
+              </div>
+              <div class="um-row">
+                <span class="avatar" style="width:38px;height:38px;font-size:13px;flex:none">SA</span>
+                <div class="grow" style="min-width:0">
+                  <div style="font-weight:600;font-size:13.5px">Super Administrator</div>
+                  <div class="sub">superadmin@siomac.com</div>
+                </div>
+                <div class="sub" style="white-space:nowrap">Assigned on Jan 15, 2024</div>
+              </div>
+              <div class="um-row" style="border-bottom:0">
+                <span class="avatar" style="width:38px;height:38px;font-size:13px;flex:none;background:var(--green)">JD</span>
+                <div class="grow" style="min-width:0">
+                  <div style="font-weight:600;font-size:13.5px">John Doe</div>
+                  <div class="sub">john.doe@siomac.com</div>
+                </div>
+                <div class="sub" style="white-space:nowrap">Assigned on Mar 03, 2024</div>
+              </div>
+            </div>
+
+            <!-- Pending approval changes -->
+            <div class="card">
+              <div class="card-head">
+                <div class="row" style="gap:9px">
+                  <div class="card-title">Pending approval changes</div>
+                  <span class="badge red">3</span>
+                </div>
+                <span class="link">View all</span>
+              </div>
+              <div class="pend-row">
+                <span class="pend-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <div class="grow" style="min-width:0">
+                  <div class="pend-cap">Edit Payroll Information</div>
+                  <div class="sub">Human Resources &middot; Requested by John Doe</div>
+                </div>
+                <div class="sub" style="white-space:nowrap">May 12, 2024</div>
+              </div>
+              <div class="pend-row">
+                <span class="pend-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <div class="grow" style="min-width:0">
+                  <div class="pend-cap">Delete Employee Records</div>
+                  <div class="sub">Human Resources &middot; Requested by Sarah Johnson</div>
+                </div>
+                <div class="sub" style="white-space:nowrap">May 10, 2024</div>
+              </div>
+              <div class="pend-row" style="border-bottom:0">
+                <span class="pend-ico"><i class="fa-solid fa-triangle-exclamation"></i></span>
+                <div class="grow" style="min-width:0">
+                  <div class="pend-cap">Approve Payroll</div>
+                  <div class="sub">Finance &middot; Requested by Mike Thompson</div>
+                </div>
+                <div class="sub" style="white-space:nowrap">May 08, 2024</div>
+              </div>
+              <div class="pend-foot">
+                <i class="fa-solid fa-circle-info" style="color:var(--amber);font-size:13px"></i>
+                Changes require approval due to high-risk capabilities.
+              </div>
+            </div>
+
+          </div><!-- /grid-2 -->
+
+        </div><!-- /rl-detail -->
+      </div><!-- /rl-layout -->
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<style>
+/* ── Master-detail layout ─────────────────────────────────────────────── */
+.rl-layout {
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 20px;
+  align-items: start;
+}
+
+/* ── Left rail ───────────────────────────────────────────────────────── */
+.rl-rail {
+  display: flex;
+  flex-direction: column;
+  position: sticky;
+  top: 80px;
+  max-height: calc(100vh - 104px);
+  overflow: hidden;
+}
+
+.rl-searchbar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 12px 10px;
+  border-bottom: 1px solid var(--line);
+}
+.rl-searchwrap {
+  position: relative;
+  flex: 1;
+}
+.rl-searchwrap i {
+  position: absolute;
+  left: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--faint);
+  font-size: 12px;
+}
+
+.rl-tabs {
+  display: flex;
+  border-bottom: 1px solid var(--line);
+}
+.rl-tab {
+  padding: 11px 16px;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  transition: color .12s;
+}
+.rl-tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+.rl-tab:hover:not(.active) { color: var(--ink-2); }
+
+.role-list {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.role-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--line-2);
+  border-left: 3px solid transparent;
+  transition: background .1s;
+  position: relative;
+}
+.role-item:hover { background: #f9fafb; }
+.role-item.selected {
+  background: var(--accent-bg);
+  border-left-color: var(--accent);
+}
+
+.role-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  font-size: 14px;
+  flex: none;
+}
+.role-info { flex: 1; min-width: 0; }
+.role-name-row { display: flex; align-items: center; gap: 6px; }
+.role-name { font-size: 13px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.role-desc { font-size: 11.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 1px; }
+.role-count { font-size: 11.5px; color: var(--faint); white-space: nowrap; flex: none; }
+
+.role-section-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px 8px;
+  border-bottom: 1px solid var(--line-2);
+}
+.role-section-lbl {
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: .07em;
+  text-transform: uppercase;
+  color: var(--faint);
+}
+
+.rl-foot {
+  padding: 10px 14px;
+  border-top: 1px solid var(--line);
+  font-size: 12px;
+  color: var(--muted);
+}
+
+/* ── Role header icon ────────────────────────────────────────────────── */
+.rh-icon {
+  width: 56px;
+  height: 56px;
+  border-radius: 14px;
+  background: var(--red-bg);
+  color: var(--red);
+  display: grid;
+  place-items: center;
+  font-size: 22px;
+  flex: none;
+}
+
+/* ── Mini stats row ──────────────────────────────────────────────────── */
+.mini-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 14px;
+}
+.mini-stat {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-sm);
+  padding: 15px 16px;
+  box-shadow: var(--shadow);
+  display: flex;
+  align-items: center;
+  gap: 13px;
+}
+.mini-val {
+  font-size: 22px;
+  font-weight: 700;
+  line-height: 1.1;
+  margin: 1px 0;
+}
+
+/* ── Right detail column ─────────────────────────────────────────────── */
+.rl-detail {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ── Capability defaults table ───────────────────────────────────────── */
+.cap-tbl {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.cap-tbl th {
+  text-align: left;
+  font-size: 11.5px;
+  font-weight: 600;
+  color: var(--muted);
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--line);
+  white-space: nowrap;
+}
+.cap-tbl td {
+  padding: 11px 14px;
+  border-bottom: 1px solid var(--line-2);
+  vertical-align: middle;
+}
+
+/* Accordion group headers */
+.acc-head td {
+  padding: 0;
+  border-bottom: 1px solid var(--line);
+}
+.acc-head.acc-collapsed td {
+  border-bottom: 1px solid var(--line-2);
+}
+.acc-head-inner {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 11px 14px;
+  background: #f8f9fc;
+  cursor: pointer;
+  transition: background .1s;
+}
+.acc-head-inner:hover { background: #f1f4fa; }
+.acc-chev {
+  font-size: 10px;
+  width: 14px;
+  text-align: center;
+  color: var(--muted);
+  flex: none;
+}
+.acc-chev.open { color: var(--accent); }
+.acc-mod-name { font-size: 13px; font-weight: 700; }
+.acc-risk-count { font-size: 12px; font-weight: 600; color: var(--red); }
+
+/* Capability rows */
+.acc-row td { background: #fff; }
+.drag-cell { padding-left: 18px !important; }
+.drag-ico { color: var(--line); font-size: 11px; cursor: grab; }
+.cap-name { font-weight: 500; }
+.cap-desc { color: var(--muted); font-size: 12.5px; }
+.toggle-cell { text-align: center; }
+
+/* ── Users card rows ─────────────────────────────────────────────────── */
+.um-row {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 20px;
+  border-bottom: 1px solid var(--line-2);
+}
+
+/* ── Pending approval rows ───────────────────────────────────────────── */
+.pend-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--line-2);
+}
+.pend-ico {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  background: var(--amber-bg);
+  color: var(--amber);
+  display: grid;
+  place-items: center;
+  font-size: 13px;
+  flex: none;
+}
+.pend-cap { font-size: 13px; font-weight: 600; }
+.pend-foot {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 11px 20px;
+  font-size: 12px;
+  color: var(--muted);
+  background: #fffbf4;
+  border-top: 1px solid var(--line-2);
+  border-radius: 0 0 var(--radius) var(--radius);
+}
+</style>
+
+</body>
+</html>
