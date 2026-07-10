@@ -377,11 +377,68 @@
   flex: 1 1 auto;
   min-height: 0;
 }
-/* The NIS bar chart SCALES to fill the tile — resizing the widget resizes the chart
-   (viewBox + default preserveAspectRatio keep proportions). Scoped so the readiness
-   gauge is untouched. min-height:0 lets the flex/grid child actually shrink. */
-.sdb-chart-plot { flex: 1 1 auto; display: flex; flex-direction: column; min-height: 0; min-width: 0; }
-.sdb-chart-plot svg { width: 100%; height: 100%; flex: 1 1 auto; min-height: 0; display: block; }
+/* Chart.js canvas container — position:relative is required by Chart.js responsive mode
+   so it can correctly compute its dimensions; overflow:hidden clips any over-render.
+   min-height:0 lets the flex child actually shrink when the tile is small. */
+.sdb-chart-plot { flex: 1 1 auto; position: relative; overflow: hidden; min-height: 0; min-width: 0; }
+.sdb-chart-plot canvas { display: block; }
+
+/* ── NIS schedule reference note — compact explainer below the rate chart. ──────── */
+.sdb-nis-note {
+  flex: 0 0 auto;
+  margin-top: 12px;
+  padding: 9px 12px;
+  border-radius: 10px;
+  background: #f6f9ff;
+  border: 1px solid #dce7f5;
+}
+.sdb-nis-note-hd {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11.5px;
+  font-weight: 700;
+  color: var(--sdb-ink2);
+  margin-bottom: 7px;
+}
+.sdb-nis-note-hd i { color: #4c7bd4; font-size: 11px; }
+.sdb-nis-note-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 7px;
+}
+.sdb-nis-chip {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid #dce7f5;
+  border-radius: 7px;
+  overflow: hidden;
+  font-size: 11px;
+}
+.sdb-nis-chip-k {
+  padding: 2px 7px;
+  background: #e5edf8;
+  color: var(--sdb-muted);
+  font-weight: 600;
+}
+.sdb-nis-chip-v {
+  padding: 2px 8px;
+  background: #fff;
+  color: var(--sdb-ink2);
+  font-weight: 600;
+}
+.sdb-nis-note-lines { display: flex; flex-direction: column; gap: 3px; }
+.sdb-nis-note-line {
+  font-size: 10.5px;
+  color: var(--sdb-body);
+  line-height: 1.4;
+}
+.sdb-nis-note-k {
+  font-weight: 700;
+  color: var(--sdb-ink2);
+  margin-right: 3px;
+}
 .sdb-legend {
   display: flex; gap: 18px;
   margin-top: 6px;

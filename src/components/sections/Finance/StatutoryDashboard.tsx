@@ -27,7 +27,17 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { memo } from 'preact/compat';
-import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks';
+import { useMemo, useState, useEffect, useRef } from 'preact/hooks';
+import {
+  Chart,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Filler,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import {
   type StatutoryVersion, type PayComponent, type NisClass,
 } from '@api/finance/statutory';
@@ -42,6 +52,9 @@ import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, fmtMoney, humanize } from './financeShared';
+
+// Register chart.js tree-shakeable modules once (module-level, idempotent).
+Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 // Re-export so the parent can reference the same literal type without a second import.
 export type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
@@ -142,15 +155,20 @@ export interface StatutoryDashboardProps {
 
 // ── SVG helpers ────────────────────────────────────────────────────────────────
 
-/** Semicircle gauge (solid track + colored fill) — matches the obv MetricGauge.
- *  The fill sweeps LEFT→RIGHT from 0 to the value; the value shows in the copy. */
-// `memo` so unrelated parent re-renders (e.g. hovering a chart point → setChartHover)
-// never re-run the fill animation — it only re-animates when pct/color actually change.
+/** Semicircle gauge — gradient track + gradient colored fill.
+ *  The fill sweeps LEFT→RIGHT from 0 to the value using a Web Animations stroke-dashoffset
+ *  tween (~700ms ease-out). Both arcs carry a linear gradient that fades toward the ends so
+ *  the arc reads as polished at any fill level; at 100% the whole arc is fully saturated.
+ *  `memo` ensures the animation only re-triggers when `pct` / `color` genuinely change —
+ *  unrelated parent re-renders (tab switches, board edits, etc.) don't replay it. */
 const HalfGauge = memo(function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
   const p = Math.max(0, Math.min(100, pct));
   const rest = 100 - p; // dashoffset that reveals exactly the first p units (left→right)
   const ARC = 'M17 62 A42 42 0 0 1 101 62';
   const fillRef = useRef<SVGPathElement>(null);
+  // Stable unique IDs for gradient <defs> — generated once on first mount; ignored arg
+  // on subsequent renders so the ref's .current always has the original value.
+  const gid = useRef(`sdb-g${Math.floor(Math.random() * 1e6)}`).current;
 
   useEffect(() => {
     const el = fillRef.current;
@@ -162,7 +180,7 @@ const HalfGauge = memo(function HalfGauge({ pct, color }: { pct: number; color: 
     // stays at 100 so there's no flash of the filled arc before the animation starts.
     const anim = el.animate(
       [{ strokeDashoffset: 100 }, { strokeDashoffset: rest }],
-      { duration: 1300, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', delay: 80, fill: 'forwards' },
+      { duration: 700, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', delay: 80, fill: 'forwards' },
     );
     return () => anim.cancel();
   }, [rest]);
@@ -170,8 +188,29 @@ const HalfGauge = memo(function HalfGauge({ pct, color }: { pct: number; color: 
   return (
     <div class="sdb-gauge">
       <svg viewBox="0 0 118 78">
-        <path d={ARC} pathLength={100} fill="none" stroke="#e9edf4" strokeWidth={13} strokeLinecap="round" />
-        <path ref={fillRef} d={ARC} pathLength={100} fill="none" stroke={color} strokeWidth={13}
+        <defs>
+          {/* Track gradient — grey that softly fades toward both arc ends. */}
+          <linearGradient id={`${gid}-t`} x1="17" y1="0" x2="101" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor="#c8d4e8" stopOpacity="0.35" />
+            <stop offset="28%"  stopColor="#e9edf4" stopOpacity="1" />
+            <stop offset="72%"  stopColor="#e9edf4" stopOpacity="1" />
+            <stop offset="100%" stopColor="#c8d4e8" stopOpacity="0.35" />
+          </linearGradient>
+          {/* Fill gradient — the accent color fading toward both ends; at 100% fill it
+              reads as one continuous saturated arc with polished tapered tips. */}
+          <linearGradient id={`${gid}-f`} x1="17" y1="0" x2="101" y2="0" gradientUnits="userSpaceOnUse">
+            <stop offset="0%"   stopColor={color} stopOpacity="0.5" />
+            <stop offset="22%"  stopColor={color} stopOpacity="1" />
+            <stop offset="78%"  stopColor={color} stopOpacity="1" />
+            <stop offset="100%" stopColor={color} stopOpacity="0.55" />
+          </linearGradient>
+        </defs>
+        {/* Track arc */}
+        <path d={ARC} pathLength={100} fill="none"
+          stroke={`url(#${gid}-t)`} strokeWidth={13} strokeLinecap="round" />
+        {/* Fill arc — animates via strokeDashoffset */}
+        <path ref={fillRef} d={ARC} pathLength={100} fill="none"
+          stroke={`url(#${gid}-f)`} strokeWidth={13}
           strokeLinecap="round" strokeDasharray="100" strokeDashoffset={100} />
       </svg>
     </div>
@@ -246,6 +285,28 @@ export function StatutoryDashboard({
     };
   }, [activeVer, activeNisClasses.length, components, onTabChange]);
 
+  // Count-up for the readiness % number — animates 0→lens.pct on first mount and whenever
+  // the value genuinely changes. Guarded by [lens.pct] so unrelated re-renders (tab switch,
+  // board edit, etc.) never re-trigger it; respects prefers-reduced-motion.
+  const [displayPct, setDisplayPct] = useState(0);
+  useEffect(() => {
+    const target = lens.pct;
+    const reduce = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    if (reduce) { setDisplayPct(target); return; }
+    const start = performance.now();
+    const dur = 700; // matches the gauge arc animation
+    let raf: number;
+    const step = (now: number): void => {
+      const t = Math.min((now - start) / dur, 1);
+      const eased = 1 - (1 - t) ** 3; // ease-out cubic
+      setDisplayPct(Math.round(target * eased));
+      if (t < 1) raf = requestAnimationFrame(step);
+    };
+    raf = requestAnimationFrame(step);
+    return (): void => { cancelAnimationFrame(raf); };
+  }, [lens.pct]);
+
   // Active version's earnings classes (sorted) — powers the summary class count and
   // the active-rate figure below.
   const nis = useMemo(() => ({ rows: [...activeNisClasses].sort((a, b) => a.classNo - b.classNo) }), [activeNisClasses]);
@@ -263,33 +324,86 @@ export function StatutoryDashboard({
     const hi = rates.length ? Math.ceil(Math.max(...rates)) + 1 : 20;
     return { pts, lo, hi };
   }, [versions]);
-  // Hovered data point on the rate-trend chart (index into rateTrend.pts) → tooltip.
-  const [chartHover, setChartHover] = useState<number | null>(null);
-  // Live pixel size of the chart plot area → the SVG viewBox matches it exactly, so the
-  // chart fills the whole container at any size (no letterbox) and never distorts.
-  const [chartDims, setChartDims] = useState<{ w: number; h: number }>({ w: 640, h: 320 });
-  const chartRO = useRef<ResizeObserver | null>(null);
-  const chartRAF = useRef<number>(0);
-  const setChartPlotEl = useCallback((el: HTMLDivElement | null) => {
-    chartRO.current?.disconnect();
-    chartRO.current = null;
-    if (typeof cancelAnimationFrame === 'function') cancelAnimationFrame(chartRAF.current);
-    if (el && typeof ResizeObserver !== 'undefined') {
-      // Read the entry's contentRect (no forced reflow) and defer the state update to the
-      // next frame — this avoids the "ResizeObserver loop" warning.
-      const ro = new ResizeObserver(entries => {
-        const cr = entries[0]?.contentRect;
-        if (!cr || cr.width <= 1 || cr.height <= 1) return;
-        const w = Math.round(cr.width), h = Math.round(cr.height);
-        cancelAnimationFrame(chartRAF.current);
-        chartRAF.current = requestAnimationFrame(() => {
-          setChartDims(prev => (prev.w === w && prev.h === h ? prev : { w, h }));
-        });
-      });
-      ro.observe(el);
-      chartRO.current = ro;
-    }
-  }, []);
+  // ── Chart.js canvas — callback-ref pattern so the useEffect re-runs if the widget is
+  //    removed then re-added to the board (new DOM element; rateTrend reference unchanged).
+  const [chartCanvas, setChartCanvas] = useState<HTMLCanvasElement | null>(null);
+  const chartInstanceRef = useRef<{ destroy(): void } | null>(null);
+
+  useEffect(() => {
+    if (!chartCanvas) return;
+    // Destroy any previous instance (stale canvas or data change).
+    chartInstanceRef.current?.destroy();
+    chartInstanceRef.current = null;
+    const { pts, lo, hi } = rateTrend;
+    if (pts.length === 0) return;
+    chartInstanceRef.current = new Chart(chartCanvas, {
+      type: 'line',
+      data: {
+        labels: pts.map(p => p.year),
+        datasets: [{
+          data: pts.map(p => p.rate),
+          borderColor: '#2f5fe0',
+          backgroundColor: 'rgba(47,95,224,0.09)',
+          fill: true,
+          tension: 0.3,
+          // Active-version point is filled blue; all others are hollow white.
+          pointRadius: pts.map(p => p.isActive ? 6 : 4),
+          pointHoverRadius: 7,
+          pointBackgroundColor: pts.map(p => p.isActive ? '#2f5fe0' : '#ffffff'),
+          pointBorderColor: '#2f5fe0',
+          pointBorderWidth: 2,
+        }],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        animation: { duration: 700 },
+        scales: {
+          x: {
+            border: { display: false },
+            grid: { color: '#eef1f7' },
+            ticks: { color: '#8593a8', font: { size: 10 } },
+          },
+          y: {
+            min: lo,
+            max: hi,
+            border: { display: false },
+            grid: { color: '#eef1f7' },
+            ticks: {
+              color: '#9aa4b6',
+              font: { size: 10 },
+              callback: (v: string | number) => `${v}%`,
+            },
+          },
+        },
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            backgroundColor: '#17305c',
+            titleColor: '#ffffff',
+            bodyColor: '#c9d6f0',
+            padding: 10,
+            cornerRadius: 7,
+            callbacks: {
+              title: (items) => {
+                const idx = items[0]?.dataIndex ?? -1;
+                const p = pts[idx];
+                return p ? fmtDate(p.effectiveFrom) : '';
+              },
+              label: (item) => {
+                const p = pts[item.dataIndex];
+                return p ? `${p.rate}% · ${p.isActive ? 'Active' : humanize(p.status)}` : '';
+              },
+            },
+          },
+        },
+      },
+    });
+    return (): void => {
+      chartInstanceRef.current?.destroy();
+      chartInstanceRef.current = null;
+    };
+  }, [chartCanvas, rateTrend]);
 
   // Active-version contribution rate derived from the data (total ÷ assumed average).
   const nisRatePct = (() => {
@@ -417,27 +531,13 @@ export function StatutoryDashboard({
       sub={pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'} />
   );
 
-  // NIS contribution RATE over time — a real trend across the seeded schedule history
-  // (10.5% 2008 → 16.2% 2026), which a per-class bar chart could never show.
+  // NIS contribution RATE over time — real trend across the seeded schedule history
+  // (10.5% 2008 → 16.2% 2026). Rendered as a Chart.js line chart on a <canvas>;
+  // Chart.js owns responsive resizing, hover, and tooltips.
   const renderChart = (): VNode => {
-    // The SVG viewBox equals the plot area's live pixel size (chartDims), so the chart
-    // fills the ENTIRE container with no letterbox and no distortion at any size.
-    const W = chartDims.w, H = chartDims.h;
-    const P = { x0: 46, x1: W - 14, yTop: 18, yBase: H - 34 };
-    const { pts, lo, hi } = rateTrend;
-    const span = Math.max(1, hi - lo);
-    const yFor = (r: number): number => P.yBase - ((r - lo) / span) * (P.yBase - P.yTop);
-    // Inset the points from the plot edges so the first/last value labels clear the
-    // y-axis labels on the left (and the card edge on the right).
-    const xL = P.x0 + 28, xR = P.x1 - 22;
-    const xFor = (i: number): number => pts.length <= 1 ? (xL + xR) / 2 : xL + (i / (pts.length - 1)) * (xR - xL);
-    const grid = Array.from({ length: 5 }, (_, i) => { const val = lo + (span * i) / 4; return { val, y: yFor(val) }; });
+    const { pts } = rateTrend;
     const first = pts[0];
-    const last = pts[pts.length - 1];
-    const areaD = pts.length
-      ? `M ${xFor(0)} ${P.yBase} ` + pts.map((p, i) => `L ${xFor(i)} ${yFor(p.rate)}`).join(' ') + ` L ${xFor(pts.length - 1)} ${P.yBase} Z`
-      : '';
-    const lineD = pts.map((p, i) => `${i === 0 ? 'M' : 'L'} ${xFor(i)} ${yFor(p.rate)}`).join(' ');
+    const last  = pts[pts.length - 1];
     return (
       <div class="sdb-card sdb-ch sdb-wgt-fill">
         <div class="sdb-ch-hd">
@@ -449,59 +549,44 @@ export function StatutoryDashboard({
             </span>
           </div>
         </div>
+
         <div class="sdb-sum-body">
-          <div class="sdb-chart-plot" ref={setChartPlotEl}>
-            {pts.length === 0 ? (
-              <div class="sdb-up-empty" style={{ padding: '48px 0' }}>No NIS schedules on record yet.</div>
-            ) : (
-              <svg viewBox={`0 0 ${W} ${H}`} width="100%" height="100%" preserveAspectRatio="none" style={{ display: 'block' }}>
-                {/* Gridlines + left axis (%) */}
-                <g fontSize="10" fill="#9aa4b6" textAnchor="end">
-                  {grid.map((g, i) => <text key={i} x={P.x0 - 8} y={g.y + 3}>{g.val.toFixed(1)}%</text>)}
-                </g>
-                <g stroke="#eef1f7" strokeWidth="1">
-                  {grid.map((g, i) => <line key={i} x1={P.x0} y1={g.y} x2={P.x1} y2={g.y} />)}
-                </g>
-                {/* Area + trend line */}
-                {areaD && <path d={areaD} fill="rgba(47,95,224,.09)" />}
-                <path d={lineD} fill="none" stroke="#2f5fe0" strokeWidth="2.5" strokeLinejoin="round" strokeLinecap="round" />
-                {/* Hover guide line for the active point */}
-                {chartHover != null && pts[chartHover] && (
-                  <line x1={xFor(chartHover)} y1={P.yTop} x2={xFor(chartHover)} y2={P.yBase} stroke="#c9d6f0" strokeWidth="1" strokeDasharray="3 3" />
-                )}
-                {/* Points + labels (active version highlighted; hovered point enlarged) */}
-                {pts.map((p, i) => {
-                  const on = chartHover === i;
-                  return (
-                    <g key={p.id}>
-                      <circle cx={xFor(i)} cy={yFor(p.rate)} r={p.isActive || on ? 6 : 4}
-                        fill={p.isActive || on ? '#2f5fe0' : '#ffffff'} stroke="#2f5fe0" strokeWidth="2" />
-                      <text x={xFor(i)} y={yFor(p.rate) - 12} textAnchor="middle" fontSize="10.5" fontWeight="700" fill="#1f3b6d">{p.rate}%</text>
-                      <text x={xFor(i)} y={P.yBase + 18} textAnchor="middle" fontSize="10" fill={on ? '#2f5fe0' : '#8593a8'} fontWeight={on ? '700' : '400'}>{p.year}</text>
-                      {/* Invisible larger hit-area for easy hovering */}
-                      <circle cx={xFor(i)} cy={yFor(p.rate)} r="16" fill="transparent" style={{ cursor: 'pointer' }}
-                        onMouseEnter={() => setChartHover(i)} onMouseLeave={() => setChartHover(h => (h === i ? null : h))} />
-                    </g>
-                  );
-                })}
-                <line x1={P.x0} y1={P.yBase} x2={P.x1} y2={P.yBase} stroke="#d7deea" strokeWidth="1" />
-                {/* Tooltip at the hovered data point */}
-                {chartHover != null && pts[chartHover] && (() => {
-                  const p = pts[chartHover]!;
-                  const cx = xFor(chartHover), cy = yFor(p.rate);
-                  const tw = 132, th = 42;
-                  const tx = Math.min(Math.max(cx - tw / 2, 4), W - tw - 4);
-                  const ty = cy - th - 16 < P.yTop ? cy + 14 : cy - th - 16;
-                  return (
-                    <g pointerEvents="none">
-                      <rect x={tx} y={ty} width={tw} height={th} rx="7" fill="#17305c" />
-                      <text x={tx + 11} y={ty + 17} fontSize="11" fontWeight="700" fill="#ffffff">{fmtDate(p.effectiveFrom)}</text>
-                      <text x={tx + 11} y={ty + 32} fontSize="10.5" fill="#c9d6f0">{p.rate}% · {p.isActive ? 'Active' : humanize(p.status)}</text>
-                    </g>
-                  );
-                })()}
-              </svg>
-            )}
+          {pts.length === 0 ? (
+            <div class="sdb-up-empty" style={{ padding: '48px 0' }}>No NIS schedules on record yet.</div>
+          ) : (
+            <div class="sdb-chart-plot">
+              <canvas ref={setChartCanvas} />
+            </div>
+          )}
+        </div>
+
+        {/* NIS schedule reference note */}
+        <div class="sdb-nis-note">
+          <div class="sdb-nis-note-hd">
+            <i class="fa-solid fa-circle-info" />
+            NIBTT Earnings-Class Schedule
+          </div>
+          <div class="sdb-nis-note-chips">
+            <span class="sdb-nis-chip">
+              <span class="sdb-nis-chip-k">Rate</span>
+              <span class="sdb-nis-chip-v">16.2%</span>
+            </span>
+            <span class="sdb-nis-chip">
+              <span class="sdb-nis-chip-k">Employee</span>
+              <span class="sdb-nis-chip-v">⅓ · 5.4%</span>
+            </span>
+            <span class="sdb-nis-chip">
+              <span class="sdb-nis-chip-k">Employer</span>
+              <span class="sdb-nis-chip-v">⅔ · 10.8%</span>
+            </span>
+          </div>
+          <div class="sdb-nis-note-lines">
+            <div class="sdb-nis-note-line">
+              <span class="sdb-nis-note-k">Assumed Avg</span> The earnings figure the contribution is based on; weekly or monthly by pay cycle.
+            </div>
+            <div class="sdb-nis-note-line">
+              <span class="sdb-nis-note-k">Class Z</span> Reduced weekly rate for workers over pensionable age — employment-injury portion only.
+            </div>
           </div>
         </div>
       </div>
@@ -547,7 +632,7 @@ export function StatutoryDashboard({
       <div class="sdb-ready-score">
         <div class="sdb-gauge-wrap">
           <HalfGauge pct={lens.pct} color={lens.color} />
-          <div class="sdb-gauge-val" style={{ color: lens.color }}>{lens.pct}%</div>
+          <div class="sdb-gauge-val" style={{ color: lens.color }}>{displayPct}%</div>
         </div>
       </div>
 
