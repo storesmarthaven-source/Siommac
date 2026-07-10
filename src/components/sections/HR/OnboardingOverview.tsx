@@ -13,7 +13,11 @@
 
 import { type VNode } from 'preact';
 import { useEffect, useMemo, useState } from 'preact/hooks';
-import { TableSkeleton } from '@ui';
+import {
+  TableSkeleton,
+  TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns,
+  type AdvTab,
+} from '@ui';
 import { can } from '@lib/permissions';
 import { useOnboardingCases, useOnboardingPackages } from '@api/hr/onboarding';
 import type {
@@ -47,129 +51,18 @@ function pageWindow(cur: number, total: number): (number | '…')[] {
   return out;
 }
 
-// ── advanced filter (mirrors the Employee Master tabbed advanced filter) ─────────
-function toggleVal(arr: string[], v: string): string[] {
-  return arr.includes(v) ? arr.filter(x => x !== v) : [...arr, v];
-}
-const OB_ADV_TABS = ['Package', 'Worker Type', 'Status'] as const;
-type ObAdvTab = typeof OB_ADV_TABS[number];
-const DUE_OPTS:   { v: DueState;        label: string }[] = [
-  { v: 'overdue', label: 'Overdue' }, { v: 'due_today', label: 'Due Today' }, { v: 'due_this_week', label: 'Due This Week' },
-];
-const BLOCK_OPTS: { v: BlockingState;   label: string }[] = [
-  { v: 'blocked', label: 'Blocked' }, { v: 'not_blocked', label: 'Not Blocked' },
-];
-const READY_OPTS: { v: ReadinessState;  label: string }[] = [
-  { v: 'ready', label: 'Ready for Activation' }, { v: 'not_ready', label: 'Not Ready' },
-];
-
-interface ObAdvProps {
-  packages: { key: string; label: string }[];
-  workerTypeOptions: string[];
-  pkgKeys: string[]; onPkg: (v: string[]) => void;
-  workerTypes: string[]; onWorker: (v: string[]) => void;
-  dueState: DueState; onDue: (v: DueState) => void;
-  blockingState: BlockingState; onBlocking: (v: BlockingState) => void;
-  readinessState: ReadinessState; onReadiness: (v: ReadinessState) => void;
-  onReset: () => void;
-}
-
-function ObAdvancedFilters(p: ObAdvProps): VNode {
-  const [open, setOpen] = useState(false);
-  const [tab, setTab] = useState<ObAdvTab>('Package');
-  const count = p.pkgKeys.length + p.workerTypes.length
-    + (p.dueState !== 'all' ? 1 : 0) + (p.blockingState !== 'all' ? 1 : 0) + (p.readinessState !== 'all' ? 1 : 0);
-  const section = (title: string, sel: string, body: VNode): VNode => (
-    <div class="advanced-section">
-      <div class="advanced-section-title"><strong>{title}</strong><span>{sel}</span></div>
-      <div class="compact-checks">{body}</div>
-    </div>
-  );
-  const checkRow = (label: string, active: boolean, onClick: () => void): VNode => (
-    <button type="button" class={`check-row ${active ? 'active' : ''}`} onClick={e => { e.stopPropagation(); onClick(); }}>
-      <span class="check-box">{active ? '✓' : ''}</span><span>{label}</span>
-    </button>
-  );
-  return (
-    <div class="dropdown-wrap" onClick={e => e.stopPropagation()}>
-      <button type="button" class="advanced-filter-btn" onClick={() => setOpen(o => !o)}>
-        <span class="left">
-          <span class="sliders">≡</span>
-          <span><small>Advanced</small><strong>{count ? `${count} filters active` : 'Advanced filters'}</strong></span>
-        </span>
-        <span class="adv-right">
-          {count ? <span class="advanced-count">{count}</span> : null}
-          <span class="adv-caret"><i class="fas fa-chevron-down" aria-hidden="true" /></span>
-        </span>
-      </button>
-      {open && (
-        <>
-          <div class="onb-adv-overlay" onClick={() => setOpen(false)} />
-          <div class="dropdown-menu advanced-menu right" onClick={e => e.stopPropagation()}>
-            <div class="dropdown-head"><strong>Advanced Filters</strong><span>Filters backed by real onboarding case data.</span></div>
-            <div class="advanced-panel tabbed">
-              <div class="advanced-tabs">
-                {OB_ADV_TABS.map(name => (
-                  <button type="button" class={`advanced-tab ${tab === name ? 'active' : ''}`} onClick={() => setTab(name)}>{name}</button>
-                ))}
-              </div>
-              <div class="advanced-tab-body">
-                {tab === 'Package' && (
-                  <div>
-                    <div class="advanced-tab-title">
-                      <div><strong>Package filters</strong><span>Filter by onboarding package.</span></div>
-                      <span class="setting-pill">Multi-select</span>
-                    </div>
-                    <div class="filter-tab-grid">
-                      {section('Package', p.pkgKeys.length ? `${p.pkgKeys.length} selected` : 'All',
-                        <>{p.packages.length
-                          ? p.packages.map(pk => checkRow(pk.label, p.pkgKeys.includes(pk.key), () => p.onPkg(toggleVal(p.pkgKeys, pk.key))))
-                          : <div class="em-empty">No packages</div>}</>)}
-                    </div>
-                  </div>
-                )}
-                {tab === 'Worker Type' && (
-                  <div>
-                    <div class="advanced-tab-title">
-                      <div><strong>Worker type filters</strong><span>Filter by worker / employment type.</span></div>
-                      <span class="setting-pill">Multi-select</span>
-                    </div>
-                    <div class="filter-tab-grid">
-                      {section('Worker Type', p.workerTypes.length ? `${p.workerTypes.length} selected` : 'All',
-                        <>{p.workerTypeOptions.length
-                          ? p.workerTypeOptions.map(w => checkRow(humanize(w), p.workerTypes.includes(w), () => p.onWorker(toggleVal(p.workerTypes, w))))
-                          : <div class="em-empty">No worker types</div>}</>)}
-                    </div>
-                  </div>
-                )}
-                {tab === 'Status' && (
-                  <div>
-                    <div class="advanced-tab-title">
-                      <div><strong>Status filters</strong><span>Filter by due, blocking and readiness state.</span></div>
-                      <span class="setting-pill">Single-select</span>
-                    </div>
-                    <div class="filter-tab-grid">
-                      {section('Due', p.dueState !== 'all' ? '1' : 'All',
-                        <>{DUE_OPTS.map(o => checkRow(o.label, p.dueState === o.v, () => p.onDue(p.dueState === o.v ? 'all' : o.v)))}</>)}
-                      {section('Blocking', p.blockingState !== 'all' ? '1' : 'All',
-                        <>{BLOCK_OPTS.map(o => checkRow(o.label, p.blockingState === o.v, () => p.onBlocking(p.blockingState === o.v ? 'all' : o.v)))}</>)}
-                      {section('Readiness', p.readinessState !== 'all' ? '1' : 'All',
-                        <>{READY_OPTS.map(o => checkRow(o.label, p.readinessState === o.v, () => p.onReadiness(p.readinessState === o.v ? 'all' : o.v)))}</>)}
-                    </div>
-                  </div>
-                )}
-              </div>
-              <div class="advanced-footer">
-                <button class="secondary-btn" type="button" onClick={p.onReset}>Reset Advanced</button>
-                <button class="primary-btn" type="button" onClick={() => setOpen(false)}>Apply Filters</button>
-              </div>
-            </div>
-          </div>
-        </>
-      )}
-    </div>
-  );
-}
+// Label maps for the single-select advanced-filter sections (due / blocking / readiness).
+// The AdvancedFilter checklist section is multi-select by default, so these sections use a
+// "take the last item" onChange handler to behave like radio buttons.
+const DUE_LABEL: Record<string, string> = {
+  overdue: 'Overdue', due_today: 'Due Today', due_this_week: 'Due This Week',
+};
+const BLOCK_LABEL: Record<string, string> = {
+  blocked: 'Blocked', not_blocked: 'Not Blocked',
+};
+const READY_LABEL: Record<string, string> = {
+  ready: 'Ready for Activation', not_ready: 'Not Ready',
+};
 
 // Full-page drill-in surfaces under HR ▸ Onboarding. Case Detail and Package Detail
 // carry their own data state (selectedCase / openPackageKey) on top of this.
@@ -206,9 +99,12 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
     window.addEventListener('siomac:hr-onboarding-open-case', onOpen);
     return () => window.removeEventListener('siomac:hr-onboarding-open-case', onOpen);
   }, []);
+
   // Cases table state (the page-local widget closes over these).
   const [query, setQuery] = useState('');
-  const [status, setStatus] = useState<OnboardingCaseStatus | ''>('');
+  // Status is now multi-select (mirrors Employee Master pattern) — the FilterDropdown
+  // manages a string[] and the query maps it to statuses: string[] | undefined.
+  const [status, setStatus] = useState<string[]>([]);
   const [page, setPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   // Advanced filter state (all backend-honoured: packageKeys/workerTypes/due/blocking/readiness).
@@ -217,13 +113,19 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
   const [dueState, setDueState] = useState<DueState>('all');
   const [blockingState, setBlockingState] = useState<BlockingState>('all');
   const [readinessState, setReadinessState] = useState<ReadinessState>('all');
+
+  // One dropdown open at a time — shared with FilterDropdown and AdvancedFilter.
+  const { openId, setOpenId } = useFilterDropdowns();
+
   // Setter wrappers reset to page 1 so the user never lands on an out-of-range page.
   const setPkg     = (v: string[]) => { setPkgKeys(v); setPage(1); };
   const setWorker  = (v: string[]) => { setWorkerTypes(v); setPage(1); };
   const setDue     = (v: DueState) => { setDueState(v); setPage(1); };
   const setBlock   = (v: BlockingState) => { setBlockingState(v); setPage(1); };
   const setReady   = (v: ReadinessState) => { setReadinessState(v); setPage(1); };
-  const resetAdvanced = () => { setPkgKeys([]); setWorkerTypes([]); setDueState('all'); setBlockingState('all'); setReadinessState('all'); setPage(1); };
+  const resetAdvanced = (): void => {
+    setPkgKeys([]); setWorkerTypes([]); setDueState('all'); setBlockingState('all'); setReadinessState('all'); setPage(1);
+  };
 
   const pkgsQ = useOnboardingPackages();
   const packages = useMemo(() => (pkgsQ.data ?? []).map(p => ({ key: p.key, label: p.label })), [pkgsQ.data]);
@@ -234,7 +136,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
 
   const casesQ = useOnboardingCases({
     query: query.trim() || undefined,
-    statuses: status ? [status] : undefined,
+    statuses: status.length ? (status as OnboardingCaseStatus[]) : undefined,
     packageKeys: pkgKeys.length ? pkgKeys : undefined,
     workerTypes: workerTypes.length ? workerTypes : undefined,
     dueState: dueState !== 'all' ? dueState : undefined,
@@ -317,38 +219,64 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
     return <StartOnboardingWizard onBack={() => setSurface('overview')} />;
   }
 
+  // ── Advanced-filter tabs (Package / Worker Type / Status) ──────────────────────
+  // The Status tab's 3 sections (due / blocking / readiness) use single-select semantics:
+  // onChange takes the LAST item in the toggled array, or 'all' if cleared.
+  const advTabs: AdvTab[] = [
+    { name: 'Package', blurb: 'Filter by onboarding package.', sections: [
+      { type: 'checklist', title: 'Package',
+        options: packages.map(p => p.key), selected: pkgKeys,
+        onChange: setPkg, labelFn: k => packages.find(p => p.key === k)?.label ?? k },
+    ] },
+    { name: 'Worker Type', blurb: 'Filter by worker / employment type.', sections: [
+      { type: 'checklist', title: 'Worker Type',
+        options: workerTypeOptions, selected: workerTypes,
+        onChange: setWorker, labelFn: humanize },
+    ] },
+    { name: 'Status', blurb: 'Filter by due, blocking and readiness state.', sections: [
+      { type: 'checklist', title: 'Due',
+        options: ['overdue', 'due_today', 'due_this_week'],
+        selected: dueState !== 'all' ? [dueState] : [],
+        onChange: v => setDue((v.length ? v[v.length - 1]! : 'all') as DueState),
+        labelFn: v => DUE_LABEL[v] ?? v },
+      { type: 'checklist', title: 'Blocking',
+        options: ['blocked', 'not_blocked'],
+        selected: blockingState !== 'all' ? [blockingState] : [],
+        onChange: v => setBlock((v.length ? v[v.length - 1]! : 'all') as BlockingState),
+        labelFn: v => BLOCK_LABEL[v] ?? v },
+      { type: 'checklist', title: 'Readiness',
+        options: ['ready', 'not_ready'],
+        selected: readinessState !== 'all' ? [readinessState] : [],
+        onChange: v => setReady((v.length ? v[v.length - 1]! : 'all') as ReadinessState),
+        labelFn: v => READY_LABEL[v] ?? v },
+    ] },
+  ];
+
+  // Active-filter chips — status (basic filter) + all advanced filter selections.
+  const allChips: { label: string; onRemove: () => void }[] = [
+    ...status.map(s => ({ label: caseStatusPill(s as OnboardingCaseStatus).label, onRemove: () => { setStatus(status.filter(x => x !== s)); setPage(1); } })),
+    ...pkgKeys.map(k => ({ label: packages.find(p => p.key === k)?.label ?? k, onRemove: () => setPkg(pkgKeys.filter(x => x !== k)) })),
+    ...workerTypes.map(w => ({ label: humanize(w), onRemove: () => setWorker(workerTypes.filter(x => x !== w)) })),
+    ...(dueState !== 'all' ? [{ label: DUE_LABEL[dueState] ?? dueState, onRemove: () => setDue('all') }] : []),
+    ...(blockingState !== 'all' ? [{ label: BLOCK_LABEL[blockingState] ?? blockingState, onRemove: () => setBlock('all') }] : []),
+    ...(readinessState !== 'all' ? [{ label: READY_LABEL[readinessState] ?? readinessState, onRemove: () => setReady('all') }] : []),
+  ];
+
   // Cases table — a PAGE-LOCAL widget. Wrapped in the `.hr-emp-master` scope so it reuses the
-  // Employee Master register styling verbatim (toolbar, table, pagination, advanced-filter dropdown).
-  const renderCases = (): VNode => {
-    const advChips: { label: string; onRemove: () => void }[] = [
-      ...pkgKeys.map(k => ({ label: packages.find(p => p.key === k)?.label ?? k, onRemove: () => setPkg(pkgKeys.filter(x => x !== k)) })),
-      ...workerTypes.map(w => ({ label: humanize(w), onRemove: () => setWorker(workerTypes.filter(x => x !== w)) })),
-      ...(dueState !== 'all' ? [{ label: DUE_OPTS.find(o => o.v === dueState)!.label, onRemove: () => setDue('all') }] : []),
-      ...(blockingState !== 'all' ? [{ label: BLOCK_OPTS.find(o => o.v === blockingState)!.label, onRemove: () => setBlock('all') }] : []),
-      ...(readinessState !== 'all' ? [{ label: READY_OPTS.find(o => o.v === readinessState)!.label, onRemove: () => setReady('all') }] : []),
-    ];
-    return (
+  // Employee Master register styling verbatim (toolbar, table, pagination).
+  const renderCases = (): VNode => (
     <div class="hr-emp-master" style={{ display: 'contents' }}>
     <div class="table-card">
       <div class="employee-toolbar compact">
-        <div class="table-search">
-          <span class="magnify">⌕</span>
-          <input type="search" placeholder="Search employee, case no, package…"
-            value={query} onInput={e => { setQuery((e.target as HTMLInputElement).value); setPage(1); }} />
-        </div>
-        <select class="onb-status-select" value={status} onChange={e => { setStatus((e.target as HTMLSelectElement).value as OnboardingCaseStatus | ''); setPage(1); }}>
-          <option value="">All statuses</option>
-          {CASE_STATUS_OPTIONS.map(s => <option key={s} value={s}>{caseStatusPill(s).label}</option>)}
-        </select>
-        <ObAdvancedFilters
-          packages={packages} workerTypeOptions={workerTypeOptions}
-          pkgKeys={pkgKeys} onPkg={setPkg}
-          workerTypes={workerTypes} onWorker={setWorker}
-          dueState={dueState} onDue={setDue}
-          blockingState={blockingState} onBlocking={setBlock}
-          readinessState={readinessState} onReadiness={setReady}
-          onReset={resetAdvanced}
-        />
+        <TableSearch value={query} onChange={v => { setQuery(v); setPage(1); }}
+          placeholder="Search employee, case no, package…" ariaLabel="Search onboarding cases" />
+        <FilterDropdown id="onb-status" label="Status"
+          options={CASE_STATUS_OPTIONS as string[]} selected={status}
+          onChange={v => { setStatus(v); setPage(1); }}
+          openId={openId} setOpenId={setOpenId}
+          labelFn={s => caseStatusPill(s as OnboardingCaseStatus).label} />
+        <AdvancedFilter id="onb-advanced" tabs={advTabs} onReset={resetAdvanced}
+          openId={openId} setOpenId={setOpenId} />
         <button type="button" class="hse-btn" onClick={() => setSurface('tasks')}>
           <i class="fas fa-list-check" /> Tasks
         </button>
@@ -373,13 +301,8 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
         </button>
       </div>
 
-      {advChips.length ? (
-        <div class="active-filter-bar">
-          <strong>Active filters:</strong>
-          {advChips.map(c => <button class="chip-btn" type="button" onClick={() => c.onRemove()}>{c.label} ×</button>)}
-          <button class="ghost-btn" type="button" onClick={resetAdvanced}>Clear all</button>
-        </div>
-      ) : null}
+      <ActiveFilters chips={allChips}
+        onClearAll={allChips.length ? () => { setStatus([]); resetAdvanced(); } : undefined} />
 
       <div class="table-scroll">
         <table>
@@ -445,8 +368,8 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
       </div>
     </div>
     </div>
-    );
-  };
+  );
+
   // Command Center's generic surface names map onto this page's surface enum; 'cases' and
   // 'activity' have no dedicated workspace — the cases table below the Command Center already
   // shows cases, so those just stay on the overview.

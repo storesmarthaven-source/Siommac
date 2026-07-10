@@ -39,9 +39,8 @@
 .hr-emp-master .primary-btn { height: 42px; border: none; padding: 0 16px; border-radius: 8px; color: #fff; font-weight: var(--font-weight-semibold, 600); background: linear-gradient(180deg, #0b65f0 0%, #0751d4 100%); display: inline-flex; align-items: center; gap: 10px; white-space: nowrap; }
 .hr-emp-master .primary-btn .caret { font-size: 13px; opacity: .9; margin-left: 4px; }
 .hr-emp-master .secondary-btn { height: 40px; border: 1px solid var(--line-dark); background: #fff; border-radius: 8px; color: #1e293b; font-weight: var(--font-weight-semibold, 600); font-size: 13px; padding: 0 14px; }
-.hr-emp-master .ghost-btn { height: 38px; border: 1px solid var(--line-dark); border-radius: 9px; background: #fff; color: #334155; padding: 0 12px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); display: inline-flex; align-items: center; gap: 7px; }
-.hr-emp-master .secondary-btn:hover, .hr-emp-master .ghost-btn:hover { background: #f8fbff; }
-.hr-emp-master .advanced-filter-btn:hover { background: #23355c; }
+/* ghost-btn / advanced-filter-btn:hover — removed (OnboardingOverview migrated to @ui FilterBar) */
+.hr-emp-master .secondary-btn:hover { background: #f8fbff; }
 
 /* ── KPI stat cards (v34 one-line) ────────────────────────────────────────── */
 .hr-emp-master .em-stat-grid { display: grid; grid-template-columns: 1fr; gap: 14px; margin: 0 0 18px; align-items: stretch; }
@@ -104,25 +103,16 @@
 .hr-emp-master .employee-toolbar { background: #fbfdff; border: 0; border-bottom: 1px solid var(--line); border-radius: 0; padding: 12px 14px; display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0; position: relative; }
 .hr-emp-master .employee-toolbar > .dropdown-wrap { flex: 0 1 auto; min-width: 130px; max-width: 220px; }
 .hr-emp-master .employee-toolbar > .dropdown-wrap:last-child { flex: 0 0 auto; min-width: 0; max-width: none; }
-.hr-emp-master .table-search { position: relative; flex: 1 1 240px; min-width: 160px; }
-.hr-emp-master .table-search .magnify { position: absolute; left: 14px; top: 12px; color: #718096; font-size: 15px; pointer-events: none; }
-.hr-emp-master .table-search input { width: 100%; height: 46px; border: 1px solid var(--line-dark); border-radius: 11px; padding: 0 14px 0 40px; background: #fff; outline: none; color: #334155; }
+/* table-search / .magnify — removed (OnboardingOverview migrated to @ui TableSearch) */
 
 .hr-emp-master .dropdown-wrap { position: relative; min-width: 0; }
-/* .multi-select* (basic-filter dropdown) migrated to the shared @ui/table FilterDropdown
-   (.tf-select). The rest of this toolbar CSS is still used by OnboardingOverview until it
-   is migrated too. */
+/* Toolbar filter components (search, status, advanced) fully migrated to @ui/table FilterBar.
+   .dropdown-wrap / .dropdown-menu / .dropdown-list / .menu-row / .menu-ico remain for the
+   row kebab ⋮ menu and the "New Employee" split-button in EmployeeMaster. */
 
-.hr-emp-master .advanced-filter-btn { height: 46px; width: 100%; border: 1px solid #fff; background: #1b2d54; color: #fff; border-radius: 11px; padding: 0 12px; display: flex; align-items: center; justify-content: space-between; gap: 12px; font-weight: var(--font-weight-bold, 700); }
-.hr-emp-master .advanced-filter-btn .left { display: flex; align-items: center; gap: 9px; min-width: 0; }
-.hr-emp-master .advanced-filter-btn small { display: block; color: rgba(255,255,255,.7); font-size: 10px; font-weight: var(--font-weight-bold, 700); text-transform: uppercase; letter-spacing: .04em; line-height: 1; margin-bottom: 3px; text-align: left; }
-.hr-emp-master .advanced-filter-btn strong { display: block; color: #fff; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.hr-emp-master .advanced-filter-btn .sliders { width: 28px; height: 28px; border-radius: 8px; color: #fff; display: grid; place-items: center; flex: none; }
-.hr-emp-master .advanced-filter-btn .adv-right { display: inline-flex; align-items: center; gap: 8px; flex: none; }
-.hr-emp-master .advanced-filter-btn .adv-caret { width: 25px; height: 25px; border-radius: 8px; background: #647394; color: #fff; display: grid; place-items: center; font-size: 11px; flex: none; }
-/* New Employee button matches the advanced-filter height (46px) in the toolbar */
+/* advanced-filter-btn / advanced-count — removed (OnboardingOverview migrated to @ui AdvancedFilter) */
+/* Action buttons in the toolbar match the @ui filter component heights (46px). */
 .hr-emp-master .employee-toolbar .hse-btn { height: 46px; border-radius: 11px; }
-.hr-emp-master .advanced-count { height: 20px; min-width: 20px; padding: 0 6px; border-radius: 999px; background: #0757df; color: #fff; display: grid; place-items: center; font-size: 11px; font-weight: var(--font-weight-bold, 700); }
 
 /* ── Dropdown menus ───────────────────────────────────────────────────────── */
 /* `display: block` is REQUIRED — `.dropdown-menu` collides with Bootstrap's
@@ -130,45 +120,22 @@
    explicit display the menu inherits that and renders invisible. */
 .hr-emp-master .dropdown-menu { display: block; position: absolute; top: calc(100% + 8px); left: 0; z-index: 60; min-width: 236px; max-width: 320px; background: #fff; border: 1px solid var(--line-dark); border-radius: 12px; overflow: hidden; box-shadow: 0 18px 40px rgba(15, 23, 42, .12); }
 .hr-emp-master .dropdown-menu.right { left: auto; right: 0; }
-.hr-emp-master .dropdown-head { padding: 12px 12px 8px; border-bottom: 1px solid var(--line); }
-.hr-emp-master .dropdown-head strong { display: block; font-size: 13px; color: #0f172a; }
-.hr-emp-master .dropdown-head span { display: block; font-size: 11px; color: #64748b; margin-top: 3px; }
+/* dropdown-head — removed (only used by ObAdvancedFilters, replaced by @ui AdvancedFilter) */
 .hr-emp-master .dropdown-list { max-height: 278px; overflow: auto; padding: 8px; }
-.hr-emp-master .check-row, .hr-emp-master .menu-row { width: 100%; border: 0; background: #fff; min-height: 36px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; text-align: left; color: #1e293b; font-size: 13px; }
-.hr-emp-master .check-row:hover, .hr-emp-master .menu-row:hover { background: #f4f8ff; }
-.hr-emp-master .check-box { width: 17px; height: 17px; border-radius: 4px; border: 1px solid #b9c6d8; display: grid; place-items: center; flex: none; color: #fff; font-size: 12px; }
-.hr-emp-master .check-row.active .check-box { background: #0757df; border-color: #0757df; }
+/* check-row / check-box — removed (only used by ObAdvancedFilters; @ui FilterBar has .tf-check) */
+.hr-emp-master .menu-row { width: 100%; border: 0; background: #fff; min-height: 36px; display: flex; align-items: center; gap: 10px; padding: 8px 9px; border-radius: 8px; text-align: left; color: #1e293b; font-size: 13px; }
+.hr-emp-master .menu-row:hover { background: #f4f8ff; }
 .hr-emp-master .menu-row .menu-ico { width: 25px; height: 25px; border-radius: 7px; background: #f1f5f9; display: grid; place-items: center; flex: none; color: #334155; font-size: 12px; }
 .hr-emp-master .menu-row.danger { color: #b91c1c; }
 .hr-emp-master .menu-row.danger .menu-ico { background: #fee2e2; color: #dc2626; }
-.hr-emp-master .dropdown-foot { border-top: 1px solid var(--line); padding: 9px; display: flex; justify-content: space-between; gap: 8px; }
-.hr-emp-master .dropdown-foot button { height: 32px; border-radius: 8px; border: 1px solid var(--line-dark); background: #fff; padding: 0 11px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
-.hr-emp-master .dropdown-foot .apply { background: #0757df; border-color: #0757df; color: #fff; }
+/* dropdown-foot — removed (unused: was the legacy multi-select dropdown footer) */
 
-/* Advanced filters — tabbed panel */
-.hr-emp-master .dropdown-menu.advanced-menu { width: min(780px, calc(100vw - 96px)); max-width: none; padding: 0; border-radius: 16px; }
-.hr-emp-master .advanced-panel.tabbed { padding: 0; display: grid; grid-template-columns: 178px minmax(0, 1fr); gap: 0; min-height: 360px; background: #fff; }
-.hr-emp-master .advanced-tabs { border-right: 1px solid var(--line); background: #f8fbff; padding: 12px; display: grid; align-content: start; gap: 8px; }
-.hr-emp-master .advanced-tab { width: 100%; min-height: 42px; border: 0; background: transparent; color: #475569; border-radius: 10px; padding: 0 12px; text-align: left; font-size: 12px; font-weight: var(--font-weight-bold, 700); display: flex; align-items: center; justify-content: space-between; }
-.hr-emp-master .advanced-tab:hover { background: #edf5ff; color: #0f172a; }
-.hr-emp-master .advanced-tab.active { background: #08345f; color: #fff; }
-.hr-emp-master .advanced-tab-body { padding: 16px; min-width: 0; overflow: auto; max-height: 360px; }
-.hr-emp-master .advanced-tab-title { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding-bottom: 12px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
-.hr-emp-master .advanced-tab-title strong { display: block; color: #0f172a; font-size: 15px; margin-bottom: 4px; }
-.hr-emp-master .advanced-tab-title span:not(.setting-pill) { display: block; color: #64748b; font-size: 12px; line-height: 1.45; }
-.hr-emp-master .filter-tab-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
-.hr-emp-master .advanced-section-title { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 8px; padding-bottom: 7px; border-bottom: 1px solid #e8eef7; }
-.hr-emp-master .advanced-section-title strong { font-size: 12px; color: #0f172a; }
-.hr-emp-master .advanced-section-title span { color: #64748b; font-size: 11px; }
-.hr-emp-master .compact-checks { display: grid; gap: 5px; max-height: 188px; overflow: auto; padding-right: 3px; }
-.hr-emp-master .compact-checks .check-row { min-height: 31px; padding: 6px 7px; font-size: 12px; }
-.hr-emp-master .advanced-footer { grid-column: 1 / -1; display: flex; align-items: center; justify-content: space-between; gap: 10px; border-top: 1px solid var(--line); padding: 12px 16px; background: #fbfdff; }
-.hr-emp-master .setting-pill { display: inline-flex; align-items: center; justify-content: center; min-height: 22px; border: 1px solid #dbeafe; background: #eff6ff; color: #0757df; border-radius: 999px; padding: 0 9px; font-size: 10px; font-weight: var(--font-weight-bold, 700); white-space: nowrap; }
+/* Advanced-filter tabbed panel (advanced-menu, advanced-panel, advanced-tabs, advanced-tab*,
+   filter-tab-grid, advanced-section-title, compact-checks, advanced-footer, setting-pill) —
+   removed: OnboardingOverview now uses @ui AdvancedFilter (styles in src/ui/table/filterBar.css). */
 
-/* Active filter chips */
-.hr-emp-master .active-filter-bar { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin: 0; padding: 10px 14px; border-bottom: 1px solid var(--line); }
-.hr-emp-master .active-filter-bar strong { font-size: 12px; color: #475569; margin-right: 2px; }
-.hr-emp-master .chip-btn { height: 28px; border: 1px solid #cfe0ff; border-radius: 999px; background: #f4f8ff; color: #0757df; padding: 0 10px; font-size: 12px; font-weight: var(--font-weight-semibold, 600); }
+/* Active-filter chips (active-filter-bar, chip-btn) — removed: @ui ActiveFilters
+   (.tf-active / .tf-chip) replaces them. */
 
 /* ── Register table ───────────────────────────────────────────────────────── */
 /* Register table widget — fills its gridstack cell; toolbar + pagination fixed,
@@ -404,10 +371,11 @@
 
 /* ─── Onboarding Overview cases table ──────────────────────────────────────────
    The cases table is wrapped in `.hr-emp-master` (display:contents) so it reuses the
-   Employee Master register styling verbatim — card, toolbar, table, pills, pagination,
-   AND the tabbed advanced-filter dropdown. Only the column count differs (7, not 10),
-   so we override just the widths / min-width (higher specificity wins) and add the two
-   onboarding-only controls (status select, advanced-filter overlay). */
+   Employee Master register styling verbatim — card, toolbar, table, pills, pagination.
+   Only the column count differs (7, not 10), so we override just the widths / min-width.
+   The toolbar filter controls (search, status, advanced) now use the shared @ui FilterBar
+   components (styles in src/ui/table/filterBar.css).
+   onb-status-select and onb-adv-overlay removed — replaced by @ui components. */
 .hr-onboarding-overview .table-card table { min-width: 820px; }
 .hr-onboarding-overview .table-card table th:nth-child(1) { width: 26%; }
 .hr-onboarding-overview .table-card table th:nth-child(2) { width: 16%; }
@@ -417,11 +385,5 @@
 .hr-onboarding-overview .table-card table th:nth-child(6),
 .hr-onboarding-overview .table-card table td:nth-child(6) { width: 8%; text-align: center; }
 .hr-onboarding-overview .table-card table th:nth-child(7) { width: 8%; }
-
-/* status select — matches the search-pill height/radius */
-.hr-onboarding-overview .onb-status-select { height: 46px; border: 1px solid var(--line-dark, #d8e0ec); border-radius: 11px; padding: 0 32px 0 14px; background: #fff; color: #334155; font-weight: var(--font-weight-semibold, 600); }
-
-/* advanced-filter click-away overlay (sits below the menu, above the page) */
-.hr-onboarding-overview .onb-adv-overlay { position: fixed; inset: 0; z-index: 59; }
 
 }
