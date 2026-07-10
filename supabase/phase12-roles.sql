@@ -41,7 +41,8 @@ CREATE TABLE IF NOT EXISTS public.role_permissions (
   role_name  text NOT NULL REFERENCES public.roles(name) ON DELETE CASCADE ON UPDATE CASCADE,
   permission text NOT NULL,
   CONSTRAINT role_permissions_pkey PRIMARY KEY (role_name, permission),
-  CONSTRAINT role_permissions_key_format CHECK (permission ~ '^[a-z_]+\.[a-z_]+$')
+  -- 2+ dot-separated [a-z_] segments (the two-segment-only regex rejected 3+ segment keys).
+  CONSTRAINT role_permissions_key_format CHECK (permission ~ '^[a-z_]+(\.[a-z_]+)+$')
 );
 CREATE INDEX IF NOT EXISTS idx_role_permissions_role ON public.role_permissions (role_name);
 

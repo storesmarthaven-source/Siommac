@@ -18,8 +18,11 @@ CREATE TABLE IF NOT EXISTS public.user_permissions (
   set_at      timestamptz NOT NULL DEFAULT now(),
 
   CONSTRAINT user_permissions_pkey PRIMARY KEY (user_id, permission),
+  -- Catalogue keys are 2+ dot-separated [a-z_] segments (e.g. 'settings.view',
+  -- 'finance.statutory.approve', 'finance.payroll.nis.verify'). The original
+  -- two-segment-only regex rejected every 3+ segment key.
   CONSTRAINT user_permissions_key_format
-    CHECK (permission ~ '^[a-z_]+\.[a-z_]+$')
+    CHECK (permission ~ '^[a-z_]+(\.[a-z_]+)+$')
 );
 
 CREATE INDEX IF NOT EXISTS idx_user_permissions_user_id ON public.user_permissions(user_id);
