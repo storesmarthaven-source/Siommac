@@ -698,25 +698,25 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
 
   // ── Platform Workflows ────────────────────────────────────────────────────────
   'workflow.submit': {
-    module: 'Workflows', group: 'Workflows',
+    module: 'Workflow', group: 'Workflows',
     label: 'Submit Workflow',
     description: 'Submit items through platform-level approval workflows.',
     risk: 'medium',
   },
   'workflow.approve': {
-    module: 'Workflows', group: 'Workflows',
+    module: 'Workflow', group: 'Workflows',
     label: 'Approve Workflow',
     description: 'Approve or reject workflow tasks assigned to you.',
     risk: 'high',
   },
   'workflow.audit': {
-    module: 'Workflows', group: 'Workflows',
+    module: 'Workflow', group: 'Workflows',
     label: 'Audit Workflows',
     description: 'View the full workflow history and approval audit trail.',
     risk: 'high',
   },
   'workflow.view': {
-    module: 'Workflows', group: 'Workflows',
+    module: 'Workflow', group: 'Workflows',
     label: 'View Workflows',
     description: 'View workflow tasks and their current status.',
     risk: 'low',
@@ -850,27 +850,27 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
 
   // ── Account Security ──────────────────────────────────────────────────────────
   'auth.security.view': {
-    module: 'auth', group: 'Account Security',
+    module: 'Auth', group: 'Account Security',
     label: 'View User Security Status',
     description: "View another user's MFA enrollment, registered passkeys, and trusted device count.",
     risk: 'high',
   },
   'auth.security.manage_policy': {
-    module: 'auth', group: 'Account Security',
+    module: 'Auth', group: 'Account Security',
     label: 'Manage Security Policy',
     description: 'Update organisation-wide account security policy (MFA requirements, trusted device TTLs, passkey rules).',
     risk: 'critical',
     requiresSuperAdmin: true,
   },
   'auth.passkeys.admin_revoke': {
-    module: 'auth', group: 'Account Security',
+    module: 'Auth', group: 'Account Security',
     label: 'Admin Revoke Passkeys',
     description: 'Revoke all registered passkeys for another user (requires step-up authentication).',
     risk: 'critical',
     requiresSuperAdmin: true,
   },
   'auth.trusted_devices.admin_revoke': {
-    module: 'auth', group: 'Account Security',
+    module: 'Auth', group: 'Account Security',
     label: 'Admin Revoke Trusted Devices',
     description: 'Revoke all trusted devices for another user, forcing re-authentication on their next login (requires step-up).',
     risk: 'critical',
