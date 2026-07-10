@@ -156,64 +156,38 @@ export interface StatutoryDashboardProps {
 
 // ── SVG helpers ────────────────────────────────────────────────────────────────
 
-/** Semicircle gauge — gradient track + gradient colored fill.
- *  The fill sweeps LEFT→RIGHT from 0 to the value using a Web Animations stroke-dashoffset
- *  tween (~700ms ease-out). Both arcs carry a linear gradient that fades toward the ends so
- *  the arc reads as polished at any fill level; at 100% the whole arc is fully saturated.
- *  `memo` ensures the animation only re-triggers when `pct` / `color` genuinely change —
- *  unrelated parent re-renders (tab switches, board edits, etc.) don't replay it. */
-const HalfGauge = memo(function HalfGauge({ pct, color }: { pct: number; color: string }): VNode {
-  const p = Math.max(0, Math.min(100, pct));
-  const rest = 100 - p; // dashoffset that reveals exactly the first p units (left→right)
-  const ARC = 'M17 62 A42 42 0 0 1 101 62';
-  const fillRef = useRef<SVGPathElement>(null);
-  // Stable unique IDs for gradient <defs> — generated once on first mount; ignored arg
-  // on subsequent renders so the ref's .current always has the original value.
-  const gid = useRef(`sdb-g${Math.floor(Math.random() * 1e6)}`).current;
-
-  useEffect(() => {
-    const el = fillRef.current;
-    if (!el) return;
-    const reduce = typeof window !== 'undefined' && window.matchMedia
-      && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { el.style.strokeDashoffset = String(rest); return; } // jump to final, no motion
-    // Always sweep LEFT→RIGHT from empty (offset 100) to the value — the static attribute
-    // stays at 100 so there's no flash of the filled arc before the animation starts.
-    const anim = el.animate(
-      [{ strokeDashoffset: 100 }, { strokeDashoffset: rest }],
-      { duration: 700, easing: 'cubic-bezier(0.16, 1, 0.3, 1)', delay: 80, fill: 'forwards' },
+/** Segmented semicircle gauge — a fan of rounded pill segments (like a speedometer tick
+ *  ring). The first `value%` of the segments light up in `color` (a subtle brighten across
+ *  the run), the segment at the leading edge fades in proportionally, and the rest stay
+ *  grey. `value` is the live (count-up) percentage, so as the parent's number animates
+ *  0→target the segments fill in lock-step. Same footprint as the old arc (endpoints
+ *  17,62 → 101,62) so the centred value overlay is unaffected. `memo` keeps it from
+ *  replaying on unrelated parent re-renders. */
+const GAUGE_SEGMENTS = 13;
+const HalfGauge = memo(function HalfGauge({ value, color }: { value: number; color: string }): VNode {
+  const v = Math.max(0, Math.min(100, value));
+  const cx = 59, cy = 62, rIn = 31, rOut = 42;      // radial pill from rIn→rOut, rotated per segment
+  const filled = (v / 100) * GAUGE_SEGMENTS;
+  const full = Math.floor(filled);
+  const frac = filled - full;
+  const segs = [];
+  for (let i = 0; i < GAUGE_SEGMENTS; i++) {
+    const rot = -90 + i * (180 / (GAUGE_SEGMENTS - 1)); // -90° (left) → +90° (right)
+    let stroke = '#e6eaf1', op = 1;
+    if (i < full) {                                   // lit: gentle brighten toward the leading edge
+      stroke = color; op = full <= 1 ? 1 : 0.8 + 0.2 * (i / (full - 1));
+    } else if (i === full && frac > 0.04) {           // leading edge: fades in with the fraction
+      stroke = color; op = 0.28 + frac * 0.5;
+    }
+    segs.push(
+      <line key={i} x1={cx} y1={cy - rIn} x2={cx} y2={cy - rOut}
+        stroke={stroke} stroke-opacity={op} stroke-width={5.6} stroke-linecap="round"
+        transform={`rotate(${rot} ${cx} ${cy})`} />,
     );
-    return () => anim.cancel();
-  }, [rest]);
-
+  }
   return (
     <div class="sdb-gauge">
-      <svg viewBox="0 0 118 78">
-        <defs>
-          {/* Track gradient — grey that softly fades toward both arc ends. */}
-          <linearGradient id={`${gid}-t`} x1="17" y1="0" x2="101" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stopColor="#c8d4e8" stopOpacity="0.35" />
-            <stop offset="28%"  stopColor="#e9edf4" stopOpacity="1" />
-            <stop offset="72%"  stopColor="#e9edf4" stopOpacity="1" />
-            <stop offset="100%" stopColor="#c8d4e8" stopOpacity="0.35" />
-          </linearGradient>
-          {/* Fill gradient — the accent color fading toward both ends; at 100% fill it
-              reads as one continuous saturated arc with polished tapered tips. */}
-          <linearGradient id={`${gid}-f`} x1="17" y1="0" x2="101" y2="0" gradientUnits="userSpaceOnUse">
-            <stop offset="0%"   stopColor={color} stopOpacity="0.5" />
-            <stop offset="22%"  stopColor={color} stopOpacity="1" />
-            <stop offset="78%"  stopColor={color} stopOpacity="1" />
-            <stop offset="100%" stopColor={color} stopOpacity="0.55" />
-          </linearGradient>
-        </defs>
-        {/* Track arc */}
-        <path d={ARC} pathLength={100} fill="none"
-          stroke={`url(#${gid}-t)`} strokeWidth={13} strokeLinecap="round" />
-        {/* Fill arc — animates via strokeDashoffset */}
-        <path ref={fillRef} d={ARC} pathLength={100} fill="none"
-          stroke={`url(#${gid}-f)`} strokeWidth={13}
-          strokeLinecap="round" strokeDasharray="100" strokeDashoffset={100} />
-      </svg>
+      <svg viewBox="0 0 118 78">{segs}</svg>
     </div>
   );
 });
@@ -632,7 +606,7 @@ export function StatutoryDashboard({
 
       <div class="sdb-ready-score">
         <div class="sdb-gauge-wrap">
-          <HalfGauge pct={lens.pct} color={lens.color} />
+          <HalfGauge value={displayPct} color={lens.color} />
           <div class="sdb-gauge-val" style={{ color: lens.color }}>{displayPct}%</div>
         </div>
       </div>
