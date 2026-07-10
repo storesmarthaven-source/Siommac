@@ -4,7 +4,7 @@
  * Statutory Configuration dashboard — a self-contained enterprise page (its own
  * `.sdb` design system) rendered directly by StatutoryConfigOverview. Not a widget.
  *
- * Layout: movable board — summary strip · 6 KPI cards · full-width NIS rate chart ·
+ * Layout: movable board — 6 KPI cards · full-width NIS rate chart ·
  *   readiness (Config Completeness) + upcoming deadlines · then the tabbed register
  *   (Rate Versions / NIS / Components / Verify / Reports).
  *
@@ -52,7 +52,7 @@ import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
-import { fmtDate, fmtMoney, humanize } from './financeShared';
+import { fmtDate, humanize } from './financeShared';
 
 // Register chart.js tree-shakeable modules once (module-level, idempotent).
 Chart.register(LineController, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
@@ -72,7 +72,6 @@ const TABS: { key: MainTab; label: string }[] = [
 // The middle band is a movable/resizable board (per-user layout). The KPI strip,
 // the NIS contribution chart and the register table stay FIXED (never widgets).
 const PAGE_KEY = 'finance.statutory';
-const W_SUMMARY   = 'finance.statutory.summary';
 const W_KPI_ACTIVE     = 'finance.statutory.kpi.activeVersion';
 const W_KPI_DRAFTS     = 'finance.statutory.kpi.drafts';
 const W_KPI_COMPONENTS = 'finance.statutory.kpi.components';
@@ -87,7 +86,6 @@ const W_REGISTER  = 'finance.statutory.register';
 // Reverse map (widget id → source constant NAME) — powers the "Copy layout" capture
 // button, which emits ready-to-paste `defInst(...)` lines for `defaultStatutoryLayout()`.
 const WIDGET_CONST: Record<string, string> = {
-  [W_SUMMARY]: 'W_SUMMARY',
   [W_KPI_ACTIVE]: 'W_KPI_ACTIVE', [W_KPI_DRAFTS]: 'W_KPI_DRAFTS', [W_KPI_COMPONENTS]: 'W_KPI_COMPONENTS',
   [W_KPI_NIS]: 'W_KPI_NIS', [W_KPI_VERIFY]: 'W_KPI_VERIFY', [W_KPI_APPROVALS]: 'W_KPI_APPROVALS',
   [W_CHART]: 'W_CHART', [W_READY]: 'W_READY', [W_DEADLINES]: 'W_DEADLINES',
@@ -110,7 +108,7 @@ function serializeLayout(items: WidgetInstance[]): string {
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// 12-COLUMN grid. 6 compact KPI cards on the TOP row (w2 each) → thin summary strip →
+// 12-COLUMN grid. 6 compact KPI cards on the TOP row (w2 each) →
 // a row of chart (left half, w6) · Upcoming Deadlines (w3) · Config Completeness (w3) →
 // the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
 // Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
@@ -125,11 +123,10 @@ function defaultStatutoryLayout(): BoardLayout {
         defInst(W_KPI_NIS,         6,   0,  2,  6, 'compact'),
         defInst(W_KPI_VERIFY,      8,   0,  2,  6, 'compact'),
         defInst(W_KPI_APPROVALS,  10,   0,  2,  6, 'compact'),
-        defInst(W_SUMMARY,         0,   6, 12,  4, 'wide'),      // thin summary strip
-        defInst(W_CHART,           0,  10,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
-        defInst(W_DEADLINES,       6,  10,  3, 24, 'standard'),
-        defInst(W_READY,           9,  10,  3, 24, 'standard'),
-        defInst(W_REGISTER,        0,  34, 12, 40, 'hero'),      // register table
+        defInst(W_CHART,           0,   6,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
+        defInst(W_DEADLINES,       6,   6,  3, 24, 'standard'),
+        defInst(W_READY,           9,   6,  3, 24, 'standard'),
+        defInst(W_REGISTER,        0,  30, 12, 40, 'hero'),      // register table
       ],
     },
   };
@@ -282,10 +279,6 @@ export function StatutoryDashboard({
     return (): void => { cancelAnimationFrame(raf); };
   }, [lens.pct]);
 
-  // Active version's earnings classes (sorted) — powers the summary class count and
-  // the active-rate figure below.
-  const nis = useMemo(() => ({ rows: [...activeNisClasses].sort((a, b) => a.classNo - b.classNo) }), [activeNisClasses]);
-
   // ── NIS contribution-rate trend across ALL versions (rate over time) ────────
   // Real historical data — each version's headline rate (nisRatePercent, computed
   // server-side from its earnings classes), plotted by schedule year.
@@ -380,13 +373,6 @@ export function StatutoryDashboard({
     };
   }, [chartCanvas, rateTrend]);
 
-  // Active-version contribution rate derived from the data (total ÷ assumed average).
-  const nisRatePct = (() => {
-    const c = nis.rows.find(r => r.assumedAverageWeekly && r.assumedAverageWeekly > 0);
-    if (!c || !c.assumedAverageWeekly) return null;
-    return Math.round(((c.employeeWeekly + c.employerWeekly) / c.assumedAverageWeekly) * 1000) / 10;
-  })();
-
   // ── Widget board (Readiness / Upcoming Deadlines) ──
   // Per-user movable/resizable zone. Only managers/admins may customize it.
   const canEditBoard = useSessionStore(selectIsManager);
@@ -419,37 +405,6 @@ export function StatutoryDashboard({
   }
   function discardPreview(): void { setPreview(null); setLibOpen(true); }
   function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
-
-  // Full-width statutory summary bar (redesigned) — PAYE / NIS / Health Surcharge
-  // for the active version, as evenly-spread labelled segments.
-  const renderSummary = (): VNode => (
-    <div class="sdb-card sdb-sumbar sdb-wgt-fill">
-      {!activeVer ? (
-        <div class="sdb-sumbar-empty">No active statutory version — activate one to see the summary.</div>
-      ) : (
-        <>
-          <div class="sdb-sumbar-seg">
-            <i class="fa-solid fa-percent sdb-sumbar-i sdb-sumbar-i--blue" />
-            <span class="sdb-sumbar-k">PAYE</span>
-            <span class="sdb-sumbar-v">{Math.round(activeVer.payeBand1Rate * 100)}% / {Math.round(activeVer.payeBand2Rate * 100)}%</span>
-            <span class="sdb-sumbar-s">allowance {fmtMoney(activeVer.payePersonalAllowance)}</span>
-          </div>
-          <div class="sdb-sumbar-seg">
-            <i class="fa-solid fa-scale-balanced sdb-sumbar-i sdb-sumbar-i--teal" />
-            <span class="sdb-sumbar-k">NIS</span>
-            <span class="sdb-sumbar-v">{nisRatePct != null ? `${nisRatePct}%` : '—'} · {nis.rows.length} classes</span>
-            <span class="sdb-sumbar-s">{activeVer.nisMonthyCeiling ? `ceiling ${fmtMoney(activeVer.nisMonthyCeiling)}/mo` : 'no ceiling'}</span>
-          </div>
-          <div class="sdb-sumbar-seg">
-            <i class="fa-solid fa-heart-pulse sdb-sumbar-i sdb-sumbar-i--amber" />
-            <span class="sdb-sumbar-k">Health Surcharge</span>
-            <span class="sdb-sumbar-v">{fmtMoney(activeVer.hsWeeklyHigh)} / {fmtMoney(activeVer.hsWeeklyLow)}/wk</span>
-            <span class="sdb-sumbar-s">over / under {fmtMoney(activeVer.hsMonthlyThreshold)}/mo</span>
-          </div>
-        </>
-      )}
-    </div>
-  );
 
   // Rich KPI tile (onboarding-sized) — colored icon chip + uppercase caption,
   // large value, context sub-line with a status dot. `text` variant sizes the
@@ -677,13 +632,12 @@ export function StatutoryDashboard({
   );
 
   // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): compact uniform
-  // size (w2 × h7 ≈ 114px), one row, and they never move, resize, or get displaced by
+  // size (w2 × h6 ≈ 96px), one row, and they never move, resize, or get displaced by
   // other tiles. The remaining widgets ARE resizable and each declares a resize FLOOR
   // (allowedSizes → minGridFor); without one the generic floor is 2 cells on this 6px grid.
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    [W_SUMMARY]:        { render: renderSummary,      chrome: 'none', title: 'Statutory Summary',        allowedSizes: floor('wide', 6, 4) },
     [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 2, 6) },
     [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 2, 6) },
     [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 2, 6) },

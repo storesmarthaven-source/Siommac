@@ -79,9 +79,16 @@ function minGridFor(widgetId: string, localWidgets?: LocalWidgetMap): { w: numbe
 // bug let a tile shrink smaller than the widget can render) — clamps a committed instance up to its
 // widget's current minimum. Runs on every load, so stale bad geometry corrects itself instead of
 // rendering a clipped tile forever. Returns the SAME reference when unchanged (identity = "no fix").
+//
+// A `resizable: false` widget is a FIXED size (its single allowedSize is min == max): the user can't
+// resize it, so its dimensions are code-owned, not user data. Heal such a tile in BOTH directions —
+// otherwise a layout saved when the widget declared a different size pins it forever (a taller saved
+// `h` can't be dragged away, and the code default it should follow is masked by the saved override).
 function clampToMinGrid(item: WidgetInstance, localWidgets?: LocalWidgetMap): WidgetInstance {
   const min = minGridFor(item.widgetId, localWidgets);
-  const w = Math.max(item.w, min.w), h = Math.max(item.h, min.h);
+  const fixed = localWidgets?.[item.widgetId]?.resizable === false;
+  const w = fixed ? min.w : Math.max(item.w, min.w);
+  const h = fixed ? min.h : Math.max(item.h, min.h);
   return (w === item.w && h === item.h) ? item : { ...item, w, h };
 }
 
