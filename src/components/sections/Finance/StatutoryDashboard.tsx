@@ -30,6 +30,7 @@ import { memo } from 'preact/compat';
 import { useMemo, useState, useEffect, useRef } from 'preact/hooks';
 import {
   Chart,
+  LineController,
   CategoryScale,
   LinearScale,
   PointElement,
@@ -54,7 +55,7 @@ import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session'
 import { fmtDate, fmtMoney, humanize } from './financeShared';
 
 // Register chart.js tree-shakeable modules once (module-level, idempotent).
-Chart.register(CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
+Chart.register(LineController, CategoryScale, LinearScale, PointElement, LineElement, Filler, Tooltip, Legend);
 
 // Re-export so the parent can reference the same literal type without a second import.
 export type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
