@@ -1,303 +1,633 @@
 /**
- * tabs/RolesTab.tsx
+ * tabs/RolesTab.tsx  —  Redesigned master-detail Roles view
  *
- * Roles-as-data management. Superadmin creates/edits/deletes roles and sets each
- * role's DEFAULT permission set (role_permissions). Per-user overrides live in
- * the Permissions tab and still take priority at resolve time.
+ * Layout: [left rail 310px] [right detail 1fr]
  *
- * System roles (superadmin, employee) are permanent floors — they can't be
- * deleted; superadmin's permissions are fixed (allow-all).
+ * Left rail:
+ *   - Search + filter button
+ *   - System / Custom tabs
+ *   - Role list (scrollable, selected role highlighted)
+ *   - Footer with count
+ *
+ * Right detail (when a role is selected):
+ *   - Role header card (icon, name, description, "Edit Role" button)
+ *   - Mini stats row (Total Capabilities / High-Risk / Members)
+ *   - Capability Defaults accordion table (grouped by module from PERMISSION_META)
+ *   - Bottom grid-2: Users with this role + Pending approval changes
+ *
+ * Vocabulary:
+ *   Role level: capability is "Granted" / "Not granted" (toggle)
+ *   Risk tiers: low / medium / high / critical
+ *
+ * "New Role" and "Edit Role" → full-page CreateRolePage (NOT a modal).
+ * "Delete Role" → confirm dialog (existing pattern).
  */
 
-import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
-import { Modal } from '@shared/Modal';
+import { type VNode, Fragment } from 'preact';
+import { useState, useMemo, useCallback } from 'preact/hooks';
 import { confirm } from '@shared/ConfirmDialog';
-import { toast } from '@store/ui';
-import { permissionGroups } from '@lib/permissions';
+import { PERMISSION_KEYS } from '@lib/permissions';
+import { PERMISSION_META } from '@lib/permissionMeta';
 import type { RoleRow, ConsoleUser } from '@lib/superadminApi';
 import {
-  useRoles, useRolePermissions, useCreateRole, useDeleteRole, useSetRolePermission,
-  useConsoleUsers,
+  useRoles, useRolePermissions, useDeleteRole, useSetRolePermission,
+  useConsoleUsers, usePermissionApprovals,
 } from '../hooks';
+import { CreateRolePage } from './CreateRolePage';
+import '../ac.css';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 function initialsOf(name: string): string {
   return (name || '?').split(' ').map(w => w[0]).join('').slice(0, 2).toUpperCase();
 }
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
 
-const RESOURCE_LABEL: Record<string, string> = {
-  employees: 'Employees', departments: 'Departments', attendance: 'Attendance',
-  leaves: 'Leave', payroll: 'Payroll', hourly_rates: 'Hourly Rates',
-  sites: 'Project Sites', map: 'Live Map', dashboard: 'Dashboard',
-  reports: 'Reports', settings: 'Settings', permissions: 'User Management',
-  sessions: 'Sessions', audit: 'Audit', roles: 'Roles',
+// Icon/colour per role name (for the role icon pill)
+const ROLE_ICON: Record<string, { icon: string; bg: string; clr: string }> = {
+  superadmin:      { icon: 'fa-shield-halved',     bg: 'var(--ac-red-bg)',    clr: 'var(--ac-red)' },
+  admin:           { icon: 'fa-sliders',            bg: 'var(--ac-accent-bg)', clr: 'var(--ac-accent)' },
+  manager:         { icon: 'fa-users',              bg: 'var(--ac-green-bg)',  clr: 'var(--ac-green)' },
+  hr_manager:      { icon: 'fa-user-tie',           bg: 'var(--ac-green-bg)',  clr: 'var(--ac-green)' },
+  hr_staff:        { icon: 'fa-user',               bg: 'var(--ac-accent-bg)', clr: 'var(--ac-accent)' },
+  hse_staff:       { icon: 'fa-hard-hat',           bg: 'var(--ac-amber-bg)',  clr: 'var(--ac-amber)' },
+  finance_manager: { icon: 'fa-dollar-sign',        bg: 'var(--ac-amber-bg)',  clr: 'var(--ac-amber)' },
+  finance_staff:   { icon: 'fa-calculator',         bg: 'var(--ac-amber-bg)',  clr: 'var(--ac-amber)' },
+  employee:        { icon: 'fa-user',               bg: 'var(--ac-accent-bg)', clr: 'var(--ac-accent)' },
 };
+function roleStyle(name: string) {
+  return ROLE_ICON[name] ?? { icon: 'fa-circle-user', bg: 'var(--ac-purple-bg)', clr: 'var(--ac-purple)' };
+}
 
-// ── Create-role inline form ───────────────────────────────────────────────────
+// Module icon map (mirrors CreateRolePage)
+const MODULE_ICON: Record<string, string> = {
+  HR: 'fa-user', Finance: 'fa-dollar-sign', HSE: 'fa-shield-halved',
+  Communications: 'fa-comment', Workflow: 'fa-diagram-project',
+  Settings: 'fa-gear', Auth: 'fa-lock',
+};
+const MODULE_COLOR: Record<string, { bg: string; clr: string }> = {
+  HR:             { bg: 'var(--ac-accent-bg)', clr: 'var(--ac-accent)' },
+  Finance:        { bg: 'var(--ac-green-bg)',  clr: 'var(--ac-green)' },
+  HSE:            { bg: 'var(--ac-amber-bg)',  clr: 'var(--ac-amber)' },
+  Communications: { bg: 'var(--ac-purple-bg)', clr: 'var(--ac-purple)' },
+};
+function modStyle(m: string) { return MODULE_COLOR[m] ?? { bg: '#f1f3f7', clr: '#566074' }; }
 
-function CreateRoleForm({ onDone }: { onDone: () => void }): VNode {
-  const [label, setLabel] = useState('');
-  const [description, setDescription] = useState('');
-  const create = useCreateRole();
+// ── Build module groups from the permission catalogue ─────────────────────────
 
-  // Derive a machine name (snake_case) from the label.
-  const name = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+interface ModuleSection {
+  module: string;
+  keys: string[];
+  total: number;
+  highRiskCount: number;
+}
+
+const ALL_MODULE_SECTIONS: ModuleSection[] = (() => {
+  const byModule = new Map<string, string[]>();
+  for (const key of PERMISSION_KEYS) {
+    const meta = PERMISSION_META[key as keyof typeof PERMISSION_META];
+    if (!meta) continue;
+    const list = byModule.get(meta.module) ?? [];
+    if (!byModule.has(meta.module)) byModule.set(meta.module, list);
+    list.push(key);
+  }
+  return [...byModule.entries()].map(([module, keys]) => ({
+    module,
+    keys,
+    total: keys.length,
+    highRiskCount: keys.filter(k => {
+      const m = PERMISSION_META[k as keyof typeof PERMISSION_META];
+      return m?.risk === 'high' || m?.risk === 'critical';
+    }).length,
+  })).sort((a, b) => b.total - a.total);
+})();
+
+const TOTAL_CAPS = PERMISSION_KEYS.length;
+const HIGH_RISK_TOTAL = PERMISSION_KEYS.filter(k => {
+  const m = PERMISSION_META[k as keyof typeof PERMISSION_META];
+  return m?.risk === 'high' || m?.risk === 'critical';
+}).length;
+
+// ── Capability accordion (right detail) ───────────────────────────────────────
+
+function CapabilityAccordion({ role, granted }: { role: RoleRow; granted: Set<string> }): VNode {
+  const setPerm = useSetRolePermission();
+  const [expanded, setExpanded] = useState<Set<string>>(new Set());
+  const [all, setAll] = useState(false);
+
+  const locked = role.name === 'superadmin';
+  const pendingKey = setPerm.isPending ? setPerm.variables?.permission : null;
+
+  const toggleExpand = (mod: string) => {
+    setExpanded(prev => {
+      const next = new Set(prev);
+      if (next.has(mod)) next.delete(mod); else next.add(mod);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (all) setExpanded(new Set());
+    else setExpanded(new Set(ALL_MODULE_SECTIONS.map(s => s.module)));
+    setAll(v => !v);
+  };
 
   return (
-    <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', padding: '16px', marginBottom: '14px' }}>
-      <div class="stg-switch-label" style={{ marginBottom: '10px' }}>New role</div>
-      <div class="stg-form-row">
-        <div class="stg-form-group">
-          <label>Display name</label>
-          <input type="text" value={label} onInput={e => setLabel((e.target as HTMLInputElement).value)} placeholder="e.g. HSE Manager" />
-          {name && <small class="stg-switch-desc">id: <code>{name}</code></small>}
+    <div class="ac-card">
+      <div class="ac-card-head" style={{ alignItems: 'flex-start', gap: '14px' }}>
+        <div style={{ flex: 1, minWidth: 0 }}>
+          <div class="ac-card-title">Capability Defaults</div>
+          <div class="ac-card-sub" style={{ maxWidth: '520px' }}>
+            Set the default access for each capability. Applies when users are assigned to this role.
+          </div>
         </div>
-        <div class="stg-form-group">
-          <label>Description</label>
-          <input type="text" value={description} onInput={e => setDescription((e.target as HTMLInputElement).value)} placeholder="Optional" />
-        </div>
-      </div>
-      <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
-        <button type="button" class="btn btn-danger-primary btn-sm" disabled={!name || create.isPending}
-          onClick={() => {
-            if (!name) { toast.error('Enter a name.'); return; }
-            create.mutate({ name, label: label.trim(), description: description.trim() }, { onSuccess: r => { if (r.success) { setLabel(''); setDescription(''); onDone(); } } });
-          }}>
-          <i class={create.isPending ? 'fas fa-spinner fa-spin' : 'fas fa-plus'} /> Create role
+        <button type="button" class="ac-btn sm" onClick={toggleAll} style={{ flex: 'none', marginTop: '2px' }}>
+          {all ? 'Collapse All' : 'Expand All'}
         </button>
-        <button type="button" class="btn btn-outline-secondary btn-sm has-label" onClick={onDone}>Cancel</button>
       </div>
+
+      {locked && (
+        <div style={{ padding: '12px 16px', background: 'rgba(27,45,84,.05)', borderBottom: '1px solid var(--ac-line)', fontSize: '13px', color: 'var(--ac-muted)', display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <i class="fas fa-lock" style={{ color: 'var(--ac-red)' }} />
+          Superadmin always has every capability — not editable.
+        </div>
+      )}
+
+      <table class="ac-cap-tbl">
+        <thead>
+          <tr>
+            <th style={{ width: '30px', paddingLeft: '16px' }} />
+            <th style={{ minWidth: '180px' }}>Capability</th>
+            <th>Description</th>
+            <th style={{ width: '100px' }}>Risk</th>
+            <th style={{ width: '100px', textAlign: 'center' }}>Granted</th>
+          </tr>
+        </thead>
+        <tbody>
+          {ALL_MODULE_SECTIONS.map(sec => {
+            const isOpen = expanded.has(sec.module);
+            const enabledCount = locked ? sec.total : sec.keys.filter(k => granted.has(k)).length;
+            const style = modStyle(sec.module);
+            const allEnabled = enabledCount === sec.total;
+            return (
+              <Fragment key={sec.module}>
+                {/* Module accordion header */}
+                <tr class={`ac-acc-head${isOpen ? '' : ' collapsed'}`}>
+                  <td colSpan={5}>
+                    <div class="ac-acc-head-inner" onClick={() => toggleExpand(sec.module)}>
+                      <i class={`fas fa-chevron-${isOpen ? 'down ac-acc-chev open' : 'right ac-acc-chev'}`} />
+                      <span class="ac-acc-ico" style={{ width: '28px', height: '28px', borderRadius: '7px', background: style.bg, color: style.clr, display: 'inline-grid', placeItems: 'center', fontSize: '12px', flex: 'none' }}>
+                        <i class={`fas ${MODULE_ICON[sec.module] ?? 'fa-cube'}`} />
+                      </span>
+                      <span class="ac-acc-mod-name">{sec.module}</span>
+                      <span style={{ fontSize: '12.5px', color: 'var(--ac-muted)', fontWeight: 400 }}>— {sec.total} capabilities</span>
+                      {sec.highRiskCount > 0 && (
+                        <span class="ac-acc-risk-count">{sec.highRiskCount} High-Risk</span>
+                      )}
+                      <span style={{ marginLeft: 'auto' }}>
+                        <span class={`ac-badge ${allEnabled ? 'green' : enabledCount > 0 ? 'amber' : 'grey'}`} style={{ fontSize: '11.5px' }}>
+                          {locked ? '✓ All Granted' : allEnabled ? '✓ All Granted' : enabledCount > 0 ? `${enabledCount} Granted` : 'None Granted'}
+                        </span>
+                      </span>
+                    </div>
+                  </td>
+                </tr>
+
+                {/* Capability rows */}
+                {isOpen && sec.keys.map((key, idx) => {
+                  const meta = PERMISSION_META[key as keyof typeof PERMISSION_META];
+                  if (!meta) return null;
+                  const on = locked || granted.has(key);
+                  const busy = pendingKey === key;
+                  const isLast = idx === sec.keys.length - 1;
+                  return (
+                    <tr key={key} class="ac-cap-row" style={{ borderBottom: isLast ? '2px solid var(--ac-line)' : undefined }}>
+                      <td style={{ paddingLeft: '16px', width: '30px' }} />
+                      <td>
+                        <div class="ac-cap-name">{meta.label}</div>
+                        <div class="ac-cap-key">{key}</div>
+                      </td>
+                      <td class="ac-cap-desc">{meta.description}</td>
+                      <td><span class={`ac-risk ${meta.risk}`}>{meta.risk}</span></td>
+                      <td class="ac-toggle-cell">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={on}
+                          aria-label={`${meta.label}: ${on ? 'Granted' : 'Not granted'}`}
+                          class={`ac-toggle${on ? ' on' : ''}`}
+                          disabled={locked || busy}
+                          onClick={() => setPerm.mutate({ roleName: role.name, permission: key, granted: !on })}
+                          style={{ opacity: busy ? .6 : 1 }}
+                        />
+                      </td>
+                    </tr>
+                  );
+                })}
+              </Fragment>
+            );
+          })}
+        </tbody>
+      </table>
     </div>
   );
 }
 
-// ── Per-role permission matrix ────────────────────────────────────────────────
+// ── Role detail pane ──────────────────────────────────────────────────────────
 
-function RolePermMatrix({ role }: { role: RoleRow }): VNode {
+function RoleDetail({ role, members, onEdit, onDelete }: {
+  role: RoleRow;
+  members: ConsoleUser[];
+  onEdit: () => void;
+  onDelete: () => void;
+}): VNode {
   const permsQ = useRolePermissions(role.name);
-  const setPerm = useSetRolePermission();
-  const groups = useMemo(() => permissionGroups(), []);
+  const approvalsQ = usePermissionApprovals('pending');
 
-  if (permsQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
-  if (permsQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load.</div>;
+  const granted = useMemo(() => new Set(permsQ.data ?? []), [permsQ.data]);
+  const highRiskGranted = useMemo(() => [...granted].filter(k => {
+    const m = PERMISSION_META[k as keyof typeof PERMISSION_META];
+    return m?.risk === 'high' || m?.risk === 'critical';
+  }).length, [granted]);
 
-  const granted = new Set(permsQ.data ?? []);
-  const locked = role.name === 'superadmin';   // allow-all, not editable
-  const pendingKey = setPerm.isPending ? setPerm.variables?.permission : null;
+  // Filter pending approvals to this role
+  const pendingForRole = useMemo(() => {
+    return (approvalsQ.data ?? []).filter(a => a.targetRole === role.name);
+  }, [approvalsQ.data, role.name]);
+
+  const style = roleStyle(role.name);
+  const memberCount = members.length;
+  const totalGranted = role.name === 'superadmin' ? TOTAL_CAPS : granted.size;
+  const isLocked = role.name === 'superadmin';
 
   return (
-    <div>
-      {locked && (
-        <div class="stg-switch-desc" style={{ marginBottom: '12px', padding: '8px 12px', background: 'rgba(27,45,84,0.06)', borderRadius: 'var(--radius-sm)' }}>
-          <i class="fas fa-lock" style={{ marginRight: '6px' }} />Superadmin always has every permission — not editable.
+    <div class="ac-rl-detail">
+      {/* Role header */}
+      <div class="ac-card">
+        <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'flex-start', gap: '16px' }}>
+          <span class="ac-rh-icon" style={{ background: style.bg, color: style.clr }}>
+            <i class={`fas ${style.icon}`} />
+          </span>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
+              <span style={{ fontSize: '20px', fontWeight: 700, letterSpacing: '-.01em', color: 'var(--ac-ink)' }}>{role.label}</span>
+              <span class={`ac-badge ${role.isSystem ? 'grey' : 'blue'}`}>{role.isSystem ? 'System' : 'Custom'}</span>
+              {role.protected && <span class="ac-badge amber">Protected</span>}
+            </div>
+            <div style={{ fontSize: '13.5px', fontWeight: 500, color: 'var(--ac-ink2)', marginBottom: '3px' }}>
+              {role.description || 'No description provided.'}
+            </div>
+            {isLocked && (
+              <div style={{ fontSize: '12.5px', color: 'var(--ac-muted)' }}>
+                This role has all capabilities granted by default.
+              </div>
+            )}
+          </div>
+          <div style={{ display: 'flex', gap: '8px', flexShrink: 0 }}>
+            {!isLocked && (
+              <button type="button" class="ac-btn sm" onClick={onEdit}>
+                <i class="fas fa-pen" style={{ fontSize: '11px' }} /> Edit Role
+              </button>
+            )}
+            {!role.isSystem && !role.protected && (
+              <button type="button" class="ac-btn sm" onClick={onDelete}
+                style={{ color: 'var(--ac-red)', borderColor: 'rgba(220,38,38,.3)' }}>
+                <i class="fas fa-trash" style={{ fontSize: '11px' }} />
+              </button>
+            )}
+          </div>
         </div>
+      </div>
+
+      {/* Mini stats */}
+      <div class="ac-mini-stats">
+        <div class="ac-mini-stat">
+          <span class="ac-mini-ico blue"><i class="fas fa-table-cells-large" /></span>
+          <div>
+            <div class="ac-mini-lbl">Granted Capabilities</div>
+            <div class="ac-mini-val">{totalGranted}</div>
+            <div class="ac-mini-sub">of {TOTAL_CAPS} total</div>
+          </div>
+        </div>
+        <div class="ac-mini-stat">
+          <span class="ac-mini-ico red"><i class="fas fa-shield-halved" /></span>
+          <div>
+            <div class="ac-mini-lbl">High-Risk Granted</div>
+            <div class="ac-mini-val">{isLocked ? HIGH_RISK_TOTAL : highRiskGranted}</div>
+            <div class="ac-mini-sub">of {HIGH_RISK_TOTAL} high-risk</div>
+          </div>
+        </div>
+        <div class="ac-mini-stat">
+          <span class="ac-mini-ico green"><i class="fas fa-users" /></span>
+          <div>
+            <div class="ac-mini-lbl">Members</div>
+            <div class="ac-mini-val">{memberCount}</div>
+            <div class="ac-mini-sub">user{memberCount !== 1 ? 's' : ''} assigned</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Capability defaults accordion */}
+      {permsQ.isLoading ? (
+        <div class="ac-card" style={{ padding: '32px', textAlign: 'center', color: 'var(--ac-muted)' }}>
+          <i class="fas fa-spinner fa-spin" /> Loading capabilities…
+        </div>
+      ) : permsQ.isError ? (
+        <div class="ac-card" style={{ padding: '20px', color: 'var(--ac-red)', textAlign: 'center' }}>
+          <i class="fas fa-exclamation-triangle" /> Failed to load capabilities.
+        </div>
+      ) : (
+        <CapabilityAccordion role={role} granted={granted} />
       )}
-      {groups.map(group => (
-        <div key={group.resource} style={{ marginBottom: '16px' }}>
-          <div class="stg-switch-desc" style={{ fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px', color: 'var(--siomac-navy)' }}>
-            {RESOURCE_LABEL[group.resource] ?? group.resource}
+
+      {/* Bottom row: users + pending */}
+      <div class="ac-grid-2">
+        {/* Users with this role */}
+        <div class="ac-card">
+          <div class="ac-card-head">
+            <div>
+              <div class="ac-card-title">
+                Users with this role
+                <span style={{ fontWeight: 400, color: 'var(--ac-muted)', marginLeft: '6px' }}>({memberCount})</span>
+              </div>
+            </div>
           </div>
-          <div style={{ background: 'var(--bg-card)', border: '1px solid var(--border)', borderRadius: 'var(--radius-md)', overflow: 'hidden' }}>
-            {group.keys.map((key, idx) => {
-              const on = locked || granted.has(key);
-              const busy = pendingKey === key;
-              return (
-                <div key={key} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '9px 16px', borderBottom: idx < group.keys.length - 1 ? '1px solid var(--border)' : 'none' }}>
-                  <div style={{ minWidth: 0 }}>
-                    <div style={{ fontSize: '13px', color: 'var(--text-primary)', textTransform: 'capitalize' }}>{(key.split('.')[1] ?? key).replace(/_/g, ' ')}</div>
-                    <div class="stg-switch-desc" style={{ marginTop: 0, fontFamily: 'monospace', fontSize: '11px' }}>{key}</div>
+          {memberCount === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--ac-muted)', fontSize: '13px' }}>
+              No users assigned to this role.
+            </div>
+          ) : (
+            <>
+              {members.slice(0, 5).map(u => (
+                <div key={u.id} class="ac-um-row">
+                  <span class="ac-avatar" style={{ width: '36px', height: '36px', fontSize: '13px' }}>
+                    {u.profileImage
+                      ? <img src={u.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      : initialsOf(u.fullName)}
+                  </span>
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div class="ac-um-name">{u.fullName}</div>
+                    <div class="ac-um-sub">{u.email || u.username}</div>
                   </div>
-                  <label class="stg-toggle" style={{ opacity: busy ? 0.6 : 1 }}>
-                    <input type="checkbox" checked={on} disabled={locked || busy}
-                      onChange={() => setPerm.mutate({ roleName: role.name, permission: key, granted: !granted.has(key) })} />
-                    <span class="stg-slider" />
-                  </label>
+                  <span class={`ac-badge ${u.active ? 'green' : 'grey'}`} style={{ fontSize: '11px', flexShrink: 0 }}>
+                    {u.active ? 'Active' : 'Inactive'}
+                  </span>
                 </div>
-              );
-            })}
-          </div>
+              ))}
+              {memberCount > 5 && (
+                <div style={{ padding: '10px 18px', textAlign: 'center', borderTop: '1px solid var(--ac-line2)', fontSize: '12.5px', color: 'var(--ac-muted)' }}>
+                  +{memberCount - 5} more user{memberCount - 5 !== 1 ? 's' : ''}
+                </div>
+              )}
+            </>
+          )}
         </div>
-      ))}
+
+        {/* Pending approval changes */}
+        <div class="ac-card">
+          <div class="ac-card-head">
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <div class="ac-card-title">Pending approval changes</div>
+              {pendingForRole.length > 0 && (
+                <span class="ac-badge red">{pendingForRole.length}</span>
+              )}
+            </div>
+          </div>
+          {pendingForRole.length === 0 ? (
+            <div style={{ padding: '24px', textAlign: 'center', color: 'var(--ac-muted)', fontSize: '13px' }}>
+              <i class="fas fa-circle-check" style={{ color: 'var(--ac-green)', marginRight: '6px' }} />
+              No pending changes for this role.
+            </div>
+          ) : (
+            <>
+              {pendingForRole.map(a => {
+                const meta = PERMISSION_META[a.permissionKey as keyof typeof PERMISSION_META];
+                return (
+                  <div key={a.id} class="ac-pend-row">
+                    <span class="ac-pend-ico"><i class="fas fa-triangle-exclamation" /></span>
+                    <div style={{ flex: 1, minWidth: 0 }}>
+                      <div class="ac-pend-cap">{meta?.label ?? a.permissionKey}</div>
+                      <div class="ac-pend-sub">
+                        {meta?.module ?? '—'}
+                        {a.requestedByName ? ` · Requested by ${a.requestedByName}` : ''}
+                      </div>
+                    </div>
+                    <div class="ac-pend-date">{timeAgo(a.requestedAt)}</div>
+                  </div>
+                );
+              })}
+              <div class="ac-pend-foot">
+                <i class="fas fa-circle-info" style={{ color: 'var(--ac-amber)', fontSize: '13px' }} />
+                Changes require approval due to high-risk capabilities.
+              </div>
+            </>
+          )}
+        </div>
+      </div>
     </div>
   );
 }
 
 // ── Tab root ──────────────────────────────────────────────────────────────────
 
-// ── Role-summary card ─────────────────────────────────────────────────────────
-
-function RoleSummaryCard({ role, members, onManage }: {
-  role: RoleRow; members: ConsoleUser[]; onManage: () => void;
-}): VNode {
-  const top = members.slice(0, 2);
-  return (
-    <div class="vt-rolecard">
-      <div class="vt-rolecard-head">
-        <span class="vt-rolecard-title">
-          {role.label}
-          {role.isSystem && <span class="vt-rolecard-sys">system</span>}
-        </span>
-        <button type="button" class="vt-rolecard-seeall" onClick={onManage}>See all</button>
-      </div>
-      <div class="vt-rolecard-members">
-        {top.length === 0
-          ? <div class="vt-rolecard-empty">No users with this role.</div>
-          : top.map(m => (
-            <div class="vt-member" key={m.id}>
-              <span class="vt-member-avatar">{m.profileImage ? <img src={m.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsOf(m.fullName)}</span>
-              <span class="vt-member-info"><span class="vt-member-name">{m.fullName}</span></span>
-              <span class={`vt-pill ${m.active ? 'is-on' : 'is-off'}`}>{m.active ? 'Enabled' : 'Disabled'}</span>
-            </div>
-          ))}
-      </div>
-      <button type="button" class="vt-rolecard-manage" onClick={onManage}>
-        <i class="fas fa-gear" /> Manage
-      </button>
-    </div>
-  );
-}
-
-// ── Tab root (VANTUS Roles layout) ────────────────────────────────────────────
+type RolesView = 'list' | 'create' | 'edit';
 
 export function RolesTab(): VNode {
-  const rolesQ = useRoles(true);
-  const usersQ = useConsoleUsers(true);
-  const del = useDeleteRole();
-  const [creating, setCreating]     = useState(false);
-  const [manageRole, setManageRole] = useState<RoleRow | null>(null);
-  const [search, setSearch]         = useState('');
-  const [roleFilter, setRoleFilter] = useState<string>('all');
+  const rolesQ   = useRoles(true);
+  const usersQ   = useConsoleUsers(true);
+  const del      = useDeleteRole();
 
-  // 'employee' is the fixed self-service baseline — never shown as a role here.
-  const roles = (rolesQ.data ?? []).filter(r => r.name !== 'employee' && r.name !== 'superadmin');
+  const [view, setView]           = useState<RolesView>('list');
+  const [editRole, setEditRole]   = useState<RoleRow | null>(null);
+  const [selectedRole, setSelectedRole] = useState<RoleRow | null>(null);
+  const [search, setSearch]       = useState('');
+  const [activeTab, setActiveTab] = useState<'system' | 'custom'>('system');
+
+  const roles = rolesQ.data ?? [];
   const users = usersQ.data ?? [];
 
   const byRole = useMemo(() => {
     const m = new Map<string, ConsoleUser[]>();
-    for (const u of users) (m.get(u.role) ?? m.set(u.role, []).get(u.role)!).push(u);
+    for (const u of users) {
+      const arr = m.get(u.role) ?? [];
+      if (!m.has(u.role)) m.set(u.role, arr);
+      arr.push(u);
+    }
     return m;
   }, [users]);
 
-  const roleLabel = (name: string) => roles.find(r => r.name === name)?.label ?? name;
+  const systemRoles  = useMemo(() => roles.filter(r => r.isSystem),  [roles]);
+  const customRoles  = useMemo(() => roles.filter(r => !r.isSystem), [roles]);
 
-  const filtered = useMemo(() => {
+  const filteredSystem = useMemo(() => {
     const q = search.toLowerCase().trim();
-    return users.filter(u =>
-      (roleFilter === 'all' || u.role === roleFilter) &&
-      (!q || u.fullName.toLowerCase().includes(q) || u.email.toLowerCase().includes(q) || u.department.toLowerCase().includes(q)));
-  }, [users, search, roleFilter]);
+    return systemRoles.filter(r => !q || r.label.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+  }, [systemRoles, search]);
 
-  if (rolesQ.isLoading) return <div class="emp-loading"><i class="fas fa-spinner fa-spin" /> Loading roles…</div>;
-  if (rolesQ.isError)   return <div class="emp-loading emp-err"><i class="fas fa-exclamation-triangle" /> Failed to load roles. <button type="button" onClick={() => void rolesQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
+  const filteredCustom = useMemo(() => {
+    const q = search.toLowerCase().trim();
+    return customRoles.filter(r => !q || r.label.toLowerCase().includes(q) || r.name.toLowerCase().includes(q));
+  }, [customRoles, search]);
+
+  const visibleRoles = activeTab === 'system' ? filteredSystem : filteredCustom;
+  const totalCount   = activeTab === 'system' ? filteredSystem.length : filteredCustom.length;
+
+  const handleDelete = useCallback(async (role: RoleRow) => {
+    const count = byRole.get(role.name)?.length ?? 0;
+    const ok = await confirm({
+      title: `Delete "${role.label}"?`,
+      message: count > 0
+        ? `${count} user(s) still have this role — reassign them first.`
+        : 'This permanently deletes the role and all its capability defaults.',
+      variant: 'danger',
+      confirmLabel: count > 0 ? 'OK' : 'Delete role',
+    });
+    if (!ok || count > 0) return;
+    del.mutate(role.name, {
+      onSuccess: res => {
+        if (res.success && selectedRole?.name === role.name) setSelectedRole(null);
+      },
+    });
+  }, [byRole, del, selectedRole]);
+
+  // Full-page views
+  if (view === 'create') {
+    return (
+      <div class="ac-scope">
+        <CreateRolePage onDone={() => { setView('list'); void rolesQ.refetch(); }} />
+      </div>
+    );
+  }
+  if (view === 'edit' && editRole) {
+    return (
+      <div class="ac-scope">
+        <CreateRolePage
+          role={editRole}
+          onDone={() => { setView('list'); setEditRole(null); void rolesQ.refetch(); }}
+        />
+      </div>
+    );
+  }
+
+  // List view
+  if (rolesQ.isLoading) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--text-muted)' }}>
+        <i class="fas fa-spinner fa-spin" /> Loading roles…
+      </div>
+    );
+  }
+  if (rolesQ.isError) {
+    return (
+      <div style={{ padding: '40px', textAlign: 'center', color: 'var(--ac-red)' }}>
+        <i class="fas fa-exclamation-triangle" /> Failed to load roles.
+        <button type="button" onClick={() => void rolesQ.refetch()} style={{ marginLeft: '8px', background: 'none', border: 'none', color: 'var(--ac-accent)', cursor: 'pointer', textDecoration: 'underline' }}>Retry</button>
+      </div>
+    );
+  }
 
   return (
-    <div>
-      {creating && <div style={{ marginBottom: '16px' }}><CreateRoleForm onDone={() => setCreating(false)} /></div>}
+    <div class="ac-scope">
+      <div class="ac-rl-layout">
 
-      {/* Roles & members */}
-      <div class="vt-section">
-        <div class="vt-section-head">
-          <div class="vt-section-titlewrap">
-            <span class="vt-section-icon"><i class="fas fa-user-shield" /></span>
-            <div>
-              <div class="vt-section-title">Roles &amp; members</div>
-              <div class="vt-section-sub">Each role unlocks specific menus and permissions. System roles are permanent.</div>
+        {/* ── Left rail ── */}
+        <div class="ac-card ac-rl-rail">
+          {/* Search */}
+          <div class="ac-rl-searchbar">
+            <div class="ac-rl-searchwrap">
+              <i class="fas fa-magnifying-glass" />
+              <input
+                value={search}
+                onInput={e => setSearch((e.target as HTMLInputElement).value)}
+                placeholder="Search roles…"
+                aria-label="Search roles"
+              />
             </div>
           </div>
-          <button type="button" class="btn btn-danger-primary btn-sm" onClick={() => setCreating(v => !v)}>
-            <i class="fas fa-plus" /> New role
-          </button>
-        </div>
-        <div class="vt-rolecards">
-          {roles.map(r => (
-            <RoleSummaryCard key={r.name} role={r} members={byRole.get(r.name) ?? []}
-              onManage={() => { setRoleFilter(r.name); setManageRole(r); }} />
-          ))}
-        </div>
-      </div>
 
-      {/* User accounts */}
-      <div class="vt-section-titlewrap" style={{ marginBottom: '14px' }}>
-        <span class="vt-section-icon"><i class="fas fa-users-gear" /></span>
-        <div>
-          <div class="vt-section-title">User accounts</div>
-          <div class="vt-section-sub">Everyone with a configurable role.</div>
-        </div>
-      </div>
-
-      <div class="vt-toolbar">
-        <div class="vt-search" style={{ flex: '1 1 260px' }}>
-          <i class="fas fa-search" aria-hidden="true" />
-          <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Search by name, email or department…" aria-label="Search accounts" />
-        </div>
-      </div>
-
-      <div class="vt-tabs">
-        <button type="button" class={`vt-tab${roleFilter === 'all' ? ' active' : ''}`} onClick={() => setRoleFilter('all')}>
-          All <span class="vt-tab-count">{users.length}</span>
-        </button>
-        {roles.map(r => (
-          <button key={r.name} type="button" class={`vt-tab${roleFilter === r.name ? ' active' : ''}`} onClick={() => setRoleFilter(r.name)}>
-            {r.label} <span class="vt-tab-count">{byRole.get(r.name)?.length ?? 0}</span>
-          </button>
-        ))}
-      </div>
-
-      <div class="vt-result-count">Showing {filtered.length} of {users.length} account{users.length === 1 ? '' : 's'}</div>
-
-      <div class="vt-table-card">
-        <div class="vt-table-scroll">
-          <table class="vt-table">
-            <thead>
-              <tr><th>Account</th><th>Role</th><th>Department</th><th>Status</th></tr>
-            </thead>
-            <tbody>
-              {filtered.length === 0 ? (
-                <tr><td colspan={4} style={{ textAlign: 'center', color: 'var(--text-muted)', padding: '28px' }}>No accounts match.</td></tr>
-              ) : filtered.map(u => (
-                <tr key={u.id}>
-                  <td>
-                    <span class="vt-cell-account">
-                      <span class="vt-cell-avatar">{u.profileImage ? <img src={u.profileImage} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover' }} /> : initialsOf(u.fullName)}</span>
-                      <span class="vt-cell-account-text">
-                        <span class="vt-cell-name">{u.fullName}</span>
-                        {u.position && <span class="vt-cell-subtext">{u.position}</span>}
-                      </span>
-                    </span>
-                  </td>
-                  <td>{roleLabel(u.role)}</td>
-                  <td style={{ color: 'var(--text-muted)' }}>{u.department || '—'}</td>
-                  <td><span class={`vt-pill ${u.active ? 'is-on' : 'is-off'}`}>{u.active ? 'Enabled' : 'Disabled'}</span></td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-
-      {/* Manage role permissions */}
-      <Modal open={!!manageRole} onClose={() => setManageRole(null)} title={manageRole ? `Manage — ${manageRole.label}` : 'Manage role'} size="lg">
-        {manageRole && (
-          <div>
-            <div class="stg-switch-group" style={{ padding: '0 0 12px', borderBottom: '1px solid var(--border)', marginBottom: '14px' }}>
-              <div>
-                <div class="stg-switch-label">{manageRole.label} {manageRole.isSystem && <span style={{ marginLeft: '6px', fontSize: '11px', color: 'var(--text-muted)' }}>(system)</span>}</div>
-                <div class="stg-switch-desc">{manageRole.description || 'No description'} · {manageRole.userCount} user{manageRole.userCount === 1 ? '' : 's'}</div>
-              </div>
-              {!manageRole.isSystem && !manageRole.protected && (
-                <button type="button" class="btn btn-sm btn-danger has-label" disabled={del.isPending}
-                  onClick={async () => {
-                    const ok = await confirm({ title: `Delete "${manageRole.label}"?`, message: manageRole.userCount > 0 ? `${manageRole.userCount} user(s) still have this role — reassign them first.` : 'This permanently deletes the role.', variant: 'danger', confirmLabel: 'Delete role' });
-                    if (ok) del.mutate(manageRole.name, { onSuccess: r => { if (r.success) setManageRole(null); } });
-                  }}>
-                  <i class={del.isPending ? 'fas fa-spinner fa-spin' : 'fas fa-trash'} /> Delete
-                </button>
-              )}
+          {/* System / Custom tabs */}
+          <div class="ac-rl-tabs">
+            <div class={`ac-rl-tab${activeTab === 'system' ? ' active' : ''}`} onClick={() => setActiveTab('system')}>
+              System <span style={{ fontSize: '11px', color: activeTab === 'system' ? 'inherit' : 'var(--ac-faint)', marginLeft: '4px' }}>({systemRoles.length})</span>
             </div>
-            <RolePermMatrix role={manageRole} />
+            <div class={`ac-rl-tab${activeTab === 'custom' ? ' active' : ''}`} onClick={() => setActiveTab('custom')}>
+              Custom <span style={{ fontSize: '11px', color: activeTab === 'custom' ? 'inherit' : 'var(--ac-faint)', marginLeft: '4px' }}>({customRoles.length})</span>
+            </div>
+          </div>
+
+          {/* Role list */}
+          <div class="ac-role-list">
+            {activeTab === 'custom' && (
+              <div class="ac-role-sec-head">
+                <span class="ac-role-sec-lbl">Custom Roles</span>
+                <button type="button" class="ac-btn sm primary" style={{ height: '28px', fontSize: '12px', padding: '0 10px' }} onClick={() => setView('create')}>
+                  <i class="fas fa-plus" style={{ fontSize: '10px' }} /> New Role
+                </button>
+              </div>
+            )}
+
+            {visibleRoles.length === 0 ? (
+              <div class="ac-rl-empty">
+                {search ? 'No roles match the search.' : activeTab === 'custom' ? 'No custom roles yet. Create one.' : 'No system roles found.'}
+              </div>
+            ) : visibleRoles.map(r => {
+              const style = roleStyle(r.name);
+              const count = byRole.get(r.name)?.length ?? r.userCount;
+              const isSelected = selectedRole?.name === r.name;
+              return (
+                <div
+                  key={r.name}
+                  class={`ac-role-item${isSelected ? ' selected' : ''}`}
+                  onClick={() => setSelectedRole(r)}
+                >
+                  <span class="ac-role-icon" style={{ background: style.bg, color: style.clr }}>
+                    <i class={`fas ${style.icon}`} />
+                  </span>
+                  <div class="ac-role-info">
+                    <div class="ac-role-name-row">
+                      <span class="ac-role-name">{r.label}</span>
+                      <span class={`ac-badge ${r.isSystem ? 'grey' : 'blue'}`} style={{ fontSize: '10.5px', padding: '1px 7px' }}>
+                        {r.isSystem ? 'System' : 'Custom'}
+                      </span>
+                    </div>
+                    <div class="ac-role-desc">{r.description || '—'}</div>
+                  </div>
+                  <span class="ac-role-count">{count} member{count !== 1 ? 's' : ''}</span>
+                </div>
+              );
+            })}
+          </div>
+
+          <div class="ac-rl-foot">
+            Showing {totalCount} of {roles.length} role{roles.length !== 1 ? 's' : ''}
+          </div>
+        </div>
+
+        {/* ── Right detail ── */}
+        {selectedRole ? (
+          <RoleDetail
+            key={selectedRole.name}
+            role={selectedRole}
+            members={byRole.get(selectedRole.name) ?? []}
+            onEdit={() => { setEditRole(selectedRole); setView('edit'); }}
+            onDelete={() => void handleDelete(selectedRole)}
+          />
+        ) : (
+          <div class="ac-rl-empty-detail">
+            <i class="fas fa-users-gear" />
+            <div style={{ fontWeight: 600, fontSize: '14px', color: 'var(--ac-ink2)', marginTop: '4px' }}>Select a role</div>
+            <div style={{ fontSize: '13px' }}>Choose a role from the list to view and manage its capabilities.</div>
           </div>
         )}
-      </Modal>
+      </div>
     </div>
   );
 }

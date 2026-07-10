@@ -1,19 +1,31 @@
 /**
- * tabs/PermissionsTab.tsx — Access Control (Users)
+ * tabs/PermissionsTab.tsx — User-level Access Control (Users tab)
  *
- * Subject-first master-detail: a user rail on the left, a capability editor on the
- * right. Every capability row shows the three things that were previously invisible —
- * the ROLE DEFAULT (baseline), the per-user OVERRIDE (if any), and the EFFECTIVE
- * result — with a segmented control to set it (Role default / Grant / Deny). Editing
- * writes a per-user override; "Role default" clears it. Critical grants route through
- * the maker-checker approval flow.
+ * 3-column layout:
+ *   [left rail 280px] [center capability editor 1fr] [right audit timeline 280px]
  *
- * Driven by PERMISSION_META + the catalogue, so a new key with metadata appears here.
+ * Key changes from previous version:
+ *   Vocabulary (canonical model):
+ *     Segmented control: "Inherit" (= role default) | "Allow" | "Deny"
+ *     Effective badge: "Allowed" | "Denied"
+ *     Source badge: "Role Default" | "Override · Allow" | "Override · Deny"
+ *     "Restricted" vocabulary dropped entirely.
+ *
+ *   Buffered saves:
+ *     Changes are staged locally (pending map) and NOT written to the DB until
+ *     "Save N changes" is clicked. "Discard" reverts to DB state. The sticky action
+ *     bar shows the pending count and the Save / Discard buttons.
+ *
+ *   Per-user audit timeline (right sidebar):
+ *     Shows the last 12 permission audit events for the selected user (entity_id filter
+ *     added to the backend and AuditLogFilters type).
+ *
+ * Critical grants still route through the maker-checker flow (immediate — not buffered),
+ * to preserve the approval handoff. Non-critical changes are buffered.
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo, useCallback } from 'preact/hooks';
-import { StatCard } from '../../Employees/StatCard';
+import { useState, useMemo, useCallback, useEffect } from 'preact/hooks';
 import { Modal } from '@shared/Modal';
 import {
   PERMISSION_KEYS, CRITICAL_GRANT_KEYS,
@@ -23,13 +35,16 @@ import {
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { toast } from '@store/ui';
 import type { UserRole, PermissionOverride } from '@api/schemas/auth';
-import type { ConsoleUser, UserPermissionRow } from '@lib/superadminApi';
+import type { ConsoleUser, UserPermissionRow, AuditLogRow } from '@lib/superadminApi';
 import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import {
   useConsoleUsers, useUserPermissions, useSetUserPermission, useClearUserPermission,
-  useRolePermissions,
+  useRolePermissions, useAuditLogs,
 } from '../hooks';
+import '../ac.css';
 import '../rbac.css';
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 const ROLE_LABEL: Record<string, string> = {
   superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
@@ -45,9 +60,28 @@ function Avatar({ name, src, cls }: { name: string; src?: string; cls: string })
   if (src) return <span class={cls}><img src={src} alt="" /></span>;
   return <span class={cls}>{initialsOf(name)}</span>;
 }
-
 function toOverrides(userId: string, rows: UserPermissionRow[]): PermissionOverride[] {
   return rows.map(r => ({ user_id: userId, permission: r.permission, granted: r.granted, set_by: '', set_at: '' }));
+}
+function timeAgo(iso: string): string {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return 'Just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  return `${Math.floor(h / 24)}d ago`;
+}
+function auditActionLabel(action: string): string {
+  if (action === 'permission_grant') return 'Override · Allow';
+  if (action === 'permission_deny')  return 'Override · Deny';
+  if (action === 'permission_clear') return 'Override cleared';
+  return action.replace(/_/g, ' ');
+}
+function auditBadgeClass(action: string): string {
+  if (action === 'permission_grant') return 'green';
+  if (action === 'permission_deny')  return 'red';
+  return 'grey';
 }
 
 /** All distinct module names, in catalogue order. */
@@ -77,7 +111,7 @@ function buildMetaGroups(filter: MatrixFilter) {
   return [...modules.entries()].map(([module, groupMap]) => ({ module, groups: [...groupMap.values()] }));
 }
 
-// ── Critical-grant reason dialog ──────────────────────────────────────────────
+// ── Critical-grant reason dialog (unchanged) ──────────────────────────────────
 
 function CriticalGrantDialog({ permKey, onConfirm, onCancel }: {
   permKey: string; onConfirm: (reason: string) => void; onCancel: () => void;
@@ -117,19 +151,91 @@ function CriticalGrantDialog({ permKey, onConfirm, onCancel }: {
   );
 }
 
-// ── Capability editor (detail pane) ───────────────────────────────────────────
+// ── Audit Timeline (right sidebar) ────────────────────────────────────────────
 
-function CapabilityEditor({ user }: { user: ConsoleUser }): VNode {
+function AuditTimeline({ userId }: { userId: string }): VNode {
+  const auditQ = useAuditLogs({ entity: 'user', entity_id: userId, limit: 12 }, !!userId);
+
+  const logs: AuditLogRow[] = auditQ.data?.logs ?? [];
+
+  return (
+    <div class="ac-card" style={{ position: 'sticky', top: '8px', maxHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+      <div class="ac-card-head" style={{ flexShrink: 0 }}>
+        <div>
+          <div class="ac-card-title">Access Changes</div>
+          <div class="ac-card-sub">Most recent permission events</div>
+        </div>
+      </div>
+      <div class="ac-ut-timeline">
+        {auditQ.isLoading ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ac-muted)', fontSize: '13px' }}>
+            <i class="fas fa-spinner fa-spin" /> Loading…
+          </div>
+        ) : logs.length === 0 ? (
+          <div style={{ padding: '20px', textAlign: 'center', color: 'var(--ac-muted)', fontSize: '13px' }}>
+            <i class="fas fa-circle-info" style={{ display: 'block', fontSize: '18px', color: '#cbd3e0', marginBottom: '6px' }} />
+            No permission changes on record for this user.
+          </div>
+        ) : (
+          <div class="ac-ut-tl-group">
+            {logs.map(log => {
+              let details: Record<string, string> = {};
+              try { details = JSON.parse(log.details || '{}'); } catch { /* no-op */ }
+              const capKey = details['permission'] ?? '';
+              const capMeta = capKey ? PERMISSION_META[capKey as keyof typeof PERMISSION_META] : null;
+              return (
+                <div key={log.id} class="ac-ut-tl-entry">
+                  <div class="ac-ut-tl-meta">
+                    <span class={`ac-badge ${auditBadgeClass(log.action)}`} style={{ fontSize: '10px', padding: '1px 6px' }}>
+                      {auditActionLabel(log.action).split(' · ')[0]}
+                    </span>
+                    <span class="ac-ut-tl-time">{timeAgo(log.created_at)}</span>
+                  </div>
+                  <div class="ac-ut-tl-body">
+                    <div class="ac-ut-tl-name">{capMeta?.label ?? capKey}</div>
+                    <div class="ac-ut-tl-action">by {log.username}</div>
+                    {capMeta && <div class="ac-ut-tl-module">{capMeta.module} · {capMeta.group}</div>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+      </div>
+      <div class="ac-ut-audit-info">
+        <i class="fas fa-circle-info" style={{ marginRight: '5px' }} />
+        Changes here create per-user overrides, not role changes.
+      </div>
+    </div>
+  );
+}
+
+// ── Pending change type ───────────────────────────────────────────────────────
+
+interface PendingChange {
+  key: string;
+  target: PermissionState;
+  /** Previous effective DB state (so discard can show what's being reverted). */
+  wasState: PermissionState;
+}
+
+// ── Capability editor (center pane) ──────────────────────────────────────────
+
+function CapabilityEditor({ user, pendingChanges, setPendingChange }: {
+  user: ConsoleUser;
+  pendingChanges: Map<string, PendingChange>;
+  setPendingChange: (key: string, change: PendingChange | null) => void;
+}): VNode {
   const permsQ    = useUserPermissions(user.id);
   const roleQ     = useRolePermissions(user.role);
-  const setPerm   = useSetUserPermission();
-  const clearPerm = useClearUserPermission();
   const role      = user.role as UserRole;
 
   const [filter, setFilter] = useState<MatrixFilter>({ module: '', search: '', risk: '' });
-  const [localPending, setLocalPending] = useState<Set<string>>(new Set());
-  const [criticalKey, setCriticalKey]   = useState<string | null>(null);
+  const [criticalKey, setCriticalKey] = useState<string | null>(null);
   const [submittingKey, setSubmittingKey] = useState<string | null>(null);
+
+  // Pending locally-submitted critical grants (not yet approved)
+  const [localPending, setLocalPending] = useState<Set<string>>(new Set());
 
   const handleCriticalGrant = useCallback(async (key: string, reason: string) => {
     setCriticalKey(null); setSubmittingKey(key);
@@ -147,54 +253,76 @@ function CapabilityEditor({ user }: { user: ConsoleUser }): VNode {
 
   const roleSet   = roleQ.data ?? [];
   const overrides = toOverrides(user.id, permsQ.data ?? []);
-  const busyKey = (setPerm.isPending && setPerm.variables?.permission) || (clearPerm.isPending && clearPerm.variables?.permission) || null;
 
-  const set = (key: string, target: PermissionState): void => {
-    if (localPending.has(key)) return;
-    if (permissionState(key, overrides) === target) return; // already in this state — no-op
-    if (target === 'default') { clearPerm.mutate({ userId: user.id, permission: key }); return; }
-    if (target === 'grant') {
-      if (CRITICAL_GRANT_KEYS.has(key)) setCriticalKey(key);
-      else setPerm.mutate({ userId: user.id, permission: key, granted: true });
-      return;
-    }
-    setPerm.mutate({ userId: user.id, permission: key, granted: false });
+  // Resolve effective state (pending changes override DB state for display)
+  const effState = (key: string): PermissionState => {
+    const pending = pendingChanges.get(key);
+    return pending ? pending.target : permissionState(key, overrides);
+  };
+  const effGranted = (key: string): boolean => {
+    const st = effState(key);
+    if (st === 'default') return roleDefaultGranted(roleSet, key, role);
+    return st === 'grant';
   };
 
-  // Summary across the whole catalogue (not the filtered view).
+  const stage = (key: string, target: PermissionState): void => {
+    if (localPending.has(key)) return;
+    const wasState = permissionState(key, overrides);
+    if (wasState === target) {
+      // Back to original DB state — remove the pending change
+      setPendingChange(key, null);
+      return;
+    }
+    setPendingChange(key, { key, target, wasState });
+  };
+
+  const triggerSet = (key: string, target: PermissionState): void => {
+    if (target === 'grant' && CRITICAL_GRANT_KEYS.has(key)) {
+      setCriticalKey(key);
+      return;
+    }
+    stage(key, target);
+  };
+
+  // Summary (uses effective state for overrides count)
   let fromRole = 0, highRisk = 0;
   for (const key of PERMISSION_KEYS) {
     const meta = PERMISSION_META[key]; if (!meta) continue;
-    const st = permissionState(key, overrides);
     const rd = roleDefaultGranted(roleSet, key, role);
     if (rd) fromRole++;
-    const eff = st === 'default' ? rd : st === 'grant';
-    if (eff && (meta.risk === 'high' || meta.risk === 'critical')) highRisk++;
+    if (effGranted(key) && (meta.risk === 'high' || meta.risk === 'critical')) highRisk++;
   }
-  const overrideCount = (permsQ.data ?? []).length;
+  const overrideCount = (permsQ.data ?? []).length + pendingChanges.size;
 
   const metaGroups = buildMetaGroups(filter);
   const hasFilter = !!(filter.module || filter.search || filter.risk);
 
   return (
     <div>
-      {criticalKey && <CriticalGrantDialog permKey={criticalKey} onConfirm={reason => void handleCriticalGrant(criticalKey, reason)} onCancel={() => setCriticalKey(null)} />}
+      {criticalKey && (
+        <CriticalGrantDialog
+          permKey={criticalKey}
+          onConfirm={reason => void handleCriticalGrant(criticalKey, reason)}
+          onCancel={() => setCriticalKey(null)}
+        />
+      )}
 
-      <div class="rbac-head">
+      {/* User header */}
+      <div class="rbac-head" style={{ marginBottom: '16px' }}>
         <Avatar name={user.fullName} src={user.profileImage} cls="rbac-head-avatar" />
         <div class="rbac-head-text">
           <div class="rbac-head-name">{user.fullName}<span class="rbac-head-role">{roleLabel(user.role)}</span></div>
-          <div class="rbac-head-note">@{user.username} · changes here create a per-user override, not a role change.</div>
+          <div class="rbac-head-note">@{user.username}</div>
         </div>
       </div>
 
-      <div class="rbac-summary">
+      <div class="rbac-summary" style={{ marginBottom: '14px' }}>
         <div class="rbac-tile"><div class="rbac-tile-lbl">From role</div><div class="rbac-tile-val">{fromRole}</div></div>
         <div class="rbac-tile"><div class="rbac-tile-lbl">Overrides</div><div class="rbac-tile-val">{overrideCount}</div></div>
         <div class="rbac-tile"><div class="rbac-tile-lbl">High-risk held</div><div class="rbac-tile-val">{highRisk}</div></div>
       </div>
 
-      <div class="rbac-filters">
+      <div class="rbac-filters" style={{ marginBottom: '14px' }}>
         <div class="rbac-fsearch">
           <i class="fas fa-search" aria-hidden="true" />
           <input type="search" value={filter.search} onInput={e => setFilter(f => ({ ...f, search: (e.target as HTMLInputElement).value }))} placeholder="Search capability or key…" aria-label="Search capabilities" />
@@ -224,30 +352,53 @@ function CapabilityEditor({ user }: { user: ConsoleUser }): VNode {
                     <div class="rbac-grp-head">{group}</div>
                     {keys.map(key => {
                       const meta = PERMISSION_META[key];
-                      const st   = permissionState(key, overrides);
+                      const st   = effState(key);
                       const rd   = roleDefaultGranted(roleSet, key, role);
-                      const eff  = st === 'default' ? rd : st === 'grant';
-                      const pending = localPending.has(key);
-                      const busy = busyKey === key || submittingKey === key;
+                      const eff  = effGranted(key);
+                      const isPending = localPending.has(key);
+                      const isChanged = pendingChanges.has(key);
+                      const isBusy = submittingKey === key;
                       return (
-                        <div key={key} class={`rbac-row${st !== 'default' ? ' is-override' : ''}`}>
+                        <div key={key} class={`rbac-row${st !== 'default' ? ' is-override' : ''}${isChanged ? ' is-staged' : ''}`}>
                           <div>
-                            <div class="rbac-cap-name">{meta?.label ?? key}{meta && <span class={`rbac-risk ${meta.risk}`}>{meta.risk}</span>}</div>
+                            <div class="rbac-cap-name">
+                              {meta?.label ?? key}
+                              {meta && <span class={`rbac-risk ${meta.risk}`}>{meta.risk}</span>}
+                              {isChanged && <span class="ac-badge blue" style={{ fontSize: '10px', marginLeft: '5px' }}>Staged</span>}
+                            </div>
                             {meta?.description && <div class="rbac-cap-desc">{meta.description}</div>}
                             <div class="rbac-cap-key">{key}</div>
                           </div>
                           <div class="rbac-res">
-                            <span class={`rbac-eff ${eff ? 'allowed' : 'denied'}`}><i class={`fas ${eff ? 'fa-circle-check' : 'fa-circle-minus'}`} />{eff ? 'Allowed' : 'Denied'}</span>
-                            <span class={`rbac-src ${st === 'grant' ? 'grant' : st === 'deny' ? 'deny' : 'role'}`}>
-                              {st === 'grant' ? 'Override · grant' : st === 'deny' ? 'Override · deny' : 'Role default'}
+                            <span class={`rbac-eff ${eff ? 'allowed' : 'denied'}`}>
+                              <i class={`fas ${eff ? 'fa-circle-check' : 'fa-circle-minus'}`} />{eff ? 'Allowed' : 'Denied'}
                             </span>
-                            {pending ? (
+                            <span class={`rbac-src ${st === 'grant' ? 'grant' : st === 'deny' ? 'deny' : 'role'}`}>
+                              {st === 'grant' ? 'Override · Allow' : st === 'deny' ? 'Override · Deny' : `Role Default${rd ? ' ✓' : ' ✕'}`}
+                            </span>
+                            {isPending ? (
                               <span class="rbac-pending"><i class="fas fa-clock" /> Pending approval</span>
                             ) : (
                               <span class="rbac-seg" role="group" aria-label="Set access">
-                                <button type="button" class={`role${st === 'default' ? ' on' : ''}`} disabled={busy} onClick={() => set(key, 'default')} title={`Role default: ${rd ? 'allowed' : 'denied'}`}>Role {rd ? '✓' : '✕'}</button>
-                                <button type="button" class={`grant${st === 'grant' ? ' on' : ''}`} disabled={busy} onClick={() => set(key, 'grant')}>Grant</button>
-                                <button type="button" class={`deny${st === 'deny' ? ' on' : ''}`} disabled={busy} onClick={() => set(key, 'deny')}>Deny</button>
+                                <button
+                                  type="button"
+                                  class={`role${st === 'default' ? ' on' : ''}`}
+                                  disabled={isBusy}
+                                  onClick={() => triggerSet(key, 'default')}
+                                  title={`Role default: ${rd ? 'allowed' : 'denied'}`}
+                                >Inherit</button>
+                                <button
+                                  type="button"
+                                  class={`grant${st === 'grant' ? ' on' : ''}`}
+                                  disabled={isBusy}
+                                  onClick={() => triggerSet(key, 'grant')}
+                                >Allow</button>
+                                <button
+                                  type="button"
+                                  class={`deny${st === 'deny' ? ' on' : ''}`}
+                                  disabled={isBusy}
+                                  onClick={() => triggerSet(key, 'deny')}
+                                >Deny</button>
                               </span>
                             )}
                           </div>
@@ -265,13 +416,22 @@ function CapabilityEditor({ user }: { user: ConsoleUser }): VNode {
   );
 }
 
-// ── Tab root — master-detail ──────────────────────────────────────────────────
+// ── Tab root ──────────────────────────────────────────────────────────────────
 
 export function PermissionsTab(): VNode {
   const usersQ = useConsoleUsers(true);
-  const [search, setSearch] = useState('');
+  const [search, setSearch]       = useState('');
   const [roleFilter, setRoleFilter] = useState('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
+
+  // Buffered changes: Map<permKey, PendingChange>
+  const [pendingChanges, setPendingChanges] = useState<Map<string, PendingChange>>(new Map());
+  const [saving, setSaving] = useState(false);
+
+  const setPerm   = useSetUserPermission();
+  const clearPerm = useClearUserPermission();
+
+  const permsQ = useUserPermissions(selectedId);
 
   const users = usersQ.data ?? [];
 
@@ -298,45 +458,161 @@ export function PermissionsTab(): VNode {
     roles: rolesInUse.length,
   }), [users, rolesInUse]);
 
+  // Clear pending changes when user selection changes
+  useEffect(() => { setPendingChanges(new Map()); }, [selectedId]);
+
+  const setPendingChange = useCallback((key: string, change: PendingChange | null) => {
+    setPendingChanges(prev => {
+      const next = new Map(prev);
+      if (change === null) next.delete(key);
+      else next.set(key, change);
+      return next;
+    });
+  }, []);
+
+  const discard = useCallback(() => {
+    setPendingChanges(new Map());
+  }, []);
+
+  const saveAll = useCallback(async () => {
+    if (!selected || pendingChanges.size === 0 || saving) return;
+    setSaving(true);
+    const changes = [...pendingChanges.values()];
+    try {
+      const results = await Promise.allSettled(
+        changes.map(c => {
+          if (c.target === 'default') {
+            return clearPerm.mutateAsync({ userId: selected.id, permission: c.key });
+          }
+          return setPerm.mutateAsync({ userId: selected.id, permission: c.key, granted: c.target === 'grant' });
+        }),
+      );
+      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+      if (failed > 0) {
+        toast.error(`${failed} of ${changes.length} changes failed. Please retry.`);
+      } else {
+        toast.success(`${changes.length} permission change${changes.length !== 1 ? 's' : ''} saved.`);
+        setPendingChanges(new Map());
+      }
+    } catch {
+      toast.error('Failed to save changes. Please retry.');
+    } finally {
+      setSaving(false);
+    }
+  }, [selected, pendingChanges, saving, setPerm, clearPerm]);
+
   if (usersQ.isLoading) return <div class="rbac-loading"><i class="fas fa-spinner fa-spin" /> Loading users…</div>;
-  if (usersQ.isError) return <div class="rbac-loading"><i class="fas fa-triangle-exclamation" /> Failed to load users. <button type="button" onClick={() => void usersQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button></div>;
+  if (usersQ.isError) return (
+    <div class="rbac-loading">
+      <i class="fas fa-triangle-exclamation" /> Failed to load users.
+      <button type="button" onClick={() => void usersQ.refetch()} style={{ color: 'var(--siomac-navy)', textDecoration: 'underline', background: 'none', border: 'none', cursor: 'pointer' }}>Retry</button>
+    </div>
+  );
 
   return (
-    <div class="rbac">
-      <div class="rbac-stats">
-        <StatCard icon="fa-users"       label="Users"          value={stats.total}     color="#2563eb" />
-        <StatCard icon="fa-user-check"  label="Enabled"        value={stats.enabled}   color="#16a34a" />
-        <StatCard icon="fa-user-lock"   label="With overrides" value={stats.overrides} color="#d97706" />
-        <StatCard icon="fa-user-shield" label="Roles in use"   value={stats.roles}     color="#7c3aed" />
+    <div class="ac-scope">
+      {/* Stat strip */}
+      <div class="ac-stats">
+        <div class="ac-stat">
+          <div class="ac-stat-top">
+            <span class="ac-stat-ico blue"><i class="fas fa-users" /></span>
+            <div><div class="ac-stat-lbl">Users</div><div class="ac-stat-val">{stats.total}</div><div class="ac-stat-sub">in system</div></div>
+          </div>
+        </div>
+        <div class="ac-stat">
+          <div class="ac-stat-top">
+            <span class="ac-stat-ico green"><i class="fas fa-user-check" /></span>
+            <div><div class="ac-stat-lbl">Active</div><div class="ac-stat-val">{stats.enabled}</div><div class="ac-stat-sub">accounts</div></div>
+          </div>
+        </div>
+        <div class="ac-stat">
+          <div class="ac-stat-top">
+            <span class="ac-stat-ico amber"><i class="fas fa-user-lock" /></span>
+            <div><div class="ac-stat-lbl">With Overrides</div><div class="ac-stat-val">{stats.overrides}</div><div class="ac-stat-sub">per-user changes</div></div>
+          </div>
+        </div>
+        <div class="ac-stat">
+          <div class="ac-stat-top">
+            <span class="ac-stat-ico purple"><i class="fas fa-user-shield" /></span>
+            <div><div class="ac-stat-lbl">Roles in Use</div><div class="ac-stat-val">{stats.roles}</div><div class="ac-stat-sub">distinct roles</div></div>
+          </div>
+        </div>
       </div>
 
-      <div class="rbac-shell">
-        <div class="rbac-rail">
-          <div class="rbac-rail-search">
+      {/* 3-column layout */}
+      <div class="ac-ut-layout">
+        {/* Left: user rail */}
+        <div class="ac-card" style={{ position: 'sticky', top: '8px', maxHeight: 'calc(100vh - 200px)', display: 'flex', flexDirection: 'column' }}>
+          <div class="rbac-rail-search" style={{ margin: '11px 12px 8px', flex: 'none' }}>
             <i class="fas fa-search" aria-hidden="true" />
             <input type="search" value={search} onInput={e => setSearch((e.target as HTMLInputElement).value)} placeholder="Find a user…" aria-label="Find a user" />
           </div>
-          <div class="rbac-rail-roles">
+          <div class="rbac-rail-roles" style={{ padding: '0 10px 8px', flex: 'none' }}>
             <button type="button" class={`rbac-rolechip${roleFilter === 'all' ? ' on' : ''}`} onClick={() => setRoleFilter('all')}>All</button>
             {rolesInUse.map(r => <button key={r} type="button" class={`rbac-rolechip${roleFilter === r ? ' on' : ''}`} onClick={() => setRoleFilter(r)}>{roleLabel(r)}</button>)}
           </div>
-          <div class="rbac-rail-list">
+          <div class="rbac-rail-list" style={{ flex: 1, overflowY: 'auto' }}>
             {filtered.length === 0 ? <div class="rbac-rail-empty">No users match.</div> : filtered.map(u => (
-              <button key={u.id} type="button" class={`rbac-rail-item${selectedId === u.id ? ' active' : ''}`} onClick={() => setSelectedId(u.id)}>
+              <button key={u.id} type="button" class={`rbac-rail-item${selectedId === u.id ? ' active' : ''}`}
+                onClick={() => setSelectedId(u.id)}>
                 <Avatar name={u.fullName} src={u.profileImage} cls="rbac-rail-avatar" />
                 <span class="rbac-rail-text">
                   <span class="rbac-rail-name">{u.fullName}</span>
-                  <span class="rbac-rail-sub">{roleLabel(u.role)}{u.overrideCount > 0 ? ` · ${u.overrideCount} override${u.overrideCount === 1 ? '' : 's'}` : ''}</span>
+                  <span class="rbac-rail-sub">{roleLabel(u.role)}</span>
+                </span>
+                <span class="ac-ovr-chip">
+                  <span class={`ac-ovr-num${u.overrideCount === 0 ? ' zero' : ''}`}>{u.overrideCount}</span>
+                  <span class="ac-ovr-lbl">overrides</span>
                 </span>
               </button>
             ))}
           </div>
+          <div class="ac-rl-foot">
+            {filtered.length} of {users.length} user{users.length !== 1 ? 's' : ''}
+          </div>
         </div>
 
-        <div class="rbac-detail">
-          {selected
-            ? <CapabilityEditor key={selected.id} user={selected} />
-            : <div class="rbac-detail-empty"><i class="fas fa-user-shield" /><div>Select a user to view and edit their capabilities.</div></div>}
+        {/* Center: capability editor */}
+        <div>
+          {selected ? (
+            <>
+              <CapabilityEditor
+                key={selected.id}
+                user={selected}
+                pendingChanges={pendingChanges}
+                setPendingChange={setPendingChange}
+              />
+              {/* Sticky action bar */}
+              {pendingChanges.size > 0 && (
+                <div class="ac-ut-action-bar">
+                  <div class="ac-ut-change-count">
+                    <span class="ac-badge blue">{pendingChanges.size}</span>
+                    unsaved change{pendingChanges.size !== 1 ? 's' : ''}
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <button type="button" class="ac-btn sm" onClick={discard} disabled={saving}>Discard</button>
+                    <button type="button" class="ac-btn sm primary" onClick={() => void saveAll()} disabled={saving}>
+                      {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : `Save ${pendingChanges.size} change${pendingChanges.size !== 1 ? 's' : ''}`}
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
+          ) : (
+            <div class="rbac-detail-empty"><i class="fas fa-user-shield" /><div>Select a user to view and edit their capabilities.</div></div>
+          )}
+        </div>
+
+        {/* Right: audit timeline */}
+        <div>
+          {selected ? (
+            <AuditTimeline userId={selected.id} />
+          ) : (
+            <div class="ac-card" style={{ padding: '24px', textAlign: 'center', color: 'var(--ac-muted)', fontSize: '13px' }}>
+              <i class="fas fa-clock" style={{ fontSize: '20px', color: '#cbd3e0', display: 'block', marginBottom: '6px' }} />
+              Select a user to see their access history.
+            </div>
+          )}
         </div>
       </div>
     </div>

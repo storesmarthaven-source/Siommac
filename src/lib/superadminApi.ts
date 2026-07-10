@@ -121,14 +121,16 @@ export interface AuditLogRow {
 }
 
 export interface AuditLogFilters {
-  search?:   string;
-  action?:   string;
-  entity?:   string;
-  username?: string;
-  from?:     string;
-  to?:       string;
-  limit?:    number;
-  offset?:   number;
+  search?:    string;
+  action?:    string;
+  entity?:    string;
+  /** Exact match on entity_id — use to fetch history for one specific record or user. */
+  entity_id?: string;
+  username?:  string;
+  from?:      string;
+  to?:        string;
+  limit?:     number;
+  offset?:    number;
 }
 
 /** Fetch filtered, paginated audit records (+ filter option lists on page 1). */

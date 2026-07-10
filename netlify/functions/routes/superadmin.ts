@@ -269,14 +269,15 @@ router.post('/revokeSession', async c => {
 // Gated by 'audit.view' (superadmin by default). Append-only table; read-only here.
 
 const GetAuditLogsSchema = z.object({
-  search:   z.string().optional(),
-  action:   z.string().optional(),
-  entity:   z.string().optional(),
-  username: z.string().optional(),
-  from:     z.string().optional(),   // ISO date
-  to:       z.string().optional(),   // ISO date
-  limit:    z.number().int().min(1).max(500).optional(),
-  offset:   z.number().int().min(0).optional(),
+  search:    z.string().optional(),
+  action:    z.string().optional(),
+  entity:    z.string().optional(),
+  entity_id: z.string().optional(),  // filter to a specific record (e.g. a user's ID)
+  username:  z.string().optional(),
+  from:      z.string().optional(),   // ISO date
+  to:        z.string().optional(),   // ISO date
+  limit:     z.number().int().min(1).max(500).optional(),
+  offset:    z.number().int().min(0).optional(),
 });
 
 // POST /superadmin/getAuditLogs — filtered, paginated audit records (+ distinct
@@ -285,7 +286,7 @@ router.post('/getAuditLogs', async c => {
   await requirePermission(c, 'audit.view');
   const v = zv(c, GetAuditLogsSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { search, action, entity, username, from, to } = v.data;
+  const { search, action, entity, entity_id, username, from, to } = v.data;
   const limit  = v.data.limit  ?? 50;
   const offset = v.data.offset ?? 0;
 
@@ -295,12 +296,13 @@ router.post('/getAuditLogs', async c => {
     .order('created_at', { ascending: false })
     .range(offset, offset + limit - 1);
 
-  if (action)   q = q.eq('action', action);
-  if (entity)   q = q.eq('entity', entity);
-  if (username) q = q.ilike('username', `%${username}%`);
-  if (from)     q = q.gte('created_at', from);
-  if (to)       q = q.lte('created_at', to);
-  if (search)   q = q.or(`details.ilike.%${search}%,entity_id.ilike.%${search}%,username.ilike.%${search}%`);
+  if (action)    q = q.eq('action', action);
+  if (entity)    q = q.eq('entity', entity);
+  if (entity_id) q = q.eq('entity_id', entity_id);
+  if (username)  q = q.ilike('username', `%${username}%`);
+  if (from)      q = q.gte('created_at', from);
+  if (to)        q = q.lte('created_at', to);
+  if (search)    q = q.or(`details.ilike.%${search}%,entity_id.ilike.%${search}%,username.ilike.%${search}%`);
 
   const { data, error, count } = await q;
   if (error) {
