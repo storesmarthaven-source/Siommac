@@ -157,6 +157,15 @@ function actionBadgeClass(action: string): string {
   if (action === 'permission_deny')  return 'red';
   return 'grey';
 }
+// `details` is stored as JSON ({ permission, … }) for permission events — render the
+// capability's human label. Falls back to the raw string for legacy/plain-text rows.
+function detailText(details: string): string {
+  try {
+    const d = JSON.parse(details || '{}') as { permission?: string };
+    if (d.permission) return PERMISSION_META[d.permission as PermissionKey]?.label ?? d.permission;
+  } catch { /* not JSON — fall through */ }
+  return details;
+}
 
 // ── Tab root ──────────────────────────────────────────────────────────────────
 
@@ -341,7 +350,7 @@ export function ModulesTab(): VNode {
                   </span>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div class="ac-rc-name">{log.username}</div>
-                    <div class="ac-rc-action" style={{ fontSize: '11.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{log.details}</div>
+                    <div class="ac-rc-action" style={{ fontSize: '11.5px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{detailText(log.details)}</div>
                   </div>
                   <div class="ac-rc-time">{timeAgo(log.created_at)}</div>
                 </div>

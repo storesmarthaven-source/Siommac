@@ -25,15 +25,20 @@
 
 import { type VNode, Fragment } from 'preact';
 import { useState, useMemo, useCallback } from 'preact/hooks';
+import { useQueryClient } from '@tanstack/preact-query';
 import { confirm } from '@shared/ConfirmDialog';
-import { PERMISSION_KEYS } from '@lib/permissions';
+import { toast } from '@store/ui';
+import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS } from '@lib/permissions';
 import { PERMISSION_META } from '@lib/permissionMeta';
 import type { RoleRow, ConsoleUser } from '@lib/superadminApi';
+import { setRolePermissionWithReasonApi } from '@lib/superadminApi';
 import {
   useRoles, useRolePermissions, useDeleteRole, useSetRolePermission,
   useConsoleUsers, usePermissionApprovals,
 } from '../hooks';
+import { consoleKeys } from '../queryKeys';
 import { CreateRolePage } from './CreateRolePage';
+import { CriticalGrantDialog } from '../CriticalGrantDialog';
 import '../ac.css';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -120,11 +125,38 @@ const HIGH_RISK_TOTAL = PERMISSION_KEYS.filter(k => {
 
 function CapabilityAccordion({ role, granted }: { role: RoleRow; granted: Set<string> }): VNode {
   const setPerm = useSetRolePermission();
+  const qc = useQueryClient();
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
   const [all, setAll] = useState(false);
+  const [criticalKey, setCriticalKey] = useState<string | null>(null);
+  const [busyReason, setBusyReason] = useState<string | null>(null);
 
   const locked = role.name === 'superadmin';
   const pendingKey = setPerm.isPending ? setPerm.variables?.permission : null;
+
+  // Toggle a capability. A CRITICAL grant is not applied directly — it opens the reason
+  // dialog and requests a maker-checker approval; everything else applies immediately.
+  const onToggle = (key: string, next: boolean): void => {
+    if (next && CRITICAL_GRANT_KEYS.has(key)) { setCriticalKey(key); return; }
+    setPerm.mutate({ roleName: role.name, permission: key, granted: next });
+  };
+  const submitCritical = async (reason: string): Promise<void> => {
+    const key = criticalKey; setCriticalKey(null);
+    if (!key) return;
+    setBusyReason(key);
+    try {
+      const res = await setRolePermissionWithReasonApi(role.name, key, true, reason);
+      if (!res.success) { toast.error(res.message ?? 'Failed to submit the request.'); return; }
+      if (res.pending) {
+        toast.success("Submitted for a second superadmin's approval.");
+        void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') });
+      } else {
+        toast.success('Capability granted.');
+        void qc.invalidateQueries({ queryKey: consoleKeys.rolePerms(role.name) });
+      }
+    } catch { toast.error('Network error. Try again.'); }
+    finally { setBusyReason(null); }
+  };
 
   const toggleExpand = (mod: string) => {
     setExpanded(prev => {
@@ -142,6 +174,14 @@ function CapabilityAccordion({ role, granted }: { role: RoleRow; granted: Set<st
 
   return (
     <div class="ac-card">
+      {criticalKey && (
+        <CriticalGrantDialog
+          permKey={criticalKey}
+          targetLabel={`the ${role.label} role`}
+          onConfirm={r => void submitCritical(r)}
+          onCancel={() => setCriticalKey(null)}
+        />
+      )}
       <div class="ac-card-head" style={{ alignItems: 'flex-start', gap: '14px' }}>
         <div style={{ flex: 1, minWidth: 0 }}>
           <div class="ac-card-title">Capability Defaults</div>
@@ -206,7 +246,7 @@ function CapabilityAccordion({ role, granted }: { role: RoleRow; granted: Set<st
                   const meta = PERMISSION_META[key as keyof typeof PERMISSION_META];
                   if (!meta) return null;
                   const on = locked || granted.has(key);
-                  const busy = pendingKey === key;
+                  const busy = pendingKey === key || busyReason === key;
                   const isLast = idx === sec.keys.length - 1;
                   return (
                     <tr key={key} class="ac-cap-row" style={{ borderBottom: isLast ? '2px solid var(--ac-line)' : undefined }}>
@@ -225,7 +265,7 @@ function CapabilityAccordion({ role, granted }: { role: RoleRow; granted: Set<st
                           aria-label={`${meta.label}: ${on ? 'Granted' : 'Not granted'}`}
                           class={`ac-toggle${on ? ' on' : ''}`}
                           disabled={locked || busy}
-                          onClick={() => setPerm.mutate({ roleName: role.name, permission: key, granted: !on })}
+                          onClick={() => onToggle(key, !on)}
                           style={{ opacity: busy ? .6 : 1 }}
                         />
                       </td>

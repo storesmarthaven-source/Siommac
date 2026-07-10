@@ -11,7 +11,8 @@
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
 import { requireUser, requireRole, requirePermission, revokeUserSessions, log_ } from '../lib/auth';
-import { PERMISSION_KEYS, invalidateRolePermissions } from '../lib/permissions';
+import { PERMISSION_KEYS, invalidateRolePermissions, isCriticalGrant } from '../lib/permissions';
+import { emitAppEvent }                   from '../lib/appEvents';
 import { getProfileSignedUrl }            from '../lib/photos';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
@@ -75,11 +76,60 @@ export async function applyPermissionGrant(
   return { ok: true };
 }
 
+// ── requestCriticalGrant — open a maker-checker approval for a CRITICAL grant ──
+// A critical capability (isCriticalGrant) is NOT applied on a single actor's say-so:
+// this inserts a pending permission_grant_approvals row that a SECOND superadmin must
+// approve (routes/permissionApprovals.ts) before it takes effect. Returns the approval
+// id so the caller can respond { pending: true }.
+async function requestCriticalGrant(
+  actor: { id: string; username: string },
+  req: { requestType: 'user_override' | 'role_permission'; targetUserId?: string; targetRole?: string; permissionKey: string; reason: string },
+): Promise<{ ok: true; approvalId: string } | { ok: false; status: 400 | 409 | 500; code: string; message: string }> {
+  if (!req.reason.trim()) {
+    return { ok: false, status: 400, code: 'reason_required', message: 'A reason is required to request a critical permission grant.' };
+  }
+  // Dedupe: one open request per target + capability.
+  let dq = sb.from('permission_grant_approvals').select('id')
+    .eq('request_type', req.requestType).eq('permission_key', req.permissionKey).eq('status', 'pending');
+  dq = req.requestType === 'user_override' ? dq.eq('target_user_id', req.targetUserId ?? '') : dq.eq('target_role', req.targetRole ?? '');
+  const { data: existing } = await dq.maybeSingle<{ id: string }>();
+  if (existing) return { ok: false, status: 409, code: 'already_pending', message: 'A pending approval already exists for this grant.' };
+
+  const { data: ins, error } = await sb.from('permission_grant_approvals').insert({
+    id:             `PGA-${crypto.randomUUID()}`,   // code-generated id (no DB default — see migration)
+    request_type:   req.requestType,
+    target_user_id: req.targetUserId ?? null,
+    target_role:    req.targetRole ?? null,
+    permission_key: req.permissionKey,
+    effect:         'allow',
+    reason:         req.reason.trim(),
+    requested_by:   actor.id,
+    expires_at:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  }).select('id').single<{ id: string }>();
+  if (error || !ins) {
+    console.error('[requestCriticalGrant] insert error:', error?.message);
+    return { ok: false, status: 500, code: 'insert_failed', message: 'Failed to create the approval request.' };
+  }
+
+  await log_(actor, 'permission_grant_requested',
+    req.requestType === 'user_override' ? 'user' : 'role',
+    req.targetUserId ?? req.targetRole ?? '',
+    JSON.stringify({ permission: req.permissionKey, approvalId: ins.id, critical: true }));
+  await emitAppEvent({
+    eventType: 'iam.permission.grant_requested', sourceModule: 'platform',
+    sourceEntityType: 'permission_grant_approval', sourceEntityId: ins.id,
+    actorUserId: actor.id, severity: 'warning',
+    payload: { permissionKey: req.permissionKey, requestType: req.requestType, target: req.targetUserId ?? req.targetRole },
+  });
+  return { ok: true, approvalId: ins.id };
+}
+
 const GetUserPermsSchema = z.object({ userId: z.string().min(1) });
 const SetUserPermSchema  = z.object({
   userId:     z.string().min(1),
   permission: z.string().refine(p => PERMISSION_KEY_SET.has(p), 'Unknown permission key'),
   granted:    z.boolean(),
+  reason:     z.string().max(500).optional(),
 });
 const ClearUserPermSchema = z.object({
   userId:     z.string().min(1),
@@ -159,7 +209,14 @@ router.post('/setUserPermission', async c => {
   const actor = await requirePermission(c, 'permissions.manage');
   const v = zv(c, SetUserPermSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { userId, permission, granted } = v.data;
+  const { userId, permission, granted, reason } = v.data;
+
+  // Critical ALLOW grant → maker-checker: create a pending approval, do NOT apply now.
+  if (granted && isCriticalGrant(permission)) {
+    const r = await requestCriticalGrant(actor, { requestType: 'user_override', targetUserId: userId, permissionKey: permission, reason: reason ?? '' });
+    if (!r.ok) return c.json({ success: false, code: r.code, message: r.message }, r.status);
+    return c.json({ success: true, pending: true, approvalId: r.approvalId });
+  }
 
   const { error } = await sb
     .from('user_permissions')
@@ -171,8 +228,14 @@ router.post('/setUserPermission', async c => {
     console.error('[superadmin/setUserPermission] error:', error.message);
     return c.json({ success: false, message: 'Failed to set permission.' }, 500);
   }
+  // Structured details (JSON) so the audit timeline + module coverage can render the capability.
   await log_(actor, granted ? 'permission_grant' : 'permission_deny', 'user', userId,
-    `${permission} ${granted ? 'granted to' : 'denied for'} user ${userId}`);
+    JSON.stringify({ permission, granted }));
+  await emitAppEvent({
+    eventType: granted ? 'iam.permission.override_allow' : 'iam.permission.override_deny',
+    sourceModule: 'platform', sourceEntityType: 'user', sourceEntityId: userId,
+    actorUserId: actor.id, severity: 'warning', payload: { permission, granted },
+  });
   return c.json({ success: true });
 });
 
@@ -193,7 +256,12 @@ router.post('/clearUserPermission', async c => {
     return c.json({ success: false, message: 'Failed to clear permission.' }, 500);
   }
   await log_(actor, 'permission_clear', 'user', userId,
-    `${permission} override removed for user ${userId} (reverted to role default)`);
+    JSON.stringify({ permission, cleared: true }));
+  await emitAppEvent({
+    eventType: 'iam.permission.override_cleared',
+    sourceModule: 'platform', sourceEntityType: 'user', sourceEntityId: userId,
+    actorUserId: actor.id, severity: 'info', payload: { permission },
+  });
   return c.json({ success: true });
 });
 
@@ -342,6 +410,7 @@ const SetRolePermSchema  = z.object({
   roleName:   z.string().min(1),
   permission: z.string().refine(p => PERMISSION_KEY_SET.has(p), 'Unknown permission key'),
   granted:    z.boolean(),
+  reason:     z.string().max(500).optional(),
 });
 const DeleteRoleSchema = z.object({ roleName: z.string().min(1) });
 
@@ -461,9 +530,16 @@ router.post('/setRolePermission', async c => {
   const actor = await requirePermission(c, 'roles.manage');
   const v = zv(c, SetRolePermSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { roleName, permission, granted } = v.data;
+  const { roleName, permission, granted, reason } = v.data;
 
   if (roleName === 'superadmin') return c.json({ success: false, message: 'Superadmin permissions cannot be changed.' }, 400);
+
+  // Critical ALLOW grant → maker-checker: create a pending approval, do NOT apply now.
+  if (granted && isCriticalGrant(permission)) {
+    const r = await requestCriticalGrant(actor, { requestType: 'role_permission', targetRole: roleName, permissionKey: permission, reason: reason ?? '' });
+    if (!r.ok) return c.json({ success: false, code: r.code, message: r.message }, r.status);
+    return c.json({ success: true, pending: true, approvalId: r.approvalId });
+  }
 
   if (granted) {
     const { error } = await sb.from('role_permissions').upsert({ role_name: roleName, permission }, { onConflict: 'role_name,permission' });
@@ -473,7 +549,13 @@ router.post('/setRolePermission', async c => {
     if (error) { console.error('[superadmin/setRolePermission] error:', error.message); return c.json({ success: false, message: 'Failed to update.' }, 500); }
   }
   invalidateRolePermissions(roleName);
-  await log_(actor, granted ? 'role_perm_grant' : 'role_perm_revoke', 'role', roleName, `${permission} ${granted ? 'granted' : 'revoked'}`);
+  await log_(actor, granted ? 'role_perm_grant' : 'role_perm_revoke', 'role', roleName,
+    JSON.stringify({ permission, granted }));
+  await emitAppEvent({
+    eventType: granted ? 'iam.role.permission_granted' : 'iam.role.permission_revoked',
+    sourceModule: 'platform', sourceEntityType: 'role', sourceEntityId: roleName,
+    actorUserId: actor.id, severity: 'warning', payload: { permission, granted, roleName },
+  });
   return c.json({ success: true });
 });
 

@@ -23,10 +23,10 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo, useEffect, useCallback } from 'preact/hooks';
-import { PERMISSION_KEYS } from '@lib/permissions';
+import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS } from '@lib/permissions';
 import { PERMISSION_META } from '@lib/permissionMeta';
 import type { RoleRow } from '@lib/superadminApi';
-import { setRolePermissionApi } from '@lib/superadminApi';
+import { setRolePermissionApi, setRolePermissionWithReasonApi } from '@lib/superadminApi';
 import { toast } from '@store/ui';
 import { useCreateRole, useUpdateRole, useRolePermissions } from '../hooks';
 import '../ac.css';
@@ -187,7 +187,7 @@ function StepDetails({ label, description, onLabel, onDesc }: {
       <div class="ac-cr-form-grid">
         <div>
           <label class="ac-field-lbl">Display Name <span class="ac-field-req">*</span></label>
-          <input class="ac-input" value={label} onInput={e => onLabel((e.target as HTMLInputElement).value)} placeholder="e.g. Finance Manager" maxLength={64} />
+          <input class="ac-input" value={label} onInput={e => onLabel((e.target as HTMLInputElement).value)} placeholder="e.g. Finance Manager" maxLength={60} />
           {name && <div class="ac-field-hint">Internal ID: <code style={{ fontFamily: 'monospace', fontSize: '11px' }}>{name}</code></div>}
           {!label.trim() && <div class="ac-field-hint" style={{ color: 'var(--ac-red)' }}>Required</div>}
         </div>
@@ -310,11 +310,14 @@ function StepCapabilities({ selected, onToggle, onToggleAll }: {
 
 // ── Step 3: High-Risk Review ───────────────────────────────────────────────────
 
-function StepHighRiskReview({ selected }: { selected: Set<string> }): VNode {
+function StepHighRiskReview({ selected, reason, onReason }: {
+  selected: Set<string>; reason: string; onReason: (v: string) => void;
+}): VNode {
   const highRiskKeys = [...selected].filter(k => {
     const m = PERMISSION_META[k as keyof typeof PERMISSION_META];
     return m?.risk === 'high' || m?.risk === 'critical';
   });
+  const criticalKeys = [...selected].filter(k => CRITICAL_GRANT_KEYS.has(k));
 
   if (highRiskKeys.length === 0) {
     return (
@@ -339,7 +342,7 @@ function StepHighRiskReview({ selected }: { selected: Set<string> }): VNode {
 
       <div style={{ padding: '10px 14px', background: 'var(--ac-amber-bg)', border: '1px solid rgba(217,119,6,.25)', borderLeft: '4px solid var(--ac-amber)', borderRadius: '9px', fontSize: '13px', color: '#7a4a00', marginBottom: '14px', lineHeight: 1.5 }}>
         <i class="fas fa-triangle-exclamation" style={{ marginRight: '8px' }} />
-        These capabilities grant elevated access. They will be audited. A role-level approval flow is planned for a future release.
+        These capabilities grant elevated access and are audited. Any <strong>critical</strong> capability is not applied on publish — it is submitted for a second superadmin's approval (maker-checker).
       </div>
 
       <div style={{ border: '1px solid var(--ac-line)', borderRadius: '10px', overflow: 'hidden' }}>
@@ -347,11 +350,12 @@ function StepHighRiskReview({ selected }: { selected: Set<string> }): VNode {
           const meta = PERMISSION_META[k as keyof typeof PERMISSION_META];
           if (!meta) return null;
           const isLast = idx === highRiskKeys.length - 1;
+          const isCritical = CRITICAL_GRANT_KEYS.has(k);
           return (
             <div key={k} class="ac-cr-hr-row" style={{ borderBottom: isLast ? 'none' : undefined, padding: '12px 16px' }}>
               <span class="ac-cr-hr-ico"><i class="fas fa-shield-halved" /></span>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div class="ac-cr-hr-name">{meta.label}</div>
+                <div class="ac-cr-hr-name">{meta.label}{isCritical && <span class="ac-badge red" style={{ fontSize: '10px', marginLeft: '6px' }}>Needs approval</span>}</div>
                 <div class="ac-cr-hr-sub">{meta.module} · {meta.group}</div>
                 <div style={{ fontSize: '11.5px', color: 'var(--ac-muted)', marginTop: '2px' }}>{meta.description}</div>
               </div>
@@ -360,6 +364,17 @@ function StepHighRiskReview({ selected }: { selected: Set<string> }): VNode {
           );
         })}
       </div>
+
+      {criticalKeys.length > 0 && (
+        <div style={{ marginTop: '16px' }}>
+          <label class="ac-field-lbl">
+            Reason for requesting {criticalKeys.length} critical capability{criticalKeys.length !== 1 ? 'ies' : 'y'} <span class="ac-field-req">*</span>
+          </label>
+          <textarea class="ac-textarea" value={reason} onInput={e => onReason((e.target as HTMLTextAreaElement).value)}
+            placeholder="Describe why this role needs these critical capabilities and who authorised it…" maxLength={500} rows={3} />
+          <div class="ac-field-hint">Shown to the approving superadmin and recorded in the audit log. Required to submit the critical grants for approval.</div>
+        </div>
+      )}
     </div>
   );
 }
@@ -430,6 +445,7 @@ export function CreateRolePage({ role: existingRole, onDone }: CreateRolePagePro
   const [label, setLabel]       = useState(existingRole?.label ?? '');
   const [description, setDesc]  = useState(existingRole?.description ?? '');
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [criticalReason, setCriticalReason] = useState('');
   const [publishing, setPublishing] = useState(false);
 
   const createRole = useCreateRole();
@@ -462,38 +478,63 @@ export function CreateRolePage({ role: existingRole, onDone }: CreateRolePagePro
 
   const name = label.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
 
+  // Critical capabilities are not applied on publish — they are submitted for approval, so a
+  // reason is required before the wizard can advance past the High-Risk Review step.
+  const criticalCaps = useMemo(() => [...selected].filter(k => CRITICAL_GRANT_KEYS.has(k)), [selected]);
+
   const canNext: boolean = (() => {
-    if (step === 1) return label.trim().length >= 2;
+    if (step === 1) return label.trim().length >= 2 && label.trim().length <= 60;
     if (step === 2) return true; // no mandatory caps
-    if (step === 3) return true; // review-only
+    if (step === 3) return criticalCaps.length === 0 || criticalReason.trim().length > 0;
     return false;
   })();
 
   const publish = async () => {
     if (!name || publishing) return;
+    const roleName = existingRole?.name ?? name;
     setPublishing(true);
     try {
+      // 1. Create or update the role record first.
       if (existingRole) {
-        // Edit mode: update label/description, then diff permissions
-        const res = await updateRole.mutateAsync({ roleName: existingRole.name, patch: { label: label.trim(), description: description.trim() } });
+        const res = await updateRole.mutateAsync({ roleName, patch: { label: label.trim(), description: description.trim() } });
         if (!res.success) { toast.error(res.message ?? 'Failed to update role.'); return; }
-        // Set permissions: grant selected, revoke deselected
-        const prev = new Set(existingPermsQ.data ?? []);
-        const toGrant  = [...selected].filter(k => !prev.has(k));
-        const toRevoke = [...prev].filter(k => !selected.has(k));
-        await Promise.all([
-          ...toGrant.map(k => setRolePermissionApi(existingRole.name, k, true)),
-          ...toRevoke.map(k => setRolePermissionApi(existingRole.name, k, false)),
-        ]);
-        toast.success(`Role "${label}" updated.`);
       } else {
-        // Create mode
         const res = await createRole.mutateAsync({ name, label: label.trim(), description: description.trim() });
         if (!res.success) { toast.error(res.message ?? 'Failed to create role.'); return; }
-        // Set all selected permissions
-        await Promise.all([...selected].map(k => setRolePermissionApi(name, k, true)));
-        toast.success(`Role "${label}" created with ${selected.size} capabilities.`);
       }
+
+      // 2. Diff capabilities (empty prev for a new role).
+      const prev = new Set(existingRole ? (existingPermsQ.data ?? []) : []);
+      const toRevoke = existingRole ? [...prev].filter(k => !selected.has(k)) : [];
+      const toGrant  = [...selected].filter(k => !prev.has(k));
+      const criticalGrants = toGrant.filter(k => CRITICAL_GRANT_KEYS.has(k));
+      const normalGrants   = toGrant.filter(k => !CRITICAL_GRANT_KEYS.has(k));
+
+      // 3. Apply revokes + non-critical grants immediately — check EVERY result.
+      const immediate = await Promise.allSettled([
+        ...normalGrants.map(k => setRolePermissionApi(roleName, k, true)),
+        ...toRevoke.map(k => setRolePermissionApi(roleName, k, false)),
+      ]);
+      const immediateFailed = immediate.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+
+      // 4. Submit critical grants for maker-checker approval (with the step-3 reason).
+      const critical = await Promise.allSettled(
+        criticalGrants.map(k => setRolePermissionWithReasonApi(roleName, k, true, criticalReason.trim())),
+      );
+      const pendingCount   = critical.filter(r => r.status === 'fulfilled' && r.value.success && r.value.pending).length;
+      const criticalFailed = critical.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+
+      // 5. Honest summary — applied / sent for approval / failed.
+      const appliedCount = (normalGrants.length + toRevoke.length) - immediateFailed;
+      const failed = immediateFailed + criticalFailed;
+      const bits: string[] = [];
+      if (appliedCount > 0) bits.push(`${appliedCount} applied`);
+      if (pendingCount > 0) bits.push(`${pendingCount} sent for approval`);
+      if (failed > 0)       bits.push(`${failed} failed`);
+      const head = `Role "${label.trim()}" ${existingRole ? 'updated' : 'created'}`;
+      const msg  = bits.length ? `${head} — ${bits.join(', ')}` : head;
+      if (failed > 0) toast.error(msg); else toast.success(msg);
+
       onDone();
     } catch {
       toast.error('An error occurred. Please try again.');
@@ -523,7 +564,7 @@ export function CreateRolePage({ role: existingRole, onDone }: CreateRolePagePro
         <div class="ac-cr-form">
           {step === 1 && <StepDetails label={label} description={description} onLabel={setLabel} onDesc={setDesc} />}
           {step === 2 && <StepCapabilities selected={selected} onToggle={toggle} onToggleAll={toggleAll} />}
-          {step === 3 && <StepHighRiskReview selected={selected} />}
+          {step === 3 && <StepHighRiskReview selected={selected} reason={criticalReason} onReason={setCriticalReason} />}
           {step === 4 && <StepReview label={label} description={description} selected={selected} />}
         </div>
 
