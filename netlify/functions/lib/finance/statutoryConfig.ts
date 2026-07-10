@@ -18,6 +18,7 @@ import { writeHrAudit } from '../hr/employeeCore';
 import { startWorkflowForRecord } from '../workflow/service';
 import { emitFinanceMutationBackbone } from './backbone';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
+import { resolveSettingValue } from '../settings/resolveSetting';
 
 // ── Segregation of duties helper ─────────────────────────────────────────────
 
@@ -788,6 +789,13 @@ export async function upsertNisClasses(
     throw Object.assign(new Error('NIS classes can only be updated on draft or approved statutory versions.'), { status: 422 });
   }
 
+  // Sensitive-change control: editing an APPROVED (pre-active) version's figures re-opens
+  // approval so the changed numbers are re-approved before activation — unless an admin has
+  // switched the policy off. Safe default (enforce) if the setting can't be resolved yet.
+  const requireReapproval = version.status === 'approved' && await resolveSettingValue<boolean>(
+    sb, 'finance_statutory.require_reapproval_on_edit', { moduleKey: 'finance_statutory' }, true,
+  );
+
   const classNos = classes.map(c => c.classNo);
 
   // Capture pre-existing rows for those class numbers (compensating rollback snapshot).
@@ -813,29 +821,90 @@ export async function upsertNisClasses(
     .select();
   if (error) throw Object.assign(new Error('upsertNisClasses: ' + error.message), { status: 500 });
 
-  // Backbone: audit (mandatory). On failure, compensating rollback undoes the upsert.
-  try {
-    await emitFinanceMutationBackbone({
-      actorUserId: actorId,
-      module: 'finance_statutory',
-      entityType: 'statutory_version',
-      entityId: statutoryVersionId,
-      eventType: 'finance.statutory.nis_classes.updated',
-      auditAction: 'statutory_version.nis_classes_updated',
-      newState: { count: classes.length },
-    });
-  } catch (backboneErr) {
-    // Compensating rollback: delete the upserted rows, restore pre-existing ones.
+  // Compensating rollback for the class upsert (no cross-table transaction available).
+  const rollbackClasses = async (): Promise<void> => {
     try {
-      await sb.from('finance_nis_classes')
-        .delete()
-        .eq('statutory_version_id', statutoryVersionId)
-        .in('class_no', classNos);
-      if ((preExisting ?? []).length > 0) {
-        await sb.from('finance_nis_classes').insert(preExisting!);
-      }
+      await sb.from('finance_nis_classes').delete()
+        .eq('statutory_version_id', statutoryVersionId).in('class_no', classNos);
+      if ((preExisting ?? []).length > 0) await sb.from('finance_nis_classes').insert(preExisting!);
     } catch (_) { /* best-effort rollback */ }
-    throw backboneErr;
+  };
+
+  if (requireReapproval) {
+    // approved → pending_approval, clear the approver.
+    const { error: flipErr } = await sb.from('finance_statutory_versions')
+      .update({ status: 'pending_approval', approved_by: null }).eq('id', statutoryVersionId);
+    if (flipErr) { await rollbackClasses(); throw Object.assign(new Error('reopenForReapproval: ' + flipErr.message), { status: 500 }); }
+
+    const restoreApproved = async (): Promise<void> => {
+      try {
+        await sb.from('finance_statutory_versions')
+          .update({ status: 'approved', approved_by: version.approvedBy ?? null }).eq('id', statutoryVersionId);
+      } catch (_) { /* best-effort */ }
+    };
+
+    // Re-enter the central approval workflow (same trigger as a fresh submit).
+    const ctx: ModuleWorkflowContext = {
+      moduleKey: 'finance_statutory',
+      workflowType: 'finance_statutory_approval',
+      triggerEvent: 'finance.statutory.version.submitted',
+      sourceRecordId: statutoryVersionId,
+      sourceRecordRef: `SV-${statutoryVersionId.slice(0, 8).toUpperCase()}`,
+      requestedBy: actorId,
+      priority: 'normal',
+      recordData: { effectiveFrom: version.effectiveFrom, jurisdiction: version.jurisdiction, label: version.label },
+    };
+    try {
+      const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
+      if (wf?.id) await sb.from('finance_statutory_versions').update({ workflow_id: wf.id }).eq('id', statutoryVersionId);
+    } catch (wfErr) {
+      await restoreApproved(); await rollbackClasses();
+      throw Object.assign(new Error('Re-approval workflow start failed — version restored to approved: ' + String(wfErr)), { status: 500 });
+    }
+
+    // Backbone: audit the edit-triggered re-approval + notify the approvers. Roll back both on failure.
+    const approverIds = await resolveStatutoryApproverIds(actorId);
+    try {
+      await emitFinanceMutationBackbone({
+        actorUserId: actorId,
+        module: 'finance_statutory',
+        entityType: 'statutory_version',
+        entityId: statutoryVersionId,
+        eventType: 'finance.statutory.version.submitted',
+        auditAction: 'statutory_version.reopened_by_edit',
+        previousState: { status: 'approved' },
+        newState: { status: 'pending_approval', nisClassesChanged: classes.length },
+        severity: 'info',
+        metadata: { effectiveFrom: version.effectiveFrom, jurisdiction: version.jurisdiction, reason: 'nis_classes_edited' },
+        notification: {
+          title: `Statutory version "${version.label}" re-opened for approval`,
+          body: `Its NIS figures were edited after approval, so it must be re-approved before activation.`,
+          actionRoute: '/finance/statutory',
+          type: 'finance.statutory.version.submitted',
+          severity: 'info',
+          ...(approverIds.length ? { recipientUserIds: approverIds } : {}),
+        },
+      });
+    } catch (backboneErr) {
+      await restoreApproved(); await rollbackClasses();
+      throw backboneErr;
+    }
+  } else {
+    // Draft edit (or approved with the policy switched off): audit the class edit only.
+    try {
+      await emitFinanceMutationBackbone({
+        actorUserId: actorId,
+        module: 'finance_statutory',
+        entityType: 'statutory_version',
+        entityId: statutoryVersionId,
+        eventType: 'finance.statutory.nis_classes.updated',
+        auditAction: 'statutory_version.nis_classes_updated',
+        newState: { count: classes.length },
+      });
+    } catch (backboneErr) {
+      await rollbackClasses();
+      throw backboneErr;
+    }
   }
 
   return ((data ?? []) as DbNisRow[]).map(toNisDto);
