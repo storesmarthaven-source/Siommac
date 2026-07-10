@@ -34,6 +34,7 @@
 
 import type { VNode, ComponentChildren } from 'preact';
 import { exportCsv, type CsvColumn } from '@ui/lib/exportCsv';
+import './reports.css';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
