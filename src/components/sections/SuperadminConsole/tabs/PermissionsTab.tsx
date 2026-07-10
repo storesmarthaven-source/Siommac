@@ -29,7 +29,7 @@ import {
   useConsoleUsers, useUserPermissions, useSetUserPermission, useClearUserPermission,
   useRolePermissions,
 } from '../hooks';
-import './rbac.css';
+import '../rbac.css';
 
 const ROLE_LABEL: Record<string, string> = {
   superadmin: 'Superadmin', admin: 'Admin', manager: 'Manager', employee: 'Employee',
