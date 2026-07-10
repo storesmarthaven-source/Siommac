@@ -1163,7 +1163,13 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'finance.payroll.components.manage': {
     module: 'Finance', group: 'Pay Components',
     label: 'Manage Pay Components',
-    description: 'Create, update and retire pay components in the Finance catalogue. HR employees use these components but cannot create them.',
+    description: 'Submit create, update and retire change requests for pay components. Changes are deferred until approved by a different Finance Manager.',
+    risk: 'high',
+  },
+  'finance.payroll.components.approve': {
+    module: 'Finance', group: 'Pay Components',
+    label: 'Approve Pay Component Changes',
+    description: 'Approve or reject pay-component change requests. Creator cannot approve their own request (segregation of duties).',
     risk: 'high',
   },
 

@@ -30,9 +30,9 @@ import { StatTable, StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
 import {
   useStatutoryVersions, useNisClasses, usePayComponents, useVersionDetail,
-  useStatutoryReport, useStatutoryMutation,
+  useStatutoryReport, useStatutoryMutation, usePayComponentChangeRequests,
   financeStatutoryApi,
-  type StatutoryVersion, type NisClass, type PayComponent,
+  type StatutoryVersion, type NisClass, type PayComponent, type PayComponentChangeRequest,
   type CreateStatutoryVersionArgs, type StatutoryReportKey,
 } from '@api/finance/statutory';
 import {
@@ -107,9 +107,12 @@ export function StatutoryConfigOverview(): VNode {
   const activeNisClassesQ = useNisClasses(activeVer?.id ?? null);
   const activeNisClasses  = activeNisClassesQ.data ?? [];
 
+  const currentUserId = useSessionStore(selectUserId);
   const canManage  = can('finance.statutory.manage');
   const canApprove = can('finance.statutory.approve');
   const canView    = can('finance.statutory.view');
+  const canManageComponents  = can('finance.payroll.components.manage');
+  const canApproveComponents = can('finance.payroll.components.approve');
 
   // KPI counts
   const drafts    = versions.filter(v => v.status === 'draft').length;
@@ -161,7 +164,7 @@ export function StatutoryConfigOverview(): VNode {
     <div>
       {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onNew={() => setSubView({ kind: 'newVersion' })} onEdit={setEditVersion} />}
       {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setSubView({ kind: 'nisBand', versionId: v })} onEdit={(v, c) => setSubView({ kind: 'nisBand', versionId: v, edit: c })} onImport={v => setSubView({ kind: 'import', versionId: v })} />}
-      {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManage} onNew={() => setSubView({ kind: 'payComponent' })} onEdit={c => setSubView({ kind: 'payComponent', edit: c })} />}
+      {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManageComponents} canApproveComponents={canApproveComponents} currentUserId={currentUserId} onNew={() => setSubView({ kind: 'payComponent' })} onEdit={c => setSubView({ kind: 'payComponent', edit: c })} />}
       {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
       {tab === 'reports'    && canView && <StatReportsTab />}
     </div>
@@ -554,11 +557,13 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
 
 // ── Pay Components tab ────────────────────────────────────────────────────────
 
-function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit }: {
+function PayComponentsTab({ components, loading, error, canManage, canApproveComponents, currentUserId, onNew, onEdit }: {
   components: PayComponent[];
   loading: boolean;
   error?: string;
   canManage: boolean;
+  canApproveComponents: boolean;
+  currentUserId: string | null;
   onNew: () => void;
   onEdit: (c: PayComponent) => void;
 }): VNode {
@@ -570,11 +575,32 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('asc');
   const { openId, setOpenId } = useFilterDropdowns();
 
+  // Pending change requests — drives the approval panel below the main table.
+  const crsQ = usePayComponentChangeRequests({ status: 'pending_approval' });
+  const pendingCRs: PayComponentChangeRequest[] = crsQ.data ?? [];
+
+  const approveMut = useStatutoryMutation(financeStatutoryApi.approveComponentChangeRequest);
+  const rejectMut  = useStatutoryMutation(financeStatutoryApi.rejectComponentChangeRequest);
+
+  const handleApprove = async (cr: PayComponentChangeRequest): Promise<void> => {
+    const confirmed = await dialog.confirm({ title: 'Approve this change?', text: `Change type: ${humanize(cr.changeType)}. The change will be applied immediately.`, confirmText: 'Approve' });
+    if (!confirmed) return;
+    try { await approveMut.mutateAsync({ id: cr.id }); toast('Change request approved and applied.'); }
+    catch (e) { toast.error((e as Error).message); }
+  };
+
+  const handleReject = async (cr: PayComponentChangeRequest): Promise<void> => {
+    const reason = await dialog.prompt({ title: 'Reject this change?', text: 'The component will remain unchanged. Provide a reason (optional):', placeholder: 'e.g. GL code is incorrect' });
+    if (reason === null) return; // cancelled
+    try { await rejectMut.mutateAsync({ id: cr.id, reason: reason || undefined }); toast('Change request rejected.'); }
+    catch (e) { toast.error((e as Error).message); }
+  };
+
   const retireMut = useStatutoryMutation(financeStatutoryApi.retireComponent);
   const handleRetire = async (c: PayComponent): Promise<void> => {
-    const confirmed = await dialog.confirm({ title: `Retire "${c.name}" (${c.code})?`, text: 'It will no longer appear for new pay items.', danger: true, confirmText: 'Retire' });
+    const confirmed = await dialog.confirm({ title: `Submit retire request for "${c.name}" (${c.code})?`, text: 'A retire request will be sent for approval. The component remains active until approved.', danger: true, confirmText: 'Submit retire request' });
     if (!confirmed) return;
-    try { await retireMut.mutateAsync({ id: c.id }); toast('Component retired.'); }
+    try { await retireMut.mutateAsync({ id: c.id }); toast('Retire request submitted for approval.'); }
     catch (e) { toast.error((e as Error).message); }
   };
 
@@ -597,10 +623,26 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
 
   const pageCount = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
 
+  // Build a set of component IDs with a pending CR for badge display.
+  const pendingCrComponentIds = useMemo(
+    () => new Set(pendingCRs.map(cr => cr.componentId).filter((id): id is string => id !== null)),
+    [pendingCRs],
+  );
+
   const columns: DtColumn<PayComponent>[] = [
     {
       key: 'name', label: 'Component', isPinned: true, sortAccessor: c => c.name,
-      renderCell: c => <div><div class="sdb-vname">{c.name}</div><div class="sdb-cell-sub" style={{ fontFamily: 'monospace' }}>{c.code}</div></div>,
+      renderCell: c => (
+        <div>
+          <div class="sdb-vname">
+            {c.name}
+            {pendingCrComponentIds.has(c.id) && (
+              <span style={{ marginLeft: 6, fontSize: 10 }}><StatBadge tone="wn">Pending</StatBadge></span>
+            )}
+          </div>
+          <div class="sdb-cell-sub" style={{ fontFamily: 'monospace' }}>{c.code}</div>
+        </div>
+      ),
     },
     { key: 'kind', label: 'Category', sortAccessor: c => c.kind, renderCell: c => <StatBadge tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</StatBadge> },
     { key: 'taxable', label: 'Taxable', align: 'center', renderCell: c => c.isTaxable ? <span class="sdb-ck tax">Taxable</span> : <span class="sdb-muted-txt">—</span> },
@@ -616,33 +658,91 @@ function PayComponentsTab({ components, loading, error, canManage, onNew, onEdit
 
   const rowActions = canManage
     ? (c: PayComponent): DtAction<PayComponent>[] => (c.isActive && !c.isStatutory
-        ? [{ key: 'retire', label: 'Retire', icon: 'close', tone: 'danger', onClick: () => handleRetire(c) }]
+        ? [{ key: 'retire', label: 'Submit retire request', icon: 'close', tone: 'danger', onClick: () => void handleRetire(c) }]
         : [])
     : undefined;
 
+  // Pending Changes panel: visible to approvers.
+  const crApproveDisabled = approveMut.isPending || rejectMut.isPending;
+
   return (
-    <DataTable<PayComponent>
-      columns={columns}
-      rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-      rowKey={c => c.id}
-      rowActions={rowActions}
-      onRowClick={canManage ? (c => onEdit(c)) : undefined}
-      loading={loading}
-      emptyState={{ icon: 'fa-money-bill-wave', title: error ? 'Could not load components' : 'No pay components', text: error ?? 'Add earnings and deductions to build the payroll catalogue.' }}
-      globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by code or name…' }}
-      filterChips={
-        <>
-          <FilterDropdown id="pc-kind" label="Category" openId={openId} setOpenId={setOpenId} labelFn={humanize}
-            options={['earning', 'deduction']} selected={kinds} onChange={v => { setKinds(v); setPage(0); }} />
-          <FilterDropdown id="pc-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
-            options={['active', 'retired']} selected={statuses} onChange={v => { setStatuses(v); setPage(0); }} />
-        </>
-      }
-      toolbarRight={canManage ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button> : undefined}
-      sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
-      pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
-      noun="components"
-    />
+    <div>
+      <DataTable<PayComponent>
+        columns={columns}
+        rows={filtered.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
+        rowKey={c => c.id}
+        rowActions={rowActions}
+        onRowClick={canManage ? (c => onEdit(c)) : undefined}
+        loading={loading}
+        emptyState={{ icon: 'fa-money-bill-wave', title: error ? 'Could not load components' : 'No pay components', text: error ?? 'Add earnings and deductions to build the payroll catalogue.' }}
+        globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by code or name…' }}
+        filterChips={
+          <>
+            <FilterDropdown id="pc-kind" label="Category" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+              options={['earning', 'deduction']} selected={kinds} onChange={v => { setKinds(v); setPage(0); }} />
+            <FilterDropdown id="pc-status" label="Status" openId={openId} setOpenId={setOpenId} labelFn={humanize}
+              options={['active', 'retired']} selected={statuses} onChange={v => { setStatuses(v); setPage(0); }} />
+          </>
+        }
+        toolbarRight={canManage ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button> : undefined}
+        sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
+        pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
+        noun="components"
+      />
+
+      {/* Pending Changes panel — visible to users with approve permission */}
+      {(canApproveComponents || (canManage && pendingCRs.length > 0)) && (
+        <div class="sdb-section" style={{ marginTop: 28 }}>
+          <div class="sdb-section-head">
+            <span class="sdb-section-title">Pending Changes</span>
+            {pendingCRs.length > 0 && <StatBadge tone="wn">{pendingCRs.length}</StatBadge>}
+          </div>
+          {crsQ.isLoading ? (
+            <div class="sdb-muted-txt" style={{ padding: '16px 0' }}>Loading…</div>
+          ) : pendingCRs.length === 0 ? (
+            <div class="sdb-empty-inline"><span class="sdb-muted-txt">No pending change requests.</span></div>
+          ) : (
+            <table class="vt-table" style={{ marginTop: 10 }}>
+              <thead>
+                <tr>
+                  <th>Change Type</th><th>Component</th><th>Submitted</th><th class="tc">SoD</th><th class="tc">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {pendingCRs.map(cr => {
+                  const isOwnCR = !!currentUserId && cr.createdBy === currentUserId;
+                  const relatedComponent = components.find(c => c.id === cr.componentId);
+                  const label = cr.changeType === 'create'
+                    ? `New: ${String(cr.payload['code'] ?? cr.payload['name'] ?? '—')}`
+                    : relatedComponent ? `${relatedComponent.name} (${relatedComponent.code})` : cr.componentId ?? '—';
+                  return (
+                    <tr key={cr.id}>
+                      <td><StatBadge tone={cr.changeType === 'retire' ? 'dr' : cr.changeType === 'create' ? 'ok' : 'nu'}>{humanize(cr.changeType)}</StatBadge></td>
+                      <td>{label}</td>
+                      <td class="sdb-muted-txt">{fmtDate(cr.createdAt)}</td>
+                      <td class="tc">
+                        {isOwnCR
+                          ? <span class="sdb-ck warn" title="You submitted this request and cannot approve it (segregation of duties).">Cannot approve own</span>
+                          : <span class="sdb-ck ok">Can approve</span>}
+                      </td>
+                      <td class="tc">
+                        {canApproveComponents && !isOwnCR && (
+                          <div style={{ display: 'flex', gap: 6, justifyContent: 'center' }}>
+                            <button type="button" class="sdb-btn sdb-btn--sm sdb-btn--pri" disabled={crApproveDisabled} onClick={() => void handleApprove(cr)}>Approve</button>
+                            <button type="button" class="sdb-btn sdb-btn--sm sdb-btn--danger" disabled={crApproveDisabled} onClick={() => void handleReject(cr)}>Reject</button>
+                          </div>
+                        )}
+                        {isOwnCR && <span class="sdb-muted-txt" style={{ fontSize: 11 }}>Awaiting approval</span>}
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          )}
+        </div>
+      )}
+    </div>
   );
 }
 

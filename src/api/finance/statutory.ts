@@ -158,6 +158,23 @@ export interface CreatePayComponentArgs {
   costAllocationRequired?: boolean;
 }
 
+/**
+ * A pending or resolved change request for a pay component.
+ * Returned by create/update/retire (the mutation opens a CR, not the component directly).
+ */
+export interface PayComponentChangeRequest {
+  id: string;
+  changeType: 'create' | 'update' | 'retire';
+  componentId: string | null;
+  payload: Record<string, unknown>;
+  status: 'pending_approval' | 'approved' | 'rejected';
+  createdBy: string | null;
+  approvedBy: string | null;
+  workflowId: string | null;
+  createdAt: string;
+  updatedAt: string | null;
+}
+
 // ── Core call helper ────────────────────────────────────────────────────────────
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
@@ -213,9 +230,18 @@ export const financeStatutoryApi = {
 
   // Pay-component catalogue (Finance-owned)
   listComponents:    (a: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) => call<PayComponent[]>('finance/payroll/components/list', a),
-  createComponent:   (a: CreatePayComponentArgs)                             => call<PayComponent>('finance/payroll/components/create', a),
-  updateComponent:   (a: { id: string } & Partial<CreatePayComponentArgs>)  => call<PayComponent>('finance/payroll/components/update', a),
-  retireComponent:   (a: { id: string })                                     => call<PayComponent>('finance/payroll/components/retire', a),
+  // Mutations now open a change request (maker-checker); the return type is a CR, not the component.
+  createComponent:   (a: CreatePayComponentArgs)                            => call<PayComponentChangeRequest>('finance/payroll/components/create', a),
+  updateComponent:   (a: { id: string } & Partial<CreatePayComponentArgs>) => call<PayComponentChangeRequest>('finance/payroll/components/update', a),
+  retireComponent:   (a: { id: string })                                    => call<PayComponentChangeRequest>('finance/payroll/components/retire', a),
+
+  // Change-request approval queue
+  listComponentChangeRequests: (a: { status?: PayComponentChangeRequest['status']; componentId?: string } = {}) =>
+    call<PayComponentChangeRequest[]>('finance/payroll/components/change-requests/list', a),
+  approveComponentChangeRequest: (a: { id: string }) =>
+    call<PayComponentChangeRequest>('finance/payroll/components/change-requests/approve', a),
+  rejectComponentChangeRequest: (a: { id: string; reason?: string }) =>
+    call<PayComponentChangeRequest>('finance/payroll/components/change-requests/reject', a),
 };
 
 // ── Query keys ────────────────────────────────────────────────────────────────
@@ -229,6 +255,7 @@ export const financeStatutoryKeys = {
   reports:          ()               => ['finance', 'statutory', 'reports'] as const,
   report:           (key: string, o: object = {}) => ['finance', 'statutory', 'report', key, o] as const,
   components:       (o: object = {}) => ['finance', 'payroll', 'components', o] as const,
+  componentCRs:     (o: object = {}) => ['finance', 'payroll', 'components', 'change-requests', o] as const,
 };
 
 // ── Query hooks ─────────────────────────────────────────────────────────────────
@@ -245,6 +272,17 @@ export function useNisClasses(statutoryVersionId: string | null) {
 }
 export function usePayComponents(opts: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) {
   return useQuery({ queryKey: financeStatutoryKeys.components(opts), queryFn: () => financeStatutoryApi.listComponents(opts) });
+}
+
+/** Live pending/approved/rejected change requests for the pay-component catalogue. */
+export function usePayComponentChangeRequests(opts: {
+  status?: PayComponentChangeRequest['status'];
+  componentId?: string;
+} = {}) {
+  return useQuery({
+    queryKey: financeStatutoryKeys.componentCRs(opts),
+    queryFn:  () => financeStatutoryApi.listComponentChangeRequests(opts),
+  });
 }
 export function useVersionDetail(id: string | null) {
   return useQuery({
@@ -276,7 +314,7 @@ export function useStatutoryMutation<A, R>(fn: (a: A) => Promise<R>) {
     mutationFn: fn,
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ['finance', 'statutory'] });
-      void qc.invalidateQueries({ queryKey: ['finance', 'payroll', 'components'] });
+      void qc.invalidateQueries({ queryKey: ['finance', 'payroll'] });
     },
   });
 }

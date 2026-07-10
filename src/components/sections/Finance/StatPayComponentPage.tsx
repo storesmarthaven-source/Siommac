@@ -78,14 +78,14 @@ export function StatPayComponentPage({ edit, onClose }: {
           reducesChargeable: f.reducesChargeable, glAccountCode: f.glAccountCode.trim() || null,
           costAllocationRequired: f.costAllocationRequired,
         });
-        toast(`Pay component ${edit.code} updated.`);
+        toast(`Update request for ${edit.code} submitted for approval.`);
       } else {
         await createMut.mutateAsync({
           code: f.code.trim().toUpperCase(), name: f.name.trim(), kind: f.kind as 'earning' | 'deduction',
           isStatutory: f.isStatutory, isTaxable: f.isTaxable, reducesChargeable: f.reducesChargeable,
           glAccountCode: f.glAccountCode.trim() || null, costAllocationRequired: f.costAllocationRequired,
         });
-        toast(`Pay component ${f.code.trim().toUpperCase()} created.`);
+        toast(`New component request for ${f.code.trim().toUpperCase()} submitted for approval.`);
       }
       onClose();
     } catch (e) { toast.error((e as Error).message); }
@@ -94,12 +94,12 @@ export function StatPayComponentPage({ edit, onClose }: {
   const retire = async (): Promise<void> => {
     if (!edit) return;
     const ok = await dialog.confirm({
-      title: `Retire pay component ${edit.code}?`,
-      text: 'It will stop appearing in active component lists. Existing payroll history is unaffected.',
-      danger: true, confirmText: 'Retire component',
+      title: `Submit retire request for ${edit.code}?`,
+      text: 'A retire request will be sent for approval. The component remains active until a finance manager approves it.',
+      danger: true, confirmText: 'Submit retire request',
     });
     if (!ok) return;
-    try { await retireMut.mutateAsync({ id: edit.id }); toast(`Pay component ${edit.code} retired.`); onClose(); }
+    try { await retireMut.mutateAsync({ id: edit.id }); toast(`Retire request for ${edit.code} submitted for approval.`); onClose(); }
     catch (e) { toast.error((e as Error).message); }
   };
 
@@ -126,6 +126,14 @@ export function StatPayComponentPage({ edit, onClose }: {
                 <div class="sfp-banner warn">
                   <span class="ic"><IconClock size={15} /></span>
                   <span>You don’t have permission to manage pay components. This page is <b>read-only</b>.</span>
+                </div>
+              )}
+              {!readOnly && (
+                <div class="sfp-banner info">
+                  <span class="ic"><IconShield size={15} /></span>
+                  <span>
+                    <b>Approval required.</b> Changes are submitted as a change request and must be approved by a different Finance Manager before taking effect.
+                  </span>
                 </div>
               )}
 
@@ -186,12 +194,12 @@ export function StatPayComponentPage({ edit, onClose }: {
             <div class="right">
               {edit && canManage && !retired && (
                 <button type="button" class="sfp-btn sfp-btn-danger" onClick={() => void retire()} disabled={busy}>
-                  {retireMut.isPending ? <span class="sfp-spin" /> : null} Retire component
+                  {retireMut.isPending ? <span class="sfp-spin" /> : null} Submit retire request
                 </button>
               )}
               <button type="button" class="sfp-btn sfp-btn-primary" onClick={() => void save()} disabled={busy || readOnly || (show && hasErrors)}>
                 {createMut.isPending || updateMut.isPending ? <span class="sfp-spin" /> : <IconOkBadge />}
-                {edit ? 'Save changes' : 'Create component'}
+                {edit ? 'Submit for approval' : 'Submit for approval'}
               </button>
             </div>
           </div>

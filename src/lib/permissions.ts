@@ -411,7 +411,8 @@ export const PERMISSION_KEYS = [
   'finance.statutory.nis_class.import', // CSV-import NIS class bands into a draft version (Wave 2B)
   // ── Finance pay-component catalogue ─────────────────────────────────────────
   'finance.payroll.components.view',   // view the pay-component catalogue
-  'finance.payroll.components.manage', // create, update and retire pay components
+  'finance.payroll.components.manage', // submit create/update/retire change requests
+  'finance.payroll.components.approve', // approve change requests (creator ≠ approver SoD)
   // ── HR Compensation (pay items — allowances / deductions) ────────────────────
   'hr.compensation.view',           // view compensation pay items for employees
   'hr.compensation.manage',         // create, submit and retire compensation pay items
@@ -625,6 +626,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    'finance.payroll.components.approve',
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
@@ -912,6 +914,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'ui.layout.manage', 'ui.layout.default.manage', 'ui.widgets.packages.view', 'ui.widgets.packages.manage',
     'hr.transfers.view', 'hr.transfers.request', 'hr.transfers.approve', 'hr.transfers.cancel',
     'hr.requests.submit_own', 'hr.requests.manage',
+    // Roster keys
+    'hr.roster.view', 'hr.roster.view_own', 'hr.roster.manage', 'hr.roster.publish', 'hr.roster.templates.manage',
     // Finance Phase-1 keys
     'finance.statutory.view',
     'finance.statutory.manage',
@@ -920,6 +924,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    'finance.payroll.components.approve',
     // HR Compensation + Overtime — ALL keys
     'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
     'hr.compensation.reports.view', 'hr.compensation.reports.export',

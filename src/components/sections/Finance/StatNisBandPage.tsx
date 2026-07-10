@@ -244,8 +244,16 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
                       <span class="ic"><IconInfo /></span>
                       <span>
                         {!canManage
-                          ? <>You don’t have permission to modify NIS contribution bands. This page is <b>read-only</b>.</>
+                          ? <>You don't have permission to modify NIS contribution bands. This page is <b>read-only</b>.</>
                           : <>Bands can only be edited while the rate version is <b>draft</b> or <b>approved</b>. This version is <b>{humanize(version.status)}</b>, so it is locked.</>}
+                      </span>
+                    </div>
+                  )}
+                  {!readOnly && version.status === 'approved' && (
+                    <div class="sfp-banner warn">
+                      <span class="ic"><IconInfo /></span>
+                      <span>
+                        <b>Re-approval required.</b> This version is already <b>approved</b>. Saving will revert it to <b>Awaiting Approval</b> so the updated NIS figures can be re-approved before activation.
                       </span>
                     </div>
                   )}

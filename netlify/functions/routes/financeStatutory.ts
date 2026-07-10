@@ -31,6 +31,9 @@ import {
   createPayComponent,
   updatePayComponent,
   retirePayComponent,
+  listPayComponentChangeRequests,
+  approvePayComponentChangeRequest,
+  rejectPayComponentChangeRequest,
 } from '../lib/finance/payrollComponents';
 import type { HonoVariables } from '../../../types/api';
 
@@ -378,8 +381,49 @@ router.post('/payroll/components/retire', async c => {
   const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
-    await retirePayComponent(v.data.id, actor.id);
-    return c.json({ success: true, data: { id: v.data.id } });
+    const data = await retirePayComponent(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// ── Pay Component Change Requests ──────────────────────────────────────────────
+
+// POST /api/finance/payroll/components/change-requests/list
+router.post('/payroll/components/change-requests/list', async c => {
+  await requirePermission(c, 'finance.payroll.components.view');
+  const v = zv(c, z.object({
+    status: z.enum(['pending_approval', 'approved', 'rejected']).optional(),
+    componentId: z.string().uuid().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listPayComponentChangeRequests(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/payroll/components/change-requests/approve
+router.post('/payroll/components/change-requests/approve', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.components.approve');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await approvePayComponentChangeRequest(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// POST /api/finance/payroll/components/change-requests/reject
+router.post('/payroll/components/change-requests/reject', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.components.approve');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    reason: z.string().max(500).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await rejectPayComponentChangeRequest(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 

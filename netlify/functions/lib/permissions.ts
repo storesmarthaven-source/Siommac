@@ -331,7 +331,8 @@ export const PERMISSION_KEYS = [
   'finance.statutory.nis_class.import', // CSV-import NIS class bands into a draft version (Wave 2B)
   // ── Finance pay-component catalogue ─────────────────────────────────────────
   'finance.payroll.components.view',   // view the pay-component catalogue
-  'finance.payroll.components.manage', // create, update and retire pay components
+  'finance.payroll.components.manage', // submit create/update/retire change requests
+  'finance.payroll.components.approve', // approve change requests (creator ≠ approver SoD)
   // ── HR Compensation (pay items — allowances / deductions) ────────────────────
   'hr.compensation.view',           // view compensation pay items for employees
   'hr.compensation.manage',         // create, submit and retire compensation pay items
@@ -589,6 +590,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    'finance.payroll.components.approve',
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
@@ -787,6 +789,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.statutory.reports.export',
     'finance.payroll.components.view',
     'finance.payroll.components.manage',
+    'finance.payroll.components.approve',
     // HR Compensation + Overtime — ALL keys
     'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
