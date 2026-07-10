@@ -1,7 +1,7 @@
 /**
  * src/components/sections/SuperadminConsole/hooks.ts
  *
- * TanStack Query hooks for the superadmin console (Modules + Permissions tabs).
+ * TanStack Query hooks for the superadmin console (Permissions, Roles, Sessions, Audit).
  *   - useQuery for reads — cache + dedupe + background refresh
  *   - useMutation for writes — no auto-retry, onSuccess invalidates + toast
  *
@@ -12,116 +12,17 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { toast } from '@store/ui';
 import { useSessionStore } from '@store/session';
 import {
-  getModulesApi, setModuleApi, resetModulesApi,
-  getManagersApi, setManagerModuleApi, resetManagerModulesApi,
   listUsersApi, getUserPermissionsApi, setUserPermissionApi, clearUserPermissionApi,
   getActiveSessionsApi, revokeSessionApi,
   getAuditLogsApi,
   listRolesApi, getRolePermissionsApi, createRoleApi, updateRoleApi, deleteRoleApi, setRolePermissionApi,
   listApprovalsApi, approveGrantApi, rejectGrantApi, cancelGrantApi,
-  type ModuleKey, type ModuleMatrix, type ManagerEntry,
   type ConsoleUser, type UserPermissionRow, type ActiveSession,
   type AuditLogFilters, type RoleRow,
   type PermissionApproval, type ApprovalStatus,
 } from '@lib/superadminApi';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
-import { setModuleMatrix } from '@components/nav/navCore';
 import { consoleKeys } from './queryKeys';
-
-// ── Modules tab ───────────────────────────────────────────────────────────────
-
-export function useModuleMatrix() {
-  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  return useQuery({
-    queryKey: consoleKeys.modules(),
-    enabled:  isAuthenticated,   // don't fetch until a session exists (avoids 401 race)
-    queryFn:  async () => {
-      const res = await getModulesApi();
-      if (!res.success || !res.modules) throw new Error('Failed to load modules');
-      return res.modules;
-    },
-  });
-}
-
-export function useSetAdminModule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ module, enabled }: { module: ModuleKey; enabled: boolean }) =>
-      setModuleApi(module, 'admin', enabled),
-    retry: false,
-    onSuccess: (res, vars) => {
-      if (!res.success) { toast.error(res.message ?? 'Failed to update module.'); return; }
-      // Keep the legacy nav matrix in sync, then refresh the cache.
-      const cur = qc.getQueryData<ModuleMatrix>(consoleKeys.modules());
-      if (cur) {
-        const next = { ...cur, [vars.module]: { ...cur[vars.module], admin: vars.enabled } };
-        setModuleMatrix(next);
-      }
-      toast.success(`${vars.module.replace('_', ' ')} ${vars.enabled ? 'enabled' : 'disabled'} for admin.`);
-      void qc.invalidateQueries({ queryKey: consoleKeys.modules() });
-    },
-    onError: () => toast.error('Network error. Try again.'),
-  });
-}
-
-export function useResetAdminModules() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: () => resetModulesApi(),
-    retry: false,
-    onSuccess: (res) => {
-      if (!res.success) { toast.error(res.message ?? 'Failed to reset modules.'); return; }
-      toast.success('Admin module permissions reset to defaults.');
-      void qc.invalidateQueries({ queryKey: consoleKeys.modules() });
-    },
-    onError: () => toast.error('Network error. Try again.'),
-  });
-}
-
-export function useManagers(enabled: boolean) {
-  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  return useQuery({
-    queryKey: consoleKeys.managers(),
-    enabled:  enabled && isAuthenticated,
-    queryFn:  async () => {
-      const res = await getManagersApi();
-      if (!res.success || !res.managers) throw new Error(res.message ?? 'Failed to load managers');
-      return res.managers;
-    },
-  });
-}
-
-export function useSetManagerModule() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: ({ userId, module, enabled }: { userId: string; module: ModuleKey; enabled: boolean }) =>
-      setManagerModuleApi(userId, module, enabled),
-    retry: false,
-    onSuccess: (res, vars) => {
-      if (!res.success) { toast.error(res.message ?? 'Failed to update manager module.'); return; }
-      qc.setQueryData<ManagerEntry[]>(consoleKeys.managers(), prev =>
-        prev?.map(m => m.id === vars.userId
-          ? { ...m, modules: { ...m.modules, [vars.module]: vars.enabled } }
-          : m));
-      toast.success(`${vars.module.replace('_', ' ')} ${vars.enabled ? 'enabled' : 'disabled'}.`);
-    },
-    onError: () => toast.error('Network error. Try again.'),
-  });
-}
-
-export function useResetManagerModules() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (userId: string) => resetManagerModulesApi(userId),
-    retry: false,
-    onSuccess: (res) => {
-      if (!res.success) { toast.error(res.message ?? 'Failed to reset manager modules.'); return; }
-      toast.success('Manager reset to role defaults.');
-      void qc.invalidateQueries({ queryKey: consoleKeys.managers() });
-    },
-    onError: () => toast.error('Network error. Try again.'),
-  });
-}
 
 // ── Permissions tab ───────────────────────────────────────────────────────────
 
