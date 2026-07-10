@@ -22,6 +22,11 @@ interface RateLimiter {
 function rateLimit({ max, windowMs, prefix = 'rl' }: RateLimitOptions): RateLimiter {
   return {
     async check(ip: string | null): Promise<RateLimitResult> {
+      // Dev/testing off-switch: set RATELIMIT_DISABLED=1 in .env to turn every limiter
+      // off (e.g. while hammering auth / admin-security endpoints during manual testing).
+      // Defaults to ON — the limiter is only bypassed when this is explicitly set, so it
+      // can never be disabled by accident in a real deploy.
+      if (process.env.RATELIMIT_DISABLED === '1') return { ok: true };
       const key = `${prefix}:${ip ?? 'unknown'}`;
       const { data, error } = await sb
         .rpc('rate_limit_check', { p_key: key, p_window_ms: windowMs, p_max: max })
