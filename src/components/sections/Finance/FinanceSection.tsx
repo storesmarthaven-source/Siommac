@@ -10,6 +10,7 @@
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
 import { can } from '@lib/permissions';
+import { showSection } from '@components/nav/navCore';
 import { PayslipStudioSection }    from '../PayslipStudio/PayslipStudioSection';
 import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
@@ -80,7 +81,7 @@ export function FinanceSection(): VNode {
   if (sectionId === STATUTORY_FORMS_ID) return <StatutoryFormsOverview />;
   if (sectionId === PAYSLIP_DESIGNER_ID)
     return can('finance.payroll.templates.manage')
-      ? <PayslipStudioSection />
+      ? <PayslipStudioSection onBack={() => showSection('s-finance-overview')} />
       : <div style="padding:48px;text-align:center;color:var(--muted,#8a93ab);font-size:14px;">
           You don't have permission to manage payslip templates.
         </div>;

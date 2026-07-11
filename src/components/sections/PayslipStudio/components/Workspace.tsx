@@ -19,7 +19,7 @@ import { PrintView } from './PrintView';
 import { Toast } from './ui/Toast';
 import { CollapsibleSection } from './ui/CollapsibleSection';
 
-export function Workspace() {
+export function Workspace({ onBack }: { onBack?: () => void }) {
   const { state, dispatch } = useDesigner();
   useKeyboardShortcuts(state, dispatch);
   useAutosave(state.design);
@@ -72,7 +72,7 @@ export function Workspace() {
   return (
     <>
       <div class="app">
-        <Toolbar />
+        <Toolbar onBack={onBack} />
         <div class="body">
           <aside class="panel panel-left">
             <div class="panel-scroll">

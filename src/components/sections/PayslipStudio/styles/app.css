@@ -22,8 +22,12 @@
   --shadow: 0 10px 30px -12px rgba(20, 30, 70, 0.28);
 
   box-sizing: border-box;
-  height: 100%;
-  min-height: 0;
+  /* Full-page takeover: a fixed overlay covering the ERP shell (topbar + sidebar)
+     so the studio is a distraction-free full-screen tool. Out of document flow,
+     so it no longer depends on the host section's height. */
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
   font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, Arial, sans-serif;
   color: var(--ink);
   background: var(--bg);
@@ -33,14 +37,21 @@
 .payslip-studio-root * { box-sizing: border-box; }
 .payslip-studio-root button { font-family: inherit; }
 
-/* Embedding: the studio is a fixed-viewport design tool, but the ERP host panel
-   `section.app-section` is display:block/height:auto and would otherwise grow to
-   the studio's full content height. Constrain the host chain to the content area
-   (main-content is a definite-height flex child) so the studio fills it and its
-   own panes scroll. Scoped via :has() so ONLY the section hosting the studio is
-   affected — every other section keeps its normal document flow. */
-.app-section:has(.payslip-studio-root) { height: 100%; min-height: 0; display: flex; flex-direction: column; }
-.app-section:has(.payslip-studio-root) > * { flex: 1 1 auto; min-height: 0; }
+/* Back button (far left of the studio toolbar) — exits the full-page studio. */
+.payslip-studio-root .psd-back { margin-right: 6px; padding-left: 8px; padding-right: 12px; }
+.payslip-studio-root .psd-back svg { margin-right: -2px; }
+
+/* Loading page shown (full-screen) while the studio chunk + fonts load. */
+.payslip-studio-root .psd-loading {
+  height: 100%; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 16px; color: var(--muted); font-size: 14px; font-weight: 600;
+}
+.payslip-studio-root .psd-spinner {
+  width: 40px; height: 40px; border-radius: 50%;
+  border: 3px solid var(--line); border-top-color: var(--brand);
+  animation: psd-spin 0.8s linear infinite;
+}
+@keyframes psd-spin { to { transform: rotate(360deg); } }
 
 .payslip-studio-root {
 .app { display: flex; flex-direction: column; height: 100%; }

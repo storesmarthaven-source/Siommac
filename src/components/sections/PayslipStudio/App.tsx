@@ -9,10 +9,10 @@ import { Workspace } from '@payslip/components/Workspace';
 const initialDesign = getAutosave() ?? buildTemplate(DEFAULT_TEMPLATE_ID) ?? blankTemplate();
 reseedIds(initialDesign.elements.map((e) => e.id));
 
-export function App() {
+export function App({ onBack }: { onBack?: () => void }) {
   return (
     <DesignerProvider initialDesign={initialDesign}>
-      <Workspace />
+      <Workspace onBack={onBack} />
     </DesignerProvider>
   );
 }

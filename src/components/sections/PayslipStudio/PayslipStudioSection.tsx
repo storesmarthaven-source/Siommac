@@ -12,8 +12,21 @@
 
 import { type VNode } from 'preact';
 import { useEffect } from 'preact/hooks';
-import { App as PayslipStudioApp } from '@payslip/App';
+import { lazy, Suspense } from 'preact/compat';
 import './styles/app.css';
+
+// Code-split the studio (large) so opening the designer shows a loading page
+// while its chunk + fonts load, and the Finance/AC bundles stay lean.
+const PayslipStudioApp = lazy(() => import('@payslip/App').then(m => ({ default: m.App })));
+
+function StudioLoading(): VNode {
+  return (
+    <div class="psd-loading">
+      <div class="psd-spinner" aria-hidden="true" />
+      <p>Loading Payslip Studio…</p>
+    </div>
+  );
+}
 
 const FONTS_ID = 'payslip-studio-fonts';
 // The six typefaces the studio's font picker offers. Loaded lazily (only when the
@@ -35,11 +48,14 @@ function ensureStudioFonts(): void {
   document.head.appendChild(link);
 }
 
-export function PayslipStudioSection(): VNode {
+/** `onBack` exits the full-page studio (parent navigates back to its module). */
+export function PayslipStudioSection({ onBack }: { onBack?: () => void }): VNode {
   useEffect(() => { ensureStudioFonts(); }, []);
   return (
     <div class="payslip-studio-root">
-      <PayslipStudioApp />
+      <Suspense fallback={<StudioLoading />}>
+        <PayslipStudioApp onBack={onBack} />
+      </Suspense>
     </div>
   );
 }

@@ -32,7 +32,7 @@ function Btn({
   );
 }
 
-export function Toolbar() {
+export function Toolbar({ onBack }: { onBack?: () => void }) {
   const { state, dispatch } = useDesigner();
   const { design, view } = state;
   const selCount = state.selectedIds.length;
@@ -71,6 +71,14 @@ export function Toolbar() {
 
   return (
     <div class="toolbar">
+      {onBack && (
+        <button class="tb-btn psd-back" title="Back" onClick={onBack}>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M15 18l-6-6 6-6" />
+          </svg>
+          Back
+        </button>
+      )}
       <span class="logo">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
           <path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2z" />
