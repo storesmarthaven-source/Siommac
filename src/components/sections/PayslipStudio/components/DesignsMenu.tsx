@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'preact/hooks';
+import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDesigner } from '@payslip/state/DesignerContext';
 import { templateStore, type StoredTemplate } from '@payslip/lib/store';
 import { computeFitZoom } from '@payslip/lib/fit';
@@ -19,11 +19,18 @@ export function DesignsMenu() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [items, setItems] = useState<StoredTemplate[]>([]);
+  const [busy, setBusy] = useState<'update' | 'save' | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
 
   const refresh = () => {
     void templateStore.list().then(setItems);
   };
+
+  // Is the current canvas different from the saved copy of the open design?
+  // (Drives the Update button's enabled state so it can't no-op or lie.)
+  const currentJson = useMemo(() => JSON.stringify(state.design), [state.design]);
+  const openItem = active ? items.find((i) => i.id === active.id) : undefined;
+  const dirty = !!active && (!openItem || currentJson !== JSON.stringify(openItem.design));
 
   useEffect(() => {
     if (!open) return;
@@ -36,20 +43,38 @@ export function DesignsMenu() {
   }, [open]);
 
   const updateActive = async () => {
-    if (!active) return;
-    const updated = await templateStore.update(active.id, { design: state.design });
-    if (updated) {
-      refresh();
-      showToast(`Updated “${active.name}”`);
+    if (!active || busy || !dirty) return;
+    setBusy('update');
+    try {
+      const updated = await templateStore.update(active.id, { design: state.design });
+      if (updated) {
+        refresh();
+        showToast(`Updated “${active.name}”`);
+      } else {
+        showToast('Could not update — the design may have been removed.', 'error');
+      }
+    } catch (e) {
+      showToast((e as Error)?.message || 'Could not update the design.', 'error');
+    } finally {
+      setBusy(null);
     }
   };
 
   const saveAsNew = async () => {
-    const entry = await templateStore.create(name || active?.name || 'Untitled', state.design);
-    dispatch({ kind: 'setSavedRef', ref: { id: entry.id, name: entry.name } });
-    setName('');
-    refresh();
-    showToast(`Saved “${entry.name}”`);
+    if (busy) return;
+    const nm = (name || active?.name || 'Untitled').trim();
+    setBusy('save');
+    try {
+      const entry = await templateStore.create(nm, state.design);
+      dispatch({ kind: 'setSavedRef', ref: { id: entry.id, name: entry.name } });
+      setName('');
+      refresh();
+      showToast(`Saved “${entry.name}”`);
+    } catch (e) {
+      showToast((e as Error)?.message || 'Could not save the design.', 'error');
+    } finally {
+      setBusy(null);
+    }
   };
 
   const openDesign = (item: StoredTemplate) => {
@@ -61,15 +86,24 @@ export function DesignsMenu() {
   };
 
   const remove = async (item: StoredTemplate) => {
-    await templateStore.remove(item.id);
-    if (active?.id === item.id) dispatch({ kind: 'setSavedRef', ref: null });
-    refresh();
+    try {
+      await templateStore.remove(item.id);
+      if (active?.id === item.id) dispatch({ kind: 'setSavedRef', ref: null });
+      refresh();
+      showToast(`Deleted “${item.name}”`);
+    } catch (e) {
+      showToast((e as Error)?.message || 'Could not delete the design.', 'error');
+    }
   };
 
   const makeDefault = async (item: StoredTemplate) => {
-    await templateStore.setDefault(item.id);
-    refresh();
-    showToast(`“${item.name}” is now the default`);
+    try {
+      await templateStore.setDefault(item.id);
+      refresh();
+      showToast(`“${item.name}” is now the default`);
+    } catch (e) {
+      showToast((e as Error)?.message || 'Could not set the default.', 'error');
+    }
   };
 
   return (
@@ -85,8 +119,12 @@ export function DesignsMenu() {
                 <span class="dz-openlabel">Open:</span>
                 <span class="dz-openname" title={active.name}>{active.name}</span>
               </div>
-              <button class="dz-update" onClick={updateActive}>
-                Update this design
+              <button
+                class="dz-update"
+                onClick={() => void updateActive()}
+                disabled={busy !== null || !dirty}
+              >
+                {busy === 'update' ? 'Updating…' : dirty ? 'Update this design' : 'No changes to update'}
               </button>
             </>
           ) : (
@@ -101,8 +139,8 @@ export function DesignsMenu() {
               onInput={(e) => setName((e.target as HTMLInputElement).value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void saveAsNew(); }}
             />
-            <button class="dz-savebtn" onClick={() => void saveAsNew()}>
-              {active ? 'Save as new' : 'Save'}
+            <button class="dz-savebtn" onClick={() => void saveAsNew()} disabled={busy !== null}>
+              {busy === 'save' ? 'Saving…' : active ? 'Save as new' : 'Save'}
             </button>
           </div>
 

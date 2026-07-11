@@ -66,7 +66,7 @@ export function Toolbar({ onBack }: { onBack?: () => void }) {
       if (!d.elements) throw new Error('bad');
       load(d, 'Imported');
     } catch {
-      showToast('Invalid file');
+      showToast('Invalid file — expected a Payslip Studio JSON export.', 'error');
     }
   };
 

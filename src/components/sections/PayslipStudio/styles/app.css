@@ -122,16 +122,18 @@
 .dz-openlabel { font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
 .dz-openname { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .dz-unsaved { color: var(--muted); font-style: italic; }
-.dz-update { width: 100%; height: 34px; border: none; border-radius: 7px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; }
-.dz-update:hover { background: #4a5468; }
+.dz-update { width: 100%; height: 34px; border: none; border-radius: 7px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: background .12s, opacity .12s; }
+.dz-update:hover:not(:disabled) { background: #4a5468; }
+.dz-update:disabled { opacity: .5; cursor: default; }
 .dz-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #12a25a; background: #e6f6ee; border-radius: 999px; padding: 1px 6px; margin-left: 8px; vertical-align: middle; }
 .dz-item.current .dz-open { background: #eef6f0; border-color: #cdeadb; }
 
 .dz-save { display: flex; gap: 6px; }
 .dz-save input { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line); border-radius: 6px; padding: 0 8px; font-size: 12.5px; color: var(--ink); }
 .dz-save input:focus { outline: none; border-color: var(--brand); }
-.dz-savebtn { height: 32px; padding: 0 14px; border: none; border-radius: 6px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; }
-.dz-savebtn:hover { background: #4a5468; }
+.dz-savebtn { height: 32px; padding: 0 14px; border: none; border-radius: 6px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: background .12s, opacity .12s; }
+.dz-savebtn:hover:not(:disabled) { background: #4a5468; }
+.dz-savebtn:disabled { opacity: .5; cursor: default; }
 .dz-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 6px; }
 .dz-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
 .dz-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 12.5px; }
@@ -396,11 +398,10 @@ table.pay-tbl tr.pt-spacer td { height: 100%; padding: 0; border: none; backgrou
 .layer .lyr-rename:focus { outline: none; }
 .layer .lz { margin-left: auto; color: var(--muted); font-size: 11px; }
 
-/* ---------------- Status + toast ---------------- */
+/* ---------------- Status bar ---------------- */
+/* Toasts now go through the ERP toast system (@store) — no bespoke studio toast. */
 .statusbar { flex: none; height: 26px; background: var(--toolbar); border-top: 1px solid #141a30; display: flex; align-items: center; gap: 16px; padding: 0 14px; font-size: 11.5px; color: #aab3d0; }
 .statusbar b { color: #ffffff; font-weight: 600; }
-.toast { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%) translateY(20px); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 8px; font-size: 13px; font-weight: 600; opacity: 0; pointer-events: none; transition: 0.25s; z-index: 2000; }
-.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
 
 /* ---------------- Print ---------------- */
 #print-root { display: none; }

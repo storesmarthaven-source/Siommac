@@ -17,7 +17,6 @@ import { PageSetupPanel } from './panels/PageSetupPanel';
 import { LayersPanel } from './panels/LayersPanel';
 import { StatusBar } from './StatusBar';
 import { PrintView } from './PrintView';
-import { Toast } from './ui/Toast';
 import { CollapsibleSection } from './ui/CollapsibleSection';
 
 interface WorkspaceProps {
@@ -111,7 +110,6 @@ export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: W
       </div>
 
       <PrintView />
-      <Toast />
     </>
   );
 }
