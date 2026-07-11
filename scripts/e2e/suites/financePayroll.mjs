@@ -1028,6 +1028,102 @@ export default async function run(h) {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Hourly base pay from approved timesheets (Wave 4c)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Isolated via a dedicated pay group so lockInputs populates ONLY these two
+  // hourly employees. Emp A has an approved timesheet (base = rate × hours);
+  // Emp B has none (base = 0 + missing_approved_timesheet warning).
+
+  const hrly = {
+    empAId: `${TAG}_hrlyA`,
+    empBId: `${TAG}_hrlyB`,
+    groupId: null,
+    tsId: null,
+    runId: null,
+    period: '2031-03-01',
+    periodEnd: '2031-03-31',
+  };
+
+  await test('setup: create two hourly employees + a scoped pay group with an approved timesheet', async () => {
+    const { error: uErr } = await sb.from('app_users').insert([
+      { id: hrly.empAId, username: `${TAG}_hrlyA`, full_name: 'Hourly A (E2E)', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'hourly', hourly_rate: 50 },
+      { id: hrly.empBId, username: `${TAG}_hrlyB`, full_name: 'Hourly B (E2E)', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'hourly', hourly_rate: 40 },
+    ]);
+    expect(!uErr, `create hourly employees failed: ${uErr?.message}`);
+    ctx.createdUserIds.push(hrly.empAId, hrly.empBId);
+
+    const code = ('HG' + TAG.replace(/[^a-z0-9]/gi, '')).slice(0, 18).toUpperCase();
+    const gr = await api('finance/payroll/pay-groups/create', fmgr1Token, { code, name: `Hourly Group ${TAG}`, frequency: 'weekly' });
+    ok(gr, `create pay group failed: ${gr.body.message}`);
+    hrly.groupId = gr.body.data.id;
+
+    for (const id of [hrly.empAId, hrly.empBId]) {
+      const ar = await api('finance/payroll/pay-groups/assign', fmgr1Token, { employeeId: id, payGroupId: hrly.groupId, effectiveFrom: '2031-01-01' });
+      ok(ar, `assign ${id} failed: ${ar.body.message}`);
+    }
+
+    // Emp A: approved timesheet inside the run month — 4800 worked minutes = 80h.
+    const { data: ts, error: tsErr } = await sb.from('hr_timesheets').insert({
+      employee_id: hrly.empAId, period_start: '2031-03-03', period_end: '2031-03-16',
+      timesheet_no: `${TAG}-TSA`, total_worked_minutes: 4800, total_late_minutes: 0, total_overtime_minutes: 0,
+      days_present: 10, days_absent: 0, days_on_leave: 0, open_exception_count: 0,
+      status: 'approved', approved_by: fmgr1Id, approved_at: new Date().toISOString(),
+    }).select('id').single();
+    expect(!tsErr, `seed approved timesheet failed: ${tsErr?.message}`);
+    hrly.tsId = ts?.id ?? null;
+  });
+
+  await test('create + lock a pay-group run and hourly base pay = rate × approved hours', async () => {
+    const cr = await api('finance/payroll/runs/create', fmgr1Token, { periodMonth: hrly.period, payGroupId: hrly.groupId });
+    ok(cr, `create hourly run failed: ${cr.body.message}`);
+    hrly.runId = cr.body.data.id;
+
+    const lr = await api('finance/payroll/runs/lock-inputs', fmgr1Token, { id: hrly.runId });
+    ok(lr, `lock-inputs failed: ${lr.body.message}`);
+
+    const ir = await api('finance/payroll/inputs/list', fmgr1Token, { runId: hrly.runId });
+    ok(ir, `inputs/list failed: ${ir.body.message}`);
+    const inputs = ir.body.data;
+
+    const baseA = inputs.find(i => i.sourceType === 'base_pay' && i.employeeId === hrly.empAId);
+    expect(baseA, 'no base_pay input for hourly emp A');
+    expect(baseA.amount === 4000, `emp A base should be 50×80=4000, got ${baseA.amount}`);
+    expect(baseA.quantity === 80, `emp A quantity should be 80 hours, got ${baseA.quantity}`);
+    expect(baseA.rate === 50, `emp A rate should be 50, got ${baseA.rate}`);
+    expect(baseA.metadata?.has_approved_timesheet === true, 'emp A metadata.has_approved_timesheet should be true');
+
+    const baseB = inputs.find(i => i.sourceType === 'base_pay' && i.employeeId === hrly.empBId);
+    expect(baseB, 'no base_pay input for hourly emp B');
+    expect(baseB.amount === 0, `emp B base should be 0 (no timesheet), got ${baseB.amount}`);
+    expect(baseB.metadata?.has_approved_timesheet === false, 'emp B metadata.has_approved_timesheet should be false');
+  });
+
+  await test('calculate raises missing_approved_timesheet warning for the hourly employee with no timesheet', async () => {
+    const cr = await api('finance/payroll/runs/calculate', fmgr1Token, { id: hrly.runId });
+    ok(cr, `calculate failed: ${cr.body.message}`);
+
+    const wr = await api('finance/payroll/warnings/list', fmgr1Token, { runId: hrly.runId });
+    ok(wr, `warnings/list failed: ${wr.body.message}`);
+    const missing = (wr.body.data ?? []).filter(w => w.warningType === 'missing_approved_timesheet' && w.employeeId === hrly.empBId);
+    expect(missing.length > 0, 'expected a missing_approved_timesheet warning for emp B');
+  });
+
+  await test('cleanup: remove the hourly run, timesheet and pay group (compensating delete)', async () => {
+    if (hrly.runId) {
+      try { await sb.from('finance_payroll_run_warnings').delete().eq('run_id', hrly.runId); } catch {}
+      try { await sb.from('finance_payroll_run_lines').delete().eq('run_id', hrly.runId); } catch {}
+      try { await sb.from('finance_payroll_run_inputs').delete().eq('run_id', hrly.runId); } catch {}
+      try { await sb.from('finance_payroll_runs').delete().eq('id', hrly.runId); } catch {}
+    }
+    if (hrly.tsId) { try { await sb.from('hr_timesheets').delete().eq('id', hrly.tsId); } catch {} }
+    if (hrly.groupId) {
+      try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', hrly.groupId); } catch {}
+      try { await sb.from('finance_pay_groups').delete().eq('id', hrly.groupId); } catch {}
+    }
+    expect(true, 'cleanup complete');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Legacy removal verification');
   // ═══════════════════════════════════════════════════════════════════════════
 

@@ -522,6 +522,28 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   // otherwise the entry's own multiplier is used (legacy behaviour).
   const otRules: OvertimeRule[] = await loadActiveOvertimeRules();
 
+  // ── 3b. Approved timesheets covering this run period ──────────────────────
+  // Hourly base pay = approved worked-hours × hourly rate. A timesheet belongs to
+  // the run whose month contains its period_start (deterministic — no double-count
+  // across adjacent runs). Salaried pay is prorated by the run's pay frequency
+  // (annual ÷ pay periods), so a weekly run pays a week's share, not a full month.
+  const round2 = (n: number): number => Math.round(n * 100) / 100;
+  const payPeriods = payPeriodsForFrequency(run.payFrequency);
+  const { data: tsRows, error: tsErr } = await sb.from('hr_timesheets')
+    .select('id, employee_id, total_worked_minutes')
+    .eq('status', 'approved')
+    .gte('period_start', periodStart)
+    .lte('period_start', periodEnd)
+    .in('employee_id', empList.map(e => e.id));
+  if (tsErr) throw Object.assign(new Error('lockInputs/timesheets: ' + tsErr.message), { status: 500 });
+  const tsByEmp = new Map<string, { minutes: number; ids: string[] }>();
+  for (const t of (tsRows ?? []) as { id: string; employee_id: string; total_worked_minutes: number }[]) {
+    const cur = tsByEmp.get(t.employee_id) ?? { minutes: 0, ids: [] };
+    cur.minutes += Number(t.total_worked_minutes ?? 0);
+    cur.ids.push(t.id);
+    tsByEmp.set(t.employee_id, cur);
+  }
+
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const now = new Date().toISOString();
   const inputRows: Record<string, unknown>[] = [];
@@ -531,21 +553,36 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
 
   for (const emp of empList) {
     // Base pay
-    const basePay = emp.pay_basis === 'salary'
-      ? (emp.monthly_salary ?? 0)
-      : (emp.hourly_rate ?? 0); // hourly: actual hours come from timesheets (Phase 3 s3)
+    //  • salaried: monthly salary prorated to the run's pay frequency (annual ÷ pay periods).
+    //  • hourly:   approved-timesheet worked hours × hourly rate (0 until a timesheet is approved).
+    const isSalary      = emp.pay_basis === 'salary';
+    const ts            = tsByEmp.get(emp.id);
+    const workedHours   = ts ? round2(ts.minutes / 60) : 0;
+    const hasApprovedTs = !!ts;
+    const hourlyRate    = emp.hourly_rate ?? 0;
+    const basePay       = isSalary
+      ? round2(((emp.monthly_salary ?? 0) * 12) / payPeriods)
+      : round2(hourlyRate * workedHours);
 
     inputRows.push({
       run_id:         runId,
       employee_id:    emp.id,
       source_type:    'base_pay',
       source_id:      emp.id,
-      component_code: emp.pay_basis === 'salary' ? 'basic' : 'hourly',
-      label:          emp.pay_basis === 'salary' ? 'Monthly Salary' : 'Hourly Rate',
+      component_code: isSalary ? 'basic' : 'hourly',
+      label:          isSalary ? 'Salary (period)' : `Hourly (${workedHours}h)`,
       amount:         basePay,
-      quantity:       null,
-      rate:           null,
-      metadata:       { pay_basis: emp.pay_basis },
+      quantity:       isSalary ? null : workedHours,
+      rate:           isSalary ? null : hourlyRate,
+      metadata:       {
+        pay_basis:              emp.pay_basis,
+        pay_periods:            payPeriods,
+        has_approved_timesheet: hasApprovedTs,
+        timesheet_ids:          ts?.ids ?? [],
+        ...(isSalary
+          ? { monthly_salary: emp.monthly_salary ?? 0 }
+          : { hourly_rate: hourlyRate, worked_hours: workedHours }),
+      },
     });
 
     // Pay items for this employee
@@ -600,9 +637,10 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
         }
       }
 
-      // OT pay = payableHours × multiplier × hourly-equivalent
+      // OT pay = payableHours × multiplier × hourly-equivalent.
+      // Salaried per-hour = annual ÷ standard annual hours (52 weeks × 40h = 2080).
       const hourlyEquivalent = emp.pay_basis === 'salary'
-        ? (emp.monthly_salary ?? 0) / (4.333 * 8 * 20) // rough daily-rate equivalent
+        ? ((emp.monthly_salary ?? 0) * 12) / 2080
         : (emp.hourly_rate ?? 0);
       const otAmount = payableHours * multiplier * hourlyEquivalent;
 
@@ -764,6 +802,30 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
           metadata:     {},
         });
       }
+    }
+
+    // ── Timesheet warnings (base pay depends on approved worked hours) ────────
+    // Derived from the base_pay input metadata snapshotted at lock-inputs time.
+    const baseInput = empInputs.find(i => i.sourceType === 'base_pay');
+    const baseMeta = (baseInput?.metadata ?? {}) as { pay_basis?: string; has_approved_timesheet?: boolean };
+    if (baseMeta.pay_basis === 'hourly' && !baseMeta.has_approved_timesheet) {
+      warningRows.push({
+        run_id:       runId,
+        employee_id:  empId,
+        warning_type: 'missing_approved_timesheet',
+        severity:     policy.requireApprovedTimesheetForHourly ? 'blocker' : 'warning',
+        message:      `Hourly employee ${empId} has no approved timesheet for the period — base pay is 0 until a timesheet is approved.`,
+        metadata:     {},
+      });
+    } else if (baseMeta.pay_basis === 'salary' && !baseMeta.has_approved_timesheet && policy.warnMissingTimesheetForSalary) {
+      warningRows.push({
+        run_id:       runId,
+        employee_id:  empId,
+        warning_type: 'missing_timesheet_salary',
+        severity:     'info',
+        message:      `Salaried employee ${empId} has no approved timesheet for the period (informational; full salary applied).`,
+        metadata:     {},
+      });
     }
 
     // ── Aggregate inputs ────────────────────────────────────────────────────
