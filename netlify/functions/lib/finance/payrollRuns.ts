@@ -25,8 +25,13 @@ import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } fro
 import { getPayGroup, listGroupMemberIds } from './payGroups';
 import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
 import { loadLoanInstallments, recordLoanDeductionsForRun, reverseLoanDeductionsForRun } from './loans';
-import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
+import { getStatutoryProfilesByEmployees } from '../hr/statutoryProfileCore';
+import { selectAllRows, chunkedInsert, chunk } from '../dbBulk';
 import { resolveSettingValue } from '../settings/resolveSetting';
+
+/** Supported scale ceiling for a single run's calc/lock (500–1k target, ~2k headroom).
+ *  Beyond this, the pipeline is rejected rather than silently truncating. */
+export const MAX_RUN_EMPLOYEES = 2000;
 import { startWorkflowForRecord, decideTask } from '../workflow/service';
 import { notifyUsersByRole } from './financeEvents';
 import { notify } from '../notify';
@@ -285,10 +290,11 @@ export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
 }
 
 export async function listRunInputs(runId: string): Promise<PayrollRunInputDto[]> {
-  const { data, error } = await sb.from('finance_payroll_run_inputs')
-    .select('*').eq('run_id', runId).order('employee_id').order('source_type');
-  if (error) throw Object.assign(new Error('listRunInputs: ' + error.message), { status: 500 });
-  return ((data ?? []) as DbInputRow[]).map(toInputDto);
+  // Paginate: a large run's inputs exceed PostgREST's 1000-row cap (which would
+  // silently truncate and mis-calculate).
+  const rows = await selectAllRows<DbInputRow>(() =>
+    sb.from('finance_payroll_run_inputs').select('*').eq('run_id', runId).order('employee_id').order('source_type').order('id'));
+  return rows.map(toInputDto);
 }
 
 export async function listRunLines(runId: string): Promise<PayrollRunLineDto[]> {
@@ -467,33 +473,40 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     }
   }
 
-  let empQuery = sb.from('app_users')
-    .select('id, pay_basis, monthly_salary, hourly_rate, department_id')
-    .eq('status', 'active')
-    .not('pay_basis', 'is', null);
-  if (memberIds) empQuery = empQuery.in('id', memberIds);
-  const { data: employees, error: empErr } = await empQuery;
-  if (empErr) throw Object.assign(new Error('lockInputs/employees: ' + empErr.message), { status: 500 });
-
-  const empList = (employees ?? []) as {
-    id: string; pay_basis: string | null;
-    monthly_salary: number | null; hourly_rate: number | null;
-    department_id: string | null;
-  }[];
+  const EMP_COLS = 'id, pay_basis, monthly_salary, hourly_rate, department_id';
+  type EmpRow = { id: string; pay_basis: string | null; monthly_salary: number | null; hourly_rate: number | null; department_id: string | null };
+  let empList: EmpRow[];
+  if (memberIds) {
+    // Grouped run: fetch by member id in chunks (a large IN() list overflows the URL).
+    empList = [];
+    for (const ids of chunk(memberIds, 300)) {
+      const { data, error } = await sb.from('app_users').select(EMP_COLS).eq('status', 'active').not('pay_basis', 'is', null).in('id', ids);
+      if (error) throw Object.assign(new Error('lockInputs/employees: ' + error.message), { status: 500 });
+      empList.push(...((data ?? []) as EmpRow[]));
+    }
+  } else {
+    // Ungrouped run: all active employees — paginate past the 1000-row cap.
+    empList = await selectAllRows<EmpRow>(() =>
+      sb.from('app_users').select(EMP_COLS).eq('status', 'active').not('pay_basis', 'is', null).order('id'));
+  }
 
   if (empList.length === 0) {
     throw Object.assign(new Error('No active employees with pay_basis found.'), { status: 422 });
   }
+  if (empList.length > MAX_RUN_EMPLOYEES) {
+    throw Object.assign(new Error(`This run would populate ${empList.length} employees, above the supported single-run ceiling of ${MAX_RUN_EMPLOYEES}. Split it into multiple pay groups.`), { status: 422 });
+  }
 
   // ── 2. Collect approved-active pay items effective in this period ─────────
-  const { data: payItems, error: piErr } = await sb
-    .from('hr_employee_pay_items')
-    .select('id, employee_id, component_id, amount, percent, effective_from, effective_to')
-    .eq('is_active', true)
-    .eq('status', 'active')
-    .lte('effective_from', periodEnd)
-    .or(`effective_to.is.null,effective_to.gte.${periodStart}`);
-  if (piErr) throw Object.assign(new Error('lockInputs/payItems: ' + piErr.message), { status: 500 });
+  // Paginate: at ~1000 employees the run's pay items exceed the 1000-row cap.
+  const payItems = await selectAllRows<{ id: string; employee_id: string; component_id: string; amount: number | null; percent: number | null; effective_from: string; effective_to: string | null }>(() =>
+    sb.from('hr_employee_pay_items')
+      .select('id, employee_id, component_id, amount, percent, effective_from, effective_to')
+      .eq('is_active', true)
+      .eq('status', 'active')
+      .lte('effective_from', periodEnd)
+      .or(`effective_to.is.null,effective_to.gte.${periodStart}`)
+      .order('id'));
 
   // Resolve component codes for pay items (need code + is_taxable + reduces_chargeable + kind)
   const componentIds = [...new Set((payItems ?? []).map((p: { component_id: string }) => p.component_id))];
@@ -509,14 +522,14 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     }
   }
 
-  // ── 3. Collect approved OT in this period ────────────────────────────────
-  const { data: overtimeEntries, error: otErr } = await sb
-    .from('hr_overtime_entries')
-    .select('id, employee_id, work_date, hours, multiplier, ot_type')
-    .eq('status', 'approved')
-    .gte('work_date', periodStart)
-    .lte('work_date', periodEnd);
-  if (otErr) throw Object.assign(new Error('lockInputs/overtime: ' + otErr.message), { status: 500 });
+  // ── 3. Collect approved OT in this period (paginated) ────────────────────
+  const overtimeEntries = await selectAllRows<{ id: string; employee_id: string; work_date: string; hours: number; multiplier: number | null; ot_type: string | null }>(() =>
+    sb.from('hr_overtime_entries')
+      .select('id, employee_id, work_date, hours, multiplier, ot_type')
+      .eq('status', 'approved')
+      .gte('work_date', periodStart)
+      .lte('work_date', periodEnd)
+      .order('id'));
 
   // Overtime rule engine: when an entry has an ot_type, the multiplier + minimum billable
   // hours come from the active rule (T&T public-holiday / rest-day / callout, etc.);
@@ -530,13 +543,18 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   // (annual ÷ pay periods), so a weekly run pays a week's share, not a full month.
   const round2 = (n: number): number => Math.round(n * 100) / 100;
   const payPeriods = payPeriodsForFrequency(run.payFrequency);
-  const { data: tsRows, error: tsErr } = await sb.from('hr_timesheets')
-    .select('id, employee_id, total_worked_minutes')
-    .eq('status', 'approved')
-    .gte('period_start', periodStart)
-    .lte('period_start', periodEnd)
-    .in('employee_id', empList.map(e => e.id));
-  if (tsErr) throw Object.assign(new Error('lockInputs/timesheets: ' + tsErr.message), { status: 500 });
+  // Chunk the employee-id IN() list (1000+ ids overflow the URL).
+  const tsRows: { id: string; employee_id: string; total_worked_minutes: number }[] = [];
+  for (const ids of chunk(empList.map(e => e.id), 300)) {
+    const { data, error: tsErr } = await sb.from('hr_timesheets')
+      .select('id, employee_id, total_worked_minutes')
+      .eq('status', 'approved')
+      .gte('period_start', periodStart)
+      .lte('period_start', periodEnd)
+      .in('employee_id', ids);
+    if (tsErr) throw Object.assign(new Error('lockInputs/timesheets: ' + tsErr.message), { status: 500 });
+    tsRows.push(...((data ?? []) as { id: string; employee_id: string; total_worked_minutes: number }[]));
+  }
   const tsByEmp = new Map<string, { minutes: number; ids: string[] }>();
   for (const t of (tsRows ?? []) as { id: string; employee_id: string; total_worked_minutes: number }[]) {
     const cur = tsByEmp.get(t.employee_id) ?? { minutes: 0, ids: [] };
@@ -683,11 +701,8 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     }
   }
 
-  // Batch insert inputs
-  if (inputRows.length > 0) {
-    const { error: insertErr } = await sb.from('finance_payroll_run_inputs').insert(inputRows);
-    if (insertErr) throw Object.assign(new Error('lockInputs/insert: ' + insertErr.message), { status: 500 });
-  }
+  // Batch insert inputs (chunked — a large run's inputs exceed one payload)
+  if (inputRows.length > 0) await chunkedInsert('finance_payroll_run_inputs', inputRows);
 
   // ── 5. Update run status ──────────────────────────────────────────────────
   const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
@@ -759,6 +774,12 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
   if (empIds.length === 0) {
     throw Object.assign(new Error('No inputs found for this run. Lock inputs first.'), { status: 422 });
   }
+  if (empIds.length > MAX_RUN_EMPLOYEES) {
+    throw Object.assign(new Error(`This run has ${empIds.length} employees, above the supported single-run ceiling of ${MAX_RUN_EMPLOYEES}. Split it into multiple pay groups.`), { status: 422 });
+  }
+
+  // Batch-load every statutory profile once (was an N+1: one query per employee).
+  const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
   // Clear any prior lines and warnings (allows re-calculate after a fix)
   await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
@@ -776,7 +797,7 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     const empInputs = allInputs.filter(i => i.employeeId === empId);
 
     // ── NIS checks (§13) ────────────────────────────────────────────────────
-    const profile = await getStatutoryProfileByEmployee(empId, 'TT');
+    const profile = profileMap.get(empId) ?? null;   // batch-loaded (no per-employee query)
     const nisApplicable = profile ? profile.nisApplicable : true; // default: applicable
 
     if (nisApplicable) {
@@ -967,17 +988,9 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     totalNisEmployer += result.nisEmployer;
   }
 
-  // ── Insert warnings ──────────────────────────────────────────────────────
-  if (warningRows.length > 0) {
-    const { error: warnErr } = await sb.from('finance_payroll_run_warnings').insert(warningRows);
-    if (warnErr) throw Object.assign(new Error('calculateRun/warnings: ' + warnErr.message), { status: 500 });
-  }
-
-  // ── Insert lines ─────────────────────────────────────────────────────────
-  if (lineRows.length > 0) {
-    const { error: lineErr } = await sb.from('finance_payroll_run_lines').insert(lineRows);
-    if (lineErr) throw Object.assign(new Error('calculateRun/lines: ' + lineErr.message), { status: 500 });
-  }
+  // ── Insert warnings + lines (chunked — a large run exceeds one payload) ───
+  if (warningRows.length > 0) await chunkedInsert('finance_payroll_run_warnings', warningRows);
+  if (lineRows.length > 0)    await chunkedInsert('finance_payroll_run_lines', lineRows);
 
   // ── Roll up totals and set status ────────────────────────────────────────
   const round2 = (n: number) => Math.round(n * 100) / 100;
@@ -1172,12 +1185,15 @@ export async function getEmployeePopulationPreview(
   const activeIds = active.map(r => r.id);
   let missingStatutoryProfile = 0;
   if (activeIds.length > 0) {
-    const { data: spData, error: spErr } = await sb
-      .from('hr_employee_statutory_profiles')
-      .select('employee_id')
-      .in('employee_id', activeIds);
-    if (spErr) throw Object.assign(new Error('populationPreview/sp: ' + spErr.message), { status: 500 });
-    const profiledIds = new Set((spData ?? []).map((r: { employee_id: string }) => r.employee_id));
+    const profiledIds = new Set<string>();
+    for (const ids of chunk(activeIds, 300)) {   // chunk the IN() — 1000+ ids overflow the URL
+      const { data: spData, error: spErr } = await sb
+        .from('hr_employee_statutory_profiles')
+        .select('employee_id')
+        .in('employee_id', ids);
+      if (spErr) throw Object.assign(new Error('populationPreview/sp: ' + spErr.message), { status: 500 });
+      for (const r of (spData ?? []) as { employee_id: string }[]) profiledIds.add(r.employee_id);
+    }
     missingStatutoryProfile = activeIds.filter(id => !profiledIds.has(id)).length;
   }
 

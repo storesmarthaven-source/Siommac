@@ -302,11 +302,17 @@ export async function loadLoanInstallments(
 ): Promise<Map<string, LoanInstallment[]>> {
   const byEmp = new Map<string, LoanInstallment[]>();
   if (employeeIds.length === 0) return byEmp;
-  const { data, error } = await sb.from('finance_employee_loans')
-    .select('id, reference, employee_id, installment_amount, balance, start_period')
-    .eq('status', 'active').gt('balance', 0).in('employee_id', employeeIds);
-  if (error) throw err(500, 'loadLoanInstallments: ' + error.message);
-  for (const l of (data ?? []) as Array<{ id: string; reference: string; employee_id: string; installment_amount: number; balance: number; start_period: string | null }>) {
+  type LoanRow = { id: string; reference: string; employee_id: string; installment_amount: number; balance: number; start_period: string | null };
+  // Chunk the IN() list — 1000+ employee ids overflow the request URL.
+  const rows: LoanRow[] = [];
+  for (let i = 0; i < employeeIds.length; i += 300) {
+    const { data, error } = await sb.from('finance_employee_loans')
+      .select('id, reference, employee_id, installment_amount, balance, start_period')
+      .eq('status', 'active').gt('balance', 0).in('employee_id', employeeIds.slice(i, i + 300));
+    if (error) throw err(500, 'loadLoanInstallments: ' + error.message);
+    rows.push(...((data ?? []) as LoanRow[]));
+  }
+  for (const l of rows) {
     if (l.start_period && l.start_period > periodMonth) continue; // not yet due
     const amount = round2(Math.min(Number(l.installment_amount), Number(l.balance)));
     if (!(amount > 0)) continue;

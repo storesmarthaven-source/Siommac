@@ -110,6 +110,33 @@ export async function getStatutoryProfileByEmployee(
   return data ? toStatutoryProfileDto(data) : null;
 }
 
+/**
+ * Batch-load statutory profiles for many employees as a Map, chunking the IN()
+ * list so the URL never overflows and no page truncates. Replaces the per-employee
+ * N+1 in the payroll calc (a run of ~1000 employees was 1000 sequential queries).
+ */
+export async function getStatutoryProfilesByEmployees(
+  employeeIds: string[],
+  jurisdiction = 'TT',
+): Promise<Map<string, StatutoryProfileDto>> {
+  const map = new Map<string, StatutoryProfileDto>();
+  const unique = [...new Set(employeeIds)];
+  const CHUNK = 300;
+  for (let i = 0; i < unique.length; i += CHUNK) {
+    const ids = unique.slice(i, i + CHUNK);
+    const { data, error } = await sb
+      .from('hr_employee_statutory_profiles')
+      .select('*')
+      .eq('jurisdiction', jurisdiction)
+      .in('employee_id', ids);
+    if (error) throw Object.assign(new Error('getStatutoryProfilesByEmployees: ' + error.message), { status: 500 });
+    for (const row of (data ?? []) as DbStatutoryProfileRow[]) {
+      map.set(row.employee_id, toStatutoryProfileDto(row));
+    }
+  }
+  return map;
+}
+
 /** Load a statutory profile by its primary key. Returns null if not found. */
 export async function getStatutoryProfileById(
   id: string,

@@ -8,6 +8,7 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
+import { selectAllRows } from '../dbBulk';
 
 export interface PayGroupDto {
   id: string;
@@ -160,13 +161,16 @@ export async function assignEmployee(input: AssignEmployeeInput, actorId: string
  * (effective_from <= periodEnd AND (effective_to is null OR effective_to >= periodStart)).
  */
 export async function listGroupMemberIds(payGroupId: string, periodStart: string, periodEnd: string): Promise<string[]> {
-  const { data, error } = await sb.from('finance_employee_pay_group_assignments')
-    .select('employee_id, effective_from, effective_to')
-    .eq('pay_group_id', payGroupId)
-    .lte('effective_from', periodEnd);
-  if (error) throw Object.assign(new Error('listGroupMemberIds: ' + error.message), { status: 500 });
+  // Paginate: a large pay group's assignments exceed PostgREST's 1000-row cap
+  // (a truncated member list would silently drop employees from the run).
+  const rows = await selectAllRows<{ employee_id: string; effective_to: string | null }>(() =>
+    sb.from('finance_employee_pay_group_assignments')
+      .select('employee_id, effective_from, effective_to')
+      .eq('pay_group_id', payGroupId)
+      .lte('effective_from', periodEnd)
+      .order('employee_id').order('effective_from'));
   const ids = new Set<string>();
-  for (const r of (data ?? []) as Array<{ employee_id: string; effective_to: string | null }>) {
+  for (const r of rows) {
     if (r.effective_to && r.effective_to < periodStart) continue;
     ids.add(r.employee_id);
   }
