@@ -858,11 +858,13 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
   background: #eef1f6; color: #475569; border: 1px solid #dde3ec;
 }
 .ui-page-head-icon i { display: grid !important; place-items: center !important; }
-/* Thin solid slate rule (kept simple — not a hard bar) between the tile and text. */
+/* Thin hairline rule between the tile and text. Light gray in light mode; tokens
+   here aren't theme-aware, so dark mode gets an explicit faint-white override. */
 .ui-page-head-rule {
-  width: 2px; flex: none; align-self: stretch; min-height: 44px;
-  border-radius: 2px; background: #64748b;
+  width: 1px; flex: none; align-self: stretch; min-height: 44px;
+  border-radius: 2px; background: #cfcfcf;
 }
+body[data-theme="dark"] .ui-page-head-rule { background: rgba(255, 255, 255, .18); }
 .ui-page-head-text { min-width: 0; }
 .ui-page-crumb {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
