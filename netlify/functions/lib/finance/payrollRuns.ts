@@ -1409,6 +1409,17 @@ export async function approveRun(runId: string, actorId: string): Promise<void> 
     payload:          { approvedBy: actorId },
   });
 
+  // Notifications + payroll_locking handoff — shared with the workflow approval path.
+  await emitRunApprovedSideEffects(run, actorId);
+}
+
+/**
+ * Side-effects fired when a run becomes approved — the "ready to lock" notifications
+ * (submitter + Finance Managers) and the payroll_locking handoff. Called from BOTH the
+ * direct approve route (approveRun) AND the workflow adapter's onWorkflowCompleted, so
+ * the side-effects don't depend on which path approved the run.
+ */
+export async function emitRunApprovedSideEffects(run: PayrollRunDto, actorId: string): Promise<void> {
   // §8.1 — notify the submitter (run.createdBy) that the run was approved
   if (run.createdBy && run.createdBy !== actorId) {
     void notify({
@@ -1419,8 +1430,8 @@ export async function approveRun(runId: string, actorId: string): Promise<void> 
       module:     'finance_payroll',
       severity:   'success',
       sourceType: 'payroll_run',
-      sourceId:   runId,
-      dedupeKey:  `payroll_run.approved.${runId}`,
+      sourceId:   run.id,
+      dedupeKey:  `payroll_run.approved.${run.id}`,
     });
   }
 
@@ -1432,16 +1443,16 @@ export async function approveRun(runId: string, actorId: string): Promise<void> 
     module:     'finance_payroll',
     severity:   'success',
     sourceType: 'payroll_run',
-    sourceId:   runId,
-    dedupeKey:  `payroll_run.approved.mgr.${runId}`,
+    sourceId:   run.id,
+    dedupeKey:  `payroll_run.approved.mgr.${run.id}`,
   });
 
   // §8.1 — handoff to payroll locking
-  void createHandoff({
+  await createHandoff({
     sourceModule:     'finance_payroll',
     targetModule:     'finance_payroll',
     sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
+    sourceEntityId:   run.id,
     targetEntityType: 'payroll_locking',
     payload: { runNo: run.runNo, periodMonth: run.periodMonth, approvedBy: actorId },
     createdBy: actorId,

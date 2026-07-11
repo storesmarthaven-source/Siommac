@@ -21,6 +21,7 @@ import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { writeHrAudit } from '../hr/employeeCore';
 import { emitAppEvent } from '../appEvents';
+import { getPayrollRun, emitRunApprovedSideEffects } from '../finance/payrollRuns';
 
 /** Resolve the actor from the most recent workflow decision. */
 async function decidedBy(workflowId: string): Promise<string | null> {
@@ -108,6 +109,12 @@ const financePayrollAdapter: ModuleWorkflowAdapter = {
       severity:         'success',
       payload:          { approvedBy: actor },
     });
+
+    // "Ready to lock" notifications + payroll_locking handoff — the SAME side-effects
+    // the direct approve route fires, so downstream automation doesn't depend on which
+    // path approved the run.
+    const approvedRun = await getPayrollRun(sourceRecordId);
+    if (approvedRun) await emitRunApprovedSideEffects(approvedRun, actor ?? 'workflow');
   },
 
   onWorkflowReturned: async ({ workflowId, sourceRecordId, comment }) => {
