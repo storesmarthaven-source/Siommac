@@ -665,6 +665,7 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [massEdit, setMassEdit] = useState(false);
+  const [backPayOpen, setBackPayOpen] = useState(false);
 
   const overrideCount = useMemo(() => {
     const m = new Map<string, number>();
@@ -732,6 +733,11 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8, borderBottom: '1px solid var(--hrfin-border)' }}>
             <input value={search} placeholder="Filter employees…" onInput={e => setSearch((e.currentTarget as HTMLInputElement).value)} style={{ ...fieldStyle, flex: 1 }} />
             <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>{selected.size} selected · {gridRows.length} shown</span>
+            {canOverride && editable && (
+              <button type="button" class="hrfin-action" style={{ fontSize: 11 }} onClick={() => setBackPayOpen(true)}>
+                Back pay
+              </button>
+            )}
             {canOverride && editable && (
               <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={selected.size === 0} onClick={() => setMassEdit(true)}>
                 Mass-edit ({selected.size})
@@ -820,6 +826,114 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
           onApplied={() => { setMassEdit(false); setSelected(new Set()); }}
         />
       )}
+
+      {backPayOpen && (
+        <BackPayModal
+          runId={runId}
+          employeeIds={empIds}
+          nameMap={nameMap}
+          onClose={() => setBackPayOpen(false)}
+          onApplied={() => setBackPayOpen(false)}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Worksheet: back-pay (retro) dialog ──────────────────────────────────────────
+
+function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
+  runId: string; employeeIds: string[];
+  nameMap: Map<string, { fullName: string }> | undefined;
+  onClose: () => void; onApplied: () => void;
+}): VNode {
+  const previewMut = usePayrollMutation(financePayrollApi.backPayPreview);
+  const addMut     = usePayrollMutation(financePayrollApi.backPayAdd);
+  const [empId, setEmpId]   = useState('');
+  const [fromMonth, setFrom] = useState('');   // yyyy-mm from <input type=month>
+  const [base, setBase]     = useState('');
+  const [reason, setReason] = useState('');
+  const [preview, setPreview] = useState<import('@api/finance/payroll').BackPayBreakdown | null>(null);
+
+  const fromPeriodMonth = fromMonth ? `${fromMonth}-01` : '';
+  const correctedPeriodBase = parseFloat(base);
+  const canPreview = !!empId && !!fromPeriodMonth && correctedPeriodBase > 0;
+  const canAdd = canPreview && !!reason.trim() && !!preview && preview.totalDelta > 0;
+  const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)', width: '100%' };
+
+  async function runPreview(): Promise<void> {
+    if (!canPreview) return;
+    try { const r = await previewMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase }); setPreview(r); }
+    catch (e) { toast((e as Error).message ?? 'Preview failed.'); setPreview(null); }
+  }
+  async function apply(): Promise<void> {
+    if (!canAdd) return;
+    try {
+      await addMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, reason: reason.trim() });
+      toast('Back pay added — recalculate to apply it to the run.');
+      onApplied();
+    } catch (e) { toast((e as Error).message ?? 'Back pay failed.'); }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: 'var(--hrfin-surface-1, #fff)', border: '1px solid var(--hrfin-border)', borderRadius: 12, padding: 18, width: 480, maxWidth: '92vw' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15, color: 'var(--hrfin-text-primary)' }}>Back pay (retro adjustment)</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
+          Recomputes the employee's base for prior finalised periods against a corrected per-period base and pays the delta on this run, taxed at this period's rates. Prior runs are not changed.
+        </p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>EMPLOYEE
+            <select value={empId} onChange={e => { setEmpId((e.currentTarget as HTMLSelectElement).value); setPreview(null); }} style={fieldStyle}>
+              <option value="">Select…</option>
+              {employeeIds.map(id => <option key={id} value={id}>{nameMap?.get(id)?.fullName ?? id}</option>)}
+            </select>
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>FROM PERIOD
+              <input type="month" value={fromMonth} onInput={e => { setFrom((e.currentTarget as HTMLInputElement).value); setPreview(null); }} style={fieldStyle} />
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>CORRECTED BASE / PERIOD
+              <input type="number" min="0.01" step="0.01" value={base} onInput={e => { setBase((e.currentTarget as HTMLInputElement).value); setPreview(null); }} style={fieldStyle} />
+            </label>
+          </div>
+          <button type="button" class="hrfin-action" style={{ fontSize: 11, alignSelf: 'flex-start' }} disabled={!canPreview || previewMut.isPending} onClick={() => void runPreview()}>
+            {previewMut.isPending ? 'Computing…' : 'Preview delta'}
+          </button>
+
+          {preview && (
+            <div style={{ border: '1px solid var(--hrfin-border)', borderRadius: 8, padding: 10, fontSize: 12 }}>
+              {preview.periods.length === 0 ? (
+                <span style={{ color: 'var(--hrfin-text-secondary)' }}>No finalised runs for this employee in the selected range.</span>
+              ) : (
+                <>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: 600, marginBottom: 6 }}>
+                    <span>{preview.periods.length} period(s)</span>
+                    <span>Total back pay: {fmtMoney(preview.totalDelta)}</span>
+                  </div>
+                  {preview.periods.map(p => (
+                    <div key={p.runId} style={{ display: 'flex', justifyContent: 'space-between', color: 'var(--hrfin-text-secondary)' }}>
+                      <span>{p.periodMonth}</span>
+                      <span>{fmtMoney(p.oldBase)} → {fmtMoney(p.correctedBase)} = +{fmtMoney(p.delta)}</span>
+                    </div>
+                  ))}
+                </>
+              )}
+            </div>
+          )}
+
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON (required)
+            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+          <button type="button" class="hrfin-action" onClick={onClose}>Cancel</button>
+          <button type="button" class="hrfin-action is-primary" disabled={!canAdd || addMut.isPending} onClick={() => void apply()}>
+            {addMut.isPending ? 'Adding…' : preview ? `Add back pay (${fmtMoney(preview.totalDelta)})` : 'Add back pay'}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

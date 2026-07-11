@@ -262,6 +262,22 @@ export interface PayrollOverride {
   createdAt: string;
 }
 
+export interface BackPayPeriod {
+  runId: string;
+  periodMonth: string;
+  oldBase: number;
+  correctedBase: number;
+  delta: number;
+}
+export interface BackPayBreakdown {
+  employeeId: string;
+  currentRunId: string;
+  fromPeriodMonth: string;
+  correctedPeriodBase: number;
+  periods: BackPayPeriod[];
+  totalDelta: number;
+}
+
 export interface PopulationPreview {
   total:                   number;
   salaried:                number;
@@ -334,6 +350,12 @@ export const financePayrollApi = {
   addOverridesBulk:(a: { runId: string; employeeIds: string[]; label: string; amount: number; kind: 'earning' | 'deduction'; isTaxable?: boolean; reducesChargeable?: boolean; reason: string }) => call<{ applied: number; skipped: number; overrides: PayrollOverride[] }>('finance/payroll/overrides/add-bulk', a),
   removeOverride: (a: { overrideId: string })          => call<{ id: string; removed: boolean }>('finance/payroll/overrides/remove', a),
   listOverrides:  (a: { runId: string })               => call<PayrollOverride[]>('finance/payroll/overrides/list', a),
+
+  // Back pay (retro adjustment)
+  backPayPreview: (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number }) =>
+                    call<BackPayBreakdown>('finance/payroll/back-pay/preview', a),
+  backPayAdd:     (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number; reason: string }) =>
+                    call<{ inputId: string; breakdown: BackPayBreakdown }>('finance/payroll/back-pay/add', a),
 
   // Pay groups
   listPayGroups:  (a: { activeOnly?: boolean } = {})   => call<PayGroup[]>('finance/payroll/pay-groups/list', a),

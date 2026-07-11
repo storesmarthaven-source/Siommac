@@ -65,6 +65,7 @@ import {
   listOverrides,
   BULK_OVERRIDE_MAX,
 } from '../lib/finance/payrollOverrides';
+import { computeBackPay, addBackPay } from '../lib/finance/backPay';
 import {
   listOvertimeRules,
   createOvertimeRule,
@@ -573,6 +574,41 @@ router.post('/payroll/overrides/add', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await addOverride(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/back-pay/preview  — recompute the retro delta (read-only).
+// Permission: finance.payroll.worksheet.override.
+router.post('/payroll/back-pay/preview', async c => {
+  await requirePermission(c, 'finance.payroll.worksheet.override');
+  const v = zv(c, z.object({
+    currentRunId: z.string().uuid(),
+    employeeId: z.string().min(1),
+    fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    correctedPeriodBase: z.number().positive(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await computeBackPay(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/back-pay/add  — add the retro delta as a taxable earning.
+// Permission: finance.payroll.worksheet.override.
+router.post('/payroll/back-pay/add', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
+  const v = zv(c, z.object({
+    currentRunId: z.string().uuid(),
+    employeeId: z.string().min(1),
+    fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    correctedPeriodBase: z.number().positive(),
+    reason: z.string().min(1).max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await addBackPay(v.data, actor.id);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
