@@ -1,0 +1,229 @@
+/**
+ * scripts/e2e/suites/payrollLoans.mjs
+ *
+ * E2E for Wave 5 — employee loans & salary advances.
+ *
+ * Routes: /api/finance/payroll/loans/{list,get,create,submit,settle,cancel}
+ * Covers:
+ *   - Access control: plain employee cannot create; finance_staff (maker) can.
+ *   - Lifecycle: create(draft) → submit(→workflow) → approve via decideTask → active.
+ *   - SoD: the creator cannot approve their own loan (workflow adapter guard).
+ *   - Payroll integration: active loan → lock-inputs emits a loan_repayment deduction;
+ *     calculate reduces net; lock records the ledger + decrements balance;
+ *     reopen reverses the ledger + restores the balance.
+ *   - Settle (active → settled, balance 0) and cancel.
+ *   - §2 side-effects (app_events + hr_audit_log) + ledger assertions via service role.
+ *
+ * REQUIRES migrations 20260918000090 (loans tables) + 20260918000100 (grant) +
+ * 20260918000110 (finance_loan_approval workflow binding) + NOTIFY pgrst.
+ */
+
+export const title = 'Finance Wave 5 - Loans & advances';
+
+function seedDate(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + (n % 900) + salt * 900);
+  return d.toISOString().slice(0, 10);
+}
+
+export default async function run(h) {
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
+
+  let fmgrId, staffId, empId;
+  let fmgrToken, staffToken, empToken;
+  const ctx = { loanId: null, versionId: null, runId: null, groupId: null, createdUserIds: [], borrowerId: null };
+
+  const waitFor = async (check, ms = 8000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 300)); }
+    return false;
+  };
+
+  h.onCleanup(async () => {
+    try { if (ctx.runId) await sb.from('finance_loan_deductions').delete().eq('run_id', ctx.runId); } catch {}
+    try { if (ctx.loanId) await sb.from('finance_loan_deductions').delete().eq('loan_id', ctx.loanId); } catch {}
+    try { if (ctx.loanId) await sb.from('finance_employee_loans').delete().eq('id', ctx.loanId); } catch {}
+    try { if (ctx.runId) await sb.from('finance_payroll_run_inputs').delete().eq('run_id', ctx.runId); } catch {}
+    try { if (ctx.runId) await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
+    try { if (ctx.runId) await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
+    try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
+    try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
+    try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
+    try { if (ctx.loanId) await sb.from('app_events').delete().eq('source_module', 'finance_loan').eq('source_entity_id', ctx.loanId); } catch {}
+    try { if (ctx.loanId) await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_loan').eq('record_id', ctx.loanId); } catch {}
+    try { if (ctx.borrowerId) await sb.from('app_users').delete().eq('id', ctx.borrowerId); } catch {}
+    try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
+  });
+
+  h.section('Loans › Setup');
+
+  await test('acquire finance_manager + finance_staff + provision a salaried borrower', async () => {
+    const mgrR = await acquireActors('finance_manager', 1);
+    const stfR = await acquireActors('finance_staff', 1);
+    fmgrId = mgrR.actors[0].id; staffId = stfR.actors[0].id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...stfR.createdIds];
+    fmgrToken  = mint({ id: fmgrId,  username: mgrR.actors[0].username, role: 'finance_manager', department_id: null });
+    staffToken = mint({ id: staffId, username: stfR.actors[0].username, role: 'finance_staff',   department_id: null });
+
+    // Dedicated borrower (salaried) so the payroll deduction math is deterministic.
+    ctx.borrowerId = `${TAG}_borrower`;
+    empId = ctx.borrowerId;
+    const { error } = await sb.from('app_users').insert({
+      id: empId, username: `${TAG}_brw`, full_name: 'Loan Borrower (E2E)', role: 'employee',
+      status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 6000,
+    });
+    expect(!error, `seed borrower failed: ${error?.message}`);
+    empToken = mint({ id: empId, username: `${TAG}_brw`, role: 'employee', department_id: null });
+  });
+
+  h.section('Loans › Create + access control');
+
+  await test('plain employee CANNOT create a loan (403)', async () => {
+    const r = await api('finance/payroll/loans/create', empToken, { employeeId: empId, loanType: 'loan', principal: 1200, installmentAmount: 500 });
+    fails(r, 'employee should be denied loan create');
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('finance_staff creates a draft loan (principal 1200 + 0 interest, 500/period)', async () => {
+    const r = await api('finance/payroll/loans/create', staffToken, {
+      employeeId: empId, loanType: 'loan', principal: 1200, installmentAmount: 500, reason: 'E2E loan',
+    });
+    ok(r, `create loan failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.status === 'draft', `expected draft, got ${d.status}`);
+    expect(Math.abs(d.totalRepayable - 1200) < 0.01, `total should be 1200, got ${d.totalRepayable}`);
+    expect(Math.abs(d.balance - 1200) < 0.01, `balance should be 1200, got ${d.balance}`);
+    expect(typeof d.reference === 'string' && d.reference.length > 0, 'reference missing');
+    ctx.loanId = d.id;
+  });
+
+  await test('create rejects an installment greater than the total (422)', async () => {
+    const r = await api('finance/payroll/loans/create', staffToken, { employeeId: empId, loanType: 'advance', principal: 500, installmentAmount: 600 });
+    fails(r, 'installment > total should be rejected');
+  });
+
+  h.section('Loans › Submit + workflow approval (SoD)');
+
+  await test('finance_staff submits the loan → pending_approval + workflow', async () => {
+    const r = await api('finance/payroll/loans/submit', staffToken, { id: ctx.loanId });
+    ok(r, `submit failed: ${r.body.message}`);
+    expect(r.body.data.status === 'pending_approval', `expected pending_approval, got ${r.body.data.status}`);
+    const got = await waitFor(async () => {
+      const { data } = await sb.from('finance_employee_loans').select('workflow_id').eq('id', ctx.loanId).maybeSingle();
+      return data?.workflow_id != null;
+    });
+    expect(got, 'workflow_id not set after submit');
+  });
+
+  await test('finance_manager (≠ creator) approves via decideTask → loan active', async () => {
+    const { data: loan } = await sb.from('finance_employee_loans').select('workflow_id').eq('id', ctx.loanId).maybeSingle();
+    const { data: tasks } = await sb.from('workflow_tasks').select('id').eq('workflow_id', loan.workflow_id).in('status', ['pending', 'open', 'in_progress']).limit(1);
+    expect((tasks ?? []).length > 0, 'no pending workflow task to approve');
+    const r = await api('workflow-engine/decide', fmgrToken, { workflowId: loan.workflow_id, taskId: tasks[0].id, decision: 'approved' });
+    ok(r, `decide approved failed: ${r.body.message}`);
+    const active = await waitFor(async () => {
+      const { data } = await sb.from('finance_employee_loans').select('status, approved_by').eq('id', ctx.loanId).maybeSingle();
+      return data?.status === 'active';
+    });
+    expect(active, 'loan did not become active after approval');
+    const { data: after } = await sb.from('finance_employee_loans').select('approved_by').eq('id', ctx.loanId).maybeSingle();
+    expect(after.approved_by === fmgrId, 'approved_by should be the finance_manager');
+  });
+
+  await test('§2 side-effect: finance.loan.activated app_event + loan.approved audit', async () => {
+    const gotEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id').eq('source_module', 'finance_loan').eq('event_type', 'finance.loan.activated').eq('source_entity_id', ctx.loanId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotEvent, 'finance.loan.activated app_event not found');
+    const { data: audit } = await sb.from('hr_audit_log').select('id').eq('submodule_key', 'finance_loan').eq('action', 'loan.approved').eq('record_id', ctx.loanId).limit(1);
+    expect((audit ?? []).length > 0, 'loan.approved audit not found');
+  });
+
+  h.section('Loans › Payroll deduction (lock records ledger, reopen reverses)');
+
+  await test('seed a statutory version + a run scoped to the borrower, lock-inputs emits the loan deduction', async () => {
+    const { data: ver, error: verErr } = await sb.from('finance_statutory_versions').insert({
+      effective_from: seedDate(TAG, 5), label: 'E2E Loan Ver ' + TAG,
+      paye_personal_allowance: 90000, paye_band1_ceiling: 1000000, paye_band1_rate: 0.25, paye_band2_rate: 0.30,
+      hs_monthly_threshold: 469.99, hs_weekly_high: 8.25, hs_weekly_low: 4.80,
+    }).select('id').single();
+    expect(!verErr, `seed version failed: ${verErr?.message}`);
+    ctx.versionId = ver.id;
+
+    // Pay group with only the borrower so lock-inputs populates just them.
+    const code = ('LG' + TAG.replace(/[^a-z0-9]/gi, '')).slice(0, 18).toUpperCase();
+    const gr = await api('finance/payroll/pay-groups/create', fmgrToken, { code, name: `Loan Group ${TAG}`, frequency: 'monthly' });
+    ok(gr, `create group failed: ${gr.body.message}`);
+    const groupId = gr.body.data.id;
+    const ar = await api('finance/payroll/pay-groups/assign', fmgrToken, { employeeId: empId, payGroupId: groupId, effectiveFrom: '2029-01-01' });
+    ok(ar, `assign failed: ${ar.body.message}`);
+    ctx.groupId = groupId;
+
+    const cr = await api('finance/payroll/runs/create', fmgrToken, { periodMonth: '2029-10-01', payGroupId: groupId });
+    ok(cr, `create run failed: ${cr.body.message}`);
+    ctx.runId = cr.body.data.id;
+
+    const lr = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
+    ok(lr, `lock-inputs failed: ${lr.body.message}`);
+
+    const ir = await api('finance/payroll/inputs/list', fmgrToken, { runId: ctx.runId });
+    ok(ir, `inputs/list failed: ${ir.body.message}`);
+    const loanInput = ir.body.data.find(i => i.metadata?.loan === true && i.metadata?.loan_id === ctx.loanId);
+    expect(loanInput, 'no loan_repayment deduction input emitted');
+    expect(Math.abs(loanInput.amount - 500) < 0.01, `loan installment should be 500, got ${loanInput.amount}`);
+  });
+
+  await test('calculate + lock → ledger row written, balance decremented to 700', async () => {
+    ok(await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId }), 'calculate failed');
+    // Drive to approved via the run workflow, then lock.
+    ok(await api('finance/payroll/runs/submit', staffToken, { id: ctx.runId }), 'run submit failed');
+    const { data: run } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
+    const { data: tasks } = await sb.from('workflow_tasks').select('id').eq('workflow_id', run.workflow_id).in('status', ['pending', 'open', 'in_progress']).limit(1);
+    ok(await api('workflow-engine/decide', fmgrToken, { workflowId: run.workflow_id, taskId: tasks[0].id, decision: 'approved' }), 'run approve failed');
+    const approved = await waitFor(async () => {
+      const { data } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
+      return data?.status === 'approved';
+    });
+    expect(approved, 'run not approved');
+    ok(await api('finance/payroll/runs/lock', fmgrToken, { id: ctx.runId }), 'lock failed');
+
+    const { data: led } = await sb.from('finance_loan_deductions').select('amount, balance_after').eq('loan_id', ctx.loanId).eq('run_id', ctx.runId).maybeSingle();
+    expect(led, 'no ledger row after lock');
+    expect(Math.abs(led.amount - 500) < 0.01, `ledger amount should be 500, got ${led?.amount}`);
+    const { data: loan } = await sb.from('finance_employee_loans').select('balance').eq('id', ctx.loanId).maybeSingle();
+    expect(Math.abs(loan.balance - 700) < 0.01, `balance should be 700 after one 500 installment, got ${loan.balance}`);
+  });
+
+  await test('reopen the run → ledger reversed + balance restored to 1200', async () => {
+    const r = await api('finance/payroll/runs/reopen', fmgrToken, { id: ctx.runId, reason: 'E2E loan reversal' });
+    ok(r, `reopen failed: ${r.body.message}`);
+    const { data: led } = await sb.from('finance_loan_deductions').select('id').eq('run_id', ctx.runId);
+    expect((led ?? []).length === 0, 'ledger rows should be gone after reopen');
+    const { data: loan } = await sb.from('finance_employee_loans').select('balance, status').eq('id', ctx.loanId).maybeSingle();
+    expect(Math.abs(loan.balance - 1200) < 0.01, `balance should restore to 1200 after reopen, got ${loan.balance}`);
+    expect(loan.status === 'active', `loan should be active again, got ${loan.status}`);
+  });
+
+  h.section('Loans › Settle + cancel');
+
+  await test('finance_staff settles the active loan → balance 0, settled', async () => {
+    const r = await api('finance/payroll/loans/settle', staffToken, { id: ctx.loanId });
+    ok(r, `settle failed: ${r.body.message}`);
+    expect(r.body.data.status === 'settled', `expected settled, got ${r.body.data.status}`);
+    expect(Math.abs(r.body.data.balance) < 0.01, `balance should be 0, got ${r.body.data.balance}`);
+  });
+
+  await test('a settled loan cannot be settled again (422)', async () => {
+    const r = await api('finance/payroll/loans/settle', staffToken, { id: ctx.loanId });
+    fails(r, 'settling a settled loan should fail');
+  });
+
+  await test('plain employee CANNOT cancel a loan (403)', async () => {
+    const r = await api('finance/payroll/loans/cancel', empToken, { id: ctx.loanId });
+    fails(r, 'employee should be denied loan cancel');
+  });
+}

@@ -36,16 +36,19 @@ import {
   usePayGroups,
   usePayGroupMembers,
   useOvertimeRules,
+  useEmployeeLoans,
   usePayrollMutation,
   financePayrollApi,
   type PayGroup,
   type OvertimeRule,
   type OvertimeEventType,
+  type EmployeeLoan,
+  type LoanType,
 } from '@api/finance/payroll';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { EmployeePicker } from './_shared/pickers';
-import { fmtDate, humanize } from './financeShared';
+import { fmtDate, fmtMoney, humanize, statusTone } from './financeShared';
 import './finance.css';
 
 const empName = (e: HrEmployeeRow): string =>
@@ -82,7 +85,7 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
 // Main page
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SetupTab = 'pay-groups' | 'overtime-rules';
+type SetupTab = 'pay-groups' | 'overtime-rules' | 'loans';
 
 export function PayrollSetupOverview(): VNode {
   const [tab, setTab] = useState<SetupTab>('pay-groups');
@@ -104,16 +107,251 @@ export function PayrollSetupOverview(): VNode {
       <HrfinPageHeader
         icon="book"
         title="Payroll Setup"
-        sub="Pay groups drive run frequency and population; overtime rules price approved overtime by its type at run time."
+        sub="Pay groups drive run frequency and population; overtime rules price OT by type; loans and advances auto-deduct from each run until cleared."
       />
 
       <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
         <button type="button" class={tab === 'pay-groups' ? 'is-active' : ''} onClick={() => setTab('pay-groups')}>Pay Groups</button>
         <button type="button" class={tab === 'overtime-rules' ? 'is-active' : ''} onClick={() => setTab('overtime-rules')}>Overtime Rules</button>
+        <button type="button" class={tab === 'loans' ? 'is-active' : ''} onClick={() => setTab('loans')}>Loans &amp; Advances</button>
       </div>
 
-      {tab === 'pay-groups' ? <PayGroupsPanel /> : <OvertimeRulesPanel />}
+      {tab === 'pay-groups' ? <PayGroupsPanel />
+        : tab === 'overtime-rules' ? <OvertimeRulesPanel />
+        : <LoansPanel />}
     </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Loans & Advances (Wave 5)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const LOAN_TYPES: ReadonlyArray<{ value: LoanType; label: string }> = [
+  { value: 'loan',    label: 'Loan' },
+  { value: 'advance', label: 'Salary advance' },
+];
+
+function loanStatusTone(s: string): HrfinTone {
+  switch (s) {
+    case 'active':           return 'ok';
+    case 'settled':          return 'nu';
+    case 'pending_approval': return 'wn';
+    case 'draft':            return 'nu';
+    case 'cancelled':
+    case 'rejected':         return 'bad';
+    default:                 return 'nu';
+  }
+}
+
+function LoansPanel(): VNode {
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
+  const [statusFilter, setStatusFilter] = useState('');
+  const [showNew, setShowNew] = useState(false);
+
+  const canManage = can('finance.payroll.loans.manage');
+  const loansQ = useEmployeeLoans(statusFilter ? { status: statusFilter } : {});
+  const empsQ = useHrEmployees({ limit: 1000 });
+  const submitMut = usePayrollMutation(financePayrollApi.submitLoan);
+  const settleMut = usePayrollMutation(financePayrollApi.settleLoan);
+  const cancelMut = usePayrollMutation(financePayrollApi.cancelLoan);
+
+  const nameOf = useMemo(() => {
+    const m = new Map((empsQ.data ?? []).map(e => [e.id, empName(e)]));
+    return (id: string) => m.get(id) ?? id;
+  }, [empsQ.data]);
+
+  const loans = loansQ.data ?? [];
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return loans;
+    return loans.filter(l => l.reference.toLowerCase().includes(q) || nameOf(l.employeeId).toLowerCase().includes(q));
+  }, [loans, search, nameOf]);
+  const { rows, pageCount, total } = useMemo(() => paginate(filtered, page), [filtered, page]);
+
+  const activeLoans = loans.filter(l => l.status === 'active');
+  const outstanding = activeLoans.reduce((s, l) => s + (l.balance || 0), 0);
+  const pendingCount = loans.filter(l => l.status === 'pending_approval').length;
+
+  const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
+    try { await p; toast(ok); } catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+  };
+
+  const quickActions = [
+    ...(canManage ? [{ key: 'new', label: 'New Loan', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
+    { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void loansQ.refetch(); } },
+  ];
+
+  const COLS: HrfinColumn<EmployeeLoan>[] = [
+    { key: 'reference',  label: 'Reference',  render: l => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{l.reference}</strong> },
+    { key: 'employee',   label: 'Employee',   render: l => <span style={{ fontSize: 13 }}>{nameOf(l.employeeId)}</span> },
+    { key: 'type',       label: 'Type',       render: l => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{humanize(l.loanType)}</span> },
+    { key: 'total',      label: 'Total',      render: l => <span style={{ fontSize: 13, textAlign: 'right', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(l.totalRepayable)}</span> },
+    { key: 'installment',label: 'Installment',render: l => <span style={{ fontSize: 12, textAlign: 'right', display: 'block', color: 'var(--hrfin-text-secondary)', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(l.installmentAmount)}</span> },
+    { key: 'balance',    label: 'Balance',    render: l => <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'right', display: 'block', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(l.balance)}</span> },
+    { key: 'status',     label: 'Status',     render: l => <HrfinPill tone={loanStatusTone(l.status)}>{humanize(l.status)}</HrfinPill> },
+  ];
+
+  const rowActions = (l: EmployeeLoan): RowActionItem[] => {
+    if (!canManage) return [];
+    const items: RowActionItem[] = [];
+    if (l.status === 'draft' || l.status === 'rejected') {
+      items.push({ key: 'submit', label: 'Submit for approval', icon: 'check', onClick: () => void run(submitMut.mutateAsync({ id: l.id }), 'Loan submitted for approval.') });
+    }
+    if (l.status === 'active') {
+      items.push({ key: 'settle', label: 'Settle (mark paid off)', icon: 'check', onClick: async () => {
+        const ok = await dialog.confirm({ title: `Settle ${l.reference}?`, text: `This marks the loan as fully paid off (clears the remaining ${fmtMoney(l.balance)} balance) and stops payroll deductions. Use when the balance is cleared outside payroll (e.g. a lump-sum payment).`, confirmText: 'Settle', icon: 'question' });
+        if (ok) void run(settleMut.mutateAsync({ id: l.id }), 'Loan settled.');
+      } });
+    }
+    if (!['settled', 'cancelled'].includes(l.status)) {
+      items.push({ key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger', onClick: async () => {
+        const reason = await dialog.prompt({ title: `Cancel ${l.reference}`, text: 'Cancelling stops any future payroll deductions. Provide a reason (audit-logged).', placeholder: 'Reason…', confirmText: 'Cancel loan' });
+        if (reason === null) return;
+        void run(cancelMut.mutateAsync({ id: l.id, reason: reason.trim() || undefined }), 'Loan cancelled.');
+      } });
+    }
+    return items;
+  };
+
+  return (
+    <>
+      <QuickActionStrip actions={quickActions} />
+
+      <div style={{ margin: '4px 0 12px', padding: '10px 14px', fontSize: 12.5, lineHeight: 1.5, background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 8, color: 'var(--hrfin-text-secondary)' }}>
+        <i class="fas fa-circle-info" style={{ marginRight: 6, color: 'var(--hrfin-accent)' }} />
+        A loan/advance is created as a draft, <strong>submitted for Finance Manager approval</strong> (maker-checker, via the approvals inbox), then auto-deducts a fixed installment from each pay run until the balance clears. Deductions post when a run is <strong>locked</strong>.
+      </div>
+
+      <section class="hrfin-kpi-strip">
+        <KpiCard label="Loans"            value={String(loans.length)}   support={`${activeLoans.length} active`}        loading={loansQ.isLoading && !loansQ.data} />
+        <KpiCard label="Outstanding"      value={fmtMoney(outstanding)}  support="active balances"                       loading={loansQ.isLoading && !loansQ.data} />
+        <KpiCard label="Pending Approval" value={String(pendingCount)}   support="awaiting a manager"  tone={pendingCount > 0 ? 'danger' : undefined} loading={loansQ.isLoading && !loansQ.data} />
+      </section>
+
+      <HrfinTable<EmployeeLoan>
+        tabs={[{ key: '', label: 'All' }, { key: 'active', label: 'Active' }, { key: 'pending_approval', label: 'Pending' }, { key: 'draft', label: 'Draft' }, { key: 'settled', label: 'Settled' }]}
+        activeTab={statusFilter}
+        onTab={k => { setStatusFilter(k); setPage(0); }}
+        searchValue={search}
+        onSearch={v => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Search by reference or employee…"
+        columns={COLS}
+        rows={rows}
+        rowKey={l => l.id}
+        rowActions={rowActions}
+        page={page}
+        pageCount={pageCount}
+        total={total}
+        pageSize={PAGE_SIZE}
+        onPage={setPage}
+        noun="loans"
+        loading={loansQ.isLoading && !loansQ.data}
+        error={loansQ.isError ? (/loan|schema cache|does not exist/i.test((loansQ.error as Error)?.message ?? '') ? 'Loans are unavailable — apply migration 20260918000090 (finance_employee_loans) and reload the PostgREST schema.' : ((loansQ.error as Error)?.message ?? 'Failed to load loans.')) : undefined}
+        emptyMessage={search || statusFilter ? 'No loans match.' : 'No loans yet. Click New Loan to create one.'}
+      />
+
+      {showNew && <NewLoanModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void loansQ.refetch(); }} />}
+    </>
+  );
+}
+
+function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }): VNode {
+  const createMut = usePayrollMutation(financePayrollApi.createLoan);
+  const [f, setF] = useState<{ employeeId: string | null; loanType: LoanType; principal: string; interest: string; installment: string; startPeriod: string; reason: string }>(
+    { employeeId: null, loanType: 'loan', principal: '', interest: '', installment: '', startPeriod: '', reason: '' },
+  );
+
+  const principal = Number(f.principal);
+  const interest = f.interest === '' ? 0 : Number(f.interest);
+  const installment = Number(f.installment);
+  const totalRepayable = principal > 0 ? Math.round((principal + (interest > 0 ? interest : 0)) * 100) / 100 : 0;
+  const termPeriods = installment > 0 && totalRepayable > 0 ? Math.ceil(totalRepayable / installment) : 0;
+
+  const errors = {
+    employee:   !f.employeeId ? 'Select an employee.' : null,
+    principal:  !(principal > 0) ? 'Principal must be greater than 0.' : null,
+    interest:   interest < 0 ? 'Interest cannot be negative.' : null,
+    installment:!(installment > 0) ? 'Installment must be greater than 0.'
+                : totalRepayable > 0 && installment > totalRepayable ? 'Installment cannot exceed the total repayable.' : null,
+  };
+  const valid = !errors.employee && !errors.principal && !errors.interest && !errors.installment;
+
+  const submit = async (): Promise<void> => {
+    if (!valid || !f.employeeId) return;
+    try {
+      await createMut.mutateAsync({
+        employeeId: f.employeeId, loanType: f.loanType,
+        principal, ...(interest > 0 ? { interestAmount: interest } : {}), installmentAmount: installment,
+        ...(f.startPeriod ? { startPeriod: f.startPeriod } : {}), reason: f.reason.trim() || null,
+      });
+      toast('Loan created as draft — submit it for approval.');
+      onCreated();
+    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create loan.'); }
+  };
+
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'Finance · Payroll', title: 'Loan / Advance', description: 'Created as a draft; submit for Finance Manager approval before it auto-deducts from payroll.',
+    preview: { icon: 'LN', title: totalRepayable ? fmtMoney(totalRepayable) : '—', subtitle: `${humanize(f.loanType)} · ${installment > 0 ? fmtMoney(installment) + '/period' : 'set installment'}` },
+    metrics: [
+      { label: 'Total repayable', value: totalRepayable ? fmtMoney(totalRepayable) : '—', tone: 'info' },
+      { label: 'Installment', value: installment > 0 ? fmtMoney(installment) : '—', tone: 'default' },
+      { label: 'Term', value: termPeriods > 0 ? `${termPeriods} period${termPeriods === 1 ? '' : 's'}` : '—', tone: 'muted' },
+    ],
+    validation: [
+      ...(errors.employee ? [{ message: errors.employee, tone: 'danger' as const }] : []),
+      ...(errors.principal ? [{ message: errors.principal, tone: 'danger' as const }] : []),
+      ...(errors.installment ? [{ message: errors.installment, tone: 'danger' as const }] : []),
+      ...(interest > 0 ? [{ message: `Flat interest of ${fmtMoney(interest)} added to the principal.`, tone: 'info' as const }] : []),
+    ],
+    approval: { required: true, risk: 'high', message: 'Financial — routed through Finance Manager maker-checker approval.' },
+    whatNext: [
+      { label: 'Submit for approval', description: 'A Finance Manager (≠ creator) approves it in the approvals inbox.' },
+      { label: 'Auto-deducts', description: 'Once active, the installment deducts from each pay run until cleared.' },
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="New Loan / Advance"
+      subtitle="Create a repayable loan or salary advance for an employee."
+      icon={<i class="fas fa-hand-holding-dollar" />}
+      context={context}
+      primaryLabel="Create draft"
+      loading={createMut.isPending}
+      disabled={!valid}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
+      <div class="fin-form-grid fin-form-grid--tight">
+        <div style={{ gridColumn: '1 / -1' }}>
+          <EmployeePicker label="Employee" value={f.employeeId} onChange={id => setF(p => ({ ...p, employeeId: id }))} required error={errors.employee} />
+        </div>
+        <label class="fin-field"><span>Type</span>
+          <select value={f.loanType} onChange={e => setF(p => ({ ...p, loanType: (e.currentTarget as HTMLSelectElement).value as LoanType }))}>
+            {LOAN_TYPES.map(t => <option value={t.value} key={t.value}>{t.label}</option>)}
+          </select>
+        </label>
+        <label class="fin-field"><span>Principal (TTD)</span>
+          <input type="number" step="0.01" min="0" value={f.principal} onInput={e => setF(p => ({ ...p, principal: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.principal && <small class="fin-field-error">{errors.principal}</small>}
+        </label>
+        <label class="fin-field"><span>Interest (flat, optional)</span>
+          <input type="number" step="0.01" min="0" value={f.interest} placeholder="0.00" onInput={e => setF(p => ({ ...p, interest: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.interest && <small class="fin-field-error">{errors.interest}</small>}
+        </label>
+        <label class="fin-field"><span>Installment / period (TTD)</span>
+          <input type="number" step="0.01" min="0" value={f.installment} onInput={e => setF(p => ({ ...p, installment: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.installment && <small class="fin-field-error">{errors.installment}</small>}
+        </label>
+        <label class="fin-field"><span>Start period (optional)</span>
+          <input type="date" value={f.startPeriod} onInput={e => setF(p => ({ ...p, startPeriod: (e.currentTarget as HTMLInputElement).value }))} />
+        </label>
+        <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Reason / notes</span>
+          <input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget as HTMLInputElement).value }))} />
+        </label>
+      </div>
+    </EnterpriseFormModal>
   );
 }
 

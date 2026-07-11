@@ -209,6 +209,31 @@ export interface PayGroup {
 }
 export interface PayGroupMember { employeeId: string; effectiveFrom: string; effectiveTo: string | null }
 
+export type LoanType = 'loan' | 'advance';
+export type LoanStatus = 'draft' | 'pending_approval' | 'active' | 'settled' | 'cancelled' | 'rejected';
+export interface EmployeeLoan {
+  id: string;
+  reference: string;
+  employeeId: string;
+  loanType: LoanType;
+  principal: number;
+  interestAmount: number;
+  totalRepayable: number;
+  installmentAmount: number;
+  balance: number;
+  startPeriod: string | null;
+  status: LoanStatus;
+  reason: string | null;
+  notes: string | null;
+  workflowId: string | null;
+  createdBy: string | null;
+  approvedBy: string | null;
+  approvedAt: string | null;
+  settledAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export type OvertimeEventType =
   | 'regular_overtime' | 'public_holiday' | 'rest_day' | 'callout' | 'night_shift';
 
@@ -316,6 +341,14 @@ export const financePayrollApi = {
   assignPayGroup: (a: { employeeId: string; payGroupId: string; effectiveFrom: string; effectiveTo?: string | null }) => call<{ employeeId: string; payGroupId: string }>('finance/payroll/pay-groups/assign', a),
   payGroupMembers:(a: { payGroupId: string })          => call<PayGroupMember[]>('finance/payroll/pay-groups/members', a),
 
+  // Employee loans & advances (Wave 5)
+  listLoans:   (a: { employeeId?: string; status?: string } = {}) => call<EmployeeLoan[]>('finance/payroll/loans/list', a),
+  getLoan:     (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/get', a),
+  createLoan:  (a: { employeeId: string; loanType: LoanType; principal: number; interestAmount?: number; installmentAmount: number; startPeriod?: string | null; reason?: string | null; notes?: string | null }) => call<EmployeeLoan>('finance/payroll/loans/create', a),
+  submitLoan:  (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/submit', a),
+  settleLoan:  (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/settle', a),
+  cancelLoan:  (a: { id: string; reason?: string })    => call<EmployeeLoan>('finance/payroll/loans/cancel', a),
+
   // Overtime rules (Wave 4b) — effective-dated OT multipliers by event type
   listOvertimeRules:   (a: object = {})                => call<OvertimeRule[]>('finance/payroll/overtime-rules/list', a),
   createOvertimeRule:  (a: { code: string; eventType: OvertimeEventType; multiplier: number; minimumHours?: number | null; effectiveFrom: string; effectiveTo?: string | null }) => call<OvertimeRule>('finance/payroll/overtime-rules/create', a),
@@ -402,6 +435,9 @@ export function usePayGroupMembers(payGroupId: string | null) {
 }
 export function useOvertimeRules() {
   return useQuery({ queryKey: ['finance', 'payroll', 'overtime-rules'], queryFn: () => financePayrollApi.listOvertimeRules() });
+}
+export function useEmployeeLoans(opts: { employeeId?: string; status?: string } = {}) {
+  return useQuery({ queryKey: ['finance', 'payroll', 'loans', opts], queryFn: () => financePayrollApi.listLoans(opts) });
 }
 export function useRunOverrides(runId: string | null) {
   return useQuery({ queryKey: ['finance', 'payroll', 'overrides', runId ?? ''], queryFn: () => financePayrollApi.listOverrides({ runId: runId! }), enabled: !!runId });
