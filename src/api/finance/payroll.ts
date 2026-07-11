@@ -209,6 +209,19 @@ export interface PayGroup {
 }
 export interface PayGroupMember { employeeId: string; effectiveFrom: string; effectiveTo: string | null }
 
+export interface PayrollOverride {
+  id: string;
+  runId: string;
+  employeeId: string;
+  label: string;
+  amount: number;
+  kind: 'earning' | 'deduction';
+  isTaxable: boolean;
+  reducesChargeable: boolean;
+  reason: string | null;
+  createdAt: string;
+}
+
 export interface PopulationPreview {
   total:                   number;
   salaried:                number;
@@ -275,6 +288,11 @@ export const financePayrollApi = {
   deliverRunPayslips:(a: { runId: string })            => call<{ sent: number; failed: number; skipped: number; total: number }>('finance/payroll/payslips/deliver-run', a),
   deliverPayslip:   (a: { payslipId: string })         => call<PayslipDelivery>('finance/payroll/payslips/deliver', a),
   listDeliveries:   (a: { runId: string })             => call<PayslipDelivery[]>('finance/payroll/payslips/deliveries/list', a),
+
+  // Worksheet overrides
+  addOverride:    (a: { runId: string; employeeId: string; label: string; amount: number; kind: 'earning' | 'deduction'; isTaxable?: boolean; reducesChargeable?: boolean; reason: string }) => call<PayrollOverride>('finance/payroll/overrides/add', a),
+  removeOverride: (a: { overrideId: string })          => call<{ id: string; removed: boolean }>('finance/payroll/overrides/remove', a),
+  listOverrides:  (a: { runId: string })               => call<PayrollOverride[]>('finance/payroll/overrides/list', a),
 
   // Pay groups
   listPayGroups:  (a: { activeOnly?: boolean } = {})   => call<PayGroup[]>('finance/payroll/pay-groups/list', a),
@@ -357,6 +375,9 @@ export function useRunGlPreview(runId: string | null) {
 }
 export function usePayGroups(activeOnly = true) {
   return useQuery({ queryKey: ['finance', 'payroll', 'pay-groups', activeOnly], queryFn: () => financePayrollApi.listPayGroups({ activeOnly }) });
+}
+export function useRunOverrides(runId: string | null) {
+  return useQuery({ queryKey: ['finance', 'payroll', 'overrides', runId ?? ''], queryFn: () => financePayrollApi.listOverrides({ runId: runId! }), enabled: !!runId });
 }
 export function useRunExports(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.exports(runId ?? ''), queryFn: () => financePayrollApi.listExports({ runId: runId! }), enabled: !!runId });

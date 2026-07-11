@@ -1382,6 +1382,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create pay groups (weekly / fortnightly / semi-monthly / monthly) and assign employees to them. Pay groups drive a run\'s frequency and which employees it pays.',
     risk: 'medium',
   },
+  'finance.payroll.worksheet.override': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Override Payroll Worksheet',
+    description: 'Add or remove per-employee earning/deduction adjustments on a locked-input or calculated run (with a mandatory reason). The original snapshot is preserved; the run is recalculated. Subject to approval.',
+    risk: 'high',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

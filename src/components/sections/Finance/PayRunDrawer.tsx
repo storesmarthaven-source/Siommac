@@ -32,6 +32,7 @@ import {
   useRunPayslips,
   useRunExports,
   useRunGlPreview,
+  useRunOverrides,
   useExportDownload,
   useRunAuditLog,
   type PayrollRun,
@@ -75,12 +76,13 @@ function fmtDateTime(iso: string | null | undefined): string {
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-type Tab = 'summary' | 'lines' | 'inputs' | 'warnings' | 'payslips' | 'exports' | 'gl' | 'approvals' | 'timeline' | 'audit' | 'related';
+type Tab = 'summary' | 'lines' | 'inputs' | 'worksheet' | 'warnings' | 'payslips' | 'exports' | 'gl' | 'approvals' | 'timeline' | 'audit' | 'related';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'summary',   label: 'Summary' },
   { key: 'lines',     label: 'Run Lines' },
   { key: 'inputs',    label: 'Inputs' },
+  { key: 'worksheet', label: 'Worksheet' },
   { key: 'warnings',  label: 'Warnings' },
   { key: 'payslips',  label: 'Payslips' },
   { key: 'exports',   label: 'Exports' },
@@ -638,6 +640,123 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
   );
 }
 
+// ── Tab: Worksheet (per-employee overrides) ─────────────────────────────────────
+
+function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
+  const { data: lines } = useRunLines(runId);
+  const { data: overrides, isLoading } = useRunOverrides(runId);
+  const empIds = (lines ?? []).map(l => l.employeeId);
+  const { data: nameMap } = useEmployeeNames(empIds);
+  const canOverride = can('finance.payroll.worksheet.override');
+  const editable = runStatus === 'input_locked' || runStatus === 'calculated';
+
+  const addMut    = usePayrollMutation(financePayrollApi.addOverride);
+  const removeMut = usePayrollMutation(financePayrollApi.removeOverride);
+  const calcMut   = usePayrollMutation(financePayrollApi.calculate);
+
+  const [empId, setEmpId]   = useState('');
+  const [label, setLabel]   = useState('');
+  const [amount, setAmount] = useState('');
+  const [kind, setKind]     = useState<'earning' | 'deduction'>('earning');
+  const [reason, setReason] = useState('');
+
+  async function add(): Promise<void> {
+    const amt = parseFloat(amount);
+    if (!empId) { toast('Select an employee.'); return; }
+    if (!label.trim()) { toast('Enter a label.'); return; }
+    if (!(amt > 0)) { toast('Amount must be greater than 0.'); return; }
+    if (!reason.trim()) { toast('A reason is required.'); return; }
+    try {
+      await addMut.mutateAsync({ runId, employeeId: empId, label: label.trim(), amount: amt, kind, reason: reason.trim() });
+      setLabel(''); setAmount(''); setReason('');
+      toast('Override added — recalculate to apply it to the run.');
+    } catch (e) { toast((e as Error).message ?? 'Failed to add override.'); }
+  }
+  async function remove(id: string): Promise<void> {
+    try { await removeMut.mutateAsync({ overrideId: id }); toast('Override removed — recalculate to apply.'); }
+    catch (e) { toast((e as Error).message ?? 'Failed to remove override.'); }
+  }
+  async function recalc(): Promise<void> {
+    try { await calcMut.mutateAsync({ id: runId }); toast('Run recalculated with overrides.'); }
+    catch (e) { toast((e as Error).message ?? 'Recalculate failed.'); }
+  }
+
+  const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)' };
+  const list = overrides ?? [];
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      {!editable && (
+        <div style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
+          Overrides can only be edited while the run is input-locked or calculated (run is “{humanize(runStatus)}”).
+        </div>
+      )}
+
+      {canOverride && editable && (
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.9fr 1.2fr 0.8fr 1.4fr auto', gap: 6, alignItems: 'end',
+                      padding: '8px', border: '1px dashed var(--hrfin-border)', borderRadius: 8 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>EMPLOYEE
+            <select value={empId} onChange={e => setEmpId((e.currentTarget as HTMLSelectElement).value)} style={fieldStyle}>
+              <option value="">Select…</option>
+              {empIds.map(id => <option key={id} value={id}>{nameMap?.get(id)?.fullName ?? id}</option>)}
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>TYPE
+            <select value={kind} onChange={e => setKind((e.currentTarget as HTMLSelectElement).value as 'earning' | 'deduction')} style={fieldStyle}>
+              <option value="earning">Earning</option>
+              <option value="deduction">Deduction</option>
+            </select>
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>LABEL
+            <input value={label} placeholder="e.g. Retro adjustment" onInput={e => setLabel((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>AMOUNT
+            <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON
+            <input value={reason} placeholder="Required" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+          <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={addMut.isPending} onClick={() => void add()}>
+            {addMut.isPending ? 'Adding…' : 'Add'}
+          </button>
+        </div>
+      )}
+
+      {isLoading ? <div class="hrfin-empty">Loading overrides…</div>
+        : list.length === 0 ? <div class="hrfin-empty" style={{ padding: '14px 0' }}>No overrides on this run.</div>
+        : (
+          <table class="vt-table" style={{ fontSize: 12 }}>
+            <thead><tr><th>Employee</th><th>Adjustment</th><th class="tc">Type</th><th class="tc">Amount</th><th>Reason</th><th /></tr></thead>
+            <tbody>
+              {list.map(o => (
+                <tr key={o.id}>
+                  <td><EmployeeCellResolved resolved={nameMap?.get(o.employeeId)} fallbackId={o.employeeId} /></td>
+                  <td>{o.label}</td>
+                  <td class="tc"><HrfinPill tone={o.kind === 'earning' ? 'ok' : 'wn'}>{o.kind}</HrfinPill></td>
+                  <td class="tc" style={{ fontVariantNumeric: 'tabular-nums' }}>{o.kind === 'deduction' ? '−' : ''}{fmtMoney(o.amount)}</td>
+                  <td style={{ color: 'var(--hrfin-text-secondary)' }}>{o.reason ?? '—'}</td>
+                  <td class="tc">
+                    {canOverride && editable && (
+                      <button type="button" class="hrfin-action" style={{ fontSize: 10, padding: '3px 8px' }} disabled={removeMut.isPending} onClick={() => void remove(o.id)}>Remove</button>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        )}
+
+      {canOverride && editable && list.length > 0 && (
+        <div>
+          <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={calcMut.isPending} onClick={() => void recalc()}>
+            {calcMut.isPending ? 'Recalculating…' : 'Recalculate run with overrides'}
+          </button>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ── Tab: GL (general-ledger posting) ────────────────────────────────────────────
 
 function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
@@ -1124,6 +1243,7 @@ export function PayRunDrawer({
             {tab === 'summary'   && <SummaryTab run={run} />}
             {tab === 'lines'     && <RunLinesTab runId={run.id} />}
             {tab === 'inputs'    && <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />}
+            {tab === 'worksheet' && <WorksheetTab runId={run.id} runStatus={run.status} />}
             {tab === 'warnings'  && <WarningsTab runId={run.id} canManage={canManage} />}
             {tab === 'payslips'  && <PayslipsTab runId={run.id} canManage={canManage} />}
             {tab === 'exports'   && <ExportsTab runId={run.id} canExport={canApprove || canManage} />}

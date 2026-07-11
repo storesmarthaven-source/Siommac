@@ -59,6 +59,11 @@ import {
   assignEmployee,
   listGroupMembers,
 } from '../lib/finance/payGroups';
+import {
+  addOverride,
+  removeOverride,
+  listOverrides,
+} from '../lib/finance/payrollOverrides';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
 import type { ExportFormat } from '../lib/finance/payrollExports';
@@ -411,6 +416,51 @@ router.post('/payroll/payslips/deliveries/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listRunDeliveries(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Worksheet overrides (Wave 4a) ────────────────────────────────────────────
+
+// POST /api/finance/payroll/overrides/add  — add a per-employee run override.
+// Permission: finance.payroll.worksheet.override.
+router.post('/payroll/overrides/add', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    employeeId: z.string().min(1),
+    label: z.string().min(1).max(80),
+    amount: z.number().positive(),
+    kind: z.enum(['earning', 'deduction']),
+    isTaxable: z.boolean().optional(),
+    reducesChargeable: z.boolean().optional(),
+    reason: z.string().min(1).max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await addOverride(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/overrides/remove
+router.post('/payroll/overrides/remove', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
+  const v = zv(c, z.object({ overrideId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await removeOverride(v.data.overrideId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/overrides/list  — Finance.
+router.post('/payroll/overrides/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listOverrides(v.data.runId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

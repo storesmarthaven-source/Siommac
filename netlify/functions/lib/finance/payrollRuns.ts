@@ -654,9 +654,11 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
 export async function calculateRun(runId: string, actorId: string): Promise<PayrollRunDto> {
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status !== 'input_locked') {
+  // Allow recalculation of an already-'calculated' run too, so worksheet overrides can be
+  // applied and recomputed before submission.
+  if (!['input_locked', 'calculated'].includes(run.status)) {
     throw Object.assign(
-      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked' runs can be calculated.`),
+      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked' or 'calculated' runs can be calculated.`),
       { status: 422 },
     );
   }
@@ -766,6 +768,8 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
       } else if (input.sourceType === 'overtime') {
         approvedOtAmount += Number(input.amount ?? 0);
       } else if (input.sourceType === 'pay_item') {
+        // Worksheet overrides are also stored as pay_item rows (tagged metadata.override), so
+        // they aggregate here into earnings / deductions via their kind/is_taxable metadata.
         const amount = Number(input.amount ?? 0);
         if (meta.kind === 'earning') {
           if (meta.is_taxable !== false) {
