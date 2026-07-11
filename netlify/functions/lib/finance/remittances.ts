@@ -19,6 +19,7 @@
 // ============================================================================
 
 import { sb } from '../db';
+import { selectAllRows } from '../dbBulk';
 import { nextRef } from '../refGenerator';
 import { startWorkflowForRecord } from '../workflow/service';
 import { assertDifferentApprover } from './statutoryConfig';
@@ -210,13 +211,12 @@ export async function computeRemittanceFromRun(
   const periodYear = periodDate.getUTCFullYear();
   const periodMonth = periodDate.getUTCMonth() + 1;
 
-  const { data: lines, error: linesErr } = await sb
-    .from('finance_payroll_run_lines')
-    .select('id, employee_id, nis_employee, nis_employer, health_surcharge, paye')
-    .eq('run_id', runId);
-  if (linesErr) throw Object.assign(new Error('computeRemittanceFromRun lines: ' + linesErr.message), { status: 500 });
-
-  const runLines = (lines ?? []) as DbRunLineRow[];
+  // Paginate past 1000-row cap — truncating underpays the remittance for large runs.
+  const runLines = await selectAllRows<DbRunLineRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('id, employee_id, nis_employee, nis_employer, health_surcharge, paye')
+      .eq('run_id', runId).order('id'),
+  );
 
   let totalEmployee = 0;
   let totalEmployer = 0;

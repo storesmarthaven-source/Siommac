@@ -11,6 +11,7 @@
 
 import PDFDocument from 'pdfkit';
 import { sb } from '../db';
+import { selectAllRows, chunk } from '../dbBulk';
 import { getEmployerProfile, isEmployerProfileComplete, type EmployerProfile } from './employerProfile';
 import { recordStatutoryForm, uploadFormArtifact, sha256Hex, type StatutoryFormDto } from './statutoryForms';
 
@@ -58,11 +59,13 @@ export async function buildNiPeriodData(year: number, month: number): Promise<Ni
 
   const acc = new Map<string, NiRow>();
   if (runIds.length > 0) {
-    const { data: lines, error: lineErr } = await sb.from('finance_payroll_run_lines')
-      .select('employee_id, gross, nis_employee, nis_employer, nis_class_no')
-      .in('run_id', runIds);
-    if (lineErr) throw Object.assign(new Error('buildNiPeriodData/lines: ' + lineErr.message), { status: 500 });
-    for (const l of (lines ?? []) as Array<{ employee_id: string; gross: number; nis_employee: number; nis_employer: number; nis_class_no: number | null }>) {
+    // Paginate — a run with 1000+ employees truncates at 1000 with a plain select.
+    const lines = await selectAllRows<{ employee_id: string; gross: number; nis_employee: number; nis_employer: number; nis_class_no: number | null }>(
+      () => sb.from('finance_payroll_run_lines')
+        .select('employee_id, gross, nis_employee, nis_employer, nis_class_no')
+        .in('run_id', runIds).order('id'),
+    );
+    for (const l of lines) {
       // Only lines that actually attracted NIS belong on the schedule.
       if (Number(l.nis_employee) <= 0 && Number(l.nis_employer) <= 0) continue;
       const r = acc.get(l.employee_id) ?? { employeeId: l.employee_id, name: l.employee_id, nisNumber: null, classNo: l.nis_class_no, weeks: 0, insurableEarnings: 0, eeContribution: 0, erContribution: 0, total: 0 };
@@ -77,12 +80,21 @@ export async function buildNiPeriodData(year: number, month: number): Promise<Ni
 
   const empIds = [...acc.keys()];
   if (empIds.length > 0) {
-    const [{ data: users }, { data: profiles }] = await Promise.all([
-      sb.from('app_users').select('id, full_name').in('id', empIds),
-      sb.from('hr_employee_statutory_profiles').select('employee_id, nis_number').in('employee_id', empIds),
-    ]);
-    for (const u of (users ?? []) as Array<{ id: string; full_name: string | null }>) { const r = acc.get(u.id); if (r) r.name = u.full_name ?? u.id; }
-    for (const p of (profiles ?? []) as Array<{ employee_id: string; nis_number: string | null }>) { const r = acc.get(p.employee_id); if (r) r.nisNumber = p.nis_number; }
+    // Chunk — .in() with 1000+ IDs overflows the URL ("fetch failed" at ~1100).
+    const allUsers: Array<{ id: string; full_name: string | null }> = [];
+    const allProfiles: Array<{ employee_id: string; nis_number: string | null }> = [];
+    for (const batch of chunk(empIds, 500)) {
+      const [{ data: uBatch, error: uErr }, { data: pBatch, error: pErr }] = await Promise.all([
+        sb.from('app_users').select('id, full_name').in('id', batch),
+        sb.from('hr_employee_statutory_profiles').select('employee_id, nis_number').in('employee_id', batch),
+      ]);
+      if (uErr) throw Object.assign(new Error('buildNiPeriodData/users: ' + uErr.message), { status: 500 });
+      if (pErr) throw Object.assign(new Error('buildNiPeriodData/profiles: ' + pErr.message), { status: 500 });
+      allUsers.push(...(uBatch ?? []) as typeof allUsers);
+      allProfiles.push(...(pBatch ?? []) as typeof allProfiles);
+    }
+    for (const u of allUsers) { const r = acc.get(u.id); if (r) r.name = u.full_name ?? u.id; }
+    for (const p of allProfiles) { const r = acc.get(p.employee_id); if (r) r.nisNumber = p.nis_number; }
   }
 
   const rows = [...acc.values()].map(r => ({

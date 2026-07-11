@@ -12,6 +12,7 @@
 // ============================================================================
 
 import { sb } from '../db';
+import { selectAllRows } from '../dbBulk';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { createHandoff } from '../handoffBus';
@@ -51,13 +52,16 @@ export interface GlPreview {
 // ── Compute journal amounts from the run lines ──────────────────────────────
 
 async function computeAmounts(runId: string): Promise<Record<string, number>> {
-  const { data: lines, error } = await sb.from('finance_payroll_run_lines')
-    .select('base, gross, nis_employee, nis_employer, health_surcharge, paye, voluntary_deductions, net, breakdown')
-    .eq('run_id', runId);
-  if (error) throw Object.assign(new Error('payrollGl/lines: ' + error.message), { status: 500 });
+  // Paginate past the 1000-row cap — truncating at 1000 understates the GL journal for
+  // large runs and breaks the balanced-entry invariant.
+  const lines = await selectAllRows<{ base: number; nis_employee: number; nis_employer: number; health_surcharge: number; paye: number; voluntary_deductions: number; breakdown: Record<string, unknown> | null }>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('base, gross, nis_employee, nis_employer, health_surcharge, paye, voluntary_deductions, net, breakdown')
+      .eq('run_id', runId).order('id'),
+  );
 
   let salary = 0, ot = 0, allow = 0, nisER = 0, paye = 0, nisEE = 0, hs = 0, vol = 0;
-  for (const l of (lines ?? []) as Array<{ base: number; nis_employee: number; nis_employer: number; health_surcharge: number; paye: number; voluntary_deductions: number; breakdown: Record<string, unknown> | null }>) {
+  for (const l of lines) {
     const bd = l.breakdown ?? {};
     salary += Number(l.base);
     ot     += Number(bd['approvedOtAmount'] ?? 0);

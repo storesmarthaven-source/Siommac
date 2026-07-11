@@ -18,6 +18,7 @@
 
 import { createHash } from 'crypto';
 import { sb } from '../db';
+import { selectAllRows, chunkedInsert } from '../dbBulk';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
@@ -111,22 +112,20 @@ export async function generatePayslips(runId: string, actorId: string, opts: { n
     );
   }
 
-  const { data: lines, error: lineErr } = await sb.from('finance_payroll_run_lines')
-    .select('id, employee_id')
-    .eq('run_id', runId);
-  if (lineErr) throw Object.assign(new Error('generatePayslips/lines: ' + lineErr.message), { status: 500 });
-
-  const lineList = (lines ?? []) as { id: string; employee_id: string }[];
+  // Paginate past the 1000-row PostgREST cap — a 1000+ employee run would silently
+  // truncate with a plain .select() and produce incomplete payslips.
+  const lineList = await selectAllRows<{ id: string; employee_id: string }>(
+    () => sb.from('finance_payroll_run_lines').select('id, employee_id').eq('run_id', runId).order('id'),
+  );
   if (lineList.length === 0) {
     throw Object.assign(new Error('No run lines found for this run.'), { status: 422 });
   }
 
-  const { data: existing, error: exErr } = await sb.from('finance_payslips')
-    .select('employee_id')
-    .eq('run_id', runId);
-  if (exErr) throw Object.assign(new Error('generatePayslips/existing: ' + exErr.message), { status: 500 });
+  const existingList = await selectAllRows<{ employee_id: string }>(
+    () => sb.from('finance_payslips').select('employee_id').eq('run_id', runId).order('employee_id'),
+  );
 
-  const existingEmployeeIds = new Set(((existing ?? []) as { employee_id: string }[]).map(r => r.employee_id));
+  const existingEmployeeIds = new Set(existingList.map(r => r.employee_id));
   const missing = lineList.filter(l => !existingEmployeeIds.has(l.employee_id));
 
   if (missing.length > 0) {
@@ -144,8 +143,8 @@ export async function generatePayslips(runId: string, actorId: string, opts: { n
       });
     }
 
-    const { error: insertErr } = await sb.from('finance_payslips').insert(insertRows);
-    if (insertErr) throw Object.assign(new Error('generatePayslips/insert: ' + insertErr.message), { status: 500 });
+    // chunkedInsert splits into <=500-row batches so PostgREST never rejects a large payload.
+    await chunkedInsert('finance_payslips', insertRows, 500);
 
     await writeHrAudit({
       submoduleKey: 'finance_payroll', recordId: runId, actorId,
@@ -258,12 +257,11 @@ export async function renderRunPayslips(runId: string, actorId: string): Promise
 // -- List payslips for a run (Finance only) ------------------------------------
 
 export async function listPayslipsForRun(runId: string): Promise<PayslipDto[]> {
-  const { data, error } = await sb.from('finance_payslips')
-    .select('*')
-    .eq('run_id', runId)
-    .order('employee_id');
-  if (error) throw Object.assign(new Error('listPayslipsForRun: ' + error.message), { status: 500 });
-  return ((data ?? []) as DbPayslipRow[]).map(toPayslipDto);
+  // Paginate — a run with 1000+ employees would silently truncate without this.
+  const rows = await selectAllRows<DbPayslipRow>(
+    () => sb.from('finance_payslips').select('*').eq('run_id', runId).order('employee_id'),
+  );
+  return rows.map(toPayslipDto);
 }
 
 // -- Get own payslips (employee self-service) ----------------------------------

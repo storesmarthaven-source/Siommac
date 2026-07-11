@@ -13,6 +13,7 @@
 
 import PDFDocument from 'pdfkit';
 import { sb } from '../db';
+import { selectAllRows, chunk } from '../dbBulk';
 import { getEmployerProfile, isEmployerProfileComplete, type EmployerProfile } from './employerProfile';
 import { recordStatutoryForm, uploadFormArtifact, sha256Hex, type StatutoryFormDto } from './statutoryForms';
 
@@ -56,13 +57,18 @@ export async function buildTd4YearData(taxYear: number, employeeId?: string): Pr
 
   const acc = new Map<string, Td4Row>();
   if (runIds.length > 0) {
-    let q = sb.from('finance_payroll_run_lines')
-      .select('employee_id, gross, paye, nis_employee, health_surcharge, net')
-      .in('run_id', runIds);
-    if (employeeId) q = q.eq('employee_id', employeeId);
-    const { data: lines, error: lineErr } = await q;
-    if (lineErr) throw Object.assign(new Error('buildTd4YearData/lines: ' + lineErr.message), { status: 500 });
-    for (const l of (lines ?? []) as Array<{ employee_id: string; gross: number; paye: number; nis_employee: number; health_surcharge: number; net: number }>) {
+    // Paginate the run-lines query — a run with 1000+ employees would silently truncate.
+    // runIds is typically <=52 (monthly/weekly in one year) so the .in() URL stays safe.
+    const lines = await selectAllRows<{ employee_id: string; gross: number; paye: number; nis_employee: number; health_surcharge: number; net: number }>(
+      () => {
+        let q = sb.from('finance_payroll_run_lines')
+          .select('employee_id, gross, paye, nis_employee, health_surcharge, net')
+          .in('run_id', runIds).order('id');
+        if (employeeId) q = q.eq('employee_id', employeeId);
+        return q;
+      },
+    );
+    for (const l of lines) {
       const r = acc.get(l.employee_id) ?? { employeeId: l.employee_id, name: l.employee_id, employeeNumber: null, tin: null, nisNumber: null, periods: 0, totalEmoluments: 0, payeDeducted: 0, nisEmployee: 0, healthSurcharge: 0, netPaid: 0 };
       r.periods += 1;
       r.totalEmoluments += Number(l.gross);
@@ -76,14 +82,23 @@ export async function buildTd4YearData(taxYear: number, employeeId?: string): Pr
 
   const empIds = [...acc.keys()];
   if (empIds.length > 0) {
-    const [{ data: users }, { data: profiles }] = await Promise.all([
-      sb.from('app_users').select('id, full_name, employee_number').in('id', empIds),
-      sb.from('hr_employee_statutory_profiles').select('employee_id, nis_number, bir_file_number').in('employee_id', empIds),
-    ]);
-    for (const u of (users ?? []) as Array<{ id: string; full_name: string | null; employee_number: string | null }>) {
+    // Chunk the lookup IDs — .in() with 1000+ IDs causes URL overflow ("fetch failed").
+    const allUsers: Array<{ id: string; full_name: string | null; employee_number: string | null }> = [];
+    const allProfiles: Array<{ employee_id: string; nis_number: string | null; bir_file_number: string | null }> = [];
+    for (const batch of chunk(empIds, 500)) {
+      const [{ data: uBatch, error: uErr }, { data: pBatch, error: pErr }] = await Promise.all([
+        sb.from('app_users').select('id, full_name, employee_number').in('id', batch),
+        sb.from('hr_employee_statutory_profiles').select('employee_id, nis_number, bir_file_number').in('employee_id', batch),
+      ]);
+      if (uErr) throw Object.assign(new Error('buildTd4YearData/users: ' + uErr.message), { status: 500 });
+      if (pErr) throw Object.assign(new Error('buildTd4YearData/profiles: ' + pErr.message), { status: 500 });
+      allUsers.push(...(uBatch ?? []) as typeof allUsers);
+      allProfiles.push(...(pBatch ?? []) as typeof allProfiles);
+    }
+    for (const u of allUsers) {
       const r = acc.get(u.id); if (r) { r.name = u.full_name ?? u.id; r.employeeNumber = u.employee_number; }
     }
-    for (const p of (profiles ?? []) as Array<{ employee_id: string; nis_number: string | null; bir_file_number: string | null }>) {
+    for (const p of allProfiles) {
       const r = acc.get(p.employee_id); if (r) { r.nisNumber = p.nis_number; r.tin = p.bir_file_number; }
     }
   }

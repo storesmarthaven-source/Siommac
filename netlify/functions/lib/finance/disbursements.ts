@@ -6,6 +6,7 @@
 
 import { createHash } from 'crypto';
 import { sb } from '../db';
+import { selectAllRows, chunk, chunkedInsert } from '../dbBulk';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
@@ -126,23 +127,35 @@ export async function computeFromRun(runId: string): Promise<ComputedDisbursemen
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   const ALLOWED = ['approved', 'locked', 'exported'];
   if (!ALLOWED.includes(run.status)) throw Object.assign(new Error('Payroll run must be approved or locked to compute a disbursement (current: ' + run.status + ').'), { status: 422 });
-  const { data: payslips, error: pErr } = await sb.from('finance_payslips').select('employee_id, run_line_id').eq('run_id', runId);
-  if (pErr) throw Object.assign(new Error('computeFromRun/payslips: ' + pErr.message), { status: 500 });
-  const payslipList = (payslips ?? []) as Array<{ employee_id: string; run_line_id: string }>;
+  // Paginate payslips — a run with 1000+ employees would silently truncate.
+  const payslipList = await selectAllRows<{ employee_id: string; run_line_id: string }>(
+    () => sb.from('finance_payslips').select('employee_id, run_line_id').eq('run_id', runId).order('employee_id'),
+  );
   if (payslipList.length === 0) throw Object.assign(new Error('No payslips found for this run. Generate payslips first.'), { status: 422 });
-  const lineIds = payslipList.map(p => p.run_line_id).filter(Boolean);
-  const { data: runLines, error: rlErr } = await sb.from('finance_payroll_run_lines').select('id, employee_id, net').in('id', lineIds);
-  if (rlErr) throw Object.assign(new Error('computeFromRun/run-lines: ' + rlErr.message), { status: 500 });
+
+  // Read all run lines by run_id via pagination (no .in() — .in() with 1000+ UUIDs
+  // creates a URL >8KB which PostgREST rejects as "fetch failed").
+  // All payslips in a given run share the same run_id, so querying by run_id is
+  // equivalent and avoids any URL-length concern.
+  const runLines = await selectAllRows<{ id: string; employee_id: string; net: number }>(
+    () => sb.from('finance_payroll_run_lines').select('id, employee_id, net').eq('run_id', runId).order('id'),
+  );
   const netByEmpId = new Map<string, number>();
-  for (const rl of (runLines ?? []) as Array<{ id: string; employee_id: string; net: number }>) {
+  for (const rl of runLines) {
     netByEmpId.set(rl.employee_id, Number(rl.net));
   }
+
+  // Chunk the employee IDs for bank-account lookup.
+  // Employee IDs are text (~17 chars each); 500 × 18 ≈ 9 000-char URL > 8 KB PostgREST cap.
+  // Use 200 per batch: 200 × 18 ≈ 3 600 chars → well under the limit.
   const employeeIds = payslipList.map(p => p.employee_id);
-  const { data: bankAccts, error: baErr } = await sb.from('finance_employee_bank_accounts').select('employee_id, id, account_number_masked, bank_name').in('employee_id', employeeIds).eq('is_primary', true).eq('is_active', true);
-  if (baErr) throw Object.assign(new Error('computeFromRun/bank-accounts: ' + baErr.message), { status: 500 });
   const bankByEmp = new Map<string, { id: string; employee_id: string; account_number_masked: string; bank_name: string }>();
-  for (const ba of (bankAccts ?? []) as Array<{ id: string; employee_id: string; account_number_masked: string; bank_name: string }>) {
-    bankByEmp.set(ba.employee_id, ba);
+  for (const batch of chunk(employeeIds, 200)) {
+    const { data: baBatch, error: baErr } = await sb.from('finance_employee_bank_accounts').select('employee_id, id, account_number_masked, bank_name').in('employee_id', batch).eq('is_primary', true).eq('is_active', true);
+    if (baErr) throw Object.assign(new Error('computeFromRun/bank-accounts: ' + baErr.message), { status: 500 });
+    for (const ba of (baBatch ?? []) as Array<{ id: string; employee_id: string; account_number_masked: string; bank_name: string }>) {
+      bankByEmp.set(ba.employee_id, ba);
+    }
   }
   const lines = payslipList.map(p => {
     const net = netByEmpId.get(p.employee_id) ?? 0;
@@ -256,10 +269,14 @@ export async function createDisbursement(opts: { payrollRunId: string; actorId: 
   const row = toDto(data);
   const lineRows = computed.lines.map(l => ({ disbursement_id: row.id, employee_id: l.employeeId, bank_account_id: l.bankAccountId ?? null, net_amount: l.netAmount, metadata: {} }));
   if (lineRows.length > 0) {
-    const { error: lineErr } = await sb.from('finance_disbursement_lines').insert(lineRows);
-    if (lineErr) {
+    try {
+      // chunkedInsert splits into <=500-row batches — a 1000+ employee run would overflow PostgREST.
+      await chunkedInsert('finance_disbursement_lines', lineRows, 500);
+    } catch (lineErr) {
+      // Compensating rollback: delete any partially-inserted lines then the header.
+      await sb.from('finance_disbursement_lines').delete().eq('disbursement_id', row.id);
       await sb.from('finance_disbursements').delete().eq('id', row.id);
-      throw Object.assign(new Error('createDisbursement/lines: ' + lineErr.message + ' -- disbursement rolled back.'), { status: 500 });
+      throw Object.assign(new Error('createDisbursement/lines: ' + String(lineErr) + ' -- disbursement rolled back.'), { status: 500 });
     }
   }
   void emitAppEvent({ eventType: 'finance.disbursement.created', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: row.id, actorUserId: opts.actorId, severity: 'info', payload: { disbursementNo: row.disbursementNo, totalAmount: row.totalAmount, employeeCount: row.employeeCount } });
@@ -337,12 +354,15 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
   }
 
   // Load raw bank-account detail (server-side only — account_number never leaves the server).
+  // Chunk the IDs — .in() with 1000+ IDs overflows the PostgREST URL.
   const bankAccountIds = [...new Set(payable.map(l => l.bank_account_id as string))];
   const bankMap = new Map<string, { id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>();
-  const { data: baData, error: baErr } = await sb.from('finance_employee_bank_accounts').select('id,bank_name,branch,account_type,account_number,transit_number').in('id', bankAccountIds);
-  if (baErr) throw Object.assign(new Error('generateBankFile/bank-accounts: ' + baErr.message), { status: 500 });
-  for (const ba of (baData ?? []) as Array<{ id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>) {
-    bankMap.set(ba.id, ba);
+  for (const batch of chunk(bankAccountIds, 500)) {
+    const { data: baBatch, error: baErr } = await sb.from('finance_employee_bank_accounts').select('id,bank_name,branch,account_type,account_number,transit_number').in('id', batch);
+    if (baErr) throw Object.assign(new Error('generateBankFile/bank-accounts: ' + baErr.message), { status: 500 });
+    for (const ba of (baBatch ?? []) as Array<{ id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>) {
+      bankMap.set(ba.id, ba);
+    }
   }
 
   // Group payable lines by resolved bank code.
@@ -730,13 +750,16 @@ export async function listDisbursementLinesDetail(
   const bankIds = lines.map(l => l.bankAccountId).filter((v): v is string => v !== null);
   const bankMap = new Map<string, { account_number_masked: string; bank_name: string }>();
   if (bankIds.length > 0) {
-    const { data: baRows, error: baErr } = await sb
-      .from('finance_employee_bank_accounts')
-      .select('id,account_number_masked,bank_name')
-      .in('id', bankIds);
-    if (baErr) throw Object.assign(new Error('listDisbursementLinesDetail/bank-accounts: ' + baErr.message), { status: 500 });
-    for (const ba of (baRows ?? []) as Array<{ id: string; account_number_masked: string; bank_name: string }>) {
-      bankMap.set(ba.id, ba);
+    // Chunk — .in() with 1000+ IDs overflows PostgREST URL.
+    for (const batch of chunk(bankIds, 500)) {
+      const { data: baRows, error: baErr } = await sb
+        .from('finance_employee_bank_accounts')
+        .select('id,account_number_masked,bank_name')
+        .in('id', batch);
+      if (baErr) throw Object.assign(new Error('listDisbursementLinesDetail/bank-accounts: ' + baErr.message), { status: 500 });
+      for (const ba of (baRows ?? []) as Array<{ id: string; account_number_masked: string; bank_name: string }>) {
+        bankMap.set(ba.id, ba);
+      }
     }
   }
 

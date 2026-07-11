@@ -27,6 +27,7 @@
 // ============================================================================
 
 import { sb } from '../db';
+import { selectAllRows } from '../dbBulk';
 
 export type ReportRow = Record<string, unknown>;
 
@@ -73,22 +74,24 @@ export async function reportPayslipRegister(opts: { runId?: string; limit?: numb
 
 // ── Net-pay summary ───────────────────────────────────────────────────────────
 export async function reportNetPaySummary(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, gross, nis_employee, health_surcharge, paye, voluntary_deductions, net, department_id, cost_center_id')
-    .eq('run_id', runId)
-    .order('net', { ascending: false });
-  if (error) throw Object.assign(new Error('reportNetPaySummary: ' + error.message), { status: 500 });
-  return result('net_pay_summary', (data ?? []) as ReportRow[]);
+  const rows = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, gross, nis_employee, health_surcharge, paye, voluntary_deductions, net, department_id, cost_center_id')
+      .eq('run_id', runId).order('id'),
+  );
+  // Sort by net descending after full fetch (stable paging requires order('id'), not order('net')).
+  rows.sort((a, b) => Number(b['net'] ?? 0) - Number(a['net'] ?? 0));
+  return result('net_pay_summary', rows);
 }
 
 // ── Employer NIS summary ──────────────────────────────────────────────────────
 export async function reportEmployerNisSummary(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, nis_employee, nis_employer, nis_class_no, nis_number_masked, nis_status')
-    .eq('run_id', runId)
-    .order('employee_id');
-  if (error) throw Object.assign(new Error('reportEmployerNisSummary: ' + error.message), { status: 500 });
-  return result('employer_nis_summary', (data ?? []) as ReportRow[]);
+  const rows = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, nis_employee, nis_employer, nis_class_no, nis_number_masked, nis_status')
+      .eq('run_id', runId).order('employee_id'),
+  );
+  return result('employer_nis_summary', rows);
 }
 
 // ── NIS remittance detail ─────────────────────────────────────────────────────
@@ -97,50 +100,53 @@ export async function reportNisRemittance(runId: string): Promise<ReportResult> 
     .select('run_no, period_month, nis_employer_total')
     .eq('id', runId).maybeSingle();
 
-  const { data: lines, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, nis_employee, nis_employer, nis_class_no, nis_number_masked, opening_ytd_nis_employee, opening_ytd_nis_employer')
-    .eq('run_id', runId)
-    .order('employee_id');
-  if (error) throw Object.assign(new Error('reportNisRemittance: ' + error.message), { status: 500 });
+  const lines = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, nis_employee, nis_employer, nis_class_no, nis_number_masked, opening_ytd_nis_employee, opening_ytd_nis_employer')
+      .eq('run_id', runId).order('employee_id'),
+  );
 
-  const rows = (lines ?? []).map(l => ({
+  const rows = lines.map(l => ({
     ...l,
     runNo:        (runData as Record<string, unknown> | null)?.run_no ?? null,
     periodMonth:  (runData as Record<string, unknown> | null)?.period_month ?? null,
-  })) as ReportRow[];
+  }));
   return result('nis_remittance', rows);
 }
 
 // ── PAYE summary ──────────────────────────────────────────────────────────────
 export async function reportPayeSummary(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, taxable_gross, chargeable_income, paye, department_id')
-    .eq('run_id', runId)
-    .order('paye', { ascending: false });
-  if (error) throw Object.assign(new Error('reportPayeSummary: ' + error.message), { status: 500 });
-  return result('paye_summary', (data ?? []) as ReportRow[]);
+  const rows = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, taxable_gross, chargeable_income, paye, department_id')
+      .eq('run_id', runId).order('id'),
+  );
+  rows.sort((a, b) => Number(b['paye'] ?? 0) - Number(a['paye'] ?? 0));
+  return result('paye_summary', rows);
 }
 
 // ── Health Surcharge summary ──────────────────────────────────────────────────
 export async function reportHsSummary(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, gross, health_surcharge, department_id')
-    .eq('run_id', runId)
-    .order('employee_id');
-  if (error) throw Object.assign(new Error('reportHsSummary: ' + error.message), { status: 500 });
-  return result('hs_summary', (data ?? []) as ReportRow[]);
+  const rows = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, gross, health_surcharge, department_id')
+      .eq('run_id', runId).order('employee_id'),
+  );
+  return result('hs_summary', rows);
 }
 
 // ── Cost by department ────────────────────────────────────────────────────────
 export async function reportCostByDepartment(runId: string): Promise<ReportResult> {
-  // Group in JS since PostgREST aggregation requires an RPC for SUM
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('department_id, gross, net, nis_employee, nis_employer, paye, health_surcharge')
-    .eq('run_id', runId);
-  if (error) throw Object.assign(new Error('reportCostByDepartment: ' + error.message), { status: 500 });
+  // Group in JS since PostgREST aggregation requires an RPC for SUM.
+  // Paginate to get all rows — a plain select caps at 1000.
+  const data = await selectAllRows<Record<string, unknown>>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('department_id, gross, net, nis_employee, nis_employer, paye, health_surcharge')
+      .eq('run_id', runId).order('id'),
+  );
 
   const agg = new Map<string, { gross: number; net: number; nisEmployee: number; nisEmployer: number; paye: number; hs: number; count: number }>();
-  for (const row of (data ?? []) as Record<string, unknown>[]) {
+  for (const row of data) {
     const deptId = (row['department_id'] as string | null) ?? '__unassigned__';
     const existing = agg.get(deptId) ?? { gross: 0, net: 0, nisEmployee: 0, nisEmployer: 0, paye: 0, hs: 0, count: 0 };
     existing.gross       += Number(row['gross'] ?? 0);
@@ -162,13 +168,14 @@ export async function reportCostByDepartment(runId: string): Promise<ReportResul
 
 // ── Cost by cost center ───────────────────────────────────────────────────────
 export async function reportCostByCostCenter(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('cost_center_id, gross, net, nis_employee, nis_employer, paye, health_surcharge')
-    .eq('run_id', runId);
-  if (error) throw Object.assign(new Error('reportCostByCostCenter: ' + error.message), { status: 500 });
+  const data = await selectAllRows<Record<string, unknown>>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('cost_center_id, gross, net, nis_employee, nis_employer, paye, health_surcharge')
+      .eq('run_id', runId).order('id'),
+  );
 
   const agg = new Map<string, { gross: number; net: number; nisEmployee: number; nisEmployer: number; paye: number; hs: number; count: number }>();
-  for (const row of (data ?? []) as Record<string, unknown>[]) {
+  for (const row of data) {
     const ccId = (row['cost_center_id'] as string | null) ?? '__unassigned__';
     const existing = agg.get(ccId) ?? { gross: 0, net: 0, nisEmployee: 0, nisEmployer: 0, paye: 0, hs: 0, count: 0 };
     existing.gross       += Number(row['gross'] ?? 0);
@@ -202,12 +209,12 @@ export async function reportExportAudit(opts: { runId?: string; limit?: number }
 
 // ── NIS Continuity Register ───────────────────────────────────────────────────
 export async function reportNisContinuity(runId: string): Promise<ReportResult> {
-  const { data, error } = await sb.from('finance_payroll_run_lines')
-    .select('employee_id, nis_number_masked, nis_status, nis_class_no, opening_ytd_nis_employee, opening_ytd_nis_employer')
-    .eq('run_id', runId)
-    .order('employee_id');
-  if (error) throw Object.assign(new Error('reportNisContinuity: ' + error.message), { status: 500 });
-  return result('nis_continuity', (data ?? []) as ReportRow[]);
+  const rows = await selectAllRows<ReportRow>(
+    () => sb.from('finance_payroll_run_lines')
+      .select('employee_id, nis_number_masked, nis_status, nis_class_no, opening_ytd_nis_employee, opening_ytd_nis_employer')
+      .eq('run_id', runId).order('employee_id'),
+  );
+  return result('nis_continuity', rows);
 }
 
 // ── Missing NIS Number ─────────────────────────────────────────────────────────
@@ -294,14 +301,17 @@ interface DiffLine { employee_id: string; gross: number; paye: number; nis_emplo
 const r2 = (n: number): number => Math.round((Number(n) || 0) * 100) / 100;
 
 async function diffRuns(baseRunId: string, compareRunId: string, report: string): Promise<ReportResult> {
-  const [{ data: baseLines, error: bErr }, { data: compLines, error: cErr }] = await Promise.all([
-    sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', baseRunId),
-    sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', compareRunId),
+  // Paginate both sides independently — large runs truncate at 1000 rows without this.
+  const [baseLines, compLines] = await Promise.all([
+    selectAllRows<DiffLine>(
+      () => sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', baseRunId).order('id'),
+    ),
+    selectAllRows<DiffLine>(
+      () => sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', compareRunId).order('id'),
+    ),
   ]);
-  if (bErr) throw Object.assign(new Error('diffRuns/base: ' + bErr.message), { status: 500 });
-  if (cErr) throw Object.assign(new Error('diffRuns/compare: ' + cErr.message), { status: 500 });
-  const baseMap = new Map((baseLines ?? []).map((l: DiffLine) => [l.employee_id, l]));
-  const compMap = new Map((compLines ?? []).map((l: DiffLine) => [l.employee_id, l]));
+  const baseMap = new Map(baseLines.map((l: DiffLine) => [l.employee_id, l]));
+  const compMap = new Map(compLines.map((l: DiffLine) => [l.employee_id, l]));
   const ids = [...new Set([...baseMap.keys(), ...compMap.keys()])].sort();
   const rows = ids.map(id => {
     const b = baseMap.get(id); const c = compMap.get(id);
