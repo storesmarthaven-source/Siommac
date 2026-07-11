@@ -1,18 +1,16 @@
 -- ============================================================================
--- permission_grant_approvals — atomic reject/cancel (audit remediation P1-8)
+-- permission_grant_approvals -- atomic reject/cancel (audit remediation P1-8)
 --
 -- approve_permission_grant_tx (20260917000300) made APPROVE atomic, but reject
 -- and cancel still did read-pending-then-update as two separate PostgREST calls:
 -- a concurrent approve could APPLY the grant between the read and the update,
 -- after which reject/cancel silently overwrote the approval's status while the
 -- grant stayed live. These functions mirror the approve tx: lock the row,
--- re-check status under the lock, then flip — or report why not.
---   reject_permission_grant_tx — maker≠checker enforced inside the tx.
---   cancel_permission_grant_tx — only the REQUESTER may cancel their own request.
--- Idempotent. Run in the Supabase SQL editor.
+-- re-check status under the lock, then flip -- or report why not.
+--   reject_permission_grant_tx -- maker <> checker enforced inside the tx.
+--   cancel_permission_grant_tx -- only the REQUESTER may cancel their own request.
+-- ASCII only + named dollar-quote tags. Idempotent / re-runnable.
 -- ============================================================================
-
-begin;
 
 create or replace function public.reject_permission_grant_tx(
   p_approval_id text,
@@ -23,7 +21,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $reject_pga$
 declare
   v_row permission_grant_approvals%rowtype;
   v_now timestamptz := now();
@@ -56,7 +54,7 @@ begin
     'requested_by',   v_row.requested_by
   );
 end;
-$$;
+$reject_pga$;
 
 create or replace function public.cancel_permission_grant_tx(
   p_approval_id text,
@@ -66,7 +64,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $cancel_pga$
 declare
   v_row permission_grant_approvals%rowtype;
 begin
@@ -97,13 +95,11 @@ begin
     'permission_key', v_row.permission_key
   );
 end;
-$$;
+$cancel_pga$;
 
 revoke all on function public.reject_permission_grant_tx(text, text, text) from public, anon, authenticated;
 revoke all on function public.cancel_permission_grant_tx(text, text) from public, anon, authenticated;
 grant execute on function public.reject_permission_grant_tx(text, text, text) to service_role;
 grant execute on function public.cancel_permission_grant_tx(text, text) to service_role;
 
-commit;
-
-notify pgrst, 'reload schema';
+-- After applying, run: NOTIFY pgrst, 'reload schema';

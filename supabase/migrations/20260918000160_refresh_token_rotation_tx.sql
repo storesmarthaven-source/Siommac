@@ -1,21 +1,21 @@
 -- ============================================================================
--- Auth — atomic refresh-token rotation + preserved auth-method claims (P1-9)
+-- Auth -- atomic refresh-token rotation + preserved auth-method claims (P1-9)
 -- ============================================================================
--- rotateRefreshToken() previously did select → delete → insert as three
+-- rotateRefreshToken() previously did select, then delete, then insert as three
 -- separate PostgREST calls with UNCHECKED errors: two concurrent refreshes
 -- could both consume the same token (or leave a session with no valid
 -- replacement), and the re-signed access token silently LOST the session's
 -- MFA/step-up claims (amr / authStrength / mfaVerifiedAt).
---   • rotate_refresh_token_tx consumes the old token with a single atomic
---     DELETE … RETURNING (exactly one concurrent caller wins), validates
+--   - rotate_refresh_token_tx consumes the old token with a single atomic
+--     DELETE ... RETURNING (exactly one concurrent caller wins), validates
 --     expiry + user status, and issues the replacement in the same tx.
---   • The auth-method claims are STORED on the refresh row (stamped at login/
+--   - The auth-method claims are STORED on the refresh row (stamped at login/
 --     step-up) and carried across rotation, so refreshed access tokens keep
 --     the session's real strength.
--- Idempotent. Run in the Supabase SQL editor.
+-- ASCII only + named dollar-quote tag. Idempotent / re-runnable.
+-- NOTE: apply this BEFORE deploying the matching backend -- issueRefreshToken()
+-- writes the new columns on every login.
 -- ============================================================================
-
-begin;
 
 alter table public.refresh_tokens add column if not exists amr             jsonb;
 alter table public.refresh_tokens add column if not exists auth_strength   text;
@@ -31,7 +31,7 @@ returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $rotate_rt$
 declare
   v_old  refresh_tokens%rowtype;
   v_user_status text;
@@ -71,11 +71,9 @@ begin
     'mfa_verified_at', v_old.mfa_verified_at
   );
 end;
-$$;
+$rotate_rt$;
 
 revoke all on function public.rotate_refresh_token_tx(text, text, integer) from public, anon, authenticated;
 grant execute on function public.rotate_refresh_token_tx(text, text, integer) to service_role;
 
-commit;
-
-notify pgrst, 'reload schema';
+-- After applying, run: NOTIFY pgrst, 'reload schema';

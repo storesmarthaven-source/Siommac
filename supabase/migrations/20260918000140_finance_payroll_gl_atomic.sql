@@ -1,18 +1,20 @@
 -- ============================================================================
--- Finance Payroll — ATOMIC GL post/reverse (audit remediation P0-3)
+-- Finance Payroll -- ATOMIC GL post/reverse (audit remediation P0-3)
 -- ============================================================================
 -- postRunGl/reverseRunGl previously issued separate PostgREST writes
--- (header → lines → run-link) with a best-effort compensating delete: two
--- concurrent posts could BOTH create journals before either linked the run,
+-- (header, then lines, then run-link) with a best-effort compensating delete:
+-- two concurrent posts could BOTH create journals before either linked the run,
 -- and a failed link left a posted journal orphaned. These functions do the
 -- whole accounting mutation in ONE transaction with a row lock on the run.
---   post_payroll_gl_tx    — lock run FOR UPDATE → guards → header + lines +
---                           run link, all-or-nothing.
---   reverse_payroll_gl_tx — lock run + original journal → mirror journal +
---                           mark reversed + unlink run, all-or-nothing.
+--   post_payroll_gl_tx    -- lock run FOR UPDATE, guards, header + lines +
+--                            run link, all-or-nothing.
+--   reverse_payroll_gl_tx -- lock run + original journal, mirror journal +
+--                            mark reversed + unlink run, all-or-nothing.
 -- A partial unique index additionally guarantees at most ONE posted payroll
 -- journal per run even outside these functions.
 -- Called via service_role RPC only (no grants to authenticated).
+-- ASCII only + named dollar-quote tags so any SQL runner parses it cleanly.
+-- Idempotent / re-runnable.
 -- ============================================================================
 
 -- Belt-and-braces: one POSTED payroll journal per run.
@@ -27,13 +29,13 @@ create or replace function public.post_payroll_gl_tx(
   p_entry_date date,
   p_memo       text,
   p_actor      text,
-  p_lines      jsonb,      -- [{account_code, debit, credit, description}] (ordered)
+  p_lines      jsonb,
   p_metadata   jsonb default '{}'::jsonb
 ) returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $post_gl$
 declare
   v_run          record;
   v_journal_id   uuid;
@@ -56,7 +58,7 @@ begin
     return jsonb_build_object('status', 'already_posted', 'journal_id', v_run.gl_journal_id);
   end if;
 
-  -- Validate lines (defense in depth — the app validates too).
+  -- Validate lines (defense in depth -- the app validates too).
   for v_line in select * from jsonb_array_elements(p_lines) loop
     v_count := v_count + 1;
     v_total_debit  := v_total_debit  + coalesce((v_line->>'debit')::numeric, 0);
@@ -98,19 +100,19 @@ begin
     'status', 'posted', 'journal_id', v_journal_id, 'journal_no', p_journal_no,
     'total_debit', v_total_debit, 'total_credit', v_total_credit);
 end;
-$$;
+$post_gl$;
 
 create or replace function public.reverse_payroll_gl_tx(
-  p_run_id              uuid,
+  p_run_id               uuid,
   p_reversing_journal_no text,
-  p_entry_date          date,
-  p_actor               text,
-  p_reason              text
+  p_entry_date           date,
+  p_actor                text,
+  p_reason               text
 ) returns jsonb
 language plpgsql
 security definer
 set search_path = public
-as $$
+as $rev_gl$
 declare
   v_run           record;
   v_orig          record;
@@ -136,13 +138,13 @@ begin
      posted_at, posted_by, created_by, reversal_of, metadata)
   values
     (p_reversing_journal_no, p_entry_date,
-     'Reversal of ' || v_orig.journal_no || case when p_reason is not null and p_reason <> '' then ' — ' || p_reason else '' end,
+     'Reversal of ' || v_orig.journal_no || case when p_reason is not null and p_reason <> '' then ' - ' || p_reason else '' end,
      'posted', 'finance_payroll', v_orig.source_ref,
      now(), p_actor, p_actor, v_orig.id,
      jsonb_build_object('reversalOf', v_orig.id::text))
   returning id into v_reversing_id;
 
-  -- Mirror the original's lines (debit ↔ credit) in one statement.
+  -- Mirror the original lines (debit <-> credit) in one statement.
   insert into public.finance_gl_journal_lines
     (journal_id, line_no, account_code, debit, credit, description)
   select v_reversing_id, line_no, account_code, credit, debit, description
@@ -163,7 +165,7 @@ begin
     'status', 'reversed', 'reversing_journal_id', v_reversing_id,
     'reversing_journal_no', p_reversing_journal_no, 'original_journal_id', v_orig.id);
 end;
-$$;
+$rev_gl$;
 
 revoke all on function public.post_payroll_gl_tx(uuid, text, date, text, text, jsonb, jsonb) from public, anon, authenticated;
 revoke all on function public.reverse_payroll_gl_tx(uuid, text, date, text, text) from public, anon, authenticated;
