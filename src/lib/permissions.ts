@@ -447,6 +447,7 @@ export const PERMISSION_KEYS = [
   'finance.payroll.payslips.distribute', // finance: email payslips (password-protected) to employees
   'finance.payroll.gl.preview',     // finance: preview the GL journal for a run (read-only)
   'finance.payroll.gl.post',        // finance: post/reverse a run's GL journal (ledger write)
+  'finance.payroll.paygroups.manage', // finance: create pay groups + assign employees
   // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
   'finance.remittances.view',         // view remittances and per-employee lines
   'finance.remittances.manage',       // create, submit and cancel remittances
@@ -607,6 +608,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
+    'finance.payroll.paygroups.manage',
     'finance.payroll.reports.view',
     // Remittances (F1)
     'finance.remittances.view',
@@ -656,6 +658,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
+    'finance.payroll.paygroups.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -968,6 +971,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
+    'finance.payroll.paygroups.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -1168,6 +1172,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
+    'finance.payroll.paygroups.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',

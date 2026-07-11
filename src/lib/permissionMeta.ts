@@ -1376,6 +1376,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Post a locked payroll run\'s balanced journal to the general ledger, and reverse it (mirror journal) when needed. Writes to the ledger — Finance Manager or Admin.',
     risk: 'high',
   },
+  'finance.payroll.paygroups.manage': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Pay Groups',
+    description: 'Create pay groups (weekly / fortnightly / semi-monthly / monthly) and assign employees to them. Pay groups drive a run\'s frequency and which employees it pays.',
+    risk: 'medium',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

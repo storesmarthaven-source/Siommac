@@ -52,6 +52,13 @@ import {
   reverseRunGl,
   getRunGlJournal,
 } from '../lib/finance/payrollGl';
+import {
+  listPayGroups,
+  createPayGroup,
+  getPayGroup,
+  assignEmployee,
+  listGroupMembers,
+} from '../lib/finance/payGroups';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
 import type { ExportFormat } from '../lib/finance/payrollExports';
@@ -110,9 +117,10 @@ router.post('/payroll/runs/create', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
   const v = zv(c, z.object({
     periodMonth:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    payFrequency:   z.enum(['monthly', 'bi_weekly', 'weekly']).optional(),
+    payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly', 'bi_weekly']).optional(),
     weeksInPeriod:  z.number().positive().optional(),
     payGroup:       z.string().min(1).max(100).optional(),
+    payGroupId:     z.string().uuid().optional(),   // when set, the group drives frequency + population
     payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }), b(c));
@@ -403,6 +411,76 @@ router.post('/payroll/payslips/deliveries/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listRunDeliveries(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Pay groups (Wave 3b) ─────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/pay-groups/list  — Finance (used by the New Run wizard).
+router.post('/payroll/pay-groups/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ activeOnly: z.boolean().optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listPayGroups({ activeOnly: v.data.activeOnly });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/pay-groups/get
+router.post('/payroll/pay-groups/get', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayGroup(v.data.id);
+    if (!data) return c.json({ success: false, message: 'Pay group not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/pay-groups/create  — Permission: paygroups.manage.
+router.post('/payroll/pay-groups/create', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.paygroups.manage');
+  const v = zv(c, z.object({
+    code: z.string().min(1).max(20),
+    name: z.string().min(1).max(120),
+    frequency: z.enum(['weekly', 'fortnightly', 'semi_monthly', 'monthly']),
+    defaultPayDay: z.number().int().optional(),
+    defaultCutoffOffsetDays: z.number().int().optional(),
+    statutoryCountry: z.string().max(4).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await createPayGroup(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/pay-groups/assign  — assign an employee to a group.
+router.post('/payroll/pay-groups/assign', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.paygroups.manage');
+  const v = zv(c, z.object({
+    employeeId: z.string().min(1),
+    payGroupId: z.string().uuid(),
+    effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await assignEmployee(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/pay-groups/members  — assignments for a group.
+router.post('/payroll/pay-groups/members', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ payGroupId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listGroupMembers(v.data.payGroupId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

@@ -20,6 +20,7 @@ export interface PayrollRun {
   statutoryVersionId: string;
   weeksInPeriod: number;
   payGroup: string | null;
+  payGroupId: string | null;
   payDate: string | null;
   cutOffDate: string | null;
   employeeCount: number;
@@ -189,9 +190,24 @@ export interface CreateRunArgs {
   payFrequency?: string;
   weeksInPeriod?: number;
   payGroup?: string;
+  payGroupId?: string;      // when set, the group drives frequency + population
   payDate?: string;         // YYYY-MM-DD actual payment date
   cutOffDate?: string;      // YYYY-MM-DD cut-off date for changes
 }
+
+export interface PayGroup {
+  id: string;
+  code: string;
+  name: string;
+  frequency: 'weekly' | 'fortnightly' | 'semi_monthly' | 'monthly';
+  defaultPayDay: number | null;
+  defaultCutoffOffsetDays: number;
+  statutoryCountry: string;
+  active: boolean;
+  memberCount?: number;
+  createdAt: string;
+}
+export interface PayGroupMember { employeeId: string; effectiveFrom: string; effectiveTo: string | null }
 
 export interface PopulationPreview {
   total:                   number;
@@ -259,6 +275,12 @@ export const financePayrollApi = {
   deliverRunPayslips:(a: { runId: string })            => call<{ sent: number; failed: number; skipped: number; total: number }>('finance/payroll/payslips/deliver-run', a),
   deliverPayslip:   (a: { payslipId: string })         => call<PayslipDelivery>('finance/payroll/payslips/deliver', a),
   listDeliveries:   (a: { runId: string })             => call<PayslipDelivery[]>('finance/payroll/payslips/deliveries/list', a),
+
+  // Pay groups
+  listPayGroups:  (a: { activeOnly?: boolean } = {})   => call<PayGroup[]>('finance/payroll/pay-groups/list', a),
+  createPayGroup: (a: { code: string; name: string; frequency: string; defaultPayDay?: number; defaultCutoffOffsetDays?: number }) => call<PayGroup>('finance/payroll/pay-groups/create', a),
+  assignPayGroup: (a: { employeeId: string; payGroupId: string; effectiveFrom: string; effectiveTo?: string | null }) => call<{ employeeId: string; payGroupId: string }>('finance/payroll/pay-groups/assign', a),
+  payGroupMembers:(a: { payGroupId: string })          => call<PayGroupMember[]>('finance/payroll/pay-groups/members', a),
 
   // GL posting
   glPreview:  (a: { runId: string })                   => call<GlPreview>('finance/payroll/gl/preview', a),
@@ -332,6 +354,9 @@ export function useRunPayslips(runId: string | null) {
 }
 export function useRunGlPreview(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.glPreview(runId ?? ''), queryFn: () => financePayrollApi.glPreview({ runId: runId! }), enabled: !!runId });
+}
+export function usePayGroups(activeOnly = true) {
+  return useQuery({ queryKey: ['finance', 'payroll', 'pay-groups', activeOnly], queryFn: () => financePayrollApi.listPayGroups({ activeOnly }) });
 }
 export function useRunExports(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.exports(runId ?? ''), queryFn: () => financePayrollApi.listExports({ runId: runId! }), enabled: !!runId });

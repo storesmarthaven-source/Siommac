@@ -24,6 +24,7 @@ import { HrfinWizardModal } from '@ui';
 import {
   usePayrollMutation,
   usePopulationPreview,
+  usePayGroups,
   financePayrollApi,
   type PayrollRun,
 } from '@api/finance/payroll';
@@ -32,20 +33,13 @@ import {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const PAY_FREQS = [
-  { value: 'monthly',    label: 'Monthly (4.33 weeks)' },
-  { value: 'bi_weekly',  label: 'Bi-weekly (2 weeks)' },
-  { value: 'weekly',     label: 'Weekly (1 week)' },
+  { value: 'monthly',      label: 'Monthly (4.33 weeks)' },
+  { value: 'semi_monthly', label: 'Semi-monthly (2.17 weeks)' },
+  { value: 'fortnightly',  label: 'Fortnightly (2 weeks)' },
+  { value: 'weekly',       label: 'Weekly (1 week)' },
 ];
 
-const PAY_GROUPS = [
-  'General Staff',
-  'Executive / Senior Management',
-  'Contract / Fixed-Term',
-  'Part-time',
-  'Casual',
-];
-
-const WEEKS_MAP: Record<string, number> = { monthly: 4.333, bi_weekly: 2, weekly: 1 };
+const WEEKS_MAP: Record<string, number> = { monthly: 4.333, semi_monthly: 52 / 24, fortnightly: 2, weekly: 1 };
 
 function iso8601Month(ym: string): string {
   return ym.length === 7 ? `${ym}-01` : ym;
@@ -66,6 +60,7 @@ function Step0Fields({
   payFrequency, setPayFrequency,
   weeksInPeriod, setWeeksInPeriod,
   payGroup, setPayGroup,
+  payGroupId, setPayGroupId,
   payDate, setPayDate,
   cutOffDate, setCutOffDate,
   errors,
@@ -74,10 +69,13 @@ function Step0Fields({
   payFrequency:   string; setPayFrequency:   (v: string) => void;
   weeksInPeriod:  string; setWeeksInPeriod:  (v: string) => void;
   payGroup:       string; setPayGroup:       (v: string) => void;
+  payGroupId:     string; setPayGroupId:     (v: string) => void;
   payDate:        string; setPayDate:        (v: string) => void;
   cutOffDate:     string; setCutOffDate:     (v: string) => void;
   errors:         Record<string, string>;
 }): VNode {
+  const payGroupsQ = usePayGroups(true);
+  const groups = payGroupsQ.data ?? [];
   return (
     <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ fontSize: 13, color: 'var(--hrfin-text-secondary)', margin: 0 }}>
@@ -102,18 +100,31 @@ function Step0Fields({
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
           <span style={{ fontSize: 12, fontWeight: 600 }}>Pay group</span>
-          <input
-            type="text"
-            list="pay-group-list"
-            value={payGroup}
-            placeholder="e.g. General Staff"
-            onInput={e => setPayGroup((e.currentTarget as HTMLInputElement).value)}
+          <select
+            value={payGroupId}
+            onChange={e => {
+              const id = (e.currentTarget as HTMLSelectElement).value;
+              setPayGroupId(id);
+              const g = groups.find(x => x.id === id);
+              if (g) {
+                // The group is authoritative for frequency + population.
+                setPayGroup(g.name);
+                setPayFrequency(g.frequency);
+                setWeeksInPeriod(String(WEEKS_MAP[g.frequency] ?? 4.333));
+              } else {
+                setPayGroup('');
+              }
+            }}
             style={FIELD_STYLE}
-          />
-          <datalist id="pay-group-list">
-            {PAY_GROUPS.map(g => <option key={g} value={g} />)}
-          </datalist>
-          <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Optional label for this group.</span>
+          >
+            <option value="">All active employees (ad-hoc)</option>
+            {groups.map(g => (
+              <option key={g.id} value={g.id}>{g.name} · {g.frequency}{g.memberCount != null ? ` (${g.memberCount})` : ''}</option>
+            ))}
+          </select>
+          <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
+            {payGroupId ? 'Frequency & population come from the group.' : 'Ad-hoc: pays all active employees at the frequency below.'}
+          </span>
         </label>
       </div>
 
@@ -496,6 +507,7 @@ export function PayNewRunWizard({
   const [payFrequency, setPayFreq]    = useState('monthly');
   const [weeksInPeriod, setWeeks]     = useState(String(WEEKS_MAP['monthly']));
   const [payGroup, setPayGroup]       = useState('');
+  const [payGroupId, setPayGroupId]   = useState('');
   const [payDate, setPayDate]         = useState('');
   const [cutOffDate, setCutOffDate]   = useState('');
 
@@ -529,6 +541,7 @@ export function PayNewRunWizard({
         payFrequency,
         weeksInPeriod: parseFloat(weeksInPeriod),
         payGroup:      payGroup.trim() || undefined,
+        payGroupId:    payGroupId || undefined,
         payDate:       payDate || undefined,
         cutOffDate:    cutOffDate || undefined,
       });
@@ -562,6 +575,7 @@ export function PayNewRunWizard({
           payFrequency={payFrequency}   setPayFrequency={setPayFreq}
           weeksInPeriod={weeksInPeriod} setWeeksInPeriod={setWeeks}
           payGroup={payGroup}           setPayGroup={setPayGroup}
+          payGroupId={payGroupId}       setPayGroupId={setPayGroupId}
           payDate={payDate}             setPayDate={setPayDate}
           cutOffDate={cutOffDate}       setCutOffDate={setCutOffDate}
           errors={errors}

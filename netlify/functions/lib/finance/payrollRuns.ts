@@ -22,6 +22,7 @@ import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
+import { getPayGroup, listGroupMemberIds } from './payGroups';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { startWorkflowForRecord } from '../workflow/service';
@@ -41,6 +42,7 @@ export interface PayrollRunDto {
   statutoryVersionId: string;
   weeksInPeriod: number;
   payGroup: string | null;
+  payGroupId: string | null;
   payDate: string | null;
   cutOffDate: string | null;
   employeeCount: number;
@@ -123,7 +125,7 @@ export interface PayrollRunWarningDto {
 interface DbRunRow {
   id: string; run_no: string; period_month: string; pay_frequency: string;
   status: string; statutory_version_id: string; weeks_in_period: number;
-  pay_group: string | null; pay_date: string | null; cut_off_date: string | null;
+  pay_group: string | null; pay_group_id: string | null; pay_date: string | null; cut_off_date: string | null;
   employee_count: number; gross_total: number; deduction_total: number;
   net_total: number; nis_employer_total: number;
   workflow_id: string | null;
@@ -168,7 +170,7 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     payFrequency: r.pay_frequency, status: r.status,
     statutoryVersionId: r.statutory_version_id,
     weeksInPeriod: Number(r.weeks_in_period),
-    payGroup: r.pay_group, payDate: r.pay_date, cutOffDate: r.cut_off_date,
+    payGroup: r.pay_group, payGroupId: r.pay_group_id, payDate: r.pay_date, cutOffDate: r.cut_off_date,
     employeeCount: r.employee_count,
     grossTotal: Number(r.gross_total), deductionTotal: Number(r.deduction_total),
     netTotal: Number(r.net_total), nisEmployerTotal: Number(r.nis_employer_total),
@@ -350,6 +352,9 @@ export interface CreateRunInput {
   payFrequency?: string;
   weeksInPeriod?: number;
   payGroup?: string;
+  /** When set, the run is scoped to this pay group: frequency comes from the group and
+   *  only the group's members are populated. */
+  payGroupId?: string;
   payDate?: string;
   cutOffDate?: string;
   actorId: string;
@@ -371,9 +376,15 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
   }
 
   const runNo = await nextRef('PAY');
-  // Frequency drives NIS/HS weeks-in-period AND PAYE annualisation (payPeriods). Derive
-  // weeks from the frequency unless the caller pins it explicitly.
-  const payFrequency = input.payFrequency ?? 'monthly';
+  // A pay group (if given) is authoritative for frequency; otherwise use the caller's.
+  // Frequency drives NIS/HS weeks-in-period AND PAYE annualisation (payPeriods).
+  let payGroup: { id: string; code: string; frequency: string } | null = null;
+  if (input.payGroupId) {
+    const g = await getPayGroup(input.payGroupId);
+    if (!g) throw Object.assign(new Error('Pay group not found.'), { status: 404 });
+    payGroup = { id: g.id, code: g.code, frequency: g.frequency };
+  }
+  const payFrequency = payGroup?.frequency ?? input.payFrequency ?? 'monthly';
 
   const { data, error } = await sb.from('finance_payroll_runs').insert({
     run_no:               runNo,
@@ -382,7 +393,8 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
     status:               'draft',
     statutory_version_id: version.id,
     weeks_in_period:      input.weeksInPeriod ?? weeksInPeriodForFrequency(payFrequency),
-    pay_group:            input.payGroup ?? null,
+    pay_group:            input.payGroup ?? payGroup?.code ?? null,
+    pay_group_id:         payGroup?.id ?? null,
     pay_date:             input.payDate ?? null,
     cut_off_date:         input.cutOffDate ?? null,
     created_by:           input.actorId,
@@ -442,11 +454,23 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   const periodStart = run.periodMonth; // already YYYY-MM-01
   const periodEnd = lastDayOfMonth(run.periodMonth);
 
-  // ── 1. Collect active employees ───────────────────────────────────────────
-  const { data: employees, error: empErr } = await sb.from('app_users')
+  // ── 1. Collect active employees (scoped to the run's pay group, if any) ────
+  // A pay-group run populates ONLY that group's members effective in the period;
+  // an ungrouped run keeps the legacy behaviour (all active employees).
+  let memberIds: string[] | null = null;
+  if (run.payGroupId) {
+    memberIds = await listGroupMemberIds(run.payGroupId, periodStart, periodEnd);
+    if (memberIds.length === 0) {
+      throw Object.assign(new Error('No employees are assigned to this pay group for the period. Assign members before locking inputs.'), { status: 422 });
+    }
+  }
+
+  let empQuery = sb.from('app_users')
     .select('id, pay_basis, monthly_salary, hourly_rate, department_id')
     .eq('status', 'active')
     .not('pay_basis', 'is', null);
+  if (memberIds) empQuery = empQuery.in('id', memberIds);
+  const { data: employees, error: empErr } = await empQuery;
   if (empErr) throw Object.assign(new Error('lockInputs/employees: ' + empErr.message), { status: 500 });
 
   const empList = (employees ?? []) as {
