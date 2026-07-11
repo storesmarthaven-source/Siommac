@@ -12,6 +12,33 @@
 
 create extension if not exists btree_gist;
 
+-- Preflight: if live data already overlaps, the exclusion ADD below throws an
+-- opaque "conflicting key value violates exclusion constraint". Detect it first
+-- and RAISE a message that NAMES the offending employees + ranges, so the
+-- operator knows exactly what to fix. (scripts/preflight-paygroup-overlaps.mjs
+-- --fix can close them automatically before applying this migration.)
+do $preflight$
+declare
+  v_conflicts text;
+begin
+  select string_agg(
+           format('emp %s [%s..%s] vs [%s..%s]',
+                  a.employee_id, a.effective_from, coalesce(a.effective_to::text, 'open'),
+                  b.effective_from, coalesce(b.effective_to::text, 'open')),
+           '; ')
+    into v_conflicts
+    from public.finance_employee_pay_group_assignments a
+    join public.finance_employee_pay_group_assignments b
+      on a.employee_id = b.employee_id
+     and a.ctid < b.ctid
+     and daterange(a.effective_from, coalesce(a.effective_to, 'infinity'::date), '[]')
+      && daterange(b.effective_from, coalesce(b.effective_to, 'infinity'::date), '[]');
+  if v_conflicts is not null then
+    raise exception 'Pay-group overlap constraint blocked: resolve these overlapping assignments first -> %', v_conflicts;
+  end if;
+end;
+$preflight$;
+
 -- Sane ranges only.
 alter table public.finance_employee_pay_group_assignments
   drop constraint if exists fepga_range_sane;
