@@ -115,6 +115,8 @@ const REPORTS: ReportDescriptor[] = [
   { key: 'cost_by_department',   label: 'Cost by Department',    description: 'Payroll cost split by department' },
   { key: 'nis_remittance',       label: 'NIS Remittance',        description: 'NIS figures for statutory remittance' },
   { key: 'nis_exceptions',       label: 'NIS Exceptions',        description: 'NIS warning exceptions for a run' },
+  { key: 'variation',            label: 'Variation (vs prior)',  description: 'This run vs the immediately-prior run: per-employee gross/net/PAYE/NIS deltas' },
+  { key: 'audit_comparison',     label: 'Audit Comparison',      description: 'Diff any two runs line-by-line (added / removed / changed)' },
 ];
 
 /** Dynamic columns derived from the first result row (unknown schema at design time). */
@@ -133,6 +135,7 @@ function dynamicColumns(rows: Array<Record<string, unknown>>): ReportColumn[] {
 function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
   const [selectedReport, setSelectedReport] = useState<string>(REPORTS[0]!.key);
   const [runId,  setRunId]   = useState<string>(() => runs[0]?.id ?? '');
+  const [compareRunId, setCompareRunId] = useState<string>('');
   const [result, setResult]  = useState<ReportResult | null>(null);
   const [loading, setLoading] = useState(false);
   const [error,   setError]   = useState<string | null>(null);
@@ -151,7 +154,10 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
     try {
       const res = await financePayrollApi.runReport({
         report: selectedReport,
-        params: runId ? { runId } : {},
+        params: {
+          ...(runId ? { runId } : {}),
+          ...(selectedReport === 'audit_comparison' && compareRunId ? { compareRunId } : {}),
+        },
       });
       setResult(res as ReportResult);
     } catch (e) {
@@ -180,10 +186,24 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
           {runs.map(r => <option key={r.id} value={r.id}>{r.runNo} · {monthLabel(r.periodMonth)}</option>)}
         </select>
       </label>
+      {selectedReport === 'audit_comparison' && (
+        <label style={{ display: 'flex', flexDirection: 'column', gap: 6, minWidth: 200 }}>
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Compare against</span>
+          <select
+            value={compareRunId}
+            onChange={e => { setCompareRunId((e.currentTarget as HTMLSelectElement).value); setResult(null); }}
+            style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
+                     border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)' }}
+          >
+            <option value="">— second run —</option>
+            {runs.map(r => <option key={r.id} value={r.id}>{r.runNo} · {monthLabel(r.periodMonth)}</option>)}
+          </select>
+        </label>
+      )}
       <button
         type="button"
         class="hrfin-action is-primary"
-        disabled={loading}
+        disabled={loading || (selectedReport === 'audit_comparison' && (!runId || !compareRunId))}
         onClick={() => void runReport()}
         style={{ alignSelf: 'flex-end', marginBottom: 0 }}
       >

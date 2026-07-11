@@ -921,7 +921,7 @@ router.post('/payroll/exports/download', async c => {
 // List available report keys (for the UI to build the report picker).
 router.post('/payroll/reports/list', async c => {
   await requirePermission(c, 'finance.payroll.reports.view');
-  const reports: { key: string; label: string; requiresRunId: boolean }[] = [
+  const reports: { key: string; label: string; requiresRunId: boolean; requiresCompareRunId?: boolean }[] = [
     { key: 'register',                  label: 'Payroll Run Register',           requiresRunId: false },
     { key: 'payslip_register',           label: 'Payslip Register',               requiresRunId: false },
     { key: 'net_pay_summary',            label: 'Net Pay Summary',                requiresRunId: true  },
@@ -938,6 +938,8 @@ router.post('/payroll/reports/list', async c => {
     { key: 'new_employee_nis_onboarding',label: 'New Employee NIS Onboarding',    requiresRunId: false },
     { key: 'nis_opening_balance',        label: 'NIS Opening Balance',            requiresRunId: false },
     { key: 'nis_exceptions',             label: 'Payroll NIS Exceptions',         requiresRunId: true  },
+    { key: 'variation',                  label: 'Payroll Variation (vs prior run)', requiresRunId: true },
+    { key: 'audit_comparison',           label: 'Audit Comparison (two runs)',    requiresRunId: true, requiresCompareRunId: true },
   ];
   return c.json({ success: true, data: reports });
 });

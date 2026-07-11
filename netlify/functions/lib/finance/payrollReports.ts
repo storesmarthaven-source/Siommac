@@ -285,7 +285,57 @@ export type PayrollReportKey =
   | 'unverified_nis'
   | 'new_employee_nis_onboarding'
   | 'nis_opening_balance'
-  | 'nis_exceptions';
+  | 'nis_exceptions'
+  | 'variation'
+  | 'audit_comparison';
+
+// ── Run diff (base → compare) shared by variation + audit comparison ─────────────
+interface DiffLine { employee_id: string; gross: number; paye: number; nis_employee: number; health_surcharge: number; net: number }
+const r2 = (n: number): number => Math.round((Number(n) || 0) * 100) / 100;
+
+async function diffRuns(baseRunId: string, compareRunId: string, report: string): Promise<ReportResult> {
+  const [{ data: baseLines, error: bErr }, { data: compLines, error: cErr }] = await Promise.all([
+    sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', baseRunId),
+    sb.from('finance_payroll_run_lines').select('employee_id, gross, paye, nis_employee, health_surcharge, net').eq('run_id', compareRunId),
+  ]);
+  if (bErr) throw Object.assign(new Error('diffRuns/base: ' + bErr.message), { status: 500 });
+  if (cErr) throw Object.assign(new Error('diffRuns/compare: ' + cErr.message), { status: 500 });
+  const baseMap = new Map((baseLines ?? []).map((l: DiffLine) => [l.employee_id, l]));
+  const compMap = new Map((compLines ?? []).map((l: DiffLine) => [l.employee_id, l]));
+  const ids = [...new Set([...baseMap.keys(), ...compMap.keys()])].sort();
+  const rows = ids.map(id => {
+    const b = baseMap.get(id); const c = compMap.get(id);
+    const grossDelta = r2((c?.gross ?? 0) - (b?.gross ?? 0));
+    const netDelta   = r2((c?.net ?? 0) - (b?.net ?? 0));
+    const payeDelta  = r2((c?.paye ?? 0) - (b?.paye ?? 0));
+    const nisDelta   = r2((c?.nis_employee ?? 0) - (b?.nis_employee ?? 0));
+    const status = !b ? 'added' : !c ? 'removed' : (grossDelta || netDelta || payeDelta || nisDelta ? 'changed' : 'unchanged');
+    return {
+      employee_id: id, status,
+      prev_gross: r2(b?.gross ?? 0), gross: r2(c?.gross ?? 0), gross_delta: grossDelta,
+      prev_net: r2(b?.net ?? 0),     net: r2(c?.net ?? 0),     net_delta: netDelta,
+      prev_paye: r2(b?.paye ?? 0),   paye: r2(c?.paye ?? 0),   paye_delta: payeDelta,
+      prev_nis: r2(b?.nis_employee ?? 0), nis_employee: r2(c?.nis_employee ?? 0), nis_delta: nisDelta,
+    } as ReportRow;
+  });
+  return result(report, rows);
+}
+
+/** Variation: this run vs the immediately-prior run (by period). */
+export async function reportVariation(runId: string): Promise<ReportResult> {
+  const { data: run, error } = await sb.from('finance_payroll_runs').select('id, period_month').eq('id', runId).maybeSingle<{ id: string; period_month: string }>();
+  if (error) throw Object.assign(new Error('reportVariation/run: ' + error.message), { status: 500 });
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  const { data: prior } = await sb.from('finance_payroll_runs')
+    .select('id').lt('period_month', run.period_month).order('period_month', { ascending: false }).limit(1).maybeSingle<{ id: string }>();
+  if (!prior) return result('variation', []);   // nothing to compare against
+  return diffRuns(prior.id, run.id, 'variation');
+}
+
+/** Audit comparison: diff any two runs (base = A, compare = B). */
+export async function reportAuditComparison(runIdA: string, runIdB: string): Promise<ReportResult> {
+  return diffRuns(runIdA, runIdB, 'audit_comparison');
+}
 
 export async function runPayrollReport(
   key: PayrollReportKey,
@@ -362,6 +412,14 @@ export async function runPayrollReport(
     case 'nis_exceptions':
       if (!params['runId']) throw Object.assign(new Error('runId is required for nis_exceptions.'), { status: 422 });
       return reportNisExceptions(params['runId'] as string);
+
+    case 'variation':
+      if (!params['runId']) throw Object.assign(new Error('runId is required for variation.'), { status: 422 });
+      return reportVariation(params['runId'] as string);
+
+    case 'audit_comparison':
+      if (!params['runId'] || !params['compareRunId']) throw Object.assign(new Error('runId and compareRunId are required for audit_comparison.'), { status: 422 });
+      return reportAuditComparison(params['runId'] as string, params['compareRunId'] as string);
 
     default:
       throw Object.assign(new Error(`Unknown payroll report: '${key as string}'.`), { status: 422 });
