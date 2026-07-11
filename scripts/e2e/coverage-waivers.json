@@ -1,6 +1,60 @@
 {
-  "_comment": "Routes with NO E2E coverage yet — explicit accepted debt. Remove entries as suites gain coverage; the gate fails on any UNWAIVED gap.",
-  "generatedAt": "2026-07-11T16:30:29.433Z",
+  "_comment": "waived = routes backing BUILT pages that lack an E2E suite (real debt — write suites, remove entries). deferred = routes whose feature/page is not built out yet; cover them WHEN the module is built (see each group's reason). The gate fails on any route that is neither covered, waived, nor deferred.",
+  "generatedAt": "2026-07-11T16:57:32.332Z",
+  "deferred": {
+    "finance_ap_bill_actions": {
+      "reason": "AP supplier-bill reject/void/duplicate-check/comments/audit — backend ahead of the FE. Cover WHEN the Accounts Payable bills page is built out (walk every control per Feature Completeness, then add the E2E).",
+      "routes": [
+        "/api/finance/ap/bills/audit",
+        "/api/finance/ap/bills/check-duplicate",
+        "/api/finance/ap/bills/comments/create",
+        "/api/finance/ap/bills/comments/list",
+        "/api/finance/ap/bills/reject",
+        "/api/finance/ap/bills/void"
+      ]
+    },
+    "communications_message_actions": {
+      "reason": "Message mute / draft-delete / recordThread / recordExport / requestThreadAccess / attachment get-url — the FE actions aren't wired. Cover WHEN the unified collaboration rail is built (see collaboration-rail-deferred memory).",
+      "routes": [
+        "/api/communications/messages/attachments/get-url",
+        "/api/communications/messages/draft/delete",
+        "/api/communications/messages/mute",
+        "/api/communications/messages/recordExport",
+        "/api/communications/messages/recordThread",
+        "/api/communications/messages/requestThreadAccess"
+      ]
+    },
+    "hse_ptw": {
+      "reason": "Permit-to-Work isolations reject/remove, SIMOPS approve-override/resolve, reject-extension, save-draft — PTW page not built out. LIFE-SAFETY: cover thoroughly WHEN HSE PTW is built.",
+      "routes": [
+        "/api/hse/ptw/permits/isolations/reject",
+        "/api/hse/ptw/permits/isolations/remove",
+        "/api/hse/ptw/permits/reject-extension",
+        "/api/hse/ptw/permits/save-draft",
+        "/api/hse/ptw/permits/simops/approve-override",
+        "/api/hse/ptw/permits/simops/resolve"
+      ]
+    },
+    "hse_training": {
+      "reason": "Training competencies/update, certificates archive + evidence upload-url, courses/requirements/dashboard reads — page not built out. Cover WHEN HSE Training is built (mutations gate who may do hazardous work).",
+      "routes": [
+        "/api/hse/training/certificates/archive",
+        "/api/hse/training/certificates/evidence/upload-url",
+        "/api/hse/training/competencies/update",
+        "/api/hse/training/courses/list",
+        "/api/hse/training/dashboard",
+        "/api/hse/training/requirements/list"
+      ]
+    },
+    "settings_manifests": {
+      "reason": "Settings-catalog manifest deprecate/return governance + legacy getSettings — the Settings & Preferences UI isn't built out. Cover WHEN Settings is built (see settings-architecture memory).",
+      "routes": [
+        "/api/getSettings",
+        "/api/settings/manifests/deprecate",
+        "/api/settings/manifests/return"
+      ]
+    }
+  },
   "waived": [
     "/api/addDepartment",
     "/api/addEmployee",
@@ -18,12 +72,6 @@
     "/api/auth/password/change",
     "/api/clearAllNotifications",
     "/api/clearClosedTickets",
-    "/api/communications/messages/attachments/get-url",
-    "/api/communications/messages/draft/delete",
-    "/api/communications/messages/mute",
-    "/api/communications/messages/recordExport",
-    "/api/communications/messages/recordThread",
-    "/api/communications/messages/requestThreadAccess",
     "/api/confirm2faSetup",
     "/api/createTicket",
     "/api/deleteDepartment",
@@ -33,12 +81,6 @@
     "/api/deleteProjectSite",
     "/api/deleteTicket",
     "/api/disable2fa",
-    "/api/finance/ap/bills/audit",
-    "/api/finance/ap/bills/check-duplicate",
-    "/api/finance/ap/bills/comments/create",
-    "/api/finance/ap/bills/comments/list",
-    "/api/finance/ap/bills/reject",
-    "/api/finance/ap/bills/void",
     "/api/finance/budgets/attachments/complete",
     "/api/finance/budgets/attachments/delete",
     "/api/finance/budgets/attachments/list",
@@ -81,7 +123,6 @@
     "/api/getPendingLeavesForManager",
     "/api/getPublicBranding",
     "/api/getRecentAttendance",
-    "/api/getSettings",
     "/api/getTickets",
     "/api/getUnreadCount",
     "/api/getWorkHours",
@@ -111,20 +152,8 @@
     "/api/hse/inspection-findings/create",
     "/api/hse/inspection-templates/archive",
     "/api/hse/inspections/evidence/upload-url",
-    "/api/hse/ptw/permits/isolations/reject",
-    "/api/hse/ptw/permits/isolations/remove",
-    "/api/hse/ptw/permits/reject-extension",
-    "/api/hse/ptw/permits/save-draft",
-    "/api/hse/ptw/permits/simops/approve-override",
-    "/api/hse/ptw/permits/simops/resolve",
     "/api/hse/risk-jsa/attachments/create",
     "/api/hse/risk-jsa/attachments/delete",
-    "/api/hse/training/certificates/archive",
-    "/api/hse/training/certificates/evidence/upload-url",
-    "/api/hse/training/competencies/update",
-    "/api/hse/training/courses/list",
-    "/api/hse/training/dashboard",
-    "/api/hse/training/requirements/list",
     "/api/layout/get",
     "/api/layout/resetOverride",
     "/api/layout/saveDefault",
@@ -152,8 +181,6 @@
     "/api/replyTicket",
     "/api/saveWorkHours",
     "/api/sendNotification",
-    "/api/settings/manifests/deprecate",
-    "/api/settings/manifests/return",
     "/api/setup2fa",
     "/api/submitLeave",
     "/api/theme/get",

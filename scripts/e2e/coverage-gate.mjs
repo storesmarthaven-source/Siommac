@@ -65,37 +65,56 @@ const prefixCalls = [...called].filter(c => c.startsWith('PREFIX:')).map(c => c.
 const isCovered = (path) =>
   called.has(path) || prefixCalls.some(p => p.length > 5 && path.startsWith(p));
 
-// ── 4. Waivers (explicit accepted debt) ─────────────────────────────────────────
-const waivers = new Set(existsSync(waiversPath) ? JSON.parse(readFileSync(waiversPath, 'utf8')).waived : []);
+// ── 4. Waivers — two kinds of accepted debt ─────────────────────────────────────
+//   waived   : flat list — routes backing BUILT/shipped pages that simply lack a
+//              suite yet. REAL debt: write suites and delete the entries.
+//   deferred : { <group>: { reason, routes[] } } — routes whose FEATURE/PAGE is
+//              not built out yet. Do NOT chase these now; per the Testing Standard
+//              a module gets its suite WHEN it's built. Kept so the intent to cover
+//              them at build time is never lost. Preserved across --write-waivers.
+const wf = existsSync(waiversPath) ? JSON.parse(readFileSync(waiversPath, 'utf8')) : {};
+const flatWaived   = new Set(wf.waived ?? []);
+const deferred     = wf.deferred ?? {};
+const deferredSet  = new Set(Object.values(deferred).flatMap(g => g.routes ?? []));
+const isWaived     = (p) => flatWaived.has(p) || deferredSet.has(p);
 
 const uniq = [...new Map(routes.map(r => [r.path, r])).values()].sort((a, b) => a.path.localeCompare(b.path));
-const covered = uniq.filter(r => isCovered(r.path));
-const gaps    = uniq.filter(r => !isCovered(r.path));
-const newGaps = gaps.filter(r => !waivers.has(r.path));
-const waived  = gaps.filter(r => waivers.has(r.path));
-const staleWaivers = [...waivers].filter(w => !gaps.some(g => g.path === w));
+const covered      = uniq.filter(r => isCovered(r.path));
+const gaps         = uniq.filter(r => !isCovered(r.path));
+const newGaps      = gaps.filter(r => !isWaived(r.path));
+const realDebt     = gaps.filter(r => flatWaived.has(r.path) && !deferredSet.has(r.path));
+const deferredGaps = gaps.filter(r => deferredSet.has(r.path));
+const staleWaivers = [...flatWaived, ...deferredSet].filter(w => !gaps.some(g => g.path === w));
 
 const mode = process.argv[2];
 if (mode === '--write-waivers') {
+  // Preserve the deferred (feature-not-built) groups verbatim; recompute `waived`
+  // as the remaining gaps NOT already parked under a deferred group.
   writeFileSync(waiversPath, JSON.stringify({
-    _comment: 'Routes with NO E2E coverage yet — explicit accepted debt. Remove entries as suites gain coverage; the gate fails on any UNWAIVED gap.',
+    _comment: 'waived = routes backing BUILT pages that lack an E2E suite (real debt — write suites, remove entries). deferred = routes whose feature/page is not built out yet; cover them WHEN the module is built (see each group\'s reason). The gate fails on any route that is neither covered, waived, nor deferred.',
     generatedAt: new Date().toISOString(),
-    waived: gaps.map(g => g.path),
+    deferred,
+    waived: gaps.map(g => g.path).filter(p => !deferredSet.has(p)),
   }, null, 2) + '\n');
-  console.log(`Wrote ${gaps.length} waivers to ${waiversPath}`);
+  console.log(`Wrote ${gaps.length - deferredGaps.length} waived + ${deferredGaps.length} deferred to ${waiversPath}`);
   process.exit(0);
 }
 
-console.log(`Routes mounted: ${uniq.length} · covered: ${covered.length} · waived (accepted debt): ${waived.length} · NEW gaps: ${newGaps.length}`);
+console.log(`Routes mounted: ${uniq.length} · covered: ${covered.length} · real debt (built, untested): ${realDebt.length} · deferred (feature not built): ${deferredGaps.length} · NEW gaps: ${newGaps.length}`);
 if (mode === '--report') {
-  console.log('\n── NEW gaps ──');   for (const g of newGaps) console.log(`  ${g.path}  (${g.file})`);
-  console.log('\n── Waived ──');     for (const g of waived)  console.log(`  ${g.path}  (${g.file})`);
+  console.log('\n── NEW gaps ──');            for (const g of newGaps)      console.log(`  ${g.path}  (${g.file})`);
+  console.log('\n── Real debt (built, untested) ──'); for (const g of realDebt) console.log(`  ${g.path}  (${g.file})`);
+  console.log('\n── Deferred (feature not built) ──');
+  for (const [group, { reason, routes: rs }] of Object.entries(deferred)) {
+    console.log(`  [${group}] ${reason}`);
+    for (const p of rs) console.log(`      ${p}`);
+  }
   if (staleWaivers.length) { console.log('\n── Stale waivers (now covered — remove them) ──'); for (const w of staleWaivers) console.log(`  ${w}`); }
 }
 if (newGaps.length) {
   console.error(`\n✖ ${newGaps.length} route(s) have no E2E coverage and no waiver:`);
   for (const g of newGaps) console.error(`  ${g.path}  (${g.file})`);
-  console.error('\nAdd suite coverage (preferred) or, for consciously deferred debt, add the path to scripts/e2e/coverage-waivers.json.');
+  console.error('\nAdd suite coverage (preferred), or park it in coverage-waivers.json — under `deferred` if its page is not built yet, else `waived`.');
   process.exit(1);
 }
 console.log('✓ No unwaived coverage gaps.');
