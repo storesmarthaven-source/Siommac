@@ -11,19 +11,67 @@
  */
 
 import { type VNode } from 'preact';
-import { useEffect } from 'preact/hooks';
+import { useEffect, useState } from 'preact/hooks';
 import { lazy, Suspense } from 'preact/compat';
+import { StudioMark } from '@payslip/components/StudioMark';
 import './styles/app.css';
 
-// Code-split the studio (large) so opening the designer shows a loading page
-// while its chunk + fonts load, and the Finance/AC bundles stay lean.
-const PayslipStudioApp = lazy(() => import('@payslip/App').then(m => ({ default: m.App })));
+// The loading screen is shown for at least this long so the boot sequence is
+// actually seen (the chunk usually resolves faster). Progress + resource lines
+// are paced to the same window.
+const MIN_LOAD_MS = 2400;
+const delay = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
+
+// Code-split the studio (large) so opening the designer shows the loading page
+// while its chunk + fonts load, and the Finance/AC bundles stay lean. The MIN
+// delay keeps the boot sequence on screen even when the import is instant.
+const PayslipStudioApp = lazy(() =>
+  Promise.all([import('@payslip/App'), delay(MIN_LOAD_MS)]).then(([m]) => ({ default: m.App })),
+);
+
+// Technical-sounding resources, revealed in step with the progress bar.
+const RESOURCES = [
+  'Loading typefaces · Inter, Manrope, Sora…',
+  'Initialising canvas renderer…',
+  'Mounting element inspector…',
+  'Restoring autosaved session…',
+  'Compiling token resolver…',
+  'Warming the template store…',
+  'Calibrating grid & snap guides…',
+  'Finalising workspace…',
+];
 
 function StudioLoading(): VNode {
+  const [pct, setPct] = useState(0);
+  useEffect(() => {
+    let raf = 0;
+    const start = performance.now();
+    const tick = (now: number): void => {
+      const t = Math.min(1, (now - start) / MIN_LOAD_MS);
+      const eased = 1 - Math.pow(1 - t, 3); // easeOutCubic — quick then settles
+      setPct(Math.round(eased * 100));
+      if (t < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, []);
+
+  const resource = RESOURCES[Math.min(RESOURCES.length - 1, Math.floor((pct / 100) * RESOURCES.length))];
+
   return (
     <div class="psd-loading">
-      <div class="psd-spinner" aria-hidden="true" />
-      <p>Loading Payslip Studio…</p>
+      <div class="psd-load-card">
+        <div class="psd-load-logo">
+          <span class="psd-load-badge"><StudioMark class="psd-load-mark" /></span>
+          <span class="psd-load-title">Payslip <b>Studio</b></span>
+        </div>
+        <div class="psd-load-bar"><div class="psd-load-fill" style={{ width: pct + '%' }} /></div>
+        <div class="psd-load-meta">
+          <span class="psd-load-res">{resource}</span>
+          <span class="psd-load-pct">{pct}%</span>
+        </div>
+      </div>
+      <div class="psd-load-brand">Powered by <b>Siomac</b></div>
     </div>
   );
 }

@@ -11,6 +11,7 @@ import { generateTemplateCode, toFnName } from '@payslip/lib/templateCode';
 import { printDesign } from '@payslip/lib/print';
 import { showToast } from '@payslip/lib/toast';
 import { DesignsMenu } from './DesignsMenu';
+import { StudioMark } from './StudioMark';
 
 function Btn({
   children,
@@ -80,10 +81,7 @@ export function Toolbar({ onBack }: { onBack?: () => void }) {
         </button>
       )}
       <span class="logo">
-        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
-          <path d="M12 2l1.8 5.4L19 9l-5.2 1.6L12 16l-1.8-5.4L5 9l5.2-1.6L12 2z" />
-          <path d="M18.5 13l.9 2.6 2.6.9-2.6.9-.9 2.6-.9-2.6-2.6-.9 2.6-.9.9-2.6z" opacity=".85" />
-        </svg>
+        <StudioMark class="logo-mark" />
         Payslip Studio
       </span>
 
