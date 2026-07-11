@@ -22,6 +22,36 @@
 
 import type { NisClassRow } from './statutoryConfig';
 
+// ── Pay-frequency helpers (Wave 3) ──────────────────────────────────────────────
+// PAYE annualises by the number of pay periods in the year, NOT always 12 — dividing
+// the annual personal allowance / band ceiling by 12 for a WEEKLY run would grossly
+// over-tax it. NIS/Health Surcharge stay weekly-based (via weeksInPeriod), which already
+// varies by frequency, so only PAYE's divisor changes.
+
+/** Number of pay periods in a year for a frequency (the PAYE annualisation divisor). */
+export function payPeriodsForFrequency(freq: string): number {
+  switch (freq) {
+    case 'weekly':      return 52;
+    case 'fortnightly': return 26;
+    case 'semi_monthly':
+    case 'bi-monthly':  return 24;
+    case 'monthly':     return 12;
+    default:            return 12; // off_cycle/bonus/etc. default to monthly annualisation
+  }
+}
+
+/** Weeks in one pay period for a frequency (drives NIS + Health Surcharge). */
+export function weeksInPeriodForFrequency(freq: string): number {
+  switch (freq) {
+    case 'weekly':      return 1;
+    case 'fortnightly': return 2;
+    case 'semi_monthly':
+    case 'bi-monthly':  return 52 / 24;   // ≈ 2.16667
+    case 'monthly':     return 52 / 12;   // ≈ 4.33333
+    default:            return 52 / 12;
+  }
+}
+
 // ── NIS calculator ────────────────────────────────────────────────────────────
 
 export interface ComputeNisInput {
@@ -112,16 +142,18 @@ export function computeHealthSurcharge(input: ComputeHealthSurchargeInput): numb
 // ── PAYE calculator ───────────────────────────────────────────────────────────
 
 export interface ComputePayeInput {
-  /** Chargeable income for the MONTH (after personal allowance + pre-tax pension deductions). */
+  /** Chargeable income for the PAY PERIOD (after personal allowance + pre-tax pension deductions). */
   chargeableIncome: number;
-  /** paye_personal_allowance from the statutory version (ANNUAL; must be divided by 12). */
+  /** paye_personal_allowance from the statutory version (ANNUAL). */
   personalAllowance: number;
-  /** paye_band1_ceiling from the statutory version (ANNUAL; must be divided by 12). */
+  /** paye_band1_ceiling from the statutory version (ANNUAL; divided by payPeriods for the period). */
   band1Ceiling: number;
   /** paye_band1_rate from the statutory version (e.g. 0.25). */
   band1Rate: number;
   /** paye_band2_rate from the statutory version (e.g. 0.30). */
   band2Rate: number;
+  /** Pay periods per year (52 weekly, 26 fortnightly, 24 semi-monthly, 12 monthly). Default 12. */
+  payPeriods?: number;
 }
 
 /**
@@ -139,10 +171,11 @@ export interface ComputePayeInput {
 export function computePaye(input: ComputePayeInput): number {
   if (input.chargeableIncome <= 0) return 0;
 
-  const monthlyBand1Ceiling = input.band1Ceiling / 12;
+  const payPeriods = input.payPeriods ?? 12;
+  const perPeriodBand1Ceiling = input.band1Ceiling / payPeriods;
 
-  const band1Income = Math.min(input.chargeableIncome, monthlyBand1Ceiling);
-  const band2Income = Math.max(0, input.chargeableIncome - monthlyBand1Ceiling);
+  const band1Income = Math.min(input.chargeableIncome, perPeriodBand1Ceiling);
+  const band2Income = Math.max(0, input.chargeableIncome - perPeriodBand1Ceiling);
 
   const tax = band1Income * input.band1Rate + band2Income * input.band2Rate;
   return round2(Math.max(0, tax));
@@ -169,6 +202,8 @@ export interface ComputeRunLineInput {
   nisClasses: NisClassRow[];
   /** Weeks in period (from finance_payroll_runs.weeks_in_period). */
   weeksInPeriod: number;
+  /** Pay periods per year for PAYE annualisation (52/26/24/12). Default 12 (monthly). */
+  payPeriods?: number;
   /** Statutory version rates. */
   statutory: {
     payePersonalAllowance: number;  // annual
@@ -226,11 +261,12 @@ export function computeRunLine(input: ComputeRunLineInput): ComputeRunLineResult
   });
 
   // Step 4 — Chargeable income
-  //   = taxable_gross − monthly_personal_allowance − pre_tax_pension
+  //   = taxable_gross − per_period_personal_allowance − pre_tax_pension
   //   NIS and HS are NOT subtracted before PAYE in T&T
-  const monthlyPersonalAllowance = statutory.payePersonalAllowance / 12;
+  const payPeriods = input.payPeriods ?? 12;
+  const perPeriodPersonalAllowance = statutory.payePersonalAllowance / payPeriods;
   const chargeableIncome = round2(
-    Math.max(0, taxableGross - monthlyPersonalAllowance - input.preTaxPensionDeductions)
+    Math.max(0, taxableGross - perPeriodPersonalAllowance - input.preTaxPensionDeductions)
   );
 
   // Step 5 — PAYE
@@ -240,6 +276,7 @@ export function computeRunLine(input: ComputeRunLineInput): ComputeRunLineResult
     band1Ceiling:      statutory.payeBand1Ceiling,
     band1Rate:         statutory.payeBand1Rate,
     band2Rate:         statutory.payeBand2Rate,
+    payPeriods,
   });
 
   // Step 6 — Voluntary deductions

@@ -21,6 +21,8 @@ import {
   computePaye,
   computeRunLine,
   findNisClass,
+  payPeriodsForFrequency,
+  weeksInPeriodForFrequency,
 } from '../../netlify/functions/lib/finance/payrollStatutory';
 import type { NisClassRow } from '../../netlify/functions/lib/finance/statutoryConfig';
 
@@ -43,7 +45,9 @@ function cls(
     id: `test-cls-${classNo}`,
     statutoryVersionId: 'test-version',
     classNo, weeklyMin, weeklyMax,
+    assumedAverageWeekly: null,
     employeeWeekly, employerWeekly,
+    classZWeekly: null,
     createdAt: '2026-01-05T00:00:00Z',
   };
 }
@@ -289,6 +293,54 @@ describe('computePaye', () => {
   });
 });
 
+// ── Pay-frequency helpers + period-correct PAYE (Wave 3) ─────────────────────────
+
+describe('pay-frequency helpers', () => {
+  it('payPeriodsForFrequency maps each frequency to its annual period count', () => {
+    expect(payPeriodsForFrequency('weekly')).toBe(52);
+    expect(payPeriodsForFrequency('fortnightly')).toBe(26);
+    expect(payPeriodsForFrequency('semi_monthly')).toBe(24);
+    expect(payPeriodsForFrequency('monthly')).toBe(12);
+    expect(payPeriodsForFrequency('off_cycle')).toBe(12); // unknown → monthly annualisation
+  });
+
+  it('weeksInPeriodForFrequency maps each frequency to its weeks/period', () => {
+    expect(weeksInPeriodForFrequency('weekly')).toBe(1);
+    expect(weeksInPeriodForFrequency('fortnightly')).toBe(2);
+    expect(weeksInPeriodForFrequency('monthly')).toBeCloseTo(4.3333, 3);
+    expect(weeksInPeriodForFrequency('semi_monthly')).toBeCloseTo(2.1667, 3);
+  });
+});
+
+describe('computePaye — period-correct annualisation', () => {
+  /**
+   * The SAME chargeable amount must tax differently by frequency, because the annual
+   * band-1 ceiling is divided by the pay periods (52 weekly vs 12 monthly).
+   *   Weekly ceiling = 1,000,000 / 52 = 19,230.77
+   *   chargeable 20,000 → band1 19,230.77 @25% (4,807.69) + band2 769.23 @30% (230.77) = 5,038.46
+   *   Monthly ceiling = 1,000,000 / 12 = 83,333.33 → all 20,000 in band1 @25% = 5,000.00
+   */
+  it('weekly (payPeriods=52) crosses band2 where monthly (12) stays in band1', () => {
+    const weekly = computePaye({
+      chargeableIncome: 20000, personalAllowance: 90000, band1Ceiling: 1000000,
+      band1Rate: 0.25, band2Rate: 0.30, payPeriods: 52,
+    });
+    const monthly = computePaye({
+      chargeableIncome: 20000, personalAllowance: 90000, band1Ceiling: 1000000,
+      band1Rate: 0.25, band2Rate: 0.30, payPeriods: 12,
+    });
+    expect(weekly).toBe(5038.46);
+    expect(monthly).toBe(5000);
+    expect(weekly).toBeGreaterThan(monthly);
+  });
+
+  it('defaults to monthly (12) when payPeriods is omitted (back-compat)', () => {
+    const explicit = computePaye({ chargeableIncome: 20000, personalAllowance: 90000, band1Ceiling: 1000000, band1Rate: 0.25, band2Rate: 0.30, payPeriods: 12 });
+    const omitted  = computePaye({ chargeableIncome: 20000, personalAllowance: 90000, band1Ceiling: 1000000, band1Rate: 0.25, band2Rate: 0.30 });
+    expect(omitted).toBe(explicit);
+  });
+});
+
 // ── computeRunLine (full orchestrator) ───────────────────────────────────────
 
 describe('computeRunLine', () => {
@@ -488,5 +540,29 @@ describe('computeRunLine', () => {
     expect(withNis.paye).toBe(withoutNis.paye);
     // But net differs by the NIS employee amount
     expect(withNis.net).toBe(withoutNis.net - withNis.nisEmployee);
+  });
+
+  /**
+   * Test Case 7 (Wave 3): WEEKLY run — weeksInPeriod=1, payPeriods=52.
+   * Base weekly pay 2000.
+   *   NIS: weekly insurable 2000/1 = 2000 → class 11 (1910–2139.99) EE 109.40 × 1 = 109.40
+   *   HS:  2000 > 469.99 → 8.25 × 1 = 8.25
+   *   chargeable = 2000 − (90000/52 = 1730.77) = 269.23
+   *   PAYE = 269.23 × 0.25 = 67.31 (weekly band1 ceiling 1,000,000/52 = 19,230.77, well above)
+   *   net  = 2000 − 109.40 − 8.25 − 67.31 = 1815.04
+   */
+  it('Case 7 — weekly run annualises PAYE by 52 (not 12)', () => {
+    const result = computeRunLine({
+      basePay: 2000, taxableAllowances: 0, nonTaxableAllowances: 0,
+      approvedOtAmount: 0, preTaxPensionDeductions: 0, voluntaryDeductions: 0,
+      nisApplicable: true, nisClasses: ALL_CLASSES,
+      weeksInPeriod: 1, payPeriods: 52, statutory: TT_2026_STATUTORY,
+    });
+    expect(result.nisClassNo).toBe(11);
+    expect(result.nisEmployee).toBe(109.40);
+    expect(result.healthSurcharge).toBe(8.25);
+    expect(result.chargeableIncome).toBe(269.23);
+    expect(result.paye).toBe(67.31);
+    expect(result.net).toBe(1815.04);
   });
 });

@@ -21,7 +21,7 @@ import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
-import { computeRunLine } from './payrollStatutory';
+import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { startWorkflowForRecord } from '../workflow/service';
@@ -371,14 +371,17 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
   }
 
   const runNo = await nextRef('PAY');
+  // Frequency drives NIS/HS weeks-in-period AND PAYE annualisation (payPeriods). Derive
+  // weeks from the frequency unless the caller pins it explicitly.
+  const payFrequency = input.payFrequency ?? 'monthly';
 
   const { data, error } = await sb.from('finance_payroll_runs').insert({
     run_no:               runNo,
     period_month:         input.periodMonth,
-    pay_frequency:        input.payFrequency ?? 'monthly',
+    pay_frequency:        payFrequency,
     status:               'draft',
     statutory_version_id: version.id,
-    weeks_in_period:      input.weeksInPeriod ?? 4.333,
+    weeks_in_period:      input.weeksInPeriod ?? weeksInPeriodForFrequency(payFrequency),
     pay_group:            input.payGroup ?? null,
     pay_date:             input.payDate ?? null,
     cut_off_date:         input.cutOffDate ?? null,
@@ -768,6 +771,7 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
       nisApplicable,
       nisClasses,
       weeksInPeriod: run.weeksInPeriod,
+      payPeriods: payPeriodsForFrequency(run.payFrequency),
       statutory: {
         payePersonalAllowance: version.payePersonalAllowance,
         payeBand1Ceiling:      version.payeBand1Ceiling,
