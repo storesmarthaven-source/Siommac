@@ -105,11 +105,16 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
 
 // ── Generate tab ─────────────────────────────────────────────────────────────────
 
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
 function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: boolean; profileReady: boolean; onGenerated: () => void }): VNode {
   const [year, setYear]       = useState(CURRENT_YEAR - 1);
   const [empId, setEmpId]     = useState<string | null>(null);
+  const [niYear, setNiYear]   = useState(CURRENT_YEAR);
+  const [niMonth, setNiMonth] = useState(new Date().getMonth() + 1);
   const yearMut = useStatutoryFormMutation(financeStatutoryFormsApi.td4GenerateYear);
   const empMut  = useStatutoryFormMutation(financeStatutoryFormsApi.td4Generate);
+  const niMut   = useStatutoryFormMutation(financeStatutoryFormsApi.niGenerate);
 
   async function genYear(): Promise<void> {
     try { const r = await yearMut.mutateAsync({ taxYear: year }); toast(`Generated ${r.employeeForms} TD4 + summary for ${year}.`); onGenerated(); }
@@ -118,6 +123,10 @@ function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: 
   async function genEmp(): Promise<void> {
     if (!empId) return;
     try { await empMut.mutateAsync({ employeeId: empId, taxYear: year }); toast(`Generated TD4 for ${year}.`); onGenerated(); }
+    catch (e) { toast((e as Error).message ?? 'Failed.'); }
+  }
+  async function genNi(): Promise<void> {
+    try { await niMut.mutateAsync({ year: niYear, month: niMonth }); toast(`Generated NI184 + NI187 for ${MONTHS[niMonth - 1]} ${niYear}.`); onGenerated(); }
     catch (e) { toast((e as Error).message ?? 'Failed.'); }
   }
 
@@ -145,13 +154,36 @@ function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: 
         </button>
       </div>
 
-      <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+      <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 14 }}>
         <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 12px' }}>Single employee</h3>
         <div style={{ maxWidth: 380, marginBottom: 12 }}>
           <EmployeePicker label="Employee" value={empId} onChange={setEmpId} error={null} />
         </div>
         <button type="button" class="hrfin-action" disabled={!canGenerate || !profileReady || !empId || empMut.isPending} onClick={() => void genEmp()}>
           {empMut.isPending ? 'Generating…' : `Generate TD4 for ${year}`}
+        </button>
+      </div>
+
+      <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16 }}>
+        <h3 style={{ fontSize: 14, fontWeight: 600, margin: '0 0 6px' }}>NIBTT monthly return (NI184 + NI187)</h3>
+        <p class="hse-muted" style={{ fontSize: 12, margin: '0 0 12px' }}>
+          Generates the NI184 contributions schedule (PDF + CSV) and the NI187 remittance summary from locked runs in the selected month.
+        </p>
+        <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
+          <label style={{ maxWidth: 160 }}>
+            <span class="hrfin-wiz-label">Month</span>
+            <select class="hrfin-input" value={niMonth} onChange={e => setNiMonth(Number((e.currentTarget as HTMLSelectElement).value))}>
+              {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
+            </select>
+          </label>
+          <label style={{ maxWidth: 120 }}>
+            <span class="hrfin-wiz-label">Year</span>
+            <input class="hrfin-input" type="number" min={2000} max={2100} value={niYear}
+              onInput={e => setNiYear(Number((e.currentTarget as HTMLInputElement).value) || CURRENT_YEAR)} />
+          </label>
+        </div>
+        <button type="button" class="hrfin-action is-primary" disabled={!canGenerate || !profileReady || niMut.isPending} onClick={() => void genNi()}>
+          {niMut.isPending ? 'Generating…' : `Generate NI184 + NI187 for ${MONTHS[niMonth - 1]} ${niYear}`}
         </button>
       </div>
     </div>

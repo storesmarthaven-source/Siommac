@@ -60,6 +60,8 @@ export const financeStatutoryFormsApi = {
                      call<StatutoryForm>('finance/statutory-forms/td4/generate', a),
   td4GenerateYear: (a: { taxYear: number }) =>
                      call<{ taxYear: number; employeeForms: number; summary: StatutoryForm }>('finance/statutory-forms/td4/generate-year', a),
+  niGenerate:      (a: { year: number; month: number }) =>
+                     call<{ periodStart: string; periodEnd: string; ni184: StatutoryForm; ni187: StatutoryForm }>('finance/statutory-forms/ni/generate', a),
 };
 
 export const financeStatutoryFormsKeys = {

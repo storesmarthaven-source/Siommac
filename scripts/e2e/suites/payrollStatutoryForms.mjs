@@ -30,13 +30,15 @@ export default async function run(h) {
 
   h.onCleanup(async () => {
     try { await sb.from('finance_statutory_forms').delete().eq('tax_year', YEAR); } catch {}
+    try { await sb.from('finance_statutory_forms').delete().eq('period_start', `${YEAR}-06-01`); } catch {}
     try {
-      const { data: objs } = await sb.storage.from('statutory-forms').list(`td4/${YEAR}`);
-      const keys = (objs ?? []).map(o => `td4/${YEAR}/${o.name}`);
-      if (keys.length) await sb.storage.from('statutory-forms').remove(keys);
-      const { data: sObjs } = await sb.storage.from('statutory-forms').list('td4_summary');
-      const sKeys = (sObjs ?? []).filter(o => o.name.startsWith(`${YEAR}-`)).map(o => `td4_summary/${o.name}`);
-      if (sKeys.length) await sb.storage.from('statutory-forms').remove(sKeys);
+      for (const folder of [`td4/${YEAR}`, 'td4_summary', `ni184`, `ni187`]) {
+        const { data: objs } = await sb.storage.from('statutory-forms').list(folder);
+        const keys = (objs ?? [])
+          .filter(o => folder.startsWith('td4/') || o.name.startsWith(`${YEAR}-`))
+          .map(o => `${folder}/${o.name}`);
+        if (keys.length) await sb.storage.from('statutory-forms').remove(keys);
+      }
     } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
@@ -165,6 +167,37 @@ export default async function run(h) {
     const r = await api('finance/statutory-forms/td4/generate', fmgr1T, { employeeId: emp1Id, taxYear: YEAR });
     ok(r, `td4/generate failed: ${r.body.message}`);
     expect(Math.abs(r.body.data.totals.totalEmoluments - 10000) < 0.01, `emp1 emoluments ${r.body.data.totals.totalEmoluments}`);
+  });
+
+  h.section('Statutory Forms > NIBTT NI184 + NI187');
+
+  await test('employee is DENIED ni/generate', async () => {
+    fails(await api('finance/statutory-forms/ni/generate', empT, { year: YEAR, month: 6 }), 'employee denied NI generate');
+  });
+
+  await test('ni/generate produces NI184 + NI187 reconciling to run-line NIS', async () => {
+    // Seeded run is period_month YEAR-06-15 → month 6.
+    const r = await api('finance/statutory-forms/ni/generate', fmgr1T, { year: YEAR, month: 6 });
+    ok(r, `ni/generate failed: ${r.body.message}`);
+    const t = r.body.data.ni184.totals;
+    // EE 460.20+276.12=736.32 · ER 920.40+552.24=1472.64 · total 2208.96 · insurable 16000
+    expect(Math.abs(t.eeContribution - 736.32) < 0.01, `NIS EE ${t.eeContribution}`);
+    expect(Math.abs(t.erContribution - 1472.64) < 0.01, `NIS ER ${t.erContribution}`);
+    expect(Math.abs(t.total - 2208.96) < 0.01, `NIS total ${t.total}`);
+    expect(Math.abs(t.insurableEarnings - 16000) < 0.01, `insurable ${t.insurableEarnings}`);
+    ctx.ni184FormId = r.body.data.ni184.id;
+    const { data: forms } = await sb.from('finance_statutory_forms').select('form_type').eq('period_start', `${YEAR}-06-01`).eq('status', 'generated');
+    const types = new Set((forms ?? []).map(f => f.form_type));
+    expect(types.has('ni184') && types.has('ni187'), 'expected both ni184 + ni187 rows for the period');
+  });
+
+  await test('NI184 CSV data file reconciles', async () => {
+    const csv = await api('finance/statutory-forms/signed-url', fmgr1T, { id: ctx.ni184FormId, which: 'data' });
+    ok(csv, `ni184 csv signed-url failed: ${csv.body.message}`);
+    const res = await fetch(csv.body.data.signedUrl);
+    expect(res.ok, `fetch ni184 csv failed: ${res.status}`);
+    const text = await res.text();
+    expect(text.includes('2208.96'), 'NI184 CSV should contain the total NIS remittance');
   });
 
   h.section('Statutory Forms > List + download');

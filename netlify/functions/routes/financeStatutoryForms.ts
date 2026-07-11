@@ -12,6 +12,7 @@ import {
   type StatutoryFormType,
 } from '../lib/finance/statutoryForms';
 import { generateTd4ForEmployee, generateTd4Year } from '../lib/finance/td4Forms';
+import { generateNiPeriod } from '../lib/finance/niForms';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -96,6 +97,24 @@ router.post('/statutory-forms/td4/generate-year', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await generateTd4Year(v.data.taxYear, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+// ── NI184 / NI187 generation (NIBTT monthly return) ────────────────────────────
+
+router.post('/statutory-forms/ni/generate', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.statutory_forms.generate');
+  const v = zv(c, z.object({
+    year:  z.number().int().min(2000).max(2100),
+    month: z.number().int().min(1).max(12),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await generateNiPeriod(v.data.year, v.data.month, actor.id);
     return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };
