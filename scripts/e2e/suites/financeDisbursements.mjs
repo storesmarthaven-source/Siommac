@@ -24,7 +24,7 @@ export default async function run(h) {
 
   let fmgr1Id, fmgr2Id, fstaff1Id, empId, emp2Id;
 
-  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, staffRunId: null, cancelRunId: null, disbId: null, cancelDisbId: null, staffDisbId: null, createdUserIds: [] };
+  const ctx = { bankAccountId: null, versionId: null, runId: null, draftRunId: null, staffRunId: null, cancelRunId: null, disbId: null, disbNo: null, rblFileId: null, cancelDisbId: null, staffDisbId: null, createdUserIds: [] };
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -36,6 +36,15 @@ export default async function run(h) {
     const ids  = [ctx.disbId, ctx.cancelDisbId, ctx.staffDisbId].filter(Boolean);
     const rids = [ctx.runId, ctx.draftRunId, ctx.staffRunId, ctx.cancelRunId].filter(Boolean);
     try { if (ids.length)  await sb.from('finance_disbursement_lines').delete().in('disbursement_id', ids); } catch {}
+    // Per-bank files cascade on disbursement delete, but drop them explicitly first + remove storage objects.
+    try { if (ids.length)  await sb.from('finance_disbursement_bank_files').delete().in('disbursement_id', ids); } catch {}
+    try {
+      if (ctx.disbNo) {
+        const { data: objs } = await sb.storage.from('disbursements').list(ctx.disbNo);
+        const keys = (objs ?? []).map(o => `${ctx.disbNo}/${o.name}`);
+        if (keys.length) await sb.storage.from('disbursements').remove(keys);
+      }
+    } catch {}
     try { if (ids.length)  await sb.from('finance_disbursements').delete().in('id', ids); } catch {}
     try { if (rids.length) await sb.from('finance_payslips').delete().in('run_id', rids); } catch {}
     try { if (rids.length) await sb.from('finance_payroll_run_lines').delete().in('run_id', rids); } catch {}
@@ -182,13 +191,14 @@ export default async function run(h) {
   await test('employee adds own bank account (masked number storage)', async () => {
     const r = await api('finance/bank-accounts/upsert', empToken, {
       bankName: 'Republic Bank', branch: 'Port of Spain',
-      accountType: 'savings', accountNumber: '1234567890', isPrimary: true,
+      accountType: 'savings', accountNumber: '1234567890', transitNumber: '001', isPrimary: true,
     });
     ok(r, `upsert failed: ${r.body.message}`);
     const d = r.body.data;
     expect(d.id, 'missing id');
     expect(d.accountNumberMasked === '****7890', `masked mismatch: ${d.accountNumberMasked}`);
     expect(!('accountNumber' in d), 'full account number must NOT be in response');
+    expect(d.transitNumber === '001', `transitNumber not persisted: ${d.transitNumber}`);
     expect(d.isPrimary === true, 'expected isPrimary true');
     ctx.bankAccountId = d.id;
   });
@@ -282,7 +292,7 @@ export default async function run(h) {
     const { data: ba, error: baErr } = await sb.from('finance_employee_bank_accounts').insert({
       employee_id: emp2Id, bank_name: 'Scotiabank', branch: 'San Fernando',
       account_type: 'savings', account_number: '9988776655', account_number_masked: '****6655',
-      is_primary: true, is_active: true, created_by: fmgr1Id,
+      transit_number: '002', is_primary: true, is_active: true, created_by: fmgr1Id,
     }).select('id').single();
     expect(!baErr, `seed emp2 bank account failed: ${baErr?.message}`);
     ctx.emp2BankAccountId = ba.id;
@@ -344,6 +354,7 @@ export default async function run(h) {
     expect(Math.abs(d.totalAmount - 7700.00) < 0.01, `total mismatch: ${d.totalAmount}`);
     expect(d.disbursementNo, 'disbursementNo missing');
     ctx.disbId = d.id;
+    ctx.disbNo = d.disbursementNo;
   });
 
   await test('side-effect: finance.disbursement.created app_event written', async () => {
@@ -416,6 +427,96 @@ export default async function run(h) {
       return (data ?? []).length > 0;
     }, 8000);
     expect(gotHandoff, 'handoff_outbox row for bank_file_action not found');
+  });
+
+  h.section('Finance Disbursements > Per-bank ACH files (Wave 6)');
+
+  await test('bank-files/list returns one balanced file per bank (RBL + SCOTIA)', async () => {
+    const r = await api('finance/disbursements/bank-files/list', fmgr1Token, { disbursementId: ctx.disbId });
+    ok(r, `bank-files/list failed: ${r.body.message}`);
+    const files = r.body.data;
+    expect(Array.isArray(files), 'expected array');
+    expect(files.length === 2, `expected 2 per-bank files (Republic + Scotia), got ${files.length}`);
+    const byCode = Object.fromEntries(files.map(f => [f.bankCode, f]));
+    expect(byCode.RBL, 'missing RBL bank file');
+    expect(byCode.SCOTIA, 'missing SCOTIA bank file');
+    expect(byCode.RBL.employeeCount === 1, `RBL employeeCount ${byCode.RBL.employeeCount}`);
+    expect(Math.abs(byCode.RBL.totalAmount - 4500.00) < 0.01, `RBL total ${byCode.RBL.totalAmount}`);
+    expect(byCode.SCOTIA.employeeCount === 1, `SCOTIA employeeCount ${byCode.SCOTIA.employeeCount}`);
+    expect(Math.abs(byCode.SCOTIA.totalAmount - 3200.00) < 0.01, `SCOTIA total ${byCode.SCOTIA.totalAmount}`);
+    // Per-file control totals must sum to the disbursement total (7700.00)
+    const grand = files.reduce((s, f) => s + Number(f.totalAmount), 0);
+    expect(Math.abs(grand - 7700.00) < 0.01, `sum of per-bank totals mismatch: ${grand}`);
+    // Response shape the FE consumes
+    for (const f of files) {
+      for (const k of ['id', 'disbursementId', 'bankName', 'bankCode', 'format', 'filePath', 'employeeCount', 'totalAmount', 'checksum', 'createdAt']) {
+        expect(k in f, `bank file missing field: ${k}`);
+      }
+      expect(f.format === 'direct_credit_csv', `unexpected format: ${f.format}`);
+      expect(typeof f.checksum === 'string' && f.checksum.length === 64, `checksum should be sha256 hex: ${f.checksum}`);
+      // Account numbers must NEVER be surfaced on a per-bank-file DTO
+      expect(!('accountNumber' in f), 'full account number must NOT be in bank file DTO');
+    }
+    ctx.rblFileId = byCode.RBL.id;
+  });
+
+  await test('side-effect: finance_disbursement_bank_files rows written (service-role assertion)', async () => {
+    const { data, error } = await sb.from('finance_disbursement_bank_files')
+      .select('bank_code, employee_count, total_amount, checksum, file_path')
+      .eq('disbursement_id', ctx.disbId);
+    expect(!error, `bank_files query failed: ${error?.message}`);
+    expect((data ?? []).length === 2, `expected 2 bank_file rows, got ${(data ?? []).length}`);
+    const codes = new Set((data ?? []).map(x => x.bank_code));
+    expect(codes.has('RBL') && codes.has('SCOTIA'), 'bank_file rows missing RBL/SCOTIA');
+  });
+
+  await test('side-effect: finance.disbursement.bank_file.generated app_event per bank', async () => {
+    const gotEvents = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('event_type', 'finance.disbursement.bank_file.generated')
+        .eq('source_entity_id', ctx.disbId);
+      return (data ?? []).length >= 2;
+    }, 8000);
+    expect(gotEvents, 'expected >=2 finance.disbursement.bank_file.generated app_events');
+  });
+
+  await test('bank-files/signed-url downloads the RBL file with a BALANCED H/D/T control total + transit', async () => {
+    const r = await api('finance/disbursements/bank-files/signed-url', fmgr1Token, { bankFileId: ctx.rblFileId });
+    ok(r, `bank-files/signed-url failed: ${r.body.message}`);
+    const { signedUrl, bankFile } = r.body.data;
+    expect(typeof signedUrl === 'string' && signedUrl.length > 0, 'signedUrl must be non-empty');
+    expect(bankFile?.bankCode === 'RBL', 'signed-url returned the wrong bank file');
+    // Fetch the actual file and verify its internal control totals reconcile
+    const res = await fetch(signedUrl);
+    expect(res.ok, `fetch signed url failed: HTTP ${res.status}`);
+    const text = await res.text();
+    const rows = text.trim().split('\n');
+    expect(rows.length === 3, `RBL file should be H + 1 D + T, got ${rows.length} rows`);
+    const hdr = rows[0].split(',');
+    const trl = rows[rows.length - 1].split(',');
+    expect(hdr[0] === 'H' && hdr[1] === 'RBL', `bad header: ${rows[0]}`);
+    expect(hdr[7] === '1' && hdr[8] === '4500.00', `header control count/total off: ${rows[0]}`);
+    expect(trl[0] === 'T' && trl[1] === '1' && trl[2] === '4500.00', `trailer control count/total off: ${rows[rows.length - 1]}`);
+    const det = rows[1].split(',');
+    expect(det[0] === 'D' && det[1] === '001', `detail transit number not written: ${rows[1]}`);
+    expect(det[4] === '4500.00', `detail amount off: ${rows[1]}`);
+  });
+
+  await test('side-effect: bank_file.downloaded app_event emitted on per-file download', async () => {
+    const got = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id')
+        .eq('source_module', 'finance_disbursements')
+        .eq('event_type', 'finance.disbursement.bank_file.downloaded')
+        .eq('source_entity_id', ctx.disbId);
+      return (data ?? []).length > 0;
+    }, 8000);
+    expect(got, 'bank_file.downloaded app_event not found after per-file download');
+  });
+
+  await test('employee is DENIED bank-files/list and bank-files/signed-url', async () => {
+    fails(await api('finance/disbursements/bank-files/list', empToken, { disbursementId: ctx.disbId }), 'employee should be denied bank-files/list');
+    fails(await api('finance/disbursements/bank-files/signed-url', empToken, { bankFileId: ctx.rblFileId }), 'employee should be denied bank-files/signed-url');
   });
 
   await test('mark-paid (file_generated -> paid)', async () => {

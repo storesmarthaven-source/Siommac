@@ -12,6 +12,7 @@ import {
   getBankFileSignedUrl, getDisbursementKpis,
   listDisbursementAuditLog, listFinanceAuditLog,
   listBankFileStatusReport, listBankAccountReadinessReport,
+  listDisbursementBankFiles, getDisbursementBankFileSignedUrl,
   type DisbursementStatus,
   type DisbursementDto,
 } from '../lib/finance/disbursements';
@@ -229,8 +230,37 @@ router.post('/disbursements/generate-file', async c => {
   const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
-    const { filePath, disbursement } = await generateBankFile(v.data.id, actor.id);
-    return c.json({ success: true, data: { ...disbursement, filePath } });
+    const { filePath, disbursement, bankFiles } = await generateBankFile(v.data.id, actor.id);
+    return c.json({ success: true, data: { ...disbursement, filePath, bankFiles } });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+// Per-bank direct-credit files generated for a disbursement (Wave 6).
+router.post('/disbursements/bank-files/list', async c => {
+  await requirePermission(c, 'finance.disbursement.view');
+  const v = zv(c, z.object({ disbursementId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listDisbursementBankFiles(v.data.disbursementId);
+    return c.json({ success: true, data });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);
+  }
+});
+
+// Signed URL to download one per-bank direct-credit file. Gated on the same
+// download permission as the manifest; emits bank_file.downloaded + audit.
+router.post('/disbursements/bank-files/signed-url', async c => {
+  const actor = await requirePermission(c, 'finance.disbursement.bank_file.download');
+  const v = zv(c, z.object({ bankFileId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getDisbursementBankFileSignedUrl(v.data.bankFileId, actor.id);
+    return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };
     return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200);

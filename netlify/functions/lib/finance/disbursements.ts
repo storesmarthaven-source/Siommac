@@ -4,6 +4,7 @@
 // Lifecycle: draft -> submitted -> approved -> file_generated -> paid
 // Permissions: finance.disbursement.{view,manage,approve}
 
+import { createHash } from 'crypto';
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
@@ -14,6 +15,10 @@ import { notifyUsersByRole, createFinanceRecordThread } from './financeEvents';
 import { createHandoff } from '../handoffBus';
 import { createTicket } from '../communications';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
+import {
+  resolveBankCode, bankNameForCode, buildDirectCreditFile,
+  type DirectCreditLine,
+} from './bankFileFormats';
 
 export type DisbursementStatus =
   | 'draft' | 'submitted' | 'approved' | 'file_generated' | 'paid' | 'cancelled';
@@ -60,6 +65,40 @@ export interface ComputedDisbursement {
     hasBankAccount: boolean;
   }>;
   missingBankAccounts: string[];
+}
+
+/** One generated per-bank direct-credit file within a disbursement (Wave 6). */
+export interface DisbursementBankFileDto {
+  id: string;
+  disbursementId: string;
+  bankName: string;
+  bankCode: string;
+  format: string;
+  filePath: string;
+  employeeCount: number;
+  totalAmount: number;
+  checksum: string | null;
+  createdBy: string | null;
+  createdAt: string;
+}
+
+interface DbBankFileRow {
+  id: string; disbursement_id: string; bank_name: string; bank_code: string;
+  format: string; file_path: string; employee_count: number; total_amount: number;
+  checksum: string | null; created_by: string | null; created_at: string;
+}
+function toBankFileDto(r: DbBankFileRow): DisbursementBankFileDto {
+  return {
+    id: r.id, disbursementId: r.disbursement_id, bankName: r.bank_name, bankCode: r.bank_code,
+    format: r.format, filePath: r.file_path, employeeCount: r.employee_count,
+    totalAmount: Number(r.total_amount), checksum: r.checksum, createdBy: r.created_by, createdAt: r.created_at,
+  };
+}
+
+/** Strip a legacy `disbursements/` prefix so the value is a bucket-relative object key.
+ *  New rows store clean keys; this keeps old rows signable too. */
+function bucketKey(path: string): string {
+  return path.replace(/^disbursements\//, '');
 }
 
 interface DbDisbursementRow {
@@ -263,41 +302,139 @@ export async function approveDisbursement(id: string, actorId: string): Promise<
   return row;
 }
 
-export async function generateBankFile(id: string, actorId: string): Promise<{ filePath: string; disbursement: DisbursementDto }> {
+/** Company legal name for the bank-file header (single-tenant; from the settings catalog). */
+async function resolveCompanyName(): Promise<string> {
+  const { data } = await sb.from('settings').select('value').eq('key', 'companyName').maybeSingle<{ value: unknown }>();
+  const v = data?.value;
+  return (typeof v === 'string' && v.trim()) ? v.trim() : 'Siomac';
+}
+
+/**
+ * Generate PER-BANK direct-credit (ACH) files for an approved disbursement.
+ * Net-pay lines are grouped by resolved bank code; one balanced H/D/T file is
+ * built + uploaded per bank, one `finance_disbursement_bank_files` row is written
+ * per bank, and a manifest listing every file is uploaded + recorded as the
+ * disbursement's `bank_file_path`. Any partial failure is compensated (uploaded
+ * objects + inserted rows are rolled back) so the disbursement stays 'approved'.
+ */
+export async function generateBankFile(id: string, actorId: string): Promise<{ filePath: string; disbursement: DisbursementDto; bankFiles: DisbursementBankFileDto[] }> {
   const existing = await getDisbursement(id);
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
   if (existing.status !== 'approved') throw Object.assign(new Error('Only approved disbursements can have a bank file generated.'), { status: 422 });
+
   const { data: lineData, error: lineErr } = await sb.from('finance_disbursement_lines').select('employee_id, bank_account_id, net_amount').eq('disbursement_id', id);
   if (lineErr) throw Object.assign(new Error('generateBankFile/lines: ' + lineErr.message), { status: 500 });
-  const lines = (lineData ?? []) as Array<{ employee_id: string; bank_account_id: string | null; net_amount: number }>;
-  const bankAccountIds = lines.map(l => l.bank_account_id).filter((v): v is string => !!v);
-  const bankMap = new Map<string, { id: string; bank_name: string; branch: string | null; account_type: string; account_number: string }>();
-  if (bankAccountIds.length > 0) {
-    const { data: baData, error: baErr } = await sb.from('finance_employee_bank_accounts').select('id,bank_name,branch,account_type,account_number').in('id', bankAccountIds);
-    if (baErr) throw Object.assign(new Error('generateBankFile/bank-accounts: ' + baErr.message), { status: 500 });
-    for (const ba of (baData ?? []) as Array<{ id: string; bank_name: string; branch: string | null; account_type: string; account_number: string }>) {
-      bankMap.set(ba.id, ba);
-    }
+  const allLines = (lineData ?? []) as Array<{ employee_id: string; bank_account_id: string | null; net_amount: number }>;
+
+  // Only positive net-pay lines get a bank credit. Zero/negative lines are not disbursed.
+  const payable = allLines.filter(l => Number(l.net_amount) > 0);
+  if (payable.length === 0) throw Object.assign(new Error('No payable lines (all net amounts are zero) — nothing to disburse.'), { status: 422 });
+
+  // Every payable line MUST have a bank account (no silent drop).
+  const unbanked = payable.filter(l => !l.bank_account_id).map(l => l.employee_id);
+  if (unbanked.length > 0) {
+    throw Object.assign(new Error(`${unbanked.length} payable employee(s) have no bank account on their disbursement line: ${unbanked.join(', ')}. Recompute the disbursement after adding bank accounts.`), { status: 422 });
   }
-  const csvHeader = 'DisbursementNo,EmployeeId,BankName,Branch,AccountType,AccountNumber,NetAmount,Currency';
-  const esc = (s: string) => s.includes(',') ? '"' + s + '"' : s;
-  const csvRows = lines.map(l => {
-    const ba = l.bank_account_id ? bankMap.get(l.bank_account_id) : undefined;
-    return [existing.disbursementNo, l.employee_id, esc(ba?.bank_name ?? ''), esc(ba?.branch ?? ''), ba?.account_type ?? '', ba?.account_number ?? '', Number(l.net_amount).toFixed(2), existing.currency].join(',');
-  });
-  const csvContent = [csvHeader, ...csvRows].join('\n');
-  const fileName = existing.disbursementNo + '-' + Date.now() + '.csv';
-  const filePath = 'disbursements/' + fileName;
-  const fileBytes = new TextEncoder().encode(csvContent);
-  const { error: uploadErr } = await sb.storage.from('disbursements').upload(filePath, fileBytes, { contentType: 'text/csv', upsert: false });
-  if (uploadErr) throw Object.assign(new Error('generateBankFile/upload: ' + uploadErr.message), { status: 500 });
+
+  // Load raw bank-account detail (server-side only — account_number never leaves the server).
+  const bankAccountIds = [...new Set(payable.map(l => l.bank_account_id as string))];
+  const bankMap = new Map<string, { id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>();
+  const { data: baData, error: baErr } = await sb.from('finance_employee_bank_accounts').select('id,bank_name,branch,account_type,account_number,transit_number').in('id', bankAccountIds);
+  if (baErr) throw Object.assign(new Error('generateBankFile/bank-accounts: ' + baErr.message), { status: 500 });
+  for (const ba of (baData ?? []) as Array<{ id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>) {
+    bankMap.set(ba.id, ba);
+  }
+
+  // Group payable lines by resolved bank code.
+  interface Group { bankCode: string; names: Set<string>; lines: DirectCreditLine[] }
+  const groups = new Map<string, Group>();
+  for (const l of payable) {
+    const ba = bankMap.get(l.bank_account_id as string);
+    if (!ba) throw Object.assign(new Error(`Bank account ${l.bank_account_id} not found while generating the bank file.`), { status: 500 });
+    const bankCode = resolveBankCode(ba.bank_name);
+    let g = groups.get(bankCode);
+    if (!g) { g = { bankCode, names: new Set(), lines: [] }; groups.set(bankCode, g); }
+    g.names.add(ba.bank_name);
+    g.lines.push({
+      transitNumber: ba.transit_number ?? null,
+      accountNumber: ba.account_number,
+      accountType:   ba.account_type,
+      amount:        Number(l.net_amount),
+      employeeRef:   l.employee_id,
+    });
+  }
+
+  const companyName = await resolveCompanyName();
   const generatedAt = new Date().toISOString();
-  const fileMeta = { ...existing.metadata, fileGeneratedAt: generatedAt, fileGeneratedBy: actorId };
-  const { data, error: updErr } = await sb.from('finance_disbursements').update({ status: 'file_generated', bank_file_path: filePath, metadata: fileMeta }).eq('id', id).select().single<DbDisbursementRow>();
-  if (updErr) throw Object.assign(new Error('generateBankFile/update: ' + updErr.message), { status: 500 });
-  const row = toDto(data);
-  void emitAppEvent({ eventType: 'finance.disbursement.file_generated', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { filePath, disbursementNo: existing.disbursementNo } });
-  await writeHrAudit({ submoduleKey: 'finance_disbursements', recordId: id, actorId, action: 'disbursement.file_generated', previousState: { status: 'approved' }, newState: { status: 'file_generated', filePath } });
+  const stamp = Date.now();
+  const fileDate = generatedAt.slice(0, 10);
+
+  // Track uploads + inserts so a mid-way failure can be fully compensated.
+  const uploadedKeys: string[] = [];
+  const insertedFileIds: string[] = [];
+  const bankFiles: DisbursementBankFileDto[] = [];
+
+  const rollback = async (): Promise<void> => {
+    try { if (uploadedKeys.length) await sb.storage.from('disbursements').remove(uploadedKeys); } catch { /* best-effort */ }
+    try { if (insertedFileIds.length) await sb.from('finance_disbursement_bank_files').delete().in('id', insertedFileIds); } catch { /* best-effort */ }
+  };
+
+  let updatedRow: DbDisbursementRow;
+  const manifestKey = `${existing.disbursementNo}/manifest-${stamp}.csv`;
+  try {
+    for (const g of [...groups.values()].sort((a, b) => a.bankCode.localeCompare(b.bankCode))) {
+      // Display name: canonical for a known code; the single source name (or 'Various') for OTHER.
+      const bankName = g.bankCode !== 'OTHER'
+        ? bankNameForCode(g.bankCode)
+        : (g.names.size === 1 ? [...g.names][0]! : 'Various (unrecognised banks)');
+
+      const built = buildDirectCreditFile({
+        bankName, bankCode: g.bankCode, companyName, currency: existing.currency,
+        fileDate, disbursementNo: existing.disbursementNo, lines: g.lines,
+      });
+      const checksum = createHash('sha256').update(built.content).digest('hex');
+      const key = `${existing.disbursementNo}/${g.bankCode}-${stamp}.csv`;
+      const { error: upErr } = await sb.storage.from('disbursements').upload(key, new TextEncoder().encode(built.content), { contentType: 'text/csv', upsert: true });
+      if (upErr) throw Object.assign(new Error('generateBankFile/upload(' + g.bankCode + '): ' + upErr.message), { status: 500 });
+      uploadedKeys.push(key);
+
+      const { data: bfRow, error: bfErr } = await sb.from('finance_disbursement_bank_files').insert({
+        disbursement_id: id, bank_name: bankName, bank_code: g.bankCode, format: 'direct_credit_csv',
+        file_path: key, employee_count: built.employeeCount, total_amount: built.totalAmount,
+        checksum, created_by: actorId,
+      }).select().single<DbBankFileRow>();
+      if (bfErr) throw Object.assign(new Error('generateBankFile/bank-file-row(' + g.bankCode + '): ' + bfErr.message), { status: 500 });
+      insertedFileIds.push(bfRow.id);
+      bankFiles.push(toBankFileDto(bfRow));
+
+      void emitAppEvent({ eventType: 'finance.disbursement.bank_file.generated', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { disbursementNo: existing.disbursementNo, bankCode: g.bankCode, bankName, employeeCount: built.employeeCount, totalAmount: built.totalAmount, filePath: key } });
+    }
+
+    // Manifest listing every per-bank file (this is the disbursement's bank_file_path).
+    const manifestHeader = 'BankCode,BankName,Employees,TotalAmount,Currency,FilePath,Checksum';
+    const manifestEsc = (s: string) => /[",\n]/.test(s) ? '"' + s.replace(/"/g, '""') + '"' : s;
+    const manifestRows = bankFiles.map(bf => [bf.bankCode, manifestEsc(bf.bankName), String(bf.employeeCount), bf.totalAmount.toFixed(2), existing.currency, bf.filePath, bf.checksum ?? ''].join(','));
+    const grandCount = bankFiles.reduce((s, bf) => s + bf.employeeCount, 0);
+    const grandTotal = bankFiles.reduce((s, bf) => s + bf.totalAmount, 0);
+    const manifestTotal = ['TOTAL', '', String(grandCount), grandTotal.toFixed(2), existing.currency, '', ''].join(',');
+    const manifestContent = [manifestHeader, ...manifestRows, manifestTotal].join('\n');
+    const { error: mErr } = await sb.storage.from('disbursements').upload(manifestKey, new TextEncoder().encode(manifestContent), { contentType: 'text/csv', upsert: true });
+    if (mErr) throw Object.assign(new Error('generateBankFile/manifest-upload: ' + mErr.message), { status: 500 });
+    uploadedKeys.push(manifestKey);
+
+    const fileMeta = { ...existing.metadata, fileGeneratedAt: generatedAt, fileGeneratedBy: actorId, bankFileCount: bankFiles.length };
+    const { data: updData, error: updErr } = await sb.from('finance_disbursements').update({ status: 'file_generated', bank_file_path: manifestKey, metadata: fileMeta }).eq('id', id).select().single<DbDisbursementRow>();
+    if (updErr) throw Object.assign(new Error('generateBankFile/update: ' + updErr.message), { status: 500 });
+    updatedRow = updData;
+  } catch (e) {
+    await rollback();
+    throw e;
+  }
+
+  const filePath = manifestKey;
+  const row = toDto(updatedRow);
+  void emitAppEvent({ eventType: 'finance.disbursement.file_generated', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'success', payload: { filePath, disbursementNo: existing.disbursementNo, bankFileCount: bankFiles.length } });
+  await writeHrAudit({ submoduleKey: 'finance_disbursements', recordId: id, actorId, action: 'disbursement.file_generated', previousState: { status: 'approved' }, newState: { status: 'file_generated', filePath, bankFileCount: bankFiles.length } });
 
   // §8.1 — notify Payment Operators (finance_manager) that the bank file is ready
   void notifyUsersByRole('finance_manager', {
@@ -350,7 +487,64 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
     createdBy:        actorId,
   });
 
-  return { filePath, disbursement: row };
+  return { filePath, disbursement: row, bankFiles };
+}
+
+// ── Per-bank file listing + signed-url download ───────────────────────────────
+
+/** All generated per-bank direct-credit files for a disbursement. */
+export async function listDisbursementBankFiles(disbursementId: string): Promise<DisbursementBankFileDto[]> {
+  const { data, error } = await sb
+    .from('finance_disbursement_bank_files')
+    .select('*')
+    .eq('disbursement_id', disbursementId)
+    .order('bank_code', { ascending: true });
+  if (error) throw Object.assign(new Error('listDisbursementBankFiles: ' + error.message), { status: 500 });
+  return ((data ?? []) as DbBankFileRow[]).map(toBankFileDto);
+}
+
+/**
+ * Short-lived signed URL for one per-bank direct-credit file.
+ * Emits `finance.disbursement.bank_file.downloaded` + hr_audit_log on every call.
+ */
+export async function getDisbursementBankFileSignedUrl(
+  bankFileId: string,
+  actorId: string,
+): Promise<{ signedUrl: string; bankFile: DisbursementBankFileDto }> {
+  const { data: row, error } = await sb
+    .from('finance_disbursement_bank_files')
+    .select('*')
+    .eq('id', bankFileId)
+    .maybeSingle<DbBankFileRow>();
+  if (error) throw Object.assign(new Error('getDisbursementBankFileSignedUrl: ' + error.message), { status: 500 });
+  if (!row) throw Object.assign(new Error('Bank file not found.'), { status: 404 });
+
+  const { data: signedData, error: signedErr } = await sb.storage
+    .from('disbursements')
+    .createSignedUrl(bucketKey(row.file_path), 300);
+  if (signedErr || !signedData?.signedUrl) {
+    throw Object.assign(new Error('getDisbursementBankFileSignedUrl/signed-url: ' + (signedErr?.message ?? 'Unknown error')), { status: 500 });
+  }
+
+  void emitAppEvent({
+    eventType: 'finance.disbursement.bank_file.downloaded',
+    sourceModule: 'finance_disbursements',
+    sourceEntityType: 'disbursement',
+    sourceEntityId: row.disbursement_id,
+    actorUserId: actorId,
+    severity: 'info',
+    payload: { bankFileId, bankCode: row.bank_code, filePath: row.file_path },
+  });
+  await writeHrAudit({
+    submoduleKey: 'finance_disbursements',
+    recordId: row.disbursement_id,
+    actorId,
+    action: 'disbursement.bank_file.downloaded',
+    previousState: null,
+    newState: { bankFileId, bankCode: row.bank_code, filePath: row.file_path },
+  });
+
+  return { signedUrl: signedData.signedUrl, bankFile: toBankFileDto(row) };
 }
 
 export async function markDisbursementPaid(id: string, actorId: string): Promise<DisbursementDto> {
@@ -397,10 +591,10 @@ export async function getBankFileSignedUrl(
     throw Object.assign(new Error('No bank file has been generated for this disbursement.'), { status: 422 });
   }
 
-  // Create a 5-minute signed URL for the storage object
+  // Create a 5-minute signed URL for the storage object (the per-disbursement manifest)
   const { data: signedData, error: signedErr } = await sb.storage
     .from('disbursements')
-    .createSignedUrl(disbursement.bankFilePath.replace(/^disbursements\//, ''), 300);
+    .createSignedUrl(bucketKey(disbursement.bankFilePath), 300);
 
   if (signedErr || !signedData?.signedUrl) {
     throw Object.assign(

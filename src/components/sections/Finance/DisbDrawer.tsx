@@ -8,12 +8,13 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { toast } from '@store';
 import { Drawer, HrfinPill, type HrfinTone } from '@ui';
 import {
   useDisbursement,
   useDisbursementLinesDetail,
+  useDisbursementBankFiles,
   useDisbursementMutation,
   useDisbursementAuditLog,
   financeDisbursementsApi,
@@ -59,7 +60,8 @@ function statusTone(s: DisbursementStatus): HrfinTone {
 
 // ── Tabs ──────────────────────────────────────────────────────────────────────
 
-type Tab = 'summary' | 'lines' | 'bank-file' | 'bank-accounts' | 'approvals' | 'payments' | 'timeline' | 'audit' | 'payroll-run';
+export type DisbDrawerTab = 'summary' | 'lines' | 'bank-file' | 'bank-accounts' | 'approvals' | 'payments' | 'timeline' | 'audit' | 'payroll-run';
+type Tab = DisbDrawerTab;
 const TABS: { key: Tab; label: string }[] = [
   { key: 'summary',       label: 'Summary' },
   { key: 'lines',         label: 'Lines' },
@@ -157,6 +159,9 @@ function LinesTab({ disbursementId }: { disbursementId: string }): VNode {
 
 function BankFileTab({ d }: { d: Disbursement }): VNode {
   const getUrl = useDisbursementMutation(financeDisbursementsApi.bankFileUrl);
+  const getFileUrl = useDisbursementMutation(financeDisbursementsApi.bankFileDownload);
+  const bankFilesQ = useDisbursementBankFiles(d.bankFilePath ? d.id : null);
+  const bankFiles = bankFilesQ.data ?? [];
   const attachQ = useFinanceAttachments('disbursement', d.id, !!d.id);
   const uploadUrlMut = useFinanceAttachmentUploadUrl();
   const completeMut = useCompleteFinanceAttachment();
@@ -166,6 +171,15 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
   async function handleDownload(): Promise<void> {
     try {
       const res = await getUrl.mutateAsync({ disbursementId: d.id });
+      window.open(res.signedUrl, '_blank');
+    } catch (e) {
+      toast((e as Error).message ?? 'Failed to generate download link.');
+    }
+  }
+
+  async function handleDownloadBankFile(bankFileId: string): Promise<void> {
+    try {
+      const res = await getFileUrl.mutateAsync({ bankFileId });
       window.open(res.signedUrl, '_blank');
     } catch (e) {
       toast((e as Error).message ?? 'Failed to generate download link.');
@@ -217,13 +231,13 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
 
   return (
     <div>
-      {/* Generated file card */}
+      {/* Manifest card — index of every per-bank file */}
       <div class="hrfin-callout is-info" style={{ marginBottom: 16 }}>
         <HrfinIcon name="file" />
         <div style={{ flex: 1 }}>
           <strong>{fileName}</strong>
           <div style={{ fontSize: 11, color: 'var(--muted)', marginTop: 2 }}>
-            EFT CSV · Status: {humanize(d.status)}
+            Manifest (index of per-bank files) · Status: {humanize(d.status)}
           </div>
         </div>
         <button
@@ -233,9 +247,71 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
           disabled={getUrl.isPending}
         >
           <HrfinIcon name="download" />
-          {getUrl.isPending ? 'Generating link…' : 'Download'}
+          {getUrl.isPending ? 'Generating link…' : 'Download manifest'}
         </button>
       </div>
+
+      {/* Per-bank direct-credit files */}
+      <div style={{ marginBottom: 8 }}>
+        <p class="hrfin-wiz-label" style={{ marginBottom: 8 }}>Per-bank direct-credit files</p>
+      </div>
+      {bankFilesQ.isLoading && <div class="hrfin-empty">Loading bank files…</div>}
+      {!bankFilesQ.isLoading && bankFiles.length === 0 && (
+        <p class="hse-muted" style={{ fontSize: 12, marginBottom: 16 }}>No per-bank files recorded for this disbursement.</p>
+      )}
+      {bankFiles.length > 0 && (
+        <div style={{ overflowX: 'auto', marginBottom: 16 }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 13 }}>
+            <thead>
+              <tr style={{ borderBottom: '1px solid var(--border)', background: 'var(--surface-alt, rgba(255,255,255,.04))' }}>
+                <th style={{ padding: '7px 12px', textAlign: 'left' }}>Bank</th>
+                <th style={{ padding: '7px 12px', textAlign: 'center' }}>Employees</th>
+                <th style={{ padding: '7px 12px', textAlign: 'right' }}>Total</th>
+                <th style={{ padding: '7px 12px', textAlign: 'right' }}>Action</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bankFiles.map(bf => (
+                <tr key={bf.id} style={{ borderBottom: '1px solid var(--border)' }}>
+                  <td style={{ padding: '8px 12px' }}>
+                    <strong>{bf.bankName}</strong>
+                    <span style={{ color: 'var(--muted)', fontSize: 11, marginLeft: 6 }}>{bf.bankCode}</span>
+                    {bf.checksum && (
+                      <div style={{ fontSize: 10, color: 'var(--muted)', fontFamily: 'monospace' }}>
+                        sha256 {bf.checksum.slice(0, 12)}…
+                      </div>
+                    )}
+                  </td>
+                  <td style={{ padding: '8px 12px', textAlign: 'center', color: 'var(--muted)' }}>{bf.employeeCount}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>{money(bf.totalAmount)}</td>
+                  <td style={{ padding: '8px 12px', textAlign: 'right' }}>
+                    <button
+                      type="button"
+                      class="hrfin-action"
+                      onClick={() => void handleDownloadBankFile(bf.id)}
+                      disabled={getFileUrl.isPending}
+                    >
+                      <HrfinIcon name="download" /> Download
+                    </button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr style={{ borderTop: '2px solid var(--border)' }}>
+                <td style={{ padding: '8px 12px', fontWeight: 600 }}>Total</td>
+                <td style={{ padding: '8px 12px', textAlign: 'center', fontWeight: 600 }}>
+                  {bankFiles.reduce((s, bf) => s + bf.employeeCount, 0)}
+                </td>
+                <td style={{ padding: '8px 12px', textAlign: 'right', fontWeight: 600 }}>
+                  {money(bankFiles.reduce((s, bf) => s + bf.totalAmount, 0))}
+                </td>
+                <td />
+              </tr>
+            </tfoot>
+          </table>
+        </div>
+      )}
 
       {/* Support attachments */}
       <div style={{ marginBottom: 8 }}>
@@ -563,6 +639,7 @@ export function DisbDrawer({
   canManage,
   canApprove,
   actions,
+  initialTab = 'summary',
 }: {
   disbursementId: string | null;
   open: boolean;
@@ -570,8 +647,11 @@ export function DisbDrawer({
   canManage: boolean;
   canApprove: boolean;
   actions: DisbDrawerActions;
+  initialTab?: Tab;
 }): VNode {
-  const [tab, setTab] = useState<Tab>('summary');
+  const [tab, setTab] = useState<Tab>(initialTab);
+  // When the drawer (re)opens for a record, honour the requested initial tab.
+  useEffect(() => { if (open) setTab(initialTab); }, [open, disbursementId, initialTab]);
   const dQ = useDisbursement(open ? disbursementId : null);
   const d = dQ.data;
 

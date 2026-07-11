@@ -42,12 +42,12 @@ router.post('/bank-accounts/get', async c => {
 // POST /api/finance/bank-accounts/upsert
 router.post('/bank-accounts/upsert', async c => {
   const actor = await requirePermission(c, 'finance.bank_accounts.manage');
-  const v = zv(c, z.object({ id: z.string().uuid().optional(), employeeId: z.string().optional(), bankName: z.string().min(1).max(200), branch: z.string().max(200).nullable().optional(), accountType: z.enum(['savings', 'chequing']), accountNumber: z.string().min(4).max(50), isPrimary: z.boolean().optional(), metadata: z.record(z.string(), z.unknown()).optional() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid().optional(), employeeId: z.string().optional(), bankName: z.string().min(1).max(200), branch: z.string().max(200).nullable().optional(), accountType: z.enum(['savings', 'chequing']), accountNumber: z.string().min(4).max(50), transitNumber: z.string().max(20).nullable().optional(), isPrimary: z.boolean().optional(), metadata: z.record(z.string(), z.unknown()).optional() }), b(c));
   if (!v.ok) return v.response;
   const isFinance = MANAGE_ROLES.includes(actor.role);
   const employeeId = isFinance ? (v.data.employeeId ?? actor.id) : actor.id;
   try {
-    const data = await upsertBankAccount({ id: v.data.id, employeeId, bankName: v.data.bankName, branch: v.data.branch ?? null, accountType: v.data.accountType, accountNumber: v.data.accountNumber, isPrimary: v.data.isPrimary, metadata: v.data.metadata, actorId: actor.id });
+    const data = await upsertBankAccount({ id: v.data.id, employeeId, bankName: v.data.bankName, branch: v.data.branch ?? null, accountType: v.data.accountType, accountNumber: v.data.accountNumber, transitNumber: v.data.transitNumber ?? null, isPrimary: v.data.isPrimary, metadata: v.data.metadata, actorId: actor.id });
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 }); 

@@ -59,6 +59,21 @@ export interface DisbursementLineDetail extends DisbursementLine {
   bankName: string | null;
 }
 
+/** One generated per-bank direct-credit (ACH) file within a disbursement (Wave 6). */
+export interface DisbursementBankFile {
+  id: string;
+  disbursementId: string;
+  bankName: string;
+  bankCode: string;
+  format: string;
+  filePath: string;
+  employeeCount: number;
+  totalAmount: number;
+  checksum: string | null;
+  createdBy: string | null;
+  createdAt: string;
+}
+
 export interface DisbursementKpis {
   pending: number;
   approved: number;
@@ -141,6 +156,12 @@ export const financeDisbursementsApi = {
                     call<Disbursement>('finance/disbursements/cancel', a),
   bankFileUrl:    (a: { disbursementId: string }) =>
                     call<{ signedUrl: string; disbursement: Disbursement }>('finance/disbursements/bank-file/signed-url', a),
+  /** Per-bank direct-credit files generated for a disbursement (Wave 6). */
+  bankFiles:      (a: { disbursementId: string }) =>
+                    call<DisbursementBankFile[]>('finance/disbursements/bank-files/list', a),
+  /** Signed URL to download one per-bank direct-credit file. */
+  bankFileDownload: (a: { bankFileId: string }) =>
+                    call<{ signedUrl: string; bankFile: DisbursementBankFile }>('finance/disbursements/bank-files/signed-url', a),
   kpis:           () => call<DisbursementKpis>('finance/disbursements/kpis'),
   listReport:     (a: { status?: DisbursementStatus } = {}) =>
                     call<DisbursementReportRow[]>('finance/disbursements/reports/list', a),
@@ -159,6 +180,7 @@ export const financeDisbursementsKeys = {
   single:                    (id: string)        => ['finance', 'disbursements', 'single', id] as const,
   lines:                     (id: string)        => ['finance', 'disbursements', 'lines', id] as const,
   linesDetail:               (id: string)        => ['finance', 'disbursements', 'lines-detail', id] as const,
+  bankFiles:                 (id: string)        => ['finance', 'disbursements', 'bank-files', id] as const,
   compute:                   (runId: string)     => ['finance', 'disbursements', 'compute', runId] as const,
   kpis:                      ()                  => ['finance', 'disbursements', 'kpis'] as const,
   report:                    (opts: object = {}) => ['finance', 'disbursements', 'report', opts] as const,
@@ -203,6 +225,14 @@ export function useDisbursementLinesDetail(disbursementId: string | null) {
   return useQuery({
     queryKey: financeDisbursementsKeys.linesDetail(disbursementId ?? ''),
     queryFn:  () => financeDisbursementsApi.linesDetail({ disbursementId: disbursementId! }),
+    enabled:  !!disbursementId,
+  });
+}
+
+export function useDisbursementBankFiles(disbursementId: string | null) {
+  return useQuery({
+    queryKey: financeDisbursementsKeys.bankFiles(disbursementId ?? ''),
+    queryFn:  () => financeDisbursementsApi.bankFiles({ disbursementId: disbursementId! }),
     enabled:  !!disbursementId,
   });
 }

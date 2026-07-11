@@ -52,7 +52,7 @@ import { EmployeeCellResolved, EmployeeCell } from './_shared/EmployeeCell';
 import { EmployeePicker } from './_shared/pickers';
 import { ReportPanel, type ReportColumn } from './_shared/reports';
 import { DisbComputeWizard } from './DisbComputeWizard';
-import { DisbDrawer, type DisbDrawerActions } from './DisbDrawer';
+import { DisbDrawer, type DisbDrawerActions, type DisbDrawerTab } from './DisbDrawer';
 import { money } from './hrfinFormat';
 import { dialog } from '@lib/dialog';
 
@@ -484,6 +484,7 @@ interface BankAccountFormState {
   branch:             string;
   accountType:        'savings' | 'chequing';
   accountNumber:      string;
+  transitNumber:      string;
   isPrimary:          boolean;
   routingNumber:      string;
   verificationStatus: 'unverified' | 'pending' | 'verified' | 'failed';
@@ -491,7 +492,7 @@ interface BankAccountFormState {
 
 const emptyBankForm = (): BankAccountFormState => ({
   employeeId: null, bankName: '', branch: '', accountType: 'savings', accountNumber: '',
-  isPrimary: true, routingNumber: '', verificationStatus: 'unverified',
+  transitNumber: '', isPrimary: true, routingNumber: '', verificationStatus: 'unverified',
 });
 
 function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
@@ -541,6 +542,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
         branch:        form.branch || null,
         accountType:   form.accountType,
         accountNumber: form.accountNumber,
+        transitNumber: form.transitNumber || null,
         isPrimary:     form.isPrimary,
         metadata:      {
           routingNumber:      form.routingNumber || null,
@@ -571,7 +573,12 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
     {
       key: 'account',
       label: 'Account (masked)',
-      render: a => <span style={{ fontFamily: 'monospace', fontSize: 12 }}>{a.accountNumberMasked}</span>,
+      render: a => (
+        <span style={{ fontFamily: 'monospace', fontSize: 12 }}>
+          {a.accountNumberMasked}
+          {a.transitNumber && <span style={{ color: 'var(--muted)', display: 'block', fontSize: 11 }}>transit {a.transitNumber}</span>}
+        </span>
+      ),
     },
     {
       key: 'routing',
@@ -662,6 +669,16 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
               />
               {errors['accountNumber'] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors['accountNumber']}</span>}
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>Stored masked — only last 4 digits visible.</span>
+            </label>
+            <label>
+              <span class="hrfin-wiz-label">Branch transit number (optional)</span>
+              <input
+                class="hrfin-input"
+                placeholder="e.g. 001"
+                value={form.transitNumber}
+                onInput={e => setForm(f => ({ ...f, transitNumber: (e.currentTarget as HTMLInputElement).value }))}
+              />
+              <span style={{ fontSize: 11, color: 'var(--muted)' }}>Branch routing/transit written into the direct-credit bank file.</span>
             </label>
             <label>
               <span class="hrfin-wiz-label">Routing / IFSC number (optional)</span>
@@ -756,6 +773,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 branch:             a.branch ?? '',
                 accountType:        a.accountType,
                 accountNumber:      '',
+                transitNumber:      a.transitNumber ?? '',
                 isPrimary:          a.isPrimary,
                 routingNumber:      (a.metadata?.routingNumber as string) ?? '',
                 verificationStatus: ((a.metadata?.verificationStatus as string) ?? 'unverified') as BankAccountFormState['verificationStatus'],
@@ -797,7 +815,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
 
 // ── Bank Files tab ────────────────────────────────────────────────────────────
 
-function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
+function BankFilesTab({ canApprove, onOpenDrawer }: { canApprove: boolean; onOpenDrawer: (id: string, tab: DisbDrawerTab) => void }): VNode {
   const [search, setSearch] = useState('');
   const [page, setPage]     = useState(0);
 
@@ -845,7 +863,15 @@ function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
     {
       key: 'format',
       label: 'Format',
-      render: () => <span style={{ color: 'var(--muted)', fontSize: 12 }}>CSV / EFT</span>,
+      render: () => <span style={{ color: 'var(--muted)', fontSize: 12 }}>Direct credit (per bank)</span>,
+    },
+    {
+      key: 'bank-files',
+      label: 'Bank Files',
+      render: d => {
+        const n = Number(d.metadata?.bankFileCount ?? 0);
+        return <span style={{ color: 'var(--muted)', fontSize: 12 }}>{n ? `${n} file${n === 1 ? '' : 's'}` : '—'}</span>;
+      },
     },
     {
       key: 'generated-by',
@@ -879,9 +905,14 @@ function BankFilesTab({ canApprove }: { canApprove: boolean }): VNode {
       columns={COLS}
       rows={paged.rows}
       rowKey={d => d.id}
+      onRowClick={d => onOpenDrawer(d.id, 'bank-file')}
       rowActions={d => [
         {
-          key: 'download', label: 'Download', icon: 'download' as const,
+          key: 'view-files', label: 'View per-bank files', icon: 'file' as const,
+          onClick: () => onOpenDrawer(d.id, 'bank-file'),
+        },
+        {
+          key: 'download', label: 'Download manifest', icon: 'download' as const,
           disabled: !canApprove || !d.bankFilePath,
           disabledReason: !canApprove ? 'Requires finance.disbursement.bank_file.download' : 'No file generated',
           onClick: () => void download(d),
@@ -1102,6 +1133,7 @@ export function DisbursementsOverview(): VNode {
   const [activeTab, setActiveTab]       = useState<PageTab>('disbursements');
   const [drawerOpen, setDrawerOpen]     = useState(false);
   const [selectedId, setSelectedId]     = useState<string | null>(null);
+  const [drawerTab, setDrawerTab]       = useState<DisbDrawerTab>('summary');
   const [wizOpen, setWizOpen]           = useState(false);
 
   const kpisQ    = useDisbursementKpis();
@@ -1112,8 +1144,9 @@ export function DisbursementsOverview(): VNode {
   const canBankMgmt = can('finance.bank_accounts.manage');
   const canDownload = can('finance.disbursement.bank_file.download');
 
-  function openDrawer(id: string): void {
+  function openDrawer(id: string, tab: DisbDrawerTab = 'summary'): void {
     setSelectedId(id);
+    setDrawerTab(tab);
     setDrawerOpen(true);
   }
 
@@ -1269,7 +1302,7 @@ export function DisbursementsOverview(): VNode {
         )}
         {activeTab === 'lines'         && <LinesTab />}
         {activeTab === 'bank-accounts' && <BankAccountsTab canManage={canBankMgmt} />}
-        {activeTab === 'bank-files'    && <BankFilesTab canApprove={canDownload} />}
+        {activeTab === 'bank-files'    && <BankFilesTab canApprove={canDownload} onOpenDrawer={openDrawer} />}
         {activeTab === 'payments'      && <PaymentsTab />}
         {activeTab === 'reports'       && <ReportsTab />}
       </section>
@@ -1291,6 +1324,7 @@ export function DisbursementsOverview(): VNode {
         canManage={canManage}
         canApprove={canApprove}
         actions={drawerActions}
+        initialTab={drawerTab}
       />
     </div>
   );

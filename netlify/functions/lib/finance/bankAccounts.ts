@@ -22,6 +22,7 @@ export interface BankAccountDto {
   branch: string | null;
   accountType: 'savings' | 'chequing';
   accountNumberMasked: string;
+  transitNumber: string | null;
   isPrimary: boolean;
   isActive: boolean;
   createdBy: string | null;
@@ -38,6 +39,7 @@ interface DbBankAccountRow {
   account_type: string;
   account_number: string;
   account_number_masked: string;
+  transit_number: string | null;
   is_primary: boolean;
   is_active: boolean;
   created_by: string | null;
@@ -49,7 +51,7 @@ interface DbBankAccountRow {
 type SafeRow = Omit<DbBankAccountRow, 'account_number'>;
 
 const SAFE_SELECT =
-  'id,employee_id,bank_name,branch,account_type,account_number_masked,' +
+  'id,employee_id,bank_name,branch,account_type,account_number_masked,transit_number,' +
   'is_primary,is_active,created_by,metadata,created_at,updated_at';
 
 function maskAccountNumber(full: string): string {
@@ -65,6 +67,7 @@ function safeRowToDto(r: SafeRow): BankAccountDto {
     branch:              r.branch,
     accountType:         r.account_type as 'savings' | 'chequing',
     accountNumberMasked: r.account_number_masked,
+    transitNumber:       r.transit_number,
     isPrimary:           r.is_primary,
     isActive:            r.is_active,
     createdBy:           r.created_by,
@@ -145,6 +148,7 @@ export interface UpsertBankAccountInput {
   branch?: string | null;
   accountType: 'savings' | 'chequing';
   accountNumber: string;
+  transitNumber?: string | null;
   isPrimary?: boolean;
   metadata?: Record<string, unknown>;
   actorId: string;
@@ -155,6 +159,7 @@ export async function upsertBankAccount(
 ): Promise<BankAccountDto> {
   const masked = maskAccountNumber(input.accountNumber);
   const isPrimary = input.isPrimary !== false;
+  const transitNumber = input.transitNumber?.trim() ? input.transitNumber.trim() : null;
 
   if (input.id) {
     const existing = await getBankAccount(input.id);
@@ -176,7 +181,8 @@ export async function upsertBankAccount(
       .update({
         bank_name: input.bankName, branch: input.branch ?? null,
         account_type: input.accountType, account_number: input.accountNumber,
-        account_number_masked: masked, is_primary: isPrimary, metadata: input.metadata ?? {},
+        account_number_masked: masked, transit_number: transitNumber,
+        is_primary: isPrimary, metadata: input.metadata ?? {},
       })
       .eq('id', input.id).select(SAFE_SELECT).single<SafeRow>();
     if (error) throw Object.assign(new Error('upsertBankAccount/update: ' + error.message), { status: 500 });
@@ -190,7 +196,7 @@ export async function upsertBankAccount(
     if (clrErr) throw Object.assign(new Error('upsertBankAccount/clear-primary-new: ' + clrErr.message), { status: 500 });
   }
   const { data, error } = await sb.from('finance_employee_bank_accounts')
-    .insert({ employee_id: input.employeeId, bank_name: input.bankName, branch: input.branch ?? null, account_type: input.accountType, account_number: input.accountNumber, account_number_masked: masked, is_primary: isPrimary, is_active: true, created_by: input.actorId, metadata: input.metadata ?? {} })
+    .insert({ employee_id: input.employeeId, bank_name: input.bankName, branch: input.branch ?? null, account_type: input.accountType, account_number: input.accountNumber, account_number_masked: masked, transit_number: transitNumber, is_primary: isPrimary, is_active: true, created_by: input.actorId, metadata: input.metadata ?? {} })
     .select(SAFE_SELECT).single<SafeRow>();
   if (error) throw Object.assign(new Error('upsertBankAccount/insert: ' + error.message), { status: 500 });
   void emitAppEvent({ eventType: 'finance.bank_account.created', sourceModule: 'finance_bank_accounts', sourceEntityType: 'bank_account', sourceEntityId: data.id, actorUserId: input.actorId, severity: 'info', payload: { employeeId: input.employeeId, masked } });

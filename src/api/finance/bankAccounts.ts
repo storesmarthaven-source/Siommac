@@ -16,6 +16,7 @@ export interface BankAccount {
   branch: string | null;
   accountType: 'savings' | 'chequing';
   accountNumberMasked: string;
+  transitNumber: string | null;
   isPrimary: boolean;
   isActive: boolean;
   createdBy: string | null;
@@ -31,6 +32,7 @@ export interface UpsertBankAccountArgs {
   branch?: string | null;
   accountType: 'savings' | 'chequing';
   accountNumber: string;
+  transitNumber?: string | null;
   isPrimary?: boolean;
   metadata?: Record<string, unknown>;
 }
