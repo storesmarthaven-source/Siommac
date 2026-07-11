@@ -339,9 +339,10 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
   if (existing.status !== 'approved') throw Object.assign(new Error('Only approved disbursements can have a bank file generated.'), { status: 422 });
 
-  const { data: lineData, error: lineErr } = await sb.from('finance_disbursement_lines').select('employee_id, bank_account_id, net_amount').eq('disbursement_id', id);
-  if (lineErr) throw Object.assign(new Error('generateBankFile/lines: ' + lineErr.message), { status: 500 });
-  const allLines = (lineData ?? []) as Array<{ employee_id: string; bank_account_id: string | null; net_amount: number }>;
+  // Paginate — a disbursement with 1000+ lines would silently truncate at 1000 rows.
+  const allLines = await selectAllRows<{ employee_id: string; bank_account_id: string | null; net_amount: number }>(
+    () => sb.from('finance_disbursement_lines').select('employee_id, bank_account_id, net_amount').eq('disbursement_id', id).order('employee_id'),
+  );
 
   // Only positive net-pay lines get a bank credit. Zero/negative lines are not disbursed.
   const payable = allLines.filter(l => Number(l.net_amount) > 0);
@@ -354,10 +355,10 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
   }
 
   // Load raw bank-account detail (server-side only — account_number never leaves the server).
-  // Chunk the IDs — .in() with 1000+ IDs overflows the PostgREST URL.
+  // Chunk the IDs — .in() with UUID IDs overflows the PostgREST URL (~8KB); 100 × 37 chars stays safe.
   const bankAccountIds = [...new Set(payable.map(l => l.bank_account_id as string))];
   const bankMap = new Map<string, { id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>();
-  for (const batch of chunk(bankAccountIds, 500)) {
+  for (const batch of chunk(bankAccountIds, 100)) {
     const { data: baBatch, error: baErr } = await sb.from('finance_employee_bank_accounts').select('id,bank_name,branch,account_type,account_number,transit_number').in('id', batch);
     if (baErr) throw Object.assign(new Error('generateBankFile/bank-accounts: ' + baErr.message), { status: 500 });
     for (const ba of (baBatch ?? []) as Array<{ id: string; bank_name: string; branch: string | null; account_type: string; account_number: string; transit_number: string | null }>) {
@@ -750,8 +751,8 @@ export async function listDisbursementLinesDetail(
   const bankIds = lines.map(l => l.bankAccountId).filter((v): v is string => v !== null);
   const bankMap = new Map<string, { account_number_masked: string; bank_name: string }>();
   if (bankIds.length > 0) {
-    // Chunk — .in() with 1000+ IDs overflows PostgREST URL.
-    for (const batch of chunk(bankIds, 500)) {
+    // Chunk — .in() with UUID IDs overflows PostgREST URL (~8KB); 100 × 37 chars stays safe.
+    for (const batch of chunk(bankIds, 100)) {
       const { data: baRows, error: baErr } = await sb
         .from('finance_employee_bank_accounts')
         .select('id,account_number_masked,bank_name')
