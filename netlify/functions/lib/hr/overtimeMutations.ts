@@ -14,7 +14,7 @@ import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
 import { startWorkflowForRecord } from '../workflow/service';
 import { getOvertimeEntry, type OvertimeEntryDto, type DbOvertimeRow } from './overtimeQueries';
-import { toOvertimeDto } from './overtimeCore';
+import { toOvertimeDto, type OvertimeType } from './overtimeCore';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export { getOvertimeEntry };
@@ -26,6 +26,7 @@ export interface SubmitOvertimeInput {
   workDate: string;
   hours: number;
   multiplier?: number;
+  otType?: OvertimeType | null;
   reason?: string | null;
   actorId: string;
 }
@@ -40,6 +41,7 @@ export async function submitOvertimeEntry(input: SubmitOvertimeInput): Promise<O
     work_date: input.workDate,
     hours: input.hours,
     multiplier: input.multiplier ?? 1.5,
+    ot_type: input.otType ?? null,
     reason: input.reason ?? null,
     status: 'submitted',
     created_by: input.actorId,
@@ -63,7 +65,7 @@ export async function submitOvertimeEntry(input: SubmitOvertimeInput): Promise<O
     sourceRecordRef: row.overtimeNo ?? `OVT-${row.id.slice(0, 8).toUpperCase()}`,
     requestedBy: input.actorId,
     priority: 'normal',
-    recordData: { employeeId: row.employeeId, workDate: row.workDate, hours: row.hours, multiplier: row.multiplier },
+    recordData: { employeeId: row.employeeId, workDate: row.workDate, hours: row.hours, multiplier: row.multiplier, otType: row.otType },
   };
 
   try {
@@ -84,7 +86,7 @@ export async function submitOvertimeEntry(input: SubmitOvertimeInput): Promise<O
     eventType: 'hr.overtime.submitted',
     sourceModule: 'hr_overtime', sourceEntityType: 'overtime_entry', sourceEntityId: row.id,
     actorUserId: input.actorId, severity: 'info',
-    payload: { employeeId: row.employeeId, workDate: row.workDate, hours: row.hours },
+    payload: { employeeId: row.employeeId, workDate: row.workDate, hours: row.hours, otType: row.otType },
   });
 
   return row;

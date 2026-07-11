@@ -71,6 +71,15 @@
 }
 .fin-page .fin-field--check input { height: auto; }
 
+/* inline per-field validation error */
+.fin-page .fin-field-error {
+  margin-top: 1px;
+  color: #dc2626;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: .01em;
+}
+
 /* run detail header */
 .fin-page .fin-detail-head {
   display: flex;

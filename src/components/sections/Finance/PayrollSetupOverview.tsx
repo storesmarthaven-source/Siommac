@@ -1,0 +1,616 @@
+/**
+ * src/components/sections/Finance/PayrollSetupOverview.tsx
+ *
+ * Finance ▸ Payroll Setup (nav id `s-finance-payroll-setup`).
+ *
+ * Two configuration surfaces that drive the payroll run engine:
+ *   • Pay Groups     — frequency + population buckets; a run scoped to a group
+ *                      inherits its frequency and is populated from its members.
+ *   • Overtime Rules — effective-dated OT multipliers by event type (T&T norms);
+ *                      lockInputs prices approved OT by its ot_type at run time.
+ *
+ * Both consume existing, permission-gated backend routes:
+ *   finance/payroll/pay-groups/{list,create,assign,members}
+ *   finance/payroll/overtime-rules/{list,create,set-active}
+ *
+ * View is gated on finance.payroll.view_all; create/assign on paygroups.manage;
+ * rule create/activate on overtime.rules.manage.
+ */
+
+import { type VNode } from 'preact';
+import { useMemo, useState } from 'preact/hooks';
+import { toast } from '@store';
+import { can } from '@lib/permissions';
+import { dialog } from '@lib/dialog';
+import {
+  HrfinPageHeader,
+  QuickActionStrip,
+  KpiCard,
+  HrfinTable,
+  HrfinPill,
+  type HrfinColumn,
+  type HrfinTone,
+  type RowActionItem,
+} from '@ui';
+import {
+  usePayGroups,
+  usePayGroupMembers,
+  useOvertimeRules,
+  usePayrollMutation,
+  financePayrollApi,
+  type PayGroup,
+  type OvertimeRule,
+  type OvertimeEventType,
+} from '@api/finance/payroll';
+import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
+import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
+import { EmployeePicker } from './_shared/pickers';
+import { fmtDate, humanize } from './financeShared';
+import './finance.css';
+
+const empName = (e: HrEmployeeRow): string =>
+  e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+
+const todayIso = (): string => new Date().toISOString().slice(0, 10);
+
+const FREQUENCIES: ReadonlyArray<{ value: PayGroup['frequency']; label: string }> = [
+  { value: 'weekly',       label: 'Weekly' },
+  { value: 'fortnightly',  label: 'Fortnightly' },
+  { value: 'semi_monthly', label: 'Semi-monthly' },
+  { value: 'monthly',      label: 'Monthly' },
+];
+
+const OT_EVENT_TYPES: ReadonlyArray<{ value: OvertimeEventType; label: string; typical: number }> = [
+  { value: 'regular_overtime', label: 'Regular overtime',       typical: 1.5 },
+  { value: 'public_holiday',   label: 'Public holiday',         typical: 2 },
+  { value: 'rest_day',         label: 'Rest day (e.g. Sunday)', typical: 2 },
+  { value: 'callout',          label: 'Call-out',               typical: 1.5 },
+  { value: 'night_shift',      label: 'Night shift',            typical: 1.25 },
+];
+const otEventLabel = (t: string): string => OT_EVENT_TYPES.find(o => o.value === t)?.label ?? humanize(t);
+
+const PAGE_SIZE = 25;
+function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; total: number } {
+  return {
+    rows:      rows.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE),
+    pageCount: Math.max(1, Math.ceil(rows.length / PAGE_SIZE)),
+    total:     rows.length,
+  };
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Main page
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type SetupTab = 'pay-groups' | 'overtime-rules';
+
+export function PayrollSetupOverview(): VNode {
+  const [tab, setTab] = useState<SetupTab>('pay-groups');
+  const canView = can('finance.payroll.view_all');
+
+  if (!canView) {
+    return (
+      <div class="hrfin fin-page">
+        <HrfinPageHeader icon="book" title="Payroll Setup" sub="Pay groups and overtime rules." />
+        <div class="hrfin-table-card"><div style={{ padding: 32 }} class="hrfin-empty">
+          You do not have permission to view payroll configuration.
+        </div></div>
+      </div>
+    );
+  }
+
+  return (
+    <div class="hrfin fin-page">
+      <HrfinPageHeader
+        icon="book"
+        title="Payroll Setup"
+        sub="Pay groups drive run frequency and population; overtime rules price approved overtime by its type at run time."
+      />
+
+      <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
+        <button type="button" class={tab === 'pay-groups' ? 'is-active' : ''} onClick={() => setTab('pay-groups')}>Pay Groups</button>
+        <button type="button" class={tab === 'overtime-rules' ? 'is-active' : ''} onClick={() => setTab('overtime-rules')}>Overtime Rules</button>
+      </div>
+
+      {tab === 'pay-groups' ? <PayGroupsPanel /> : <OvertimeRulesPanel />}
+    </div>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Pay Groups
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function PayGroupsPanel(): VNode {
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
+  const [showNew, setShowNew] = useState(false);
+  const [membersOf, setMembersOf] = useState<PayGroup | null>(null);
+
+  const canManage = can('finance.payroll.paygroups.manage');
+  const groupsQ = usePayGroups(false); // include inactive
+  const groups = groupsQ.data ?? [];
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return groups;
+    return groups.filter(g =>
+      g.code.toLowerCase().includes(q) || g.name.toLowerCase().includes(q) || g.frequency.includes(q));
+  }, [groups, search]);
+  const { rows, pageCount, total } = useMemo(() => paginate(filtered, page), [filtered, page]);
+
+  const totalMembers = groups.reduce((s, g) => s + (g.memberCount ?? 0), 0);
+  const weeklyCount  = groups.filter(g => g.frequency === 'weekly' || g.frequency === 'fortnightly').length;
+
+  const quickActions = [
+    ...(canManage ? [{ key: 'new', label: 'New Pay Group', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
+    { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void groupsQ.refetch(); } },
+  ];
+
+  const COLS: HrfinColumn<PayGroup>[] = [
+    { key: 'code',      label: 'Code',       render: g => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{g.code}</strong> },
+    { key: 'name',      label: 'Name',       render: g => <span style={{ fontSize: 13 }}>{g.name}</span> },
+    { key: 'frequency', label: 'Frequency',  render: g => <HrfinPill tone="nu">{humanize(g.frequency)}</HrfinPill> },
+    { key: 'payDay',    label: 'Pay day',    render: g => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{g.defaultPayDay != null ? `Day ${g.defaultPayDay}` : '—'}</span> },
+    { key: 'cutoff',    label: 'Cut-off',    render: g => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{g.defaultCutoffOffsetDays}d before</span> },
+    { key: 'members',   label: 'Members',    render: g => <span style={{ fontSize: 13, textAlign: 'right', display: 'block' }}>{g.memberCount ?? 0}</span> },
+    { key: 'active',    label: 'Status',     render: g => <HrfinPill tone={g.active ? 'ok' : 'bad'}>{g.active ? 'Active' : 'Inactive'}</HrfinPill> },
+  ];
+
+  const rowActions = (g: PayGroup): RowActionItem[] => {
+    const items: RowActionItem[] = [
+      { key: 'members', label: 'Members', icon: 'file', onClick: () => setMembersOf(g) },
+    ];
+    if (canManage) items.push({ key: 'assign', label: 'Assign employee', icon: 'plus', onClick: () => setMembersOf(g) });
+    return items;
+  };
+
+  return (
+    <>
+      <QuickActionStrip actions={quickActions} />
+
+      <section class="hrfin-kpi-strip">
+        <KpiCard label="Pay Groups"     value={String(groups.length)}         support={`${groups.filter(g => g.active).length} active`}  loading={groupsQ.isLoading && !groupsQ.data} />
+        <KpiCard label="Assigned Employees" value={String(totalMembers)}        support="across all groups"                                  loading={groupsQ.isLoading && !groupsQ.data} />
+        <KpiCard label="High-Frequency"  value={String(weeklyCount)}            support="weekly / fortnightly"                               loading={groupsQ.isLoading && !groupsQ.data} />
+      </section>
+
+      <HrfinTable<PayGroup>
+        searchValue={search}
+        onSearch={v => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Search by code, name or frequency…"
+        columns={COLS}
+        rows={rows}
+        rowKey={g => g.id}
+        onRowClick={g => setMembersOf(g)}
+        rowActions={rowActions}
+        page={page}
+        pageCount={pageCount}
+        total={total}
+        pageSize={PAGE_SIZE}
+        onPage={setPage}
+        noun="pay groups"
+        loading={groupsQ.isLoading && !groupsQ.data}
+        error={groupsQ.isError ? ((groupsQ.error as Error)?.message ?? 'Failed to load pay groups.') : undefined}
+        emptyMessage={search ? 'No pay groups match your search.' : 'No pay groups yet. Click New Pay Group to create the first one.'}
+      />
+
+      {showNew && <NewPayGroupModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void groupsQ.refetch(); }} />}
+      {membersOf && <PayGroupMembersModal group={membersOf} canManage={canManage} onClose={() => { setMembersOf(null); void groupsQ.refetch(); }} />}
+    </>
+  );
+}
+
+function NewPayGroupModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }): VNode {
+  const createMut = usePayrollMutation(financePayrollApi.createPayGroup);
+  const [f, setF] = useState<{ code: string; name: string; frequency: PayGroup['frequency']; defaultPayDay: string; cutoff: string }>(
+    { code: '', name: '', frequency: 'monthly', defaultPayDay: '', cutoff: '3' },
+  );
+
+  const codeTrim = f.code.trim();
+  const nameTrim = f.name.trim();
+  const payDayNum = f.defaultPayDay === '' ? null : Number(f.defaultPayDay);
+  const cutoffNum = f.cutoff === '' ? 0 : Number(f.cutoff);
+  const needsPayDay = f.frequency === 'monthly' || f.frequency === 'semi_monthly';
+
+  const errors = {
+    code: !codeTrim ? 'Code is required.' : codeTrim.length < 2 ? 'Code must be at least 2 characters.' : !/^[A-Za-z0-9_-]+$/.test(codeTrim) ? 'Letters, numbers, dash or underscore only.' : null,
+    name: !nameTrim ? 'Name is required.' : nameTrim.length < 2 ? 'Name must be at least 2 characters.' : null,
+    payDay: payDayNum != null && (!Number.isInteger(payDayNum) || payDayNum < 1 || payDayNum > 31) ? 'Pay day must be between 1 and 31.' : null,
+    cutoff: !Number.isInteger(cutoffNum) || cutoffNum < 0 || cutoffNum > 31 ? 'Cut-off offset must be 0–31 days.' : null,
+  };
+  const valid = !errors.code && !errors.name && !errors.payDay && !errors.cutoff;
+
+  const submit = async (): Promise<void> => {
+    if (!valid) return;
+    try {
+      await createMut.mutateAsync({
+        code: codeTrim.toUpperCase(),
+        name: nameTrim,
+        frequency: f.frequency,
+        ...(payDayNum != null ? { defaultPayDay: payDayNum } : {}),
+        defaultCutoffOffsetDays: cutoffNum,
+      });
+      toast('Pay group created.');
+      onCreated();
+    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create pay group.'); }
+  };
+
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'Finance · Payroll', title: 'Pay Group', description: 'A run scoped to this group inherits its frequency and is populated from its members.',
+    preview: { icon: 'PG', title: codeTrim ? codeTrim.toUpperCase() : '—', subtitle: nameTrim || 'Name the group' },
+    metrics: [
+      { label: 'Frequency', value: humanize(f.frequency), tone: 'info' },
+      { label: 'Pay day', value: payDayNum != null ? `Day ${payDayNum}` : '—', tone: 'default' },
+      { label: 'Cut-off', value: `${cutoffNum}d`, tone: 'default' },
+    ],
+    validation: [
+      ...(errors.code ? [{ message: errors.code, tone: 'danger' as const }] : []),
+      ...(errors.name ? [{ message: errors.name, tone: 'danger' as const }] : []),
+      ...(errors.payDay ? [{ message: errors.payDay, tone: 'danger' as const }] : []),
+      ...(errors.cutoff ? [{ message: errors.cutoff, tone: 'danger' as const }] : []),
+      ...(needsPayDay && payDayNum == null ? [{ message: 'Tip: set a pay day for monthly / semi-monthly groups.', tone: 'warning' as const }] : []),
+    ],
+    whatNext: [
+      { label: 'Assign employees', description: 'Add members from the group’s Members panel.' },
+      { label: 'Drives pay runs', description: 'Selecting this group in a new run sets its frequency and population.' },
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="New Pay Group"
+      subtitle="Define a frequency + population bucket for payroll runs."
+      icon={<i class="fas fa-layer-group" />}
+      context={context}
+      primaryLabel="Create pay group"
+      loading={createMut.isPending}
+      disabled={!valid}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
+      <div class="fin-form-grid fin-form-grid--tight">
+        <label class="fin-field"><span>Code</span>
+          <input type="text" maxLength={20} value={f.code} placeholder="e.g. WKLY-OPS"
+            onInput={e => setF(p => ({ ...p, code: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.code && <small class="fin-field-error">{errors.code}</small>}
+        </label>
+        <label class="fin-field"><span>Name</span>
+          <input type="text" maxLength={120} value={f.name} placeholder="e.g. Weekly — Operations"
+            onInput={e => setF(p => ({ ...p, name: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.name && <small class="fin-field-error">{errors.name}</small>}
+        </label>
+        <label class="fin-field"><span>Frequency</span>
+          <select value={f.frequency} onChange={e => setF(p => ({ ...p, frequency: (e.currentTarget as HTMLSelectElement).value as PayGroup['frequency'] }))}>
+            {FREQUENCIES.map(fq => <option value={fq.value} key={fq.value}>{fq.label}</option>)}
+          </select>
+        </label>
+        <label class="fin-field"><span>Default pay day {needsPayDay ? '' : '(optional)'}</span>
+          <input type="number" min="1" max="31" value={f.defaultPayDay} placeholder="1–31"
+            onInput={e => setF(p => ({ ...p, defaultPayDay: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.payDay && <small class="fin-field-error">{errors.payDay}</small>}
+        </label>
+        <label class="fin-field"><span>Cut-off (days before pay day)</span>
+          <input type="number" min="0" max="31" value={f.cutoff}
+            onInput={e => setF(p => ({ ...p, cutoff: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.cutoff && <small class="fin-field-error">{errors.cutoff}</small>}
+        </label>
+      </div>
+    </EnterpriseFormModal>
+  );
+}
+
+function PayGroupMembersModal({ group, canManage, onClose }: { group: PayGroup; canManage: boolean; onClose: () => void }): VNode {
+  const membersQ = usePayGroupMembers(group.id);
+  const empsQ = useHrEmployees({ limit: 1000 });
+  const assignMut = usePayrollMutation(financePayrollApi.assignPayGroup);
+
+  const nameOf = useMemo(() => {
+    const m = new Map((empsQ.data ?? []).map(e => [e.id, empName(e)]));
+    return (id: string) => m.get(id) ?? id;
+  }, [empsQ.data]);
+
+  const [empId, setEmpId] = useState<string | null>(null);
+  const [effFrom, setEffFrom] = useState<string>(todayIso());
+
+  const members = membersQ.data ?? [];
+  const alreadyMember = !!empId && members.some(m => m.employeeId === empId && m.effectiveTo == null);
+  const canAdd = canManage && !!empId && !!effFrom && !alreadyMember;
+
+  const addMember = async (): Promise<void> => {
+    if (!canAdd || !empId) return;
+    try {
+      await assignMut.mutateAsync({ employeeId: empId, payGroupId: group.id, effectiveFrom: effFrom });
+      toast('Employee assigned to pay group.');
+      setEmpId(null);
+      void membersQ.refetch();
+    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to assign employee.'); }
+  };
+
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'Finance · Payroll', title: group.name, description: `Members of ${group.code} (${humanize(group.frequency)}).`,
+    preview: { icon: 'PG', title: group.code, subtitle: `${members.length} member${members.length === 1 ? '' : 's'}` },
+    metrics: [
+      { label: 'Members', value: String(members.length), tone: 'info' },
+      { label: 'Frequency', value: humanize(group.frequency), tone: 'default' },
+    ],
+    validation: [
+      ...(alreadyMember ? [{ message: 'That employee is already an active member.', tone: 'warning' as const }] : []),
+      ...(!canManage ? [{ message: 'You can view members but not assign — requires pay-group management permission.', tone: 'info' as const }] : []),
+    ],
+    whatNext: [
+      { label: 'Population', description: 'Members are picked up when a run is scoped to this group.' },
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="Pay Group Members"
+      subtitle={`${group.code} — assign employees and review membership`}
+      icon={<i class="fas fa-users" />}
+      context={context}
+      primaryLabel={canManage ? 'Assign employee' : 'Close'}
+      loading={assignMut.isPending}
+      disabled={canManage ? !canAdd : false}
+      cancelLabel="Close"
+      onCancel={onClose}
+      onSubmit={() => (canManage ? void addMember() : onClose())}>
+      <div class="fin-form-grid fin-form-grid--tight">
+        {canManage && (
+          <>
+            <EmployeePicker label="Employee" value={empId} onChange={setEmpId} required
+              error={alreadyMember ? 'Already an active member' : null} />
+            <label class="fin-field"><span>Effective from</span>
+              <input type="date" value={effFrom} onInput={e => setEffFrom((e.currentTarget as HTMLInputElement).value)} />
+            </label>
+          </>
+        )}
+      </div>
+
+      <div style={{ marginTop: 14 }}>
+        <div style={{ fontSize: 11, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '.06em', color: 'var(--hrfin-text-secondary)', marginBottom: 8 }}>
+          Current members
+        </div>
+        {membersQ.isLoading && !membersQ.data ? (
+          <div class="hrfin-empty" style={{ padding: 16 }}>Loading members…</div>
+        ) : membersQ.isError ? (
+          <div class="fin-field-error" style={{ padding: 8 }}>{(membersQ.error as Error)?.message ?? 'Failed to load members.'}</div>
+        ) : members.length === 0 ? (
+          <div class="hrfin-empty" style={{ padding: 16 }}>No employees assigned yet.</div>
+        ) : (
+          <table class="obx-table">
+            <thead><tr><th>Employee</th><th>Effective from</th><th>Effective to</th></tr></thead>
+            <tbody>{members.map(m => (
+              <tr key={`${m.employeeId}-${m.effectiveFrom}`}>
+                <td>{nameOf(m.employeeId)}</td>
+                <td class="obx-meta">{fmtDate(m.effectiveFrom)}</td>
+                <td class="obx-meta">{m.effectiveTo ? fmtDate(m.effectiveTo) : '—'}</td>
+              </tr>
+            ))}</tbody>
+          </table>
+        )}
+      </div>
+    </EnterpriseFormModal>
+  );
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Overtime Rules
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function ruleWindowTone(r: OvertimeRule): HrfinTone {
+  if (!r.active) return 'bad';
+  const today = todayIso();
+  if (r.effectiveFrom > today) return 'wn';               // future
+  if (r.effectiveTo != null && r.effectiveTo < today) return 'nu'; // expired window
+  return 'ok';
+}
+
+function OvertimeRulesPanel(): VNode {
+  const [page, setPage] = useState(0);
+  const [search, setSearch] = useState('');
+  const [showNew, setShowNew] = useState(false);
+
+  const canManage = can('finance.payroll.overtime.rules.manage');
+  const rulesQ = useOvertimeRules();
+  const setActiveMut = usePayrollMutation(financePayrollApi.setOvertimeRuleActive);
+  const rules = rulesQ.data ?? [];
+
+  const filtered = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    if (!q) return rules;
+    return rules.filter(r => r.code.toLowerCase().includes(q) || r.eventType.includes(q));
+  }, [rules, search]);
+  const { rows, pageCount, total } = useMemo(() => paginate(filtered, page), [filtered, page]);
+
+  const activeCount = rules.filter(r => r.active).length;
+  const distinctTypes = new Set(rules.filter(r => r.active).map(r => r.eventType)).size;
+
+  const toggleActive = async (r: OvertimeRule): Promise<void> => {
+    const confirmed = await dialog.confirm({
+      title: r.active ? `Deactivate ${r.code}?` : `Activate ${r.code}?`,
+      text: r.active
+        ? 'Deactivating this rule means overtime of this type falls back to the entry’s own multiplier until another active rule covers it.'
+        : 'Activating this rule means approved overtime of this type will be priced at its multiplier at lock-inputs time.',
+      confirmText: r.active ? 'Deactivate' : 'Activate',
+      icon: 'question',
+    });
+    if (!confirmed) return;
+    try { await setActiveMut.mutateAsync({ id: r.id, active: !r.active }); toast(r.active ? 'Rule deactivated.' : 'Rule activated.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
+  };
+
+  const quickActions = [
+    ...(canManage ? [{ key: 'new', label: 'New Rule', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
+    { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void rulesQ.refetch(); } },
+  ];
+
+  const COLS: HrfinColumn<OvertimeRule>[] = [
+    { key: 'code',       label: 'Code',        render: r => <strong style={{ fontFamily: 'monospace', fontSize: 12 }}>{r.code}</strong> },
+    { key: 'type',       label: 'Event type',  render: r => <span style={{ fontSize: 13 }}>{otEventLabel(r.eventType)}</span> },
+    { key: 'multiplier', label: 'Multiplier',  render: r => <span style={{ fontSize: 13, fontWeight: 600, textAlign: 'right', display: 'block' }}>{r.multiplier}×</span> },
+    { key: 'min',        label: 'Min hours',   render: r => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', textAlign: 'right', display: 'block' }}>{r.minimumHours != null ? `${r.minimumHours}h` : '—'}</span> },
+    { key: 'window',     label: 'Effective',   render: r => <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{fmtDate(r.effectiveFrom)}{r.effectiveTo ? ` → ${fmtDate(r.effectiveTo)}` : ' →'}</span> },
+    { key: 'active',     label: 'Status',      render: r => <HrfinPill tone={ruleWindowTone(r)}>{r.active ? 'Active' : 'Inactive'}</HrfinPill> },
+  ];
+
+  const rowActions = (r: OvertimeRule): RowActionItem[] =>
+    canManage
+      ? [{ key: 'toggle', label: r.active ? 'Deactivate' : 'Activate', icon: r.active ? 'close' : 'check', onClick: () => void toggleActive(r), tone: r.active ? 'danger' as const : undefined }]
+      : [];
+
+  // The finance_overtime_rules table ships with migration 20260918000070. Surface a
+  // clear message (not a silent empty) when that migration hasn't been applied yet.
+  const loadError = rulesQ.isError
+    ? (/overtime_rules|schema cache|does not exist/i.test((rulesQ.error as Error)?.message ?? '')
+        ? 'Overtime rules are unavailable — apply migration 20260918000070 (finance_overtime_rules) and reload the PostgREST schema.'
+        : ((rulesQ.error as Error)?.message ?? 'Failed to load overtime rules.'))
+    : undefined;
+
+  return (
+    <>
+      <QuickActionStrip actions={quickActions} />
+
+      <div style={{
+        margin: '4px 0 12px', padding: '10px 14px', fontSize: 12.5, lineHeight: 1.5,
+        background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 8,
+        color: 'var(--hrfin-text-secondary)',
+      }}>
+        <i class="fas fa-circle-info" style={{ marginRight: 6, color: 'var(--hrfin-accent)' }} />
+        Approved overtime is priced by the <strong>active rule for its event type</strong> at lock-inputs time
+        (latest effective-from wins). Overtime without a classified type falls back to the entry’s own multiplier.
+      </div>
+
+      <section class="hrfin-kpi-strip">
+        <KpiCard label="Overtime Rules"  value={String(rules.length)}   support={`${activeCount} active`}       loading={rulesQ.isLoading && !rulesQ.data} />
+        <KpiCard label="Covered Types"   value={`${distinctTypes}/5`}   support="event types with an active rule" loading={rulesQ.isLoading && !rulesQ.data} tone={distinctTypes < 5 ? 'danger' : undefined} />
+      </section>
+
+      <HrfinTable<OvertimeRule>
+        searchValue={search}
+        onSearch={v => { setSearch(v); setPage(0); }}
+        searchPlaceholder="Search by code or event type…"
+        columns={COLS}
+        rows={rows}
+        rowKey={r => r.id}
+        rowActions={rowActions}
+        page={page}
+        pageCount={pageCount}
+        total={total}
+        pageSize={PAGE_SIZE}
+        onPage={setPage}
+        noun="overtime rules"
+        loading={rulesQ.isLoading && !rulesQ.data}
+        error={loadError}
+        emptyMessage={search ? 'No rules match your search.' : 'No overtime rules yet. Click New Rule to add one.'}
+      />
+
+      {showNew && <NewOvertimeRuleModal onClose={() => setShowNew(false)} onCreated={() => { setShowNew(false); void rulesQ.refetch(); }} />}
+    </>
+  );
+}
+
+function NewOvertimeRuleModal({ onClose, onCreated }: { onClose: () => void; onCreated: () => void }): VNode {
+  const createMut = usePayrollMutation(financePayrollApi.createOvertimeRule);
+  const [f, setF] = useState<{ code: string; eventType: OvertimeEventType; multiplier: string; minHours: string; effFrom: string; effTo: string }>(
+    { code: '', eventType: 'regular_overtime', multiplier: '1.5', minHours: '', effFrom: todayIso(), effTo: '' },
+  );
+
+  const codeTrim = f.code.trim();
+  const multNum = Number(f.multiplier);
+  const minNum = f.minHours === '' ? null : Number(f.minHours);
+
+  const errors = {
+    code: !codeTrim ? 'Code is required.' : codeTrim.length < 2 ? 'Code must be at least 2 characters.' : !/^[A-Za-z0-9_-]+$/.test(codeTrim) ? 'Letters, numbers, dash or underscore only.' : null,
+    multiplier: !(multNum > 0) ? 'Multiplier must be greater than 0.' : multNum > 10 ? 'Multiplier looks too high (max 10×).' : null,
+    minHours: minNum != null && (!(minNum > 0) || minNum > 24) ? 'Minimum hours must be between 0 and 24.' : null,
+    effFrom: !f.effFrom ? 'Effective-from date is required.' : null,
+    effTo: f.effTo && f.effTo < f.effFrom ? 'Effective-to cannot be before effective-from.' : null,
+  };
+  const valid = !errors.code && !errors.multiplier && !errors.minHours && !errors.effFrom && !errors.effTo;
+
+  const submit = async (): Promise<void> => {
+    if (!valid) return;
+    try {
+      await createMut.mutateAsync({
+        code: codeTrim.toUpperCase(),
+        eventType: f.eventType,
+        multiplier: multNum,
+        ...(minNum != null ? { minimumHours: minNum } : {}),
+        effectiveFrom: f.effFrom,
+        ...(f.effTo ? { effectiveTo: f.effTo } : {}),
+      });
+      toast('Overtime rule created.');
+      onCreated();
+    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create overtime rule.'); }
+  };
+
+  const typical = OT_EVENT_TYPES.find(o => o.value === f.eventType)?.typical;
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'Finance · Payroll', title: 'Overtime Rule', description: 'Effective-dated multiplier applied to approved overtime of this event type.',
+    preview: { icon: 'OT', title: codeTrim ? codeTrim.toUpperCase() : '—', subtitle: `${otEventLabel(f.eventType)} · ${multNum > 0 ? multNum : '—'}×` },
+    metrics: [
+      { label: 'Event type', value: otEventLabel(f.eventType), tone: 'info' },
+      { label: 'Multiplier', value: multNum > 0 ? `${multNum}×` : '—', tone: 'default' },
+      { label: 'Min hours', value: minNum != null ? `${minNum}h` : '—', tone: 'muted' },
+    ],
+    validation: [
+      ...(errors.code ? [{ message: errors.code, tone: 'danger' as const }] : []),
+      ...(errors.multiplier ? [{ message: errors.multiplier, tone: 'danger' as const }] : []),
+      ...(errors.minHours ? [{ message: errors.minHours, tone: 'danger' as const }] : []),
+      ...(errors.effTo ? [{ message: errors.effTo, tone: 'danger' as const }] : []),
+      ...(typical && multNum > 0 && multNum !== typical ? [{ message: `Typical T&T ${otEventLabel(f.eventType).toLowerCase()} rate is ${typical}×.`, tone: 'warning' as const }] : []),
+    ],
+    whatNext: [
+      { label: 'Prices overtime', description: 'Approved OT of this type is priced at this multiplier at lock-inputs.' },
+      { label: 'Effective-dated', description: 'The active rule with the latest effective-from covering the work date wins.' },
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="New Overtime Rule"
+      subtitle="Configure an overtime multiplier for an event type."
+      icon={<i class="fas fa-clock" />}
+      context={context}
+      primaryLabel="Create rule"
+      loading={createMut.isPending}
+      disabled={!valid}
+      onCancel={onClose}
+      onSubmit={() => void submit()}>
+      <div class="fin-form-grid fin-form-grid--tight">
+        <label class="fin-field"><span>Code</span>
+          <input type="text" maxLength={20} value={f.code} placeholder="e.g. OT-HOLIDAY"
+            onInput={e => setF(p => ({ ...p, code: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.code && <small class="fin-field-error">{errors.code}</small>}
+        </label>
+        <label class="fin-field"><span>Event type</span>
+          <select value={f.eventType} onChange={e => {
+            const eventType = (e.currentTarget as HTMLSelectElement).value as OvertimeEventType;
+            const t = OT_EVENT_TYPES.find(o => o.value === eventType)?.typical;
+            setF(p => ({ ...p, eventType, multiplier: t != null ? String(t) : p.multiplier }));
+          }}>
+            {OT_EVENT_TYPES.map(o => <option value={o.value} key={o.value}>{o.label}</option>)}
+          </select>
+        </label>
+        <label class="fin-field"><span>Multiplier</span>
+          <input type="number" step="0.05" min="0" value={f.multiplier}
+            onInput={e => setF(p => ({ ...p, multiplier: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.multiplier && <small class="fin-field-error">{errors.multiplier}</small>}
+        </label>
+        <label class="fin-field"><span>Minimum billable hours (optional)</span>
+          <input type="number" step="0.5" min="0" value={f.minHours} placeholder="e.g. 3 for call-outs"
+            onInput={e => setF(p => ({ ...p, minHours: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.minHours && <small class="fin-field-error">{errors.minHours}</small>}
+        </label>
+        <label class="fin-field"><span>Effective from</span>
+          <input type="date" value={f.effFrom} onInput={e => setF(p => ({ ...p, effFrom: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.effFrom && <small class="fin-field-error">{errors.effFrom}</small>}
+        </label>
+        <label class="fin-field"><span>Effective to (optional)</span>
+          <input type="date" min={f.effFrom} value={f.effTo} onInput={e => setF(p => ({ ...p, effTo: (e.currentTarget as HTMLInputElement).value }))} />
+          {errors.effTo && <small class="fin-field-error">{errors.effTo}</small>}
+        </label>
+      </div>
+    </EnterpriseFormModal>
+  );
+}

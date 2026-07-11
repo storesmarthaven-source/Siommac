@@ -11,6 +11,10 @@ import { apiPost } from '@lib/api';
 
 export type OvertimeStatus = 'submitted' | 'approved' | 'rejected' | 'paid' | 'cancelled';
 
+/** Structured overtime classification — mirrors finance_overtime_rules.event_type. */
+export type OvertimeType =
+  | 'regular_overtime' | 'public_holiday' | 'rest_day' | 'callout' | 'night_shift';
+
 export interface OvertimeEntry {
   id: string;
   overtimeNo: string | null;
@@ -18,6 +22,7 @@ export interface OvertimeEntry {
   workDate: string;
   hours: number;
   multiplier: number;
+  otType: OvertimeType | null;
   reason: string | null;
   status: OvertimeStatus;
   workflowId: string | null;
@@ -34,6 +39,7 @@ export interface SubmitOvertimeArgs {
   workDate: string;
   hours: number;
   multiplier?: number;
+  otType?: OvertimeType | null;
   reason?: string | null;
 }
 

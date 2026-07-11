@@ -19,7 +19,8 @@
  *   • §2 side-effects: app_events + hr_audit_log asserted via service-role client.
  *   • Cleanup via h.TAG.
  *
- * NOTE: Migrations 20260802000006 + 20260802000009 + NOTIFY pgrst must be applied.
+ * NOTE: Migrations 20260802000006 + 20260802000009 + 20260918000070 (ot_type column)
+ *       + NOTIFY pgrst must be applied.
  */
 
 export const title = 'HR — Overtime (Phase 2)';
@@ -36,6 +37,7 @@ export default async function run(h) {
     ot2Id: null, // emp1 submits → manager rejects
     ot3Id: null, // emp1 submits → cancelled by employee
     ot4Id: null, // fake paid OT (seeded directly) for immutability test
+    ot5Id: null, // emp1 submits classified overtime (ot_type) — Wave 4b activation
     createdUserIds: [],
   };
 
@@ -49,7 +51,7 @@ export default async function run(h) {
     // Scoped by the SPECIFIC entries this run created — emp1/emp2 may now be real
     // employees with real overtime history, so a broad employee_id delete would
     // destroy their genuine entries.
-    const otIds = [ctx.ot1Id, ctx.ot2Id, ctx.ot3Id, ctx.ot4Id].filter(Boolean);
+    const otIds = [ctx.ot1Id, ctx.ot2Id, ctx.ot3Id, ctx.ot4Id, ctx.ot5Id].filter(Boolean);
     try { if (otIds.length) await sb.from('hr_overtime_entries').delete().in('id', otIds); } catch {}
     try { if (otIds.length) await sb.from('hr_audit_log').delete().in('record_id', otIds); } catch {}
     try { if (otIds.length) await sb.from('app_events').delete().eq('source_module', 'hr_overtime').in('source_entity_id', otIds); } catch {}
@@ -109,6 +111,31 @@ export default async function run(h) {
     });
     ok(r3, `submit ot3 failed: ${r3.body.message}`);
     ctx.ot3Id = r3.body.data.id;
+  });
+
+  await test('employee can submit classified OT (ot_type round-trips) — Wave 4b', async () => {
+    const r = await api('hr/overtime/submit', emp1Token, {
+      workDate: '2026-08-08',
+      hours: 5,
+      otType: 'public_holiday',
+      multiplier: 2,
+      reason: 'Public holiday cover',
+    });
+    ok(r, `submit classified OT failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.otType === 'public_holiday', `otType should round-trip, got: ${d.otType}`);
+    ctx.ot5Id = d.id;
+
+    // Persisted to the column the payroll rule engine reads.
+    const { data: row } = await sb.from('hr_overtime_entries').select('ot_type').eq('id', ctx.ot5Id).single();
+    expect(row?.ot_type === 'public_holiday', `DB ot_type should be public_holiday, got: ${row?.ot_type}`);
+  });
+
+  await test('invalid ot_type is rejected (enum-guarded)', async () => {
+    const r = await api('hr/overtime/submit', emp1Token, {
+      workDate: '2026-08-09', hours: 1, otType: 'triple_time_saturday',
+    });
+    fails(r, 'unknown ot_type should be rejected by the route');
   });
 
   await test('§2 side-effects: hr.overtime.submitted event + hr_audit_log', async () => {

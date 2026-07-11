@@ -9,6 +9,15 @@
 
 export type OvertimeStatus = 'submitted' | 'approved' | 'rejected' | 'paid' | 'cancelled';
 
+/**
+ * Structured overtime classification. Mirrors finance_overtime_rules.event_type
+ * (T&T norms). When set, the payroll rule engine resolves the authoritative
+ * multiplier + minimum billable hours from the active rule at lock-inputs time;
+ * the stored `multiplier` is only a fallback when no active rule matches the type.
+ */
+export type OvertimeType =
+  | 'regular_overtime' | 'public_holiday' | 'rest_day' | 'callout' | 'night_shift';
+
 export interface OvertimeEntryDto {
   id: string;
   overtimeNo: string | null;
@@ -16,6 +25,7 @@ export interface OvertimeEntryDto {
   workDate: string;
   hours: number;
   multiplier: number;
+  otType: OvertimeType | null;
   reason: string | null;
   status: OvertimeStatus;
   workflowId: string | null;
@@ -35,6 +45,7 @@ export interface DbOvertimeRow {
   work_date: string;
   hours: number;
   multiplier: number;
+  ot_type: string | null;
   reason: string | null;
   status: string;
   workflow_id: string | null;
@@ -55,6 +66,7 @@ export function toOvertimeDto(r: DbOvertimeRow): OvertimeEntryDto {
     workDate: r.work_date,
     hours: Number(r.hours),
     multiplier: Number(r.multiplier),
+    otType: (r.ot_type as OvertimeType | null) ?? null,
     reason: r.reason,
     status: r.status as OvertimeStatus,
     workflowId: r.workflow_id,

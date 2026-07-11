@@ -66,6 +66,7 @@ router.post('/overtime/submit', async c => {
     workDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     hours: z.number().positive(),
     multiplier: z.number().positive().optional(),
+    otType: z.enum(['regular_overtime', 'public_holiday', 'rest_day', 'callout', 'night_shift']).nullable().optional(),
     reason: z.string().max(500).nullable().optional(),
   }), b(c));
   if (!v.ok) return v.response;

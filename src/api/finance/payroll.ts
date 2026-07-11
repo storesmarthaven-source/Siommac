@@ -209,6 +209,21 @@ export interface PayGroup {
 }
 export interface PayGroupMember { employeeId: string; effectiveFrom: string; effectiveTo: string | null }
 
+export type OvertimeEventType =
+  | 'regular_overtime' | 'public_holiday' | 'rest_day' | 'callout' | 'night_shift';
+
+export interface OvertimeRule {
+  id: string;
+  code: string;
+  eventType: OvertimeEventType;
+  multiplier: number;
+  minimumHours: number | null;
+  active: boolean;
+  effectiveFrom: string;
+  effectiveTo: string | null;
+  createdAt: string;
+}
+
 export interface PayrollOverride {
   id: string;
   runId: string;
@@ -300,6 +315,11 @@ export const financePayrollApi = {
   assignPayGroup: (a: { employeeId: string; payGroupId: string; effectiveFrom: string; effectiveTo?: string | null }) => call<{ employeeId: string; payGroupId: string }>('finance/payroll/pay-groups/assign', a),
   payGroupMembers:(a: { payGroupId: string })          => call<PayGroupMember[]>('finance/payroll/pay-groups/members', a),
 
+  // Overtime rules (Wave 4b) — effective-dated OT multipliers by event type
+  listOvertimeRules:   (a: object = {})                => call<OvertimeRule[]>('finance/payroll/overtime-rules/list', a),
+  createOvertimeRule:  (a: { code: string; eventType: OvertimeEventType; multiplier: number; minimumHours?: number | null; effectiveFrom: string; effectiveTo?: string | null }) => call<OvertimeRule>('finance/payroll/overtime-rules/create', a),
+  setOvertimeRuleActive:(a: { id: string; active: boolean }) => call<OvertimeRule>('finance/payroll/overtime-rules/set-active', a),
+
   // GL posting
   glPreview:  (a: { runId: string })                   => call<GlPreview>('finance/payroll/gl/preview', a),
   glPost:     (a: { runId: string })                   => call<{ journalId: string; journalNo: string; totalDebit: number; totalCredit: number }>('finance/payroll/gl/post', a),
@@ -375,6 +395,12 @@ export function useRunGlPreview(runId: string | null) {
 }
 export function usePayGroups(activeOnly = true) {
   return useQuery({ queryKey: ['finance', 'payroll', 'pay-groups', activeOnly], queryFn: () => financePayrollApi.listPayGroups({ activeOnly }) });
+}
+export function usePayGroupMembers(payGroupId: string | null) {
+  return useQuery({ queryKey: ['finance', 'payroll', 'pay-group-members', payGroupId ?? ''], queryFn: () => financePayrollApi.payGroupMembers({ payGroupId: payGroupId! }), enabled: !!payGroupId });
+}
+export function useOvertimeRules() {
+  return useQuery({ queryKey: ['finance', 'payroll', 'overtime-rules'], queryFn: () => financePayrollApi.listOvertimeRules() });
 }
 export function useRunOverrides(runId: string | null) {
   return useQuery({ queryKey: ['finance', 'payroll', 'overrides', runId ?? ''], queryFn: () => financePayrollApi.listOverrides({ runId: runId! }), enabled: !!runId });

@@ -12,6 +12,7 @@ import { useState, useEffect } from 'preact/hooks';
 import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
 import { PayrollOverview }          from './PayrollOverview';
+import { PayrollSetupOverview }     from './PayrollSetupOverview';
 import { RemittancesOverview }      from './RemittancesOverview';
 import { MyPayslipsOverview }       from './MyPayslipsOverview';
 import { ExpensesOverview }         from './ExpensesOverview';
@@ -23,6 +24,7 @@ const OVERVIEW_ID      = 's-finance-overview';
 const PAYABLES_ID      = 's-finance-payables';
 const STATUTORY_ID    = 's-finance-statutory';
 const PAYROLL_ID       = 's-finance-payroll';
+const PAYROLL_SETUP_ID = 's-finance-payroll-setup';
 const REMITTANCES_ID   = 's-finance-remittances';
 const MY_PAYSLIPS_ID   = 's-finance-my-payslips';
 const EXPENSES_ID      = 's-finance-expenses';
@@ -33,6 +35,7 @@ function isFinanceSection(id: string): boolean {
   return id === OVERVIEW_ID
     || id === STATUTORY_ID
     || id === PAYROLL_ID
+    || id === PAYROLL_SETUP_ID
     || id === REMITTANCES_ID
     || id === EXPENSES_ID
     || id === MY_PAYSLIPS_ID
@@ -62,6 +65,7 @@ export function FinanceSection(): VNode {
   if (sectionId === STATUTORY_ID)    return <StatutoryConfigOverview />;
   if (sectionId === EXPENSES_ID)     return <ExpensesOverview />;
   if (sectionId === PAYROLL_ID)      return <PayrollOverview />;
+  if (sectionId === PAYROLL_SETUP_ID) return <PayrollSetupOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === MY_PAYSLIPS_ID)  return <MyPayslipsOverview />;
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;

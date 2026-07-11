@@ -13,7 +13,7 @@ import { useMemo, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { PageHeader, EmptyState } from '@ui';
-import { useOvertimeEntries, useOvertimeMutation, hrOvertimeApi, type OvertimeEntry } from '@api/hr/overtime';
+import { useOvertimeEntries, useOvertimeMutation, hrOvertimeApi, type OvertimeEntry, type OvertimeType } from '@api/hr/overtime';
 import { openActionModal, rejectAction, cancelAction, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
@@ -23,6 +23,21 @@ import '../Finance/finance.css';
 const empName = (e: HrEmployeeRow): string => e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
 
 const STATUS_FILTERS = ['submitted', 'approved', 'rejected', 'paid', 'cancelled'] as const;
+
+/**
+ * Overtime classifications (mirror finance_overtime_rules.event_type, T&T norms).
+ * The `indicative` multiplier is for display + the stored fallback only — the payroll
+ * rule engine re-resolves the authoritative multiplier + minimum billable hours from
+ * the active finance_overtime_rules row for this type at lock-inputs time.
+ */
+const OT_TYPES: ReadonlyArray<{ value: OvertimeType; label: string; indicative: number; hint: string }> = [
+  { value: 'regular_overtime', label: 'Regular overtime',        indicative: 1.5,  hint: 'Time-and-a-half' },
+  { value: 'public_holiday',   label: 'Public holiday',          indicative: 2,    hint: 'Double time' },
+  { value: 'rest_day',         label: 'Rest day (e.g. Sunday)',  indicative: 2,    hint: 'Double time' },
+  { value: 'callout',          label: 'Call-out',                indicative: 1.5,  hint: 'Often a 3-hour minimum' },
+  { value: 'night_shift',      label: 'Night shift',             indicative: 1.25, hint: 'Shift premium' },
+];
+const otTypeLabel = (t: string | null): string => OT_TYPES.find(o => o.value === t)?.label ?? '—';
 
 export function OvertimeOverview(): VNode {
   const [status, setStatus] = useState<string>('submitted');
@@ -49,6 +64,7 @@ export function OvertimeOverview(): VNode {
     badges: [statusBadge(e.status)],
     fields: [
       e.overtimeNo ? { label: 'OT #', value: e.overtimeNo } : null,
+      e.otType ? { label: 'Type', value: otTypeLabel(e.otType) } : null,
       e.reason ? { label: 'Reason', value: e.reason } : null,
     ],
   });
@@ -92,12 +108,13 @@ export function OvertimeOverview(): VNode {
           : !entries.length ? <EmptyState icon="fa-clock" title="No overtime entries" text="Overtime entries matching this filter will appear here." />
           : (
             <table class="obx-table">
-              <thead><tr><th>OT #</th><th>Employee</th><th>Date</th><th>Hours</th><th>×</th><th>Reason</th><th>Status</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
+              <thead><tr><th>OT #</th><th>Employee</th><th>Date</th><th>Type</th><th>Hours</th><th>×</th><th>Reason</th><th>Status</th><th style={{ textAlign: 'right' }}>Actions</th></tr></thead>
               <tbody>{entries.map(e => (
                 <tr key={e.id}>
                   <td><b>{e.overtimeNo ?? '—'}</b></td>
                   <td class="obx-meta">{nameOf(e.employeeId)}</td>
                   <td class="obx-meta">{fmtDate(e.workDate)}</td>
+                  <td class="obx-meta">{otTypeLabel(e.otType)}</td>
                   <td class="obx-meta">{e.hours}</td>
                   <td class="obx-meta">{e.multiplier}×</td>
                   <td class="obx-meta">{e.reason ?? '—'}</td>
@@ -135,58 +152,70 @@ export function OvertimeOverview(): VNode {
 function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
   const submitMut = useOvertimeMutation(hrOvertimeApi.submitOvertime);
   const today = new Date().toISOString().slice(0, 10);
-  const [f, setF] = useState({ workDate: today, hours: '', multiplier: '1.5', reason: '' });
+  const [f, setF] = useState<{ workDate: string; hours: string; otType: OvertimeType; reason: string }>(
+    { workDate: today, hours: '', otType: 'regular_overtime', reason: '' },
+  );
+
+  const otDef = OT_TYPES.find(o => o.value === f.otType) ?? OT_TYPES[0]!;
+  const hoursNum = Number(f.hours);
+  const dateInFuture = !!f.workDate && f.workDate > today;
 
   const submit = async (): Promise<void> => {
-    const hours = Number(f.hours);
-    if (!f.workDate || !(hours > 0)) { dialog.error('Work date and a positive number of hours are required.'); return; }
+    if (!f.workDate || !(hoursNum > 0)) { dialog.error('Work date and a positive number of hours are required.'); return; }
+    if (dateInFuture) { dialog.error('Overtime cannot be logged for a future date.'); return; }
     try {
-      await submitMut.mutateAsync({ workDate: f.workDate, hours, multiplier: Number(f.multiplier) || 1.5, reason: f.reason.trim() || null });
+      // The stored multiplier is the type's indicative fallback; the payroll overtime rule
+      // for this type is authoritative and re-resolves at lock-inputs time.
+      await submitMut.mutateAsync({
+        workDate: f.workDate, hours: hoursNum, otType: f.otType,
+        multiplier: otDef.indicative, reason: f.reason.trim() || null,
+      });
       dialog.success('Overtime submitted for approval.');
       onDone();
     } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to submit overtime.'); }
   };
 
-  const hoursNum = Number(f.hours);
-  const payable = hoursNum > 0 ? hoursNum * (Number(f.multiplier) || 1.5) : 0;
+  const payable = hoursNum > 0 ? hoursNum * otDef.indicative : 0;
   const context: DialogContextPanelConfig = {
-    eyebrow: 'HR · Overtime', title: 'Overtime Preview', description: 'Preview payable hours and payroll impact.',
-    preview: { icon: 'OT', title: `${f.hours || '—'}h × ${f.multiplier}`, subtitle: f.workDate || 'Set work date' },
+    eyebrow: 'HR · Overtime', title: 'Overtime Preview', description: 'Preview the classification and indicative payable hours.',
+    preview: { icon: 'OT', title: `${f.hours || '—'}h · ${otDef.label}`, subtitle: f.workDate || 'Set work date' },
     metrics: [
       { label: 'Hours', value: f.hours || '—', tone: 'info' },
-      { label: 'Multiplier', value: `${f.multiplier}×`, tone: 'default' },
-      { label: 'Payable', value: payable ? payable.toFixed(2) : '—', tone: payable ? 'success' : 'muted' },
+      { label: 'Indicative rate', value: `${otDef.indicative}×`, tone: 'default' },
+      { label: 'Indicative pay', value: payable ? payable.toFixed(2) : '—', tone: payable ? 'success' : 'muted' },
     ],
     validation: [
       ...(!f.workDate ? [{ message: 'Set the work date.', tone: 'danger' as const }] : []),
+      ...(dateInFuture ? [{ message: 'Work date cannot be in the future.', tone: 'danger' as const }] : []),
       ...(!(hoursNum > 0) ? [{ message: 'Enter a positive number of hours.', tone: 'danger' as const }] : []),
+      { message: `Priced by the payroll ${otDef.label.toLowerCase()} overtime rule at run time.`, tone: 'info' as const },
     ],
     approval: { required: true, risk: 'low', message: 'Submitted for approval by your manager / HR.' },
     whatNext: [
       { label: 'Routes for approval', description: 'Your manager or HR approves or rejects.' },
-      { label: 'Feeds payroll', description: 'Approved overtime feeds the next pay run; immutable once paid.' },
+      { label: 'Feeds payroll', description: 'Approved overtime is priced by the overtime rule for its type; immutable once paid.' },
     ],
   };
   return (
     <EnterpriseFormModal open
       title="Log Overtime"
-      subtitle="Submit overtime — the panel previews payable hours."
+      subtitle="Classify the overtime — the payroll rule for its type sets the final rate."
       icon={<i class="fas fa-clock" />}
       context={context}
       primaryLabel="Submit overtime"
       loading={submitMut.isPending}
-      disabled={!f.workDate || !(hoursNum > 0)}
+      disabled={!f.workDate || dateInFuture || !(hoursNum > 0)}
       onCancel={onDone}
       onSubmit={() => void submit()}>
       <div class="fin-form-grid fin-form-grid--tight">
-        <label class="fin-field"><span>Work date</span><input type="date" value={f.workDate} onInput={e => setF(p => ({ ...p, workDate: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field"><span>Hours</span><input type="number" step="0.25" value={f.hours} onInput={e => setF(p => ({ ...p, hours: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field"><span>Multiplier</span>
-          <select value={f.multiplier} onChange={e => setF(p => ({ ...p, multiplier: (e.currentTarget as HTMLSelectElement).value }))}>
-            <option value="1">1.0× (straight)</option><option value="1.5">1.5× (time-and-a-half)</option><option value="2">2.0× (double)</option>
+        <label class="fin-field"><span>Work date</span><input type="date" max={today} value={f.workDate} onInput={e => setF(p => ({ ...p, workDate: (e.currentTarget as HTMLInputElement).value }))} /></label>
+        <label class="fin-field"><span>Hours</span><input type="number" step="0.25" min="0" value={f.hours} onInput={e => setF(p => ({ ...p, hours: (e.currentTarget as HTMLInputElement).value }))} /></label>
+        <label class="fin-field"><span>Overtime type</span>
+          <select value={f.otType} onChange={e => setF(p => ({ ...p, otType: (e.currentTarget as HTMLSelectElement).value as OvertimeType }))}>
+            {OT_TYPES.map(o => <option value={o.value} key={o.value}>{o.label} — {o.indicative}× ({o.hint})</option>)}
           </select>
         </label>
-        <label class="fin-field"><span>Reason</span><input type="text" value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget as HTMLInputElement).value }))} /></label>
+        <label class="fin-field"><span>Reason</span><input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget as HTMLInputElement).value }))} /></label>
       </div>
     </EnterpriseFormModal>
   );
