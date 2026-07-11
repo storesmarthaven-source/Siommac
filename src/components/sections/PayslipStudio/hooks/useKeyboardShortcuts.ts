@@ -1,6 +1,6 @@
 import { useEffect } from 'preact/hooks';
 import { selectedElements, type Action, type DesignerState } from '@payslip/state/reducer';
-import { setAutosave } from '@payslip/lib/store/autosave';
+import { saveDraft } from '@payslip/lib/store/autosave';
 import { showToast } from '@payslip/lib/toast';
 
 function isTypingTarget(el: EventTarget | null): boolean {
@@ -38,7 +38,7 @@ export function useKeyboardShortcuts(state: DesignerState, dispatch: (a: Action)
       }
       if (meta && e.key.toLowerCase() === 's') {
         e.preventDefault();
-        setAutosave(state.design);
+        saveDraft(state.design);
         showToast('Saved');
         return;
       }

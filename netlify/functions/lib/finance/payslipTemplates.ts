@@ -276,3 +276,36 @@ export async function archiveTemplate(id: string, actorId: string): Promise<{ ok
   });
   return { ok: true };
 }
+
+// ── Per-user editor state (autosave draft + open-ref) ───────────────────────────
+// Private per-user scratch state that replaces the studio's browser localStorage,
+// so nothing is browser-only. Not a business record: no events/audit (like a
+// widget layout). Every query is scoped to the calling user's id.
+
+export interface OpenRef { id: string; name: string }
+export interface EditorState { draftDesign: unknown | null; openRef: OpenRef | null }
+
+export async function getEditorState(userId: string): Promise<EditorState> {
+  const { data, error } = await sb
+    .from('payroll_payslip_editor_state')
+    .select('draft_design, open_ref')
+    .eq('user_id', userId)
+    .maybeSingle<{ draft_design: unknown; open_ref: OpenRef | null }>();
+  if (error) throw err('getEditorState: ' + error.message, 500);
+  return { draftDesign: data?.draft_design ?? null, openRef: data?.open_ref ?? null };
+}
+
+export interface SaveEditorStateInput { draftDesign?: unknown | null; openRef?: OpenRef | null }
+
+/** Partial upsert: only the provided keys are written (unset keys are preserved). */
+export async function saveEditorState(userId: string, input: SaveEditorStateInput): Promise<{ ok: true }> {
+  const patch: Record<string, unknown> = { user_id: userId, updated_at: new Date().toISOString() };
+  if ('draftDesign' in input) patch.draft_design = input.draftDesign ?? null;
+  if ('openRef' in input) patch.open_ref = input.openRef ?? null;
+
+  const { error } = await sb
+    .from('payroll_payslip_editor_state')
+    .upsert(patch, { onConflict: 'user_id' });
+  if (error) throw err('saveEditorState: ' + error.message, 500);
+  return { ok: true };
+}

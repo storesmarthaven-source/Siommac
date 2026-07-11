@@ -10,7 +10,7 @@ import { requirePermission } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import {
   listTemplates, getTemplate, createTemplate, updateTemplate,
-  setDefaultTemplate, archiveTemplate,
+  setDefaultTemplate, archiveTemplate, getEditorState, saveEditorState,
 } from '../lib/finance/payslipTemplates';
 import type { HonoVariables } from '../../../types/api';
 
@@ -86,6 +86,29 @@ router.post(`${P}/delete`, async c => {
   if (!v.ok) return v.response;
   try {
     return c.json({ success: true, data: await archiveTemplate(v.data.id, actor.id) });
+  } catch (e) { return fail(c, e); }
+});
+
+// ── Per-user editor state (autosave draft + open-ref) — always scoped to actor ──
+
+router.post(`${P}/editor-state/get`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.manage');
+  try {
+    return c.json({ success: true, data: await getEditorState(actor.id) });
+  } catch (e) { return fail(c, e); }
+});
+
+const zOpenRef = z.object({ id: z.string().min(1), name: z.string() });
+
+router.post(`${P}/editor-state/save`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.manage');
+  const v = zv(c, z.object({
+    draftDesign: zDesign.nullable().optional(),
+    openRef:     zOpenRef.nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    return c.json({ success: true, data: await saveEditorState(actor.id, v.data) });
   } catch (e) { return fail(c, e); }
 });
 

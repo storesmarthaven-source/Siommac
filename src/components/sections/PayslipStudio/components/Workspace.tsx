@@ -4,8 +4,9 @@ import { useKeyboardShortcuts } from '@payslip/hooks/useKeyboardShortcuts';
 import { useAutosave } from '@payslip/hooks/useAutosave';
 import { computeFitZoom } from '@payslip/lib/fit';
 import { reseedIds } from '@payslip/lib/id';
+import type { SavedRef } from '@payslip/state/reducer';
 import { templateStore } from '@payslip/lib/store';
-import { getAutosave, getOpenRef, setOpenRef } from '@payslip/lib/store/autosave';
+import { saveOpenRef } from '@payslip/lib/store/autosave';
 import { seedBuiltInTemplates } from '@payslip/templates/seed';
 import { Toolbar } from './Toolbar';
 import { Canvas } from './canvas/Canvas';
@@ -19,7 +20,15 @@ import { PrintView } from './PrintView';
 import { Toast } from './ui/Toast';
 import { CollapsibleSection } from './ui/CollapsibleSection';
 
-export function Workspace({ onBack }: { onBack?: () => void }) {
+interface WorkspaceProps {
+  onBack?: () => void;
+  /** The DB open-ref captured at boot (from the per-user editor state). */
+  initialOpenRef?: SavedRef | null;
+  /** Whether the initial design came from a restored draft (vs the default). */
+  hadDraft?: boolean;
+}
+
+export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: WorkspaceProps) {
   const { state, dispatch } = useDesigner();
   useKeyboardShortcuts(state, dispatch);
   useAutosave(state.design);
@@ -34,18 +43,16 @@ export function Workspace({ onBack }: { onBack?: () => void }) {
   // design" is available. If the last session was editing a saved design, restore
   // that link; otherwise open the default saved design.
   useEffect(() => {
-    // Capture persisted state synchronously, before the persist effect can touch it.
-    const hadAutosave = getAutosave() != null;
-    const openRef = getOpenRef();
+    // The draft + open-ref were loaded from the DB before mount and passed in.
     void (async () => {
       await seedBuiltInTemplates();
       const list = await templateStore.list();
       if (list.length === 0) return;
 
-      if (hadAutosave && openRef && list.some((t) => t.id === openRef.id)) {
-        // Restored autosaved work that belongs to a saved design — relink it.
-        dispatch({ kind: 'setSavedRef', ref: openRef });
-      } else if (!hadAutosave) {
+      if (hadDraft && initialOpenRef && list.some((t) => t.id === initialOpenRef.id)) {
+        // Restored draft that belongs to a saved design — relink it.
+        dispatch({ kind: 'setSavedRef', ref: initialOpenRef });
+      } else if (!hadDraft) {
         // Fresh session — open the default saved design.
         const def = list.find((t) => t.isDefault) ?? list[0];
         if (def) {
@@ -66,7 +73,7 @@ export function Workspace({ onBack }: { onBack?: () => void }) {
       firstRef.current = false;
       return;
     }
-    setOpenRef(state.savedRef);
+    saveOpenRef(state.savedRef);
   }, [state.savedRef]);
 
   return (

@@ -14,6 +14,7 @@ import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { lazy, Suspense } from 'preact/compat';
 import { StudioMark } from '@payslip/components/StudioMark';
+import { loadEditorState, type EditorState } from '@payslip/lib/store/autosave';
 import './styles/app.css';
 
 // The loading screen is shown for at least this long so the boot sequence is
@@ -98,12 +99,25 @@ function ensureStudioFonts(): void {
 
 /** `onBack` exits the full-page studio (parent navigates back to its module). */
 export function PayslipStudioSection({ onBack }: { onBack?: () => void }): VNode {
-  useEffect(() => { ensureStudioFonts(); }, []);
+  // Fetch the per-user draft + open-ref from the DB before mounting the studio.
+  // The loading page covers both this fetch and the code-split chunk load.
+  const [editor, setEditor] = useState<EditorState | null>(null);
+  useEffect(() => {
+    ensureStudioFonts();
+    let alive = true;
+    void loadEditorState().then(s => { if (alive) setEditor(s); });
+    return () => { alive = false; };
+  }, []);
+
   return (
     <div class="payslip-studio-root">
-      <Suspense fallback={<StudioLoading />}>
-        <PayslipStudioApp onBack={onBack} />
-      </Suspense>
+      {editor === null
+        ? <StudioLoading />
+        : (
+          <Suspense fallback={<StudioLoading />}>
+            <PayslipStudioApp onBack={onBack} draftDesign={editor.draftDesign} openRef={editor.openRef} />
+          </Suspense>
+        )}
     </div>
   );
 }

@@ -53,6 +53,7 @@ export default async function run(h) {
 
   h.onCleanup(async () => {
     try { await sb.from('payroll_payslip_templates').delete().in('created_by', [fmgrId, viewerId, plainId]); } catch {}
+    try { await sb.from('payroll_payslip_editor_state').delete().in('user_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll').in('actor_user_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('user_permissions').delete().eq('user_id', viewerId); } catch {}
@@ -209,6 +210,49 @@ export default async function run(h) {
   await test('view-only user CANNOT set-default (manage gate → 403)', async () => {
     const r = await api('finance/payroll/payslip-templates/set-default', viewerToken, { id: ctx.aId });
     fails(r, 'view-only user must not set-default');
+    expect(r.status === 403, 'expected 403, got ' + r.status);
+  });
+
+  // ===========================================================================
+  h.section('Payslip templates - Per-user editor state (DB-backed autosave)');
+  // ===========================================================================
+
+  await test('editor-state starts empty for a fresh user', async () => {
+    const r = await api('finance/payroll/payslip-templates/editor-state/get', fmgrToken, {});
+    ok(r, 'editor-state get failed: ' + r.body.message);
+    expect(r.body.data.draftDesign === null, 'fresh draftDesign is null');
+    expect(r.body.data.openRef === null, 'fresh openRef is null');
+  });
+
+  await test('save + read back a working draft (DB round-trip, per-user row)', async () => {
+    const design = sampleDesign(TAG + '-draft');
+    const s = await api('finance/payroll/payslip-templates/editor-state/save', fmgrToken, { draftDesign: design });
+    ok(s, 'editor-state save failed: ' + s.body.message);
+    const g = await api('finance/payroll/payslip-templates/editor-state/get', fmgrToken, {});
+    ok(g, 'editor-state get failed');
+    expect(g.body.data.draftDesign && g.body.data.draftDesign.elements?.length === 1, 'draft round-trips with its design');
+    // stored under THIS user's id (per-user isolation is structural — get uses actor.id)
+    const { data: row } = await sb.from('payroll_payslip_editor_state').select('user_id').eq('user_id', fmgrId).maybeSingle();
+    expect(row && row.user_id === fmgrId, 'draft row is keyed to the calling user');
+  });
+
+  await test('partial save of openRef preserves the existing draft', async () => {
+    const s = await api('finance/payroll/payslip-templates/editor-state/save', fmgrToken, { openRef: { id: ctx.aId, name: TAG + ' Template A2' } });
+    ok(s, 'openRef save failed: ' + s.body.message);
+    const g = await api('finance/payroll/payslip-templates/editor-state/get', fmgrToken, {});
+    expect(g.body.data.openRef && g.body.data.openRef.id === ctx.aId, 'openRef round-trips');
+    expect(g.body.data.draftDesign && g.body.data.draftDesign.elements?.length === 1, 'partial save kept the draft');
+  });
+
+  await test('plain employee CANNOT read editor-state (manage gate → 403)', async () => {
+    const r = await api('finance/payroll/payslip-templates/editor-state/get', plainToken, {});
+    fails(r, 'employee must not read editor-state');
+    expect(r.status === 403, 'expected 403, got ' + r.status);
+  });
+
+  await test('view-only user CANNOT save editor-state (manage gate → 403)', async () => {
+    const r = await api('finance/payroll/payslip-templates/editor-state/save', viewerToken, { draftDesign: sampleDesign(TAG) });
+    fails(r, 'view-only user must not save editor-state');
     expect(r.status === 403, 'expected 403, got ' + r.status);
   });
 }

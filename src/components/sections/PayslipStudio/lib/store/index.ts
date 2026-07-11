@@ -6,9 +6,9 @@ import type { TemplateStore } from './types';
  *
  * Embedded in Siomac → ApiTemplateStore: named templates persist to
  * `payroll_payslip_templates` through the authenticated finance routes. The
- * whole studio UI depends only on the TemplateStore interface, so nothing else
- * changes. (Autosave stays local — see lib/store/autosave.ts.)
- * LocalTemplateStore is retained for the standalone/offline studio build.
+ * whole studio UI depends only on the TemplateStore interface. The per-user
+ * autosave draft + open-ref are ALSO DB-backed (see lib/store/autosave.ts), so
+ * nothing the studio persists is browser-only.
  */
 export const templateStore: TemplateStore = new ApiTemplateStore();
 

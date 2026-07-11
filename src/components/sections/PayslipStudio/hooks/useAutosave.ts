@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'preact/hooks';
 import type { Design } from '@payslip/types';
-import { setAutosave } from '@payslip/lib/store/autosave';
+import { saveDraft } from '@payslip/lib/store/autosave';
 
-/** Debounced auto-save of the current design to the autosave slot. */
+/** Debounced auto-save of the current design to the per-user DB draft slot. */
 export function useAutosave(design: Design): void {
   const timer = useRef(0);
   const first = useRef(true);
@@ -13,7 +13,7 @@ export function useAutosave(design: Design): void {
       return;
     }
     window.clearTimeout(timer.current);
-    timer.current = window.setTimeout(() => setAutosave(design), 800);
+    timer.current = window.setTimeout(() => saveDraft(design), 1000);
     return () => window.clearTimeout(timer.current);
   }, [design]);
 }
