@@ -64,6 +64,11 @@ import {
   removeOverride,
   listOverrides,
 } from '../lib/finance/payrollOverrides';
+import {
+  listOvertimeRules,
+  createOvertimeRule,
+  setOvertimeRuleActive,
+} from '../lib/finance/overtimeRules';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
 import type { ExportFormat } from '../lib/finance/payrollExports';
@@ -416,6 +421,46 @@ router.post('/payroll/payslips/deliveries/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listRunDeliveries(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Overtime rules (Wave 4b) ─────────────────────────────────────────────────
+
+// POST /api/finance/payroll/overtime-rules/list  — Finance.
+router.post('/payroll/overtime-rules/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  try {
+    const data = await listOvertimeRules();
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/overtime-rules/create  — Permission: overtime.rules.manage.
+router.post('/payroll/overtime-rules/create', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.overtime.rules.manage');
+  const v = zv(c, z.object({
+    code: z.string().min(1).max(20),
+    eventType: z.enum(['regular_overtime', 'public_holiday', 'rest_day', 'callout', 'night_shift']),
+    multiplier: z.number().positive(),
+    minimumHours: z.number().positive().nullable().optional(),
+    effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await createOvertimeRule(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/overtime-rules/set-active
+router.post('/payroll/overtime-rules/set-active', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.overtime.rules.manage');
+  const v = zv(c, z.object({ id: z.string().uuid(), active: z.boolean() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await setOvertimeRuleActive(v.data.id, v.data.active, actor.id);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

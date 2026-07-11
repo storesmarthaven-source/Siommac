@@ -23,6 +23,7 @@ import { nextRef } from '../refGenerator';
 import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
 import { getPayGroup, listGroupMemberIds } from './payGroups';
+import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { startWorkflowForRecord } from '../workflow/service';
@@ -510,11 +511,16 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   // ── 3. Collect approved OT in this period ────────────────────────────────
   const { data: overtimeEntries, error: otErr } = await sb
     .from('hr_overtime_entries')
-    .select('id, employee_id, work_date, hours, multiplier')
+    .select('id, employee_id, work_date, hours, multiplier, ot_type')
     .eq('status', 'approved')
     .gte('work_date', periodStart)
     .lte('work_date', periodEnd);
   if (otErr) throw Object.assign(new Error('lockInputs/overtime: ' + otErr.message), { status: 500 });
+
+  // Overtime rule engine: when an entry has an ot_type, the multiplier + minimum billable
+  // hours come from the active rule (T&T public-holiday / rest-day / callout, etc.);
+  // otherwise the entry's own multiplier is used (legacy behaviour).
+  const otRules: OvertimeRule[] = await loadActiveOvertimeRules();
 
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const now = new Date().toISOString();
@@ -580,14 +586,25 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     const empOt = (overtimeEntries ?? []).filter((o: { employee_id: string }) => o.employee_id === emp.id);
     for (const ot of empOt as {
       id: string; employee_id: string; work_date: string;
-      hours: number; multiplier: number;
+      hours: number; multiplier: number; ot_type: string | null;
     }[]) {
-      // OT pay = hours × multiplier × (monthly_salary / (4.333 × 8))
-      // Use the effective hourly equivalent from the employee's monthly salary
+      // Resolve the multiplier + minimum billable hours from the OT rule engine when the entry
+      // has an ot_type; otherwise fall back to the entry's own multiplier (legacy).
+      let multiplier = Number(ot.multiplier);
+      let payableHours = Number(ot.hours);
+      if (ot.ot_type) {
+        const rule = resolveOvertimeMultiplier(otRules, ot.ot_type, ot.work_date);
+        if (rule) {
+          multiplier = rule.multiplier;
+          if (rule.minimumHours != null) payableHours = Math.max(payableHours, rule.minimumHours);
+        }
+      }
+
+      // OT pay = payableHours × multiplier × hourly-equivalent
       const hourlyEquivalent = emp.pay_basis === 'salary'
         ? (emp.monthly_salary ?? 0) / (4.333 * 8 * 20) // rough daily-rate equivalent
         : (emp.hourly_rate ?? 0);
-      const otAmount = Number(ot.hours) * Number(ot.multiplier) * hourlyEquivalent;
+      const otAmount = payableHours * multiplier * hourlyEquivalent;
 
       inputRows.push({
         run_id:         runId,
@@ -595,11 +612,11 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
         source_type:    'overtime',
         source_id:      ot.id,
         component_code: 'overtime',
-        label:          `OT ${ot.work_date}`,
+        label:          `OT ${ot.work_date}${ot.ot_type ? ' (' + ot.ot_type.replace(/_/g, ' ') + ')' : ''}`,
         amount:         Math.round(otAmount * 100) / 100,
-        quantity:       Number(ot.hours),
-        rate:           Number(ot.multiplier),
-        metadata:       { work_date: ot.work_date, multiplier: ot.multiplier },
+        quantity:       payableHours,
+        rate:           multiplier,
+        metadata:       { work_date: ot.work_date, multiplier, ot_type: ot.ot_type ?? null, entered_hours: Number(ot.hours) },
       });
     }
   }

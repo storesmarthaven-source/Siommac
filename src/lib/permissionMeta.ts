@@ -1388,6 +1388,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Add or remove per-employee earning/deduction adjustments on a locked-input or calculated run (with a mandatory reason). The original snapshot is preserved; the run is recalculated. Subject to approval.',
     risk: 'high',
   },
+  'finance.payroll.overtime.rules.manage': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Overtime Rules',
+    description: 'Create and activate/deactivate effective-dated overtime rules (multipliers + minimum billable hours) for public holidays, rest days, callouts, etc. Rules price the OT that flows into payroll runs.',
+    risk: 'medium',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

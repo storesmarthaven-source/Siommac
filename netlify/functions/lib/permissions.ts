@@ -369,6 +369,7 @@ export const PERMISSION_KEYS = [
   'finance.payroll.gl.post',        // finance: post/reverse a run's GL journal (ledger write)
   'finance.payroll.paygroups.manage', // finance: create pay groups + assign employees
   'finance.payroll.worksheet.override', // finance: add/remove per-employee run overrides
+  'finance.payroll.overtime.rules.manage', // finance: manage overtime rule engine (multipliers)
   // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
   'finance.remittances.view',         // view remittances and per-employee lines
   'finance.remittances.manage',       // create, submit and cancel remittances
@@ -556,6 +557,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.gl.post',
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
+    'finance.payroll.overtime.rules.manage',
     'finance.payroll.reports.view',
     // Remittances (F1) — staff can view and manage (create/submit/cancel)
     'finance.remittances.view',
@@ -627,6 +629,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.gl.post',
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
+    'finance.payroll.overtime.rules.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -840,6 +843,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.gl.post',
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
+    'finance.payroll.overtime.rules.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
