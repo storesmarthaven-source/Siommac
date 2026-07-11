@@ -443,6 +443,10 @@ export const PERMISSION_KEYS = [
   'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
   'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen
   'finance.payroll.export',         // finance manager: export a locked run to CSV/JSON artifact
+  'finance.payroll.payslips.generate', // finance: generate + render payslip PDFs for a locked run
+  'finance.payroll.payslips.distribute', // finance: email payslips (password-protected) to employees
+  'finance.payroll.gl.preview',     // finance: preview the GL journal for a run (read-only)
+  'finance.payroll.gl.post',        // finance: post/reverse a run's GL journal (ledger write)
   // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
   'finance.remittances.view',         // view remittances and per-employee lines
   'finance.remittances.manage',       // create, submit and cancel remittances
@@ -499,6 +503,13 @@ export const PERMISSION_KEYS = [
   'finance.ap.duplicate.resolve',     // resolve duplicate bill risk reviews
   'finance.ap.reports.export',        // export AP registers / reports (audited data egress)
   'finance.ap.bills.import',          // import bills from CSV/XLSX
+
+  // ── Calendar & Tasks (platform) ──────────────────────────────────────────────
+  'calendar.view',                    // see the calendar + own/team/org dated items (scope server-side)
+  'calendar.manage',                  // manage team/org calendar items (scope server-side)
+  'calendar.task.manage_own',         // create / update / complete own tasks
+  'calendar.task.assign',             // assign a task to a permitted team member
+  'calendar.activity.manage_own',     // create / update own activities (meetings, site visits…)
 ] as const;
 
 export type PermissionKey = typeof PERMISSION_KEYS[number];
@@ -549,6 +560,7 @@ const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
   'hr.roster.view_own',
   'finance.bank_accounts.view',
   'finance.bank_accounts.manage',
+  'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
 ]);
 
 export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
@@ -566,6 +578,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.contracts.view', 'hr.contracts.manage',
   ]),
   hr_manager: new Set<PermissionKey>([
+    'calendar.manage', 'calendar.task.assign',
     ...EMPLOYEE_BASELINE,
     // HR Compensation — full
     'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
@@ -590,6 +603,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.payslips.generate',
+    'finance.payroll.payslips.distribute',
+    'finance.payroll.gl.preview',
+    'finance.payroll.gl.post',
     'finance.payroll.reports.view',
     // Remittances (F1)
     'finance.remittances.view',
@@ -618,6 +635,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.ap.payment.record',
   ]),
   finance_manager: new Set<PermissionKey>([
+    'calendar.manage', 'calendar.task.assign',
     ...EMPLOYEE_BASELINE,
     'finance.statutory.view',
     'finance.statutory.manage',
@@ -634,6 +652,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.payslips.generate',
+    'finance.payroll.payslips.distribute',
+    'finance.payroll.gl.preview',
+    'finance.payroll.gl.post',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -696,6 +718,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   employee: new Set<PermissionKey>([
+    'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     // Workflow — my tasks + decide when assigned (Spec §22)
     'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
     // Settings — own personal preferences only (Spec §4)
@@ -727,6 +750,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   manager: new Set<PermissionKey>([
+    'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // Workflow — run approvals + manage instances (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
     'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
@@ -785,6 +809,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   admin: new Set<PermissionKey>([
+    'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // Workflow — full except superadmin-only admin_override (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
     'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',
@@ -939,6 +964,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.payslips.generate',
+    'finance.payroll.payslips.distribute',
+    'finance.payroll.gl.preview',
+    'finance.payroll.gl.post',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -1135,6 +1164,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.payslips.generate',
+    'finance.payroll.payslips.distribute',
+    'finance.payroll.gl.preview',
+    'finance.payroll.gl.post',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -1153,6 +1186,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.ap.bills.create', 'finance.ap.bills.edit', 'finance.ap.bills.submit', 'finance.ap.bills.approve', 'finance.ap.bills.void',
     'finance.ap.payment.record', 'finance.ap.payment.run.manage', 'finance.ap.payment.run.process',
     'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
+    // Calendar & Tasks (platform) — superadmin: all
+    'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
   ]),
 };
 

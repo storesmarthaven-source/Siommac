@@ -58,6 +58,10 @@ export default async function run(h) {
 
   const runStart = new Date().toISOString();
   const roleName = ('e2e_' + TAG.toLowerCase()).replace(/[^a-z0-9_]/g, '_'); // valid RoleNameSchema
+  // A SECOND throwaway role for the critical-role-grant test. The maker-checker
+  // test must NEVER target a real role (e.g. 'manager') — a mistaken cleanup could
+  // delete a live grant. This temp role is created fresh and torn down with the rest.
+  const roleNameCrit = roleName + '_c';
   const createdRoles = [];
 
   // Capture the target's pre-test override for PERM so cleanup restores it exactly.
@@ -88,7 +92,8 @@ export default async function run(h) {
     if (approvalIds.length) await sb.from('permission_grant_approvals').delete().in('id', approvalIds);
     await sb.from('permission_grant_approvals').delete().eq('requested_by', sadmin.id).gte('created_at', runStart);
     await sb.from('user_permissions').delete().eq('user_id', tgt.id).eq('permission', CRIT);
-    await sb.from('role_permissions').delete().eq('permission', CRIT).in('role_name', [roleName, 'manager']);
+    // NOTE: role_permissions for created roles are removed via createdRoles above —
+    // we deliberately do NOT touch any real role (e.g. 'manager') here.
     // Platform §2 rows emitted by the mutations (app_events + emitAppEvent audit_logs).
     const evEntityIds = [tgt.id, roleName, ...approvalIds];
     await sb.from('app_events').delete().eq('source_module', 'platform').gte('created_at', runStart).in('source_entity_id', evEntityIds);
@@ -290,19 +295,30 @@ export default async function run(h) {
     ok(r);
     const { data: up } = await sb.from('user_permissions').select('granted').eq('user_id', tgt.id).eq('permission', CRIT).maybeSingle();
     expect(up && up.granted === true, 'grant now applied after approval');
-    const { data: appr } = await sb.from('permission_grant_approvals').select('status, decided_by').eq('id', userApprovalId).maybeSingle();
+    const { data: appr } = await sb.from('permission_grant_approvals').select('status, decided_by, applied_at').eq('id', userApprovalId).maybeSingle();
     expect(appr && appr.status === 'approved' && appr.decided_by === checkerId, 'row approved by the checker');
+    expect(appr && appr.applied_at, 'applied_at stamped atomically with the grant');
+  });
+
+  await test('re-approving an already-approved request is rejected (atomic status guard)', async () => {
+    // The apply + status flip is one transaction with a `pending` guard, so a second
+    // approve cannot re-apply the grant — it must see the row is no longer pending.
+    const r = await api('admin/approvals/approve', checkerTok, { approvalId: userApprovalId });
+    fails(r); expect(r.status === 400, `expected 400 not_pending, got ${r.status}`);
   });
 
   await test('critical ROLE grant routes through approval too', async () => {
-    const noReason = await api('superadmin/setRolePermission', T.sadmin, { roleName: 'manager', permission: CRIT, granted: true });
+    // Target a fresh throwaway role — never a real one — so nothing real is mutated.
+    const cr = await api('superadmin/createRole', T.sadmin, { name: roleNameCrit, label: 'E2E Crit Role' });
+    ok(cr); createdRoles.push(roleNameCrit);
+    const noReason = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT, granted: true });
     fails(noReason); expect(noReason.status === 400 && noReason.body.code === 'reason_required', 'role critical grant needs a reason');
-    const r = await api('superadmin/setRolePermission', T.sadmin, { roleName: 'manager', permission: CRIT, granted: true, reason: 'E2E role critical' });
+    const r = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT, granted: true, reason: 'E2E role critical' });
     ok(r); expect(r.body.pending === true && !!r.body.approvalId, 'pending role approval');
     approvalIds.push(r.body.approvalId);
     const { data: appr } = await sb.from('permission_grant_approvals').select('request_type, target_role, status').eq('id', r.body.approvalId).maybeSingle();
-    expect(appr && appr.request_type === 'role_permission' && appr.target_role === 'manager' && appr.status === 'pending', 'pending role_permission row');
-    const { data: rp } = await sb.from('role_permissions').select('permission').eq('role_name', 'manager').eq('permission', CRIT);
+    expect(appr && appr.request_type === 'role_permission' && appr.target_role === roleNameCrit && appr.status === 'pending', 'pending role_permission row');
+    const { data: rp } = await sb.from('role_permissions').select('permission').eq('role_name', roleNameCrit).eq('permission', CRIT);
     expect((rp ?? []).length === 0, 'role grant NOT applied while pending');
   });
 

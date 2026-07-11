@@ -1,13 +1,15 @@
 /**
- * src/components/shared/ProfilePill.tsx
+ * src/components/shared/AccountPill.tsx
  *
- * The single reusable profile + notification pill for page heroes.
+ * The account pill: avatar + name/role + notification/message/ticket quick actions
+ * + account dropdown (My Profile · Settings · About · Log out). Rendered INSIDE the
+ * UserPill global top bar (src/components/shared/UserPill.tsx) — it is the "who am I
+ * + quick actions" cluster on the bar's right edge.
  *
  * Fully self-contained — no shared element ids, so any number of instances can
  * exist without collisions:
  *   • Self-populating: reads name/role/avatar from the session store, so it is
- *     correct regardless of when it mounts (fixes the lazily-mounted hero where
- *     attSystem's one-time id population had already run).
+ *     correct regardless of when it mounts.
  *   • Id-free actions: icon buttons carry data-pill-action="notif|msg|ticket";
  *     NavController's delegated handler opens the shared header modal positioned
  *     under the clicked icon.
@@ -15,7 +17,11 @@
  *     them by attribute.
  *   • Profile area routes to My Profile.
  *
- * Drop <ProfilePill /> into any hero. Use variant="onDark" on dark panels.
+ * Customization:
+ *   variant="onDark"                → styling for dark panels
+ *   iconsFirst                      → icons on the left, profile in the corner (top bar)
+ *   showNotif / showMsg / showTicket → toggle each quick-action icon (all default true)
+ *   compact                         → avatar + caret only (hides the name/role text)
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
@@ -24,8 +30,6 @@ import { useSessionStore, selectFullName, selectRole } from '@store/session';
 import { dialog } from '@lib/dialog';
 
 // ── Lucide line-icons (the app's icon language) ───────────────────────────────
-// Hand-drawn to match the Lucide 24×24 / currentColor / round-cap style used across
-// the shell, so the menu doesn't fall back to Font Awesome glyphs.
 const lIco = (inner: ComponentChildren, sw = 1.8, size = 19): VNode => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor"
     stroke-width={sw} stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">{inner}</svg>
@@ -45,32 +49,37 @@ function roleLabel(role: string | null): string {
   }
 }
 
-function gotoProfile(): void {
-  (window as unknown as { Nav?: { showSection?: (id: string) => void } }).Nav?.showSection?.('s-profile');
+function nav(id: string): void {
+  (window as unknown as { Nav?: { showSection?: (id: string) => void } }).Nav?.showSection?.(id);
 }
-
-function gotoSettings(): void {
-  (window as unknown as { Nav?: { showSection?: (id: string) => void } }).Nav?.showSection?.('s-settings');
-}
-
-function gotoAbout(): void {
-  (window as unknown as { Nav?: { showSection?: (id: string) => void } }).Nav?.showSection?.('s-about');
-}
-
 function doLogout(): void {
   (window as unknown as { handleLogout?: () => void }).handleLogout?.();
 }
 
-export interface ProfilePillProps {
+export interface AccountPillProps {
   /** Visual variant: 'light' (navy pill, default) or 'onDark' (for dark heroes). */
   variant?: 'light' | 'onDark';
-  /** When true, render the notification/message/ticket icons BEFORE the profile
-   *  (icons on the left, profile pill in the far-right corner). Used by the app
-   *  top bar; other heroes keep the default profile-first order. */
+  /** Render the notification/message/ticket icons BEFORE the profile (icons on the
+   *  left, profile pill in the far-right corner). Used by the app top bar. */
   iconsFirst?: boolean;
+  /** Show the notifications quick-action icon (default true). */
+  showNotif?: boolean;
+  /** Show the messages quick-action icon (default true). */
+  showMsg?: boolean;
+  /** Show the support-tickets quick-action icon (default true). */
+  showTicket?: boolean;
+  /** Compact mode: avatar + caret only, hides the name/role text (for tight bars). */
+  compact?: boolean;
 }
 
-export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePillProps): VNode {
+export function AccountPill({
+  variant = 'light',
+  iconsFirst = false,
+  showNotif = true,
+  showMsg = true,
+  showTicket = true,
+  compact = false,
+}: AccountPillProps): VNode {
   const fullName  = useSessionStore(selectFullName);
   const role      = useSessionStore(selectRole);
   const avatarUrl = useSessionStore(s => s.profileImage);
@@ -80,17 +89,12 @@ export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePi
   const initial = (name.trim()[0] ?? 'U').toUpperCase();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  // Menu is position:fixed (positioned from the trigger) so it escapes the top bar's
-  // overflow:hidden clipping.
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
   const wrapRef = useRef<HTMLDivElement>(null);
 
   const openMenu = (): void => {
     if (wrapRef.current) {
       const r = wrapRef.current.getBoundingClientRect();
-      // Aligned to the pill: derive width from the ROUNDED left/right edges (not the raw
-      // width) so both the left and right edges land on the pill's exact pixels — avoids
-      // a 1px drift. box-sizing:border-box keeps the menu's border inside this width.
       const left  = Math.round(r.left);
       const width = Math.round(r.right) - left;
       setMenuPos({ top: Math.round(r.bottom), left, width });
@@ -134,10 +138,12 @@ export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePi
             ? <img src={avatarUrl} alt="" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: 'inherit' }} />
             : initial}
         </span>
-        <span class="pnp-info">
-          <span class="pnp-name">{name}</span>
-          <span class="pnp-role">{roleLabel(role)}</span>
-        </span>
+        {!compact && (
+          <span class="pnp-info">
+            <span class="pnp-name">{name}</span>
+            <span class="pnp-role">{roleLabel(role)}</span>
+          </span>
+        )}
         <span class="pnp-caret-box">
           <i class={`fas fa-chevron-${menuOpen ? 'up' : 'down'} pnp-caret`} aria-hidden="true" />
         </span>
@@ -145,13 +151,13 @@ export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePi
       {menuOpen && (
         <div class="pnp-menu" role="menu" style={{ top: menuPos.top, left: menuPos.left, width: menuPos.width }}>
           <div class="pnp-menu-group">
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); gotoProfile(); }}>
+            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-profile'); }}>
               <IcUser /><span>My Profile</span>
             </button>
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); gotoSettings(); }}>
+            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-settings'); }}>
               <IcSettings /><span>Settings</span>
             </button>
-            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); gotoAbout(); }}>
+            <button type="button" class="pnp-menu-item" role="menuitem" onClick={() => { setMenuOpen(false); nav('s-about'); }}>
               <IcAbout /><span>About</span>
             </button>
           </div>
@@ -165,25 +171,35 @@ export function ProfilePill({ variant = 'light', iconsFirst = false }: ProfilePi
       )}
     </div>
   );
-  const icons = (
+
+  const anyIcon = showNotif || showMsg || showTicket;
+  const icons = anyIcon ? (
     <div class="pnp-icons">
-      <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications">
-        <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={{ display: 'none' }} />
-      </button>
-      <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages">
-        <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={{ display: 'none' }} />
-      </button>
-      <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets">
-        <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={{ display: 'none' }} />
-      </button>
+      {showNotif && (
+        <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications">
+          <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={{ display: 'none' }} />
+        </button>
+      )}
+      {showMsg && (
+        <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages">
+          <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={{ display: 'none' }} />
+        </button>
+      )}
+      {showTicket && (
+        <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets">
+          <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={{ display: 'none' }} />
+        </button>
+      )}
     </div>
-  );
+  ) : null;
+
+  const divider = icons ? <div class="pnp-divider" /> : null;
 
   return (
-    <div class={`profile-notif-pill${variant === 'onDark' ? ' pnp-on-dark' : ''}`}>
+    <div class={`profile-notif-pill${variant === 'onDark' ? ' pnp-on-dark' : ''}${compact ? ' pnp-compact' : ''}`}>
       {iconsFirst
-        ? <>{icons}<div class="pnp-divider" />{profile}</>
-        : <>{profile}<div class="pnp-divider" />{icons}</>}
+        ? <>{icons}{divider}{profile}</>
+        : <>{profile}{divider}{icons}</>}
     </div>
   );
 }

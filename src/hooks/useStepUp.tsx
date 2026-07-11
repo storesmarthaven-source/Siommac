@@ -85,7 +85,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
 
   const applyToken = useCallback((token: string) => {
     const s = useSessionStore.getState();
-    s.refreshTokens(token, s.refreshToken ?? '', s.expiresAt ?? Date.now() + 15 * 60 * 1000);
+    s.refreshTokens(token, s.expiresAt ?? Date.now() + 15 * 60 * 1000);
   }, []);
 
   const handleTotpVerify = useCallback(async () => {

@@ -17,8 +17,8 @@ import { Hono }                      from 'hono';
 import { sb }                        from '../lib/db';
 import { requirePermission, log_ }   from '../lib/auth';
 import { requireStepUp }             from '../lib/stepUp';
-import { emitAppEvent }         from '../lib/appEvents';
-import { applyPermissionGrant } from './superadmin';
+import { emitAppEvent }             from '../lib/appEvents';
+import { invalidateRolePermissions } from '../lib/permissions';
 import { z, zv }                     from '../lib/validate';
 import type { HonoVariables }        from '../../../types/api';
 
@@ -138,65 +138,50 @@ router.post('/approve', async c => {
   if (!v.ok) return v.response;
   const { approvalId } = v.data;
 
-  // Load the approval row
-  const { data: row, error: fetchErr } = await sb
-    .from('permission_grant_approvals')
-    .select('*')
-    .eq('id', approvalId)
-    .maybeSingle<ApprovalRow>();
-
-  if (fetchErr) {
-    console.error('[approvals/approve] fetch error:', fetchErr.message);
-    return c.json({ success: false, message: 'Failed to load approval.' }, 500);
-  }
-  if (!row) return c.json({ success: false, message: 'Approval not found.' }, 404);
-  if (row.status !== 'pending') {
-    return c.json({ success: false, message: `Cannot approve: request is already ${row.status}.` }, 400);
-  }
-
-  // Expiry check
-  if (new Date(row.expires_at) < new Date()) {
-    return c.json({ success: false, code: 'expired', message: 'This approval request has expired.' }, 400);
-  }
-
-  // Maker ≠ checker
-  if (row.requested_by === actor.id) {
-    return c.json({ success: false, code: 'self_approval', message: 'You cannot approve your own permission grant request.' }, 403);
-  }
-
-  // Apply the actual grant
-  const applyResult = await applyPermissionGrant(
-    {
-      request_type:   row.request_type,
-      target_role:    row.target_role ?? undefined,
-      target_user_id: row.target_user_id ?? undefined,
-      permission_key: row.permission_key,
-      effect:         row.effect as 'allow' | 'deny',
-    },
-    actor.username,
-  );
-
-  if (!applyResult.ok) {
-    console.error('[approvals/approve] apply error:', applyResult.message);
+  // Apply the grant + mark the approval approved in ONE atomic DB transaction.
+  // The RPC row-locks the pending request, re-checks status / expiry / segregation
+  // of duties, applies the grant to live RBAC, and flips status→approved. If any
+  // step fails the whole call rolls back — a grant can never be applied while its
+  // approval row is left pending, and two concurrent approvals serialize on the lock.
+  const { data: rpcData, error: rpcErr } = await sb.rpc('approve_permission_grant_tx', {
+    p_approval_id:      approvalId,
+    p_checker_id:       actor.id,
+    p_checker_username: actor.username,
+  });
+  if (rpcErr) {
+    console.error('[approvals/approve] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to apply the permission grant.' }, 500);
   }
 
-  // Note: applyPermissionGrant already calls invalidateRolePermissions internally for role grants.
+  const result = (rpcData ?? {}) as {
+    status:          'applied' | 'not_found' | 'not_pending' | 'expired' | 'self_approval';
+    current?:        string;
+    request_type?:   'role_permission' | 'user_override';
+    target_role?:    string | null;
+    target_user_id?: string | null;
+    permission_key?: string;
+    effect?:         string;
+    requested_by?:   string;
+  };
 
-  const now = new Date().toISOString();
-  const { error: updateErr } = await sb
-    .from('permission_grant_approvals')
-    .update({ status: 'approved', decided_by: actor.id, decided_at: now, applied_at: now })
-    .eq('id', approvalId);
+  switch (result.status) {
+    case 'applied':       break;
+    case 'not_found':     return c.json({ success: false, message: 'Approval not found.' }, 404);
+    case 'not_pending':   return c.json({ success: false, message: `Cannot approve: request is already ${result.current}.` }, 400);
+    case 'expired':       return c.json({ success: false, code: 'expired', message: 'This approval request has expired.' }, 400);
+    case 'self_approval': return c.json({ success: false, code: 'self_approval', message: 'You cannot approve your own permission grant request.' }, 403);
+    default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
+  }
 
-  if (updateErr) {
-    // Grant was applied — log the inconsistency but don't fail the caller
-    console.error('[approvals/approve] status update error (grant already applied):', updateErr.message);
+  // The DB write is committed; drop the in-memory role-permission cache for role
+  // grants so the new grant resolves immediately on the next authorization check.
+  if (result.request_type === 'role_permission' && result.target_role) {
+    invalidateRolePermissions(result.target_role);
   }
 
   // Audit log
   await log_(actor, 'permission_grant_approved', 'permission_grant_approval', approvalId,
-    `approved ${row.permission_key} ${row.request_type === 'role_permission' ? 'for role ' + (row.target_role ?? '') : 'for user ' + (row.target_user_id ?? '')}`);
+    `approved ${result.permission_key} ${result.request_type === 'role_permission' ? 'for role ' + (result.target_role ?? '') : 'for user ' + (result.target_user_id ?? '')}`);
 
   // Emit audit events
   await Promise.all([
@@ -207,7 +192,7 @@ router.post('/approve', async c => {
       sourceEntityId: approvalId,
       actorUserId: actor.id,
       severity: 'warning',
-      payload: { permissionKey: row.permission_key, approvalId, requestedBy: row.requested_by },
+      payload: { permissionKey: result.permission_key, approvalId, requestedBy: result.requested_by },
     }),
     emitAppEvent({
       eventType: 'iam.permission.granted',
@@ -216,7 +201,7 @@ router.post('/approve', async c => {
       sourceEntityId: approvalId,
       actorUserId: actor.id,
       severity: 'success',
-      payload: { permissionKey: row.permission_key, target: row.target_role ?? row.target_user_id },
+      payload: { permissionKey: result.permission_key, target: result.target_role ?? result.target_user_id },
     }),
   ]);
 

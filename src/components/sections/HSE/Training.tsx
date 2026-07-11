@@ -138,9 +138,9 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
         </div>
         <div style={{ flexShrink: 0 }}>
           <NewMenu label="Add Certificate" fill items={[
-            { label: 'Add Certificate', icon: 'fa-certificate', sub: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
-            { label: 'Assign Training', icon: 'fa-graduation-cap', sub: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
-            { label: 'Create Role Requirement', icon: 'fa-list-check', sub: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
+            { label: 'Add Certificate', icon: 'Award', sub: 'Record a worker certificate', onSelect: () => { setPresetWorker(undefined); setAddCertOpen(true); } },
+            { label: 'Assign Training', icon: 'GraduationCap', sub: 'Assign training to a worker', onSelect: () => { setPresetWorker(undefined); setAssignOpen(true); } },
+            { label: 'Create Role Requirement', icon: 'ListChecks', sub: 'Define a role competency rule', onSelect: () => setReqOpen(true) },
           ]} />
         </div>
       </div>

@@ -4,6 +4,55 @@ Every page in every module (HSE, HR, Finance, Operations) is built from `@ui` on
 **Never hand-roll** a header, card, modal, drawer, table, or form control — if a
 primitive doesn't exist for what you need, add it to `@ui` first, then use it.
 
+## Every page's chrome (non-negotiable)
+
+Two things wrap **every** page, and you never build them per-page:
+
+1. **The global top bar — `UserPill`** (`@shared/UserPill`): search + ⌘K + AI +
+   the account cluster. It is mounted **once** in `AppShell`, so it is already on
+   every page — do NOT add a per-page pill or top bar.
+2. **The standard page header — `<PageHeader>`** (`@ui`): the slate icon tile ·
+   thin navy rule · breadcrumb (module) · navy title · sub · right-aligned actions,
+   capped by a bottom separator that fades at both ends. Exactly **one** per page,
+   directly under the top bar. Standard spacing is baked into `.ui-page-header`
+   (40px above / 32px below) — don't add your own margins.
+
+**Header action buttons — the standard (`actions` slot):**
+- Every action button is the **same 40px-tall footprint** (`.hse-btn`, 10px radius). Don't
+  mix sizes in the header row.
+- The **primary create action is NAVY** — `NewMenu` renders a navy "New ▾" (single item → a
+  plain navy button). Navy is the standard for the header's primary button; secondary actions
+  (Export, etc.) are the bordered white `.hse-btn`.
+- **Dropdown-item icons are always Lucide, coloured `#667085`** (`MENU_ICON_COLOR`) — pass a
+  Lucide name to each `NewMenuItem.icon` (never a FontAwesome class). This is a page-header
+  standard for any menu opened from the header.
+- A board's **Customize control is an icon-only button** (`WidgetBoardToolbar`) matching the
+  40px header-button size — it lives in the `actions` slot, not on its own row. It opens a
+  **dropdown menu** (Edit layout · Widget Library · Reset · Set as default).
+
+**Dropdown menu — standard shell + animation.** Every dropdown uses the shared classes in
+`uikit-layout.css`: `.ui-menu` (white card, rounded rows) + `.ui-menu-item` (row with the
+standard **hover background** `#f2f6fc`, navy label; `.ui-menu-divider` between groups) +
+`.ui-menu-pop` (the open animation — a subtle fade + rise from the top, ~140ms, no-op under
+reduced-motion). Caller sets only the anchor offset (top / left / right). Register-table filter
+menus (`.tf-menu`) reference the `ui-menu-pop` keyframe directly. Don't hand-roll a dropdown's
+shell, hover, or open animation.
+
+```tsx
+import { PageHeader } from '@ui';
+
+<PageHeader
+  icon={<LucideIcon name="ShieldCheck" size={22} />}  // or a FontAwesome class string
+  module="Access Control"                              // breadcrumb / eyebrow
+  title="Overview"
+  sub="Manage roles, users, and capability coverage across the organization."
+  actions={<><SecondaryBtn/> <PrimaryBtn/></>}         // optional, right-aligned
+/>
+```
+
+When porting a mockup, wire the mockup's own header text/actions INTO `<PageHeader>` —
+never reproduce a mockup's bespoke header bar.
+
 > Porting a design mockup into a page (the workflow, the rich drawer/dialog/wizard
 > components, end-to-end wiring, and the gotchas) → see **[PORTING_GUIDE.md](./PORTING_GUIDE.md)**.
 
@@ -112,7 +161,7 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 1. **One create entry-point per page: the `NewMenu` on the tab row.** No create buttons in
    `PageHeader` / `PageHero`, and **none inside table cards** (`hse-table-card-top` is
    info + table-level actions only — Audit Log / Export, never "New …"). The page's create
-   action is the standard **`NewMenu`** ("New ▾", red accent, `fill`) placed to the **right of
+   action is the standard **`NewMenu`** ("New ▾", **navy**, `fill`) placed to the **right of
    the nav/tabs row**. Each page passes its own items (the submenu) and the workflow each
    triggers — e.g. Risk/JSA → New Hazard / Risk Assessment / JSA; Incidents → Injury /
    Near Miss / Environmental / Property. One item renders a plain button; many render the dropdown.

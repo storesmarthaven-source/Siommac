@@ -41,8 +41,20 @@ export default async function run(h) {
     sv1Id: null,  // first statutory version (to be activated, then superseded)
     sv2Id: null,  // second statutory version (to replace sv1 on activation)
     nisVersionId: null,
+    seededActiveId: null,  // the REAL active TT version at suite start — restored in cleanup
     createdUserIds: [],
   };
+
+  // Snapshot the currently-active TT statutory version BEFORE the activation tests run.
+  // Those tests activate throwaway versions, which (one-active-per-jurisdiction) RETIRE
+  // this seeded version; deleting the throwaways in cleanup would otherwise leave the real
+  // seeded 2026 schedule retired with NO active version — exactly what left NIS 2026
+  // retired in the app. We re-activate it in cleanup so the suite leaves no trace.
+  try {
+    const { data: activeRow } = await sb.from('finance_statutory_versions')
+      .select('id').eq('jurisdiction', 'TT').eq('is_active', true).maybeSingle();
+    ctx.seededActiveId = activeRow?.id ?? null;
+  } catch { /* table may be empty on a fresh DB — nothing to restore */ }
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -54,6 +66,15 @@ export default async function run(h) {
     // Delete test-created records in reverse dependency order
     try { await sb.from('finance_nis_classes').delete().in('statutory_version_id', [ctx.sv1Id, ctx.sv2Id].filter(Boolean)); } catch {}
     try { await sb.from('finance_statutory_versions').delete().or(`id.eq.${ctx.sv1Id},id.eq.${ctx.sv2Id}`).select(); } catch {}
+    // Restore the real seeded active version that the activation tests retired (only after
+    // the throwaways are gone, so one-active-per-jurisdiction is satisfied).
+    try {
+      if (ctx.seededActiveId) {
+        await sb.from('finance_statutory_versions')
+          .update({ status: 'active', is_active: true, retired_by: null, retired_at: null })
+          .eq('id', ctx.seededActiveId);
+      }
+    } catch {}
     try { if (ctx.compId) await sb.from('finance_pay_components').delete().eq('id', ctx.compId); } catch {}
     try { if (ctx.comp2Id) await sb.from('finance_pay_components').delete().eq('id', ctx.comp2Id); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}

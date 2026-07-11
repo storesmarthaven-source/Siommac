@@ -38,13 +38,16 @@ export interface WidgetBoardProps {
   /** When false, tiles can be DRAG-REORDERED in edit mode but NOT resized (uniform-size
    *  zones like the onboarding KPI row: pick which widgets + reorder, never resize). Default true. */
   resizable?: boolean;
+  /** When false, tiles paint instantly instead of the fade+rise mount reveal (boards that
+   *  shouldn't animate on load). Default true. */
+  revealOnMount?: boolean;
   preview?: PreviewWidgetInstance | null;
   onPreviewChange?: (preview: PreviewWidgetInstance) => void;
   onCommitPreview?: (preview: PreviewWidgetInstance) => void;
   onDiscardPreview?: () => void;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
+export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
   // `isSuccess` = the installed-package list is authoritative — only THEN may a zone prune board
   // instances whose widget no longer resolves (a transient/stale-dist error must NOT drop widgets).
@@ -56,6 +59,7 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
           key={zoneId} pageKey={pageKey} zoneId={zoneId} editing={editing}
           localWidgets={localWidgets} defaultLayout={defaultLayout} demo={demo}
           cellHeight={cellHeight} column={column} gap={gap} compact={compact} resizable={resizable}
+          revealOnMount={revealOnMount}
           registryReady={pkgQuery.isSuccess}
           preview={preview} onPreviewChange={onPreviewChange}
           onCommitPreview={onCommitPreview} onDiscardPreview={onDiscardPreview}

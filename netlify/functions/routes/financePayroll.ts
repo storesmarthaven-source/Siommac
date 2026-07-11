@@ -38,7 +38,20 @@ import {
   getPayslip,
   signedPayslipUrl,
   listPayslipsForRun,
+  renderPayslip,
+  renderRunPayslips,
 } from '../lib/finance/payrollPayslips';
+import {
+  deliverPayslip,
+  deliverRunPayslips,
+  listRunDeliveries,
+} from '../lib/finance/payrollPayslipDelivery';
+import {
+  previewRunGl,
+  postRunGl,
+  reverseRunGl,
+  getRunGlJournal,
+} from '../lib/finance/payrollGl';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
 import type { ExportFormat } from '../lib/finance/payrollExports';
@@ -326,6 +339,124 @@ router.post('/payroll/payslips/generate', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await generatePayslips(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/render-run
+// Generate (idempotent) + render PDF payslips for every employee in a locked run, upload to
+// the private payslips bucket, and stamp file_path. Row-level failure isolation.
+// Permission: finance.payroll.payslips.generate (write).
+router.post('/payroll/payslips/render-run', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.payslips.generate');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await renderRunPayslips(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/render
+// Re-render a single payslip PDF (e.g. retry after a failure).
+// Permission: finance.payroll.payslips.generate (write).
+router.post('/payroll/payslips/render', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.payslips.generate');
+  const v = zv(c, z.object({ payslipId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await renderPayslip(v.data.payslipId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/deliver-run
+// Email every RENDERED payslip in a run to its employee (password-protected PDF) + track.
+// Permission: finance.payroll.payslips.distribute (sends personal data externally).
+router.post('/payroll/payslips/deliver-run', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.payslips.distribute');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await deliverRunPayslips(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/deliver
+// Email a single rendered payslip (e.g. resend to one employee).
+router.post('/payroll/payslips/deliver', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.payslips.distribute');
+  const v = zv(c, z.object({ payslipId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await deliverPayslip(v.data.payslipId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/payslips/deliveries/list
+// Delivery history for a run — Finance only.
+router.post('/payroll/payslips/deliveries/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listRunDeliveries(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Payroll GL posting (Wave 2) ──────────────────────────────────────────────
+
+// POST /api/finance/payroll/gl/preview
+// Build the (unposted) double-entry journal for a run: lines, totals, balance,
+// and any missing account mappings. Read-only. Permission: finance.payroll.gl.preview.
+router.post('/payroll/gl/preview', async c => {
+  await requirePermission(c, 'finance.payroll.gl.preview');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await previewRunGl(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/gl/post
+// Post the run's balanced journal to the GL and link it on the run.
+// Guards: run locked/exported, not already posted, all mappings present.
+// Permission: finance.payroll.gl.post.
+router.post('/payroll/gl/post', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.gl.post');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await postRunGl(v.data.runId, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/gl/reverse
+// Reverse the run's posted journal (creates a mirror reversing journal) with a reason.
+// Permission: finance.payroll.gl.post.
+router.post('/payroll/gl/reverse', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.gl.post');
+  const v = zv(c, z.object({ runId: z.string().uuid(), reason: z.string().min(1) }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await reverseRunGl(v.data.runId, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/gl/get
+// Fetch the posted journal (header + lines) for a run, or null if unposted.
+router.post('/payroll/gl/get', async c => {
+  await requirePermission(c, 'finance.payroll.gl.preview');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getRunGlJournal(v.data.runId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

@@ -1,17 +1,23 @@
 // lib/auth.ts — JWT access tokens, refresh token rotation, revocation
 //
 // Token strategy:
-//   Access token  — signed JWT, 15-minute TTL, contains jti (unique ID)
-//   Refresh token — 256-bit random secret, 7-day TTL, stored hashed in DB
+//   Access token  — signed JWT, 15-minute TTL, contains jti (unique ID). Sent to
+//                   the client in the JSON body (held in memory/localStorage).
+//   Refresh token — 256-bit random secret, 7-day TTL, stored hashed in DB and
+//                   delivered ONLY as an httpOnly Secure cookie (never in JSON) —
+//                   immune to XSS exfiltration. The refresh_tokens table is the
+//                   server-side session table (device list, revocation).
 //
-// On login:  issue access token + refresh token (hashed stored in refresh_tokens)
-// On refresh: validate refresh token hash, delete old row, issue new pair (rotation)
-// On logout:  insert jti into token_revocations + delete refresh token row
+// On login:  issue access token (JSON) + refresh token (httpOnly cookie)
+// On refresh: validate cookie token hash, delete old row, issue new pair (rotation)
+// On logout:  insert jti into token_revocations + delete refresh rows + clear cookie
 // requireUser: verifies signature, checks exp, checks jti not in revocations
 
 import jwt                  from 'jsonwebtoken';
 import crypto               from 'crypto';
 import type { Context, Next } from 'hono';
+import { setCookie, deleteCookie } from 'hono/cookie';
+import { isSecureRequest }  from './trustedDevices';
 import { sb }               from './db';
 import { resolveWithSet, loadRolePermissions, type PermissionOverrideRow } from './permissions';
 import { getReqContext }    from './reqContext';
@@ -32,8 +38,32 @@ const JWT_SECRET = process.env.JWT_SECRET ?? '';
 
 const USE_RS256            = Boolean(JWT_PRIVATE_KEY && JWT_PUBLIC_KEY);
 const ACCESS_TOKEN_TTL     = '15m';
+/** Access-token TTL in ms — returned to the client so it schedules its proactive
+ *  refresh from the server's authoritative value (keep in sync with ACCESS_TOKEN_TTL). */
+export const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
 const REVOCATION_TTL_DAYS  = 1;
+
+// ── Refresh-token cookie (httpOnly — the browser never exposes it to JS) ──────
+// Path-scoped to the API so it rides only on API calls. SameSite=Lax + the
+// wrapped-args POST convention keeps cross-site abuse off the table; `secure`
+// follows the request protocol so http://localhost dev still works (Firefox
+// drops Secure cookies set over plain http).
+export const RT_COOKIE_NAME = 'siomac_rt';
+
+export function setRefreshCookie(c: Context, token: string): void {
+  setCookie(c, RT_COOKIE_NAME, token, {
+    httpOnly: true,
+    secure:   isSecureRequest(c),
+    sameSite: 'Lax',
+    path:     '/api',
+    maxAge:   Math.floor(REFRESH_TOKEN_TTL_MS / 1000),
+  });
+}
+
+export function clearRefreshCookie(c: Context): void {
+  deleteCookie(c, RT_COOKIE_NAME, { path: '/api' });
+}
 
 if (!USE_RS256 && (!JWT_SECRET || JWT_SECRET.length < 32)) {
   console.warn('[auth] Neither RS256 keys nor a 32-char JWT_SECRET are set — this is insecure');
@@ -146,9 +176,9 @@ async function rotateRefreshToken(
 
   const { data: row } = await sb
     .from('refresh_tokens')
-    .select('user_id, expires_at')
+    .select('user_id, expires_at, user_agent, ip_address')
     .eq('token_hash', hash)
-    .maybeSingle<{ user_id: string; expires_at: string }>();
+    .maybeSingle<{ user_id: string; expires_at: string; user_agent: string | null; ip_address: string | null }>();
 
   if (!row) return null;
   if (new Date(row.expires_at) < new Date()) {
@@ -168,14 +198,19 @@ async function rotateRefreshToken(
     return null;
   }
 
-  // Rotate: delete old token and issue a new pair
+  // Rotate: delete old token and issue a new pair. Device metadata carries over
+  // so the Sessions page keeps showing the device after rotation, and
+  // last_seen_at is bumped — a rotation IS activity on that session.
   await sb.from('refresh_tokens').delete().eq('token_hash', hash);
   const [newRefreshPlain, newRefreshHash] = _generateRefreshToken();
   const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString();
   await sb.from('refresh_tokens').insert({
-    user_id:    user.id,
-    token_hash: newRefreshHash,
-    expires_at: newExpiresAt,
+    user_id:      user.id,
+    token_hash:   newRefreshHash,
+    expires_at:   newExpiresAt,
+    user_agent:   row.user_agent,
+    ip_address:   row.ip_address,
+    last_seen_at: new Date().toISOString(),
   });
 
   return {

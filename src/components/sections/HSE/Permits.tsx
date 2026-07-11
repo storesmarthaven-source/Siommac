@@ -497,7 +497,7 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
           <NewMenu label="New Permit" fill items={[
             {
               label:    'New Permit to Work',
-              icon:     'fa-file-shield',
+              icon:     'ShieldCheck',
               sub:      'Request PTW via evidence-gated approval',
               onSelect: () => setWizardOpen(true),
             },

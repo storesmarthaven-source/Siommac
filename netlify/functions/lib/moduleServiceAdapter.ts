@@ -28,7 +28,8 @@ import type { EventSeverity } from './appEvents';
 
 export type ModuleKey =
   | 'hse' | 'hr' | 'payroll' | 'finance'
-  | 'operations' | 'tickets' | 'messages' | 'reports';
+  | 'operations' | 'tickets' | 'messages' | 'reports'
+  | 'calendar';
 
 export type WorkflowPriority = 'low' | 'medium' | 'high' | 'critical';
 

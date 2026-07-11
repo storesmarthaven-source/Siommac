@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Access Matrix</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --ink:        #1e293b;
+    --ink-2:      #334155;
+    --muted:      #64748b;
+    --faint:      #94a3b8;
+    --line:       #eceef2;
+    --line-2:     #f2f4f7;
+    --card-border:#e6e8ee;
+    --accent:     #2563eb;
+    --green:      #16a34a;
+    --orange:     #e5890c;
+    --none-bg:    #eef1f5;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    padding: 32px;
+    background: #f1f3f7;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink-2);
+  }
+
+  .amx {
+    max-width: 1120px;
+    margin: 0 auto;
+    background: #fff;
+    border: 1px solid var(--card-border);
+    border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 30px rgba(16,24,40,.06);
+    overflow: hidden;
+  }
+
+  /* Header */
+  .amx-head {
+    display: flex;
+    align-items: flex-start;
+    gap: 16px;
+    padding: 22px 26px;
+    border-bottom: 1px solid var(--line);
+  }
+  .amx-title { font-size: 21px; font-weight: 700; color: var(--ink); letter-spacing: -.02em; margin: 0; }
+  .amx-sub   { font-size: 13.5px; color: var(--muted); margin: 3px 0 0; }
+  .amx-actions { margin-left: auto; display: flex; align-items: center; gap: 10px; }
+
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px;
+    height: 40px; padding: 0 14px;
+    border: 1px solid #e2e5ec; border-radius: 10px;
+    background: #fff; color: var(--ink-2);
+    font: inherit; font-size: 14px; font-weight: 500; cursor: pointer;
+    transition: background .12s, border-color .12s;
+  }
+  .btn:hover { background: #f7f9fc; border-color: #d5d9e2; }
+  .btn i { width: 16px; height: 16px; color: var(--muted); }
+  .btn.icon { width: 40px; padding: 0; justify-content: center; }
+
+  /* Table */
+  table.amx-tbl { width: 100%; border-collapse: collapse; }
+  .amx-tbl thead th {
+    font-size: 13px; font-weight: 600; color: var(--muted);
+    padding: 16px 12px; border-bottom: 1px solid var(--line);
+    text-align: center; white-space: nowrap;
+  }
+  .amx-tbl thead th:first-child { text-align: left; padding-left: 26px; }
+  .amx-tbl thead th .rh { display: inline-flex; align-items: center; gap: 8px; }
+  .amx-tbl thead th .rh i { width: 16px; height: 16px; color: var(--faint); }
+
+  .amx-tbl tbody td {
+    padding: 16px 12px; border-bottom: 1px solid var(--line-2); text-align: center;
+  }
+  .amx-tbl tbody tr:last-child td { border-bottom: 0; }
+  .amx-tbl tbody tr:hover td { background: #fafbfd; }
+
+  .mod {
+    display: flex; align-items: center; gap: 13px;
+    padding-left: 14px; text-align: left; font-size: 15px; font-weight: 600; color: var(--ink);
+  }
+  .mod i { width: 19px; height: 19px; color: var(--muted); flex: none; }
+
+  /* Coverage marks */
+  .cov { display: inline-grid; place-items: center; }
+  .cov.full {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--green); color: #fff;
+  }
+  .cov.full i { width: 15px; height: 15px; stroke-width: 3; }
+  .cov.partial {
+    width: 23px; height: 23px; border-radius: 50%;
+    border: 2px solid var(--orange);
+    background: linear-gradient(90deg, var(--orange) 50%, #fff 50%);
+  }
+  .cov.none {
+    width: 26px; height: 26px; border-radius: 50%;
+    background: var(--none-bg); color: var(--faint);
+  }
+  .cov.none i { width: 13px; height: 13px; }
+
+  /* Footer */
+  .amx-foot {
+    display: flex; align-items: center; gap: 16px;
+    padding: 16px 26px; border-top: 1px solid var(--line);
+  }
+  .amx-count { font-size: 13.5px; color: var(--muted); }
+  .pager { margin: 0 auto; display: flex; align-items: center; gap: 8px; }
+  .pager button {
+    min-width: 38px; height: 38px; padding: 0 6px;
+    border: 1px solid #e2e5ec; border-radius: 9px; background: #fff;
+    color: var(--ink-2); font: inherit; font-size: 14px; cursor: pointer;
+    display: grid; place-items: center;
+  }
+  .pager button:hover { background: #f7f9fc; }
+  .pager button i { width: 16px; height: 16px; }
+  .pager button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+</style>
+</head>
+<body>
+
+  <div class="amx">
+    <div class="amx-head">
+      <div>
+        <h1 class="amx-title">Access Matrix</h1>
+        <p class="amx-sub">View module-by-role capability coverage</p>
+      </div>
+      <div class="amx-actions">
+        <button class="btn">View by Role <i data-lucide="chevron-down"></i></button>
+        <button class="btn"><i data-lucide="filter"></i> Filters</button>
+        <button class="btn icon" aria-label="More"><i data-lucide="more-horizontal"></i></button>
+      </div>
+    </div>
+
+    <table class="amx-tbl">
+      <thead>
+        <tr>
+          <th>Module</th>
+          <th><span class="rh"><i data-lucide="users"></i> Superadmin</span></th>
+          <th><span class="rh"><i data-lucide="droplet"></i> Admin</span></th>
+          <th><span class="rh"><i data-lucide="shield-check"></i> Manager</span></th>
+          <th><span class="rh"><i data-lucide="shield"></i> Employee</span></th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="mod"><i data-lucide="messages-square"></i> Communications</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="box"></i> Dashboard</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="box"></i> Employees</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov none"><i data-lucide="minus"></i></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="wallet"></i> Finance</span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov none"><i data-lucide="minus"></i></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="users"></i> HR</span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="hard-hat"></i> HSE</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="credit-card"></i> Payroll</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="settings"></i> Settings</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="box"></i> Sites &amp; Map</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov none"><i data-lucide="minus"></i></span></td>
+        </tr>
+        <tr>
+          <td><span class="mod"><i data-lucide="sliders-horizontal"></i> System</span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov full"><i data-lucide="check"></i></span></td>
+          <td><span class="cov partial"></span></td>
+          <td><span class="cov partial"></span></td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="amx-foot">
+      <span class="amx-count">Showing 1 to 10 of 10 modules</span>
+      <div class="pager">
+        <button aria-label="Previous"><i data-lucide="chevron-left"></i></button>
+        <button class="active">1</button>
+        <button aria-label="Next"><i data-lucide="chevron-right"></i></button>
+      </div>
+      <button class="btn">10 / page <i data-lucide="chevron-down"></i></button>
+    </div>
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

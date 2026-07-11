@@ -23,6 +23,13 @@
  *     - Readiness lenses (Config Completeness / NIS Verification / Payroll)
  *                                                     ← booleans + ratios over the
  *                                                       active version's real config
+ *
+ *   STATIC REFERENCE (fixed regulatory constants, not server data — labelled on-card):
+ *     - NIBTT rate + employee/employer split (16.2% · ⅓ / ⅔)
+ *                                                     ← T&T NIBTT Earnings-Class
+ *                                                       schedule, effective 05 Jan 2026.
+ *                                                       Rendered as a reference card, not
+ *                                                       a KPI (see .sdb-nis-note).
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
@@ -48,9 +55,8 @@ import {
 } from '@ui/widgets';
 import { LucideIcon } from '@ui/LucideIcon';
 import { InfoTip } from '@ui/InfoTip';
+import { PageHeader } from '@ui';
 import { can } from '@lib/permissions';
-import { dialog } from '@lib/dialog';
-import { toast } from '@store';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, humanize } from './financeShared';
 
@@ -82,28 +88,6 @@ const W_CHART     = 'finance.statutory.nisChart';
 const W_READY     = 'finance.statutory.readiness';
 const W_DEADLINES = 'finance.statutory.deadlines';
 const W_REGISTER  = 'finance.statutory.register';
-
-// Reverse map (widget id → source constant NAME) — powers the "Copy layout" capture
-// button, which emits ready-to-paste `defInst(...)` lines for `defaultStatutoryLayout()`.
-const WIDGET_CONST: Record<string, string> = {
-  [W_KPI_ACTIVE]: 'W_KPI_ACTIVE', [W_KPI_DRAFTS]: 'W_KPI_DRAFTS', [W_KPI_COMPONENTS]: 'W_KPI_COMPONENTS',
-  [W_KPI_NIS]: 'W_KPI_NIS', [W_KPI_VERIFY]: 'W_KPI_VERIFY', [W_KPI_APPROVALS]: 'W_KPI_APPROVALS',
-  [W_CHART]: 'W_CHART', [W_READY]: 'W_READY', [W_DEADLINES]: 'W_DEADLINES',
-  [W_REGISTER]: 'W_REGISTER',
-};
-
-// Serialize a live board zone into the exact `defInst(...)` code block used by
-// `defaultStatutoryLayout()`, so a hand-arranged board can be captured verbatim.
-function serializeLayout(items: WidgetInstance[]): string {
-  const rows = [...items]
-    .sort((a, b) => (a.y - b.y) || (a.x - b.x))
-    .map(w => {
-      const name = (WIDGET_CONST[w.widgetId] ?? `'${w.widgetId}'`).padEnd(17);
-      const n = (v: number) => String(v).padStart(2);
-      return `        defInst(${name}, ${n(w.x)}, ${n(w.y)}, ${n(w.w)}, ${n(w.h)}, '${w.sizeKey}'),`;
-    });
-  return `      main: [\n${rows.join('\n')}\n      ],`;
-}
 
 function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
   return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
@@ -149,6 +133,10 @@ export interface StatutoryDashboardProps {
   onTabChange: (t: MainTab) => void;
   // Fully-wired tab content rendered by the parent (VersionsTab / NisClassesTab / …)
   tabContent: VNode;
+  /** Page-level header actions (Export · New ▾) rendered in the standard PageHeader. The
+   *  board's Customize control is appended after these so it sits in the header, not on
+   *  its own row. */
+  headerActions?: ComponentChildren;
 }
 
 // ── SVG helpers ────────────────────────────────────────────────────────────────
@@ -194,7 +182,7 @@ const HalfGauge = memo(function HalfGauge({ value, color }: { value: number; col
 export function StatutoryDashboard({
   versions, components, activeVer, activeNisClasses, drafts, pending, activeComponents, verifyQueue,
   versionsLoading,
-  tab, onTabChange, tabContent,
+  tab, onTabChange, tabContent, headerActions,
 }: StatutoryDashboardProps): VNode {
 
   const inactiveComponents = components.length - activeComponents;
@@ -304,7 +292,35 @@ export function StatutoryDashboard({
     chartInstanceRef.current = null;
     const { pts, lo, hi } = rateTrend;
     if (pts.length === 0) return;
-    chartInstanceRef.current = new Chart(chartCanvas, {
+    // Smooth left-to-right line DRAW: the final geometry is drawn instantly, then revealed by an
+    // eased clip that sweeps from the y-axis to the right edge. Clipping only the DATASETS (line +
+    // fill + points, never the axes/grid) avoids the per-point stepping and curve/fill wobble that
+    // a point-by-point animation produced; driven by rAF so it stays frame-smooth no matter how few
+    // points there are. No-ops under prefers-reduced-motion (draws instantly).
+    const reduceMotion = typeof window !== 'undefined'
+      && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const totalDuration = 1100;
+    const reveal = { v: reduceMotion ? 1 : 0 };
+    let didClip = false;
+    const revealPlugin = {
+      id: 'nisLineReveal',
+      beforeDatasetsDraw(chart: Chart): void {
+        // Once fully revealed, never clip — otherwise the last point's marker (which sits at the
+        // chart-area's right edge) gets shaved. Pad the moving clip a little past the sweep so a
+        // marker is never half-cut as the wipe crosses it.
+        if (reveal.v >= 1) { didClip = false; return; }
+        const area = chart.chartArea;
+        if (!area) return;
+        const { ctx } = chart;
+        ctx.save();
+        ctx.beginPath();
+        ctx.rect(area.left, area.top, (area.right - area.left) * reveal.v + 8, area.bottom - area.top);
+        ctx.clip();
+        didClip = true;
+      },
+      afterDatasetsDraw(chart: Chart): void { if (didClip) { chart.ctx.restore(); didClip = false; } },
+    };
+    const chart = new Chart(chartCanvas, {
       type: 'line',
       data: {
         labels: pts.map(p => p.year),
@@ -325,7 +341,10 @@ export function StatutoryDashboard({
       options: {
         responsive: true,
         maintainAspectRatio: false,
-        animation: { duration: 700 },
+        // Geometry is final immediately; the rAF-driven clip below does the reveal.
+        animation: false,
+        // Right/top padding so the last point's marker (no y-axis on the right) isn't clipped.
+        layout: { padding: { right: 10, left: 2, top: 6, bottom: 0 } },
         scales: {
           x: {
             border: { display: false },
@@ -366,8 +385,26 @@ export function StatutoryDashboard({
           },
         },
       },
+      plugins: [revealPlugin],
     });
+    chartInstanceRef.current = chart;
+
+    // Drive the clip 0→1 with an ease-out cubic, redrawing each frame (no Chart animation).
+    let rafId = 0;
+    if (!reduceMotion) {
+      const easeOutCubic = (t: number): number => 1 - Math.pow(1 - t, 3);
+      const start = performance.now();
+      const tick = (now: number): void => {
+        const t = Math.min((now - start) / totalDuration, 1);
+        reveal.v = easeOutCubic(t);
+        chart.draw();
+        if (t < 1) rafId = requestAnimationFrame(tick);
+      };
+      rafId = requestAnimationFrame(tick);
+    }
+
     return (): void => {
+      if (rafId) cancelAnimationFrame(rafId);
       chartInstanceRef.current?.destroy();
       chartInstanceRef.current = null;
     };
@@ -390,19 +427,8 @@ export function StatutoryDashboard({
     () => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can),
     [],
   );
-  // Capture the CURRENT board arrangement as ready-to-paste `defInst(...)` code, so a
-  // hand-tuned layout can be hard-coded into `defaultStatutoryLayout()` verbatim. The
-  // page + board share one query cache, so `boardItems` reflects live drag/resize.
-  async function captureLayout(): Promise<void> {
-    const code = serializeLayout(boardItems);
-    try { await navigator.clipboard.writeText(code); toast.success('Layout copied — paste it to Claude'); }
-    catch { toast('Copied below — select and copy it'); }
-    await dialog.prompt({
-      title: 'Board layout coordinates',
-      text: 'This is the exact arrangement on screen. It is already on your clipboard — paste it to Claude to hard-code as the default.',
-      type: 'textarea', value: code, confirmText: 'Done', cancelText: 'Close',
-    });
-  }
+  // "Copy layout" (capture the live arrangement as code) now lives in the shared board
+  // toolbar dropdown — passed `boardItems` below. Available on every board page, admin-only.
   function discardPreview(): void { setPreview(null); setLibOpen(true); }
   function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
 
@@ -490,11 +516,12 @@ export function StatutoryDashboard({
           )}
         </div>
 
-        {/* NIS schedule reference note */}
+        {/* NIS schedule reference note — static NIBTT regulatory constants, not computed */}
         <div class="sdb-nis-note">
           <div class="sdb-nis-note-hd">
             <i class="fa-solid fa-circle-info" />
             NIBTT Earnings-Class Schedule
+            <span class="sdb-nis-note-ref">Reference</span>
           </div>
           <div class="sdb-nis-note-chips">
             <span class="sdb-nis-chip">
@@ -517,6 +544,9 @@ export function StatutoryDashboard({
             <div class="sdb-nis-note-line">
               <span class="sdb-nis-note-k">Class Z</span> Reduced weekly rate for workers over pensionable age — employment-injury portion only.
             </div>
+          </div>
+          <div class="sdb-nis-note-src">
+            Static regulatory reference · NIBTT, effective 05 Jan 2026
           </div>
         </div>
       </div>
@@ -650,27 +680,29 @@ export function StatutoryDashboard({
     [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
   };
 
-  return (
-    <div class="sdb">
+  // The board's Customize control now lives in the standard PageHeader actions (right of
+  // Export · New ▾), so it no longer consumes a full-width row above the board.
+  const boardTools = canEditBoard ? (
+    <WidgetBoardToolbar
+      editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
+      onToggleEdit={() => setEditing(e => !e)}
+      onOpenLibrary={() => setLibOpen(true)}
+      onReset={() => void resetLayout()}
+      onSetDefault={() => void setAsDefault()}
+    />
+  ) : null;
 
-      {/* ── Customize toolbar at the TOP of the page ───────────────────────── */}
-      {canEditBoard && (
-        <div class="sdb-board-tools">
-          <WidgetBoardToolbar
-            editing={editing} canSetDefault={isAdmin}
-            onToggleEdit={() => setEditing(e => !e)}
-            onOpenLibrary={() => setLibOpen(true)}
-            onReset={() => void resetLayout()}
-            onSetDefault={() => void setAsDefault()}
-          />
-          {editing && (
-            <button type="button" class="sdb-capture-btn" onClick={() => void captureLayout()}
-              title="Copy the current board arrangement as code to hard-code as the default">
-              <i class="fa-solid fa-crosshairs" /> Copy layout
-            </button>
-          )}
-        </div>
-      )}
+  return (
+    <>
+      <PageHeader
+        icon="fa-scale-balanced"
+        module="Finance · Statutory Configuration"
+        title="Statutory Configuration"
+        sub="Manage Trinidad & Tobago statutory rate versions, NIS classes and pay components."
+        actions={<>{headerActions}{boardTools}</>}
+      />
+      <div class="sdb">
+
       {preview && (
         <div class="wmock-preview-banner">
           <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then add it or discard.</span>
@@ -678,7 +710,7 @@ export function StatutoryDashboard({
       )}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
-        cellHeight={6} gap={[12, 12]}
+        cellHeight={6} gap={[12, 12]} revealOnMount={false}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
@@ -689,6 +721,7 @@ export function StatutoryDashboard({
         onClose={() => setLibOpen(false)}
         onAddWidget={inst => addWidget('main', placeBottom(inst as WidgetInstance))}
         onPreviewOnBoard={p => setPreview(placeBottom(p))} />
-    </div>
+      </div>
+    </>
   );
 }

@@ -1,21 +1,23 @@
 /**
- * src/components/shared/AppTopBar.tsx
+ * src/components/shared/UserPill.tsx
  *
- * Horizontal page top bar (prototype). A navy bar pinned to the top of the page:
- *   main row  — page title/subtext · global search (hosts the AI assistant button
- *               on its right edge) · profile/notifications cluster in the corner.
- *   footer strip — breadcrumb trail · meta chips, capped by a thin brand-accent
- *               line along the bar's bottom edge.
+ * The Siomac global top bar — a navy bar pinned to the top of every page:
+ *   main row  — optional page title/subtext · global search (hosts the AI assistant
+ *               button on its right edge) · the AccountPill (notifications/messages/
+ *               tickets + profile + account menu) in the corner.
+ *   footer strip — optional breadcrumb trail · meta chips · module sub-nav, capped by
+ *               a thin brand-accent line along the bar's bottom edge.
  * Search opens the command palette (⌘K).
  *
- * Currently rendered on Employee Master only, to evaluate the look before making
- * it the global top bar across every page.
+ * Mounted ONCE in the app shell (AppShell) as the global top bar; the account cluster
+ * lives in AccountPill.tsx. All props are optional — bare <UserPill /> is the search +
+ * account bar; pass title/sub/module/crumbs/meta/nav to add page context.
  */
 
 import { type VNode } from 'preact';
 import { dialog } from '@lib/dialog';
 import type { PageMetaChip } from '@ui/components/PageHeader';
-import { ProfilePill } from './ProfilePill';
+import { AccountPill } from './AccountPill';
 
 function openSearch(): void {
   (window as unknown as { openCommandPalette?: () => void }).openCommandPalette?.();
@@ -26,7 +28,7 @@ function openAI(): void {
   void dialog.info('AI Assistant', 'The AI assistant is coming soon.');
 }
 
-export interface AppTopBarProps {
+export interface UserPillProps {
   /** Icon shown next to the title, e.g. 'fa-users'. */
   icon?: string;
   /** Page title, shown at the bar's left edge (replaces the page header's title). */
@@ -44,7 +46,7 @@ export interface AppTopBarProps {
   nav?: VNode;
 }
 
-export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [], nav }: AppTopBarProps): VNode {
+export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav }: UserPillProps): VNode {
   // Breadcrumb trail ends at the current page (title) — the footer strip is now
   // the dedicated "where am I" row, so it repeats the title as the final, current segment.
   const trail = [module, ...crumbs, title].filter(Boolean) as string[];
@@ -69,11 +71,11 @@ export function AppTopBar({ icon, title, sub, module, crumbs = [], meta = [], na
             <span class="app-topbar-search-text">Search &amp; jump to…</span>
           </button>
           <kbd class="app-topbar-kbd">⌘K</kbd>
-          <button type="button" class="app-topbar-ai" onClick={openAI} title="AI Assistant" aria-label="AI Assistant">
-            <span class="app-topbar-ai-glyph" aria-hidden="true" />
-          </button>
         </div>
-        <div class="app-topbar-pill"><ProfilePill iconsFirst /></div>
+        <button type="button" class="app-topbar-ai" onClick={openAI} title="AI Assistant" aria-label="AI Assistant">
+          <span class="app-topbar-ai-glyph" aria-hidden="true" />
+        </button>
+        <div class="app-topbar-pill"><AccountPill iconsFirst /></div>
       </div>
 
       {(nav || trail.length > 0 || meta.length > 0) && (

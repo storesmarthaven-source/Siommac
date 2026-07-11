@@ -37,6 +37,7 @@ import { useSessionStore, selectUserId } from '@store/session';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
 import { StepUpProvider }                from '@/hooks/useStepUp';
+import { UserPill }                       from '@shared/UserPill';
 import { Toaster }                       from '@ui/toast';
 import { ActionModalHost }               from '@/components/common/actions';
 
@@ -128,6 +129,9 @@ export default function AppShell() {
 
         <main class="main-content">
           <PageHeader />
+
+          {/* Global top bar — ONE instance for every page (search + AI + account). */}
+          <UserPill />
 
           {/* Header modals (anchored inside main-content, float above via CSS) */}
           <NotificationModal />

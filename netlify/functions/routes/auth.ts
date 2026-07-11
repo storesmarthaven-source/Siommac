@@ -1,7 +1,8 @@
 import { Hono }     from 'hono';
+import type { Context } from 'hono';
 import { getCookie, setCookie, deleteCookie } from 'hono/cookie';
 import { sb, createAnonClient } from '../lib/db';
-import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_ } from '../lib/auth';
+import { signUser, issueRefreshToken, rotateRefreshToken, revokeToken, requireUser, loadUserOverrides, log_, setRefreshCookie, clearRefreshCookie, RT_COOKIE_NAME, ACCESS_TOKEN_TTL_MS } from '../lib/auth';
 import type { AuthMethodClaims }       from '../lib/auth';
 import { loadRolePermissions, loadRoleIsEmployee, loadRoleScope } from '../lib/permissions';
 import { getProfileSignedUrl, resolveProfileImageUrl } from '../lib/photos';
@@ -77,11 +78,15 @@ function shouldPromptForPasskey(user: AppUser): boolean {
 }
 
 // ── Shared helper: build full session payload after successful auth ────────────
+// Takes the Hono context so the ONE issuance point can deliver the refresh token
+// as an httpOnly cookie — it is deliberately NOT part of the returned JSON, so it
+// never touches JS-readable storage (XSS cannot exfiltrate it).
 export async function buildSessionPayload(
+  c:       Context,
   u:       AppUser,
-  device?: { userAgent?: string; ip?: string },
   amr?:    Partial<AuthMethodClaims>,
 ) {
+  const device = deviceFrom(c);
   // Prefer the new public avatar URL (no signing, never stale); fall back to the
   // legacy signed-URL path only for users who haven't re-uploaded yet.
   const publicAvatar = resolveProfileImageUrl(u);
@@ -106,10 +111,14 @@ export async function buildSessionPayload(
   // the prompt cadence allows it (null or older than 7 days).
   const showPrompt = !hasPasskey && shouldPromptForPasskey(u);
 
+  // Refresh token travels ONLY in the httpOnly cookie — never in the JSON body.
+  setRefreshCookie(c, refreshToken);
+
   return {
     success:      true as const,
     token:        signUser(u, amr),
-    refreshToken,
+    // Client-side proactive refresh schedules off this (server-authoritative TTL).
+    expiresAt:    Date.now() + ACCESS_TOKEN_TTL_MS,
     userId:       u.id,
     username:     u.username,
     fullName:     u.full_name,
@@ -215,7 +224,7 @@ router.post('/login', async c => {
         ipAddress:   c.get('clientIp') ?? undefined,
       });
       if (tdResult.trusted) {
-        const payload = await buildSessionPayload(u, deviceFrom(c), {
+        const payload = await buildSessionPayload(c, u, {
           amr:          ['pwd', 'trusted_device'],
           mfaSatisfied: true,
           authStrength: 'trusted_device',
@@ -273,7 +282,7 @@ router.post('/login', async c => {
         ipAddress:   c.get('clientIp') ?? undefined,
       });
       if (tdResult.trusted) {
-        const payload = await buildSessionPayload(u, deviceFrom(c), {
+        const payload = await buildSessionPayload(c, u, {
           amr:          ['pwd', 'trusted_device'],
           mfaSatisfied: true,
           authStrength: 'trusted_device',
@@ -314,7 +323,7 @@ router.post('/login', async c => {
   // No 2FA required — issue full session (password-only)
   console.log('[login] building session for', u.username);
   try {
-    const payload = await buildSessionPayload(u, deviceFrom(c), {
+    const payload = await buildSessionPayload(c, u, {
       amr:          ['pwd'],
       mfaSatisfied: false,
       authStrength: 'password_only',
@@ -385,7 +394,7 @@ router.post('/verify2fa', async c => {
 
   await consumeChallenge(challenge.id);
 
-  const session = await buildSessionPayload(u, deviceFrom(c), {
+  const session = await buildSessionPayload(c, u, {
     amr:           ['pwd', 'otp'],
     mfaSatisfied:  true,
     mfaVerifiedAt: new Date().toISOString(),
@@ -508,7 +517,7 @@ router.post('/confirm2faSetup', async c => {
 
   await log_(uFull, '2fa_enrolled', 'user', uFull.id, '');
 
-  const session = await buildSessionPayload(uFull, deviceFrom(c), {
+  const session = await buildSessionPayload(c, uFull, {
     amr:           ['pwd', 'otp'],
     mfaSatisfied:  true,
     mfaVerifiedAt: new Date().toISOString(),
@@ -557,29 +566,31 @@ router.post('/disable2fa', async c => {
 });
 
 // ── Refresh — rotate refresh token, issue new access token ────────────────────
-const RefreshSchema = z.object({
-  refreshToken: z.string().min(1).max(256),
-});
-
+// The refresh token arrives ONLY via the httpOnly cookie (never the body) and the
+// rotated replacement leaves the same way — JS on either side never sees it.
 router.post('/refreshToken', async c => {
-  const v = zv(c, RefreshSchema, c.get('body').args ?? {});
-  if (!v.ok) return v.response;
+  const rt = getCookie(c, RT_COOKIE_NAME);
+  if (!rt) {
+    return c.json({ success: false, message: 'No refresh token. Please log in again.' }, 401);
+  }
 
-  const result = await rotateRefreshToken(v.data.refreshToken);
+  const result = await rotateRefreshToken(rt);
   if (!result) {
+    clearRefreshCookie(c);
     return c.json({ success: false, message: 'Invalid or expired refresh token. Please log in again.' }, 401);
   }
 
+  setRefreshCookie(c, result.refreshToken);
   await log_(result.user, 'tokenRefresh', 'user', result.user.id, '');
 
   return c.json({
-    success:      true,
-    token:        result.accessToken,
-    refreshToken: result.refreshToken,
+    success:   true,
+    token:     result.accessToken,
+    expiresAt: Date.now() + ACCESS_TOKEN_TTL_MS,
   });
 });
 
-// ── Logout — revoke access token JTI + delete refresh token ──────────────────
+// ── Logout — revoke access token JTI + delete refresh token + clear cookie ────
 router.post('/logout', async c => {
   const u    = await requireUser(c);
   const auth = c.get('auth');
@@ -590,6 +601,7 @@ router.post('/logout', async c => {
     log_(u, 'logout', 'user', u.id, ''),
   ]);
 
+  clearRefreshCookie(c);
   return c.json({ success: true });
 });
 

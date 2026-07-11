@@ -12,7 +12,6 @@
 import { type VNode } from 'preact';
 import { useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { PageHeader } from '@ui';
-import { AppTopBar } from '@shared/AppTopBar';
 import { useSessionStore, toast } from '@store';
 import { resolvePermission } from '@lib/permissions';
 import {
@@ -1146,7 +1145,6 @@ export function MyProfileSection(): VNode {
 
   return (
     <div class="mp76">
-      <AppTopBar />
       <PageHeader icon="fa-user" title="My Profile" sub="Manage your personal information and account security." hidePill />
 
       <div class="mp76-grid-top">

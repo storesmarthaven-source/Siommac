@@ -22,6 +22,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
+import { can } from '@lib/permissions';
 import { Drawer, HrfinPill, type HrfinTone } from '@ui';
 import {
   usePayrollRun,
@@ -30,6 +31,7 @@ import {
   useRunWarnings,
   useRunPayslips,
   useRunExports,
+  useRunGlPreview,
   useExportDownload,
   useRunAuditLog,
   type PayrollRun,
@@ -73,7 +75,7 @@ function fmtDateTime(iso: string | null | undefined): string {
 
 // ── Tab types ─────────────────────────────────────────────────────────────────
 
-type Tab = 'summary' | 'lines' | 'inputs' | 'warnings' | 'payslips' | 'exports' | 'approvals' | 'timeline' | 'audit' | 'related';
+type Tab = 'summary' | 'lines' | 'inputs' | 'warnings' | 'payslips' | 'exports' | 'gl' | 'approvals' | 'timeline' | 'audit' | 'related';
 
 const TABS: { key: Tab; label: string }[] = [
   { key: 'summary',   label: 'Summary' },
@@ -82,6 +84,7 @@ const TABS: { key: Tab; label: string }[] = [
   { key: 'warnings',  label: 'Warnings' },
   { key: 'payslips',  label: 'Payslips' },
   { key: 'exports',   label: 'Exports' },
+  { key: 'gl',        label: 'GL' },
   { key: 'approvals', label: 'Approvals' },
   { key: 'timeline',  label: 'Timeline' },
   { key: 'audit',     label: 'Audit' },
@@ -454,7 +457,9 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
   const { data: nameMap } = useEmployeeNames(allIds);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [notifying, setNotifying] = useState(false);
-  const regenMut = usePayrollMutation(financePayrollApi.generatePayslips);
+  const renderMut = usePayrollMutation(financePayrollApi.renderRunPayslips);
+  const emailMut = usePayrollMutation(financePayrollApi.deliverRunPayslips);
+  const canDistribute = can('finance.payroll.payslips.distribute');
 
   async function downloadPayslip(payslip: Payslip): Promise<void> {
     try {
@@ -476,14 +481,35 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
     toast(`Downloaded ${toDownload.length} payslip(s).`);
   }
 
-  async function regenerate(): Promise<void> {
+  async function generatePayslips(): Promise<void> {
     try {
-      await regenMut.mutateAsync({ runId });
+      const r = await renderMut.mutateAsync({ runId });
       void refetch();
-      toast('Payslips regenerated.');
+      toast(r.failed > 0
+        ? `Rendered ${r.rendered}/${r.total} payslips — ${r.failed} failed (retry individually).`
+        : `Generated ${r.rendered} payslip PDF${r.rendered === 1 ? '' : 's'}.`);
     } catch (e) {
-      toast((e as Error).message ?? 'Regenerate failed.');
+      toast((e as Error).message ?? 'Payslip generation failed.');
     }
+  }
+
+  async function emailPayslips(): Promise<void> {
+    try {
+      const r = await emailMut.mutateAsync({ runId });
+      const parts = [`${r.sent} sent`];
+      if (r.skipped > 0) parts.push(`${r.skipped} skipped`);
+      if (r.failed > 0) parts.push(`${r.failed} failed`);
+      toast(`Payslip emails: ${parts.join(', ')} of ${r.total}.`);
+    } catch (e) {
+      toast((e as Error).message ?? 'Emailing payslips failed.');
+    }
+  }
+
+  async function resendOne(payslipId: string): Promise<void> {
+    try {
+      const d = await financePayrollApi.deliverPayslip({ payslipId });
+      toast(d.status === 'sent' ? 'Payslip emailed.' : d.status === 'skipped' ? `Skipped: ${d.error ?? 'no email/disabled'}` : `Failed: ${d.error ?? 'send error'}`);
+    } catch (e) { toast((e as Error).message ?? 'Email failed.'); }
   }
 
   async function notifyEmployees(): Promise<void> {
@@ -517,7 +543,16 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
   }
 
   if (isLoading) return <div class="hrfin-empty">Loading payslips…</div>;
-  if (!payslips || payslips.length === 0) return <div class="hrfin-empty">No payslips generated yet. Lock the run first, then generate payslips.</div>;
+  if (!payslips || payslips.length === 0) return (
+    <div class="hrfin-empty" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 12 }}>
+      <div>No payslips yet. The run must be <strong>locked</strong> first.</div>
+      {canManage && (
+        <button type="button" class="hrfin-action is-primary" disabled={renderMut.isPending} onClick={() => void generatePayslips()}>
+          {renderMut.isPending ? 'Generating…' : 'Generate payslips'}
+        </button>
+      )}
+    </div>
+  );
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
@@ -538,9 +573,15 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
         )}
         {canManage && (
           <>
-            <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={regenMut.isPending} onClick={() => void regenerate()}>
-              {regenMut.isPending ? 'Regenerating…' : 'Regenerate'}
+            <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={renderMut.isPending} onClick={() => void generatePayslips()}>
+              {renderMut.isPending ? 'Generating…' : 'Generate payslips'}
             </button>
+            {canDistribute && (
+              <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={emailMut.isPending} onClick={() => void emailPayslips()}
+                title="Email each rendered payslip to the employee as a password-protected PDF">
+                {emailMut.isPending ? 'Emailing…' : 'Email payslips'}
+              </button>
+            )}
             <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={notifying} onClick={() => void notifyEmployees()}>
               {notifying ? 'Notifying…' : 'Notify employees'}
             </button>
@@ -565,19 +606,119 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
           <div style={{ flex: 1 }}>
             <EmployeeCellResolved resolved={nameMap?.get(p.employeeId)} fallbackId={p.employeeId} />
             <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', marginTop: 2 }}>
-              {p.payslipNo} · Generated {fmtDateTime(p.generatedAt)}
+              {p.payslipNo} · {p.filePath
+                ? <span style={{ color: '#16a34a', fontWeight: 600 }}>PDF ready</span>
+                : <span style={{ color: '#b45309', fontWeight: 600 }}>PDF pending</span>}
+              {' · '}Generated {fmtDateTime(p.generatedAt)}
             </div>
           </div>
+          {canDistribute && p.filePath && (
+            <button
+              type="button"
+              class="hrfin-action"
+              style={{ fontSize: 11, padding: '4px 10px' }}
+              onClick={e => { e.stopPropagation(); void resendOne(p.id); }}
+              title="Email this payslip to the employee"
+            >
+              Email
+            </button>
+          )}
           <button
             type="button"
             class="hrfin-action"
-            style={{ fontSize: 11, padding: '4px 10px' }}
+            style={{ fontSize: 11, padding: '4px 10px', opacity: p.filePath ? 1 : 0.5 }}
+            disabled={!p.filePath}
             onClick={e => { e.stopPropagation(); void downloadPayslip(p); }}
           >
             Download
           </button>
         </div>
       ))}
+    </div>
+  );
+}
+
+// ── Tab: GL (general-ledger posting) ────────────────────────────────────────────
+
+function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
+  const { data: p, isLoading } = useRunGlPreview(runId);
+  const postMut    = usePayrollMutation(financePayrollApi.glPost);
+  const reverseMut = usePayrollMutation(financePayrollApi.glReverse);
+  const canPost = can('finance.payroll.gl.post');
+
+  async function post(): Promise<void> {
+    try {
+      const r = await postMut.mutateAsync({ runId });
+      toast(`GL posted: ${r.journalNo} — ${fmtMoney(r.totalDebit)} (balanced).`);
+    } catch (e) { toast((e as Error).message ?? 'GL posting failed.'); }
+  }
+  async function reverse(): Promise<void> {
+    const reason = await dialog.prompt({
+      title: 'Reverse GL posting',
+      text: 'Creates a reversing journal and unlinks the run so it can be re-posted after a correction.',
+      placeholder: 'Reason (required)', confirmText: 'Reverse posting',
+    });
+    if (!reason?.trim()) return;
+    try {
+      const r = await reverseMut.mutateAsync({ runId, reason });
+      toast(`GL reversed — ${r.reversingJournalNo}.`);
+    } catch (e) { toast((e as Error).message ?? 'GL reversal failed.'); }
+  }
+
+  if (isLoading) return <div class="hrfin-empty">Loading GL…</div>;
+  if (!p) return <div class="hrfin-empty">GL preview unavailable.</div>;
+
+  const isLocked = runStatus === 'locked' || runStatus === 'exported';
+  const canDoPost = canPost && !p.alreadyPosted && isLocked && p.balanced && p.missingMappings.length === 0;
+  const note = (text: string, warn = false): VNode => (
+    <div style={{ fontSize: 12, color: warn ? '#b45309' : 'var(--hrfin-text-secondary)', padding: '2px 0' }}>{text}</div>
+  );
+
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap', padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
+        {p.alreadyPosted
+          ? <HrfinPill tone="ok">Posted to GL</HrfinPill>
+          : <HrfinPill tone={p.balanced ? 'nu' : 'bad'}>{p.balanced ? 'Balanced · not posted' : 'Unbalanced'}</HrfinPill>}
+        {p.missingMappings.length > 0 && <HrfinPill tone="bad">{p.missingMappings.length} unmapped</HrfinPill>}
+        <div style={{ flex: 1 }} />
+        {canPost && !p.alreadyPosted && (
+          <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={!canDoPost || postMut.isPending} onClick={() => void post()}>
+            {postMut.isPending ? 'Posting…' : 'Post to GL'}
+          </button>
+        )}
+        {canPost && p.alreadyPosted && (
+          <button type="button" class="hrfin-action" style={{ fontSize: 11 }} disabled={reverseMut.isPending} onClick={() => void reverse()}>
+            {reverseMut.isPending ? 'Reversing…' : 'Reverse posting'}
+          </button>
+        )}
+      </div>
+
+      {!isLocked && !p.alreadyPosted && note('GL can be posted once the run is locked.')}
+      {p.missingMappings.length > 0 && note('Missing account mappings: ' + p.missingMappings.join(', ') + '. Configure payroll GL mappings before posting.', true)}
+
+      <table class="vt-table" style={{ fontSize: 12 }}>
+        <thead>
+          <tr><th>Account</th><th>Line</th><th class="tc">Debit</th><th class="tc">Credit</th></tr>
+        </thead>
+        <tbody>
+          {p.lines.map((l, i) => (
+            <tr key={i}>
+              <td>{l.accountCode ?? <span style={{ color: '#dc2626' }}>unmapped</span>}{l.accountName ? ` · ${l.accountName}` : ''}</td>
+              <td>{humanize(l.mappingKey)}</td>
+              <td class="tc" style={{ fontVariantNumeric: 'tabular-nums' }}>{l.side === 'debit' ? fmtMoney(l.amount) : ''}</td>
+              <td class="tc" style={{ fontVariantNumeric: 'tabular-nums' }}>{l.side === 'credit' ? fmtMoney(l.amount) : ''}</td>
+            </tr>
+          ))}
+        </tbody>
+        <tfoot>
+          <tr style={{ fontWeight: 700 }}>
+            <td colSpan={2}>Totals</td>
+            <td class="tc" style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(p.totalDebit)}</td>
+            <td class="tc" style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(p.totalCredit)}</td>
+          </tr>
+        </tfoot>
+      </table>
     </div>
   );
 }
@@ -986,6 +1127,7 @@ export function PayRunDrawer({
             {tab === 'warnings'  && <WarningsTab runId={run.id} canManage={canManage} />}
             {tab === 'payslips'  && <PayslipsTab runId={run.id} canManage={canManage} />}
             {tab === 'exports'   && <ExportsTab runId={run.id} canExport={canApprove || canManage} />}
+            {tab === 'gl'        && <GlTab runId={run.id} runStatus={run.status} />}
             {tab === 'approvals' && <ApprovalsTab run={run} />}
             {tab === 'timeline'  && <TimelineTab run={run} />}
             {tab === 'audit'     && <AuditTab runId={run.id} />}

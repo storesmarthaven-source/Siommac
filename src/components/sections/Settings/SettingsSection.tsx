@@ -40,12 +40,8 @@ import { SwzCatalogPage } from './SwzCatalogPage';
 import { SwzIcon } from './swzIcons';
 import { getSwzPage, buildSettingsMenuHtml, type SwzPage } from './settingsNav';
 import { showSection, buildSidebar } from '@/components/nav/navCore';
-import { RolesTab }          from '@/components/sections/SuperadminConsole/tabs/RolesTab';
-import { ModulesTab }        from '@/components/sections/SuperadminConsole/tabs/ModulesTab';
-import { PermissionsTab }    from '@/components/sections/SuperadminConsole/tabs/PermissionsTab';
-import { ApprovalsTab }      from '@/components/sections/SuperadminConsole/tabs/ApprovalsTab';
-import { SessionsTab }       from '@/components/sections/SuperadminConsole/tabs/SessionsTab';
-import { AuditLogTab }       from '@/components/sections/SuperadminConsole/tabs/AuditLogTab';
+// RBAC tabs (Roles / Modules / Permissions / Approvals / Sessions / Audit Log) moved
+// to the top-level Access Control section. Only the non-RBAC security tools remain here.
 import { UserSecurityPanel } from '@/components/sections/SuperadminConsole/tabs/UserSecurityPanel';
 import { SecurityPolicyTab } from '@/components/sections/SuperadminConsole/tabs/SecurityPolicyTab';
 import { UIKitPage }         from '@ui/examples/UIKitPage';
@@ -1284,12 +1280,6 @@ function PlaceholderPage({ meta }: { meta: SwzPage }): VNode {
 // ── Console (Administration) tools embedded in the v2 shell ────────────────────
 
 const CONSOLE_BODIES: Record<string, ComponentType> = {
-  'roles':           RolesTab,
-  'modules':         ModulesTab,
-  'permissions':     PermissionsTab,
-  'approvals':       ApprovalsTab,
-  'sessions':        SessionsTab,
-  'audit-log':       AuditLogTab,
   'user-security':   UserSecurityPanel,
   'security-policy': SecurityPolicyTab,
   'ui-kit':          UIKitPage,

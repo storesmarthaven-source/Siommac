@@ -212,11 +212,11 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         </div>
         <div style={{ flexShrink: 0 }}>
           <NewMenu label="New" fill items={[
-            { label: 'New Hazard',          icon: 'fa-radiation',         sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
-            { label: 'New Risk Assessment', icon: 'fa-table-cells-large', sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
-            { label: 'New JSA',             icon: 'fa-list-ol',           sub: 'Job safety analysis',       onSelect: () => { setJsaPrefill(null); setJsaFormOpen(true); } },
-            { label: 'Generate JSA from Risk Assessment', icon: 'fa-wand-magic-sparkles', sub: 'Carry over scope & hazards', onSelect: () => setGenerateOpen(true) },
-            { label: 'Workflow Templates',  icon: 'fa-diagram-project',   divider: true,                    onSelect: () => setTemplatesOpen(true) },
+            { label: 'New Hazard',          icon: 'Radiation',    sub: 'Identify & rate a hazard', onSelect: () => setHazardFormOpen(true) },
+            { label: 'New Risk Assessment', icon: 'LayoutGrid',   sub: '5×5 matrix scoring',        onSelect: () => setRaFormOpen(true) },
+            { label: 'New JSA',             icon: 'ListOrdered',  sub: 'Job safety analysis',       onSelect: () => { setJsaPrefill(null); setJsaFormOpen(true); } },
+            { label: 'Generate JSA from Risk Assessment', icon: 'WandSparkles', sub: 'Carry over scope & hazards', onSelect: () => setGenerateOpen(true) },
+            { label: 'Workflow Templates',  icon: 'Workflow',     divider: true,                    onSelect: () => setTemplatesOpen(true) },
           ]} />
         </div>
       </div>

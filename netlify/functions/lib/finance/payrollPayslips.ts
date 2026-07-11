@@ -16,11 +16,13 @@
 // to each employee via notifyMany (fire-and-forget, dedupe-keyed per run).
 // ============================================================================
 
+import { createHash } from 'crypto';
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { notifyMany } from '../notify';
+import { buildPayslipSnapshot, renderPayslipPdf } from './payslipPdf';
 
 // -- DTO -----------------------------------------------------------------------
 
@@ -46,6 +48,24 @@ interface DbPayslipRow {
   generated_at: string;
   generated_by: string | null;
   metadata: Record<string, unknown>;
+}
+
+/** Fire the "payslip ready" in-app notification to a set of employees (dedupe-keyed per run). */
+function notifyPayslipReady(employeeIds: string[], runNo: string, runId: string): void {
+  if (employeeIds.length === 0) return;
+  void notifyMany(employeeIds, {
+    type:        'finance.payroll.payslip.ready',
+    title:       'Your payslip is ready',
+    body:        'Your payslip for payroll run ' + runNo + ' has been generated. Log in to view and download it.',
+    link:        's-finance-my-payslips',
+    module:      'finance_payroll',
+    severity:    'info',
+    sourceType:  'payroll_run',
+    sourceId:    runId,
+    actionRoute: 's-finance-my-payslips',
+    metadata:    { runNo, runId },
+    dedupeKey:   'payslip.ready.' + runId,
+  });
 }
 
 function toPayslipDto(r: DbPayslipRow): PayslipDto {
@@ -77,7 +97,7 @@ function toPayslipDto(r: DbPayslipRow): PayslipDto {
  *   4. Notifies each newly-created payslip employee (fire-and-forget via notifyMany).
  *      dedupeKey payslip.ready.<runId> prevents re-notification on idempotent re-generate.
  */
-export async function generatePayslips(runId: string, actorId: string): Promise<PayslipDto[]> {
+export async function generatePayslips(runId: string, actorId: string, opts: { notify?: boolean } = { notify: true }): Promise<PayslipDto[]> {
   const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
     .select('id, run_no, status')
     .eq('id', runId)
@@ -143,23 +163,96 @@ export async function generatePayslips(runId: string, actorId: string): Promise<
       severity:         'info',
       payload:          { runNo: run.run_no, generatedCount: missing.length },
     });
-    const newEmployeeIds = missing.map(l => l.employee_id);
-    void notifyMany(newEmployeeIds, {
-      type:        'finance.payroll.payslip.ready',
-      title:       'Your payslip is ready',
-      body:        'Your payslip for payroll run ' + run.run_no + ' has been generated. Log in to view and download it.',
-      link:        's-finance-my-payslips',
-      module:      'finance_payroll',
-      severity:    'info',
-      sourceType:  'payroll_run',
-      sourceId:    runId,
-      actionRoute: 's-finance-my-payslips',
-      metadata:    { runNo: run.run_no, runId },
-      dedupeKey:   'payslip.ready.' + runId,
-    });
+    // Notification is opt-in: the render flow (renderRunPayslips) suppresses it here and
+    // instead notifies AFTER the PDFs actually exist, so employees are never told a payslip
+    // is "ready" before it can be downloaded.
+    if (opts.notify) {
+      const newEmployeeIds = missing.map(l => l.employee_id);
+      notifyPayslipReady(newEmployeeIds, run.run_no, runId);
+    }
   }
 
   return listPayslipsForRun(runId);
+}
+
+// -- Render a single payslip PDF -> storage ------------------------------------
+
+/**
+ * Render one payslip to a PDF, upload it to the private `payslips` bucket, and stamp
+ * file_path + pdf_rendered_at + checksum on the row. Idempotent (upsert overwrites).
+ * Side-effects: hr_audit_log + app_event. Throws on failure (caller isolates per-row).
+ */
+export async function renderPayslip(payslipId: string, actorId: string): Promise<PayslipDto> {
+  const snapshot = await buildPayslipSnapshot(payslipId);
+  const pdf = await renderPayslipPdf(snapshot);
+  const checksum = createHash('sha256').update(pdf).digest('hex');
+  const filePath = `${snapshot.runId}/${snapshot.payslipNo}.pdf`;
+
+  const { error: upErr } = await sb.storage.from('payslips')
+    .upload(filePath, pdf, { contentType: 'application/pdf', upsert: true });
+  if (upErr) throw Object.assign(new Error('renderPayslip/upload: ' + upErr.message), { status: 500 });
+
+  const nowIso = new Date().toISOString();
+  const { data, error } = await sb.from('finance_payslips')
+    .update({ file_path: filePath, pdf_rendered_at: nowIso, pdf_checksum: checksum })
+    .eq('id', payslipId).select('*').single<DbPayslipRow>();
+  if (error) throw Object.assign(new Error('renderPayslip/update: ' + error.message), { status: 500 });
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: snapshot.runId, actorId,
+    action: 'payslip.rendered',
+    newState: { payslipId, payslipNo: snapshot.payslipNo, checksum, employeeId: snapshot.employee.id },
+  });
+  void emitAppEvent({
+    eventType: 'finance.payroll.payslip.rendered',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payslip', sourceEntityId: payslipId,
+    actorUserId: actorId, severity: 'info',
+    payload: { payslipNo: snapshot.payslipNo, employeeId: snapshot.employee.id },
+  });
+
+  return toPayslipDto(data);
+}
+
+// -- Render all payslips for a locked run --------------------------------------
+
+export interface RenderRunResult { rendered: number; failed: number; total: number }
+
+/**
+ * Ensure payslip rows exist for a locked run (idempotent generate), then render a PDF for
+ * each one still missing its file. Row-level failure isolation: one bad line increments
+ * `failed` but never aborts the batch or the run (§11 — PDF failure must not invalidate the
+ * run). For very large runs this is Wave-8 job territory; here it renders inline.
+ */
+export async function renderRunPayslips(runId: string, actorId: string): Promise<RenderRunResult> {
+  // Silent generate (notify=false): we notify AFTER the PDFs exist, not before.
+  const all = await generatePayslips(runId, actorId, { notify: false });
+  const pending = all.filter(p => !p.filePath);
+  let rendered = 0, failed = 0;
+  const renderedEmployeeIds: string[] = [];
+  for (const ps of pending) {
+    try { const dto = await renderPayslip(ps.id, actorId); rendered++; renderedEmployeeIds.push(dto.employeeId); }
+    catch { failed++; }
+  }
+
+  // Notify only the employees whose payslip actually rendered this round.
+  if (renderedEmployeeIds.length > 0) {
+    const { data: run } = await sb.from('finance_payroll_runs').select('run_no').eq('id', runId).maybeSingle<{ run_no: string }>();
+    notifyPayslipReady(renderedEmployeeIds, run?.run_no ?? runId, runId);
+  }
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.payslips_rendered',
+    newState: { rendered, failed, total: all.length },
+  });
+  void emitAppEvent({
+    eventType: 'finance.payroll.payslips.rendered',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
+    actorUserId: actorId, severity: failed > 0 ? 'warning' : 'success',
+    payload: { rendered, failed, total: all.length },
+  });
+
+  return { rendered, failed, total: all.length };
 }
 
 // -- List payslips for a run (Finance only) ------------------------------------

@@ -22,7 +22,8 @@ export interface ApiError extends ApiResponse {
 export interface LoginResponse extends ApiResponse {
   // ── Full session (2FA complete or not required) ──────────────────────────
   token?:          string;   // short-lived access token (15 min)
-  refreshToken?:   string;   // long-lived refresh token (7 days, rotating)
+  expiresAt?:      number;   // unix ms — server-authoritative access-token expiry
+  // (refresh token travels ONLY as an httpOnly cookie — never in this payload)
   userId?:         string;
   username?:       string;
   fullName?:       string;
@@ -72,7 +73,7 @@ export interface Setup2faResponse extends ApiResponse {
 export interface Verify2faResponse extends ApiResponse {
   // On success, same full session fields as LoginResponse
   token?:          string;
-  refreshToken?:   string;
+  expiresAt?:      number;
   userId?:         string;
   username?:       string;
   fullName?:       string;

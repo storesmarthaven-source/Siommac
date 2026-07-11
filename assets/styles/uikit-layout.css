@@ -837,18 +837,33 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
 @media (max-width: 600px)  { .hse-spark-grid { grid-template-columns: 1fr; } .hse-main-grid { grid-template-columns: 1fr; } .hero-footer { flex-direction: column; align-items: stretch; } }
 
 /* ── Standard sub-module page header (PageHeader) ───────────────────────────── */
+/* The standard Siomac page header (one per page, under the global UserPill bar):
+   slate icon tile · tapered navy rule · breadcrumb + navy title · sub · actions,
+   capped by a bottom separator that fades out at both ends. */
 .ui-page-header {
+  position: relative;
   display: flex; align-items: center; justify-content: space-between;
-  gap: var(--space-4); flex-wrap: wrap; margin-bottom: var(--space-4);
+  gap: var(--space-4); flex-wrap: wrap;
+  padding-bottom: 22px;
+  margin-top: var(--space-10); margin-bottom: 32px;
 }
-.ui-page-head-main { display: flex; align-items: center; gap: 14px; min-width: 0; flex: 1; }
+.ui-page-header::after {
+  content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 1px;
+  background: linear-gradient(90deg, rgba(211,217,228,0) 0%, #d3d9e4 22%, #d3d9e4 78%, rgba(211,217,228,0) 100%);
+}
+.ui-page-head-main { display: flex; align-items: center; gap: 16px; min-width: 0; flex: 1; }
 .ui-page-head-icon {
-  width: 40px; height: 40px; flex-shrink: 0; display: grid; place-items: center;
-  border-radius: 12px; font-size: 1rem;
-  background: var(--siomac-navy); color: #fff;
+  width: 48px; height: 48px; flex-shrink: 0; display: grid; place-items: center;
+  border-radius: 13px; font-size: 1.1rem;
+  background: #eef1f6; color: #475569; border: 1px solid #dde3ec;
 }
 .ui-page-head-icon i { display: grid !important; place-items: center !important; }
-.ui-page-head-text { min-width: 0; position: relative; top: 6px; }
+/* Thin solid slate rule (kept simple — not a hard bar) between the tile and text. */
+.ui-page-head-rule {
+  width: 2px; flex: none; align-self: stretch; min-height: 44px;
+  border-radius: 2px; background: #64748b;
+}
+.ui-page-head-text { min-width: 0; }
 .ui-page-crumb {
   display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
   font-size: 0.68rem; font-weight: 500; color: var(--text-muted); margin-bottom: 3px;
@@ -1161,3 +1176,38 @@ body[data-theme="dark"] .hse-hero-area-icon { color: rgba(255,255,255,.07); }
    intentionally kept in HSE.css instead. ─────────────────────────────────────── */
 
 }
+
+/* ── Standard dropdown / menu open animation (app-wide) ──────────────────────
+   ONE reusable pop for every dropdown menu (NewMenu, the board Customize menu,
+   register-table filter menus, …). A subtle fade + rise from the top. Add
+   `ui-menu-pop` to any menu container, or reference the `ui-menu-pop` keyframe.
+   Kept UNLAYERED so it wins over @layer sections and is never accidentally
+   overridden. No-ops under prefers-reduced-motion. */
+@keyframes ui-menu-pop {
+  from { opacity: 0; transform: translateY(-6px) scale(.985); }
+  to   { opacity: 1; transform: translateY(0) scale(1); }
+}
+.ui-menu-pop {
+  animation: ui-menu-pop .14s cubic-bezier(.22, 1, .36, 1);
+  transform-origin: top center;
+}
+@media (prefers-reduced-motion: reduce) { .ui-menu-pop { animation: none; } }
+
+/* ── Standard dropdown menu shell + items (app-wide) ─────────────────────────
+   The one look for a dropdown menu: white card + rounded rows with a hover
+   background. Callers set only the anchor offset (top / left / right). Pair with
+   `ui-menu-pop` for the open animation. Unlayered so it isn't overridden. */
+.ui-menu {
+  position: absolute; z-index: 41; min-width: 220px;
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #e4e7ec);
+  border-radius: var(--radius-sm, 10px); box-shadow: var(--elev-4, 0 12px 28px rgba(16, 24, 40, .14));
+  padding: 5px; display: grid; gap: 1px;
+}
+.ui-menu-item {
+  display: flex; align-items: center; gap: 10px; width: 100%; padding: 9px 12px;
+  background: none; border: none; border-radius: 8px; cursor: pointer; text-align: left;
+  color: var(--siomac-navy, #1b2d54); font: inherit; font-size: .82rem; font-weight: 500;
+}
+.ui-menu-item:hover { background: #f2f6fc; }
+.ui-menu-item:disabled { opacity: .5; cursor: default; background: none; }
+.ui-menu-divider { height: 1px; margin: 4px 6px; background: var(--border, #e4e7ec); }

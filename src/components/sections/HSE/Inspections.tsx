@@ -161,8 +161,8 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         </div>
         <div style={{ flexShrink: 0 }}>
           <NewMenu label="Schedule Inspection" fill items={[
-            { label: 'Schedule Inspection', icon: 'fa-calendar-plus', sub: 'Create a new inspection or audit', onSelect: () => setDialogOpen(true) },
-            { label: 'New Checklist Template', icon: 'fa-list-check', sub: 'Build a reusable inspection checklist', onSelect: () => setTemplateOpen(true) },
+            { label: 'Schedule Inspection', icon: 'CalendarPlus', sub: 'Create a new inspection or audit', onSelect: () => setDialogOpen(true) },
+            { label: 'New Checklist Template', icon: 'ListChecks', sub: 'Build a reusable inspection checklist', onSelect: () => setTemplateOpen(true) },
           ]} />
         </div>
       </div>

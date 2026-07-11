@@ -25,56 +25,11 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 
-// ── applyPermissionGrant — apply an APPROVED maker-checker grant to live RBAC ──
-// Called by routes/permissionApprovals.ts after a second superadmin approves a
-// pending permission_grant_approvals row. Writes the same tables the direct
-// admin routes use, so behaviour is identical to an immediate grant.
-
-export interface PermissionGrantInput {
-  request_type:    'role_permission' | 'user_override';
-  target_role?:    string;
-  target_user_id?: string;
-  permission_key:  string;
-  effect:          'allow' | 'deny';
-}
-
-export async function applyPermissionGrant(
-  grant: PermissionGrantInput,
-  actorUsername: string,
-): Promise<{ ok: boolean; message?: string }> {
-  if (grant.request_type === 'role_permission') {
-    const role = grant.target_role;
-    if (!role) return { ok: false, message: 'target_role is required for a role_permission grant' };
-    if (grant.effect === 'allow') {
-      // Role RBAC has no deny-rows: presence = granted. Add idempotently.
-      const { error } = await sb.from('role_permissions')
-        .upsert({ role_name: role, permission: grant.permission_key }, { onConflict: 'role_name,permission' });
-      if (error) return { ok: false, message: error.message };
-    } else {
-      const { error } = await sb.from('role_permissions')
-        .delete().eq('role_name', role).eq('permission', grant.permission_key);
-      if (error) return { ok: false, message: error.message };
-    }
-    invalidateRolePermissions(role);
-    return { ok: true };
-  }
-
-  // user_override — explicit per-user grant/deny row (granted = allow).
-  const userId = grant.target_user_id;
-  if (!userId) return { ok: false, message: 'target_user_id is required for a user_override grant' };
-  const { error } = await sb.from('user_permissions').upsert(
-    {
-      user_id:    userId,
-      permission: grant.permission_key,
-      granted:    grant.effect === 'allow',
-      set_by:     actorUsername,
-      set_at:     new Date().toISOString(),
-    },
-    { onConflict: 'user_id,permission' },
-  );
-  if (error) return { ok: false, message: error.message };
-  return { ok: true };
-}
+// The APPROVED-grant apply path lives in the DB now: routes/permissionApprovals.ts
+// calls the approve_permission_grant_tx() RPC, which applies the grant and marks
+// the approval row in ONE atomic transaction (migration 20260917000300). There is
+// no JS apply path — that split write could leave a grant applied but the row
+// pending, so it was removed rather than kept as a second code path.
 
 // ── requestCriticalGrant — open a maker-checker approval for a CRITICAL grant ──
 // A critical capability (isCriticalGrant) is NOT applied on a single actor's say-so:
@@ -107,6 +62,11 @@ async function requestCriticalGrant(
     expires_at:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   }).select('id').single<{ id: string }>();
   if (error || !ins) {
+    // The partial unique indexes (pga_uniq_pending_role/user) reject a duplicate
+    // pending request even if the read-check above raced with a concurrent insert.
+    if (error?.code === '23505') {
+      return { ok: false, status: 409, code: 'already_pending', message: 'A pending approval already exists for this grant.' };
+    }
     console.error('[requestCriticalGrant] insert error:', error?.message);
     return { ok: false, status: 500, code: 'insert_failed', message: 'Failed to create the approval request.' };
   }

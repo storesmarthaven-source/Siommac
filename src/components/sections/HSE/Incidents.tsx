@@ -1118,10 +1118,10 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         </div>
         <div style={{ flexShrink: 0 }}>
           <NewMenu label="New Incident" fill items={[
-            { label: 'Report Injury',        icon: 'fa-person-falling-burst', sub: 'Personal harm',     onSelect: () => setWizardOpen(true) },
-            { label: 'Report Near Miss',     icon: 'fa-triangle-exclamation', sub: 'Close call',        onSelect: () => setWizardOpen(true) },
-            { label: 'Report Environmental', icon: 'fa-leaf',                 sub: 'Spill / release',   onSelect: () => setWizardOpen(true) },
-            { label: 'Report Property',      icon: 'fa-wrench',               sub: 'Asset damage',      onSelect: () => setWizardOpen(true) },
+            { label: 'Report Injury',        icon: 'HeartPulse',    sub: 'Personal harm',     onSelect: () => setWizardOpen(true) },
+            { label: 'Report Near Miss',     icon: 'TriangleAlert', sub: 'Close call',        onSelect: () => setWizardOpen(true) },
+            { label: 'Report Environmental', icon: 'Leaf',          sub: 'Spill / release',   onSelect: () => setWizardOpen(true) },
+            { label: 'Report Property',      icon: 'Wrench',        sub: 'Asset damage',      onSelect: () => setWizardOpen(true) },
           ]} />
         </div>
       </div>

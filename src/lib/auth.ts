@@ -8,20 +8,21 @@
  *   All other code reads auth state from `store/session.ts` and calls helpers
  *   here to mutate it. Components never call auth endpoints directly.
  *
- * MIGRATION NOTE (docs/ARCHITECTURE.md §9 — Current → Target):
- *   Phase 1 (current): JWT stored in localStorage `siomac_session_v1`.
- *   Phase 2b (this):   Typed service layer wrapping the existing backend.
- *   Phase 2b+ (future): Swap backend calls for Supabase Auth httpOnly cookies
- *                        by changing only this file — all callers stay the same.
+ * TOKEN MODEL (Phase 2b+ — DONE):
+ *   Access token  — 15-min JWT in localStorage `siomac_session_v1` (freshness only;
+ *                   silently refreshed, never the session's lifetime).
+ *   Refresh token — httpOnly Secure cookie (`siomac_rt`, path=/api), set/rotated/
+ *                   cleared by the server. JS never sees it — XSS cannot exfiltrate
+ *                   it. Server-side session table = refresh_tokens (device list,
+ *                   revocation; surfaced on the Access Control Sessions page).
  *
  *   The public interface (`signIn`, `signOut`, `refreshSession`, `getSession`)
  *   is intentionally designed to be backend-agnostic. The implementation detail
  *   of "which transport" lives only inside each function.
  *
  * SECURITY NOTES (docs/SECURITY.md):
- *   - VULN-001 (HS256): currently uses HS256. Migration to RS256 is tracked.
+ *   - VULN-001 (HS256): RS256 signing active when JWT keys are configured.
  *   - VULN-003 (no rate limiting): rate limiting is enforced server-side.
- *   - Token storage in localStorage is transitional; httpOnly cookie is Phase 2b+.
  *
  * @see docs/ARCHITECTURE.md §9-Authentication-&-Session
  * @see docs/CODING_STANDARDS.md §8-API-&-Data-Fetching-Rules
@@ -279,7 +280,6 @@ export function getSession(): FullSession | null {
     }
     return {
       token:          s.token,
-      refreshToken:   s.refreshToken ?? '',
       userId:         s.userId,
       username:       s.username,
       fullName:       s.fullName ?? '',

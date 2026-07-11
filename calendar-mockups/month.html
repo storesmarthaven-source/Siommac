@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Calendar & Tasks — Month · SIOMAC</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+<div class="app">
+
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand"><span class="brand-logo">S</span><span class="brand-name">SIOMAC<small>ERP</small></span></div>
+    <nav class="nav">
+      <div class="nav-item"><i class="fa-solid fa-gauge-high"></i> Dashboard</div>
+      <div class="nav-item"><i class="fa-solid fa-users"></i> CRM</div>
+      <div class="nav-item"><i class="fa-solid fa-diagram-project"></i> Projects</div>
+      <div class="nav-item"><i class="fa-solid fa-sack-dollar"></i> Finance</div>
+      <div class="nav-item"><i class="fa-solid fa-cart-shopping"></i> Procurement</div>
+      <div class="nav-item"><i class="fa-solid fa-boxes-stacked"></i> Inventory</div>
+      <div class="nav-item"><i class="fa-solid fa-user-group"></i> HR &amp; Payroll</div>
+      <div class="nav-item"><i class="fa-solid fa-cube"></i> Assets</div>
+      <div class="nav-item"><i class="fa-solid fa-helmet-safety"></i> HSE</div>
+      <div class="nav-item active"><i class="fa-solid fa-calendar-days"></i> Calendar &amp; Tasks</div>
+      <div class="nav-item"><i class="fa-solid fa-file-lines"></i> Documents</div>
+      <div class="nav-item"><i class="fa-solid fa-chart-column"></i> Reports</div>
+      <div class="nav-item"><i class="fa-solid fa-gear"></i> Settings</div>
+    </nav>
+    <div class="side-foot">
+      <div class="side-collapse"><i class="fa-solid fa-arrow-left"></i> Collapse</div>
+      <div class="side-suite"><span class="brand-logo">S</span><span class="side-suite-name">SIOMAC Suite<small>v2.0.0</small></span></div>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <div class="main">
+    <div class="topbar">
+      <i class="fa-solid fa-bars hamb"></i>
+      <div class="topsearch"><i class="fa-solid fa-magnifying-glass"></i><input placeholder="Search SIOMAC ERP…"><kbd>⌘ K</kbd></div>
+      <div class="top-spacer"></div>
+      <div class="icon-btn"><i class="fa-regular fa-bell"></i><span class="badge-count">8</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-envelope"></i><span class="badge-count blue">3</span></div>
+      <div class="icon-btn"><i class="fa-regular fa-circle-question"></i></div>
+      <div class="user-chip">
+        <span class="avatar" style="background:#334155">MO</span>
+        <span><div class="user-chip-name">Michael Okafor</div><div class="user-chip-role">Admin</div></span>
+        <i class="fa-solid fa-chevron-down" style="color:#9ca3af;font-size:11px"></i>
+      </div>
+    </div>
+
+    <div class="content">
+      <h1 class="page-title">Calendar &amp; Tasks</h1>
+
+      <!-- Toolbar -->
+      <div class="cal-toolbar">
+        <button class="btn">Today</button>
+        <div class="seg-nav"><button><i class="fa-solid fa-chevron-left"></i></button><button><i class="fa-solid fa-chevron-right"></i></button></div>
+        <button class="btn"><i class="fa-regular fa-calendar"></i> May 2025 <i class="fa-solid fa-chevron-down" style="font-size:11px;color:var(--faint)"></i></button>
+        <div class="spacer"></div>
+        <button class="btn"><i class="fa-solid fa-filter"></i> Filter <i class="fa-solid fa-chevron-down" style="font-size:11px;color:var(--faint)"></i></button>
+        <button class="btn primary"><i class="fa-solid fa-plus"></i> New <i class="fa-solid fa-chevron-down" style="font-size:11px"></i></button>
+      </div>
+
+      <!-- Stat cards -->
+      <div class="stats">
+        <div class="stat"><div class="stat-top"><span class="stat-ico blue"><i class="fa-solid fa-calendar-days"></i></span><div><div class="stat-val">28</div><div class="stat-lbl">Total Events</div></div></div><div class="stat-foot"><span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 12%</span> <span class="muted">vs Apr</span></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico amber"><i class="fa-regular fa-clock"></i></span><div><div class="stat-val">12</div><div class="stat-lbl">Deadlines</div></div></div><div class="stat-foot"><span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 8%</span> <span class="muted">vs Apr</span></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico green"><i class="fa-solid fa-circle-check"></i></span><div><div class="stat-val">9</div><div class="stat-lbl">Tasks</div></div></div><div class="stat-foot"><span class="trend-down"><i class="fa-solid fa-arrow-down"></i> 5%</span> <span class="muted">vs Apr</span></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico purple"><i class="fa-solid fa-users"></i></span><div><div class="stat-val">7</div><div class="stat-lbl">Activities</div></div></div><div class="stat-foot"><span class="trend-up"><i class="fa-solid fa-arrow-up"></i> 16%</span> <span class="muted">vs Apr</span></div></div>
+        <div class="stat"><div class="stat-top"><span class="stat-ico slate"><i class="fa-solid fa-clipboard-list"></i></span><div><div class="stat-val">5</div><div class="stat-lbl">Overdue Items</div></div></div><div class="stat-foot"><span class="stat-link">View all</span></div></div>
+      </div>
+
+      <!-- Body -->
+      <div class="cal-body">
+
+        <!-- Month grid -->
+        <div class="surface">
+          <div class="weekhead"><div>Sun</div><div>Mon</div><div>Tue</div><div>Wed</div><div>Thu</div><div>Fri</div><div>Sat</div></div>
+          <div class="mgrid">
+            <!-- Week 1 -->
+            <div class="cell out"><div class="daynum">27</div></div>
+            <div class="cell out"><div class="daynum">28</div></div>
+            <div class="cell out"><div class="daynum">29</div></div>
+            <div class="cell out"><div class="daynum">30</div></div>
+            <div class="cell"><div class="daynum">1</div><div class="chip deadline"><i class="fa-regular fa-clock"></i>PAYE Deadline</div></div>
+            <div class="cell"><div class="daynum">2</div><div class="chip task"><i class="fa-solid fa-circle-check"></i>Follow-up Task</div></div>
+            <div class="cell"><div class="daynum">3</div></div>
+            <!-- Week 2 -->
+            <div class="cell"><div class="daynum">4</div></div>
+            <div class="cell"><div class="daynum">5</div><div class="chip activity"><i class="fa-solid fa-user"></i>Team Meeting</div><div class="more">+1 more</div></div>
+            <div class="cell"><div class="daynum">6</div><div class="chip deadline"><i class="fa-regular fa-clock"></i>NIS Remittance</div><div class="more">+1 more</div></div>
+            <div class="cell"><div class="daynum">7</div></div>
+            <div class="cell selected"><div class="daynum today">8</div><div class="chip activity"><i class="fa-solid fa-user"></i>Site Visit – Lekki</div><div class="more">+1 more</div></div>
+            <div class="cell"><div class="daynum">9</div></div>
+            <div class="cell"><div class="daynum">10</div></div>
+            <!-- Week 3 -->
+            <div class="cell"><div class="daynum">11</div></div>
+            <div class="cell"><div class="daynum">12</div><div class="chip task"><i class="fa-solid fa-circle-check"></i>Onboarding Review</div></div>
+            <div class="cell"><div class="daynum">13</div></div>
+            <div class="cell"><div class="daynum">14</div><div class="chip deadline"><i class="fa-regular fa-clock"></i>Inspection Due</div></div>
+            <div class="cell"><div class="daynum">15</div><div class="chip activity"><i class="fa-solid fa-user"></i>Team Meeting</div></div>
+            <div class="cell"><div class="daynum">16</div></div>
+            <div class="cell"><div class="daynum">17</div></div>
+            <!-- Week 4 -->
+            <div class="cell"><div class="daynum">18</div></div>
+            <div class="cell"><div class="daynum">19</div><div class="chip activity"><i class="fa-solid fa-user"></i>Site Visit – Ajah</div></div>
+            <div class="cell"><div class="daynum">20</div></div>
+            <div class="cell"><div class="daynum">21</div></div>
+            <div class="cell"><div class="daynum">22</div><div class="chip deadline"><i class="fa-regular fa-clock"></i>PTW Expiry</div><div class="more">+1 more</div></div>
+            <div class="cell"><div class="daynum">23</div><div class="chip task"><i class="fa-solid fa-circle-check"></i>Follow-up Task</div></div>
+            <div class="cell"><div class="daynum">24</div></div>
+            <!-- Week 5 -->
+            <div class="cell"><div class="daynum">25</div></div>
+            <div class="cell"><div class="daynum">26</div><div class="chip activity"><i class="fa-solid fa-user"></i>HSE Walkthrough</div></div>
+            <div class="cell"><div class="daynum">27</div></div>
+            <div class="cell"><div class="daynum">28</div><div class="chip task"><i class="fa-solid fa-circle-check"></i>Follow-up Task</div></div>
+            <div class="cell"><div class="daynum">29</div></div>
+            <div class="cell"><div class="daynum">30</div><div class="chip deadline"><i class="fa-regular fa-clock"></i>NIS Remittance</div><div class="more">+1 more</div></div>
+            <div class="cell"><div class="daynum">31</div></div>
+          </div>
+          <div class="legend">
+            <span class="li"><span class="dot deadline"></span> Deadline</span>
+            <span class="li"><span class="dot task"></span> Task</span>
+            <span class="li"><span class="dot activity"></span> Activity</span>
+            <span class="link"><i class="fa-solid fa-list"></i> View agenda</span>
+          </div>
+        </div>
+
+        <!-- Day drawer -->
+        <aside class="drawer">
+          <div class="drawer-head"><div class="drawer-title">Thursday, 8 May 2025</div><i class="fa-solid fa-xmark drawer-x"></i></div>
+          <div class="drawer-body">
+            <div class="ovr-label">Day overview</div>
+            <div class="overview">
+              <div class="ovr-count">4<small>Items<br>scheduled</small></div>
+              <svg width="96" height="96" viewBox="0 0 42 42">
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eef1f5" stroke-width="5"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#7c3aed" stroke-width="5" stroke-dasharray="50 50" stroke-dashoffset="0" transform="rotate(-90 21 21)"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#16a34a" stroke-width="5" stroke-dasharray="25 75" stroke-dashoffset="-50" transform="rotate(-90 21 21)"/>
+                <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#d97706" stroke-width="5" stroke-dasharray="25 75" stroke-dashoffset="-75" transform="rotate(-90 21 21)"/>
+              </svg>
+              <div class="donut-legend">
+                <span class="li"><span class="dot" style="background:#d97706"></span> 1 Deadline</span>
+                <span class="li"><span class="dot" style="background:#16a34a"></span> 1 Task</span>
+                <span class="li"><span class="dot" style="background:#7c3aed"></span> 2 Activities</span>
+              </div>
+            </div>
+
+            <div class="agenda">
+              <div class="ag-item">
+                <div class="ag-time"><div class="t">10:00 AM</div><div class="d">60m</div></div>
+                <div class="ag-card"><i class="fa-regular fa-calendar ag-cal"></i>
+                  <span class="ag-type activity"><span class="dot" style="background:#7c3aed"></span> Activity</span>
+                  <div class="ag-title">Site Visit – Lekki Phase 1</div>
+                  <div class="ag-meta"><span><i class="fa-solid fa-location-dot"></i> Lekki Phase 1, Lagos</span><span><i class="fa-solid fa-user"></i> Tunde, Aisha, Michael</span></div>
+                </div>
+              </div>
+              <div class="ag-item">
+                <div class="ag-time"><div class="t">12:00 PM</div><div class="d">60m</div></div>
+                <div class="ag-card"><i class="fa-regular fa-calendar ag-cal"></i>
+                  <span class="ag-type activity"><span class="dot" style="background:#7c3aed"></span> Activity</span>
+                  <div class="ag-title">Team Meeting</div>
+                  <div class="ag-meta"><span><i class="fa-solid fa-location-dot"></i> Board Room</span><span><i class="fa-solid fa-user"></i> Michael, Tunde, Grace +2</span></div>
+                </div>
+              </div>
+              <div class="ag-item">
+                <div class="ag-time"><div class="t">2:30 PM</div><div class="d">30m</div></div>
+                <div class="ag-card"><i class="fa-regular fa-calendar ag-cal"></i>
+                  <span class="ag-type deadline"><span class="dot" style="background:#d97706"></span> Deadline</span>
+                  <div class="ag-title">Supplier Document Due</div>
+                  <div class="ag-meta"><span><i class="fa-solid fa-building"></i> Vendor Compliance</span></div>
+                </div>
+              </div>
+              <div class="ag-item">
+                <div class="ag-time"><div class="t">4:00 PM</div><div class="d">45m</div></div>
+                <div class="ag-card"><i class="fa-regular fa-calendar ag-cal"></i>
+                  <span class="ag-type task"><span class="dot" style="background:#16a34a"></span> Task</span>
+                  <div class="ag-title">Follow-up Task</div>
+                  <div class="ag-meta"><span>Follow up with vendor on quotation</span></div>
+                </div>
+              </div>
+            </div>
+
+            <a class="drawer-link">View full day agenda</a>
+
+            <div class="notes-h">Notes</div>
+            <div class="note"><i class="fa-regular fa-note-sticky"></i><div><div class="note-body">Site access arranged with Mr. Tunde. Prepare method statements.</div><div class="note-by">Michael Okafor · 07 May 2025, 09:15 AM</div></div></div>
+
+            <button class="share-btn"><i class="fa-solid fa-share-nodes"></i> Share day</button>
+          </div>
+        </aside>
+
+      </div>
+    </div>
+  </div>
+</div>
+</body>
+</html>

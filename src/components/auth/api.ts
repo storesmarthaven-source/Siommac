@@ -18,7 +18,7 @@ export interface LoginResult {
   message?:          string;
   // Direct login
   token?:            string;
-  refreshToken?:     string;
+  expiresAt?:        number;
   userId?:           string | number;
   username?:         string;
   fullName?:         string;

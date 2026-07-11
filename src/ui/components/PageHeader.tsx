@@ -12,7 +12,6 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { ProfilePill } from '@shared/ProfilePill';
 
 export interface PageMetaChip { icon?: string; label: string; }
 
@@ -26,17 +25,18 @@ export interface PageHeaderProps {
   module?: string;
   /** Extra breadcrumb segments after the module (e.g. a parent area). */
   crumbs?: string[];
-  /** Meta shown as chips beneath the title/description. */
+  /** @deprecated No-op — the standard header shows no meta chips (kept clean, like
+   *  the reference AC header). Surface counts/dates inside the page, not the header. */
   meta?: PageMetaChip[];
   /** Right-aligned action buttons. */
   actions?: ComponentChildren;
-  /** Hide the inline ProfilePill (e.g. when a global top bar already shows it). */
+  /** @deprecated No-op — the account pill now lives only in the global UserPill top bar. */
   hidePill?: boolean;
   /** Hide the title/subtext (e.g. when a global top bar already shows them). */
   hideTitle?: boolean;
 }
 
-export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], actions, hidePill, hideTitle }: PageHeaderProps): VNode {
+export function PageHeader({ icon, title, sub, module, crumbs = [], actions, hideTitle }: PageHeaderProps): VNode {
   // Breadcrumb = the parent trail only (module › crumbs). The title is the H1
   // below it, so we don't repeat it as a crumb.
   const trail = [module, ...crumbs].filter(Boolean) as string[];
@@ -44,6 +44,7 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
     <div class="ui-page-header">
       <div class="ui-page-head-main">
         <span class="ui-page-head-icon">{typeof icon === 'string' ? <i class={`fas ${icon}`} /> : icon}</span>
+        <span class="ui-page-head-rule" aria-hidden="true" />
         <div class="ui-page-head-text">
           {trail.length > 0 && (
             <div class="ui-page-crumb">
@@ -57,20 +58,10 @@ export function PageHeader({ icon, title, sub, module, crumbs = [], meta = [], a
           )}
           {!hideTitle && <div class="ui-page-title">{title}</div>}
           {!hideTitle && sub && <div class="ui-page-sub">{sub}</div>}
-          {meta.length > 0 && (
-            <div class="ui-page-meta">
-              {meta.map((m, i) => (
-                <span class="ui-page-meta-chip" key={i}>
-                  {m.icon && <i class={`fas ${m.icon}`} />}{m.label}
-                </span>
-              ))}
-            </div>
-          )}
         </div>
       </div>
       <div class="ui-page-head-actions">
         {actions}
-        {!hidePill && <ProfilePill />}
       </div>
     </div>
   );

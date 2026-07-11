@@ -51,6 +51,8 @@ export interface WidgetBoardZoneProps {
   compact?: 'vertical' | 'horizontal' | null;
   /** When false, tiles drag-reorder but never resize — see WidgetBoardProps.resizable. Default true. */
   resizable?: boolean;
+  /** When false, tiles skip the fade+rise mount reveal — see WidgetBoardProps.revealOnMount. Default true. */
+  revealOnMount?: boolean;
   /** True once the installed-package list has loaded — gates pruning of orphaned (uninstalled) widgets. */
   registryReady?: boolean;
   preview?: PreviewWidgetInstance | null;
@@ -98,7 +100,7 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
   return !!(localWidgets?.[widgetId]?.sizeToContent ?? findWidgetDef(widgetId)?.sizeToContent);
 }
 
-export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
+export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
   const { layout, updateZoneLayout, removeWidget, resetLayout } = useBoardLayout(pageKey, defaultLayout);
@@ -173,17 +175,26 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
   const sig = JSON.stringify(items.map(w => [w.instanceId, w.widgetId, w.w]));
   useEffect(() => {
     const cardToId = new Map<Element, string>();
+    let raf = 0;
+    // Defer the state update to the next frame so the observer callback never mutates layout
+    // synchronously — that synchronous observe→resize→observe loop is what triggers the benign
+    // "ResizeObserver loop completed with undelivered notifications" console warning.
     const ro = new ResizeObserver(entries => {
-      setFitRows(prev => {
-        let next = prev;
-        for (const e of entries) {
-          const id = cardToId.get(e.target);
-          if (!id) continue;
-          const h = (e.target as HTMLElement).offsetHeight;
-          const rows = Math.max(1, Math.ceil((h + vMargin) / (cellHeight + vMargin)));
-          if ((next[id] ?? -1) !== rows) { if (next === prev) next = { ...prev }; next[id] = rows; }
-        }
-        return next;
+      const measured = entries
+        .map(e => ({ id: cardToId.get(e.target), h: (e.target as HTMLElement).offsetHeight }))
+        .filter((m): m is { id: string; h: number } => !!m.id);
+      if (measured.length === 0) return;
+      if (raf) cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        setFitRows(prev => {
+          let next = prev;
+          for (const { id, h } of measured) {
+            const rows = Math.max(1, Math.ceil((h + vMargin) / (cellHeight + vMargin)));
+            if ((next[id] ?? -1) !== rows) { if (next === prev) next = { ...prev }; next[id] = rows; }
+          }
+          return next;
+        });
       });
     });
     for (const it of items) {
@@ -193,7 +204,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
         ?? wrap?.querySelector('.wbi-bare-body, .wbi-body');
       if (card) { cardToId.set(card, it.instanceId); ro.observe(card); }
     }
-    return () => ro.disconnect();
+    return () => { if (raf) cancelAnimationFrame(raf); ro.disconnect(); };
   }, [sig, cellHeight, vMargin, editing, demo, rtVersion, localWidgets]);
 
   // Prune orphaned (uninstalled/renamed) widgets AND self-heal geometry saved below a widget's
@@ -238,7 +249,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
               ref={el => { if (el) wrapRefs.current.set(it.instanceId, el as HTMLDivElement); else wrapRefs.current.delete(it.instanceId); }}
             >
               <WidgetFrame
-                item={it} editing={editing} isPreview={isPrev} local={localWidgets} demo={demo}
+                item={it} editing={editing} isPreview={isPrev} local={localWidgets} demo={demo} revealOnMount={revealOnMount}
                 onCommitPreview={isPrev ? () => onCommitPreview?.(it as PreviewWidgetInstance) : undefined}
                 onDiscardPreview={isPrev ? onDiscardPreview : undefined}
                 onRemove={!isPrev ? () => void removeWidget(zoneId, it.instanceId) : undefined}

@@ -292,14 +292,6 @@
 /* Widget-zone tiles own their height (RGL grid) — the card fills the tile so
    drag/resize behaves, and internal overflow scrolls instead of clipping. */
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
-.sdb-board-tools { display: flex; align-items: center; justify-content: flex-end; gap: 8px; margin: 0 0 12px; }
-.sdb-capture-btn {
-  display: inline-flex; align-items: center; gap: 7px; padding: 7px 13px; border-radius: 9px;
-  border: 1px solid #cdd8ea; background: #f2f6fc; color: #1f3b6d; font-size: 13px; font-weight: 600;
-  cursor: pointer; transition: background .15s, border-color .15s;
-}
-.sdb-capture-btn:hover { background: #e6eefa; border-color: #9db6dc; }
-.sdb-capture-btn i { font-size: 12px; }
 
 /* Rich KPI tile (onboarding-sized) — icon chip + uppercase caption, large value
    (scales with the tile via container queries), context sub-line + accent bar. */
@@ -388,6 +380,25 @@
   margin-bottom: 7px;
 }
 .sdb-nis-note-hd i { color: #4c7bd4; font-size: 11px; }
+.sdb-nis-note-ref {
+  margin-left: auto;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: #e5edf8;
+  border: 1px solid #dce7f5;
+  color: var(--sdb-muted);
+  font-size: 9px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.sdb-nis-note-src {
+  margin-top: 7px;
+  padding-top: 6px;
+  border-top: 1px solid #e5edf8;
+  font-size: 9.5px;
+  color: var(--sdb-muted);
+}
 .sdb-nis-note-chips {
   display: flex;
   flex-wrap: wrap;

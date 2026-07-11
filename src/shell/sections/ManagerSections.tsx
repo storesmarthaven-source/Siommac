@@ -12,17 +12,8 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-import { ProfilePill } from '@shared/ProfilePill';
 import { AppSection } from './AppSection';
 
-/** Right-aligned wrapper over the reusable, self-populating pill. */
-function MgrProfilePill() {
-  return (
-    <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <ProfilePill />
-    </div>
-  );
-}
 
 export default function ManagerSections() {
   return (
@@ -30,7 +21,6 @@ export default function ManagerSections() {
       {/* Manager — Department Overview */}
       <AppSection id="s-mgr-overview" role="manager">
         {/* NOTE: profile pill must stay in HTML — wired by nav.js badge system */}
-        <MgrProfilePill />
         <div id="preact-mgr-overview-root" />
       </AppSection>
 

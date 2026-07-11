@@ -11,7 +11,6 @@
 
 import { type VNode, type ComponentChildren } from 'preact';
 import { PageHeader } from '@ui';
-import { AppTopBar } from '@shared/AppTopBar';
 
 // ── Icons (ported from the 2026-07 mockups) ─────────────────────────────────────
 type IconProps = { size?: number };
@@ -90,9 +89,7 @@ export function StatFormShell({ icon, title, sub, statusLabel, backLabel = 'Stat
 }): VNode {
   return (
     <div class="sfp">
-      {/* New employee-master top bar (search + AI + profile cluster). The standalone
-          ProfilePill is retired — the page header below hides it (hidePill). */}
-      <AppTopBar />
+      {/* Top bar is the global UserPill (mounted once in AppShell) — not rendered per page. */}
       {/* Header + back button. The back button is absolutely positioned top-right of the
           header (out of flow) so it sits up by the header without shifting the stepper. */}
       <div class="sfp-headwrap">

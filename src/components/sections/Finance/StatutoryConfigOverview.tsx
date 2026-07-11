@@ -21,7 +21,7 @@ import { useSessionStore, selectUserId } from '@store/session';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
-  HrfinPill, HrfinWizardModal, Drawer, exportCsv, PageHeader, NewMenu,
+  HrfinPill, HrfinWizardModal, Drawer, exportCsv, NewMenu,
   DataTable, type DtColumn, type DtAction,
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   type RowActionItem,
@@ -39,7 +39,6 @@ import {
   useNisProfiles, usePayrollMutation, financePayrollApi, type NisProfileRow,
 } from '@api/finance/payroll';
 import { useEmployeeNames } from '@api/finance/lookups';
-import { AppTopBar } from '@shared/AppTopBar';
 import { EmployeeCell, EmployeeCellResolved } from './_shared/EmployeeCell';
 import { fmtMoney, fmtPercent, fmtDate, humanize, toRoman } from './financeShared';
 import { ReportPanel, type ReportColumn } from './_shared/reports';
@@ -162,9 +161,9 @@ export function StatutoryConfigOverview(): VNode {
   // ── Tab content (computed here so tab sub-components keep closing over parent state) ─
   const tabContent = (
     <div>
-      {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onNew={() => setSubView({ kind: 'newVersion' })} onEdit={setEditVersion} />}
+      {tab === 'versions'   && <VersionsTab versions={versions} loading={versionsQ.isLoading} error={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} canApprove={canApprove} onOpenDrawer={openDrawer} onOpenDrawerAtRuns={openDrawerAtRuns} onEdit={setEditVersion} />}
       {tab === 'nis'        && <NisClassesTab versions={versions} versionsError={versionsQ.error ? String(versionsQ.error) : undefined} canManage={canManage} onAdd={v => setSubView({ kind: 'nisBand', versionId: v })} onEdit={(v, c) => setSubView({ kind: 'nisBand', versionId: v, edit: c })} onImport={v => setSubView({ kind: 'import', versionId: v })} />}
-      {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManageComponents} canApproveComponents={canApproveComponents} currentUserId={currentUserId} onNew={() => setSubView({ kind: 'payComponent' })} onEdit={c => setSubView({ kind: 'payComponent', edit: c })} />}
+      {tab === 'components' && <PayComponentsTab components={components} loading={componentsQ.isLoading} error={componentsQ.error ? String(componentsQ.error) : undefined} canManage={canManageComponents} canApproveComponents={canApproveComponents} currentUserId={currentUserId} onEdit={c => setSubView({ kind: 'payComponent', edit: c })} />}
       {tab === 'verify'     && <NisVerifyTab canVerify={can('finance.payroll.nis.verify')} />}
       {tab === 'reports'    && canView && <StatReportsTab />}
     </div>
@@ -173,33 +172,24 @@ export function StatutoryConfigOverview(): VNode {
   // ── Page: the dashboard is a self-contained enterprise page (its own `.sdb`
   // design system), rendered directly — NOT wrapped in the widget board, which
   // was pure ceremony that fought the background and clipped the height. ────────
+  const headerActions = (
+    <>
+      <button type="button" class="hse-btn" onClick={handleExport}><i class="fas fa-download" /> Export</button>
+      {canManage && (
+        <NewMenu items={[
+          { label: 'New Rate Version',  icon: 'FilePlus2', onSelect: () => setSubView({ kind: 'newVersion' }) },
+          { label: 'New Pay Component', icon: 'Layers',    onSelect: () => setSubView({ kind: 'payComponent' }) },
+          { label: 'Import NIS Classes', icon: 'FileInput', sub: activeVer ? undefined : 'Needs an active version',
+            onSelect: () => { if (activeVer) setSubView({ kind: 'import', versionId: activeVer.id }); } },
+        ]} />
+      )}
+    </>
+  );
+
   return (
     <>
-      <AppTopBar />
-      <PageHeader
-        icon="fa-scale-balanced"
-        module="Finance · Statutory Configuration"
-        title="Statutory Configuration"
-        sub="Manage Trinidad & Tobago statutory rate versions, NIS classes and pay components."
-        meta={activeVer
-          ? [{ icon: 'fa-circle-dot', label: `Active: ${activeVer.label}` }]
-          : [{ icon: 'fa-circle-exclamation', label: 'No active version' }]}
-        hidePill
-        actions={
-          <>
-            <button type="button" class="hse-btn" onClick={handleExport}><i class="fas fa-download" /> Export</button>
-            {canManage && (
-              <NewMenu items={[
-                { label: 'New Rate Version',  icon: 'fa-file-circle-plus', onSelect: () => setSubView({ kind: 'newVersion' }) },
-                { label: 'New Pay Component', icon: 'fa-layer-group',      onSelect: () => setSubView({ kind: 'payComponent' }) },
-                { label: 'Import NIS Classes', icon: 'fa-file-import', sub: activeVer ? undefined : 'Needs an active version',
-                  onSelect: () => { if (activeVer) setSubView({ kind: 'import', versionId: activeVer.id }); } },
-              ]} />
-            )}
-          </>
-        }
-      />
       <StatutoryDashboard
+        headerActions={headerActions}
         versions={versions}
         components={components}
         activeVer={activeVer}
@@ -235,7 +225,7 @@ export function StatutoryConfigOverview(): VNode {
 
 // ── Rate Versions tab ─────────────────────────────────────────────────────────
 
-function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDrawer, onOpenDrawerAtRuns, onNew, onEdit }: {
+function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDrawer, onOpenDrawerAtRuns, onEdit }: {
   versions: StatutoryVersion[];
   loading: boolean;
   error?: string;
@@ -243,7 +233,6 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   canApprove: boolean;
   onOpenDrawer: (id: string) => void;
   onOpenDrawerAtRuns: (id: string) => void;
-  onNew: () => void;
   onEdit: (v: StatutoryVersion) => void;
 }): VNode {
   const [search, setSearch] = useState('');
@@ -419,9 +408,6 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
             ] },
           ]} />
       }
-      toolbarRight={canManage
-        ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Rate Version</button>
-        : undefined}
       sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
       pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
       noun="versions"
@@ -557,14 +543,13 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
 
 // ── Pay Components tab ────────────────────────────────────────────────────────
 
-function PayComponentsTab({ components, loading, error, canManage, canApproveComponents, currentUserId, onNew, onEdit }: {
+function PayComponentsTab({ components, loading, error, canManage, canApproveComponents, currentUserId, onEdit }: {
   components: PayComponent[];
   loading: boolean;
   error?: string;
   canManage: boolean;
   canApproveComponents: boolean;
   currentUserId: string | null;
-  onNew: () => void;
   onEdit: (c: PayComponent) => void;
 }): VNode {
   const [search, setSearch] = useState('');
@@ -684,7 +669,6 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
               options={['active', 'retired']} selected={statuses} onChange={v => { setStatuses(v); setPage(0); }} />
           </>
         }
-        toolbarRight={canManage ? <button type="button" class="sdb-btn sdb-btn--pri" onClick={onNew}>+ New Component</button> : undefined}
         sort={{ field: sortField, dir: sortDir, onSort: (f, d) => { setSortField(f); setSortDir(d); setPage(0); } }}
         pagination={{ page, pageCount, total: filtered.length, onPage: setPage }}
         noun="components"

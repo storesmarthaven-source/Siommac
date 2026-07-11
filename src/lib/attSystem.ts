@@ -200,13 +200,13 @@ function _swapAvatarImg(el: HTMLElement | ProfileAvEl, url: string, initial: str
 // ── _syncPillAvatars ──────────────────────────────────────────────────────────
 
 /**
- * Profile pills are now the self-populating reusable <ProfilePill> component
- * (src/components/shared/ProfilePill.tsx), which reads the session store
+ * Profile pills are now the self-populating reusable <UserPill> component
+ * (src/components/shared/UserPill.tsx), which reads the session store
  * directly — so there is no per-section avatar/name population to do here.
  * Kept as a no-op so the applySession call site stays stable.
  */
 function _syncPillAvatars(_result: Record<string, unknown>): void {
-  /* intentionally empty — ProfilePill self-populates from the session store */
+  /* intentionally empty — UserPill self-populates from the session store */
 }
 
 // ── _setAttendanceAvatar ──────────────────────────────────────────────────────
@@ -423,14 +423,21 @@ interface SessionData {
   colorScheme:    string;
   layoutMode:     string;
   token:          string;
-  refreshToken:   string;
   companyName:    string;
   companyLogoUrl: string;
   profileImage:   string;
-  expiresAt:      number;   // sliding idle deadline (unix ms)
+  expiresAt:      number;   // ACCESS-TOKEN expiry (owned by the store/refresh layer)
+  idleExpiresAt?: number;   // sliding idle deadline (unix ms) — the session's real lifetime
   idleTimeoutMs:  number;   // the role's configured idle window
   rememberMe:     boolean;
   [key: string]:  unknown;
+}
+
+/** The session's idle deadline, backfilled from the idle window when a pre-migration
+ *  session has no `idleExpiresAt` yet. NEVER read `expiresAt` for this — that field
+ *  is the access-token expiry (refreshed silently), not the logout deadline. */
+function _idleDeadline(s: SessionData): number {
+  return Number(s.idleExpiresAt) || (Date.now() + (Number(s.idleTimeoutMs) || SESSION_DEFAULT_IDLE));
 }
 
 function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
@@ -443,7 +450,7 @@ function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
       : (serverIdle || SESSION_DEFAULT_IDLE);
     const data = Object.assign({}, payload, {
       idleTimeoutMs,
-      expiresAt:  Date.now() + idleTimeoutMs,
+      idleExpiresAt: Date.now() + idleTimeoutMs,
       rememberMe: !!rememberMe,
     });
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
@@ -463,7 +470,13 @@ function loadSession(): SessionData | null {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SessionData;
-    if (!s || !s.expiresAt || s.expiresAt < Date.now()) { localStorage.removeItem(SESSION_KEY); return null; }
+    if (!s || !s.token) return null;
+    // Only the IDLE deadline ends a session. An expired access token must NOT —
+    // it would destroy the refresh token and make silent refresh impossible.
+    if (s.idleExpiresAt && Number(s.idleExpiresAt) < Date.now()) {
+      localStorage.removeItem(SESSION_KEY);
+      return null;
+    }
     return s;
   } catch (_) { return null; }
 }
@@ -479,7 +492,7 @@ function clearSession(): void {
 function _armSessionTimers(): void {
   const s = loadSession();
   if (!s) return;
-  const msLeft = s.expiresAt - Date.now();
+  const msLeft = _idleDeadline(s) - Date.now();
   if (msLeft <= 0) { handleSessionExpired(); return; }
   if (_sessExpTimer)  clearTimeout(_sessExpTimer);
   if (_sessWarnTimer) clearTimeout(_sessWarnTimer);
@@ -505,7 +518,7 @@ function _resetIdleDeadline(): void {
   if (!s) return;
   _lastActivityReset = now;
   const idle = Number(s.idleTimeoutMs) || SESSION_DEFAULT_IDLE;
-  updateStoredSession({ expiresAt: now + idle });
+  updateStoredSession({ idleExpiresAt: now + idle });
   _sessWarned = false;            // fresh activity clears a prior warning
   _armSessionTimers();
 }
@@ -513,7 +526,9 @@ function _resetIdleDeadline(): void {
 function startSessionTimer(): void {
   const s = loadSession();
   if (!s) return;
-  if (s.expiresAt - Date.now() <= 0) { handleSessionExpired(); return; }
+  // Migration: pre-idleExpiresAt sessions get their deadline persisted once here.
+  if (!s.idleExpiresAt) updateStoredSession({ idleExpiresAt: _idleDeadline(s) });
+  if (_idleDeadline(s) - Date.now() <= 0) { handleSessionExpired(); return; }
   if (_sessTickTimer) clearInterval(_sessTickTimer);
   _armSessionTimers();
   updateSessionWidget();
@@ -551,14 +566,14 @@ function handleSessionExpired(): void {
 
 function updateSessionWidget(): void {
   const s = loadSession();
-  // Expiry auto-logout must run even when the timer widget is not rendered
+  // Idle-expiry auto-logout must run even when the timer widget is not rendered
   // (the sidebar timer was replaced by "Powered by Siomac").
-  if (s && s.expiresAt - Date.now() <= 0) { handleSessionExpired(); return; }
+  if (s && _idleDeadline(s) - Date.now() <= 0) { handleSessionExpired(); return; }
   const widget = document.getElementById('sessionTimer');
   if (!widget) return;
   if (!s) { widget.classList.add('hidden'); return; }
   widget.classList.remove('hidden');
-  const msLeft = s.expiresAt - Date.now();
+  const msLeft = _idleDeadline(s) - Date.now();
   const totalMins = Math.floor(msLeft / 60000);
   const secs      = Math.floor((msLeft % 60000) / 1000);
   let txt: string;
@@ -608,7 +623,6 @@ export function _completeLogin(result: Record<string, unknown>): void {
     colorScheme:    result['colorScheme']     as string ?? 'navy',
     layoutMode:     result['layoutMode']      as string ?? 'sidebar',
     token:          result['token']           as string ?? '',
-    refreshToken:   result['refreshToken']    as string ?? '',
     companyName:    result['companyName']     as string ?? '',
     companyLogoUrl: result['companyLogoUrl']  as string ?? '',
     profileImage:   result['profileImage']    as string ?? '',

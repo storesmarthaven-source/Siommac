@@ -108,6 +108,51 @@ export interface Payslip {
   metadata: Record<string, unknown>;
 }
 
+export interface PayslipDelivery {
+  id: string;
+  payslipId: string;
+  runId: string;
+  employeeId: string;
+  channel: string;
+  recipient: string | null;
+  status: 'queued' | 'sent' | 'failed' | 'skipped';
+  passwordProtected: boolean;
+  attempts: number;
+  error: string | null;
+  sentAt: string | null;
+  createdAt: string;
+}
+
+export interface GlPreviewLine {
+  mappingKey: string;
+  accountCode: string | null;
+  accountName: string | null;
+  side: 'debit' | 'credit';
+  amount: number;
+}
+export interface GlPreview {
+  runId: string;
+  lines: GlPreviewLine[];
+  totalDebit: number;
+  totalCredit: number;
+  balanced: boolean;
+  missingMappings: string[];
+  alreadyPosted: boolean;
+  journalId: string | null;
+}
+export interface GlJournalLine {
+  lineNo: number; accountCode: string; debit: number; credit: number;
+  description: string | null; costCenterId: string | null;
+}
+export interface GlJournal {
+  id: string; journalNo: string; entryDate: string; memo: string | null;
+  status: 'draft' | 'posted' | 'reversed';
+  sourceModule: string; sourceRef: string | null;
+  postedAt: string | null; postedBy: string | null;
+  reversedAt: string | null; reversalOf: string | null; createdAt: string;
+  lines: GlJournalLine[]; totalDebit: number; totalCredit: number;
+}
+
 export interface PayrollExport {
   id: string;
   exportNo: string;
@@ -209,6 +254,17 @@ export const financePayrollApi = {
 
   // Payslips
   generatePayslips: (a: { runId: string })             => call<{ generated: number }>('finance/payroll/payslips/generate', a),
+  renderRunPayslips:(a: { runId: string })             => call<{ rendered: number; failed: number; total: number }>('finance/payroll/payslips/render-run', a),
+  renderPayslip:    (a: { payslipId: string })         => call<Payslip>('finance/payroll/payslips/render', a),
+  deliverRunPayslips:(a: { runId: string })            => call<{ sent: number; failed: number; skipped: number; total: number }>('finance/payroll/payslips/deliver-run', a),
+  deliverPayslip:   (a: { payslipId: string })         => call<PayslipDelivery>('finance/payroll/payslips/deliver', a),
+  listDeliveries:   (a: { runId: string })             => call<PayslipDelivery[]>('finance/payroll/payslips/deliveries/list', a),
+
+  // GL posting
+  glPreview:  (a: { runId: string })                   => call<GlPreview>('finance/payroll/gl/preview', a),
+  glPost:     (a: { runId: string })                   => call<{ journalId: string; journalNo: string; totalDebit: number; totalCredit: number }>('finance/payroll/gl/post', a),
+  glReverse:  (a: { runId: string; reason: string })   => call<{ reversingJournalId: string; reversingJournalNo: string }>('finance/payroll/gl/reverse', a),
+  glGet:      (a: { runId: string })                   => call<GlJournal | null>('finance/payroll/gl/get', a),
   listPayslips:     (a: { runId: string })             => call<Payslip[]>('finance/payroll/payslips/list', a),
   myPayslips:       (a: object = {})                   => call<Payslip[]>('finance/payroll/payslips/my', a),
   getPayslip:       (a: { id: string })                => call<Payslip>('finance/payroll/payslips/get', a),
@@ -253,6 +309,7 @@ export const financePayrollKeys = {
   warnings: (id: string)     => ['finance', 'payroll', 'warnings', id] as const,
   exports:  (id: string)     => ['finance', 'payroll', 'exports', id] as const,
   payslips: (id: string)     => ['finance', 'payroll', 'payslips', id] as const,
+  glPreview:(id: string)     => ['finance', 'payroll', 'gl-preview', id] as const,
   nisProfiles: (o: object = {}) => ['finance', 'payroll', 'nis', o] as const,
 };
 
@@ -272,6 +329,9 @@ export function useRunWarnings(runId: string | null) {
 }
 export function useRunPayslips(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.payslips(runId ?? ''), queryFn: () => financePayrollApi.listPayslips({ runId: runId! }), enabled: !!runId });
+}
+export function useRunGlPreview(runId: string | null) {
+  return useQuery({ queryKey: financePayrollKeys.glPreview(runId ?? ''), queryFn: () => financePayrollApi.glPreview({ runId: runId! }), enabled: !!runId });
 }
 export function useRunExports(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.exports(runId ?? ''), queryFn: () => financePayrollApi.listExports({ runId: runId! }), enabled: !!runId });

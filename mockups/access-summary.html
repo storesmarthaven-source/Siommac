@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Access Summary</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --ink:     #1e293b;
+    --ink-2:   #334155;
+    --muted:   #64748b;
+    --faint:   #94a3b8;
+    --line:    #e6e8ee;
+    --accent:  #2563eb;
+    --green:   #22c55e;
+    --amber:   #f59e0b;
+    --none:    #e2e6ee;
+    --red:     #ef4444;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; padding: 30px; background: #f1f3f7;
+    font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    color: var(--ink-2);
+  }
+
+  .asum {
+    display: flex; align-items: center; gap: 40px;
+    background: #fff; border: 1px solid var(--line); border-radius: 16px;
+    box-shadow: 0 1px 2px rgba(16,24,40,.04), 0 10px 30px rgba(16,24,40,.05);
+    padding: 26px 34px;
+  }
+
+  /* Left — heading */
+  .asum-intro { flex: 0 0 250px; }
+  .asum-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: -.02em; margin: 0; }
+  .asum-sub   { font-size: 14px; color: var(--muted); line-height: 1.5; margin: 10px 0 0; }
+
+  /* Center — donut + legend */
+  .asum-center { flex: 1; display: flex; align-items: center; justify-content: center; gap: 40px; }
+
+  .donut { position: relative; width: 150px; height: 150px; flex: none; }
+  .donut svg { transform: rotate(-90deg); }
+  .donut-c { position: absolute; inset: 0; display: grid; place-items: center; text-align: center; }
+  .donut-num { font-size: 30px; font-weight: 800; color: var(--ink); line-height: 1; }
+  .donut-lbl { font-size: 10.5px; color: var(--muted); margin-top: 4px; line-height: 1.25; }
+
+  .legend { display: flex; flex-direction: column; gap: 16px; }
+  .legend-row { display: flex; align-items: center; gap: 12px; font-size: 15px; }
+  .legend-dot { width: 13px; height: 13px; border-radius: 50%; flex: none; }
+  .legend-name { color: var(--ink-2); min-width: 128px; }
+  .legend-val  { font-weight: 700; color: var(--ink); }
+  .legend-pct  { color: var(--faint); margin-left: 4px; }
+
+  /* Divider */
+  .asum-div { width: 1px; align-self: stretch; background: var(--line); margin: 4px 0; }
+
+  /* Right — risk posture */
+  .asum-risk { flex: 0 0 300px; }
+  .risk-title { font-size: 15px; font-weight: 700; color: var(--ink); margin: 0; }
+  .risk-sub   { font-size: 13px; color: var(--muted); margin: 5px 0 14px; }
+  .risk-level { display: flex; align-items: center; gap: 9px; font-size: 17px; font-weight: 700; color: var(--red); }
+  .risk-level .dot { width: 13px; height: 13px; border-radius: 50%; background: var(--red); }
+  .risk-note  { font-size: 13px; color: var(--muted); margin: 8px 0 16px; }
+  .risk-note b { color: var(--red); font-weight: 700; }
+  .risk-link  { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; color: var(--accent); text-decoration: none; }
+  .risk-link i { width: 16px; height: 16px; }
+</style>
+</head>
+<body>
+
+  <div class="asum">
+
+    <div class="asum-intro">
+      <h2 class="asum-title">Access Summary</h2>
+      <p class="asum-sub">Overall access coverage across all modules and roles.</p>
+    </div>
+
+    <div class="asum-center">
+      <div class="donut">
+        <svg width="150" height="150" viewBox="0 0 42 42">
+          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="#eef1f5" stroke-width="5" />
+          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--green)" stroke-width="5"
+                  stroke-dasharray="40.6 59.4" stroke-dashoffset="0" stroke-linecap="butt" />
+          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--amber)" stroke-width="5"
+                  stroke-dasharray="46.9 53.1" stroke-dashoffset="-40.6" stroke-linecap="butt" />
+          <circle cx="21" cy="21" r="15.9155" fill="none" stroke="var(--none)" stroke-width="5"
+                  stroke-dasharray="12.5 87.5" stroke-dashoffset="-87.5" stroke-linecap="butt" />
+        </svg>
+        <div class="donut-c">
+          <div class="donut-num">64</div>
+          <div class="donut-lbl">Total<br />Capability<br />Access</div>
+        </div>
+      </div>
+
+      <div class="legend">
+        <div class="legend-row">
+          <span class="legend-dot" style="background:var(--green)"></span>
+          <span class="legend-name">Full Access</span>
+          <span class="legend-val">26</span><span class="legend-pct">(41%)</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-dot" style="background:var(--amber)"></span>
+          <span class="legend-name">Partial Access</span>
+          <span class="legend-val">30</span><span class="legend-pct">(47%)</span>
+        </div>
+        <div class="legend-row">
+          <span class="legend-dot" style="background:var(--none)"></span>
+          <span class="legend-name">No Access</span>
+          <span class="legend-val">8</span><span class="legend-pct">(13%)</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="asum-div"></div>
+
+    <div class="asum-risk">
+      <h3 class="risk-title">Risk Posture</h3>
+      <p class="risk-sub">Based on high-risk capabilities</p>
+      <div class="risk-level"><span class="dot"></span> High</div>
+      <p class="risk-note"><b>8</b> capabilities require approval</p>
+      <a class="risk-link" href="#">Review high-risk capabilities <i data-lucide="arrow-right"></i></a>
+    </div>
+
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

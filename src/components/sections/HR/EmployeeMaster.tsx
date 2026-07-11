@@ -37,7 +37,6 @@ import { ContactDialog, StatusDialog, OffboardingDialog, ChangeRequestDialog, Do
 import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
 import { TableSkeleton, Button } from '@ui';
-import { AppTopBar } from '@shared/AppTopBar';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
@@ -421,7 +420,6 @@ export function EmployeeMaster(): VNode {
     <>
       {/* Navy top bar (search + profile), full width; the page title + subtext sit in a
           heading BELOW it, left-aligned. */}
-      <AppTopBar />
       <div class="hr-emp-master" onClick={() => setOpenId(null)}>
       <div class="em-pagehead">
         <span class="em-headrow-icon"><i class="fas fa-users" aria-hidden="true" /></span>
@@ -435,7 +433,7 @@ export function EmployeeMaster(): VNode {
           default / Done. Only managers/admins/superadmins may customize. */}
       {canEdit && (
         <WidgetBoardToolbar
-          editing={editing} canSetDefault={isAdmin}
+          editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
           onToggleEdit={() => setEditing(e => !e)}
           onOpenLibrary={() => setLibOpen(true)}
           onReset={() => void resetLayout()}

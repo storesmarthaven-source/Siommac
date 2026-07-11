@@ -29,6 +29,7 @@ import {
   type PersistedSession,
 } from '@lib/session';
 import type { LoginResponse, Verify2faResponse } from '../../types/api';
+import { ACCESS_TOKEN_TTL_MS } from '@cfg';
 import type { UserRole, ColorScheme, LayoutMode } from '@cfg';
 import type { PermissionOverride } from '@api/schemas/auth';
 
@@ -47,7 +48,7 @@ export interface SessionState {
 
   // ── Tokens ─────────────────────────────────────────────────────────────────
   token:        string | null;
-  refreshToken: string | null;
+  // NOTE: no refreshToken — it lives in an httpOnly cookie, invisible to JS.
   expiresAt:    number | null;   // unix ms
 
   // ── Preferences (persisted per-user) ──────────────────────────────────────
@@ -100,8 +101,8 @@ export interface SessionState {
   setColorScheme: (scheme: ColorScheme) => void;
   /** Update layout mode (called from settings panel) */
   setLayoutMode: (mode: LayoutMode) => void;
-  /** Replace tokens after a silent refresh */
-  refreshTokens: (token: string, refreshToken: string, expiresAt: number) => void;
+  /** Replace the access token after a silent refresh (refresh token = httpOnly cookie) */
+  refreshTokens: (token: string, expiresAt: number) => void;
   /** Apply per-user permission overrides loaded from DB at login (Phase 2b) */
   setPermissionOverrides: (overrides: PermissionOverride[]) => void;
   /** Update the registered passkey count (called by the Security panel). */
@@ -125,8 +126,8 @@ function payloadToState(p: LoginResponse | Verify2faResponse): Partial<SessionSt
     position:        p.position      ?? null,
     profileImage:    p.profileImage  ?? null,
     token:           p.token         ?? null,
-    refreshToken:    p.refreshToken  ?? null,
-    expiresAt:       p.token         ? Date.now() + 15 * 60 * 1000 : null,
+    // Prefer the server-authoritative expiry; fall back to the client constant.
+    expiresAt:       p.token ? (p.expiresAt ?? Date.now() + ACCESS_TOKEN_TTL_MS) : null,
     colorScheme:     (p.colorScheme  as ColorScheme) ?? 'navy',
     layoutMode:      (p.layoutMode   as LayoutMode)  ?? 'sidebar',
     companyName:     p.companyName   ?? null,
@@ -151,7 +152,6 @@ function stateFromPersisted(s: PersistedSession): Partial<SessionState> {
     position:        s.position,
     profileImage:    s.profileImage,
     token:           s.token,
-    refreshToken:    s.refreshToken,
     expiresAt:       s.expiresAt,
     colorScheme:     s.colorScheme as ColorScheme,
     layoutMode:      s.layoutMode as LayoutMode,
@@ -172,7 +172,6 @@ const LOGGED_OUT: Partial<SessionState> = {
   position:            null,
   profileImage:        null,
   token:               null,
-  refreshToken:        null,
   expiresAt:           null,
   companyName:         null,
   companyLogoUrl:      null,
@@ -201,7 +200,6 @@ export const useSessionStore = create<SessionState>()((set) => ({
   position:        null,
   profileImage:    null,
   token:           null,
-  refreshToken:    null,
   expiresAt:       null,
   colorScheme:     'navy',
   layoutMode:      'sidebar',
@@ -224,11 +222,21 @@ export const useSessionStore = create<SessionState>()((set) => ({
     const next = payloadToState(payload);
     set(next as SessionState);
 
-    // Persist to localStorage for page-refresh hydration
+    // Persist to localStorage for page-refresh hydration.
+    // Same-user writes MERGE over the existing record so fields owned by other
+    // writers survive (attSystem's idleExpiresAt/idleTimeoutMs/rememberMe/roleScope
+    // idle-policy fields — this full-replace used to silently DROP them, which is
+    // how the token-expiry and idle-deadline semantics ended up fighting over one
+    // field). A different user gets a clean slate — no cross-user leakage.
     if (payload.userId && payload.token) {
+      const prev = loadSession();
+      const keep = prev && prev.userId === payload.userId ? prev : null;
+      // Scrub any pre-cookie-era plaintext refresh token so the merge can't carry
+      // a secret back into localStorage (the cookie is the only home it has now).
+      if (keep) delete (keep as unknown as Record<string, unknown>)['refreshToken'];
       saveSession({
+        ...(keep ?? {}),
         token:          payload.token!,
-        refreshToken:   payload.refreshToken ?? '',
         userId:         payload.userId!,
         username:       payload.username ?? '',
         fullName:       payload.fullName ?? '',
@@ -240,7 +248,10 @@ export const useSessionStore = create<SessionState>()((set) => ({
         profileImage:   payload.profileImage ?? '',
         companyLogoUrl: payload.companyLogoUrl ?? '',
         companyName:    payload.companyName ?? '',
-        expiresAt:      Date.now() + 15 * 60 * 1000,
+        // Access-token expiry ONLY (freshness for the silent-refresh machinery).
+        // The session's lifetime is the idle deadline, owned by attSystem.
+        expiresAt:      payload.expiresAt ?? (Date.now() + ACCESS_TOKEN_TTL_MS),
+        isEmployee:     payload.isEmployee !== false,
         rolePermissions:     payload.rolePermissions ?? [],
         permissionOverrides: payload.permissionOverrides ?? [],
       });
@@ -276,10 +287,10 @@ export const useSessionStore = create<SessionState>()((set) => ({
     if (s) saveSession({ ...s, layoutMode: mode });
   },
 
-  refreshTokens(token, refreshToken, expiresAt) {
-    set({ token, refreshToken, expiresAt });
+  refreshTokens(token, expiresAt) {
+    set({ token, expiresAt });
     const s = loadSession();
-    if (s) saveSession({ ...s, token, refreshToken, expiresAt });
+    if (s) saveSession({ ...s, token, expiresAt });
   },
 
   setPermissionOverrides(overrides) {

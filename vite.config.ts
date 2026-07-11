@@ -22,6 +22,10 @@ export default defineConfig(({ mode }) => ({
     VitePWA({
       registerType: 'autoUpdate',
       filename:     'sw.js',
+      // Self-destroying by default: the SW unregisters itself + clears all caches on
+      // load, so heavy dev iteration (chunk-hash churn) can never leave the browser
+      // stuck on a stale bundle. Build with PWA=on to ship the real caching PWA in prod.
+      selfDestroying: process.env.PWA !== 'on',
       manifest: {
         name:             'Siomac',
         short_name:       'Siomac',

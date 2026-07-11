@@ -15,21 +15,8 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-import { ProfilePill as SharedProfilePill } from '@shared/ProfilePill';
 import { AppSection } from './AppSection';
 
-// ── Right-aligned wrapper over the reusable, self-populating pill ─────────────
-// (`ids` is ignored — the shared pill is id-free; kept so call sites are stable)
-
-interface PillIds { [k: string]: string }
-
-function ProfilePill(_props: { ids?: PillIds }) {
-  return (
-    <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <SharedProfilePill />
-    </div>
-  );
-}
 
 // ── Live Operations Map ───────────────────────────────────────────────────────
 
@@ -113,13 +100,6 @@ function AboutSection() {
   return (
     <AppSection id="s-about">
 
-      <ProfilePill ids={{
-        profileBtn: 'admAbtProfileBtn', avatar: 'admAbtProfileAvatar',
-        profileName: 'admAbtProfileName', profileRole: 'admAbtProfileRole',
-        notifBtn: 'admAbtNotifBtn', notifBadge: 'admAbtNotifBadge',
-        msgBtn: 'admAbtMsgBtn', msgBadge: 'admAbtMsgBadge',
-        ticketBtn: 'admAbtTicketBtn', ticketBadge: 'admAbtTicketBadge',
-      }} />
 
       {/* Hero banner */}
       <div style="background:#1b2d54;border-radius:20px;padding:48px 40px;margin-bottom:24px;display:flex;align-items:center;gap:36px;flex-wrap:wrap;">
@@ -200,9 +180,8 @@ export default function SharedSections() {
     <>
       <LiveMapSection />
 
-      {/* Superadmin Console — superadmin only */}
       {/* Notification Center / Messages — all roles.
-          NO wrapper <ProfilePill> here: the Preact component's <PageHeader>
+          NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}
       <AppSection id="s-notification-center">
         <div id="preact-notification-center-root" />
@@ -212,31 +191,23 @@ export default function SharedSections() {
         <div id="preact-messages-root" />
       </AppSection>
 
-      <AppSection id="s-superadmin-console">
-        <ProfilePill ids={{
-          profileBtn: 'sadmModProfileBtn', avatar: 'sadmModProfileAvatar',
-          profileName: 'sadmModProfileName', profileRole: 'sadmModProfileRole',
-          notifBtn: 'sadmModNotifBtn', notifBadge: 'sadmModNotifBadge',
-          msgBtn: 'sadmModMsgBtn', msgBadge: 'sadmModMsgBadge',
-          ticketBtn: 'sadmModTicketBtn', ticketBadge: 'sadmModTicketBadge',
-        }} />
-        <div id="preact-superadmin-console-root" />
+      {/* Calendar & Tasks — all roles (the module renders its own page header) */}
+      <AppSection id="s-calendar">
+        <div id="preact-calendar-root" />
+      </AppSection>
+
+      {/* Access Control — superadmin only (RBAC console, moved out of Settings) */}
+      <AppSection id="s-access-control">
+        <div id="preact-access-control-root" />
       </AppSection>
 
       {/* Payroll — admin + manager */}
       <AppSection id="s-payroll">
-        <ProfilePill ids={{
-          profileBtn: 'admPayProfileBtn', avatar: 'admPayProfileAvatar',
-          profileName: 'admPayProfileName', profileRole: 'admPayProfileRole',
-          notifBtn: 'admPayNotifBtn', notifBadge: 'admPayNotifBadge',
-          msgBtn: 'admPayMsgBtn', msgBadge: 'admPayMsgBadge',
-          ticketBtn: 'admPayTicketBtn', ticketBadge: 'admPayTicketBadge',
-        }} />
         <div id="preact-payroll-root" />
       </AppSection>
 
       {/* My Profile — every role.
-          NO wrapper <ProfilePill> here: the Preact component's <PageHeader>
+          NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}
       <AppSection id="s-profile">
         <div id="preact-profile-root" />
@@ -244,13 +215,6 @@ export default function SharedSections() {
 
       {/* Settings */}
       <AppSection id="s-settings">
-        <ProfilePill ids={{
-          profileBtn: 'admStgProfileBtn', avatar: 'admStgProfileAvatar',
-          profileName: 'admStgProfileName', profileRole: 'admStgProfileRole',
-          notifBtn: 'admStgNotifBtn', notifBadge: 'admStgNotifBadge',
-          msgBtn: 'admStgMsgBtn', msgBadge: 'admStgMsgBadge',
-          ticketBtn: 'admStgTicketBtn', ticketBadge: 'admStgTicketBadge',
-        }} />
         {/* SettingsSection Preact component mounts here */}
         <div id="preact-settings-root" />
         {/*

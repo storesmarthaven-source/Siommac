@@ -9,7 +9,10 @@
  * Covers:
  *   - Employee can list own payslips via /my (finance.payroll.view_own).
  *   - Employee requesting a signed-url for their OWN payslip passes self-scope, then
- *     correctly 422s (PDF rendering/upload not yet built — file_path is null).
+ *     correctly 422s BEFORE render (file_path still null), and SUCCEEDS after render.
+ *   - Wave 1: render-run produces PDFs (file_path set); deliver-run emails them
+ *     (password-protected) or records 'skipped' when RESEND_API_KEY is unset; both are
+ *     permission-gated (generate / distribute) and tracked in finance_payslip_deliveries.
  *   - Employee CANNOT get a signed-url for another employee payslip (self-scope 403).
  *   - An employee with no payslips gets an empty list (not an error).
  *   - S2 side-effect: payslip-ready notification written on generate.
@@ -73,6 +76,7 @@ export default async function run(h) {
 
   h.onCleanup(async () => {
     try { await sb.from('notifications').delete().in('metadata->runId', [ctx.runId]).eq('type', 'finance.payroll.payslip.ready'); } catch {}
+    try { await sb.from('finance_payslip_deliveries').delete().eq('run_id', ctx.runId); } catch {}
     try { await sb.from('finance_payslips').delete().eq('run_id', ctx.runId); } catch {}
     try { await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
@@ -182,12 +186,11 @@ export default async function run(h) {
   h.section('Finance Payslip ESS - Signed URL (self-scope guard)');
   // ===========================================================================
 
-  await test('emp1 requesting a signed-url passes self-scope, then correctly 422s (PDF not generated yet)', async () => {
-    // PDF rendering/upload is not yet built (generatePayslips always inserts
-    // file_path: null). signedPayslipUrl correctly refuses with 422 "not generated
-    // yet" rather than pretending a file exists — this asserts self-scope let the
-    // request THROUGH (not a 403/404), and that the refusal is the honest 422, not
-    // a permission or lookup failure.
+  await test('emp1 requesting a signed-url passes self-scope, then correctly 422s (not rendered yet)', async () => {
+    // The payslip has not been RENDERED yet at this point (file_path is null), so
+    // signedPayslipUrl correctly refuses with 422 rather than pretending a file exists.
+    // Asserts self-scope let the request THROUGH (not a 403/404). The render section
+    // below then renders the PDF and re-checks that signed-url succeeds.
     const r = await api('finance/payroll/payslips/signed-url', emp1Token, { id: ctx.payslip1Id });
     fails(r, 'expected a refusal (file not generated), not success');
     expect(r.status !== 403, 'emp1 owns this payslip — must not be self-scope-denied');
@@ -245,5 +248,74 @@ export default async function run(h) {
     ok(r, 'payslips/my failed');
     const found = (r.body.data ?? []).find(p => p.employeeId === emp1Id);
     expect(!found, 'emp2 must not see emp1 payslip in /my list');
+  });
+
+  // ===========================================================================
+  h.section('Finance Payslip - PDF render + storage (Wave 1)');
+  // ===========================================================================
+
+  await test('employee CANNOT render payslips (needs finance.payroll.payslips.generate)', async () => {
+    const r = await api('finance/payroll/payslips/render-run', emp1Token, { runId: ctx.runId });
+    fails(r, 'employee must be denied payslip render');
+    expect(r.status === 403, 'expected 403, got ' + r.status);
+  });
+
+  await test('finance_manager renders payslip PDFs for the locked run', async () => {
+    const r = await api('finance/payroll/payslips/render-run', fmgrToken, { runId: ctx.runId });
+    ok(r, 'render-run failed (is the `payslips` storage bucket migration applied?)');
+    expect(typeof r.body.data.rendered === 'number', 'expected rendered count');
+    expect(r.body.data.rendered >= 2, 'expected >=2 rendered, got ' + r.body.data.rendered);
+    expect(r.body.data.failed === 0, 'expected 0 failed, got ' + r.body.data.failed);
+  });
+
+  await test('file_path is now set on the payslips (list endpoint)', async () => {
+    const r = await api('finance/payroll/payslips/list', fmgrToken, { runId: ctx.runId });
+    ok(r, 'payslips/list failed');
+    const withFile = (r.body.data ?? []).filter(p => p.filePath);
+    expect(withFile.length >= 2, 'expected >=2 payslips with filePath, got ' + withFile.length);
+  });
+
+  await test('after render, emp1 signed-url SUCCEEDS (returns a url)', async () => {
+    const r = await api('finance/payroll/payslips/signed-url', emp1Token, { id: ctx.payslip1Id });
+    ok(r, 'signed-url should now succeed after render');
+    expect(typeof r.body.data.url === 'string' && r.body.data.url.length > 0, 'expected a signed url');
+  });
+
+  // ===========================================================================
+  h.section('Finance Payslip - Email delivery + tracking (Wave 1)');
+  // ===========================================================================
+
+  await test('employee CANNOT distribute payslips (needs finance.payroll.payslips.distribute)', async () => {
+    const r = await api('finance/payroll/payslips/deliver-run', emp1Token, { runId: ctx.runId });
+    fails(r, 'employee must be denied payslip distribution');
+    expect(r.status === 403, 'expected 403, got ' + r.status);
+  });
+
+  await test('finance_manager delivers payslips (email or skipped when RESEND disabled)', async () => {
+    const r = await api('finance/payroll/payslips/deliver-run', fmgrToken, { runId: ctx.runId });
+    ok(r, 'deliver-run failed');
+    const d = r.body.data;
+    expect(typeof d.total === 'number' && d.total >= 2, 'expected total >=2, got ' + d.total);
+    expect(d.sent + d.skipped + d.failed === d.total, 'delivery counts must sum to total');
+    expect(d.failed === 0, 'expected 0 hard failures (skipped is OK), got ' + d.failed);
+  });
+
+  await test('S5: a delivery row is recorded per payslip', async () => {
+    const { data } = await sb.from('finance_payslip_deliveries')
+      .select('id, status, employee_id, channel').eq('run_id', ctx.runId);
+    expect((data ?? []).length >= 2, 'expected >=2 delivery rows, got ' + (data ?? []).length);
+    for (const row of (data ?? [])) {
+      expect(['sent', 'skipped', 'failed'].includes(row.status), 'unexpected delivery status: ' + row.status);
+      expect(row.channel === 'email', 'expected email channel');
+    }
+  });
+
+  await test('deliveries/list returns the delivery history (Finance)', async () => {
+    const r = await api('finance/payroll/payslips/deliveries/list', fmgrToken, { runId: ctx.runId });
+    ok(r, 'deliveries/list failed');
+    expect(Array.isArray(r.body.data) && r.body.data.length >= 2, 'expected >=2 deliveries');
+    for (const k of ['id', 'payslipId', 'employeeId', 'status', 'channel', 'passwordProtected']) {
+      expect(k in r.body.data[0], 'delivery missing field: ' + k);
+    }
   });
 }

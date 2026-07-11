@@ -1,26 +1,33 @@
 /**
  * src/ui/components/NewMenu.tsx
  *
- * The app-wide STANDARD page action — a "New ▾" dropdown that sits to the right
- * of the page nav/tabs. Each page passes its own create items (the submenu) and
- * the workflow each one triggers:
+ * The app-wide STANDARD page action — a navy "New ▾" dropdown that sits to the
+ * right of the page nav/tabs (and in the PageHeader actions). Each page passes
+ * its own create items (the submenu) and the workflow each one triggers:
  *
  *   <NewMenu items={[
- *     { label: 'New Hazard',          icon: 'fa-radiation',          onSelect: openHazard },
- *     { label: 'New Risk Assessment', icon: 'fa-table-cells-large',  onSelect: openRa },
- *     { label: 'New JSA',             icon: 'fa-list-ol',            onSelect: openJsa },
+ *     { label: 'New Hazard',          icon: 'Radiation',   onSelect: openHazard },
+ *     { label: 'New Risk Assessment', icon: 'LayoutGrid',  onSelect: openRa },
+ *     { label: 'New JSA',             icon: 'ListOrdered', onSelect: openJsa },
  *   ]} />
  *
- * One item → renders a plain primary button (no chevron). Many items → the
- * "New ▾" dropdown. Manages its own open state + outside-click close.
+ * STANDARD (page-header rules): the trigger button is NAVY (the standard header
+ * button colour), and every dropdown-item `icon` is a LUCIDE name rendered in
+ * #667085. One item → a plain navy button (no chevron). Many → the "New ▾"
+ * dropdown. Manages its own open state + outside-click close.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, Fragment } from 'preact';
 import { useState } from 'preact/hooks';
+import { LucideIcon, type LucideName } from '../LucideIcon';
+
+/** Standard muted colour for header dropdown-item icons (Lucide, page-header standard). */
+export const MENU_ICON_COLOR = '#667085';
 
 export interface NewMenuItem {
   label: string;
-  icon?: string;
+  /** Lucide icon name (page-header standard). Rendered in #667085. */
+  icon?: LucideName;
   /** Optional one-line description shown under the label. */
   sub?: string;
   onSelect: () => void;
@@ -34,62 +41,53 @@ export interface NewMenuProps {
   label?: string;
   /** Dropdown alignment relative to the button. */
   align?: 'left' | 'right';
-  /** Override the leading icon (default fa-circle-plus). */
-  icon?: string;
+  /** Override the leading Lucide icon (default 'Plus'). */
+  icon?: LucideName;
   /** Stretch the button to fill its container's height (e.g. to match an adjacent tab bar). */
   fill?: boolean;
 }
 
-export function NewMenu({ items, label, align = 'right', icon = 'fa-circle-plus', fill = false }: NewMenuProps): VNode {
+export function NewMenu({ items, label, align = 'right', icon = 'Plus', fill = false }: NewMenuProps): VNode {
   const [open, setOpen] = useState(false);
 
   // When `fill`, override the 40px min-height so the button matches its row's height.
   const fillStyle = fill ? { height: '100%', minHeight: 0 } : undefined;
 
-  // Single action → plain primary button (no dropdown).
+  // Single action → plain navy button (no dropdown).
   if (items.length === 1) {
     const only = items[0]!;
     return (
-      <button class="hse-btn accent" style={fillStyle} onClick={only.onSelect}>
-        <i class={`fas ${only.icon ?? icon}`} /> {label ?? only.label}
+      <button class="hse-btn primary" style={fillStyle} onClick={only.onSelect}>
+        <LucideIcon name={only.icon ?? icon} size={15} /> {label ?? only.label}
       </button>
     );
   }
 
   return (
     <div style={{ position: 'relative', height: fill ? '100%' : undefined }}>
-      <button class="hse-btn accent" style={fillStyle} onClick={() => setOpen(o => !o)}>
-        <i class={`fas ${icon}`} /> {label ?? 'New'}{' '}
-        <i class="fas fa-chevron-down" style={{ fontSize: '0.6rem', marginLeft: '2px' }} />
+      <button class="hse-btn primary" style={fillStyle} onClick={() => setOpen(o => !o)}>
+        <LucideIcon name={icon} size={15} /> {label ?? 'New'}{' '}
+        <LucideIcon name="ChevronDown" size={12} style={{ marginLeft: '2px' }} />
       </button>
       {open && (
         <>
           <div style={{ position: 'fixed', inset: 0, zIndex: 40 }} onClick={() => setOpen(false)} />
-          <div
-            style={{
-              position: 'absolute', top: 'calc(100% + 6px)', zIndex: 41, minWidth: '220px',
-              [align]: 0,
-              background: 'var(--bg-card)', border: '1px solid var(--border)',
-              borderRadius: 'var(--radius-sm)', boxShadow: 'var(--elev-4)', overflow: 'hidden', display: 'grid',
-            }}
-          >
+          <div class="ui-menu ui-menu-pop" style={{ top: 'calc(100% + 6px)', [align]: 0 }}>
             {items.map(it => (
-              <button
-                key={it.label}
-                onClick={() => { it.onSelect(); setOpen(false); }}
-                style={{
-                  display: 'flex', alignItems: 'center', gap: '10px', padding: '10px 14px',
-                  background: 'none', border: 'none', cursor: 'pointer', textAlign: 'left',
-                  borderTop: it.divider ? '1px solid var(--border)' : 'none',
-                  borderBottom: '1px solid var(--border)',
-                }}
-              >
-                <i class={`fas ${it.icon ?? 'fa-circle-plus'}`} style={{ width: '16px', color: 'var(--siomac-red)', flexShrink: 0 }} />
-                <span style={{ display: 'grid', gap: '1px', minWidth: 0 }}>
-                  <span style={{ fontSize: '0.82rem', color: 'var(--siomac-navy)', fontWeight: 600 }}>{it.label}</span>
-                  {it.sub && <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)' }}>{it.sub}</span>}
-                </span>
-              </button>
+              <Fragment key={it.label}>
+                {it.divider && <div class="ui-menu-divider" />}
+                <button
+                  type="button" class="ui-menu-item"
+                  style={{ alignItems: it.sub ? 'flex-start' : 'center' }}
+                  onClick={() => { it.onSelect(); setOpen(false); }}
+                >
+                  <LucideIcon name={it.icon ?? 'Plus'} size={16} style={{ color: MENU_ICON_COLOR, flexShrink: 0, marginTop: it.sub ? '1px' : 0 }} />
+                  <span style={{ display: 'grid', gap: '1px', minWidth: 0 }}>
+                    <span>{it.label}</span>
+                    {it.sub && <span style={{ fontSize: '0.68rem', fontWeight: 500, color: 'var(--text-muted)' }}>{it.sub}</span>}
+                  </span>
+                </button>
+              </Fragment>
             ))}
           </div>
         </>

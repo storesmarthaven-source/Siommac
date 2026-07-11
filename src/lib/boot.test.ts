@@ -39,7 +39,6 @@ import type { PersistedSession }                 from '@lib/session';
 function makeSession(role: PersistedSession['role'] = 'admin'): PersistedSession {
   return {
     token:          'tok_test',
-    refreshToken:   'ref_test',
     userId:         'USR-00000001',
     username:       'testuser',
     fullName:       'Test User',
@@ -166,14 +165,32 @@ describe('Boot invariant 3 — session: single source of truth, no corruption', 
     expect(loaded?.userId).toBe(sess.userId);
     expect(loaded?.role).toBe(sess.role);
     expect(loaded?.token).toBe(sess.token);
-    expect(loaded?.refreshToken).toBe(sess.refreshToken);
     expect(loaded?.expiresAt).toBe(sess.expiresAt);
   });
 
-  it('loadSession returns null for an expired session', () => {
-    const expired: PersistedSession = { ...makeSession(), expiresAt: Date.now() - 1 };
-    localStorage.setItem(SESSION_KEY, JSON.stringify(expired));
+  it('loadSession SURVIVES an expired ACCESS token (silent refresh handles freshness)', () => {
+    // Token expiry is a freshness concern, not a logout — the refresh machinery
+    // (apiFetch proactive refresh / 401-retry / ensureFreshToken) restores it.
+    // Treating it as logout was the root cause of "reload logs me out".
+    const staleToken: PersistedSession = { ...makeSession(), expiresAt: Date.now() - 1 };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(staleToken));
+    expect(loadSession()).not.toBeNull();
+  });
+
+  it('loadSession returns null once the IDLE deadline has passed (session policy logout)', () => {
+    const idleExpired: PersistedSession = { ...makeSession(), idleExpiresAt: Date.now() - 1 };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(idleExpired));
     expect(loadSession()).toBeNull();
+  });
+
+  it('loadSession survives a future IDLE deadline with a stale access token', () => {
+    const s: PersistedSession = {
+      ...makeSession(),
+      expiresAt:     Date.now() - 60_000,            // access token stale
+      idleExpiresAt: Date.now() + 8 * 60 * 60 * 1000, // but the user isn't idle-expired
+    };
+    localStorage.setItem(SESSION_KEY, JSON.stringify(s));
+    expect(loadSession()).not.toBeNull();
   });
 
   it('loadSession returns null when localStorage is empty', () => {

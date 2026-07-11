@@ -57,7 +57,9 @@ export type ConfirmSetupPayload = z.infer<typeof ConfirmSetupPayloadSchema>;
 
 export const FullSessionSchema = z.object({
   token:          z.string().min(1),
-  refreshToken:   z.string().min(1),
+  // Server-authoritative access-token expiry (the refresh token itself is an
+  // httpOnly cookie — deliberately absent from the JSON payload).
+  expiresAt:      z.number().optional(),
   userId:         z.string().min(1),
   username:       z.string().min(1),
   fullName:       z.string(),

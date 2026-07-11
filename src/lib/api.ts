@@ -37,7 +37,6 @@ import { logger } from '@lib/logger';
 import type { ApiResponse } from '../../types/api';
 import {
   getToken,
-  getRefreshToken,
   patchTokens,
   clearSession,
   loadSession,
@@ -68,24 +67,26 @@ function _retryDelay(attempt: number): Promise<void> {
 let _refreshPromise: Promise<string | null> | null = null;
 
 async function _doRefresh(): Promise<string | null> {
-  const rt = getRefreshToken();
-  if (!rt) {
+  // The refresh token lives in an httpOnly cookie the browser attaches itself —
+  // JS never sees it. Only attempt a refresh when a session actually exists, so
+  // pre-login boots can never fire a spurious refresh → expiry broadcast.
+  if (!loadSession()) {
     _onAuthExpired();
     return null;
   }
 
   try {
     const res  = await fetch(`${API_URL.replace(/\/$/, '')}/refreshToken`, {
-      method:  'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({ args: { refreshToken: rt } }),
+      method:      'POST',
+      headers:     { 'Content-Type': 'application/json' },
+      credentials: 'same-origin',   // send + accept the httpOnly refresh cookie
+      body:        JSON.stringify({ args: {} }),
     });
 
     const json = await res.json() as {
-      success:       boolean;
-      token?:        string;
-      refreshToken?: string;
-      expiresAt?:    number;
+      success:    boolean;
+      token?:     string;
+      expiresAt?: number;
     };
 
     if (!json.success || !json.token) {
@@ -96,10 +97,11 @@ async function _doRefresh(): Promise<string | null> {
     }
 
     const expiresAt = json.expiresAt ?? (Date.now() + ACCESS_TOKEN_TTL_MS);
-    patchTokens(json.token, json.refreshToken ?? rt, expiresAt);
+    patchTokens(json.token, expiresAt);
 
-    // Broadcast new tokens to other tabs
-    _broadcastTokens(json.token, json.refreshToken ?? rt, expiresAt);
+    // Broadcast the new access token to other tabs (the rotated refresh token is
+    // in the shared cookie jar — nothing else to sync)
+    _broadcastTokens(json.token, expiresAt);
 
     return json.token;
   } catch (err) {
@@ -122,10 +124,9 @@ async function _refreshToken(): Promise<string | null> {
 const CHANNEL_NAME = 'siomac-token-sync';
 
 interface TokenBroadcast {
-  type:         'TOKEN_REFRESHED' | 'SESSION_EXPIRED';
-  token?:       string;
-  refreshToken?: string;
-  expiresAt?:   number;
+  type:       'TOKEN_REFRESHED' | 'SESSION_EXPIRED';
+  token?:     string;
+  expiresAt?: number;
 }
 
 let _channel: BroadcastChannel | null = null;
@@ -135,10 +136,11 @@ function _getChannel(): BroadcastChannel | null {
   if (!_channel) {
     _channel = new BroadcastChannel(CHANNEL_NAME);
     _channel.onmessage = (evt: MessageEvent<TokenBroadcast>) => {
-      const { type, token, refreshToken, expiresAt } = evt.data;
-      if (type === 'TOKEN_REFRESHED' && token && refreshToken && expiresAt) {
-        // Another tab refreshed — adopt their tokens without making our own call
-        patchTokens(token, refreshToken, expiresAt);
+      const { type, token, expiresAt } = evt.data;
+      if (type === 'TOKEN_REFRESHED' && token && expiresAt) {
+        // Another tab refreshed — adopt their access token without making our own
+        // call (the rotated refresh token is already in the shared cookie jar)
+        patchTokens(token, expiresAt);
         logger.debug('Adopted token refresh from another tab');
       } else if (type === 'SESSION_EXPIRED') {
         clearSession();
@@ -149,8 +151,8 @@ function _getChannel(): BroadcastChannel | null {
   return _channel;
 }
 
-function _broadcastTokens(token: string, refreshToken: string, expiresAt: number): void {
-  _getChannel()?.postMessage({ type: 'TOKEN_REFRESHED', token, refreshToken, expiresAt } satisfies TokenBroadcast);
+function _broadcastTokens(token: string, expiresAt: number): void {
+  _getChannel()?.postMessage({ type: 'TOKEN_REFRESHED', token, expiresAt } satisfies TokenBroadcast);
 }
 
 function _broadcastExpiry(): void {
@@ -180,6 +182,16 @@ function _tokenNeedsRefresh(): boolean {
   const s = loadSession();
   if (!s?.expiresAt) return false;
   return s.expiresAt - Date.now() < TOKEN_REFRESH_HEADROOM_MS;
+}
+
+/**
+ * Boot-time kick: eagerly refresh a stale access token so a reload after idle
+ * (< the idle deadline) resumes seamlessly instead of waiting for the first API
+ * call. Shares the single-flight refresh promise, so early queries simply queue
+ * behind the same request. No-op when the token is fresh or no session exists.
+ */
+export async function ensureFreshToken(): Promise<void> {
+  if (_tokenNeedsRefresh()) await _refreshToken();
 }
 
 // ── Core fetch ────────────────────────────────────────────────────────────────

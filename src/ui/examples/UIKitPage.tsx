@@ -16,7 +16,7 @@ import {
   PageHero, ModuleTabs, TabBar, PageHeader, MetricRow, withCounts, SectionHead,
   Card, SparkCard, StatsCard, ChartCard, MiniCard, RecordRow, StatusPill,
   Sparkline, BarRow, ProgressBar,
-  Button, Field, TextInput, SelectInput, TextareaInput, FormGrid,
+  Button, NewMenu, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
   PersonSearchSelect, type PersonSearchOption,
   PersonCell, TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, type AdvTab,
@@ -28,6 +28,8 @@ import {
   type ModuleTab, type TabDef, type Column,
 } from '@ui';
 import { ThemeEditor } from './ThemeEditor';
+import { UserPill } from '@shared/UserPill';
+import { AccountPill } from '@shared/AccountPill';
 
 // ── Catalog scaffolding ─────────────────────────────────────────────────────────
 
@@ -167,7 +169,7 @@ export function UIKitPage(): VNode {
         <Demo label="The rules" wide>
           <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.8rem', color: 'var(--text-primary)', lineHeight: 1.8 }}>
             <li>Headers are <strong>info-only</strong> — no action buttons (those go in the tab content)</li>
-            <li><strong>One ProfilePill</strong> per page (the app header) — never in a page/hero</li>
+            <li><strong>One UserPill</strong> per page (the app header) — never in a page/hero</li>
             <li><strong>All cards use <code>&lt;Card&gt;</code></strong> — never hand-roll <code>.inc-mini-card</code></li>
             <li>Four-card rows are <strong>rearrangeable</strong> (<code>pageKey</code>: <code>&lt;module&gt;.&lt;area&gt;</code>)</li>
             <li>Overlays use <strong>Modal / Wizard / Drawer</strong>; forms use <strong>Field</strong> + inputs</li>
@@ -247,6 +249,42 @@ export function UIKitPage(): VNode {
             <Button variant="primary" disabled>Disabled</Button>
           </div>
         </Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="Header action buttons — the page-header standard (40px · navy primary · Lucide #667085 menu icons)" wide>
+          <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
+            <button type="button" class="hse-btn"><i class="fas fa-download" /> Export</button>
+            <NewMenu items={[
+              { label: 'New Rate Version',   icon: 'FilePlus2', sub: 'Draft a statutory version', onSelect: () => {} },
+              { label: 'New Pay Component',  icon: 'Layers',    sub: 'Add an earning or deduction', onSelect: () => {} },
+              { label: 'Import NIS Classes', icon: 'FileInput', sub: 'Bulk-load from CSV',          onSelect: () => {} },
+            ]} />
+          </div>
+        </Demo>
+      </Section>
+
+      {/* USER PILL (global top bar) ------------------------------------------- */}
+      <Section id="uikit-userpill" title="UserPill — the global top bar" sub="The single top bar mounted once in the app shell on every page: global search (⌘K) + AI assistant, and the AccountPill (notifications / messages / tickets + profile + account menu) in the corner. Bare <UserPill /> is the search + account bar; pass title/sub/module/crumbs/meta/nav to add page context.">
+        <Demo label="Global bar — bare (search + account)" wide><UserPill /></Demo>
+        <div style={{ height: 'var(--space-3)' }} />
+        <Demo label="With page context (title · breadcrumb · meta)" wide>
+          <UserPill icon="fa-users" title="Employee Master" sub="All personnel records" module="HR" crumbs={['People']} meta={[{ icon: 'fa-circle-dot', label: '128 active' }]} />
+        </Demo>
+      </Section>
+
+      {/* ACCOUNT PILL --------------------------------------------------------- */}
+      <Section id="uikit-accountpill" title="AccountPill — profile & quick actions" sub="The account cluster inside UserPill: profile menu (My Profile · Settings · About · Log out) plus notification / message / ticket quick actions. Self-populates from the session store. Customize with variant · iconsFirst · showNotif/showMsg/showTicket · compact.">
+        <Grid min="300px">
+          <Demo label="Default"><AccountPill /></Demo>
+          <Demo label="Icons first (top bar corner)"><AccountPill iconsFirst /></Demo>
+          <Demo label="Compact — avatar + caret only"><AccountPill compact /></Demo>
+          <Demo label="Notifications only (msg + ticket off)"><AccountPill showMsg={false} showTicket={false} /></Demo>
+          <Demo label="No quick-action icons"><AccountPill showNotif={false} showMsg={false} showTicket={false} /></Demo>
+          <Demo label="On a dark panel (variant='onDark')">
+            <div style={{ background: 'var(--siomac-navy)', padding: 'var(--space-4)', borderRadius: 'var(--radius-sm)' }}>
+              <AccountPill variant="onDark" />
+            </div>
+          </Demo>
+        </Grid>
       </Section>
 
       {/* STATUS --------------------------------------------------------------- */}

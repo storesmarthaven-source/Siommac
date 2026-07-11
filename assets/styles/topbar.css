@@ -66,18 +66,24 @@
 .app-topbar-search-text { flex: 1; text-align: left; }
 .app-topbar-kbd { font-size: 0.74rem; font-weight: 600; color: #fff; border: 1px solid rgba(255,255,255,0.12); border-radius: 5px; padding: 1px 6px; background: rgba(255,255,255,0.08); font-family: inherit; }
 
-/* AI assistant — bare glyph (no container) inside the search field on its right edge. */
+/* AI assistant — its own standalone button beside the search field. Navy gradient (deep
+   siomac-navy → a lighter blue accent) with a light accent outline, so it reads as a raised
+   on-brand chip on the navy top bar rather than a foreign colour. Icon = currentColor (white). */
 .app-topbar-ai {
   align-self: center; flex: 0 0 auto;
-  width: 30px; height: 32px; display: inline-flex; align-items: center; justify-content: center;
-  border: none; background: transparent; padding: 0; cursor: pointer; color: #fff;
-  transition: transform 0.15s ease;
+  width: 34px; height: 34px; display: inline-flex; align-items: center; justify-content: center;
+  border: 1px solid rgba(190,198,220,0.5);
+  background: linear-gradient(135deg, #4e5871 0%, #646f8e 100%);
+  border-radius: 10px; padding: 0; cursor: pointer; color: #fff;
+  box-shadow: 0 2px 10px rgba(88,98,125,0.4);
+  transition: filter 0.15s, box-shadow 0.15s, border-color 0.15s, transform 0.15s ease;
 }
-.app-topbar-ai:hover { transform: scale(1.1); }
+.app-topbar-ai:hover { filter: brightness(1.1); border-color: rgba(214,220,236,0.85); box-shadow: 0 3px 15px rgba(88,98,125,0.5); }
+.app-topbar-ai:active { transform: scale(0.94); }
 /* Custom AI sparkle glyph (provided asset). Rendered via mask so it takes the
    button's colour (currentColor) and stays crisp at any size. */
 .app-topbar-ai-glyph {
-  width: 24px; height: 24px; display: block; background: currentColor;
+  width: 27px; height: 27px; display: block; background: currentColor;
   -webkit-mask: url(../icons/ai-sparkle.svg) center / contain no-repeat;
           mask: url(../icons/ai-sparkle.svg) center / contain no-repeat;
 }

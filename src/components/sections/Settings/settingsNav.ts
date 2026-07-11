@@ -76,19 +76,10 @@ export const SWZ_PAGES: SwzPage[] = [
   { page: 'manifest-review', label: 'Manifest Review', faIcon: 'fa-clipboard-list', iconKey: 'CHECK', group: 'Governance', kind: 'manifests', adminOnly: true,
     title: 'Manifest Review', desc: 'Approve module settings manifests before modules are marked complete.' },
 
-  // ── Administration (superadmin) — former Console tools ──
-  { page: 'roles', label: 'Roles', faIcon: 'fa-user-shield', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Roles', desc: 'Create and manage roles and their default permission sets. System roles (superadmin, employee) are permanent; build custom roles like HSE Manager or Finance Officer on top.' },
-  { page: 'modules', label: 'Modules', faIcon: 'fa-table-cells', iconKey: 'LAYOUT', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Modules', desc: 'Control which feature modules are visible to each role and individual manager. Changes take effect at next login.' },
-  { page: 'permissions', label: 'Permissions', faIcon: 'fa-lock', iconKey: 'LOCK', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Permissions', desc: 'Grant or revoke individual capabilities per user. Overrides take priority over role defaults; clearing an override reverts to the role default.' },
-  { page: 'approvals', label: 'Approvals', faIcon: 'fa-clipboard-check', iconKey: 'CHECK', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Approvals', desc: 'Maker-checker queue for critical permission grants. A second superadmin must approve any grant of a critical capability before it takes effect.' },
-  { page: 'sessions', label: 'Sessions', faIcon: 'fa-clock', iconKey: 'CLOCK', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Sessions', desc: 'See who is logged in and from which device. Revoking a session signs the user out immediately; they must re-authenticate (including 2FA).' },
-  { page: 'audit-log', label: 'Audit Log', faIcon: 'fa-clipboard-list', iconKey: 'CHECK', group: 'Administration', kind: 'console', superOnly: true,
-    title: 'Audit Log', desc: 'A tamper-evident, append-only record of every privileged action — who did what, when, and from where. Filter, search and export to CSV.' },
+  // ── Administration (superadmin) ──
+  // Roles / Modules / Permissions / Approvals / Sessions / Audit Log MOVED OUT to the
+  // top-level "Access Control" section (src/components/sections/AccessControl). Only the
+  // non-RBAC security tooling stays under Settings.
   { page: 'user-security', label: 'User Security', faIcon: 'fa-user-shield', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,
     title: 'User Security', desc: 'Inspect and manage authentication factors for individual users. Revoke passkeys or trusted devices (requires step-up verification).' },
   { page: 'security-policy', label: 'Security Policy', faIcon: 'fa-shield-halved', iconKey: 'SHIELD', group: 'Administration', kind: 'console', superOnly: true,

@@ -84,6 +84,13 @@
 .pnp-name { font-size: 0.85rem; font-weight: 600; color: #fff; }
 .pnp-role { font-size: 0.68rem; color: rgba(255,255,255,0.75); }
 
+/* Compact variant — avatar + caret only (hides the name/role text). */
+.pnp-compact { padding: 5px 8px 5px 5px; }
+.pnp-compact .pnp-info { display: none; }
+.pnp-compact .pnp-profile { padding: 3px 8px 3px 4px; gap: 6px; }
+.pnp-compact .pnp-avatar { width: 34px; height: 34px; font-size: 0.85rem; }
+.pnp-compact .pnp-divider { height: 30px; }
+
 .pnp-divider { width: 1px; height: 36px; background: rgba(255,255,255,0.2); margin: 0 2px; flex-shrink: 0; }
 
 .pnp-icons { display: flex; align-items: center; gap: 6px; padding-right: 4px; }

@@ -358,7 +358,7 @@ export function OnboardingCaseDetail({
 
       {canEdit && (
         <WidgetBoardToolbar
-          editing={editing} canSetDefault={isAdmin}
+          editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
           onToggleEdit={() => setEditing(e => !e)}
           onOpenLibrary={() => setLibOpen(true)}
           onReset={() => void resetLayout()}

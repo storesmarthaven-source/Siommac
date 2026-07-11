@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Access Posture — stat cards</title>
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+  :root {
+    --ink: #1e293b; --muted: #94a3b8; --line: #e9ebf1;
+    --purple: #7c3aed; --purple-bg: #ede9fe;
+    --green: #16a34a;  --green-bg: #dcfce7;
+    --red: #dc2626;    --red-bg: #fee2e2;
+    --blue: #2563eb;   --blue-bg: #dbeafe;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; padding: 30px; background: #f4f6fa; font-family: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+
+  .cards { display: grid; grid-template-columns: repeat(5, 1fr); gap: 16px; align-items: stretch; }
+
+  /* ── Access Posture (navy-blue gradient) ─────────────────────────── */
+  .posture { position: relative; overflow: hidden; border-radius: 14px; padding: 19px 24px; color: #fff;
+             background: linear-gradient(120deg, #2c4576 0%, #1b2d54 60%, #16244a 100%); }
+  .posture::before { content: ""; position: absolute; inset: 0; background: radial-gradient(120% 120% at 12% 6%, rgba(255,255,255,.14) 0%, transparent 42%); z-index: 1; }
+  .posture::after { content: ""; position: absolute; inset: 0; z-index: 1; background-image: radial-gradient(rgba(255,255,255,.09) 1.1px, transparent 1.1px); background-size: 15px 15px; -webkit-mask-image: linear-gradient(90deg, transparent 50%, #000 100%); mask-image: linear-gradient(90deg, transparent 50%, #000 100%); }
+  .posture-body { position: relative; z-index: 2; }
+  .posture-label { display: flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 700; letter-spacing: .01em; color: rgba(255,255,255,.82); }
+  .posture-label svg { width: 13px; height: 13px; color: rgba(255,255,255,.6); }
+  .posture-row { display: flex; align-items: center; gap: 22px; margin-top: 9px; }
+  .posture-pct { font-size: 38px; font-weight: 800; line-height: 1; letter-spacing: -.02em; flex: none; }
+  .posture-meter { min-width: 0; }
+  .posture-cov { font-size: 12.5px; color: rgba(255,255,255,.85); }
+  .posture-bar { width: 190px; max-width: 100%; height: 8px; border-radius: 6px; background: rgba(255,255,255,.22); margin-top: 7px; overflow: hidden; }
+  .posture-bar > span { display: block; height: 100%; width: 64%; border-radius: 6px; background: #22c55e; }
+  .posture-frac { font-size: 11.5px; color: rgba(255,255,255,.75); margin-top: 6px; }
+  .posture-shield { position: absolute; right: 26px; top: 50%; transform: translateY(-50%); z-index: 1; }
+  .posture-shield svg { width: 165px; height: 165px; color: rgba(255,255,255,.10); stroke-width: 1.1; }
+
+  /* ── White stat cards ────────────────────────────────────────────── */
+  .stat { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 18px 18px 0; }
+  .stat-main { display: flex; align-items: center; gap: 13px; }
+  .stat-ico { width: 40px; height: 40px; border-radius: 11px; display: grid; place-items: center; flex: none; }
+  .stat-ico svg { width: 20px; height: 20px; }
+  .stat-body { min-width: 0; }
+  .stat-numrow { display: flex; align-items: baseline; gap: 8px; }
+  .stat-num { font-size: 24px; font-weight: 800; color: var(--ink); letter-spacing: -.02em; line-height: 1; }
+  .stat-name { font-size: 14px; font-weight: 700; color: var(--ink); }
+  .stat-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .stat-link { display: flex; align-items: center; gap: 6px; margin-top: auto; padding: 13px 0; border-top: 1px solid #eef1f5; font-size: 12px; font-weight: 600; text-decoration: none; cursor: pointer; }
+  .stat-link svg { width: 14px; height: 14px; }
+
+  .review { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 15px 18px; }
+  .review-ico { width: 44px; height: 44px; border-radius: 12px; background: #eef1f6; color: #475569; display: grid; place-items: center; flex: none; }
+  .review-ico svg { width: 22px; height: 22px; }
+  .review-body { min-width: 0; }
+  .review-label { font-size: 12.5px; color: var(--muted); }
+  .review-date { font-size: 21px; font-weight: 800; color: var(--ink); letter-spacing: -.01em; margin-top: 3px; line-height: 1.1; }
+  .review-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+
+  .ico-purple { background: var(--purple-bg); color: var(--purple); }
+  .ico-green  { background: var(--green-bg);  color: var(--green); }
+  .ico-red    { background: var(--red-bg);    color: var(--red); }
+  .ico-blue   { background: var(--blue-bg);   color: var(--blue); }
+  .lk-blue  { color: var(--blue); }
+  .lk-green { color: var(--green); }
+  .lk-red   { color: var(--red); }
+</style>
+</head>
+<body>
+
+  <div class="cards">
+
+    <div class="stat">
+      <div class="stat-main">
+        <span class="stat-ico ico-purple"><i data-lucide="users"></i></span>
+        <div class="stat-body">
+          <div class="stat-numrow"><span class="stat-num">10</span><span class="stat-name">Roles</span></div>
+          <div class="stat-sub">System &amp; Custom Roles</div>
+        </div>
+      </div>
+      <a class="stat-link lk-blue">View Roles <i data-lucide="arrow-right"></i></a>
+    </div>
+
+    <div class="stat">
+      <div class="stat-main">
+        <span class="stat-ico ico-green"><i data-lucide="user-round"></i></span>
+        <div class="stat-body">
+          <div class="stat-numrow"><span class="stat-num">29</span><span class="stat-name">Users</span></div>
+          <div class="stat-sub">Configurable-Role Users</div>
+        </div>
+      </div>
+      <a class="stat-link lk-green">View Users <i data-lucide="arrow-right"></i></a>
+    </div>
+
+    <div class="stat">
+      <div class="stat-main">
+        <span class="stat-ico ico-red"><i data-lucide="shield"></i></span>
+        <div class="stat-body">
+          <div class="stat-numrow"><span class="stat-num">8</span><span class="stat-name">High-Risk Capabilities</span></div>
+          <div class="stat-sub">Require Approval</div>
+        </div>
+      </div>
+      <a class="stat-link lk-red">View High-Risk <i data-lucide="arrow-right"></i></a>
+    </div>
+
+    <div class="stat">
+      <div class="stat-main">
+        <span class="stat-ico ico-blue"><i data-lucide="refresh-cw"></i></span>
+        <div class="stat-body">
+          <div class="stat-numrow"><span class="stat-num">0</span><span class="stat-name">Active Overrides</span></div>
+          <div class="stat-sub">Across 0 Users</div>
+        </div>
+      </div>
+      <a class="stat-link lk-blue">View Overrides <i data-lucide="arrow-right"></i></a>
+    </div>
+
+    <div class="review">
+      <span class="review-ico"><i data-lucide="calendar-clock"></i></span>
+      <div class="review-body">
+        <div class="review-label">Last Reviewed</div>
+        <div class="review-date">May 05, 2025</div>
+        <div class="review-sub">Access review cycle</div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>lucide.createIcons();</script>
+</body>
+</html>

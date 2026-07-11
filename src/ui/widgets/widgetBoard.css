@@ -17,26 +17,25 @@
 
 /* ── Customize toolbar (top-right of the board) — v1 ArrangeControls styling.
       NOTE: lives OUTSIDE .wbi-board, so it uses GLOBAL tokens, not the --wbi-* vars. ── */
-.wbi-toolbar { display: flex; justify-content: flex-end; align-items: center; gap: 6px; margin: 0 0 12px; flex-wrap: nowrap; }
+.wbi-toolbar { position: relative; display: flex; justify-content: flex-end; align-items: center; gap: 8px; margin: 0 0 12px; flex-wrap: nowrap; }
+/* When mounted inside the standard PageHeader actions, drop the standalone bottom margin
+   so the icon trigger centres with the Export / New buttons. */
+.ui-page-head-actions .wbi-toolbar { margin: 0; }
+/* Match the standard header button footprint (see .hse-btn): 40px tall, 10px radius. */
 .wbi-tb-btn {
-  display: inline-flex; align-items: center; gap: 5px;
-  padding: 5px 10px; border: 1px solid var(--cds-border, #e4e7ec); border-radius: 8px;
+  min-height: 40px; display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 0 14px; border: 1px solid var(--cds-border, #e4e7ec); border-radius: 10px;
   background: var(--cds-surface, #fff); color: var(--siomac-navy, #1f3b6d);
-  font-size: .72rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  font-size: .8rem; font-weight: 600; cursor: pointer; white-space: nowrap;
+  box-shadow: var(--shadow-card); transition: border-color .15s, color .15s, background .15s;
 }
-.wbi-tb-btn:hover { background: #f6f8fb; }
+.wbi-tb-btn:hover { background: #f6f8fb; border-color: var(--siomac-navy, #1f3b6d); }
 .wbi-tb-btn.solid { color: #fff; background: var(--siomac-navy, #1f3b6d); border-color: var(--siomac-navy, #1f3b6d); }
-.wbi-tb-btn i { font-size: .72rem; }
+/* Icon-only trigger — a 40×40 square that matches the other header buttons' height. */
+.wbi-tb-trigger { width: 40px; padding: 0; }
+.wbi-tb-trigger:hover { color: var(--siomac-navy, #1f3b6d); }
 
-/* expanded controls slide out right→left when customizing */
-.wbi-tb-slide {
-  display: inline-flex; align-items: center; gap: 6px;
-  overflow: hidden;
-  max-width: 0; opacity: 0; transform: translateX(18px);
-  transition: max-width .3s ease, opacity .22s ease, transform .3s ease;
-  pointer-events: none;
-}
-.wbi-tb-slide.open { max-width: 680px; opacity: 1; transform: translateX(0); pointer-events: auto; }
+/* Customize dropdown uses the standard .ui-menu / .ui-menu-item shell (uikit-layout.css). */
 
 .wbi-zone-wrap { position: relative; }
 .wbi-zone.react-grid-layout { background: transparent; }

@@ -16,17 +16,8 @@
  * @see docs/CODING_STANDARDS.md
  */
 
-import { ProfilePill } from '@shared/ProfilePill';
 import { AppSection } from './AppSection';
 
-/** Right-aligned wrapper over the reusable, self-populating pill. */
-function EmpProfilePill() {
-  return (
-    <div style="display:flex;justify-content:flex-end;margin-bottom:20px;">
-      <ProfilePill />
-    </div>
-  );
-}
 
 /** Employee attendance home — the main employee dashboard. */
 function EmpAttendanceSection() {
@@ -36,7 +27,6 @@ function EmpAttendanceSection() {
       {/* AttendanceDashboard Preact controller — headless */}
       <div id="preact-att-dashboard-ctrl" style="display:none;" aria-hidden="true" />
 
-      <EmpProfilePill />
 
       {/* Welcome + Timeline row */}
       <div class="ea-top-row">

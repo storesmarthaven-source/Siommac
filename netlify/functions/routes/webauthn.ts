@@ -45,14 +45,6 @@ import type { AppUser }                         from '../../../types/db';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
-/** Extract device context from Hono context (same pattern as auth.ts). */
-function deviceFrom(c: { req: { header: (k: string) => string | undefined }; get: (k: string) => unknown }) {
-  return {
-    userAgent: (c.req.header('user-agent') ?? '').slice(0, 400) || undefined,
-    ip:        (c.get('clientIp') as string | undefined) ?? undefined,
-  };
-}
-
 // ── Zod schemas ───────────────────────────────────────────────────────────────
 
 const RegisterVerifySchema = z.object({
@@ -204,7 +196,7 @@ router.post('/webauthn/register/preauth/verify', async c => {
   void rotateSecurityStamp(user.id, 'passkey_registered');
   await log_(user, 'auth.passkey.registered', 'webauthn_credentials', credential.id, 'Passkey registered at mandatory setup');
 
-  const payload = await buildSessionPayload(user, deviceFrom(c), {
+  const payload = await buildSessionPayload(c, user, {
     amr: ['pwd', 'webauthn'], mfaSatisfied: true, authStrength: 'mfa',
   });
 
@@ -371,7 +363,7 @@ router.post('/webauthn/auth/verify', async c => {
 
     await consumeChallenge(challenge.id);
 
-    const payload = await buildSessionPayload(result.user, deviceFrom(c), {
+    const payload = await buildSessionPayload(c, result.user, {
       amr:           ['pwd', 'webauthn'],
       mfaSatisfied:  true,
       authStrength:  'mfa',
@@ -415,7 +407,7 @@ router.post('/webauthn/auth/verify', async c => {
     return c.json({ success: false, message: err.message ?? 'Authentication failed.' }, (err.status ?? 401) as 400 | 401 | 500);
   }
 
-  const payload = await buildSessionPayload(result.user, deviceFrom(c), {
+  const payload = await buildSessionPayload(c, result.user, {
     amr:           ['webauthn'],
     mfaSatisfied:  true,
     authStrength:  'passwordless_passkey',

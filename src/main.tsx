@@ -85,15 +85,13 @@ import {
   mountAttendanceDashboard,
   unmountAttendanceDashboard,
 } from '@sections/AttendanceDashboard';
-import {
-  mountSuperadminConsoleSection,
-  unmountSuperadminConsoleSection,
-} from '@sections/SuperadminConsole';
 import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
 import { mountMessageCenterSection, mountMessageDropdown } from '@sections/Messages';
 import '@sections/HSE';                 // self-registers the HSE module
 import '@sections/HR';                  // self-registers the HR module
 import '@sections/Finance';             // self-registers the Finance module
+import '@sections/Calendar';            // self-registers the Calendar & Tasks module
+import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
 import { QueryClientProvider }  from '@tanstack/preact-query';
@@ -110,6 +108,7 @@ import '@lib/cache';            // registers SiomacDB / SwCacheManager, patches 
 import '@components/realtime';  // registers window._initRealtime / _teardownRealtime
 import '@components/livemap';   // registers window.LiveMap before any legacy script reads it
 import { AttendanceSystem }     from '@lib/attSystem';  // registers window.AttendanceSystem (AFTER all its deps)
+import { ensureFreshToken }     from '@lib/api';
 
 // ── Register session store on window so attSystem.ts can sync it ──────────────
 // attSystem._completeLogin() calls window.__siomacSessionStore to update the
@@ -201,6 +200,11 @@ async function bootApp(): Promise<void> {
     await _siomacDB.warmSwr().catch(() => undefined);
   }
   AttendanceSystem.init();
+
+  // Boot-time silent refresh: if the persisted session's access token went stale
+  // while the tab was closed/idle, mint a fresh one now (single-flight — early
+  // queries queue behind it). A reload within the idle window NEVER logs out.
+  void ensureFreshToken();
 
   logger.info('App bootstrapped');
 
@@ -440,12 +444,6 @@ async function bootApp(): Promise<void> {
     displayEmployeeCards:         () => undefined,
     loadLeaveApplications:        () => { void queryClient.invalidateQueries({ queryKey: ['leaves'] }); },
   };
-
-  // Superadmin Console section
-  const superadminConsoleRoot = document.getElementById('preact-superadmin-console-root');
-  if (superadminConsoleRoot) {
-    mountSuperadminConsoleSection(superadminConsoleRoot, { queryClient });
-  }
 
   // Notification Center section (all roles)
   const notificationCenterRoot = document.getElementById('preact-notification-center-root');

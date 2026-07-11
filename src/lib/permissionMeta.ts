@@ -1352,6 +1352,30 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export a locked payroll run as a CSV/JSON artifact. Re-export creates a new versioned artifact; prior artifacts are marked not-current. Does not disburse funds. Finance Manager or Admin only.',
     risk: 'high',
   },
+  'finance.payroll.payslips.generate': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Generate Payslips',
+    description: 'Generate and render payslip PDFs for a locked payroll run and upload them to secure storage for employee self-service. Does not alter run figures.',
+    risk: 'medium',
+  },
+  'finance.payroll.payslips.distribute': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Distribute Payslips',
+    description: 'Email rendered payslips (password-protected PDF attachments) to employees and track delivery status. Sends personal data externally — Finance Manager or Admin.',
+    risk: 'high',
+  },
+  'finance.payroll.gl.preview': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Preview Payroll GL',
+    description: 'Preview the double-entry general-ledger journal that a locked payroll run would post (accounts, debits, credits, balance). Read-only.',
+    risk: 'low',
+  },
+  'finance.payroll.gl.post': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Post Payroll GL',
+    description: 'Post a locked payroll run\'s balanced journal to the general ledger, and reverse it (mirror journal) when needed. Writes to the ledger — Finance Manager or Admin.',
+    risk: 'high',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {
@@ -1533,5 +1557,37 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     label: 'Download Bank File',
     description: 'Download the generated EFT/CSV bank disbursement file (sensitive payment artifact). Finance Manager or Admin.',
     risk: 'high',
+  },
+
+  // ── Calendar & Tasks (platform) ──────────────────────────────────────────────
+  'calendar.view': {
+    module: 'Calendar', group: 'Calendar & Tasks',
+    label: 'View Calendar',
+    description: 'See the calendar and the dated items in scope (own, and — where permitted — team/org). Scope is enforced server-side.',
+    risk: 'low',
+  },
+  'calendar.manage': {
+    module: 'Calendar', group: 'Calendar & Tasks',
+    label: 'Manage Team/Org Items',
+    description: 'Create, edit, and cancel calendar tasks and activities beyond one’s own — for the team or organisation, per server-side scope.',
+    risk: 'high',
+  },
+  'calendar.task.manage_own': {
+    module: 'Calendar', group: 'Calendar & Tasks',
+    label: 'Manage Own Tasks',
+    description: 'Create, update, complete, and cancel one’s own calendar tasks.',
+    risk: 'medium',
+  },
+  'calendar.task.assign': {
+    module: 'Calendar', group: 'Calendar & Tasks',
+    label: 'Assign Tasks',
+    description: 'Assign a task to a permitted team member. The assignee is validated server-side against the reporting hierarchy.',
+    risk: 'medium',
+  },
+  'calendar.activity.manage_own': {
+    module: 'Calendar', group: 'Calendar & Tasks',
+    label: 'Manage Own Activities',
+    description: 'Create and update one’s own calendar activities (meetings, site visits, training) and their attendees.',
+    risk: 'medium',
   },
 };

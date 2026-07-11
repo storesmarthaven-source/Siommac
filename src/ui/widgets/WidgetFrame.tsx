@@ -13,12 +13,14 @@ import type { BoardWidgetInstance, LocalWidgetMap } from './types';
 // Pressing an action button must not start a drag.
 const noDrag = (e: JSX.TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
 
-export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPreview, onDiscardPreview, onRemove }: {
+export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove }: {
   item: BoardWidgetInstance;
   editing?: boolean;
   isPreview?: boolean;
   local?: LocalWidgetMap;
   demo?: boolean;
+  /** When false, the tile skips the fade+rise mount reveal (boards that should paint instantly). */
+  revealOnMount?: boolean;
   onCommitPreview?: () => void;
   onDiscardPreview?: () => void;
   onRemove?: () => void;
@@ -27,10 +29,11 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, onCommitPre
   const title = item.titleOverride ?? resolved?.title ?? '';
   const bare = resolved?.chrome === 'none';
   // Gentle fade+rise when a committed tile mounts (board load / add-from-library). The preview
-  // tile is intentionally left un-animated (it's already a distinct dashed affordance). No-ops
-  // under prefers-reduced-motion. Attached to whichever root renders (bare vs framed).
+  // tile is intentionally left un-animated (it's already a distinct dashed affordance), and a
+  // board may opt out entirely (revealOnMount=false) to paint instantly. No-ops under
+  // prefers-reduced-motion. Attached to whichever root renders (bare vs framed).
   const revealRef = useMountReveal();
-  const rootRef = isPreview ? undefined : revealRef;
+  const rootRef = (isPreview || !revealOnMount) ? undefined : revealRef;
 
   const previewActions = (
     <span class="wbi-preview-actions">
