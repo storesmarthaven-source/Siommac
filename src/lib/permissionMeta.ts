@@ -1400,6 +1400,18 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create, submit for approval, settle and cancel employee loans & salary advances. Approved loans auto-deduct a fixed installment from each pay run until the balance clears. Financial — routed through maker-checker approval.',
     risk: 'high',
   },
+  'finance.payroll.statutory_forms.generate': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Generate Statutory Forms',
+    description: 'Generate year-end and period statutory forms (BIR TD4 + TD4 Summary, NIBTT NI184/NI187) from locked payroll runs, and set the employer statutory profile (BIR file # / NIS employer #) that appears on them. Statutory output — figures derive from locked runs, never edited by hand.',
+    risk: 'high',
+  },
+  'finance.payroll.statutory_forms.view': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'View Statutory Forms',
+    description: 'View and download generated statutory forms (TD4/TD4 Summary/NI184/NI187) and read the employer statutory profile.',
+    risk: 'low',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {
