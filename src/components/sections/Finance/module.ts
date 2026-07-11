@@ -48,6 +48,13 @@ const PAYROLL_SETUP_ITEM: ModuleNavItem = {
   sub: 'Pay groups (frequency & population) and overtime rules that drive the pay-run engine',
 };
 
+const PAYSLIP_DESIGNER_ITEM: ModuleNavItem = {
+  id: 's-finance-payslip-designer',
+  label: 'Payslip Designer',
+  icon: 'fa-file-invoice',
+  sub: 'Design payslip layout templates (employer block, logo, sections, footer) used when rendering payslips',
+};
+
 const REMITTANCES_ITEM: ModuleNavItem = {
   id: 's-finance-remittances',
   label: 'Statutory Remittances',
@@ -92,7 +99,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_SETUP_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

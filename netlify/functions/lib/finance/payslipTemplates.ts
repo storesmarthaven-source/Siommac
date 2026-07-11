@@ -1,0 +1,278 @@
+// ============================================================================
+// Finance Payroll -- Payslip layout templates (Payslip Studio, Phase 1)
+// ============================================================================
+// Named payslip DESIGNS authored in the embedded Payslip Studio. `design` is the
+// full self-contained Design JSON (presentation only -- employer block, logo,
+// which sections/components show, footer). NOT a figure editor: pay figures never
+// live here. One active default at a time (guarded by a partial unique index);
+// soft-delete via status='archived'. The DTO mirrors the studio's StoredTemplate
+// exactly so ApiTemplateStore is a drop-in for LocalTemplateStore.
+// Follows the finance house pattern: direct sb writes + awaited writeHrAudit +
+// emitAppEvent (no runModuleMutation -- there is no workflow/handoff to
+// orchestrate, so the adapter would be ceremony).
+// ============================================================================
+
+import { sb } from '../db';
+import { emitAppEvent } from '../appEvents';
+import { writeHrAudit } from '../hr/employeeCore';
+
+const SUBMODULE = 'finance_payroll';
+const ENTITY = 'payslip_template';
+const SELECT = 'id,name,design,is_default,status,created_at,updated_at';
+const MAX_NAME = 120;
+
+/** Wire shape consumed by the studio (StoredTemplate). `updatedAt` is epoch ms. */
+export interface PayslipTemplateDto {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  updatedAt: number;
+  design: unknown;
+}
+
+interface DbRow {
+  id: string;
+  name: string;
+  design: unknown;
+  is_default: boolean;
+  status: string;
+  created_at: string;
+  updated_at: string | null;
+}
+
+function toDto(r: DbRow): PayslipTemplateDto {
+  return {
+    id: r.id,
+    name: r.name,
+    isDefault: !!r.is_default,
+    updatedAt: Date.parse(r.updated_at ?? r.created_at),
+    design: r.design,
+  };
+}
+
+function err(message: string, status: number): Error & { status: number } {
+  return Object.assign(new Error(message), { status });
+}
+
+/** A payslip design must be a non-null JSON object (jsonb). */
+function assertDesign(design: unknown): asserts design is Record<string, unknown> {
+  if (design === null || typeof design !== 'object' || Array.isArray(design)) {
+    throw err('A payslip design (object) is required.', 422);
+  }
+}
+
+function cleanName(name: unknown): string {
+  const s = String(name ?? '').trim();
+  if (!s) throw err('Template name is required.', 422);
+  if (s.length > MAX_NAME) throw err(`Template name must be at most ${MAX_NAME} characters.`, 422);
+  return s;
+}
+
+// ── Read ────────────────────────────────────────────────────────────────────
+
+export async function listTemplates(): Promise<PayslipTemplateDto[]> {
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .select(SELECT)
+    .eq('status', 'active')
+    .order('is_default', { ascending: false })
+    .order('created_at', { ascending: false });
+  if (error) throw err('listTemplates: ' + error.message, 500);
+  return ((data ?? []) as DbRow[]).map(toDto);
+}
+
+export async function getTemplate(id: string): Promise<PayslipTemplateDto | null> {
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .select(SELECT)
+    .eq('id', id)
+    .eq('status', 'active')
+    .maybeSingle<DbRow>();
+  if (error) throw err('getTemplate: ' + error.message, 500);
+  return data ? toDto(data) : null;
+}
+
+/** Number of active templates -- drives "first template becomes the default". */
+async function activeCount(): Promise<number> {
+  const { count, error } = await sb
+    .from('payroll_payslip_templates')
+    .select('id', { count: 'exact', head: true })
+    .eq('status', 'active');
+  if (error) throw err('activeCount: ' + error.message, 500);
+  return count ?? 0;
+}
+
+/** Load an active template row (for guards) or throw 404. */
+async function requireActive(id: string): Promise<DbRow> {
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .select(SELECT)
+    .eq('id', id)
+    .eq('status', 'active')
+    .maybeSingle<DbRow>();
+  if (error) throw err('loadTemplate: ' + error.message, 500);
+  if (!data) throw err('Payslip template not found.', 404);
+  return data;
+}
+
+// ── Mutations ─────────────────────────────────────────────────────────────────
+
+export interface CreateTemplateInput {
+  name: string;
+  design: unknown;
+}
+
+export async function createTemplate(input: CreateTemplateInput, actorId: string): Promise<PayslipTemplateDto> {
+  const name = cleanName(input.name);
+  assertDesign(input.design);
+
+  // Mirror the local store: the very first template becomes the default so a
+  // usable default always exists. No conflict with the unique index because
+  // there are zero active defaults when count is 0.
+  const isDefault = (await activeCount()) === 0;
+
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .insert({ name, design: input.design, is_default: isDefault, created_by: actorId, updated_by: actorId })
+    .select(SELECT)
+    .single<DbRow>();
+  if (error) throw err('createTemplate: ' + error.message, 500);
+
+  const dto = toDto(data);
+  await writeHrAudit({
+    submoduleKey: SUBMODULE, recordId: dto.id, actorId,
+    action: 'payslip_template.created',
+    newState: { name: dto.name, isDefault: dto.isDefault },
+  });
+  await emitAppEvent({
+    eventType: 'finance.payroll.payslip_template.created',
+    sourceModule: SUBMODULE, sourceEntityType: ENTITY, sourceEntityId: dto.id,
+    actorUserId: actorId, severity: 'info',
+    payload: { name: dto.name, isDefault: dto.isDefault },
+  });
+  return dto;
+}
+
+export interface UpdateTemplateInput {
+  id: string;
+  name?: string;
+  design?: unknown;
+}
+
+export async function updateTemplate(input: UpdateTemplateInput, actorId: string): Promise<PayslipTemplateDto | null> {
+  const prev = await requireActive(input.id);
+
+  const patch: Record<string, unknown> = { updated_by: actorId };
+  if (input.name !== undefined) patch.name = cleanName(input.name);
+  if (input.design !== undefined) {
+    assertDesign(input.design);
+    patch.design = input.design;
+  }
+
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .update(patch)
+    .eq('id', input.id)
+    .eq('status', 'active')
+    .select(SELECT)
+    .maybeSingle<DbRow>();
+  if (error) throw err('updateTemplate: ' + error.message, 500);
+  if (!data) return null;
+
+  const dto = toDto(data);
+  await writeHrAudit({
+    submoduleKey: SUBMODULE, recordId: dto.id, actorId,
+    action: 'payslip_template.updated',
+    previousState: { name: prev.name },
+    newState: { name: dto.name },
+  });
+  await emitAppEvent({
+    eventType: 'finance.payroll.payslip_template.updated',
+    sourceModule: SUBMODULE, sourceEntityType: ENTITY, sourceEntityId: dto.id,
+    actorUserId: actorId, severity: 'info',
+    payload: { name: dto.name },
+  });
+  return dto;
+}
+
+export async function setDefaultTemplate(id: string, actorId: string): Promise<PayslipTemplateDto> {
+  // Guard BEFORE clearing so a bad id can never leave zero defaults.
+  await requireActive(id);
+
+  // The partial unique index enforces "at most one active default". supabase-js
+  // cannot express the single-statement CASE, so clear-then-set in sequence:
+  // the transient zero-default window is harmless and self-healing.
+  const { error: clearErr } = await sb
+    .from('payroll_payslip_templates')
+    .update({ is_default: false, updated_by: actorId })
+    .eq('status', 'active')
+    .eq('is_default', true);
+  if (clearErr) throw err('setDefaultTemplate/clear: ' + clearErr.message, 500);
+
+  const { data, error } = await sb
+    .from('payroll_payslip_templates')
+    .update({ is_default: true, updated_by: actorId })
+    .eq('id', id)
+    .eq('status', 'active')
+    .select(SELECT)
+    .single<DbRow>();
+  if (error) throw err('setDefaultTemplate/set: ' + error.message, 500);
+
+  const dto = toDto(data);
+  await writeHrAudit({
+    submoduleKey: SUBMODULE, recordId: dto.id, actorId,
+    action: 'payslip_template.default_changed',
+    newState: { name: dto.name, isDefault: true },
+  });
+  await emitAppEvent({
+    eventType: 'finance.payroll.payslip_template.default_changed',
+    sourceModule: SUBMODULE, sourceEntityType: ENTITY, sourceEntityId: dto.id,
+    actorUserId: actorId, severity: 'info',
+    payload: { name: dto.name },
+  });
+  return dto;
+}
+
+export async function archiveTemplate(id: string, actorId: string): Promise<{ ok: true }> {
+  const prev = await requireActive(id);
+
+  const { error } = await sb
+    .from('payroll_payslip_templates')
+    .update({ status: 'archived', is_default: false, updated_by: actorId })
+    .eq('id', id)
+    .eq('status', 'active');
+  if (error) throw err('archiveTemplate: ' + error.message, 500);
+
+  // Mirror the local store: keep a usable default. If the archived template was
+  // the default, promote the most-recent remaining active template.
+  if (prev.is_default) {
+    const { data: next } = await sb
+      .from('payroll_payslip_templates')
+      .select('id')
+      .eq('status', 'active')
+      .order('created_at', { ascending: false })
+      .limit(1)
+      .maybeSingle<{ id: string }>();
+    if (next?.id) {
+      const { error: promoteErr } = await sb
+        .from('payroll_payslip_templates')
+        .update({ is_default: true, updated_by: actorId })
+        .eq('id', next.id)
+        .eq('status', 'active');
+      if (promoteErr) throw err('archiveTemplate/promote: ' + promoteErr.message, 500);
+    }
+  }
+
+  await writeHrAudit({
+    submoduleKey: SUBMODULE, recordId: id, actorId,
+    action: 'payslip_template.archived',
+    previousState: { name: prev.name, isDefault: prev.is_default },
+  });
+  await emitAppEvent({
+    eventType: 'finance.payroll.payslip_template.archived',
+    sourceModule: SUBMODULE, sourceEntityType: ENTITY, sourceEntityId: id,
+    actorUserId: actorId, severity: 'info',
+    payload: { name: prev.name },
+  });
+  return { ok: true };
+}

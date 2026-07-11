@@ -19,10 +19,12 @@ import { AcCoveragePage }  from './pages/AcCoveragePage';
 import { AcApprovalsPage } from './pages/AcApprovalsPage';
 import { AcAuditPage }     from './pages/AcAuditPage';
 import { AcSessionsPage }  from './pages/AcSessionsPage';
+import { PayslipStudioSection } from '../PayslipStudio/PayslipStudioSection';
 import './accessControl.css';
 
 const OVERVIEW = 's-ac-overview';
-const IDS = new Set([OVERVIEW, 's-ac-users', 's-ac-roles', 's-ac-coverage', 's-ac-approvals', 's-ac-audit', 's-ac-sessions']);
+const PAYSLIP_DESIGNER = 's-ac-payslip-designer';
+const IDS = new Set([OVERVIEW, 's-ac-users', 's-ac-roles', 's-ac-coverage', 's-ac-approvals', 's-ac-audit', 's-ac-sessions', PAYSLIP_DESIGNER]);
 
 export function AccessControlSection(): VNode {
   const [sectionId, setSectionId] = useState<string>(() => {
@@ -47,5 +49,6 @@ export function AccessControlSection(): VNode {
   if (sectionId === 's-ac-approvals') return <AcApprovalsPage />;
   if (sectionId === 's-ac-audit')     return <AcAuditPage />;
   if (sectionId === 's-ac-sessions')  return <AcSessionsPage />;
+  if (sectionId === PAYSLIP_DESIGNER) return <PayslipStudioSection />;
   return <AcOverviewPage />;
 }

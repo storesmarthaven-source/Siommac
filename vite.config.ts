@@ -99,6 +99,7 @@ export default defineConfig(({ mode }) => ({
       { find: /^@store\/(.+)$/,      replacement: '/src/store/$1'               },
       { find: /^@lib\/(.+)$/,        replacement: '/src/lib/$1'                 },
       { find: /^@shared\/(.+)$/,     replacement: '/src/components/shared/$1'   },
+      { find: /^@payslip\/(.+)$/,    replacement: '/src/components/sections/PayslipStudio/$1' },
       { find: /^@sections\/(.+)$/,   replacement: '/src/components/sections/$1' },
       { find: /^@ui\/(.+)$/,         replacement: '/src/ui/$1'                  },
       { find: /^@components\/(.+)$/, replacement: '/src/components/$1'          },

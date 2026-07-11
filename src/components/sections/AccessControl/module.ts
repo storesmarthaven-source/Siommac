@@ -22,6 +22,7 @@ const ITEMS: ModuleNavItem[] = [
   { id: 's-ac-approvals',  label: 'Approvals',       icon: 'fa-clipboard-check', sub: 'Maker-checker queue for critical permission grants' },
   { id: 's-ac-audit',      label: 'Audit Log',       icon: 'fa-clipboard-list',  sub: 'Append-only record of every privileged action' },
   { id: 's-ac-sessions',   label: 'Sessions',        icon: 'fa-user-clock',      sub: 'Active sessions with device context + remote revoke' },
+  { id: 's-ac-payslip-designer', label: 'Payslip Designer', icon: 'fa-file-invoice', sub: 'Design and manage the payslip layout templates used across payroll' },
 ];
 
 export const accessControlModule: ModuleDefinition = {

@@ -1412,6 +1412,18 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'View and download generated statutory forms (TD4/TD4 Summary/NI184/NI187) and read the employer statutory profile.',
     risk: 'low',
   },
+  'finance.payroll.templates.view': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'View Payslip Templates',
+    description: 'List and open saved payslip layout templates authored in Payslip Studio (presentation only — no payroll figures).',
+    risk: 'low',
+  },
+  'finance.payroll.templates.manage': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Payslip Templates',
+    description: 'Create, edit, set-as-default and archive payslip layout templates in Payslip Studio. Controls payslip presentation (employer block, logo, sections, footer) — never the underlying pay figures.',
+    risk: 'medium',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

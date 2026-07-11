@@ -9,6 +9,8 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
+import { can } from '@lib/permissions';
+import { PayslipStudioSection }    from '../PayslipStudio/PayslipStudioSection';
 import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
 import { PayrollOverview }          from './PayrollOverview';
@@ -32,6 +34,7 @@ const EXPENSES_ID      = 's-finance-expenses';
 const BUDGETS_ID       = 's-finance-budgets';
 const DISBURSEMENTS_ID  = 's-finance-disbursements';
 const STATUTORY_FORMS_ID = 's-finance-statutory-forms';
+const PAYSLIP_DESIGNER_ID = 's-finance-payslip-designer';
 
 function isFinanceSection(id: string): boolean {
   return id === OVERVIEW_ID
@@ -44,6 +47,7 @@ function isFinanceSection(id: string): boolean {
     || id === BUDGETS_ID
     || id === DISBURSEMENTS_ID
     || id === STATUTORY_FORMS_ID
+    || id === PAYSLIP_DESIGNER_ID
     || id === PAYABLES_ID
    ;
 }
@@ -74,6 +78,12 @@ export function FinanceSection(): VNode {
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;
   if (sectionId === DISBURSEMENTS_ID) return <DisbursementsOverview />;
   if (sectionId === STATUTORY_FORMS_ID) return <StatutoryFormsOverview />;
+  if (sectionId === PAYSLIP_DESIGNER_ID)
+    return can('finance.payroll.templates.manage')
+      ? <PayslipStudioSection />
+      : <div style="padding:48px;text-align:center;color:var(--muted,#8a93ab);font-size:14px;">
+          You don't have permission to manage payslip templates.
+        </div>;
   if (sectionId === PAYABLES_ID)      return <PayablesOverview />;
   return <FinanceOverview />;
 }
