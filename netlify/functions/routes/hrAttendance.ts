@@ -14,6 +14,7 @@ import { punchIn, punchOut, createPunchPhotoUploadUrl, createPunchPhotoReadUrl, 
 import { applyCorrection } from '../lib/hr/attendanceCorrections';
 import { waiveException, resolveException } from '../lib/hr/attendanceExceptions';
 import { buildTimesheet, submitTimesheet, reopenTimesheet } from '../lib/hr/timesheetService';
+import { importAttendancePunches, IMPORT_MAX_ROWS } from '../lib/hr/attendanceImport';
 import { listReports, runReport } from '../lib/hr/attendanceReports';
 import type { HonoVariables } from '../../../types/api';
 
@@ -125,6 +126,29 @@ router.post('/attendance/records/correct', async c => {
     await applyCorrection(actor.id, v.data);
     const updated = await getAttendanceRecord(v.data.recordId);
     return c.json({ success: true, data: updated });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
+});
+
+// ── Bulk CSV import ────────────────────────────────────────────────────────────
+// Imports punch in/out per employee per day (source='import'); worked minutes are
+// derived by the shared recompute pipeline and roll up into timesheets. Gated on the
+// same 'write others' attendance' permission as single-record correction.
+router.post('/attendance/records/import', async c => {
+  const actor = await requirePermission(c, 'hr.attendance.correct');
+  const v = zv(c, z.object({
+    rows: z.array(z.object({
+      employeeId: z.string().nullable().optional(),
+      username:   z.string().nullable().optional(),
+      workDate:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      punchIn:    z.string().nullable().optional(),
+      punchOut:   z.string().nullable().optional(),
+      siteId:     z.string().nullable().optional(),
+    })).min(1).max(IMPORT_MAX_ROWS),
+  }), body(c));
+  if (!v.ok) return v.response;
+  try {
+    const result = await importAttendancePunches(actor.id, v.data.rows);
+    return c.json({ success: true, data: result });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 

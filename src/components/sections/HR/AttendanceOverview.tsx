@@ -15,6 +15,7 @@ import { PageHeader, EmptyState } from '@ui';
 import {
   useAttendanceRecords, useTimesheets, useAttendanceExceptions, useAttendanceStats,
   useWaiveException, useResolveException, useSubmitTimesheet, useReopenTimesheet, useCorrectRecord, fmtMinutes,
+  useImportAttendance, type AttendanceImportRow, type AttendanceImportResult,
 } from '@api/hr/attendance';
 import type { AttendanceRecord } from '../../../../types/hrAttendance';
 import { humanize } from './shared';
@@ -78,6 +79,7 @@ export function AttendanceOverview(): VNode {
   const canApproveTs = can('hr.attendance.timesheets.approve');
   const canCorrect   = can('hr.attendance.correct');
   const [correcting, setCorrecting] = useState<AttendanceRecord | null>(null);
+  const [importing, setImporting]   = useState(false);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
     try { await p; dialog.success(ok); }
@@ -145,7 +147,13 @@ export function AttendanceOverview(): VNode {
 
       {/* ── Daily Log ── */}
       {surface === 'log' && (
-        <div class="obx-section"><div class="obx-section-body">
+        <div class="obx-section">
+          {canCorrect && (
+            <div class="obx-toolbar" style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, padding: '8px 10px' }}>
+              <button class="obx-btn obx-btn-sm" onClick={() => setImporting(true)}><i class="fas fa-file-import" /> Import CSV</button>
+            </div>
+          )}
+          <div class="obx-section-body">
           {recQ.isLoading && !recQ.data ? <div class="obx-empty">Loading…</div>
             : !(recQ.data?.records.length) ? <EmptyState icon="fa-clock" title="No attendance records" text="Punch records will appear here once employees clock in." />
             : (
@@ -232,6 +240,7 @@ export function AttendanceOverview(): VNode {
       )}
 
       {correcting && <CorrectRecordModal record={correcting} onClose={() => setCorrecting(null)} />}
+      {importing && <ImportAttendanceModal onClose={() => setImporting(false)} />}
     </div>
   );
 }
@@ -327,6 +336,154 @@ function CorrectRecordModal({ record, onClose }: { record: AttendanceRecord; onC
           <textarea value={reason} onInput={e => setReason((e.currentTarget as HTMLTextAreaElement).value)} rows={3} placeholder="Why is this correction being made? (audit-logged)" />
         </label>
       </div>
+    </EnterpriseFormModal>
+  );
+}
+
+// ── Bulk CSV import ────────────────────────────────────────────────────────────
+// Imports punch in/out per employee per day; worked minutes are derived server-side
+// by the shared recompute pipeline and roll up into timesheets that feed payroll.
+
+interface ParsedCsv { rows: AttendanceImportRow[]; errors: string[] }
+
+const CSV_TEMPLATE = 'username,workDate,punchIn,punchOut\njdoe,2026-07-06,08:00,16:30\njdoe,2026-07-07,08:05,16:30';
+
+function parseAttendanceCsv(text: string): ParsedCsv {
+  const errors: string[] = [];
+  const lines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+  if (lines.length < 2) return { rows: [], errors: ['Provide a header row and at least one data row.'] };
+  const header = lines[0]!.split(',').map(h => h.trim().toLowerCase().replace(/\s+/g, ''));
+  const col = (names: string[]): number => header.findIndex(h => names.includes(h));
+  const iUser = col(['username', 'user', 'employee', 'employeeref']);
+  const iId   = col(['employeeid', 'employee_id', 'id']);
+  const iDate = col(['workdate', 'date', 'work_date']);
+  const iIn   = col(['punchin', 'in', 'punch_in', 'clockin', 'timein']);
+  const iOut  = col(['punchout', 'out', 'punch_out', 'clockout', 'timeout']);
+  const iSite = col(['siteid', 'site', 'site_id']);
+  if (iDate < 0) errors.push('Missing a "workDate" (or "date") column.');
+  if (iUser < 0 && iId < 0) errors.push('Need a "username" or "employeeId" column.');
+  if (iIn < 0 && iOut < 0) errors.push('Need a "punchIn" and/or "punchOut" column.');
+  const rows: AttendanceImportRow[] = [];
+  if (errors.length === 0) {
+    for (let i = 1; i < lines.length; i++) {
+      const cols = lines[i]!.split(',').map(c => c.trim());
+      const at = (idx: number): string => (idx >= 0 ? (cols[idx] ?? '') : '');
+      rows.push({
+        username:   iUser >= 0 ? (at(iUser) || null) : null,
+        employeeId: iId >= 0 ? (at(iId) || null) : null,
+        workDate:   at(iDate),
+        punchIn:    iIn >= 0 ? (at(iIn) || null) : null,
+        punchOut:   iOut >= 0 ? (at(iOut) || null) : null,
+        siteId:     iSite >= 0 ? (at(iSite) || null) : null,
+      });
+    }
+  }
+  return { rows, errors };
+}
+
+function rowIsValid(r: AttendanceImportRow): boolean {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test((r.workDate ?? '').trim())) return false;
+  if (!r.username && !r.employeeId) return false;
+  if (!r.punchIn && !r.punchOut) return false;
+  return true;
+}
+
+function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
+  const importMut = useImportAttendance();
+  const [text, setText] = useState('');
+  const [result, setResult] = useState<AttendanceImportResult | null>(null);
+
+  const parsed = parseAttendanceCsv(text);
+  const validRows = parsed.rows.filter(rowIsValid);
+  const invalidCount = parsed.rows.length - validRows.length;
+  const hasHeaderErrors = parsed.errors.length > 0;
+
+  const onFile = (e: Event): void => {
+    const file = (e.currentTarget as HTMLInputElement).files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => setText(String(reader.result ?? ''));
+    reader.readAsText(file);
+  };
+
+  const doImport = async (): Promise<void> => {
+    if (!validRows.length) return;
+    try {
+      const res = await importMut.mutateAsync({ rows: validRows });
+      setResult(res);
+      dialog.success(`Imported ${res.imported + res.updated} of ${res.total} rows.`);
+    } catch (err) { dialog.error(err instanceof Error ? err.message : 'Import failed.'); }
+  };
+
+  const context: DialogContextPanelConfig = {
+    eyebrow: 'HR · Attendance', title: 'CSV Import', description: 'Import punch in/out per employee per day. Worked hours are computed server-side and roll up into timesheets that feed payroll.',
+    preview: { icon: 'CSV', title: result ? 'Import complete' : `${validRows.length} ready`, subtitle: result ? `${result.imported + result.updated} applied` : `${parsed.rows.length} parsed` },
+    metrics: result
+      ? [
+          { label: 'Imported', value: result.imported, tone: 'success' },
+          { label: 'Updated', value: result.updated, tone: 'info' },
+          { label: 'Skipped', value: result.skipped, tone: result.skipped ? 'danger' : 'muted' },
+        ]
+      : [
+          { label: 'Valid rows', value: validRows.length, tone: validRows.length ? 'success' : 'muted' },
+          { label: 'Invalid', value: invalidCount, tone: invalidCount ? 'warning' : 'muted' },
+        ],
+    validation: result ? [] : [
+      ...parsed.errors.map(m => ({ message: m, tone: 'danger' as const })),
+      ...(invalidCount > 0 ? [{ message: `${invalidCount} row(s) missing a valid date, employee or punch — they will be skipped.`, tone: 'warning' as const }] : []),
+      ...(!hasHeaderErrors && validRows.length === 0 ? [{ message: 'No valid rows to import yet.', tone: 'info' as const }] : []),
+    ],
+    whatNext: [
+      { label: 'Columns', description: 'username (or employeeId), workDate (YYYY-MM-DD), punchIn, punchOut (HH:MM), optional siteId.' },
+      { label: 'Computed', description: 'Worked / late / overtime minutes are derived from the punches, per the attendance policy.' },
+    ],
+  };
+
+  return (
+    <EnterpriseFormModal open
+      title="Import attendance (CSV)"
+      subtitle="Bulk-import punch records for many employees"
+      icon={<i class="fas fa-file-import" />}
+      context={context}
+      primaryLabel={result ? 'Done' : `Import ${validRows.length} row${validRows.length === 1 ? '' : 's'}`}
+      loading={importMut.isPending}
+      disabled={result ? false : validRows.length === 0}
+      cancelLabel={result ? 'Close' : 'Cancel'}
+      onCancel={onClose}
+      onSubmit={() => (result ? onClose() : void doImport())}>
+      {result ? (
+        <div>
+          <p style={{ fontSize: 13, color: '#334155', marginTop: 0 }}>
+            Applied <b>{result.imported + result.updated}</b> of <b>{result.total}</b> rows
+            ({result.imported} new, {result.updated} updated). {result.skipped > 0 ? `${result.skipped} skipped.` : 'No errors.'}
+          </p>
+          {result.errors.length > 0 && (
+            <table class="obx-table" style={{ marginTop: 8 }}>
+              <thead><tr><th>Row</th><th>Employee</th><th>Error</th></tr></thead>
+              <tbody>{result.errors.slice(0, 100).map(er => (
+                <tr key={er.row}>
+                  <td class="obx-meta">{er.row}</td>
+                  <td class="obx-meta">{er.employee ?? '—'}</td>
+                  <td class="obx-meta">{er.message}</td>
+                </tr>
+              ))}</tbody>
+            </table>
+          )}
+        </div>
+      ) : (
+        <div class="fin-form-grid" style={{ gridTemplateColumns: '1fr' }}>
+          <label class="fin-field"><span>Upload a .csv file</span>
+            <input type="file" accept=".csv,text/csv" onChange={onFile} />
+          </label>
+          <label class="fin-field"><span>…or paste CSV rows</span>
+            <textarea value={text} onInput={e => setText((e.currentTarget as HTMLTextAreaElement).value)} rows={10}
+              placeholder={CSV_TEMPLATE} style={{ fontFamily: 'monospace', fontSize: 12 }} />
+          </label>
+          <button type="button" class="obx-btn obx-btn-sm" style={{ justifySelf: 'start' }} onClick={() => setText(CSV_TEMPLATE)}>
+            <i class="fas fa-file-lines" /> Load sample
+          </button>
+        </div>
+      )}
     </EnterpriseFormModal>
   );
 }

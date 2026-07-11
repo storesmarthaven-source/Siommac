@@ -438,6 +438,58 @@ export default async function run(h) {
     fails(await api('hr/attendance/reports/list', emp1Token, {}), 'expected employee to be denied reports');
   });
 
+  h.section('HR Attendance > Bulk CSV import (Wave 4c)');
+
+  const importDates = ['2031-04-01', '2031-04-02'];
+
+  await test('employee is DENIED bulk import (lacks hr.attendance.correct)', async () => {
+    fails(await api('hr/attendance/records/import', emp1Token, {
+      rows: [{ employeeId: emp1Id, workDate: importDates[0], punchIn: '08:00', punchOut: '16:30' }],
+    }), 'employee should be denied attendance import');
+  });
+
+  await test('hr_staff can bulk-import punches; result reports applied + skipped', async () => {
+    const r = await api('hr/attendance/records/import', staffToken, {
+      rows: [
+        { employeeId: emp1Id, workDate: importDates[0], punchIn: '08:00', punchOut: '16:30' },
+        { employeeId: emp1Id, workDate: importDates[1], punchIn: '08:05', punchOut: '16:30' },
+        { employeeId: 'nonexistent-user-id', workDate: importDates[0], punchIn: '08:00', punchOut: '16:00' },
+      ],
+    });
+    ok(r, `import failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.total === 3, `total should be 3, got ${d.total}`);
+    expect((d.imported + d.updated) === 2, `2 rows should apply, got imported=${d.imported} updated=${d.updated}`);
+    expect(d.skipped === 1, `1 row should be skipped (bad employee), got ${d.skipped}`);
+    expect(Array.isArray(d.errors) && d.errors.length === 1, 'errors should list the skipped row');
+  });
+
+  await test('imported punches created records with source=import and computed worked minutes', async () => {
+    const { data } = await sb.from('hr_attendance_records')
+      .select('id, source, worked_minutes, work_date').eq('employee_id', emp1Id).in('work_date', importDates);
+    expect((data ?? []).length === 2, `expected 2 imported records, got ${(data ?? []).length}`);
+    expect((data ?? []).every(x => x.source === 'import'), 'all imported records should have source=import');
+    expect((data ?? []).some(x => Number(x.worked_minutes) > 0), 'worked_minutes should be computed from punches');
+  });
+
+  await test('§2 side-effect: hr.attendance.imported app_event fired', async () => {
+    const got = await waitFor(async () => {
+      const { data } = await sb.from('app_events')
+        .select('id').eq('source_module', 'hr_attendance').eq('event_type', 'hr.attendance.imported')
+        .eq('actor_user_id', staffId).limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(got, 'hr.attendance.imported app_event not found');
+  });
+
+  await test('import cleanup (compensating delete)', async () => {
+    try { await sb.from('hr_attendance_exceptions').delete().eq('employee_id', emp1Id).in('work_date', importDates); } catch {}
+    try { await sb.from('hr_attendance_records').delete().eq('employee_id', emp1Id).in('work_date', importDates); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'hr_attendance').eq('event_type', 'hr.attendance.imported').eq('actor_user_id', staffId); } catch {}
+    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'hr_attendance').eq('action', 'attendance.imported').eq('actor_id', staffId); } catch {}
+    expect(true, 'cleanup complete');
+  });
+
   h.section('HR Attendance > Access control');
 
   await test('unauthenticated → 401', async () => {

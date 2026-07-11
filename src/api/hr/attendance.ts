@@ -87,6 +87,24 @@ function useAttendanceMutation<TArgs, TData>(path: string) {
   });
 }
 
+export interface AttendanceImportRow {
+  employeeId?: string | null;
+  username?: string | null;
+  workDate: string;
+  punchIn?: string | null;
+  punchOut?: string | null;
+  siteId?: string | null;
+}
+export interface AttendanceImportResult {
+  total: number;
+  imported: number;
+  updated: number;
+  skipped: number;
+  errors: Array<{ row: number; employee?: string; message: string }>;
+}
+export const useImportAttendance = () =>
+  useAttendanceMutation<{ rows: AttendanceImportRow[] }, AttendanceImportResult>('hr/attendance/records/import');
+
 export const usePunchIn        = () => useAttendanceMutation<PunchInArgs, AttendanceRecord>('hr/attendance/punch/in');
 export const usePunchOut       = () => useAttendanceMutation<PunchOutArgs, AttendanceRecord>('hr/attendance/punch/out');
 export const useCorrectRecord  = () => useAttendanceMutation<ApplyCorrectionArgs, AttendanceRecord | null>('hr/attendance/records/correct');
