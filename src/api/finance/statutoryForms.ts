@@ -56,6 +56,10 @@ export const financeStatutoryFormsApi = {
                 call<StatutoryForm[]>('finance/statutory-forms/list', a),
   signedUrl:  (a: { id: string; which?: 'pdf' | 'data' }) =>
                 call<{ signedUrl: string; form: StatutoryForm }>('finance/statutory-forms/signed-url', a),
+  td4Generate:     (a: { employeeId: string; taxYear: number }) =>
+                     call<StatutoryForm>('finance/statutory-forms/td4/generate', a),
+  td4GenerateYear: (a: { taxYear: number }) =>
+                     call<{ taxYear: number; employeeForms: number; summary: StatutoryForm }>('finance/statutory-forms/td4/generate-year', a),
 };
 
 export const financeStatutoryFormsKeys = {

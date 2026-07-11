@@ -82,10 +82,17 @@ const DISBURSEMENTS_ITEM: ModuleNavItem = {
   sub: 'EFT bank file generation and net-pay disbursements from approved payroll runs',
 };
 
+const STATUTORY_FORMS_ITEM: ModuleNavItem = {
+  id: 's-finance-statutory-forms',
+  label: 'Statutory Forms',
+  icon: 'fa-file-contract',
+  sub: 'Year-end BIR TD4 + TD4 Summary and NIBTT NI184/NI187 generated from locked payroll runs',
+};
+
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_SETUP_ITEM, REMITTANCES_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_SETUP_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

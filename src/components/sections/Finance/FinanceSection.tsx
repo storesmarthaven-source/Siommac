@@ -18,6 +18,7 @@ import { MyPayslipsOverview }       from './MyPayslipsOverview';
 import { ExpensesOverview }         from './ExpensesOverview';
 import { BudgetsOverview }          from './BudgetsOverview';
 import { DisbursementsOverview }   from './DisbursementsOverview';
+import { StatutoryFormsOverview }  from './StatutoryFormsOverview';
 import { PayablesOverview }        from './PayablesOverview';
 
 const OVERVIEW_ID      = 's-finance-overview';
@@ -30,6 +31,7 @@ const MY_PAYSLIPS_ID   = 's-finance-my-payslips';
 const EXPENSES_ID      = 's-finance-expenses';
 const BUDGETS_ID       = 's-finance-budgets';
 const DISBURSEMENTS_ID  = 's-finance-disbursements';
+const STATUTORY_FORMS_ID = 's-finance-statutory-forms';
 
 function isFinanceSection(id: string): boolean {
   return id === OVERVIEW_ID
@@ -41,6 +43,7 @@ function isFinanceSection(id: string): boolean {
     || id === MY_PAYSLIPS_ID
     || id === BUDGETS_ID
     || id === DISBURSEMENTS_ID
+    || id === STATUTORY_FORMS_ID
     || id === PAYABLES_ID
    ;
 }
@@ -70,6 +73,7 @@ export function FinanceSection(): VNode {
   if (sectionId === MY_PAYSLIPS_ID)  return <MyPayslipsOverview />;
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;
   if (sectionId === DISBURSEMENTS_ID) return <DisbursementsOverview />;
+  if (sectionId === STATUTORY_FORMS_ID) return <StatutoryFormsOverview />;
   if (sectionId === PAYABLES_ID)      return <PayablesOverview />;
   return <FinanceOverview />;
 }
