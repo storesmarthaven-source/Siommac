@@ -486,7 +486,7 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   // ── 2. Collect approved-active pay items effective in this period ─────────
   const { data: payItems, error: piErr } = await sb
     .from('hr_employee_pay_items')
-    .select('id, employee_id, component_id, amount, percent, effective_from, effective_to, metadata')
+    .select('id, employee_id, component_id, amount, percent, effective_from, effective_to')
     .eq('is_active', true)
     .eq('status', 'active')
     .lte('effective_from', periodEnd)
@@ -548,7 +548,6 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
       id: string; employee_id: string; component_id: string;
       amount: number | null; percent: number | null;
       effective_from: string; effective_to: string | null;
-      metadata: Record<string, unknown>;
     }[]) {
       const comp = componentMap.get(item.component_id);
       if (!comp) continue; // component was deactivated after approval — skip
