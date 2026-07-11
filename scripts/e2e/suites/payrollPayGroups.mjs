@@ -60,8 +60,8 @@ export default async function run(h) {
     const users = [
       { id: fmgrId,  username: TAG + '_pgm', full_name: 'PG Fmgr (E2E)',  role: 'finance_manager', status: 'active', employment_type: 'employee' },
       { id: plainId, username: TAG + '_pge', full_name: 'PG Plain (E2E)', role: 'employee',        status: 'active', employment_type: 'employee' },
-      { id: emp1Id,  username: TAG + '_pg1', full_name: 'PG Emp1 (E2E)',  role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 2000 },
-      { id: emp2Id,  username: TAG + '_pg2', full_name: 'PG Emp2 (E2E)',  role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 2000 },
+      { id: emp1Id,  username: TAG + '_pg1', full_name: 'PG Emp1 (E2E)',  role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 8667 },  // ~2000/week once prorated (8667*12/52)
+      { id: emp2Id,  username: TAG + '_pg2', full_name: 'PG Emp2 (E2E)',  role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 8667 },  // ~2000/week once prorated (8667*12/52)
     ];
     const { error } = await sb.from('app_users').insert(users);
     expect(!error, 'seed users failed: ' + error?.message);
@@ -130,13 +130,15 @@ export default async function run(h) {
     for (const id of ids) expect([emp1Id, emp2Id].includes(id), 'unexpected employee in group run: ' + id);
   });
 
-  await test('calculate applies period-correct (weekly) PAYE — a 2000/wk earner is taxed', async () => {
+  await test('calculate applies period-correct (weekly) PAYE — a ~2000/wk earner is taxed', async () => {
     const r = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
     ok(r, 'calculate failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('employee_id, base, paye').eq('run_id', ctx.runId);
     expect((lines ?? []).length === 2, 'expected 2 lines, got ' + (lines ?? []).length);
     for (const l of (lines ?? [])) {
-      // Weekly: chargeable = 2000 − (90000/52 = 1730.77) = 269.23 → PAYE 67.31.
+      // Salaried base is prorated to the pay frequency: 8667/mo × 12 ÷ 52 ≈ 2000/week.
+      expect(Math.abs(Number(l.base) - 2000) < 1, `weekly base should prorate to ~2000, got ${l.base} for ${l.employee_id}`);
+      // Weekly: chargeable ≈ 2000 − (90000/52 = 1730.77) = 269.23 → PAYE ≈ 67.31.
       // A MONTHLY annualisation would give 2000 − 7500 < 0 → PAYE 0. So >0 proves period-correctness.
       expect(Number(l.paye) > 0, `weekly PAYE must be > 0 (period-correct), got ${l.paye} for ${l.employee_id}`);
     }
