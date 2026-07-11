@@ -51,7 +51,7 @@ export default async function run(h) {
     // Delete by the SPECIFIC request ids this run created — empA/empB may now be
     // real employees with unrelated real requests, so a broad employee_id delete
     // would destroy their genuine data.
-    const reqIds = [ctx.reqAId, ctx.reqBId, ctx.reqSimpleId].filter(Boolean);
+    const reqIds = [ctx.reqAId, ctx.reqBId, ctx.reqSimpleId, ctx.inquiryId].filter(Boolean);
     try { if (reqIds.length) await sb.from('hr_requests').delete().in('id', reqIds); } catch {}
     try { if (reqIds.length) await sb.from('app_events').delete().eq('source_module', 'hr').in('source_entity_id', reqIds); } catch {}
     try { if (reqIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'requests').in('record_id', reqIds); } catch {}
@@ -141,10 +141,13 @@ export default async function run(h) {
   h.section('HR Requests › Side-effects (submit)');
 
   await test('app_event hr.request.submitted written for empA request', async () => {
+    // Platform convention: app_events.source_entity_id is the record UUID (the
+    // request_no ref lives in the payload) — the old filter used request_no and
+    // could never match, misreporting a side-effect that IS emitted.
     const gotEvent = await waitFor(async () => {
       const { data } = await sb.from('app_events')
         .select('id').eq('source_module', 'hr').eq('event_type', 'hr.request.submitted')
-        .eq('source_entity_id', (await sb.from('hr_requests').select('request_no').eq('id', ctx.reqAId).maybeSingle())?.data?.request_no ?? '')
+        .eq('source_entity_id', ctx.reqAId)
         .limit(1);
       return (data ?? []).length > 0;
     });
@@ -234,6 +237,7 @@ export default async function run(h) {
     });
     ok(submitR, `setup submit for decide test failed: ${submitR.body.message}`);
     const inquiryId = submitR.body.data.requestId;
+    ctx.inquiryId = inquiryId;   // tracked for cleanup
     expect(submitR.body.data.workflowId === null, 'general_inquiry should have no workflow');
 
     const decideR = await api('hr/requests/decide', ctx.staffToken, { requestId: inquiryId, decision: 'approved', comment: 'Happy to help' });

@@ -38,7 +38,7 @@ export default async function run(h) {
   const fmgrId  = 'PG-FMGR-' + TAG;
   const plainId = 'PG-EE-'   + TAG;
 
-  const ctx = { groupId: null, runId: null };
+  const ctx = { groupId: null, group2Id: null, runId: null };
   let fmgrToken, plainToken;
 
   h.onCleanup(async () => {
@@ -47,7 +47,9 @@ export default async function run(h) {
     try { if (ctx.runId) await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
     try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
+    try { if (ctx.group2Id) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.group2Id); } catch {}
     try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
+    try { if (ctx.group2Id) await sb.from('finance_pay_groups').delete().eq('id', ctx.group2Id); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll').in('actor_user_id', [fmgrId]); } catch {}
     try { await sb.from('app_users').delete().in('id', [emp1Id, emp2Id, fmgrId, plainId]); } catch {}
   });
@@ -102,6 +104,52 @@ export default async function run(h) {
     const m = await api('finance/payroll/pay-groups/members', fmgrToken, { payGroupId: ctx.groupId });
     ok(m, 'members list failed');
     expect(m.body.data.length === 2, 'expected 2 members, got ' + m.body.data.length);
+  });
+
+  await test('overlap protection: reassigning to a NEW group closes the previous open assignment', async () => {
+    // Create a second group and move emp1 into it from a later date.
+    const g2 = await api('finance/payroll/pay-groups/create', fmgrToken, {
+      code: `PG2-${TAG.slice(-6)}`, name: `E2E Group 2 ${TAG}`, frequency: 'monthly',
+    });
+    ok(g2, 'create second group failed');
+    ctx.group2Id = g2.body.data.id;
+
+    const r = await api('finance/payroll/pay-groups/assign', fmgrToken, {
+      employeeId: emp1Id, payGroupId: ctx.group2Id, effectiveFrom: '2010-06-01',
+    });
+    ok(r, 'reassign to group 2 failed: ' + r.body.message);
+
+    // The weekly-group assignment must now be CLOSED the day before the move.
+    const { data: rows } = await sb.from('finance_employee_pay_group_assignments')
+      .select('pay_group_id, effective_from, effective_to')
+      .eq('employee_id', emp1Id).order('effective_from');
+    const oldRow = (rows ?? []).find(x => x.pay_group_id === ctx.groupId);
+    const newRow = (rows ?? []).find(x => x.pay_group_id === ctx.group2Id);
+    expect(oldRow?.effective_to === '2010-05-31', `previous assignment should close 2010-05-31, got ${oldRow?.effective_to}`);
+    expect(newRow && newRow.effective_to === null, 'new assignment should be open-ended');
+
+    // Restore emp1 for the run-scoping tests below: put them back on the weekly
+    // group open-ended (close group 2 first).
+    await sb.from('finance_employee_pay_group_assignments').delete().eq('employee_id', emp1Id).eq('pay_group_id', ctx.group2Id);
+    await sb.from('finance_employee_pay_group_assignments').update({ effective_to: null }).eq('employee_id', emp1Id).eq('pay_group_id', ctx.groupId);
+  });
+
+  await test('overlap protection: a bounded range overlapping an existing one is refused (409)', async () => {
+    // emp2 is open-ended in the weekly group since 2000-01-01; a bounded overlap
+    // in ANOTHER group cannot close it (it starts earlier + is open) → DB refuses.
+    const r = await api('finance/payroll/pay-groups/assign', fmgrToken, {
+      employeeId: emp2Id, payGroupId: ctx.group2Id,
+      effectiveFrom: '1999-01-01', effectiveTo: '2001-01-01',
+    });
+    fails(r, 'overlapping bounded assignment should be refused');
+  });
+
+  await test('effectiveTo before effectiveFrom is refused (422)', async () => {
+    const r = await api('finance/payroll/pay-groups/assign', fmgrToken, {
+      employeeId: emp2Id, payGroupId: ctx.group2Id,
+      effectiveFrom: '2035-06-01', effectiveTo: '2035-05-01',
+    });
+    fails(r, 'inverted date range should be refused');
   });
 
   // ===========================================================================

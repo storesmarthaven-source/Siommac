@@ -154,16 +154,24 @@ router.post('/calendar/list', async c => {
   if (!v.ok) return v.response;
   const { from, to } = v.data;
   if (from > to) return c.json({ success: false, message: '`from` must be on or before `to`.' }, 400);
+  // Cap the window — unbounded ranges force unbounded recurrence expansion.
+  const rangeDays = (Date.parse(to) - Date.parse(from)) / 86_400_000;
+  if (rangeDays > 366) return c.json({ success: false, message: 'Date range too large — request at most 366 days.' }, 400);
 
   const can = await effectiveCan(user);
   const caps: Caps = { canManage: can('calendar.manage'), canAssign: can('calendar.task.assign'), userId: user.id };
 
-  // Read scope: own (owner/assignee) + org, plus team for managers. Never others' personal.
+  // Read scope: own (owner/assignee/INVITED ATTENDEE) + org, plus team for managers.
+  // Never others' personal. Mirrors canReadEntry (the central policy).
+  const { data: attRows } = await sb.from('calendar_activity_attendees')
+    .select('calendar_entry_id').eq('user_id', user.id);
+  const attendeeIds = [...new Set(((attRows ?? []) as Array<{ calendar_entry_id: string }>).map(a => a.calendar_entry_id))];
   const scopeOr = [
     `owner_user_id.eq.${user.id}`,
     `assignee_user_id.eq.${user.id}`,
     `visibility.eq.org`,
     ...(caps.canManage ? ['visibility.eq.team'] : []),
+    ...(attendeeIds.length ? [`id.in.(${attendeeIds.join(',')})`] : []),
   ].join(',');
 
   const wantType = (t: 'task' | 'activity' | 'deadline') => !v.data.types || v.data.types.includes(t);
@@ -287,9 +295,10 @@ router.post('/calendar/get', async c => {
 
   const can = await effectiveCan(user);
   const caps: Caps = { canManage: can('calendar.manage'), canAssign: can('calendar.task.assign'), userId: user.id };
-  // Visibility guard: personal items are visible only to owner/assignee (+ managers).
-  const isParticipant = row.owner_user_id === user.id || row.assignee_user_id === user.id;
-  if (!isParticipant && !caps.canManage && row.visibility === 'personal') {
+  // Central read policy — same scope as /calendar/list (a known UUID grants nothing extra):
+  // participants + org; team only for managers; personal NEVER via calendar.manage.
+  const attendee = await isAttendee(entryId, user.id);
+  if (!canReadEntry(row, caps, attendee)) {
     return c.json({ success: false, message: 'Not found.' }, 404);
   }
 
@@ -489,14 +498,59 @@ router.post('/calendar/activity/create', async c => {
   return c.json({ success: true, id: result.entityId });
 });
 
-// ── mutation authz: load the target + confirm the caller may edit it ─────────
+// ── central calendar policy ───────────────────────────────────────────────────
+// ONE place that answers "may this caller read / mutate this entry". Every
+// list/get/update/status/cancel path goes through these — no route derives its
+// own scope rules.
 
+/** Is the caller an invited attendee of this entry? */
+async function isAttendee(entryId: string, userId: string): Promise<boolean> {
+  const { data } = await sb.from('calendar_activity_attendees')
+    .select('user_id').eq('calendar_entry_id', entryId).eq('user_id', userId).maybeSingle();
+  return !!data;
+}
+
+/**
+ * Read policy (mirrors /calendar/list scope):
+ *   participant (owner / assignee / invited attendee) → yes
+ *   org visibility → yes · team visibility → managers only
+ *   personal → participants ONLY (never through calendar.manage)
+ */
+function canReadEntry(row: EntryRow, caps: Caps, attendee: boolean): boolean {
+  const participant = row.owner_user_id === caps.userId || row.assignee_user_id === caps.userId || attendee;
+  if (participant) return true;
+  if (row.visibility === 'org') return true;
+  if (row.visibility === 'team') return caps.canManage;
+  return false; // personal
+}
+
+/**
+ * Mutation authz: load the target + confirm the caller may edit it.
+ *   • The per-type manage permission is REQUIRED (task → calendar.task.manage_own,
+ *     activity → calendar.activity.manage_own) — an explicit deny on it cannot be
+ *     bypassed by calendar.view.
+ *   • Owners edit their own entries; calendar.manage reaches team/org entries but
+ *     NEVER someone else's personal items.
+ */
 async function loadEditable(user: { id: string; role?: string | null }, entryId: string): Promise<{ ok: true; row: EntryRow; canManage: boolean } | { ok: false; status: 400 | 403 | 404; message: string }> {
   const { data: row, error } = await sb.from('calendar_entries').select('*').eq('id', entryId).maybeSingle<EntryRow>();
   if (error) return { ok: false, status: 400, message: 'Failed to load item.' };
   if (!row) return { ok: false, status: 404, message: 'Item not found.' };
-  const canManage = await userCan(user, 'calendar.manage');
-  if (row.owner_user_id !== user.id && !canManage) {
+
+  const can = await effectiveCan(user);
+  const managePerm = row.type === 'task' ? 'calendar.task.manage_own' : 'calendar.activity.manage_own';
+  const canManage = can('calendar.manage');
+  const isOwner = row.owner_user_id === user.id;
+
+  if (isOwner) {
+    if (!can(managePerm)) {
+      return { ok: false, status: 403, message: `You do not have permission to manage calendar ${row.type === 'task' ? 'tasks' : 'activities'}.` };
+    }
+  } else if (canManage) {
+    if (row.visibility === 'personal') {
+      return { ok: false, status: 403, message: 'Personal calendar items can only be changed by their owner.' };
+    }
+  } else {
     return { ok: false, status: 403, message: 'You can only change your own calendar items.' };
   }
   return { ok: true, row, canManage };
@@ -626,9 +680,11 @@ router.post('/calendar/task/status', async c => {
   if (!row) return c.json({ success: false, message: 'Task not found.' }, 404);
   if (row.type !== 'task') return c.json({ success: false, message: 'Only tasks have a completion status.' }, 400);
 
-  // Owner, assignee, or a manager may complete/reopen.
+  // Owner, assignee, or a manager may complete/reopen — but calendar.manage
+  // never reaches someone else's PERSONAL task (central policy).
   const canManage = await userCan(user, 'calendar.manage');
-  const mayComplete = row.owner_user_id === user.id || row.assignee_user_id === user.id || canManage;
+  const isParticipant = row.owner_user_id === user.id || row.assignee_user_id === user.id;
+  const mayComplete = isParticipant || (canManage && row.visibility !== 'personal');
   if (!mayComplete) return c.json({ success: false, message: 'You cannot change this task.' }, 403);
 
   const now = new Date().toISOString();

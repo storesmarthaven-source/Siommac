@@ -144,10 +144,12 @@ router.post('/attendance/records/import', async c => {
       punchOut:   z.string().nullable().optional(),
       siteId:     z.string().nullable().optional(),
     })).min(1).max(IMPORT_MAX_ROWS),
+    // Live/manual punches are protected — replacing them is an explicit opt-in.
+    overwriteExisting: z.boolean().optional(),
   }), body(c));
   if (!v.ok) return v.response;
   try {
-    const result = await importAttendancePunches(actor.id, v.data.rows);
+    const result = await importAttendancePunches(actor.id, v.data.rows, { overwriteExisting: v.data.overwriteExisting });
     return c.json({ success: true, data: result });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });

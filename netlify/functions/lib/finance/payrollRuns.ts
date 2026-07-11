@@ -27,7 +27,7 @@ import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule }
 import { loadLoanInstallments, recordLoanDeductionsForRun, reverseLoanDeductionsForRun } from './loans';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
-import { startWorkflowForRecord } from '../workflow/service';
+import { startWorkflowForRecord, decideTask } from '../workflow/service';
 import { notifyUsersByRole } from './financeEvents';
 import { notify } from '../notify';
 import { createHandoff } from '../handoffBus';
@@ -734,10 +734,11 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   // Allow recalculation of an already-'calculated' run too, so worksheet overrides can be
-  // applied and recomputed before submission.
-  if (!['input_locked', 'calculated'].includes(run.status)) {
+  // applied and recomputed before submission. 'returned' (rejected/returned by the approval
+  // workflow) is likewise revisable — the preparer corrects and re-calculates.
+  if (!['input_locked', 'calculated', 'returned'].includes(run.status)) {
     throw Object.assign(
-      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked' or 'calculated' runs can be calculated.`),
+      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked', 'calculated' or 'returned' runs can be calculated.`),
       { status: 422 },
     );
   }
@@ -1289,9 +1290,11 @@ export async function downloadRunExport(
 export async function submitRun(runId: string, actorId: string): Promise<PayrollRunDto> {
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status !== 'calculated') {
+  // 'returned' = rejected/returned by the approval workflow; the preparer may
+  // resubmit (a fresh workflow instance is started and stamped below).
+  if (!['calculated', 'returned'].includes(run.status)) {
     throw Object.assign(
-      new Error(`Cannot submit: run is in status '${run.status}'. Only 'calculated' runs can be submitted.`),
+      new Error(`Cannot submit: run is in status '${run.status}'. Only 'calculated' or 'returned' runs can be submitted.`),
       { status: 422 },
     );
   }
@@ -1323,9 +1326,9 @@ export async function submitRun(runId: string, actorId: string): Promise<Payroll
       actor: { id: actorId },
     });
   } catch (wfErr) {
-    // Compensating rollback: revert status back to 'calculated'
+    // Compensating rollback: revert to the pre-submit status ('calculated' or 'returned')
     await sb.from('finance_payroll_runs')
-      .update({ status: 'calculated' })
+      .update({ status: run.status })
       .eq('id', runId);
     throw Object.assign(
       new Error('submitRun/workflow: ' + (wfErr as Error).message),
@@ -1391,57 +1394,83 @@ export async function submitRun(runId: string, actorId: string): Promise<Payroll
   return { ...updatedRun, status: 'pending_approval', workflowId: workflowInstance?.id ?? null };
 }
 
-// ── Approve Run (direct adapter path — called only by the workflow adapter) ───
+// ── Decide Run Approval (the ONLY approve/reject path — delegates to the engine) ──
 
 /**
- * Approve a run (called by financePayrollAdapter on workflow completion).
- * Transitions: pending_approval → approved.
- * SoD enforced: actorId must differ from createdBy.
- * This function is NOT exposed as a direct route — approval flows through the workflow.
+ * Approve or reject a pending_approval run by DECIDING its open workflow task.
+ * The central workflow engine is the single approval authority: the decision
+ * closes the task and the finance_payroll adapter transitions the run
+ * (approved → 'approved' + ready-to-lock side-effects; rejected → 'returned').
+ * The old direct approve/reject functions flipped the run status while leaving
+ * the workflow task dangling open — that dual path is DELETED.
  */
-export async function approveRun(runId: string, actorId: string): Promise<void> {
-  const run = await getPayrollRun(runId);
+export async function decideRunApproval(opts: {
+  runId: string;
+  actor: { id: string; role?: string | null };
+  decision: 'approved' | 'rejected';
+  comment?: string;
+}): Promise<PayrollRunDto> {
+  const run = await getPayrollRun(opts.runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   if (run.status !== 'pending_approval') {
     throw Object.assign(
-      new Error(`Cannot approve: run is in status '${run.status}'.`),
+      new Error(`Cannot ${opts.decision === 'approved' ? 'approve' : 'reject'}: run is in status '${run.status}'. Only 'pending_approval' runs can be decided.`),
+      { status: 422 },
+    );
+  }
+  if (opts.decision === 'rejected' && !opts.comment?.trim()) {
+    throw Object.assign(new Error('A reason is required to reject a payroll run.'), { status: 422 });
+  }
+  // SoD fast-fail (the adapter re-enforces this at completion time).
+  if (opts.decision === 'approved') {
+    assertDifferentApprover({ actorId: opts.actor.id, createdBy: run.createdBy, action: 'approve a payroll run' });
+  }
+  if (!run.workflowId) {
+    throw Object.assign(
+      new Error('This run has no approval workflow attached. Reopen and resubmit it to start a new approval.'),
       { status: 422 },
     );
   }
 
-  assertDifferentApprover({ actorId, createdBy: run.createdBy, action: 'approve a payroll run' });
+  const { data: tasks, error: tErr } = await sb.from('workflow_tasks')
+    .select('id, assigned_to, assigned_role, status, created_at')
+    .eq('workflow_id', run.workflowId)
+    .in('status', ['pending', 'open', 'in_progress'])
+    .order('created_at', { ascending: true });
+  if (tErr) throw Object.assign(new Error('decideRunApproval/tasks: ' + tErr.message), { status: 500 });
+  const open = (tasks ?? []) as Array<{ id: string; assigned_to: string | null; assigned_role: string | null }>;
+  if (open.length === 0) {
+    throw Object.assign(
+      new Error('No open approval task found for this run — the workflow state is inconsistent. Resolve it from the workflow console.'),
+      { status: 409 },
+    );
+  }
+  // Engine assignment rule (mirrors /workflow-engine/decide): the actor must be
+  // the task's assignee (by user or by role).
+  const mine = open.find(t => t.assigned_to === opts.actor.id || (!!t.assigned_role && t.assigned_role === (opts.actor.role ?? '')));
+  if (!mine) {
+    throw Object.assign(
+      new Error('The open approval task is not assigned to you — decide it from your workflow inbox, or have it reassigned.'),
+      { status: 403 },
+    );
+  }
 
-  const { error } = await sb.from('finance_payroll_runs')
-    .update({ status: 'approved', approved_by: actorId })
-    .eq('id', runId);
-  if (error) throw Object.assign(new Error('approveRun: ' + error.message), { status: 500 });
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.approved',
-    previousState: { status: 'pending_approval' },
-    newState: { status: 'approved', approvedBy: actorId },
+  await decideTask({
+    workflowId: run.workflowId,
+    taskId:     mine.id,
+    actor:      { id: opts.actor.id, role: opts.actor.role ?? undefined },
+    decision:   opts.decision,
+    comment:    opts.comment?.trim() || undefined,
   });
 
-  void emitAppEvent({
-    eventType:        'finance.payroll.run.approved',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    actorUserId:      actorId,
-    severity:         'success',
-    payload:          { approvedBy: actorId },
-  });
-
-  // Notifications + payroll_locking handoff — shared with the workflow approval path.
-  await emitRunApprovedSideEffects(run, actorId);
+  // The adapter has transitioned the run (or the next approval step opened) — return the fresh row.
+  return (await getPayrollRun(opts.runId))!;
 }
 
 /**
  * Side-effects fired when a run becomes approved — the "ready to lock" notifications
- * (submitter + Finance Managers) and the payroll_locking handoff. Called from BOTH the
- * direct approve route (approveRun) AND the workflow adapter's onWorkflowCompleted, so
- * the side-effects don't depend on which path approved the run.
+ * (submitter + Finance Managers) and the payroll_locking handoff. Called by the
+ * workflow adapter's onWorkflowCompleted (the single approval authority).
  */
 export async function emitRunApprovedSideEffects(run: PayrollRunDto, actorId: string): Promise<void> {
   // §8.1 — notify the submitter (run.createdBy) that the run was approved
@@ -1646,83 +1675,10 @@ export async function reopenRun(
   return updatedRun;
 }
 
-// ── Reject Run (pending_approval → calculated) ───────────────────────────────
-
-/**
- * Reject a run that is pending approval, returning it to 'calculated' status
- * so the preparer can review the feedback and re-submit.
- *
- * Transitions: pending_approval → calculated.
- * Clears the workflow_id (the approval cycle is over; a new one will be created on re-submit).
- * Lines and inputs are preserved so the preparer can review them.
- * A mandatory reason is required; the submitter (run.createdBy) is notified.
- *
- * Permission enforcement is on the route (finance.payroll.approve).
- */
-export async function rejectRun(
-  runId:   string,
-  actorId: string,
-  reason:  string,
-): Promise<PayrollRunDto> {
-  const run = await getPayrollRun(runId);
-  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status !== 'pending_approval') {
-    throw Object.assign(
-      new Error(`Cannot reject: run is in status '${run.status}'. Only 'pending_approval' runs can be rejected.`),
-      { status: 422 },
-    );
-  }
-  if (!reason || reason.trim() === '') {
-    throw Object.assign(new Error('A reason is required to reject a payroll run.'), { status: 422 });
-  }
-
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({
-      status:      'calculated',
-      workflow_id: null,
-    })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('rejectRun/update: ' + updErr.message), { status: 500 });
-
-  const updatedRun = toRunDto(updated);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.rejected',
-    previousState: { status: 'pending_approval' },
-    newState: { status: 'calculated', rejectedBy: actorId, reason: reason.trim() },
-    reason: reason.trim(),
-  });
-
-  void emitAppEvent({
-    eventType:        'finance.payroll.run.rejected',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    actorUserId:      actorId,
-    severity:         'warning',
-    payload:          { runNo: updatedRun.runNo, reason: reason.trim() },
-  });
-
-  // §8.1 — notify the submitter (run.createdBy) that the run was rejected
-  if (run.createdBy && run.createdBy !== actorId) {
-    void notify({
-      userId:     run.createdBy,
-      type:       'finance.payroll.run.rejected',
-      title:      `Payroll run ${run.runNo} rejected`,
-      body:       `Your ${run.periodMonth.slice(0, 7)} payroll run was rejected. Reason: ${reason.trim()}`,
-      module:     'finance_payroll',
-      severity:   'warning',
-      sourceType: 'payroll_run',
-      sourceId:   runId,
-      dedupeKey:  `payroll_run.rejected.${runId}`,
-    });
-  }
-
-  return updatedRun;
-}
+// ── Reject Run — DELETED ──────────────────────────────────────────────────────
+// Rejection flows through decideRunApproval → the workflow engine → the
+// finance_payroll adapter's onWorkflowRejected (run status → 'returned').
+// The engine notifies the submitter and records the decision + audit trail.
 
 // ── Notify payslip employees ──────────────────────────────────────────────────
 

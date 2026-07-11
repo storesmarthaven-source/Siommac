@@ -127,7 +127,6 @@ export interface ExpenseAuditEntry {
   id: string;
   actorId: string | null;
   action: string;
-  summary: string | null;
   previousState: Record<string, unknown> | null;
   newState: Record<string, unknown> | null;
   reason: string | null;

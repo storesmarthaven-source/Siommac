@@ -15,7 +15,8 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { createHandoff } from '../handoffBus';
-import { postJournal, reverseJournal, getJournalWithLines, type JournalDto } from './generalLedger';
+import { nextRef } from '../refGenerator';
+import { getJournalWithLines, type JournalDto } from './generalLedger';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 
@@ -161,22 +162,39 @@ export async function postRunGl(runId: string, actorId: string): Promise<PostRun
     throw Object.assign(new Error('Missing GL account mappings for: ' + preview.missingMappings.join(', ') + '. Configure payroll GL mappings first.'), { status: 422 });
   }
 
-  const journal = await postJournal({
-    sourceModule: 'finance_payroll', sourceRef: run.run_no,
-    entryDate: run.pay_date ?? run.period_month,
-    memo: `Payroll ${run.run_no} — ${run.period_month.slice(0, 7)}`,
-    lines: preview.lines.map(l => ({
-      accountCode: l.accountCode as string,
-      debit: l.side === 'debit' ? l.amount : 0,
+  // ONE atomic transaction (Postgres fn): lock run → guards → header + lines +
+  // run link. Two concurrent posts serialise on the row lock; the loser gets
+  // 'already_posted'. No compensating deletes on the accounting path.
+  const journalNo = await nextRef('JE');
+  const { data: rpcData, error: rpcErr } = await sb.rpc('post_payroll_gl_tx', {
+    p_run_id:     runId,
+    p_journal_no: journalNo,
+    p_entry_date: run.pay_date ?? run.period_month,
+    p_memo:       `Payroll ${run.run_no} — ${run.period_month.slice(0, 7)}`,
+    p_actor:      actorId,
+    p_lines:      preview.lines.map(l => ({
+      account_code: l.accountCode as string,
+      debit:  l.side === 'debit'  ? l.amount : 0,
       credit: l.side === 'credit' ? l.amount : 0,
       description: KEY_LABEL[l.mappingKey] ?? l.mappingKey,
     })),
-    actorId, metadata: { payrollRunId: runId, runNo: run.run_no },
+    p_metadata:   { runNo: run.run_no },
   });
-
-  await sb.from('finance_payroll_runs')
-    .update({ gl_journal_id: journal.id, gl_posted_at: new Date().toISOString() })
-    .eq('id', runId);
+  if (rpcErr) throw Object.assign(new Error('postRunGl/tx: ' + rpcErr.message), { status: 500 });
+  const result = (rpcData ?? {}) as { status: string; journal_id?: string; journal_no?: string; total_debit?: number; total_credit?: number; current?: string; message?: string };
+  switch (result.status) {
+    case 'posted': break;
+    case 'already_posted': throw Object.assign(new Error('This run has already been posted to the GL. Reverse the existing journal first.'), { status: 409 });
+    case 'not_lockable':   throw Object.assign(new Error(`GL can only be posted for locked runs (run is '${result.current}').`), { status: 422 });
+    case 'not_found':      throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+    case 'unbalanced':
+    case 'invalid_lines':  throw Object.assign(new Error('GL journal rejected by the database: ' + (result.message ?? result.status)), { status: 422 });
+    default:               throw Object.assign(new Error('postRunGl/tx: unexpected result ' + JSON.stringify(result)), { status: 500 });
+  }
+  const journal = {
+    id: result.journal_id!, journalNo: result.journal_no ?? journalNo,
+    totalDebit: Number(result.total_debit ?? 0), totalCredit: Number(result.total_credit ?? 0),
+  };
 
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: runId, actorId,
@@ -210,12 +228,26 @@ export async function reverseRunGl(runId: string, actorId: string, reason: strin
   if (!run.gl_journal_id) throw Object.assign(new Error('This run has no posted GL journal to reverse.'), { status: 422 });
   if (!reason || !reason.trim()) throw Object.assign(new Error('A reason is required to reverse a GL posting.'), { status: 422 });
 
-  const reversing = await reverseJournal(run.gl_journal_id, actorId, reason.trim());
-
-  // Clear the run's GL link so it can be re-posted (e.g. after a correction).
-  await sb.from('finance_payroll_runs')
-    .update({ gl_journal_id: null, gl_posted_at: null })
-    .eq('id', runId);
+  // ONE atomic transaction: lock run + original journal → mirror journal +
+  // mark reversed + unlink run. Concurrent/duplicate reversals lose on the lock.
+  const reversingNo = await nextRef('JE');
+  const { data: rpcData, error: rpcErr } = await sb.rpc('reverse_payroll_gl_tx', {
+    p_run_id:               runId,
+    p_reversing_journal_no: reversingNo,
+    p_entry_date:           new Date().toISOString().slice(0, 10),
+    p_actor:                actorId,
+    p_reason:               reason.trim(),
+  });
+  if (rpcErr) throw Object.assign(new Error('reverseRunGl/tx: ' + rpcErr.message), { status: 500 });
+  const result = (rpcData ?? {}) as { status: string; reversing_journal_id?: string; reversing_journal_no?: string; current?: string };
+  switch (result.status) {
+    case 'reversed': break;
+    case 'not_posted':     throw Object.assign(new Error('This run has no posted GL journal to reverse.'), { status: 422 });
+    case 'not_reversible': throw Object.assign(new Error(`Only posted journals can be reversed (status is '${result.current}').`), { status: 422 });
+    case 'not_found':      throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+    default:               throw Object.assign(new Error('reverseRunGl/tx: unexpected result ' + JSON.stringify(result)), { status: 500 });
+  }
+  const reversing = { id: result.reversing_journal_id!, journalNo: result.reversing_journal_no ?? reversingNo };
 
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: runId, actorId,

@@ -391,6 +391,7 @@ function rowIsValid(r: AttendanceImportRow): boolean {
 function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
   const importMut = useImportAttendance();
   const [text, setText] = useState('');
+  const [overwrite, setOverwrite] = useState(false);
   const [result, setResult] = useState<AttendanceImportResult | null>(null);
 
   const parsed = parseAttendanceCsv(text);
@@ -409,7 +410,7 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
   const doImport = async (): Promise<void> => {
     if (!validRows.length) return;
     try {
-      const res = await importMut.mutateAsync({ rows: validRows });
+      const res = await importMut.mutateAsync({ rows: validRows, overwriteExisting: overwrite });
       setResult(res);
       dialog.success(`Imported ${res.imported + res.updated} of ${res.total} rows.`);
     } catch (err) { dialog.error(err instanceof Error ? err.message : 'Import failed.'); }
@@ -478,6 +479,19 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
           <label class="fin-field"><span>…or paste CSV rows</span>
             <textarea value={text} onInput={e => setText((e.currentTarget as HTMLTextAreaElement).value)} rows={10}
               placeholder={CSV_TEMPLATE} style={{ fontFamily: 'monospace', fontSize: 12 }} />
+          </label>
+          <label class="fin-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+            <input
+              type="checkbox"
+              checked={overwrite}
+              onChange={e => setOverwrite((e.currentTarget as HTMLInputElement).checked)}
+            />
+            <span style={{ margin: 0 }}>
+              Overwrite existing live/manual punches (correction mode)
+              <span style={{ display: 'block', fontSize: 11, color: '#64748b' }}>
+                Off by default — rows that collide with a real punch are skipped instead of replacing it.
+              </span>
+            </span>
           </label>
           <button type="button" class="obx-btn obx-btn-sm" style={{ justifySelf: 'start' }} onClick={() => setText(CSV_TEMPLATE)}>
             <i class="fas fa-file-lines" /> Load sample

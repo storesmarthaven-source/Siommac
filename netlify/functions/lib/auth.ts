@@ -141,81 +141,102 @@ function _generateRefreshToken(): [string, string] {
  * Issue a refresh token for a user.
  * Stores the hash in the DB; returns the plaintext to send to the client.
  * Any previous refresh tokens for this user are deleted (single active session).
+ * The session's auth-method claims are stored ON the row so rotation preserves
+ * the session's real strength (amr / authStrength / mfaVerifiedAt).
  */
 async function issueRefreshToken(
   userId: string,
   device?: { userAgent?: string; ip?: string },
+  claims?: Partial<AuthMethodClaims>,
 ): Promise<string> {
   const [plain, hash] = _generateRefreshToken();
   const expiresAt     = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString();
 
   // Delete any existing refresh tokens for this user (single-session policy)
-  await sb.from('refresh_tokens').delete().eq('user_id', userId);
+  const { error: delErr } = await sb.from('refresh_tokens').delete().eq('user_id', userId);
+  if (delErr) throw new Error('issueRefreshToken/clear: ' + delErr.message);
 
-  await sb.from('refresh_tokens').insert({
+  const { error: insErr } = await sb.from('refresh_tokens').insert({
     user_id:      userId,
     token_hash:   hash,
     expires_at:   expiresAt,
     user_agent:   device?.userAgent ?? null,
     ip_address:   device?.ip ?? null,
     last_seen_at: new Date().toISOString(),
+    amr:             claims?.amr ?? ['pwd'],
+    auth_strength:   claims?.authStrength ?? 'password_only',
+    mfa_satisfied:   claims?.mfaSatisfied ?? false,
+    mfa_verified_at: claims?.mfaVerifiedAt ?? null,
   });
+  if (insErr) throw new Error('issueRefreshToken/insert: ' + insErr.message);
 
   return plain;
 }
 
 /**
- * Validate a refresh token and rotate it.
- * Returns the user row on success, or null if invalid/expired.
- * Old token is deleted and a new pair is issued atomically.
+ * Persist updated auth-method claims onto the user's active refresh session
+ * (single-session policy — one row per user). Called after a mid-session
+ * step-up so a later rotation keeps the elevated strength.
+ */
+async function persistSessionAuthClaims(userId: string, claims: AuthMethodClaims): Promise<void> {
+  const { error } = await sb.from('refresh_tokens').update({
+    amr:             claims.amr,
+    auth_strength:   claims.authStrength,
+    mfa_satisfied:   claims.mfaSatisfied,
+    mfa_verified_at: claims.mfaVerifiedAt ?? null,
+  }).eq('user_id', userId);
+  if (error) console.error('[auth] persistSessionAuthClaims failed — refreshed tokens will downgrade to the login-time strength:', error.message);
+}
+
+/**
+ * Validate a refresh token and rotate it — TRULY atomically, via the
+ * rotate_refresh_token_tx Postgres function (migration 20260918000160):
+ * the old token is consumed with a single DELETE … RETURNING (exactly one
+ * concurrent caller wins), expiry + user status are checked under the same
+ * transaction, and the replacement row (device metadata + auth-method claims
+ * carried over) is inserted before commit. Any DB error rolls the whole
+ * rotation back — the old token stays valid instead of the session dying.
+ * The re-signed access token keeps the session's REAL auth strength.
  */
 async function rotateRefreshToken(
   plainToken: string,
 ): Promise<{ user: AppUser; accessToken: string; refreshToken: string } | null> {
   const hash = crypto.createHash('sha256').update(plainToken).digest('hex');
+  const [newRefreshPlain, newRefreshHash] = _generateRefreshToken();
 
-  const { data: row } = await sb
-    .from('refresh_tokens')
-    .select('user_id, expires_at, user_agent, ip_address')
-    .eq('token_hash', hash)
-    .maybeSingle<{ user_id: string; expires_at: string; user_agent: string | null; ip_address: string | null }>();
-
-  if (!row) return null;
-  if (new Date(row.expires_at) < new Date()) {
-    // expired — clean up and reject
-    await sb.from('refresh_tokens').delete().eq('token_hash', hash);
+  const { data: rpcData, error: rpcErr } = await sb.rpc('rotate_refresh_token_tx', {
+    p_old_hash:    hash,
+    p_new_hash:    newRefreshHash,
+    p_ttl_seconds: Math.floor(REFRESH_TOKEN_TTL_MS / 1000),
+  });
+  if (rpcErr) {
+    console.error('[auth] rotate_refresh_token_tx failed:', rpcErr.message);
     return null;
   }
+  const result = (rpcData ?? {}) as {
+    status: string; user_id?: string;
+    amr?: string[] | null; auth_strength?: string | null;
+    mfa_satisfied?: boolean | null; mfa_verified_at?: string | null;
+  };
+  if (result.status !== 'rotated' || !result.user_id) return null;
 
-  const { data: user } = await sb
+  const { data: user, error: userErr } = await sb
     .from('app_users')
     .select('*')
-    .eq('id', row.user_id)
+    .eq('id', result.user_id)
     .single<AppUser>();
+  if (userErr || !user) return null;
 
-  if (!user || user.status !== 'active') {
-    await sb.from('refresh_tokens').delete().eq('token_hash', hash);
-    return null;
-  }
-
-  // Rotate: delete old token and issue a new pair. Device metadata carries over
-  // so the Sessions page keeps showing the device after rotation, and
-  // last_seen_at is bumped — a rotation IS activity on that session.
-  await sb.from('refresh_tokens').delete().eq('token_hash', hash);
-  const [newRefreshPlain, newRefreshHash] = _generateRefreshToken();
-  const newExpiresAt = new Date(Date.now() + REFRESH_TOKEN_TTL_MS).toISOString();
-  await sb.from('refresh_tokens').insert({
-    user_id:      user.id,
-    token_hash:   newRefreshHash,
-    expires_at:   newExpiresAt,
-    user_agent:   row.user_agent,
-    ip_address:   row.ip_address,
-    last_seen_at: new Date().toISOString(),
-  });
+  const claims: Partial<AuthMethodClaims> = {
+    amr:           result.amr ?? ['pwd'],
+    authStrength:  (result.auth_strength ?? 'password_only') as AuthMethodClaims['authStrength'],
+    mfaSatisfied:  result.mfa_satisfied ?? false,
+    mfaVerifiedAt: result.mfa_verified_at ?? undefined,
+  };
 
   return {
     user,
-    accessToken:  signUser(user),
+    accessToken:  signUser(user, claims),
     refreshToken: newRefreshPlain,
   };
 }
@@ -426,6 +447,7 @@ export {
   signUser,
   verifyToken,
   issueRefreshToken,
+  persistSessionAuthClaims,
   rotateRefreshToken,
   revokeToken,
   isTokenRevoked,

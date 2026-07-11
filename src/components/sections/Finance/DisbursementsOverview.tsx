@@ -1179,7 +1179,7 @@ export function DisbursementsOverview(): VNode {
       <HrfinPageHeader
         icon="bank"
         title="Payroll Bank Disbursements"
-        sub="Generate EFT bank files and disburse net pay to employees from approved payroll runs."
+        sub="Generate per-bank direct-credit files (generic layout — verify against each bank's spec) and disburse net pay from approved payroll runs."
         chips={[
           ...(kpis?.pending
             ? [{ icon: 'clock' as const, label: `${kpis.pending} pending`, tone: 'warning' as const }]

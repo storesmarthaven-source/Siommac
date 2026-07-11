@@ -33,7 +33,7 @@ export default async function run(h) {
 
   let fmgrId, staffId, empId;
   let fmgrToken, staffToken, empToken;
-  const ctx = { loanId: null, versionId: null, runId: null, groupId: null, createdUserIds: [], borrowerId: null };
+  const ctx = { loanId: null, cancelLoanId: null, versionId: null, runId: null, groupId: null, createdUserIds: [], borrowerId: null };
 
   const waitFor = async (check, ms = 8000) => {
     const t0 = Date.now();
@@ -45,6 +45,9 @@ export default async function run(h) {
     try { if (ctx.runId) await sb.from('finance_loan_deductions').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.loanId) await sb.from('finance_loan_deductions').delete().eq('loan_id', ctx.loanId); } catch {}
     try { if (ctx.loanId) await sb.from('finance_employee_loans').delete().eq('id', ctx.loanId); } catch {}
+    try { if (ctx.cancelLoanId) await sb.from('finance_employee_loans').delete().eq('id', ctx.cancelLoanId); } catch {}
+    try { if (ctx.cancelLoanId) await sb.from('app_events').delete().eq('source_module', 'finance_loan').eq('source_entity_id', ctx.cancelLoanId); } catch {}
+    try { if (ctx.cancelLoanId) await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_loan').eq('record_id', ctx.cancelLoanId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_inputs').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
@@ -210,11 +213,26 @@ export default async function run(h) {
 
   h.section('Loans › Settle + cancel');
 
-  await test('finance_staff settles the active loan → balance 0, settled', async () => {
+  await test('an ACTIVE loan CANNOT be cancelled (settle or write-off only)', async () => {
+    const r = await api('finance/payroll/loans/cancel', staffToken, { id: ctx.loanId, reason: 'trying to cancel active' });
+    fails(r, 'cancelling an active loan should be refused');
+    const { data: loan } = await sb.from('finance_employee_loans').select('status').eq('id', ctx.loanId).maybeSingle();
+    expect(loan?.status === 'active', `loan must stay active after refused cancel, got ${loan?.status}`);
+  });
+
+  await test('finance_staff settles the active loan → balance 0, settled + SETTLEMENT LEDGER row', async () => {
     const r = await api('finance/payroll/loans/settle', staffToken, { id: ctx.loanId });
     ok(r, `settle failed: ${r.body.message}`);
     expect(r.body.data.status === 'settled', `expected settled, got ${r.body.data.status}`);
     expect(Math.abs(r.body.data.balance) < 0.01, `balance should be 0, got ${r.body.data.balance}`);
+    // The ledger is the source of truth — the external payment MUST be recorded there.
+    const { data: led } = await sb.from('finance_loan_deductions')
+      .select('amount, entry_type, run_id, balance_after')
+      .eq('loan_id', ctx.loanId).eq('entry_type', 'settlement');
+    expect((led ?? []).length === 1, `expected exactly 1 settlement ledger row, got ${(led ?? []).length}`);
+    expect(led[0].run_id === null, 'settlement ledger row must have no run_id');
+    expect(Math.abs(Number(led[0].amount) - 1200) < 0.01, `settlement amount should be the cleared balance (1200), got ${led[0].amount}`);
+    expect(Math.abs(Number(led[0].balance_after)) < 0.01, 'settlement balance_after should be 0');
   });
 
   await test('a settled loan cannot be settled again (422)', async () => {
@@ -225,5 +243,34 @@ export default async function run(h) {
   await test('plain employee CANNOT cancel a loan (403)', async () => {
     const r = await api('finance/payroll/loans/cancel', empToken, { id: ctx.loanId });
     fails(r, 'employee should be denied loan cancel');
+  });
+
+  await test('cancelling a PENDING loan also cancels its approval workflow (no dangling task)', async () => {
+    // Create + submit a fresh loan → pending_approval with an open workflow task.
+    const cr = await api('finance/payroll/loans/create', staffToken, {
+      employeeId: empId, loanType: 'advance', principal: 300, installmentAmount: 100,
+      reason: `E2E cancel-pending ${TAG}`,
+    });
+    ok(cr, `create for cancel-pending failed: ${cr.body.message}`);
+    ctx.cancelLoanId = cr.body.data.id;
+    const sr = await api('finance/payroll/loans/submit', staffToken, { id: ctx.cancelLoanId });
+    ok(sr, `submit for cancel-pending failed: ${sr.body.message}`);
+    const { data: pending } = await sb.from('finance_employee_loans')
+      .select('status, workflow_id').eq('id', ctx.cancelLoanId).maybeSingle();
+    expect(pending?.status === 'pending_approval', `expected pending_approval, got ${pending?.status}`);
+    expect(pending?.workflow_id, 'pending loan should have a workflow_id');
+
+    const cx = await api('finance/payroll/loans/cancel', staffToken, { id: ctx.cancelLoanId, reason: 'E2E cancel pending' });
+    ok(cx, `cancel pending failed: ${cx.body.message}`);
+    expect(cx.body.data.status === 'cancelled', `expected cancelled, got ${cx.body.data.status}`);
+
+    // The approval workflow is closed and no open task remains.
+    const { data: wfRow } = await sb.from('workflow_instances')
+      .select('status').eq('id', pending.workflow_id).maybeSingle();
+    expect(wfRow?.status === 'cancelled', `workflow should be cancelled, got ${wfRow?.status}`);
+    const { data: openTasks } = await sb.from('workflow_tasks')
+      .select('id').eq('workflow_id', pending.workflow_id)
+      .in('status', ['pending', 'open', 'in_progress']);
+    expect((openTasks ?? []).length === 0, 'no open workflow task may remain after cancelling a pending loan');
   });
 }

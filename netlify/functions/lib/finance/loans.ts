@@ -14,7 +14,7 @@ import { sb } from '../db';
 import { nextRef } from '../refGenerator';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { startWorkflowForRecord, cancelWorkflow } from '../workflow/service';
 import { notify } from '../notify';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
@@ -209,15 +209,33 @@ export async function settleLoan(id: string, actorId: string): Promise<LoanDto> 
   const loan = await getLoan(id);
   if (!loan) throw err(404, 'Loan not found.');
   if (loan.status !== 'active') throw err(422, `Only active loans can be settled (loan is '${loan.status}').`);
+  if (!(loan.balance > 0)) throw err(422, 'Loan has no outstanding balance to settle.');
 
+  // The LEDGER is the source of truth — record the external payment FIRST, so a
+  // balance recompute can never resurrect a settled loan. One settlement per loan
+  // (partial unique index); a concurrent double-settle loses on the insert.
   const now = new Date().toISOString();
+  const { data: ledgerRow, error: ledErr } = await sb.from('finance_loan_deductions').insert({
+    loan_id: id, run_id: null, entry_type: 'settlement',
+    amount: loan.balance, balance_after: 0,
+  }).select('id').single<{ id: string }>();
+  if (ledErr) {
+    if (ledErr.code === '23505') throw err(409, 'This loan already has a settlement recorded.');
+    throw err(500, 'settleLoan/ledger: ' + ledErr.message);
+  }
+
   const { error } = await sb.from('finance_employee_loans')
-    .update({ status: 'settled', balance: 0, settled_at: now }).eq('id', id);
-  if (error) throw err(500, 'settleLoan: ' + error.message);
+    .update({ status: 'settled', balance: 0, settled_at: now })
+    .eq('id', id).eq('status', 'active');
+  if (error) {
+    // Compensating rollback — never leave a settlement row without the settled status.
+    await sb.from('finance_loan_deductions').delete().eq('id', ledgerRow.id);
+    throw err(500, 'settleLoan: ' + error.message);
+  }
 
   await writeHrAudit({
     submoduleKey: 'finance_loan', recordId: id, actorId,
-    action: 'loan.settled', previousState: { status: 'active', balance: loan.balance }, newState: { status: 'settled', balance: 0 },
+    action: 'loan.settled', previousState: { status: 'active', balance: loan.balance }, newState: { status: 'settled', balance: 0, settlementLedgerId: ledgerRow.id },
   });
   void emitAppEvent({
     eventType: 'finance.loan.settled', sourceModule: 'finance_loan',
@@ -227,17 +245,35 @@ export async function settleLoan(id: string, actorId: string): Promise<LoanDto> 
   return (await getLoan(id))!;
 }
 
-// ── Cancel (draft / pending_approval / active → cancelled) ─────────────────────
+// ── Cancel (draft / pending_approval / rejected → cancelled) ───────────────────
 
+/**
+ * Cancel a loan that has NOT taken effect. An ACTIVE loan cannot be cancelled —
+ * its outstanding balance is real money: it must be settled (paid off) or written
+ * off through its own approval, never zeroed by a single actor's cancel click.
+ * Cancelling a pending_approval loan also cancels its open workflow instance so
+ * no orphaned approval task remains.
+ */
 export async function cancelLoan(id: string, actorId: string, reason?: string): Promise<LoanDto> {
   const loan = await getLoan(id);
   if (!loan) throw err(404, 'Loan not found.');
-  if (['settled', 'cancelled'].includes(loan.status)) {
-    throw err(422, `A ${loan.status} loan cannot be cancelled.`);
+  if (!['draft', 'pending_approval', 'rejected'].includes(loan.status)) {
+    throw err(422, loan.status === 'active'
+      ? 'An active loan cannot be cancelled — settle it (paid off) or process a write-off via approval.'
+      : `A ${loan.status} loan cannot be cancelled.`);
   }
 
-  const { error } = await sb.from('finance_employee_loans').update({ status: 'cancelled' }).eq('id', id);
-  if (error) throw err(500, 'cancelLoan: ' + error.message);
+  if (loan.status === 'pending_approval' && loan.workflowId) {
+    // Cancel the WORKFLOW — its adapter (onWorkflowCancelled) sets the loan to
+    // 'cancelled'. One authority: no direct status write alongside the engine,
+    // and no orphaned open approval task.
+    await cancelWorkflow({ workflowId: loan.workflowId, actor: { id: actorId }, reason: reason?.trim() || 'Loan cancelled by finance.' });
+  } else {
+    const { error } = await sb.from('finance_employee_loans')
+      .update({ status: 'cancelled' })
+      .eq('id', id).in('status', ['draft', 'rejected']);
+    if (error) throw err(500, 'cancelLoan: ' + error.message);
+  }
 
   await writeHrAudit({
     submoduleKey: 'finance_loan', recordId: id, actorId,

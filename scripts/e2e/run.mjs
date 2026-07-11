@@ -45,10 +45,26 @@ if (!selected.length) {
 for (const f of selected) {
   const mod = await import(new URL(`./suites/${f}`, import.meta.url));
   const title = mod.title || f.replace('.mjs', '');
+
+  // Server-health gate: once the dev server dies (e.g. Netlify OOM), every
+  // remaining suite would fail with meaningless `network: fetch failed` noise —
+  // abort with a clear reason instead, and still run cleanup for what DID run.
+  if (!(await h.isServerUp())) {
+    const remaining = selected.length - selected.indexOf(f);
+    console.error(`\n✖ Dev server at ${h.base} is DOWN — aborting before "${title}". ` +
+      `${remaining} suite(s) not run. Restart npm run dev:netlify and re-run.`);
+    h.results.push({ group: title, name: '(aborted — dev server down)', ok: false, detail: 'server unreachable before suite start' });
+    break;
+  }
+
+  const t0 = Date.now();
   console.log(`\n── ${title} ─────────────────────────────`);
   h.section(title);
   try { await mod.default(h); }
   catch (e) { console.error(`\nSuite "${title}" crashed:`, e.stack || e.message); h.results.push({ group: title, name: '(suite crashed)', ok: false, detail: e.message }); }
+  const secs = ((Date.now() - t0) / 1000).toFixed(1);
+  const mem  = Math.round(process.memoryUsage().rss / 1048576);
+  console.log(`\n   [${title}] ${secs}s · runner rss ${mem}MB`);
 }
 
 await h.runCleanup();

@@ -19,8 +19,7 @@ import {
   lockInputs,
   calculateRun,
   submitRun,
-  approveRun,
-  rejectRun,
+  decideRunApproval,
   lockRun,
   reopenRun,
   listRunInputs,
@@ -249,23 +248,25 @@ router.post('/payroll/runs/submit', async c => {
 });
 
 // POST /api/finance/payroll/runs/approve
-// Approves a pending_approval run.  SoD enforced: actor must differ from run.createdBy.
+// Approves a pending_approval run by DECIDING its open workflow task — the central
+// workflow engine is the single approval authority (the adapter transitions the run).
+// SoD enforced (actor ≠ preparer) + engine assignment rule (actor must be the assignee).
 // Permission: finance.payroll.approve (finance_manager / admin only).
 router.post('/payroll/runs/approve', async c => {
   const actor = await requirePermission(c, 'finance.payroll.approve');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), comment: z.string().max(2000).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
-    await approveRun(v.data.id, actor.id);
-    const data = await getPayrollRun(v.data.id);
+    const data = await decideRunApproval({ runId: v.data.id, actor: { id: actor.id, role: actor.role }, decision: 'approved', comment: v.data.comment });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
 
 // POST /api/finance/payroll/runs/reject
-// Rejects a pending_approval run, returning it to 'calculated' so the preparer can revise.
-// A mandatory reason is required and the submitter is notified.
-// Permission: finance.payroll.approve (same authority as approve — SoD mirrors approve path).
+// Rejects a pending_approval run by deciding its open workflow task; the adapter
+// returns the run to 'returned' for the preparer to revise + resubmit.
+// A mandatory reason is required; the engine notifies the submitter.
+// Permission: finance.payroll.approve (same authority as approve).
 router.post('/payroll/runs/reject', async c => {
   const actor = await requirePermission(c, 'finance.payroll.approve');
   const v = zv(c, z.object({
@@ -274,7 +275,7 @@ router.post('/payroll/runs/reject', async c => {
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await rejectRun(v.data.id, actor.id, v.data.reason);
+    const data = await decideRunApproval({ runId: v.data.id, actor: { id: actor.id, role: actor.role }, decision: 'rejected', comment: v.data.reason });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

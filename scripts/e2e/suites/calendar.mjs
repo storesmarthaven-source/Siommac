@@ -208,6 +208,47 @@ export default async function run(h) {
     fails(c); expect(c.status === 403, `cancel expected 403, got ${c.status}`);
   });
 
+  await test('central policy: a MANAGER cannot read or edit someone else\'s PERSONAL task', async () => {
+    // get by UUID — calendar.manage must NOT reach a personal item.
+    const g = await api('calendar/get', T.mgr, { id: personalId });
+    fails(g, 'manager get on a personal task must be refused');
+    // update/status via manage must also be refused.
+    const u = await api('calendar/update', T.mgr, { id: personalId, patch: { title: 'mgr hijack' } });
+    fails(u); expect(u.status === 403, `manager update on personal expected 403, got ${u.status}`);
+    const st = await api('calendar/task/status', T.mgr, { id: personalId, status: 'done' });
+    fails(st); expect(st.status === 403, `manager status on personal expected 403, got ${st.status}`);
+  });
+
+  await test('central policy: a TEAM entry is not readable by UUID for a non-participant', async () => {
+    const r = await api('calendar/task/create', T.emp1, { title: `${TAG} team item`, startsOn: dayKey(2), visibility: 'team' });
+    ok(r); const teamId = r.body.id; entryIds.push(teamId);
+    // Non-participant plain employee: list excludes it AND get by UUID is refused.
+    const items = await listItems(T.emp2, dayKey(-1), dayKey(10));
+    expect(!items.some(i => i.id === teamId), 'emp2 must not see a team entry in list');
+    const g = await api('calendar/get', T.emp2, { id: teamId });
+    fails(g, 'team entry must not leak to a non-participant via get-by-UUID');
+    // The manager (calendar.manage) DOES see team scope.
+    const mgrGet = await api('calendar/get', T.mgr, { id: teamId });
+    ok(mgrGet, 'manager should read a team entry');
+  });
+
+  await test('central policy: an invited ATTENDEE sees the activity in list + get', async () => {
+    const r = await api('calendar/activity/create', T.emp1, {
+      title: `${TAG} attendee visibility`, startsOn: dayKey(3), visibility: 'personal',
+      attendeeUserIds: [emp2.id],
+    });
+    ok(r); const actId = r.body.id; entryIds.push(actId);
+    const items = await listItems(T.emp2, dayKey(-1), dayKey(10));
+    expect(items.some(i => i.id === actId), 'invited attendee must see the activity in list');
+    const g = await api('calendar/get', T.emp2, { id: actId });
+    ok(g, 'invited attendee must be able to get the activity');
+  });
+
+  await test('list range above 366 days is refused (400)', async () => {
+    const r = await api('calendar/list', T.emp1, { from: dayKey(0), to: dayKey(400) });
+    fails(r); expect(r.status === 400, `expected 400 for oversized range, got ${r.status}`);
+  });
+
   await test('a user DENIED calendar.view is blocked from list (403)', async () => {
     await sb.from('user_permissions').upsert(
       { user_id: emp2.id, permission: 'calendar.view', granted: false, set_by: 'e2e', set_at: new Date().toISOString() },
@@ -215,6 +256,18 @@ export default async function run(h) {
     overrides.push({ userId: emp2.id, permission: 'calendar.view' });
     const r = await api('calendar/list', T.emp2, { from: dayKey(0), to: dayKey(3) });
     fails(r); expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('an explicit DENY on calendar.task.manage_own blocks editing your OWN task', async () => {
+    // FE gate ⇒ BE gate: calendar.view alone must not allow mutations.
+    await sb.from('user_permissions').upsert(
+      { user_id: emp1.id, permission: 'calendar.task.manage_own', granted: false, set_by: 'e2e', set_at: new Date().toISOString() },
+      { onConflict: 'user_id,permission' });
+    overrides.push({ userId: emp1.id, permission: 'calendar.task.manage_own' });
+    const u = await api('calendar/update', T.emp1, { id: personalId, patch: { title: 'should be blocked' } });
+    fails(u); expect(u.status === 403, `denied manage_own update expected 403, got ${u.status}`);
+    // Remove the deny so later tests aren't poisoned.
+    await sb.from('user_permissions').delete().eq('user_id', emp1.id).eq('permission', 'calendar.task.manage_own');
   });
 
   // ── Deadline adapters (path runs + shape) ───────────────────────────────────

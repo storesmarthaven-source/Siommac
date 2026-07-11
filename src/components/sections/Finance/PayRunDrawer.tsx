@@ -61,6 +61,7 @@ function runStatusTone(status: string): HrfinTone {
     case 'calculated':
     case 'input_locked':
       return 'wn';
+    case 'returned':  return 'bad';  // rejected/returned by approval — needs revision
     case 'cancelled': return 'bad';
     default:         return 'nu';  // draft
   }
@@ -1310,8 +1311,8 @@ function DrawerFooter({
   return (
     <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: '100%' }}>
       {s === 'draft'           && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>}
-      {s === 'input_locked'   && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onCalculate(run)}>Calculate</button>}
-      {s === 'calculated'     && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onSubmit(run)}>Submit for Approval</button>}
+      {['input_locked', 'returned'].includes(s) && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onCalculate(run)}>Calculate</button>}
+      {['calculated', 'returned'].includes(s)   && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit for Approval' : 'Submit for Approval'}</button>}
       {s === 'pending_approval' && canApprove && <button class="hrfin-action is-primary" onClick={() => actions.onApprove(run)}>Approve</button>}
       {s === 'pending_approval' && canApprove && <button class="hrfin-action is-danger"  onClick={() => actions.onReject(run)}>Reject</button>}
       {s === 'approved'      && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockRun(run)}>Lock Run</button>}

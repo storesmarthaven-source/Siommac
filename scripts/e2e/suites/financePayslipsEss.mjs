@@ -318,4 +318,20 @@ export default async function run(h) {
       expect(k in r.body.data[0], 'delivery missing field: ' + k);
     }
   });
+
+  await test('a payslip is NEVER emailed unprotected: no DOB on file → delivery skipped', async () => {
+    // emp1 is a synthetic TAG user — mutating it is safe. Give it an EMAIL (so the
+    // no-recipient skip doesn't mask the check) but clear the DOB.
+    const { error: clrErr } = await sb.from('app_users')
+      .update({ date_of_birth: null, email: `${TAG.toLowerCase()}_psl1@e2e.local` })
+      .eq('id', emp1Id);
+    expect(!clrErr, `clear DOB failed: ${clrErr?.message}`);
+
+    const r = await api('finance/payroll/payslips/deliver', fmgrToken, { payslipId: ctx.payslip1Id });
+    ok(r, `single deliver failed: ${r.body.message}`);
+    const d = r.body.data;
+    expect(d.status === 'skipped', `expected skipped (unprotectable PDF), got ${d.status}`);
+    expect(d.passwordProtected === false, 'passwordProtected must be false for a skipped no-DOB delivery');
+    expect(/date of birth/i.test(d.error ?? ''), `skip reason should cite the missing DOB, got: ${d.error}`);
+  });
 }

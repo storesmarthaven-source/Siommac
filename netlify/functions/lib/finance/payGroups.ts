@@ -118,18 +118,39 @@ export interface AssignEmployeeInput {
 export async function assignEmployee(input: AssignEmployeeInput, actorId: string): Promise<{ employeeId: string; payGroupId: string }> {
   const group = await getPayGroup(input.payGroupId);
   if (!group) throw Object.assign(new Error('Pay group not found.'), { status: 404 });
+  if (input.effectiveTo && input.effectiveTo < input.effectiveFrom) {
+    throw Object.assign(new Error('effectiveTo must be on or after effectiveFrom.'), { status: 422 });
+  }
+
+  // Business intent: moving to a new group ENDS the previous membership — close
+  // any open assignment that started before this one (ends the day before the
+  // new start). Overlaps the close can't resolve are rejected by the DB
+  // exclusion constraint (one active group per employee per date).
+  const dayBefore = new Date(Date.parse(input.effectiveFrom) - 86_400_000).toISOString().slice(0, 10);
+  const { error: closeErr } = await sb.from('finance_employee_pay_group_assignments')
+    .update({ effective_to: dayBefore })
+    .eq('employee_id', input.employeeId)
+    .is('effective_to', null)
+    .lt('effective_from', input.effectiveFrom);
+  if (closeErr) throw Object.assign(new Error('assignEmployee/close-previous: ' + closeErr.message), { status: 500 });
 
   const { error } = await sb.from('finance_employee_pay_group_assignments').upsert({
     employee_id: input.employeeId, pay_group_id: input.payGroupId,
     effective_from: input.effectiveFrom, effective_to: input.effectiveTo ?? null,
     created_by: actorId,
   }, { onConflict: 'employee_id,pay_group_id,effective_from' });
-  if (error) throw Object.assign(new Error('assignEmployee: ' + error.message), { status: 500 });
+  if (error) {
+    // 23P01 = exclusion violation — the requested range still overlaps another assignment.
+    if (error.code === '23P01') {
+      throw Object.assign(new Error('This employee already has a pay-group assignment covering part of that period. End the existing assignment first.'), { status: 409 });
+    }
+    throw Object.assign(new Error('assignEmployee: ' + error.message), { status: 500 });
+  }
 
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: input.payGroupId, actorId,
     action: 'pay_group.employee_assigned',
-    newState: { employeeId: input.employeeId, payGroupId: input.payGroupId, effectiveFrom: input.effectiveFrom },
+    newState: { employeeId: input.employeeId, payGroupId: input.payGroupId, effectiveFrom: input.effectiveFrom, effectiveTo: input.effectiveTo ?? null },
   });
   return { employeeId: input.employeeId, payGroupId: input.payGroupId };
 }

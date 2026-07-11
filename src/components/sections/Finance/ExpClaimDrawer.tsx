@@ -404,9 +404,6 @@ export function ExpClaimDrawer({
                     <div key={entry.id} class="hrfin-metric-row" style={{ alignItems: 'flex-start' }}>
                       <span>
                         <b style={{ fontSize: 13 }}>{humanize(entry.action)}</b>
-                        {entry.summary && (
-                          <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>{entry.summary}</span>
-                        )}
                         {entry.reason && (
                           <span class="hse-muted" style={{ display: 'block', fontSize: 11 }}>Reason: {entry.reason}</span>
                         )}

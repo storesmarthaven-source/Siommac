@@ -101,9 +101,10 @@ export interface AttendanceImportResult {
   updated: number;
   skipped: number;
   errors: Array<{ row: number; employee?: string; message: string }>;
+  contentHash: string;
 }
 export const useImportAttendance = () =>
-  useAttendanceMutation<{ rows: AttendanceImportRow[] }, AttendanceImportResult>('hr/attendance/records/import');
+  useAttendanceMutation<{ rows: AttendanceImportRow[]; overwriteExisting?: boolean }, AttendanceImportResult>('hr/attendance/records/import');
 
 export const usePunchIn        = () => useAttendanceMutation<PunchInArgs, AttendanceRecord>('hr/attendance/punch/in');
 export const usePunchOut       = () => useAttendanceMutation<PunchOutArgs, AttendanceRecord>('hr/attendance/punch/out');

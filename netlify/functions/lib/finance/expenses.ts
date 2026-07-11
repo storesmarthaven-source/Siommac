@@ -1029,7 +1029,6 @@ export interface ExpenseAuditEntry {
   id: string;
   actorId: string | null;
   action: string;
-  summary: string | null;
   previousState: Record<string, unknown> | null;
   newState: Record<string, unknown> | null;
   reason: string | null;
@@ -1037,22 +1036,22 @@ export interface ExpenseAuditEntry {
 }
 
 export async function listExpenseAuditLog(claimId: string): Promise<ExpenseAuditEntry[]> {
+  // NOTE: hr_audit_log has NO `summary` column — selecting one 400s the whole query.
   const { data, error } = await sb
     .from('hr_audit_log')
-    .select('id, actor_id, action, summary, previous_state, new_state, reason, created_at')
+    .select('id, actor_id, action, previous_state, new_state, reason, created_at')
     .eq('submodule_key', 'finance_expenses')
     .eq('record_id', claimId)
     .order('created_at', { ascending: true });
   if (error) throw Object.assign(new Error('listExpenseAuditLog: ' + error.message), { status: 500 });
   return ((data ?? []) as Array<{
-    id: string; actor_id: string | null; action: string; summary: string | null;
+    id: string; actor_id: string | null; action: string;
     previous_state: Record<string, unknown> | null; new_state: Record<string, unknown> | null;
     reason: string | null; created_at: string;
   }>).map(r => ({
     id: r.id,
     actorId: r.actor_id,
     action: r.action,
-    summary: r.summary,
     previousState: r.previous_state,
     newState: r.new_state,
     reason: r.reason,

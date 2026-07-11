@@ -107,13 +107,23 @@ export class Harness {
   /** Register a cleanup closure; run LIFO after all suites finish. */
   onCleanup = (fn) => { this._cleanups.push(fn); };
 
+  /** Lightweight liveness probe (no auth, no DB) — true when the server answers. */
+  async isServerUp() {
+    try {
+      const res = await fetch(`${this.base}/api/ping`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"args":{}}',
+      });
+      return !!res && res.ok;
+    } catch { return false; }
+  }
+
   /** Fail fast with a clear message if the dev server isn't up. */
   async ping() {
     try {
-      const res = await fetch(`${this.base}/api/communications/summary`, {
+      const res = await fetch(`${this.base}/api/ping`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{"args":{}}',
       });
-      if (!res) throw new Error('no response');
+      if (!res || !res.ok) throw new Error('no response');
     } catch {
       console.error(`\nCannot reach ${this.base}. Start the dev server first:  npm run dev:netlify\n`);
       process.exit(2);

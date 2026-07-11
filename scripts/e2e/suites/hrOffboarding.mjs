@@ -33,7 +33,11 @@ export default async function run(h) {
     try { if (ctx.caseId) await sb.from('hr_offboarding_cases').delete().eq('id', ctx.caseId); } catch {}
     try { await sb.from('hr_offboarding_cases').delete().eq('employee_id', empId); } catch {}
     try { await sb.from('hr_employee_status_history').delete().eq('employee_id', empId); } catch {}
+    // Events are emitted against BOTH the employee id and the CASE id — clean both
+    // (the suite's own assertions read the case-id events; deleting only by empId leaked them).
     try { await sb.from('app_events').delete().eq('source_module', 'hr').eq('source_entity_id', empId); } catch {}
+    try { if (ctx.caseId) await sb.from('app_events').delete().eq('source_entity_id', ctx.caseId); } catch {}
+    try { if (ctx.caseId) await sb.from('hr_audit_log').delete().eq('record_id', ctx.caseId); } catch {}
     try { await sb.from('app_users').delete().in('id', [empId, staffId]); } catch {}
   });
 

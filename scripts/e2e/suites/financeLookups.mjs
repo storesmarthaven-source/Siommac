@@ -31,6 +31,17 @@
 
 export const title = 'Finance — Phase-0 Lookups + Attachments + Bridges';
 
+/** Deterministic-but-unique date from TAG + salt (finance_payroll_runs.period_month is
+ *  unique across the WHOLE table — a fixed date would collide with real runs). */
+function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = (n % 1000) + salt * 1000;
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
@@ -42,6 +53,8 @@ export default async function run(h) {
     disbId:       null,   // created disbursement id (bridge result)
     remPaye:      null,   // created PAYE remittance (bridge result)
     attachId:     null,   // created expense attachment id
+    versionId:    null,   // statutory version (only when created by this run)
+    bankAccountId: null,  // seeded bank account for the disbursement bridge
     createdUserIds: [],
   };
 
@@ -55,21 +68,38 @@ export default async function run(h) {
     }
     // Bridge rows (disbursement / remittance from run)
     if (ctx.runId) {
-      try { await sb.from('finance_remittance_lines').delete().eq('remittance_id', ctx.remPaye ?? '00000000-0000-0000-0000-000000000000'); } catch {}
-      try { await sb.from('finance_remittances').delete().in('payroll_run_id', [ctx.runId]); } catch {}
+      try {
+        // Delete lines for EVERY remittance of this run (PAYE + NIS), not just the PAYE one.
+        const { data: rems } = await sb.from('finance_remittances').select('id').eq('payroll_run_id', ctx.runId);
+        const remIds = (rems ?? []).map(r => r.id);
+        if (remIds.length) await sb.from('finance_remittance_lines').delete().in('remittance_id', remIds);
+      } catch {}
+      try { await sb.from('finance_remittances').delete().eq('payroll_run_id', ctx.runId); } catch {}
+      try { if (ctx.disbId) await sb.from('finance_disbursement_bank_files').delete().eq('disbursement_id', ctx.disbId); } catch {}
       try { await sb.from('finance_disbursement_lines').delete().eq('disbursement_id', ctx.disbId ?? '00000000-0000-0000-0000-000000000000'); } catch {}
       try { await sb.from('finance_disbursements').delete().eq('payroll_run_id', ctx.runId); } catch {}
+      try { await sb.from('finance_payslip_deliveries').delete().eq('run_id', ctx.runId); } catch {}
+      try { await sb.from('finance_payslips').delete().eq('run_id', ctx.runId); } catch {}
       try { await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
       try { await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    }
+    if (ctx.bankAccountId) {
+      try { await sb.from('finance_employee_bank_accounts').delete().eq('id', ctx.bankAccountId); } catch {}
+    }
+    if (ctx.versionId) {
+      try { await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
     }
     // Reimbursement bridge + claim
     if (ctx.claimId) {
       try { await sb.from('finance_reimbursement_handoffs').delete().eq('expense_claim_id', ctx.claimId); } catch {}
       try { await sb.from('finance_expense_claims').delete().eq('id', ctx.claimId); } catch {}
     }
-    // Audit + events cleanup
+    // Audit + events cleanup — scoped to THIS RUN'S records only. acquireActors()
+    // can hand back REAL users, so deleting hr_audit_log by actor_id would destroy
+    // their genuine audit history. record_id is the claim/disbursement we created.
     try {
-      await sb.from('hr_audit_log').delete().like('action', '%.attachment_%').in('actor_id', [fmgrId, fstaff1Id].filter(Boolean));
+      const recIds = [ctx.claimId, ctx.disbId].filter(Boolean);
+      if (recIds.length) await sb.from('hr_audit_log').delete().in('record_id', recIds);
     } catch {}
     // Users
     if (ctx.createdUserIds.length) {
@@ -94,7 +124,7 @@ export default async function run(h) {
     fmgrToken  = mint({ id: fmgrId,    username: fmgr.username,   role: 'finance_manager' });
     fstaffToken = mint({ id: fstaff1Id, username: fstaff.username, role: 'finance_staff' });
     empToken   = mint({ id: empId,     username: emp.username,    role: 'employee' });
-    ok(fmgrToken && fstaffToken && empToken, 'all tokens minted');
+    expect(fmgrToken && fstaffToken && empToken, 'all tokens minted');
   });
 
   await test('seed approved payroll run (required for bridge tests)', async () => {
@@ -111,6 +141,7 @@ export default async function run(h) {
       hs_weekly_low: 4.80,
     }).select('id').single();
     // Tolerate duplicate effective_from — fetch existing if constraint fires
+    if (ver?.id) ctx.versionId = ver.id; // track for cleanup only when WE created it
     const versionId = ver?.id ?? (await sb.from('finance_statutory_versions')
       .select('id').eq('effective_from', '1970-01-01').limit(1).single()).data?.id;
 
@@ -118,8 +149,8 @@ export default async function run(h) {
       run_no:              `TEST-LOOKUP-${TAG}`,
       status:              'approved',
       pay_frequency:       'monthly',
-      period_month:        '2026-01-01',
-      pay_date:            '2026-01-31',
+      period_month:        seedDateFromTag(TAG, 21),
+      pay_date:            seedDateFromTag(TAG, 22),
       statutory_version_id: versionId,
       net_total:           10000,
       gross_total:         12000,
@@ -128,23 +159,46 @@ export default async function run(h) {
     }).select('id').single();
     expect(!runErr, `seed run failed: ${runErr?.message}`);
     ctx.runId = run.id;
-    ok(ctx.runId, 'run seeded');
+    expect(ctx.runId, 'run seeded');
+
+    // The disbursement bridge computes from PAYSLIPS joined to run-lines, and
+    // requires every payable employee to have an active primary bank account —
+    // seed all three (mirrors the real flow: lock → payslips → disburse).
+    const { data: line, error: lineErr } = await sb.from('finance_payroll_run_lines').insert({
+      run_id: ctx.runId, employee_id: empId, net: 500.00,
+    }).select('id').single();
+    expect(!lineErr, `seed run line failed: ${lineErr?.message}`);
+    const { error: pslErr } = await sb.from('finance_payslips').insert({
+      payslip_no: `PSL-LOOKUP-${TAG.slice(-6)}`, run_id: ctx.runId,
+      run_line_id: line.id, employee_id: empId, generated_by: fmgrId,
+    });
+    expect(!pslErr, `seed payslip failed: ${pslErr?.message}`);
+    const { data: ba, error: baErr } = await sb.from('finance_employee_bank_accounts').insert({
+      employee_id: empId, bank_name: 'Republic Bank', branch: 'E2E',
+      account_type: 'savings', account_number: '1122334455', account_number_masked: '****4455',
+      is_primary: true, is_active: true, created_by: fmgrId,
+    }).select('id').single();
+    expect(!baErr, `seed bank account failed: ${baErr?.message}`);
+    ctx.bankAccountId = ba.id;
   });
 
   await test('seed expense claim (required for reimbursement bridge)', async () => {
+    // Columns match the REAL finance_expense_claims schema (expense_date + category
+    // are NOT NULL; there is no submitted_at column).
     const { data: claim, error: claimErr } = await sb.from('finance_expense_claims').insert({
       claim_no:       `TEST-CLAIM-${TAG}`,
       claimant_id:    empId,
       status:         'approved',
       title:          `E2E Test Claim ${TAG}`,
+      expense_date:   '2026-01-15',
+      category:       'travel',
       total_amount:   500,
       currency:       'TTD',
-      submitted_at:   new Date().toISOString(),
       approved_by:    fmgrId,
     }).select('id').single();
     expect(!claimErr, `seed claim failed: ${claimErr?.message}`);
     ctx.claimId = claim.id;
-    ok(ctx.claimId, 'claim seeded');
+    expect(ctx.claimId, 'claim seeded');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -152,45 +206,45 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('resolve-employees: employee DENIED (403)', async () => {
-    const r = await api(empToken, 'finance/lookups/resolve-employees', { ids: [] });
+    const r = await api('finance/lookups/resolve-employees', empToken, { ids: [] });
     fails(r, 'employee must be denied resolve-employees');
     expect(r.status === 403, 'correct 403 status');
   });
 
   await test('resolve-employees: finance_manager gets empty map for empty ids', async () => {
-    const r = await api(fmgrToken, 'finance/lookups/resolve-employees', { ids: [] });
+    const r = await api('finance/lookups/resolve-employees', fmgrToken, { ids: [] });
     ok(r, 'resolve-employees passes for finance_manager');
-    expect(Array.isArray(r.data), 'data is array');
-    expect(r.data.length === 0, 'empty ids → empty result');
+    expect(Array.isArray(r.body.data), 'data is array');
+    expect(r.body.data.length === 0, 'empty ids → empty result');
   });
 
   await test('lookups/employees: finance_manager gets employee list with required shape', async () => {
-    const r = await api(fmgrToken, 'finance/lookups/employees', {});
+    const r = await api('finance/lookups/employees', fmgrToken, {});
     ok(r, 'employees list succeeds');
-    expect(Array.isArray(r.data), 'data is array');
-    if (r.data.length > 0) {
-      const e = r.data[0];
+    expect(Array.isArray(r.body.data), 'data is array');
+    if (r.body.data.length > 0) {
+      const e = r.body.data[0];
       expect('id' in e && 'fullName' in e && 'status' in e, 'employee shape: id+fullName+status');
     }
   });
 
   await test('lookups/approved-payroll-runs: returns our seeded approved run', async () => {
-    const r = await api(fmgrToken, 'finance/lookups/approved-payroll-runs', {});
+    const r = await api('finance/lookups/approved-payroll-runs', fmgrToken, {});
     ok(r, 'approved runs succeeds');
-    expect(Array.isArray(r.data), 'data is array');
-    const found = r.data.some(run => run.id === ctx.runId);
+    expect(Array.isArray(r.body.data), 'data is array');
+    const found = r.body.data.some(run => run.id === ctx.runId);
     expect(found, 'seeded approved run appears in picker');
-    if (r.data.length > 0) {
-      const run = r.data.find(rr => rr.id === ctx.runId) ?? r.data[0];
+    if (r.body.data.length > 0) {
+      const run = r.body.data.find(rr => rr.id === ctx.runId) ?? r.body.data[0];
       expect('id' in run && 'runNo' in run && 'status' in run, 'run shape: id+runNo+status');
     }
   });
 
   await test('lookups/authorities: returns all 3 authorities with correct values', async () => {
-    const r = await api(fmgrToken, 'finance/lookups/authorities', {});
+    const r = await api('finance/lookups/authorities', fmgrToken, {});
     ok(r, 'authorities succeeds');
-    expect(Array.isArray(r.data) && r.data.length === 3, '3 authorities returned');
-    const vals = r.data.map(a => a.value).sort();
+    expect(Array.isArray(r.body.data) && r.body.data.length === 3, '3 authorities returned');
+    const vals = r.body.data.map(a => a.value).sort();
     expect(
       vals.includes('paye_bir') && vals.includes('nis_nibtt') && vals.includes('health_surcharge'),
       'all 3 authority values present',
@@ -198,9 +252,9 @@ export default async function run(h) {
   });
 
   await test('lookups/budget-categories: finance_staff can list', async () => {
-    const r = await api(fstaffToken, 'finance/lookups/budget-categories', {});
+    const r = await api('finance/lookups/budget-categories', fstaffToken, {});
     ok(r, 'budget-categories succeeds for finance_staff');
-    expect(Array.isArray(r.data), 'data is array');
+    expect(Array.isArray(r.body.data), 'data is array');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -208,7 +262,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('upload-url: employee DENIED for expense_claim (403)', async () => {
-    const r = await api(empToken, 'finance/attachments/upload-url', {
+    const r = await api('finance/attachments/upload-url', empToken, {
       entityType: 'expense_claim',
       entityId:   ctx.claimId,
       fileName:   'receipt.pdf',
@@ -219,21 +273,21 @@ export default async function run(h) {
   });
 
   await test('upload-url: finance_manager gets presigned URL (response shape)', async () => {
-    const r = await api(fmgrToken, 'finance/attachments/upload-url', {
+    const r = await api('finance/attachments/upload-url', fmgrToken, {
       entityType: 'expense_claim',
       entityId:   ctx.claimId,
       fileName:   'receipt.pdf',
       mimeType:   'application/pdf',
     });
     ok(r, 'upload-url succeeds for finance_manager');
-    expect('uploadUrl' in r.data && 'path' in r.data && 'bucket' in r.data,
+    expect('uploadUrl' in r.body.data && 'path' in r.body.data && 'bucket' in r.body.data,
       'upload-url shape: uploadUrl + path + bucket');
   });
 
   await test('complete: finance_manager can commit an expense attachment', async () => {
     // Use a fake storagePath — we're testing the DB metadata row, not Storage
     const fakePath = `e2e-test/${TAG}/receipt_${Date.now()}.pdf`;
-    const r = await api(fmgrToken, 'finance/attachments/complete', {
+    const r = await api('finance/attachments/complete', fmgrToken, {
       entityType:  'expense_claim',
       entityId:    ctx.claimId,
       fileName:    `receipt-${TAG}.pdf`,
@@ -242,10 +296,10 @@ export default async function run(h) {
       fileSize:    12345,
     });
     ok(r, 'complete succeeds');
-    expect('id' in r.data && 'fileName' in r.data && 'storagePath' in r.data,
+    expect('id' in r.body.data && 'fileName' in r.body.data && 'storagePath' in r.body.data,
       'attachment shape: id + fileName + storagePath');
-    ctx.attachId = r.data.id;
-    ok(ctx.attachId, 'attachment id captured');
+    ctx.attachId = r.body.data.id;
+    expect(ctx.attachId, 'attachment id captured');
   });
 
   await test('complete: hr_audit_log written (expense.attachment_added)', async () => {
@@ -260,21 +314,21 @@ export default async function run(h) {
   });
 
   await test('list: finance_manager can list expense attachments', async () => {
-    const r = await api(fmgrToken, 'finance/attachments/list', {
+    const r = await api('finance/attachments/list', fmgrToken, {
       entityType: 'expense_claim',
       entityId:   ctx.claimId,
     });
     ok(r, 'list succeeds');
-    expect(Array.isArray(r.data), 'data is array');
-    const found = r.data.some(a => a.id === ctx.attachId);
+    expect(Array.isArray(r.body.data), 'data is array');
+    const found = r.body.data.some(a => a.id === ctx.attachId);
     expect(found, 'our committed attachment appears in list');
-    const att = r.data.find(a => a.id === ctx.attachId) ?? r.data[0];
+    const att = r.body.data.find(a => a.id === ctx.attachId) ?? r.body.data[0];
     expect('id' in att && 'fileName' in att && 'fileSize' in att && 'createdAt' in att,
       'attachment list item shape OK');
   });
 
   await test('list: employee DENIED for expense_claim attachments (403)', async () => {
-    const r = await api(empToken, 'finance/attachments/list', {
+    const r = await api('finance/attachments/list', empToken, {
       entityType: 'expense_claim',
       entityId:   ctx.claimId,
     });
@@ -284,31 +338,31 @@ export default async function run(h) {
 
   await test('signed-url: finance_manager gets a signed URL string', async () => {
     // Use the storagePath from the committed attachment
-    const listR = await api(fmgrToken, 'finance/attachments/list', {
+    const listR = await api('finance/attachments/list', fmgrToken, {
       entityType: 'expense_claim', entityId: ctx.claimId,
     });
-    const att = listR.data?.find(a => a.id === ctx.attachId);
+    const att = listR.body.data?.find(a => a.id === ctx.attachId);
     if (!att) { console.warn('[skip] no attachment to sign'); return; }
 
     // signed-url will fail if the file doesn't actually exist in storage,
     // but the route itself should return a well-formed Supabase signed URL.
     // We accept either success or a storage 404 (the DB row logic is correct).
-    const r = await api(fmgrToken, 'finance/attachments/signed-url', {
+    const r = await api('finance/attachments/signed-url', fmgrToken, {
       entityType:  'expense_claim',
       entityId:    ctx.claimId,
       storagePath: att.storagePath,
     });
     // Accept success (storage has file) or internal error (storage missing in test env)
-    if (r.success) {
-      expect(typeof r.data?.signedUrl === 'string', 'signedUrl is a string');
-      expect(r.data.signedUrl.includes('token='), 'signed URL contains token param');
+    if (r.body.success) {
+      expect(typeof r.body.data?.signedUrl === 'string', 'signedUrl is a string');
+      expect(r.body.data.signedUrl.includes('token='), 'signed URL contains token param');
     }
     // Either way, the route pattern is exercised
-    ok(true, 'signed-url route reachable');
+    expect(true, 'signed-url route reachable');
   });
 
   await test('delete: finance_manager can delete expense attachment', async () => {
-    const r = await api(fmgrToken, 'finance/attachments/delete', {
+    const r = await api('finance/attachments/delete', fmgrToken, {
       id:         ctx.attachId,
       entityType: 'expense_claim',
       entityId:   ctx.claimId,
@@ -328,7 +382,7 @@ export default async function run(h) {
       .maybeSingle();
     // audit row may or may not exist depending on whether storage delete succeeded
     // We assert the endpoint behaved correctly (not 403/404), the rest is env-dependent
-    ok(true, 'delete endpoint reachable and returned correct status family');
+    expect(true, 'delete endpoint reachable and returned correct status family');
     ctx.attachId = null; // prevent double-cleanup
   });
 
@@ -337,7 +391,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('create-disbursement: employee DENIED (403)', async () => {
-    const r = await api(empToken, 'finance/bridges/create-disbursement', {
+    const r = await api('finance/bridges/create-disbursement', empToken, {
       payrollRunId: ctx.runId,
     });
     fails(r, 'employee must be denied create-disbursement');
@@ -345,24 +399,24 @@ export default async function run(h) {
   });
 
   await test('create-disbursement: finance_manager creates disbursement from approved run', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-disbursement', {
+    const r = await api('finance/bridges/create-disbursement', fmgrToken, {
       payrollRunId: ctx.runId,
     });
     ok(r, 'create-disbursement succeeds');
-    expect('disbursement' in r.data && 'reusedExisting' in r.data,
+    expect('disbursement' in r.body.data && 'reusedExisting' in r.body.data,
       'response shape: disbursement + reusedExisting');
-    expect(r.data.reusedExisting === false, 'first call: reusedExisting=false');
-    ctx.disbId = r.data.disbursement?.id;
-    ok(ctx.disbId, 'disbursement id captured');
+    expect(r.body.data.reusedExisting === false, 'first call: reusedExisting=false');
+    ctx.disbId = r.body.data.disbursement?.id;
+    expect(ctx.disbId, 'disbursement id captured');
   });
 
   await test('create-disbursement: second call is idempotent (reusedExisting=true)', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-disbursement', {
+    const r = await api('finance/bridges/create-disbursement', fmgrToken, {
       payrollRunId: ctx.runId,
     });
     ok(r, 'second create-disbursement succeeds');
-    expect(r.data.reusedExisting === true, 'second call: reusedExisting=true');
-    expect(r.data.disbursement?.id === ctx.disbId, 'same disbursement id returned');
+    expect(r.body.data.reusedExisting === true, 'second call: reusedExisting=true');
+    expect(r.body.data.disbursement?.id === ctx.disbId, 'same disbursement id returned');
   });
 
   await test('create-disbursement: hr_audit_log NOT double-written (first call only)', async () => {
@@ -377,40 +431,40 @@ export default async function run(h) {
   });
 
   await test('create-remittance PAYE: finance_manager creates remittance', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-remittance', {
+    const r = await api('finance/bridges/create-remittance', fmgrToken, {
       payrollRunId: ctx.runId,
       authority:    'paye_bir',
       dueDate:      '2026-02-28',
     });
     ok(r, 'create-remittance (paye_bir) succeeds');
-    expect('remittance' in r.data && 'reusedExisting' in r.data,
+    expect('remittance' in r.body.data && 'reusedExisting' in r.body.data,
       'response shape: remittance + reusedExisting');
-    expect(r.data.reusedExisting === false, 'first call: reusedExisting=false');
-    ctx.remPaye = r.data.remittance?.id;
-    ok(ctx.remPaye, 'PAYE remittance id captured');
+    expect(r.body.data.reusedExisting === false, 'first call: reusedExisting=false');
+    ctx.remPaye = r.body.data.remittance?.id;
+    expect(ctx.remPaye, 'PAYE remittance id captured');
   });
 
   await test('create-remittance PAYE: second call is idempotent', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-remittance', {
+    const r = await api('finance/bridges/create-remittance', fmgrToken, {
       payrollRunId: ctx.runId,
       authority:    'paye_bir',
     });
     ok(r, 'second create-remittance succeeds');
-    expect(r.data.reusedExisting === true, 'second call: reusedExisting=true');
-    expect(r.data.remittance?.id === ctx.remPaye, 'same remittance id returned');
+    expect(r.body.data.reusedExisting === true, 'second call: reusedExisting=true');
+    expect(r.body.data.remittance?.id === ctx.remPaye, 'same remittance id returned');
   });
 
   await test('create-remittance NIS: different authority → different record', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-remittance', {
+    const r = await api('finance/bridges/create-remittance', fmgrToken, {
       payrollRunId: ctx.runId,
       authority:    'nis_nibtt',
     });
     ok(r, 'NIS remittance created');
-    expect(r.data.remittance?.id !== ctx.remPaye, 'NIS remittance is distinct from PAYE');
+    expect(r.body.data.remittance?.id !== ctx.remPaye, 'NIS remittance is distinct from PAYE');
   });
 
   await test('create-reimbursement: employee DENIED (403)', async () => {
-    const r = await api(empToken, 'finance/bridges/create-reimbursement', {
+    const r = await api('finance/bridges/create-reimbursement', empToken, {
       expenseClaimId: ctx.claimId,
     });
     fails(r, 'employee must be denied create-reimbursement');
@@ -418,15 +472,15 @@ export default async function run(h) {
   });
 
   await test('create-reimbursement: finance_manager creates reimbursement handoff', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-reimbursement', {
+    const r = await api('finance/bridges/create-reimbursement', fmgrToken, {
       expenseClaimId: ctx.claimId,
       payrollRunId:   ctx.runId,
     });
     ok(r, 'create-reimbursement succeeds');
-    expect('bridgeId' in r.data && 'handoffId' in r.data && 'reusedExisting' in r.data,
+    expect('bridgeId' in r.body.data && 'handoffId' in r.body.data && 'reusedExisting' in r.body.data,
       'response shape: bridgeId + handoffId + reusedExisting');
-    expect(r.data.reusedExisting === false, 'first call: reusedExisting=false');
-    ok(r.data.bridgeId && r.data.handoffId, 'bridgeId and handoffId non-null');
+    expect(r.body.data.reusedExisting === false, 'first call: reusedExisting=false');
+    expect(r.body.data.bridgeId && r.body.data.handoffId, 'bridgeId and handoffId non-null');
   });
 
   await test('create-reimbursement: handoff_outbox row written', async () => {
@@ -440,11 +494,11 @@ export default async function run(h) {
   });
 
   await test('create-reimbursement: second call is idempotent (reusedExisting=true)', async () => {
-    const r = await api(fmgrToken, 'finance/bridges/create-reimbursement', {
+    const r = await api('finance/bridges/create-reimbursement', fmgrToken, {
       expenseClaimId: ctx.claimId,
     });
     ok(r, 'second create-reimbursement succeeds');
-    expect(r.data.reusedExisting === true, 'second call: reusedExisting=true');
+    expect(r.body.data.reusedExisting === true, 'second call: reusedExisting=true');
   });
 
   await test('create-reimbursement: hr_audit_log written (expense.reimbursement_handoff_created)', async () => {

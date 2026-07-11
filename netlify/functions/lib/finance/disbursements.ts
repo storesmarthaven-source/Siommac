@@ -442,7 +442,8 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
     title:         `Bank file ready: ${existing.disbursementNo}`,
     body:          `Bank file generated for disbursement ${existing.disbursementNo}. ` +
                    `Total: ${existing.currency} ${Number(existing.totalAmount).toFixed(2)} · ` +
-                   `${existing.employeeCount} employee(s). Download and submit to bank.`,
+                   `${existing.employeeCount} employee(s). Generic direct-credit format — verify your ` +
+                   `bank's required layout before submitting.`,
     module:        'finance_disbursements',
     severity:      'info',
     sourceType:    'disbursement',
@@ -463,7 +464,8 @@ export async function generateBankFile(id: string, actorId: string): Promise<{ f
     body:             `Bank file has been generated for disbursement ${existing.disbursementNo}. ` +
                       `Total: ${existing.currency} ${Number(existing.totalAmount).toFixed(2)} for ` +
                       `${existing.employeeCount} employee(s). File: ${filePath}. ` +
-                      `Please download and submit to the bank for processing.`,
+                      `Files use the generic direct-credit layout — verify each bank's ` +
+                      `required format before submitting for processing.`,
     notifyRole:       'finance_manager',
   });
 

@@ -67,6 +67,7 @@ function runStatusTone(status: string): HrfinTone {
     case 'pending_approval':
     case 'calculated':
     case 'input_locked':     return 'wn';
+    case 'returned':         return 'bad';  // rejected/returned by approval — needs revision
     case 'cancelled':        return 'bad';
     default:                 return 'nu';   // draft, unknown
   }
@@ -94,7 +95,7 @@ const PAGE_TABS: { key: PageTab; label: string }[] = [
 function tabFilter(runs: PayrollRun[], tab: PageTab): PayrollRun[] {
   switch (tab) {
     case 'draft':       return runs.filter(r => r.status === 'draft');
-    case 'calculating': return runs.filter(r => ['input_locked', 'calculated'].includes(r.status));
+    case 'calculating': return runs.filter(r => ['input_locked', 'calculated', 'returned'].includes(r.status));
     case 'pending':     return runs.filter(r => r.status === 'pending_approval');
     case 'approved':    return runs.filter(r => r.status === 'approved');
     case 'locked':      return runs.filter(r => r.status === 'locked');
@@ -291,7 +292,7 @@ export function PayrollOverview(): VNode {
   const totalGross      = runs.reduce((s, r) => s + (r.grossTotal || 0), 0);
   const totalNisEmp     = runs.reduce((s, r) => s + (r.nisEmployerTotal || 0), 0);
   const countLocked     = runs.filter(r => r.status === 'locked').length;
-  const countInProgress = runs.filter(r => ['draft', 'input_locked', 'calculated', 'pending_approval'].includes(r.status)).length;
+  const countInProgress = runs.filter(r => ['draft', 'input_locked', 'calculated', 'returned', 'pending_approval'].includes(r.status)).length;
   const countPending    = runs.filter(r => r.status === 'pending_approval').length;
 
   // Tab filtering + search + pagination
@@ -432,7 +433,7 @@ export function PayrollOverview(): VNode {
     onReject:      async run => {
       const reason = await dialog.prompt({
         title: `Reject run ${run.runNo}`,
-        text: 'Provide a reason for rejection. The preparer will be notified and the run returned to Calculated status.',
+        text: 'Provide a reason for rejection. The workflow task is decided as rejected; the preparer is notified and the run is returned to them for revision.',
         placeholder: 'Reason for rejection…',
         confirmText: 'Reject',
       });
@@ -460,10 +461,10 @@ export function PayrollOverview(): VNode {
     if (canManage && run.status === 'draft') {
       items.push({ key: 'lock-inputs', label: 'Lock Inputs', icon: 'gavel', onClick: () => drawerActions.onLockInputs(run) });
     }
-    if (canManage && run.status === 'input_locked') {
+    if (canManage && ['input_locked', 'returned'].includes(run.status)) {
       items.push({ key: 'calculate', label: 'Calculate', icon: 'refresh', onClick: () => drawerActions.onCalculate(run) });
     }
-    if (canManage && run.status === 'calculated') {
+    if (canManage && ['calculated', 'returned'].includes(run.status)) {
       items.push({ key: 'submit', label: 'Submit for Approval', icon: 'check', onClick: () => drawerActions.onSubmit(run) });
     }
     if (canApprove && run.status === 'pending_approval') {
@@ -569,7 +570,7 @@ export function PayrollOverview(): VNode {
             if (total === 0) return null;
             const barItems = [
               { label: 'Draft',           n: runs.filter(r => r.status === 'draft').length,                                         tone: 'accent'  as const },
-              { label: 'Calculating',      n: runs.filter(r => ['input_locked','calculated'].includes(r.status)).length,              tone: 'warning' as const },
+              { label: 'Calculating',      n: runs.filter(r => ['input_locked','calculated','returned'].includes(r.status)).length,   tone: 'warning' as const },
               { label: 'Pending',          n: runs.filter(r => r.status === 'pending_approval').length,                               tone: 'danger'  as const },
               { label: 'Locked/Approved',  n: runs.filter(r => ['approved','locked','exported'].includes(r.status)).length,           tone: 'success' as const },
             ]

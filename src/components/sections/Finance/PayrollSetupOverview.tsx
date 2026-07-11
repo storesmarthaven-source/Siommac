@@ -205,9 +205,11 @@ function LoansPanel(): VNode {
         if (ok) void run(settleMut.mutateAsync({ id: l.id }), 'Loan settled.');
       } });
     }
-    if (!['settled', 'cancelled'].includes(l.status)) {
+    // An ACTIVE loan cannot be cancelled (outstanding balance is real money) —
+    // it is settled (paid off) or written off via approval. Mirrors the BE gate.
+    if (['draft', 'pending_approval', 'rejected'].includes(l.status)) {
       items.push({ key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger', onClick: async () => {
-        const reason = await dialog.prompt({ title: `Cancel ${l.reference}`, text: 'Cancelling stops any future payroll deductions. Provide a reason (audit-logged).', placeholder: 'Reason…', confirmText: 'Cancel loan' });
+        const reason = await dialog.prompt({ title: `Cancel ${l.reference}`, text: 'Cancelling withdraws this loan before it takes effect (any open approval is closed). Provide a reason (audit-logged).', placeholder: 'Reason…', confirmText: 'Cancel loan' });
         if (reason === null) return;
         void run(cancelMut.mutateAsync({ id: l.id, reason: reason.trim() || undefined }), 'Loan cancelled.');
       } });

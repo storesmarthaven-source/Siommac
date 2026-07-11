@@ -216,35 +216,25 @@ router.post('/reject', async c => {
   if (!v.ok) return v.response;
   const { approvalId, reason } = v.data;
 
-  const { data: row, error: fetchErr } = await sb
-    .from('permission_grant_approvals')
-    .select('*')
-    .eq('id', approvalId)
-    .maybeSingle<ApprovalRow>();
-
-  if (fetchErr) {
-    console.error('[approvals/reject] fetch error:', fetchErr.message);
-    return c.json({ success: false, message: 'Failed to load approval.' }, 500);
-  }
-  if (!row) return c.json({ success: false, message: 'Approval not found.' }, 404);
-  if (row.status !== 'pending') {
-    return c.json({ success: false, message: `Cannot reject: request is already ${row.status}.` }, 400);
-  }
-
-  // Maker ≠ checker
-  if (row.requested_by === actor.id) {
-    return c.json({ success: false, code: 'self_approval', message: 'You cannot reject your own permission grant request.' }, 403);
-  }
-
-  const now = new Date().toISOString();
-  const { error } = await sb
-    .from('permission_grant_approvals')
-    .update({ status: 'rejected', decided_by: actor.id, decided_at: now, decision_reason: reason ?? null })
-    .eq('id', approvalId);
-
-  if (error) {
-    console.error('[approvals/reject] error:', error.message);
+  // ONE atomic transaction (row lock + pending re-check + maker≠checker inside
+  // the tx) — a concurrent approve can no longer apply the grant between a
+  // read and this status flip.
+  const { data: rpcData, error: rpcErr } = await sb.rpc('reject_permission_grant_tx', {
+    p_approval_id: approvalId,
+    p_checker_id:  actor.id,
+    p_reason:      reason ?? '',
+  });
+  if (rpcErr) {
+    console.error('[approvals/reject] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to reject approval.' }, 500);
+  }
+  const row = (rpcData ?? {}) as { status: string; current?: string; permission_key?: string; requested_by?: string };
+  switch (row.status) {
+    case 'rejected':      break;
+    case 'not_found':     return c.json({ success: false, message: 'Approval not found.' }, 404);
+    case 'not_pending':   return c.json({ success: false, message: `Cannot reject: request is already ${row.current}.` }, 400);
+    case 'self_approval': return c.json({ success: false, code: 'self_approval', message: 'You cannot reject your own permission grant request.' }, 403);
+    default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
   }
 
   await log_(actor, 'permission_grant_rejected', 'permission_grant_approval', approvalId,
@@ -271,34 +261,23 @@ router.post('/cancel', async c => {
   if (!v.ok) return v.response;
   const { approvalId } = v.data;
 
-  const { data: row, error: fetchErr } = await sb
-    .from('permission_grant_approvals')
-    .select('id, status, requested_by, permission_key')
-    .eq('id', approvalId)
-    .maybeSingle<Pick<ApprovalRow, 'id' | 'status' | 'requested_by' | 'permission_key'>>();
-
-  if (fetchErr) {
-    console.error('[approvals/cancel] fetch error:', fetchErr.message);
-    return c.json({ success: false, message: 'Failed to load approval.' }, 500);
-  }
-  if (!row) return c.json({ success: false, message: 'Approval not found.' }, 404);
-  if (row.status !== 'pending') {
-    return c.json({ success: false, message: `Cannot cancel: request is already ${row.status}.` }, 400);
-  }
-
-  // Only the requester can cancel
-  if (row.requested_by !== actor.id) {
-    return c.json({ success: false, message: 'Only the requester can cancel this approval request.' }, 403);
-  }
-
-  const { error } = await sb
-    .from('permission_grant_approvals')
-    .update({ status: 'cancelled', decided_by: actor.id, decided_at: new Date().toISOString() })
-    .eq('id', approvalId);
-
-  if (error) {
-    console.error('[approvals/cancel] error:', error.message);
+  // ONE atomic transaction (row lock + pending re-check + requester-only inside
+  // the tx) — cannot race a concurrent approve.
+  const { data: rpcData, error: rpcErr } = await sb.rpc('cancel_permission_grant_tx', {
+    p_approval_id: approvalId,
+    p_actor_id:    actor.id,
+  });
+  if (rpcErr) {
+    console.error('[approvals/cancel] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to cancel approval.' }, 500);
+  }
+  const row = (rpcData ?? {}) as { status: string; current?: string; permission_key?: string };
+  switch (row.status) {
+    case 'cancelled':     break;
+    case 'not_found':     return c.json({ success: false, message: 'Approval not found.' }, 404);
+    case 'not_pending':   return c.json({ success: false, message: `Cannot cancel: request is already ${row.current}.` }, 400);
+    case 'not_requester': return c.json({ success: false, message: 'Only the requester can cancel this approval request.' }, 403);
+    default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
   }
 
   await log_(actor, 'permission_grant_cancelled', 'permission_grant_approval', approvalId,

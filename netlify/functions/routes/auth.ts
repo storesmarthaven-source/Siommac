@@ -94,7 +94,7 @@ export async function buildSessionPayload(
     publicAvatar ? Promise.resolve(publicAvatar) : getProfileSignedUrl(u.id, u.profile_image),
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
-    issueRefreshToken(u.id, device),
+    issueRefreshToken(u.id, device, amr),
     // superadmin needs no overrides (role default already grants everything)
     u.role === 'superadmin'
       ? Promise.resolve([] as { permission: string; granted: boolean }[])

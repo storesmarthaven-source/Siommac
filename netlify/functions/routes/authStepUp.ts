@@ -14,7 +14,7 @@
 
 import { Hono }       from 'hono';
 import { z }          from 'zod';
-import { requireUser, signUser } from '../lib/auth';
+import { requireUser, signUser, persistSessionAuthClaims } from '../lib/auth';
 import { checkCodeVerifyLimit, checkAuthReadLimit } from '../lib/ratelimit';
 import { verifyCode }            from '../lib/totp';
 import {
@@ -143,14 +143,18 @@ router.post('/verify', async c => {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-/** Re-issue a fresh access token with updated mfaVerifiedAt and mfaSatisfied. */
+/** Re-issue a fresh access token with updated mfaVerifiedAt and mfaSatisfied,
+ *  and persist the elevated claims on the refresh session so a later token
+ *  rotation keeps the step-up strength instead of downgrading to login-time. */
 function issueStepUpToken(user: AppUser, factorMethod: 'otp' | 'webauthn'): string {
-  return signUser(user, {
+  const claims = {
     amr:           ['pwd', factorMethod],
     mfaSatisfied:  true,
     mfaVerifiedAt: new Date().toISOString(),
-    authStrength:  'mfa',
-  });
+    authStrength:  'mfa' as const,
+  };
+  void persistSessionAuthClaims(user.id, claims);
+  return signUser(user, claims);
 }
 
 /** Fire-and-forget step-up audit event. */

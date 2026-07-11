@@ -482,6 +482,49 @@ export default async function run(h) {
     expect(got, 'hr.attendance.imported app_event not found');
   });
 
+  await test('re-importing IMPORT-sourced rows applies without the overwrite flag (idempotent re-run)', async () => {
+    const r = await api('hr/attendance/records/import', staffToken, {
+      rows: [{ employeeId: emp1Id, workDate: importDates[0], punchIn: '08:15', punchOut: '16:45' }],
+    });
+    ok(r, `re-import failed: ${r.body.message}`);
+    expect(r.body.data.updated === 1, `re-import should update 1, got ${JSON.stringify(r.body.data)}`);
+  });
+
+  await test('a LIVE punch is PROTECTED: colliding row skips without overwriteExisting, applies with it', async () => {
+    const liveDate = '2031-04-03';
+    // Seed a live (mobile) punch record directly.
+    const { data: live, error: liveErr } = await sb.from('hr_attendance_records').insert({
+      record_no: `ATR-E2E-${TAG.slice(-6)}`, employee_id: emp1Id, work_date: liveDate,
+      punch_in_at: `${liveDate}T08:00:00.000Z`, punch_out_at: `${liveDate}T16:00:00.000Z`,
+      source: 'mobile', status: 'present',
+    }).select('id').single();
+    expect(!liveErr, `seed live record failed: ${liveErr?.message}`);
+
+    // Without the flag → skipped, live record untouched.
+    const r1 = await api('hr/attendance/records/import', staffToken, {
+      rows: [{ employeeId: emp1Id, workDate: liveDate, punchIn: '09:00', punchOut: '17:00' }],
+    });
+    ok(r1, `protected import call failed: ${r1.body.message}`);
+    expect(r1.body.data.skipped === 1 && r1.body.data.updated === 0, `live collision should skip, got ${JSON.stringify(r1.body.data)}`);
+    expect(/overwrite/i.test(r1.body.data.errors[0]?.message ?? ''), 'skip reason should mention the overwrite flag');
+    const { data: after1 } = await sb.from('hr_attendance_records').select('source, punch_in_at').eq('id', live.id).maybeSingle();
+    expect(after1?.source === 'mobile', 'live record must be untouched without the flag');
+
+    // With the flag → replaced (correction mode).
+    const r2 = await api('hr/attendance/records/import', staffToken, {
+      rows: [{ employeeId: emp1Id, workDate: liveDate, punchIn: '09:00', punchOut: '17:00' }],
+      overwriteExisting: true,
+    });
+    ok(r2, `overwrite import failed: ${r2.body.message}`);
+    expect(r2.body.data.updated === 1, `overwrite should update 1, got ${JSON.stringify(r2.body.data)}`);
+    const { data: after2 } = await sb.from('hr_attendance_records').select('source').eq('id', live.id).maybeSingle();
+    expect(after2?.source === 'import', 'record should now be import-sourced');
+
+    // Cleanup the seeded live-date record.
+    try { await sb.from('hr_attendance_exceptions').delete().eq('employee_id', emp1Id).eq('work_date', liveDate); } catch {}
+    try { await sb.from('hr_attendance_records').delete().eq('id', live.id); } catch {}
+  });
+
   await test('import cleanup (compensating delete)', async () => {
     try { await sb.from('hr_attendance_exceptions').delete().eq('employee_id', emp1Id).in('work_date', importDates); } catch {}
     try { await sb.from('hr_attendance_records').delete().eq('employee_id', emp1Id).in('work_date', importDates); } catch {}

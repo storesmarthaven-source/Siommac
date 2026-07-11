@@ -9,8 +9,12 @@
 // Decoupled from the run: a failed/skipped send NEVER invalidates the run.
 // When RESEND_API_KEY is absent (dev / E2E), the send is recorded as 'skipped'
 // rather than 'failed', so downstream flows/tests don't depend on a live mailbox.
-// Password = employee date of birth DDMMYYYY (a standard T&T payroll convention);
-// omitted (unprotected) when no DOB is on file.
+// Password = employee date of birth DDMMYYYY (a standard T&T payroll convention).
+// A payslip is NEVER emailed unprotected: with no DOB on file the delivery is
+// recorded as 'skipped' and the employee uses the authenticated ESS download.
+// Dup-safety: the delivery row is written as 'queued' BEFORE the send and
+// updated after — a crash between send and record leaves a visible queued row
+// instead of silently allowing a duplicate email on retry.
 // ============================================================================
 
 import { sb } from '../db';
@@ -65,19 +69,25 @@ function maskEmail(email: string): string {
   return `${user.slice(0, 1)}***@${domain}`;
 }
 
-function buildDeliveryHtml(payslipNo: string, period: string, employer: string, employeeName: string, protectedPdf: boolean): string {
+/** Escape user-controlled values interpolated into the email HTML. */
+function escHtml(s: string): string {
+  return s.replace(/[&<>"']/g, c => (
+    { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>
+  )[c] ?? c);
+}
+
+function buildDeliveryHtml(payslipNo: string, period: string, employer: string, employeeName: string): string {
+  const emp = escHtml(employer);
   return `<!DOCTYPE html><html><body style="font-family:Arial,Helvetica,sans-serif;color:#1b2d54;">
   <div style="max-width:560px;margin:0 auto;padding:24px;">
-    <h2 style="color:#1b2d54;margin:0 0 4px;">${employer}</h2>
+    <h2 style="color:#1b2d54;margin:0 0 4px;">${emp}</h2>
     <p style="color:#64748b;margin:0 0 18px;font-size:13px;">Payroll</p>
-    <p>Dear ${employeeName},</p>
-    <p>Your payslip <strong>${payslipNo}</strong> for <strong>${period}</strong> is attached as a PDF.</p>
-    ${protectedPdf
-      ? `<p style="background:#f2f6fc;border:1px solid #dde3ec;border-radius:8px;padding:12px;font-size:13px;">
-           The PDF is password-protected. Your password is your <strong>date of birth</strong> in
-           <strong>DDMMYYYY</strong> format (e.g. 07&nbsp;March&nbsp;1990 → <code>07031990</code>).</p>`
-      : ``}
-    <p style="font-size:12px;color:#64748b;margin-top:18px;">This is an automated message from ${employer} payroll. If you did not expect this, contact your payroll administrator.</p>
+    <p>Dear ${escHtml(employeeName)},</p>
+    <p>Your payslip <strong>${escHtml(payslipNo)}</strong> for <strong>${escHtml(period)}</strong> is attached as a PDF.</p>
+    <p style="background:#f2f6fc;border:1px solid #dde3ec;border-radius:8px;padding:12px;font-size:13px;">
+      The PDF is password-protected. Your password is your <strong>date of birth</strong> in
+      <strong>DDMMYYYY</strong> format (e.g. 07&nbsp;March&nbsp;1990 → <code>07031990</code>).</p>
+    <p style="font-size:12px;color:#64748b;margin-top:18px;">This is an automated message from ${emp} payroll. If you did not expect this, contact your payroll administrator.</p>
   </div></body></html>`;
 }
 
@@ -105,37 +115,54 @@ export async function deliverPayslip(payslipId: string, actorId: string): Promis
   const recipient = emp?.email?.trim() || emp?.personal_email?.trim() || null;
   const password = derivePassword(emp?.date_of_birth);
   const snapshot = await buildPayslipSnapshot(payslipId);
-
-  let status: PayslipDeliveryDto['status'] = 'sent';
-  let error: string | null = null;
   const apiKey = process.env.RESEND_API_KEY;
 
-  if (!recipient) { status = 'skipped'; error = 'No email address on file for this employee.'; }
-  else if (!apiKey) { status = 'skipped'; error = 'Email delivery disabled (RESEND_API_KEY not set).'; }
-  else {
+  // Skip reasons that make sending impossible or UNSAFE. A payslip is NEVER
+  // emailed without password protection — no DOB means ESS download only.
+  const skipReason =
+    !recipient ? 'No email address on file for this employee.' :
+    !password  ? 'No date of birth on file — the PDF cannot be password-protected. Employee must download via the self-service portal.' :
+    !apiKey    ? 'Email delivery disabled (RESEND_API_KEY not set).' :
+    null;
+
+  // Record the delivery attempt BEFORE sending (queued-first): a crash between
+  // send and record leaves a visible 'queued' row for the operator, never a
+  // silent state where a retry double-emails the payslip.
+  const nowIso = new Date().toISOString();
+  const { data: queued, error: insErr } = await sb.from('finance_payslip_deliveries').insert({
+    payslip_id: ps.id, run_id: ps.run_id, employee_id: ps.employee_id,
+    channel: 'email', recipient: recipient ? maskEmail(recipient) : null,
+    status: skipReason ? 'skipped' : 'queued',
+    password_protected: !skipReason, attempts: 1,
+    error: skipReason, sent_at: null, created_by: actorId, updated_at: nowIso,
+  }).select('*').single<DbDeliveryRow>();
+  if (insErr) throw Object.assign(new Error('deliverPayslip/record: ' + insErr.message), { status: 500 });
+
+  let status: PayslipDeliveryDto['status'] = skipReason ? 'skipped' : 'sent';
+  let error: string | null = skipReason;
+
+  if (!skipReason) {
     try {
-      const pdf = await renderPayslipPdf(snapshot, password ? { password } : {});
+      const pdf = await renderPayslipPdf(snapshot, { password: password! });
       const { Resend } = await import('resend');
-      const resend = new Resend(apiKey);
+      const resend = new Resend(apiKey!);
       const from = process.env.RESEND_FROM_EMAIL ?? 'Siomac <no-reply@siomac.app>';
       const { error: sendErr } = await resend.emails.send({
-        from, to: [recipient],
+        from, to: [recipient!],
         subject: `Payslip ${snapshot.payslipNo} — ${snapshot.periodLabel}`,
-        html: buildDeliveryHtml(snapshot.payslipNo, snapshot.periodLabel, snapshot.employer.name, snapshot.employee.name, !!password),
+        html: buildDeliveryHtml(snapshot.payslipNo, snapshot.periodLabel, snapshot.employer.name, snapshot.employee.name),
         attachments: [{ filename: `Payslip-${snapshot.payslipNo}.pdf`, content: pdf.toString('base64') }],
       });
       if (sendErr) { status = 'failed'; error = typeof sendErr === 'object' ? JSON.stringify(sendErr) : String(sendErr); }
     } catch (e) { status = 'failed'; error = (e as Error).message; }
   }
 
-  const nowIso = new Date().toISOString();
-  const { data: del, error: insErr } = await sb.from('finance_payslip_deliveries').insert({
-    payslip_id: ps.id, run_id: ps.run_id, employee_id: ps.employee_id,
-    channel: 'email', recipient: recipient ? maskEmail(recipient) : null,
-    status, password_protected: status === 'sent' && !!password, attempts: 1,
-    error, sent_at: status === 'sent' ? nowIso : null, created_by: actorId, updated_at: nowIso,
-  }).select('*').single<DbDeliveryRow>();
-  if (insErr) throw Object.assign(new Error('deliverPayslip/record: ' + insErr.message), { status: 500 });
+  const doneIso = new Date().toISOString();
+  const { data: del, error: updErr } = await sb.from('finance_payslip_deliveries')
+    .update({ status, error, sent_at: status === 'sent' ? doneIso : null, updated_at: doneIso })
+    .eq('id', queued.id)
+    .select('*').single<DbDeliveryRow>();
+  if (updErr) throw Object.assign(new Error('deliverPayslip/finalise: ' + updErr.message), { status: 500 });
 
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: ps.run_id, actorId,

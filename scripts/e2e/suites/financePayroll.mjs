@@ -34,6 +34,20 @@
 
 export const title = 'Finance — Payroll Runs (Phase 3 — full lifecycle)';
 
+/** Deterministic-but-unique NEAR-FUTURE date from TAG + salt — period_month is
+ *  unique across the WHOLE runs table (a fixed date collides with residue from
+ *  crashed runs), while remittances/statutory logic expect a sane year (the
+ *  finance_remittances period_year CHECK rejects far-future periods). Each salt
+ *  gets its own ~1-year window from a 2027 base so salts never collide. */
+function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = 20820 + (salt % 10) * 400 + (n % 365); // 2027-01-01 + per-salt window
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
@@ -52,6 +66,7 @@ export default async function run(h) {
     disbursementId:   null,   // bridge flow test — create-disbursement (Gap 16)
     disbRunId:        null,   // isolated (pay-scoped) run seeded for the disbursement test
     remittancePAYEId: null,   // bridge flow test — create-remittance paye_bir (Gap 16)
+    sodRunId:         null,   // seeded run for the SoD / no-workflow approve negatives
     createdUserIds:   [],
     statutoryVersionId: null,
   };
@@ -76,9 +91,29 @@ export default async function run(h) {
     try { await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
     try { await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { await sb.from('finance_payroll_run_inputs').delete().eq('run_id', ctx.runId); } catch {}
+    // Remittances + disbursements FK the run (restrict) — they MUST go BEFORE the
+    // run row or its delete silently fails and the run leaks (period collision
+    // for every later run that picks the same date).
+    try { if (ctx.runId) await sb.from('finance_remittances').delete().eq('payroll_run_id', ctx.runId); } catch {}
+    try { if (ctx.runId) {
+      const { data: disbs } = await sb.from('finance_disbursements').select('id').eq('payroll_run_id', ctx.runId);
+      const dIds = (disbs ?? []).map(d => d.id);
+      if (dIds.length) {
+        await sb.from('finance_disbursement_bank_files').delete().in('disbursement_id', dIds);
+        await sb.from('finance_disbursement_lines').delete().in('disbursement_id', dIds);
+        await sb.from('finance_disbursements').delete().in('id', dIds);
+      }
+    } } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
-    try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
-    try { await sb.from('app_events').delete().in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, emp1Id, emp2Id]); } catch {}
+    // Audit/event cleanup scoped to THIS RUN'S records — acquireActors() can return
+    // REAL users, so deleting by actor_id would destroy their genuine history.
+    try {
+      const recIds = [ctx.runId, ctx.disbRunId, ctx.sodRunId, ctx.disbursementId, ctx.remittancePAYEId].filter(Boolean);
+      if (recIds.length) {
+        await sb.from('hr_audit_log').delete().in('record_id', recIds);
+        await sb.from('app_events').delete().in('source_entity_id', recIds);
+      }
+    } catch {}
     // Bridge-flow cleanup (Gap 16)
     if (ctx.disbursementId) {
       try { await sb.from('finance_disbursement_lines').delete().eq('disbursement_id', ctx.disbursementId); } catch {}
@@ -89,8 +124,9 @@ export default async function run(h) {
       try { await sb.from('finance_payslip_deliveries').delete().eq('run_id', ctx.disbRunId); } catch {}
       try { await sb.from('finance_payroll_runs').delete().eq('id', ctx.disbRunId); } catch {}
     }
-    if (ctx.runId) {
-      try { await sb.from('finance_remittances').delete().eq('payroll_run_id', ctx.runId); } catch {}
+    // Seeded SoD-negative run
+    if (ctx.sodRunId) {
+      try { await sb.from('finance_payroll_runs').delete().eq('id', ctx.sodRunId); } catch {}
     }
     // Handoff + notification cleanup (Gaps 17/18)
     if (ctx.runId) {
@@ -149,7 +185,7 @@ export default async function run(h) {
   h.section('Finance Payroll › Create Run');
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const testPeriod = '2029-06-01'; // Far-future date to avoid conflicts
+  const testPeriod = seedDateFromTag(TAG, 51); // TAG-derived: period_month is table-unique — fixed dates collide with residue
 
   await test('finance_staff can create a payroll run', async () => {
     const r = await api('finance/payroll/runs/create', fstaff1Token, {
@@ -170,7 +206,7 @@ export default async function run(h) {
   });
 
   await test('employee is DENIED creating a payroll run', async () => {
-    const r = await api('finance/payroll/runs/create', emp1Token, { periodMonth: '2029-07-01' });
+    const r = await api('finance/payroll/runs/create', emp1Token, { periodMonth: seedDateFromTag(TAG, 52) });
     fails(r, 'employee should be denied run creation');
   });
 
@@ -270,7 +306,7 @@ export default async function run(h) {
 
   await test('employee is DENIED submitting a run', async () => {
     // Create a separate draft run to test deny
-    const cr = await api('finance/payroll/runs/create', fmgr1Token, { periodMonth: '2029-08-01' });
+    const cr = await api('finance/payroll/runs/create', fmgr1Token, { periodMonth: seedDateFromTag(TAG, 53) });
     ok(cr, 'could not create a secondary draft run for deny test');
     const draftId = cr.body.data.id;
 
@@ -378,6 +414,38 @@ export default async function run(h) {
       return data?.status === 'approved';
     });
     expect(approved, 'run status did not reach approved within 8s');
+
+    // Approval must leave NO dangling open task — the workflow is fully closed.
+    const { data: leftover } = await sb.from('workflow_tasks')
+      .select('id').eq('workflow_id', run.workflow_id)
+      .in('status', ['pending', 'open', 'in_progress']);
+    expect((leftover ?? []).length === 0, `open workflow tasks remain after approval: ${(leftover ?? []).length}`);
+    const { data: wfRow } = await sb.from('workflow_instances')
+      .select('status').eq('id', run.workflow_id).maybeSingle();
+    expect(wfRow?.status === 'completed', `workflow should be completed after approval, got ${wfRow?.status}`);
+  });
+
+  await test('SoD + no-workflow guards on the runs/approve route (seeded negatives)', async () => {
+    // Seed a minimal pending_approval run CREATED BY fmgr1 with NO workflow attached.
+    const dSalt = (TAG.split('').reduce((n, c) => (n * 31 + c.charCodeAt(0)) >>> 0, 7) % 900) + 40;
+    const d = new Date(Date.UTC(1971, 0, 1)); d.setUTCDate(d.getUTCDate() + dSalt);
+    const { data: sodRun, error: sodErr } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-SOD-${TAG.slice(-6)}`, period_month: d.toISOString().slice(0, 10),
+      statutory_version_id: ctx.statutoryVersionId, status: 'pending_approval',
+      created_by: fmgr1Id, employee_count: 0,
+    }).select('id').single();
+    expect(!sodErr, `seed SoD run failed: ${sodErr?.message}`);
+    ctx.sodRunId = sodRun.id;
+
+    // SoD: the creator cannot approve their own run (fast-fail before the engine).
+    const rSod = await api('finance/payroll/runs/approve', fmgr1Token, { id: ctx.sodRunId });
+    fails(rSod, 'creator approving own run should be refused (SoD)');
+
+    // No-workflow guard: a different manager hits the missing-workflow 422 (not a silent flip).
+    const rNoWf = await api('finance/payroll/runs/approve', fmgr2Token, { id: ctx.sodRunId });
+    fails(rNoWf, 'approve on a run with no workflow attached should be refused');
+    const { data: still } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.sodRunId).maybeSingle();
+    expect(still?.status === 'pending_approval', 'run status must be unchanged by refused approvals');
   });
 
   await test('§2 side-effects: payroll_run.approved app_event + audit_log', async () => {
@@ -569,31 +637,72 @@ export default async function run(h) {
     expect(r.body.data.reopenReason, 'missing reopenReason');
   });
 
-  await test('reopen without a reason is rejected (422)', async () => {
-    // Run is now draft — lock-inputs again to get to locked state
+  await test('UI reject path: runs/reject decides the workflow task → run returned, no dangling task', async () => {
+    // Run is now draft (reopened) — take it back to pending_approval.
     await api('finance/payroll/runs/lock-inputs', fmgr1Token, { id: ctx.runId });
     await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
-
-    // Submit → workflow → approve → lock (fast path via service_role)
-    const { data: run1 } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
-    // Run is calculated; submit it
     const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
     ok(sr, `re-submit failed: ${sr.body.message}`);
+    const { data: runRow } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
+    expect(runRow?.workflow_id, 'resubmitted run should have a workflow_id');
 
-    // Get the new workflow task and approve
-    const { data: run2 } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
-    if (run2?.workflow_id) {
-      const { data: tasks } = await sb.from('workflow_tasks')
-        .select('id').eq('workflow_id', run2.workflow_id)
-        .in('status', ['pending', 'open', 'in_progress']).limit(1);
-      if (tasks?.length) {
-        await api('workflow-engine/decide', fmgr1Token, { workflowId: run2.workflow_id, taskId: tasks[0].id, decision: 'approved' });
-        await waitFor(async () => {
-          const { data } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
-          return data?.status === 'approved';
-        });
-      }
-    }
+    // finance_staff (no finance.payroll.approve) is DENIED the route outright.
+    fails(await api('finance/payroll/runs/reject', fstaff1Token, { id: ctx.runId, reason: 'nope' }),
+      'finance_staff should be denied runs/reject');
+
+    // Reject WITHOUT a reason → zod 400 (mandatory reason).
+    fails(await api('finance/payroll/runs/reject', fmgr1Token, { id: ctx.runId, reason: '' }),
+      'reject without a reason should fail');
+
+    // fmgr1 rejects via the RUN route (the UI path) — this must decide the task.
+    const rj = await api('finance/payroll/runs/reject', fmgr1Token, { id: ctx.runId, reason: 'Numbers off — revise dept B OT' });
+    ok(rj, `runs/reject failed: ${rj.body.message}`);
+    const returned = await waitFor(async () => {
+      const { data } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
+      return data?.status === 'returned';
+    });
+    expect(returned, 'run should be returned after workflow rejection');
+
+    // No dangling open task; the workflow instance is closed as rejected.
+    const { data: leftover } = await sb.from('workflow_tasks')
+      .select('id').eq('workflow_id', runRow.workflow_id)
+      .in('status', ['pending', 'open', 'in_progress']);
+    expect((leftover ?? []).length === 0, 'open workflow tasks remain after rejection');
+    const { data: wfRow } = await sb.from('workflow_instances')
+      .select('status').eq('id', runRow.workflow_id).maybeSingle();
+    expect(wfRow?.status === 'rejected', `workflow should be rejected, got ${wfRow?.status}`);
+  });
+
+  await test('returned run is revisable: recalculate → resubmit → runs/approve completes the workflow', async () => {
+    // Recalculate from 'returned' (preparer revises), then resubmit — a NEW workflow starts.
+    const rc = await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
+    ok(rc, `recalculate from returned failed: ${rc.body.message}`);
+    const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
+    ok(sr, `resubmit after return failed: ${sr.body.message}`);
+    const { data: runRow } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
+    expect(runRow?.workflow_id, 'resubmitted run should carry a fresh workflow_id');
+
+    // Approve via the RUN route (the UI path) — fmgr1 is role-assigned to the task.
+    const ap = await api('finance/payroll/runs/approve', fmgr1Token, { id: ctx.runId });
+    ok(ap, `runs/approve failed: ${ap.body.message}`);
+    const approved = await waitFor(async () => {
+      const { data } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
+      return data?.status === 'approved';
+    });
+    expect(approved, 'run should be approved after runs/approve');
+
+    // Single approval authority: task closed, workflow completed.
+    const { data: leftover } = await sb.from('workflow_tasks')
+      .select('id').eq('workflow_id', runRow.workflow_id)
+      .in('status', ['pending', 'open', 'in_progress']);
+    expect((leftover ?? []).length === 0, 'open workflow tasks remain after runs/approve');
+    const { data: wfRow } = await sb.from('workflow_instances')
+      .select('status').eq('id', runRow.workflow_id).maybeSingle();
+    expect(wfRow?.status === 'completed', `workflow should be completed, got ${wfRow?.status}`);
+  });
+
+  await test('reopen without a reason is rejected (422)', async () => {
+    // Lock the (now approved) run, then test the reopen negative.
     await api('finance/payroll/runs/lock', fmgr2Token, { id: ctx.runId });
     await waitFor(async () => {
       const { data } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
