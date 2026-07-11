@@ -115,6 +115,95 @@ export async function addOverride(input: AddOverrideInput, actorId: string): Pro
   return toDto(data);
 }
 
+export interface AddOverridesBulkInput {
+  runId: string;
+  employeeIds: string[];
+  label: string;
+  amount: number;
+  kind: 'earning' | 'deduction';
+  isTaxable?: boolean;
+  reducesChargeable?: boolean;
+  reason: string;
+}
+
+export const BULK_OVERRIDE_MAX = 5000;
+
+/**
+ * Mass-edit: apply ONE adjustment to many employees of a run in a single request.
+ * Only employees that are actually part of the run are affected (others are skipped
+ * and reported). All rows are inserted in one batch; one audit + one event carry the
+ * count. The run still needs a recalculate to apply the overrides.
+ */
+export async function addOverridesBulk(
+  input: AddOverridesBulkInput,
+  actorId: string,
+): Promise<{ applied: number; skipped: number; overrides: OverrideDto[] }> {
+  const run = await getPayrollRun(input.runId);
+  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+  if (!EDITABLE_STATUSES.includes(run.status)) {
+    throw Object.assign(new Error(`Overrides can only be added while a run is input-locked or calculated (run is '${run.status}').`), { status: 422 });
+  }
+  if (!input.reason || !input.reason.trim()) {
+    throw Object.assign(new Error('A reason is required for a worksheet override.'), { status: 422 });
+  }
+  if (!Number.isFinite(input.amount) || input.amount <= 0) {
+    throw Object.assign(new Error('Override amount must be a positive number (kind sets earning vs deduction).'), { status: 422 });
+  }
+  const requested = [...new Set((input.employeeIds ?? []).map(id => String(id).trim()).filter(Boolean))];
+  if (requested.length === 0) {
+    throw Object.assign(new Error('Select at least one employee for the mass adjustment.'), { status: 422 });
+  }
+  if (requested.length > BULK_OVERRIDE_MAX) {
+    throw Object.assign(new Error(`Too many employees (${requested.length}). Apply to at most ${BULK_OVERRIDE_MAX} at once.`), { status: 422 });
+  }
+
+  // Keep only employees actually part of this run.
+  const { data: members, error: memErr } = await sb.from('finance_payroll_run_inputs')
+    .select('employee_id').eq('run_id', input.runId).in('employee_id', requested);
+  if (memErr) throw Object.assign(new Error('addOverridesBulk/members: ' + memErr.message), { status: 500 });
+  const inRun = new Set((members ?? []).map((m: { employee_id: string }) => m.employee_id));
+  const targets = requested.filter(id => inRun.has(id));
+  const skipped = requested.length - targets.length;
+  if (targets.length === 0) {
+    throw Object.assign(new Error('None of the selected employees are part of this payroll run.'), { status: 422 });
+  }
+
+  const reason = input.reason.trim();
+  const amount = Math.round(input.amount * 100) / 100;
+  const metadata = {
+    kind: input.kind,
+    is_taxable: input.isTaxable !== false,
+    reduces_chargeable: input.kind === 'deduction' ? input.reducesChargeable === true : false,
+    override: true,
+    reason,
+    created_by: actorId,
+  };
+  const rows = targets.map(employeeId => ({
+    run_id: input.runId, employee_id: employeeId,
+    source_type: 'pay_item', source_id: null,
+    component_code: 'override', label: input.label.trim() || 'Adjustment',
+    amount, quantity: null, rate: null, metadata,
+  }));
+
+  const { data, error } = await sb.from('finance_payroll_run_inputs')
+    .insert(rows).select('id, run_id, employee_id, label, amount, metadata, created_at');
+  if (error) throw Object.assign(new Error('addOverridesBulk: ' + error.message), { status: 500 });
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: input.runId, actorId,
+    action: 'payroll_run.overrides_bulk_added',
+    newState: { count: targets.length, label: input.label, amount, kind: input.kind, reason },
+    reason,
+  });
+  void emitAppEvent({
+    eventType: 'finance.payroll.override.bulk_added', sourceModule: 'finance_payroll',
+    sourceEntityType: 'payroll_run', sourceEntityId: input.runId, actorUserId: actorId, severity: 'info',
+    payload: { count: targets.length, kind: input.kind, amount },
+  });
+
+  return { applied: targets.length, skipped, overrides: ((data ?? []) as DbInputRow[]).map(toDto) };
+}
+
 export async function removeOverride(overrideId: string, actorId: string): Promise<{ id: string; removed: true }> {
   const { data: row, error: getErr } = await sb.from('finance_payroll_run_inputs')
     .select('id, run_id, employee_id, metadata, label, amount')

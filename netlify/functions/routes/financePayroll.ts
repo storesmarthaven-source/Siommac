@@ -61,8 +61,10 @@ import {
 } from '../lib/finance/payGroups';
 import {
   addOverride,
+  addOverridesBulk,
   removeOverride,
   listOverrides,
+  BULK_OVERRIDE_MAX,
 } from '../lib/finance/payrollOverrides';
 import {
   listOvertimeRules,
@@ -484,6 +486,27 @@ router.post('/payroll/overrides/add', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await addOverride(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/overrides/add-bulk  — mass-edit: one adjustment → many employees.
+// Permission: finance.payroll.worksheet.override.
+router.post('/payroll/overrides/add-bulk', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    employeeIds: z.array(z.string().min(1)).min(1).max(BULK_OVERRIDE_MAX),
+    label: z.string().min(1).max(80),
+    amount: z.number().positive(),
+    kind: z.enum(['earning', 'deduction']),
+    isTaxable: z.boolean().optional(),
+    reducesChargeable: z.boolean().optional(),
+    reason: z.string().min(1).max(500),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await addOverridesBulk(v.data, actor.id);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

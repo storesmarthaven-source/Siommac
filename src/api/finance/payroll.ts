@@ -306,6 +306,7 @@ export const financePayrollApi = {
 
   // Worksheet overrides
   addOverride:    (a: { runId: string; employeeId: string; label: string; amount: number; kind: 'earning' | 'deduction'; isTaxable?: boolean; reducesChargeable?: boolean; reason: string }) => call<PayrollOverride>('finance/payroll/overrides/add', a),
+  addOverridesBulk:(a: { runId: string; employeeIds: string[]; label: string; amount: number; kind: 'earning' | 'deduction'; isTaxable?: boolean; reducesChargeable?: boolean; reason: string }) => call<{ applied: number; skipped: number; overrides: PayrollOverride[] }>('finance/payroll/overrides/add-bulk', a),
   removeOverride: (a: { overrideId: string })          => call<{ id: string; removed: boolean }>('finance/payroll/overrides/remove', a),
   listOverrides:  (a: { runId: string })               => call<PayrollOverride[]>('finance/payroll/overrides/list', a),
 

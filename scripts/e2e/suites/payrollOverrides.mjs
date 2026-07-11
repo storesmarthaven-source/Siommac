@@ -153,4 +153,51 @@ export default async function run(h) {
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('gross').eq('run_id', ctx.runId).eq('employee_id', emp1Id);
     expect(Math.abs(Number((lines ?? [])[0]?.gross) - 5000) < 0.01, 'gross must return to 5000 after removal, got ' + (lines ?? [])[0]?.gross);
   });
+
+  // ===========================================================================
+  h.section('Worksheet overrides - Mass-edit (bulk, Wave 4c)');
+  // ===========================================================================
+
+  await test('seed emp2 as a run participant (base_pay input)', async () => {
+    const { error } = await sb.from('finance_payroll_run_inputs').insert({
+      run_id: ctx.runId, employee_id: emp2Id, source_type: 'base_pay', source_id: emp2Id,
+      component_code: 'basic', label: 'Salary (period)', amount: 4000, metadata: { pay_basis: 'salary' },
+    });
+    expect(!error, 'seed emp2 base_pay failed: ' + error?.message);
+  });
+
+  await test('plain employee CANNOT mass-edit (403)', async () => {
+    const r = await api('finance/payroll/overrides/add-bulk', plainToken, { runId: ctx.runId, employeeIds: [emp1Id], label: 'X', amount: 100, kind: 'earning', reason: 'nope' });
+    fails(r, 'employee must not mass-edit');
+    expect(r.status === 403, 'expected 403, got ' + r.status);
+  });
+
+  await test('mass-edit applies to run participants and skips non-participants', async () => {
+    const r = await api('finance/payroll/overrides/add-bulk', fmgrToken, {
+      runId: ctx.runId, employeeIds: [emp1Id, emp2Id, 'NOT-IN-RUN-' + TAG],
+      label: 'COLA allowance', amount: 500, kind: 'earning', reason: 'Cost-of-living adjustment',
+    });
+    ok(r, 'mass-edit failed: ' + r.body.message);
+    expect(r.body.data.applied === 2, 'expected applied=2, got ' + r.body.data.applied);
+    expect(r.body.data.skipped === 1, 'expected skipped=1, got ' + r.body.data.skipped);
+    const { data: ovr } = await sb.from('finance_payroll_run_inputs').select('employee_id').eq('run_id', ctx.runId).contains('metadata', { override: true });
+    expect((ovr ?? []).length === 2, 'expected 2 override rows, got ' + (ovr ?? []).length);
+  });
+
+  await test('§2 side-effect: finance.payroll.override.bulk_added event fired', async () => {
+    const { data } = await sb.from('app_events').select('id')
+      .eq('source_module', 'finance_payroll').eq('event_type', 'finance.payroll.override.bulk_added')
+      .eq('source_entity_id', ctx.runId).limit(1);
+    expect((data ?? []).length > 0, 'bulk_added app_event not found');
+  });
+
+  await test('recalculate → both participants gross rises by 500', async () => {
+    const rc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    ok(rc, 'recalc failed');
+    const { data: lines } = await sb.from('finance_payroll_run_lines').select('employee_id, gross').eq('run_id', ctx.runId).in('employee_id', [emp1Id, emp2Id]);
+    const g1 = Number((lines ?? []).find(l => l.employee_id === emp1Id)?.gross);
+    const g2 = Number((lines ?? []).find(l => l.employee_id === emp2Id)?.gross);
+    expect(Math.abs(g1 - 5500) < 0.01, 'emp1 gross must be 5500, got ' + g1);
+    expect(Math.abs(g2 - 4500) < 0.01, 'emp2 gross must be 4500, got ' + g2);
+  });
 }

@@ -19,7 +19,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
@@ -660,6 +660,39 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
   const [kind, setKind]     = useState<'earning' | 'deduction'>('earning');
   const [reason, setReason] = useState('');
 
+  // Worksheet grid — all employees on the run, with selection for mass-edit.
+  const [search, setSearch]     = useState('');
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [massEdit, setMassEdit] = useState(false);
+
+  const overrideCount = useMemo(() => {
+    const m = new Map<string, number>();
+    for (const o of overrides ?? []) m.set(o.employeeId, (m.get(o.employeeId) ?? 0) + 1);
+    return m;
+  }, [overrides]);
+
+  const gridRows = useMemo(() => {
+    const q = search.trim().toLowerCase();
+    const rows = (lines ?? []).map(l => ({
+      employeeId: l.employeeId,
+      name:       nameMap?.get(l.employeeId)?.fullName ?? l.employeeId,
+      gross:      l.gross,
+      deductions: (l.paye ?? 0) + (l.nisEmployee ?? 0) + (l.healthSurcharge ?? 0) + (l.voluntaryDeductions ?? 0),
+      net:        l.net,
+      ovr:        overrideCount.get(l.employeeId) ?? 0,
+    }));
+    return q ? rows.filter(r => r.name.toLowerCase().includes(q) || r.employeeId.toLowerCase().includes(q)) : rows;
+  }, [lines, nameMap, overrideCount, search]);
+
+  const allFilteredSelected = gridRows.length > 0 && gridRows.every(r => selected.has(r.employeeId));
+  const toggleOne = (id: string): void => setSelected(prev => { const n = new Set(prev); if (n.has(id)) n.delete(id); else n.add(id); return n; });
+  const toggleAll = (): void => setSelected(prev => {
+    const n = new Set(prev);
+    if (allFilteredSelected) gridRows.forEach(r => n.delete(r.employeeId));
+    else gridRows.forEach(r => n.add(r.employeeId));
+    return n;
+  });
+
   async function add(): Promise<void> {
     const amt = parseFloat(amount);
     if (!empId) { toast('Select an employee.'); return; }
@@ -689,6 +722,30 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       {!editable && (
         <div style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
           Overrides can only be edited while the run is input-locked or calculated (run is “{humanize(runStatus)}”).
+        </div>
+      )}
+
+      {/* Worksheet grid — every employee on the run (virtualized), with mass-edit selection */}
+      {(lines?.length ?? 0) > 0 && (
+        <div style={{ border: '1px solid var(--hrfin-border)', borderRadius: 8, overflow: 'hidden' }}>
+          <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8, borderBottom: '1px solid var(--hrfin-border)' }}>
+            <input value={search} placeholder="Filter employees…" onInput={e => setSearch((e.currentTarget as HTMLInputElement).value)} style={{ ...fieldStyle, flex: 1 }} />
+            <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>{selected.size} selected · {gridRows.length} shown</span>
+            {canOverride && editable && (
+              <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={selected.size === 0} onClick={() => setMassEdit(true)}>
+                Mass-edit ({selected.size})
+              </button>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', padding: '6px 8px', fontSize: 10, textTransform: 'uppercase', letterSpacing: '.05em', color: 'var(--hrfin-text-secondary)', borderBottom: '1px solid var(--hrfin-border)' }}>
+            <span style={{ width: 28 }}>{canOverride && editable && <input type="checkbox" checked={allFilteredSelected} onChange={toggleAll} aria-label="Select all" />}</span>
+            <span style={{ flex: 1 }}>Employee</span>
+            <span style={{ width: 88, textAlign: 'right' }}>Gross</span>
+            <span style={{ width: 88, textAlign: 'right' }}>Deductions</span>
+            <span style={{ width: 88, textAlign: 'right' }}>Net</span>
+            <span style={{ width: 40, textAlign: 'center' }}>Ovr</span>
+          </div>
+          <WorksheetVirtualRows rows={gridRows} rowHeight={32} viewportHeight={300} selectable={canOverride && editable} selected={selected} onToggle={toggleOne} />
         </div>
       )}
 
@@ -753,6 +810,111 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
           </button>
         </div>
       )}
+
+      {massEdit && (
+        <MassEditModal
+          runId={runId}
+          employeeIds={[...selected]}
+          onClose={() => setMassEdit(false)}
+          onApplied={() => { setMassEdit(false); setSelected(new Set()); }}
+        />
+      )}
+    </div>
+  );
+}
+
+// ── Worksheet: virtualized row list (windowed — no external dep) ─────────────────
+
+interface GridRow { employeeId: string; name: string; gross: number; deductions: number; net: number; ovr: number }
+
+function WorksheetVirtualRows({ rows, rowHeight, viewportHeight, selectable, selected, onToggle }: {
+  rows: GridRow[]; rowHeight: number; viewportHeight: number; selectable: boolean;
+  selected: Set<string>; onToggle: (id: string) => void;
+}): VNode {
+  const [scrollTop, setScrollTop] = useState(0);
+  const overscan = 8;
+  const start = Math.max(0, Math.floor(scrollTop / rowHeight) - overscan);
+  const end   = Math.min(rows.length, start + Math.ceil(viewportHeight / rowHeight) + overscan * 2);
+  const padTop = start * rowHeight;
+  const padBottom = Math.max(0, (rows.length - end) * rowHeight);
+
+  if (rows.length === 0) return <div class="hrfin-empty" style={{ padding: 14 }}>No employees match the filter.</div>;
+
+  return (
+    <div style={{ maxHeight: viewportHeight, overflowY: 'auto' }} onScroll={e => setScrollTop((e.currentTarget as HTMLDivElement).scrollTop)}>
+      <div style={{ paddingTop: padTop, paddingBottom: padBottom }}>
+        {rows.slice(start, end).map(r => (
+          <div key={r.employeeId} style={{ display: 'flex', alignItems: 'center', height: rowHeight, padding: '0 8px', fontSize: 12, borderBottom: '1px solid var(--hrfin-border)' }}>
+            <span style={{ width: 28 }}>{selectable && <input type="checkbox" checked={selected.has(r.employeeId)} onChange={() => onToggle(r.employeeId)} aria-label={`Select ${r.name}`} />}</span>
+            <span style={{ flex: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.name}</span>
+            <span style={{ width: 88, textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(r.gross)}</span>
+            <span style={{ width: 88, textAlign: 'right', fontVariantNumeric: 'tabular-nums', color: 'var(--hrfin-text-secondary)' }}>{fmtMoney(r.deductions)}</span>
+            <span style={{ width: 88, textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontWeight: 600 }}>{fmtMoney(r.net)}</span>
+            <span style={{ width: 40, textAlign: 'center' }}>{r.ovr > 0 ? <HrfinPill tone="ok">{String(r.ovr)}</HrfinPill> : '—'}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ── Worksheet: mass-edit dialog (one adjustment → many selected employees) ───────
+
+function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
+  runId: string; employeeIds: string[]; onClose: () => void; onApplied: () => void;
+}): VNode {
+  const bulkMut = usePayrollMutation(financePayrollApi.addOverridesBulk);
+  const [label, setLabel]   = useState('');
+  const [amount, setAmount] = useState('');
+  const [kind, setKind]     = useState<'earning' | 'deduction'>('earning');
+  const [reason, setReason] = useState('');
+  const amt = parseFloat(amount);
+  const valid = !!label.trim() && amt > 0 && !!reason.trim() && employeeIds.length > 0;
+  const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)', width: '100%' };
+
+  async function apply(): Promise<void> {
+    if (!valid) return;
+    try {
+      const res = await bulkMut.mutateAsync({ runId, employeeIds, label: label.trim(), amount: amt, kind, reason: reason.trim() });
+      toast(`Adjustment applied to ${res.applied} employee(s)${res.skipped ? `, ${res.skipped} skipped` : ''} — recalculate to apply.`);
+      onApplied();
+    } catch (e) { toast((e as Error).message ?? 'Mass-edit failed.'); }
+  }
+
+  return (
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(15,23,42,.45)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60 }}
+         onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div style={{ background: 'var(--hrfin-surface-1, #fff)', border: '1px solid var(--hrfin-border)', borderRadius: 12, padding: 18, width: 440, maxWidth: '92vw' }}>
+        <h3 style={{ margin: '0 0 4px', fontSize: 15, color: 'var(--hrfin-text-primary)' }}>Mass-edit — {employeeIds.length} employee{employeeIds.length === 1 ? '' : 's'}</h3>
+        <p style={{ margin: '0 0 14px', fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
+          Applies one earning or deduction to every selected employee. Employees not on this run are skipped. Recalculate to apply.
+        </p>
+        <div style={{ display: 'grid', gap: 10 }}>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>LABEL
+            <input value={label} placeholder="e.g. COLA allowance" onInput={e => setLabel((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>TYPE
+              <select value={kind} onChange={e => setKind((e.currentTarget as HTMLSelectElement).value as 'earning' | 'deduction')} style={fieldStyle}>
+                <option value="earning">Earning</option>
+                <option value="deduction">Deduction</option>
+              </select>
+            </label>
+            <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>AMOUNT (each)
+              <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            </label>
+          </div>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON (required)
+            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+          </label>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
+          <button type="button" class="hrfin-action" onClick={onClose}>Cancel</button>
+          <button type="button" class="hrfin-action is-primary" disabled={!valid || bulkMut.isPending} onClick={() => void apply()}>
+            {bulkMut.isPending ? 'Applying…' : `Apply to ${employeeIds.length}`}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
