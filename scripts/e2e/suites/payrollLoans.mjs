@@ -166,7 +166,9 @@ export default async function run(h) {
     ok(ar, `assign failed: ${ar.body.message}`);
     ctx.groupId = groupId;
 
-    const cr = await api('finance/payroll/runs/create', fmgrToken, { periodMonth: '2029-10-01', payGroupId: groupId });
+    // Create the run as the MAKER (finance_staff) so the finance_manager can
+    // approve it without tripping segregation-of-duties (creator != approver).
+    const cr = await api('finance/payroll/runs/create', staffToken, { periodMonth: '2029-10-01', payGroupId: groupId });
     ok(cr, `create run failed: ${cr.body.message}`);
     ctx.runId = cr.body.data.id;
 

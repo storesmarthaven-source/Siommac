@@ -136,5 +136,5 @@ export interface ModuleWorkflowAdapter {
   onWorkflowCompleted(params: { workflowId: string; sourceRecordId: string; finalDecision: string }): Promise<void>;
   onWorkflowReturned(params: { workflowId: string; sourceRecordId: string; comment: string }): Promise<void>;
   onWorkflowRejected(params: { workflowId: string; sourceRecordId: string; comment: string }): Promise<void>;
-  onWorkflowCancelled(params: { workflowId: string; sourceRecordId: string; reason: string }): Promise<void>;
+  onWorkflowCancelled(params: { workflowId: string; sourceRecordId: string; reason: string; actorId?: string | null }): Promise<void>;
 }

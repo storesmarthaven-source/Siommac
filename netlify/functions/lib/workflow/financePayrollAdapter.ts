@@ -168,13 +168,15 @@ const financePayrollAdapter: ModuleWorkflowAdapter = {
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await setRunStatus(sourceRecordId, 'cancelled', null);
 
+    // Real canceller (threaded from cancelWorkflow) or null system actor -- never
+    // the literal 'workflow' (not an app_users row; FK-violates hr_audit_log).
     await writeHrAudit({
       submoduleKey: 'finance_payroll',
       recordId:     sourceRecordId,
-      actorId:      'workflow',
+      actorId:      actorId ?? null,
       action:       'payroll_run.workflow_cancelled',
       previousState: { status: 'pending_approval' },
       newState:      { status: 'cancelled' },

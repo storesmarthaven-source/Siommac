@@ -88,10 +88,13 @@ const financeLoanAdapter: ModuleWorkflowAdapter = {
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await setLoanStatus(sourceRecordId, 'cancelled');
+    // Use the real canceller (threaded from cancelWorkflow); null is a valid
+    // system actor (hr_audit_log.actor_id is nullable) -- never the literal
+    // 'workflow', which isn't an app_users row and FK-violates.
     await writeHrAudit({
-      submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: 'workflow',
+      submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: actorId ?? null,
       action: 'loan.workflow_cancelled', previousState: { status: 'pending_approval' }, newState: { status: 'cancelled' }, reason: reason ?? null,
     });
   },

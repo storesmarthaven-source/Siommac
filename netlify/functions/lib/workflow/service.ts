@@ -322,7 +322,7 @@ export async function cancelWorkflow(params: { workflowId: string; actor: Workfl
   const at = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'cancelled', cancelled_at: at, closed_at: at }).eq('id', wf.id);
   await sb.from('workflow_tasks').update({ status: 'cancelled' }).eq('workflow_id', wf.id).in('status', ['pending', 'open', 'in_progress']);
-  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowCancelled({ workflowId: wf.id, sourceRecordId: wf.source_record_id, reason: params.reason });
+  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowCancelled({ workflowId: wf.id, sourceRecordId: wf.source_record_id, reason: params.reason, actorId: params.actor.id ?? null });
   await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.cancelled', reason: params.reason });
   emitWf('workflow.cancelled', wf, params.actor.id, {
     severity: 'warning',
