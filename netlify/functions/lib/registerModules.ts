@@ -17,6 +17,7 @@ import { registerHrOvertimeAdapter }           from './workflow/hrOvertimeAdapte
 import { registerFinanceNisProfileAdapter }     from './workflow/financeNisProfileAdapter';
 import { registerFinancePayComponentAdapter }  from './workflow/financePayComponentAdapter';
 import { registerFinancePayrollAdapter }       from './workflow/financePayrollAdapter';
+import { registerFinanceLoanAdapter }          from './workflow/financeLoanAdapter';
 import { registerFinanceRemittancesAdapter }   from './workflow/financeRemittancesAdapter';
 
 let registered = false;
@@ -38,6 +39,7 @@ export function registerModulesOnce(): void {
   registerFinanceNisProfileAdapter();
   registerFinancePayComponentAdapter();
   registerFinancePayrollAdapter();
+  registerFinanceLoanAdapter();
   registerFinanceRemittancesAdapter();
 
   registered = true;

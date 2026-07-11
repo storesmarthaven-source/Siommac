@@ -71,6 +71,14 @@ import {
   createOvertimeRule,
   setOvertimeRuleActive,
 } from '../lib/finance/overtimeRules';
+import {
+  listLoans,
+  getLoan,
+  createLoan,
+  submitLoan,
+  settleLoan,
+  cancelLoan,
+} from '../lib/finance/loans';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
 import type { ExportFormat } from '../lib/finance/payrollExports';
@@ -463,6 +471,84 @@ router.post('/payroll/overtime-rules/set-active', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await setOvertimeRuleActive(v.data.id, v.data.active, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ── Employee loans & salary advances (Wave 5) ────────────────────────────────
+
+// POST /api/finance/payroll/loans/list  — Finance.
+router.post('/payroll/loans/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ employeeId: z.string().optional(), status: z.string().optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listLoans(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/loans/get
+router.post('/payroll/loans/get', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getLoan(v.data.id);
+    if (!data) return c.json({ success: false, message: 'Loan not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/loans/create  — draft. Permission: loans.manage.
+router.post('/payroll/loans/create', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.loans.manage');
+  const v = zv(c, z.object({
+    employeeId:        z.string().min(1),
+    loanType:          z.enum(['loan', 'advance']),
+    principal:         z.number().positive(),
+    interestAmount:    z.number().nonnegative().optional(),
+    installmentAmount: z.number().positive(),
+    startPeriod:       z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
+    reason:            z.string().max(500).nullable().optional(),
+    notes:             z.string().max(1000).nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await createLoan(v.data, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/loans/submit  — draft → pending_approval (workflow).
+router.post('/payroll/loans/submit', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.loans.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await submitLoan(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/loans/settle  — early settlement (active → settled).
+router.post('/payroll/loans/settle', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.loans.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await settleLoan(v.data.id, actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/loans/cancel
+router.post('/payroll/loans/cancel', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.loans.manage');
+  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await cancelLoan(v.data.id, actor.id, v.data.reason);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

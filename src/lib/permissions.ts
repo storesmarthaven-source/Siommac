@@ -450,6 +450,7 @@ export const PERMISSION_KEYS = [
   'finance.payroll.paygroups.manage', // finance: create pay groups + assign employees
   'finance.payroll.worksheet.override', // finance: add/remove per-employee run overrides
   'finance.payroll.overtime.rules.manage', // finance: manage overtime rule engine (multipliers)
+  'finance.payroll.loans.manage',     // finance: create/submit/settle employee loans & salary advances
   // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
   'finance.remittances.view',         // view remittances and per-employee lines
   'finance.remittances.manage',       // create, submit and cancel remittances
@@ -613,6 +614,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
+    'finance.payroll.loans.manage',
     'finance.payroll.reports.view',
     // Remittances (F1)
     'finance.remittances.view',
@@ -665,6 +667,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
+    'finance.payroll.loans.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -980,6 +983,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
+    'finance.payroll.loans.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -1183,6 +1187,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.paygroups.manage',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
+    'finance.payroll.loans.manage',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',

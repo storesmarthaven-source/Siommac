@@ -1394,6 +1394,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create and activate/deactivate effective-dated overtime rules (multipliers + minimum billable hours) for public holidays, rest days, callouts, etc. Rules price the OT that flows into payroll runs.',
     risk: 'medium',
   },
+  'finance.payroll.loans.manage': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Employee Loans',
+    description: 'Create, submit for approval, settle and cancel employee loans & salary advances. Approved loans auto-deduct a fixed installment from each pay run until the balance clears. Financial — routed through maker-checker approval.',
+    risk: 'high',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

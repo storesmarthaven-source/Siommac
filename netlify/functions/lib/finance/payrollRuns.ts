@@ -24,6 +24,7 @@ import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } fr
 import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
 import { getPayGroup, listGroupMemberIds } from './payGroups';
 import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
+import { loadLoanInstallments, recordLoanDeductionsForRun, reverseLoanDeductionsForRun } from './loans';
 import { getStatutoryProfileByEmployee } from '../hr/statutoryProfileCore';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { startWorkflowForRecord } from '../workflow/service';
@@ -544,6 +545,12 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     tsByEmp.set(t.employee_id, cur);
   }
 
+  // ── 3c. Active loan/advance installments due this period (Wave 5) ──────────
+  // A deduction pay item is emitted per active loan; the balance is decremented from
+  // the ledger only when the run is LOCKED (recordLoanDeductionsForRun), so re-lock
+  // and recalculate never double-deduct.
+  const loanInstallments = await loadLoanInstallments(empList.map(e => e.id), periodStart);
+
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const now = new Date().toISOString();
   const inputRows: Record<string, unknown>[] = [];
@@ -655,6 +662,23 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
         quantity:       payableHours,
         rate:           multiplier,
         metadata:       { work_date: ot.work_date, multiplier, ot_type: ot.ot_type ?? null, entered_hours: Number(ot.hours) },
+      });
+    }
+
+    // Active-loan installments — a post-tax deduction per active loan (reduces net, NOT
+    // chargeable income). The ledger is written at lock time (recordLoanDeductionsForRun).
+    for (const inst of loanInstallments.get(emp.id) ?? []) {
+      inputRows.push({
+        run_id:         runId,
+        employee_id:    emp.id,
+        source_type:    'pay_item',
+        source_id:      inst.loanId,
+        component_code: 'loan_repayment',
+        label:          `Loan repayment (${inst.reference})`,
+        amount:         inst.amount,
+        quantity:       null,
+        rate:           null,
+        metadata:       { kind: 'deduction', is_taxable: false, reduces_chargeable: false, loan: true, loan_id: inst.loanId, loan_reference: inst.reference },
       });
     }
   }
@@ -1503,6 +1527,10 @@ export async function lockRun(runId: string, actorId: string): Promise<PayrollRu
     payload:          { runNo: updatedRun.runNo, lockedAt: now },
   });
 
+  // Wave 5 — the run is now final: record loan installment deductions into the ledger
+  // and decrement loan balances (idempotent per loan+run; reversed if the run is reopened).
+  await recordLoanDeductionsForRun(runId, actorId);
+
   // §8.1 — notify Finance Managers that the run is locked and payslips can be generated
   void notifyUsersByRole('finance_manager', {
     type:           'finance.payroll.run.locked',
@@ -1571,6 +1599,10 @@ export async function reopenRun(
   await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
   await sb.from('finance_payroll_run_inputs').delete().eq('run_id', runId);
   await sb.from('finance_payroll_run_warnings').delete().eq('run_id', runId);
+
+  // Wave 5 — reverse this run's loan deductions (restore balances) so the re-lock
+  // that follows records them afresh and the loan isn't double-decremented.
+  await reverseLoanDeductionsForRun(runId);
 
   const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
     .update({
