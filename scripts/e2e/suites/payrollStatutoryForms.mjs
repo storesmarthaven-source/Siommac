@@ -7,11 +7,13 @@
 export const title = 'Payroll — Statutory Forms (employer profile + TD4)';
 
 // Distinct tax year per suite run (finance_payroll_runs.period_month is unique
-// table-wide) — hash TAG into a high, unlikely-to-collide year.
+// table-wide) — hash TAG into a high, unlikely-to-collide year. Kept within the
+// route's tax-year ceiling (<= 2100) so the run isn't rejected on validation;
+// 2040-2099 is still far past any real run so period_month never collides.
 function taxYearFromTag(tag) {
   let n = 7;
   for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2040 + (n % 120);
+  return 2040 + (n % 60);
 }
 
 export default async function run(h) {
