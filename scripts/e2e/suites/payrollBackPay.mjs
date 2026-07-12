@@ -84,7 +84,7 @@ export default async function run(h) {
 
     // One prior LOCKED weekly run — for the frequency filter test.
     const { data: wkRun, error: wErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-BP-WK-${TAG.slice(-4)}`, period_month: P1, pay_frequency: 'weekly',
+      run_no: `RUN-BP-WK-${TAG.slice(-4)}`, period_month: `${Y}-01-08`, pay_frequency: 'weekly',
       statutory_version_id: ctx.versionId, status: 'locked', employee_count: 1,
     }).select('id').single();
     expect(!wErr, `seed weekly run failed: ${wErr?.message}`);

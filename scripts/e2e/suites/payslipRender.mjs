@@ -577,6 +577,12 @@ export default async function run(h) {
   });
 
   await test('render-run still works after template cleared (built-in pdfkit fallback)', async () => {
+    // render-run is idempotent — it only renders payslips that still lack a file.
+    // The prior template render already stamped every file_path, so clear them first
+    // to force the fallback path to actually re-render (proving pdfkit works with no template).
+    await sb.from('finance_payslips')
+      .update({ file_path: null }).eq('run_id', ctx.runId);
+
     const r = await api('finance/payroll/payslips/render-run', fmgr1Token, { runId: ctx.runId });
     ok(r, 'render-run (fallback) failed: ' + r.body.message);
     expect(r.body.data.rendered > 0, 'rendered should be > 0 with no template (built-in fallback)');
