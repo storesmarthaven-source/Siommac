@@ -42,7 +42,12 @@
 .payslip-studio-root .psd-back svg { margin-right: -2px; }
 
 /* Custom Payslip Studio logo mark (toolbar). The svg is viewBox-only. */
-.payslip-studio-root .logo-mark { width: 22px; height: 22px; color: #fff; flex: none; }
+/* Toolbar logo: white mark on a flat siomac-yellow badge (matches the loading badge). */
+.payslip-studio-root .logo-mark {
+  width: 22px; height: 22px; color: #fff; flex: none; box-sizing: content-box;
+  padding: 4px; border-radius: 7px;
+  background: linear-gradient(150deg, #ffd23f 0%, #f6bb22 100%);
+}
 
 /* Loading page shown (full-screen) while the studio chunk + fonts load. */
 .payslip-studio-root .psd-loading {
@@ -56,8 +61,8 @@
 .payslip-studio-root .psd-load-badge {
   display: inline-flex; align-items: center; justify-content: center;
   width: 52px; height: 52px; border-radius: 14px; flex: none;
-  /* AI-assistant navy (matches .app-topbar-ai), flattened; white mark, no shadow. */
-  background: linear-gradient(135deg, #565f79 0%, #646f8e 100%);
+  /* Flat siomac-yellow gradient (close stops); white mark, no shadow. */
+  background: linear-gradient(150deg, #ffd23f 0%, #f6bb22 100%);
   color: #ffffff;
   animation: psd-badge-pulse 1.8s ease-in-out infinite;
 }
