@@ -17,11 +17,10 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { h, type VNode }                       from 'preact';
+import { type VNode }                          from 'preact';
 import { useState, useEffect, useRef,
-         useCallback, useMemo }                from 'preact/hooks';
-import { useQuery, useQueryClient,
-         useMutation }                         from '@tanstack/preact-query';
+         useMemo }                             from 'preact/hooks';
+import { useQuery, useQueryClient }            from '@tanstack/preact-query';
 import { Modal }                               from '@shared/Modal';
 import { ConfirmDialog }                       from '@shared/ConfirmDialog';
 import { Spinner }                             from '@shared/Spinner';
@@ -126,7 +125,7 @@ function useMiniMap(
 
     return () => {
       clearTimeout(timer);
-      if (m) { try { m.remove(); } catch (_) {} }
+      if (m) { try { m.remove(); } catch (_) { /* empty */ } }
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lat, lng, radius, isActive]);
@@ -403,7 +402,7 @@ function MapPicker({ show, lat, lng, radius, onCoordsSet }: MapPickerProps): VNo
   useEffect(() => {
     if (!show) {
       if (mapRef.current) {
-        try { mapRef.current.remove(); } catch (_) {}
+        try { mapRef.current.remove(); } catch (_) { /* empty */ }
         mapRef.current = null;
       }
       return;
@@ -608,7 +607,7 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
 
       const siteId = res.id || (editingSite ? String(editingSite.id) : null);
       if (siteId) {
-        await assignSiteEmployeesApi(siteId, Array.from(pickerSel)).catch(() => {});
+        await assignSiteEmployeesApi(siteId, Array.from(pickerSel)).catch(() => { /* noop */ });
       }
       toast.success('Project site saved successfully');
       onClose();

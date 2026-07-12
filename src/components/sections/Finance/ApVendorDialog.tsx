@@ -20,7 +20,6 @@ import { can } from '@lib/permissions';
 import { HrfinWizardModal, EntityPicker, HrfinIcon, type EntityOption } from '@ui';
 import { useCreateVendor, useUpdateVendor, type ApVendor, type ApPaymentMethod, type ApVendorStatus } from '@api/finance/accountsPayable';
 import { useGlAccounts, useCostCentres, usePaymentTerms } from '@api/finance/pickers';
-import { money } from './hrfinFormat';
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 

@@ -12,7 +12,6 @@ import type {
   PayrollRunData,
   Department,
   EmployeeListItem,
-  PayrollConstants,
   PayCycle,
 } from './types';
 

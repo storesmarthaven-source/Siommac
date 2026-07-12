@@ -42,5 +42,5 @@ export async function doHdrBadgeSync(): Promise<void> {
     // Leave badge is not part of the comms summary — keep existing nav refresh
     // with 0 as a pass-through until leave counts are added to summary.
     refreshNavBadges(0);
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 }

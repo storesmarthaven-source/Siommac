@@ -142,7 +142,7 @@ export function ConfirmDialog({
   return (
     <Modal
       open={open}
-      onClose={isLoading ? () => {} : onClose}
+      onClose={isLoading ? () => { /* noop */ } : onClose}
       closeOnBackdrop={!isLoading}
       closeOnEscape={!isLoading}
       size="sm"

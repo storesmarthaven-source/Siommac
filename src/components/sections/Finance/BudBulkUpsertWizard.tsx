@@ -11,7 +11,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useCallback } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { HrfinWizardModal } from '@ui';
 import { CostCentrePicker, BudgetCategoryPicker, EmployeePicker } from './_shared/pickers';
 import {

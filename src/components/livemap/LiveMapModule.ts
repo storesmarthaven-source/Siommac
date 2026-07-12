@@ -188,7 +188,7 @@ function initializeMap(): void {
     api('listProjectSites', {}).then(res => {
       const sites = (res?.success && res.data) || [];
       const attendanceZones = AppState.get('attendanceZones') as any[];
-      attendanceZones.forEach(z => { try { lmap.removeLayer(z); } catch (_) {} });
+      attendanceZones.forEach(z => { try { lmap.removeLayer(z); } catch (_) { /* empty */ } });
       AppState.set('attendanceZones', []);
 
       const liveData = AppState.get('liveData') as any[];
@@ -245,7 +245,7 @@ function initializeMap(): void {
       if (!AppState.get('_mapViewSet')) {
         const azFinal = AppState.get('attendanceZones') as any[];
         if (azFinal.length) {
-          try { lmap.fitBounds(L.featureGroup(azFinal).getBounds().pad(0.25), { animate: false }); } catch (_) {}
+          try { lmap.fitBounds(L.featureGroup(azFinal).getBounds().pad(0.25), { animate: false }); } catch (_) { /* empty */ }
         }
         AppState.set('_mapViewSet', true);
       }
@@ -483,7 +483,7 @@ function updateUserLocationOnMap(): void {
 function _hideActiveEmpMarker(): void {
   const active = AppState.get('_activeEmpMarker') as any;
   const lmap   = AppState.get('map') as any;
-  if (active && lmap) { try { lmap.removeLayer(active); } catch (_) {} }
+  if (active && lmap) { try { lmap.removeLayer(active); } catch (_) { /* empty */ } }
   AppState.set('_activeEmpMarker', null);
 }
 

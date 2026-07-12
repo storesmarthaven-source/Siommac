@@ -1104,7 +1104,7 @@ export function MyProfileSection(): VNode {
     setLoadingActivity(true);
     fetchMyActivity(ctrl.signal)
       .then(evts => { if (!cancelled) setActivity(evts); })
-      .catch(() => {})
+      .catch(() => { /* noop */ })
       .finally(() => { if (!cancelled) setLoadingActivity(false); });
     return () => { cancelled = true; ctrl.abort(); };
   }, []);

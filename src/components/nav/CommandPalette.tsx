@@ -15,7 +15,7 @@
 
 import { h, render } from 'preact';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
-import type { SiomacConfig, SectionItem, NavGroupItem } from './types';
+import type { SiomacConfig, SectionItem } from './types';
 import './CommandPalette.css';
 
 // ── Data ──────────────────────────────────────────────────────────────────────

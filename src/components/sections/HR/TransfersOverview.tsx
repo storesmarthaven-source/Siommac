@@ -11,10 +11,9 @@
  */
 import { type VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState } from '@ui';
 import {
   useTransfers, useTransfersMutation, hrTransfersApi,
 } from '@api/hr/transfers';

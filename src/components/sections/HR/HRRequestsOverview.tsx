@@ -10,10 +10,9 @@
  */
 import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
-import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
-import { PageHeader, Modal, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton } from '@ui';
+import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton } from '@ui';
 import {
   useRequestTypes, useMyRequests, useAllRequests, useRequestsMutation, hrRequestsApi,
 } from '@api/hr/requests';

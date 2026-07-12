@@ -15,7 +15,7 @@
  * @see docs/CODING_STANDARDS.md §10-Testing-Standards
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import { resolvePermission, PERMISSION_KEYS, ROLE_PERMISSIONS } from './permissions';
 import type { PermissionContext }                from './permissions';
 import type { PermissionOverride }               from '@api/schemas/auth';

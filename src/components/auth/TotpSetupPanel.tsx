@@ -117,7 +117,7 @@ export function TotpSetupPanel({ preAuthToken, onSuccess, onError }: Props) {
       await navigator.clipboard.writeText(text);
       setCopyLabel('copied');
       setTimeout(() => setCopyLabel('copy'), 2500);
-    } catch (_) {}
+    } catch (_) { /* empty */ }
   }
 
   function handleDone() {

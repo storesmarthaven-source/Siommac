@@ -35,7 +35,6 @@ import type {
   UserStatus,
   PayCycle,
   PayBasis,
-  Department,
 } from './types';
 import { fileToBase64 } from './utils';
 import { useAddEmployee, useUpdateEmployee, useDepartmentList, useAssignableRoles } from './hooks';

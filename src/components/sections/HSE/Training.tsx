@@ -19,7 +19,6 @@ import {
   useTrainingStats, useCompetencyMatrix, useCertificates,
   type MatrixRow, type CertificateRow,
 } from '@api/hse/training';
-import { hsePill } from './types';
 import { WorkerProfileDrawer } from './training/WorkerProfileDrawer';
 import { CertificateDetailDrawer } from './training/CertificateDetailDrawer';
 import { AddCertificateDialog, AssignTrainingDialog, CreateRequirementDialog } from './training/TrainingDialogs';

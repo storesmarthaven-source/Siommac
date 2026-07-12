@@ -68,16 +68,6 @@ function openTicketPanel(): void {
   }
 }
 
-function navigateToRoute(route?: string | null): void {
-  // §0.3 guard: only call showSection for section ids (start with 's-')
-  if (route?.startsWith("s-")) {
-    window.Nav?.showSection?.(route);
-  } else {
-    // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav?.showSection?.("s-notification-center");
-  }
-}
-
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'

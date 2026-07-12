@@ -26,20 +26,20 @@ import {
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   type RowActionItem,
 } from '@ui';
-import { StatTable, StatBadge } from './StatTable';
+import { StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
 import {
   useStatutoryVersions, useNisClasses, usePayComponents, useVersionDetail,
   useStatutoryReport, useStatutoryMutation, usePayComponentChangeRequests,
   financeStatutoryApi,
   type StatutoryVersion, type NisClass, type PayComponent, type PayComponentChangeRequest,
-  type CreateStatutoryVersionArgs, type StatutoryReportKey,
+  type StatutoryReportKey,
 } from '@api/finance/statutory';
 import {
   useNisProfiles, usePayrollMutation, financePayrollApi, type NisProfileRow,
 } from '@api/finance/payroll';
 import { useEmployeeNames } from '@api/finance/lookups';
-import { EmployeeCell, EmployeeCellResolved } from './_shared/EmployeeCell';
+import { EmployeeCellResolved } from './_shared/EmployeeCell';
 import { fmtMoney, fmtPercent, fmtDate, humanize, toRoman } from './financeShared';
 import { ReportPanel, type ReportColumn } from './_shared/reports';
 import { StatNisBandPage } from './StatNisBandPage';
@@ -58,8 +58,6 @@ type StatSubView =
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-const num = (v: string): number => { const n = Number(v); return Number.isFinite(n) ? n : 0; };
-
 function statusTone(s: string): 'ok' | 'bad' | 'wn' | 'nu' | 'dr' {
   switch (s) {
     case 'active':   return 'ok';
@@ -69,10 +67,6 @@ function statusTone(s: string): 'ok' | 'bad' | 'wn' | 'nu' | 'dr' {
     case 'retired':  return 'dr';
     default:         return 'dr';
   }
-}
-
-function dateMonthKey(iso: string): string {
-  return iso.slice(0, 7); // "2026-07"
 }
 
 const PAGE_SIZE = 10;

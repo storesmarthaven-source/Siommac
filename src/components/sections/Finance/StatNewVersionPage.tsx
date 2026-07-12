@@ -26,7 +26,7 @@ import { useState, useMemo, useEffect } from 'preact/hooks';
 import { toast } from '@store';
 import {
   useStatutoryVersions, useStatutoryMutation, financeStatutoryApi,
-  type CreateStatutoryVersionArgs, type StatutoryVersion,
+  type CreateStatutoryVersionArgs,
 } from '@api/finance/statutory';
 import { Stepper, type StepperStep } from '@ui';
 import { fmtMoney, fmtDate, fmtPercent, toRoman } from './financeShared';
@@ -234,8 +234,8 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
                     </div>
                     {submitAttempted && !f.effectiveFrom ? <span class="sfp-err-msg">Effective date is required.</span> : <span class="sfp-hint">Rates apply from this date.</span>}
                   </div>
-                  <SelectField label="Jurisdiction" show={false} value="TT" onChange={() => {}} options={[{ value: 'TT', label: 'Trinidad & Tobago (TT)' }]} disabled />
-                  <SelectField label="Currency" show={false} value="TTD" onChange={() => {}} options={[{ value: 'TTD', label: 'TTD' }]} disabled />
+                  <SelectField label="Jurisdiction" show={false} value="TT" onChange={() => { /* noop */ }} options={[{ value: 'TT', label: 'Trinidad & Tobago (TT)' }]} disabled />
+                  <SelectField label="Currency" show={false} value="TTD" onChange={() => { /* noop */ }} options={[{ value: 'TTD', label: 'TTD' }]} disabled />
                   <SelectField label="Based On Previous Version" show={false} value={basedOnId}
                     onChange={copyFrom} hint="Optional — copy PAYE / HS / NIS-ceiling values from an existing version."
                     options={[{ value: '', label: '— None (start blank) —' }, ...versions.map(v => ({ value: v.id, label: `${v.label} (${fmtDate(v.effectiveFrom)})` }))]} />

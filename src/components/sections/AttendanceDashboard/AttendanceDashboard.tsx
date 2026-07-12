@@ -25,8 +25,7 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { h, Fragment }        from 'preact';
-import { useEffect, useRef, useState, useCallback } from 'preact/hooks';
+import { useEffect, useRef, useState } from 'preact/hooks';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { useSessionStore }    from '@store/session';
 import { getMyStatus, listProjectSites, markAttendance } from './api';

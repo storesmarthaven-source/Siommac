@@ -15,7 +15,7 @@
 import { type VNode, type ComponentChildren, cloneElement, toChildArray } from 'preact';
 import { useState, useMemo } from 'preact/hooks';
 import {
-  PageHeader, TabBar, HseModal, HseDrawer, Field,
+  PageHeader, TabBar, HseModal, Field,
   TextInput, SelectInput, TextareaInput, useCardReorder, ArrangeControls,
   MetricRow, StatsCard, Sparkline, NewMenu, Pagination, usePagination, DetailGrid, type AreaTab,
 } from '@ui';
@@ -488,7 +488,7 @@ function ReorderStrip({ pageKey, keys, children }: {
   );
 }
 
-function IncidentControlStrip({ incidents, investigations, capa, closurePct, avgDaysToClose, pageTab }: {
+function IncidentControlStrip({ incidents, investigations, capa, closurePct: _closurePct, avgDaysToClose, pageTab }: {
   incidents: IncidentRecord[];
   investigations: Investigation[];
   capa: CapaItem[];
@@ -897,7 +897,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct, avg
 
 // ── CAPA Health Card ──────────────────────────────────────────────────────────
 
-function CapaHealthCard({ capa, onViewAll, closurePct, overdueCapa, avgDaysToClose, avgTarget }: {
+function CapaHealthCard({ capa, onViewAll: _onViewAll, closurePct, overdueCapa, avgDaysToClose, avgTarget }: {
   capa: CapaItem[];
   onViewAll: () => void;
   closurePct: number;
@@ -1200,7 +1200,7 @@ function nextStep(i: IncidentRecord): string {
 
 
 
-function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, onReport }: {
+function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, onReport: _onReport }: {
   incidents: IncidentRecord[];
   savedView: string;
   setSavedView: (v: string) => void;
@@ -2823,7 +2823,7 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
 
 // ── CAPA tab ──────────────────────────────────────────────────────────────────
 
-function CapaTab({ capa, closurePct, avgDaysToClose }: { capa: CapaItem[]; closurePct: number; avgDaysToClose: number }): VNode {
+function CapaTab({ capa, closurePct: _closurePct, avgDaysToClose: _avgDaysToClose }: { capa: CapaItem[]; closurePct: number; avgDaysToClose: number }): VNode {
   const [search,     setSearch]  = useState('');
   const [statFilter, setStat]    = useState('All statuses');
   const [priFilter,  setPri]     = useState('All priorities');

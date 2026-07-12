@@ -6,7 +6,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useEffect } from 'preact/hooks';
-import { HseModal, Field, SelectInput, TextInput, TextareaInput } from '@ui';
+import { HseModal, Field, SelectInput, TextInput } from '@ui';
 import {
   useCreateCertificate, useRenewCertificate, useAssignTraining, useCreateRequirement,
   useCompetencies, useCourses,

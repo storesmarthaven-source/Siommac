@@ -312,7 +312,7 @@ function loadExpandedGroups(role: string): Set<string> | null {
 }
 
 function saveExpandedGroups(role: string, expanded: Set<string>): void {
-  try { localStorage.setItem(NAV_EXPAND_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
+  try { localStorage.setItem(NAV_EXPAND_KEY(role), JSON.stringify([...expanded])); } catch (_) { /* empty */ }
 }
 
 // Collapsible parent (sub-menu) expansion — persisted per role, like groups.
@@ -327,7 +327,7 @@ function loadExpandedParents(role: string): Set<string> {
 }
 
 function saveExpandedParents(role: string, expanded: Set<string>): void {
-  try { localStorage.setItem(NAV_PARENT_KEY(role), JSON.stringify([...expanded])); } catch (_) {}
+  try { localStorage.setItem(NAV_PARENT_KEY(role), JSON.stringify([...expanded])); } catch (_) { /* empty */ }
 }
 
 /** Wire collapsible parent (sub-menu) toggles — chevron button expands/collapses + persists. */
@@ -494,7 +494,7 @@ export function applyPalette(id: string): void {
   root.setProperty('--navy-light',   p.light);
   root.setProperty('--navy-accent',  p.accent);
   root.setProperty('--navy-hover',   p.hover);
-  try { localStorage.setItem('colorScheme', p.id); } catch (_) {}
+  try { localStorage.setItem('colorScheme', p.id); } catch (_) { /* empty */ }
 }
 
 export function renderPalettes(): void {
@@ -522,7 +522,7 @@ export function applyLayout(mode: string): void {
   const valid = LAYOUTS.find(l => l.id === mode) ? mode : 'sidebar';
   document.body.classList.remove('layout-sidebar', 'layout-tabs');
   document.body.classList.add('layout-' + valid);
-  try { localStorage.setItem('layoutMode', valid); } catch (_) {}
+  try { localStorage.setItem('layoutMode', valid); } catch (_) { /* empty */ }
   if (valid === 'tabs' && getRole()) buildTopTabs(getRole());
 }
 
@@ -601,20 +601,20 @@ export function showSection(id: string): void {
   document.getElementById(panelId)?.classList.add('active');
 
   // Broadcast the logical section id so module shells can render the right page.
-  try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: id })); } catch (_) {}
+  try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: id })); } catch (_) { /* empty */ }
 
   if (id === 's-adm-projects') {
     setTimeout(() => {
       const miniMaps = (window as unknown as { _getSiteMiniMaps?: () => Record<string, unknown> })._getSiteMiniMaps?.() ?? {};
       Object.values(miniMaps).forEach(m => {
         if (m && m !== 'pending') {
-          try { (m as { invalidateSize: () => void }).invalidateSize(); } catch (_) {}
+          try { (m as { invalidateSize: () => void }).invalidateSize(); } catch (_) { /* empty */ }
         }
       });
     }, 80);
   }
 
-  try { localStorage.setItem('siomac_last_section_' + getRole(), id); } catch (_) {}
+  try { localStorage.setItem('siomac_last_section_' + getRole(), id); } catch (_) { /* empty */ }
 
   document.querySelectorAll('.sidebar-menu button[data-section]').forEach(b =>
     b.classList.toggle('active', (b as HTMLButtonElement).dataset.section === id));

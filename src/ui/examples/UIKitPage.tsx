@@ -202,7 +202,7 @@ export function UIKitPage(): VNode {
           <ModuleTabs
             icon="fa-shield-halved" title="Example Module" sub="Navigation tabs with per-tab counts"
             tabs={SAMPLE_TABS} active={tab} onSelect={setTab}
-            actionLabel="New Record" onAction={() => {}}
+            actionLabel="New Record" onAction={() => { /* noop */ }}
           />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />
@@ -254,9 +254,9 @@ export function UIKitPage(): VNode {
           <div style={{ display: 'flex', gap: 'var(--space-2)', flexWrap: 'wrap', alignItems: 'center' }}>
             <button type="button" class="hse-btn"><i class="fas fa-download" /> Export</button>
             <NewMenu items={[
-              { label: 'New Rate Version',   icon: 'FilePlus2', sub: 'Draft a statutory version', onSelect: () => {} },
-              { label: 'New Pay Component',  icon: 'Layers',    sub: 'Add an earning or deduction', onSelect: () => {} },
-              { label: 'Import NIS Classes', icon: 'FileInput', sub: 'Bulk-load from CSV',          onSelect: () => {} },
+              { label: 'New Rate Version',   icon: 'FilePlus2', sub: 'Draft a statutory version', onSelect: () => { /* noop */ } },
+              { label: 'New Pay Component',  icon: 'Layers',    sub: 'Add an earning or deduction', onSelect: () => { /* noop */ } },
+              { label: 'Import NIS Classes', icon: 'FileInput', sub: 'Bulk-load from CSV',          onSelect: () => { /* noop */ } },
             ]} />
           </div>
         </Demo>
@@ -523,9 +523,9 @@ export function UIKitPage(): VNode {
         onSubmit={() => setModalOpen(false)} submitLabel="Save"
       >
         <FormGrid>
-          <Field label="Name"><TextInput value="" onInput={() => {}} placeholder="Enter a name" /></Field>
-          <Field label="Type"><SelectInput value="" onInput={() => {}} options={['Type A', 'Type B']} placeholder="Select…" /></Field>
-          <Field label="Notes" wide><TextareaInput value="" onInput={() => {}} placeholder="Optional notes" /></Field>
+          <Field label="Name"><TextInput value="" onInput={() => { /* noop */ }} placeholder="Enter a name" /></Field>
+          <Field label="Type"><SelectInput value="" onInput={() => { /* noop */ }} options={['Type A', 'Type B']} placeholder="Select…" /></Field>
+          <Field label="Notes" wide><TextareaInput value="" onInput={() => { /* noop */ }} placeholder="Optional notes" /></Field>
         </FormGrid>
       </Modal>
 
@@ -536,8 +536,8 @@ export function UIKitPage(): VNode {
         onClose={() => setWizardOpen(false)}
         onSubmit={() => setWizardOpen(false)} submitLabel="Create"
       >
-        {wizardStep === 0 && <FormGrid><Field label="Title" wide><TextInput value="" onInput={() => {}} placeholder="Step 1 — details" /></Field></FormGrid>}
-        {wizardStep === 1 && <FormGrid><Field label="Option" wide><SelectInput value="" onInput={() => {}} options={['One', 'Two']} placeholder="Step 2 — choose" /></Field></FormGrid>}
+        {wizardStep === 0 && <FormGrid><Field label="Title" wide><TextInput value="" onInput={() => { /* noop */ }} placeholder="Step 1 — details" /></Field></FormGrid>}
+        {wizardStep === 1 && <FormGrid><Field label="Option" wide><SelectInput value="" onInput={() => { /* noop */ }} options={['One', 'Two']} placeholder="Step 2 — choose" /></Field></FormGrid>}
         {wizardStep === 2 && <p style={{ fontSize: '0.85rem' }}>Step 3 — review and confirm. The footer shows Back · Cancel · Create.</p>}
       </Wizard>
 

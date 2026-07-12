@@ -45,7 +45,7 @@ export function PasswordLoginPanel({ onSuccess, onPasskeyClick }: Props) {
         setUsername(remembered);
         setRememberMe(true);
       }
-    } catch (_) {}
+    } catch (_) { /* empty */ }
   }, []);
 
   const loginMut = useMutation({

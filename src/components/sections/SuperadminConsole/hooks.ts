@@ -17,9 +17,8 @@ import {
   getAuditLogsApi,
   listRolesApi, getRolePermissionsApi, createRoleApi, updateRoleApi, deleteRoleApi, setRolePermissionApi,
   listApprovalsApi, approveGrantApi, rejectGrantApi, cancelGrantApi,
-  type ConsoleUser, type UserPermissionRow, type ActiveSession,
-  type AuditLogFilters, type RoleRow,
-  type PermissionApproval, type ApprovalStatus,
+  type AuditLogFilters,
+  type ApprovalStatus,
 } from '@lib/superadminApi';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import { consoleKeys } from './queryKeys';

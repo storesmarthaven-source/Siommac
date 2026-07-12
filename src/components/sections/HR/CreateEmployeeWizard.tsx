@@ -234,7 +234,7 @@ export function CreateEmployeeWizard({ onClose, onToast }: { onClose: () => void
                     <Sel label="Supervisor" value={form.supervisorId} onInput={v => set('supervisorId', v)} idOptions={supervisors} placeholder="No supervisor" />
                     <Field label="Cost Center" value={form.costCenter} onInput={v => set('costCenter', v)} />
                     <Field label="Assignment Effective Date" type="date" value={form.assignmentEffectiveDate} onInput={v => set('assignmentEffectiveDate', v)} />
-                    <Sel label="Primary Assignment" value="Yes" onInput={() => {}} options={['Yes']} />
+                    <Sel label="Primary Assignment" value="Yes" onInput={() => { /* noop */ }} options={['Yes']} />
                   </div>
                   <div class="warning-card">Warnings appear for missing department, site, or supervisor, a duplicate employee number, an inactive supervisor, or login enabled for a non-active employee.</div>
                 </section>

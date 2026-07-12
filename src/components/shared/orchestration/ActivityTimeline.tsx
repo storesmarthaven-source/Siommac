@@ -13,7 +13,7 @@
 
 import { type VNode } from 'preact';
 import { useState, useRef, useEffect, useMemo } from 'preact/hooks';
-import { useRecordTimeline, type TimelineItem } from '@api/orchestration';
+import { useRecordTimeline } from '@api/orchestration';
 import { relativeTime } from '@sections/NotificationCenter/notifMeta';
 
 const ICON: Record<string, string> = {

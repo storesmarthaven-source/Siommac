@@ -15,7 +15,6 @@ import { can } from '@lib/permissions';
 import { Drawer, HrfinPill, HrfinIcon } from '@ui';
 import { useApDuplicateRisks, useResolveDuplicateRisk, type ApDuplicateReview } from '@api/finance/accountsPayable';
 import { openActionModal } from '@/components/common/actions';
-import { money } from './hrfinFormat';
 
 const MATCH_LABEL: Record<string, string> = {
   exact_invoice:    'Same invoice number',

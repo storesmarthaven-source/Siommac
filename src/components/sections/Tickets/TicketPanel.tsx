@@ -88,8 +88,8 @@ export function TicketPanel({ onOpen }: TicketPanelProps) {
     w._getTicketUnreadCount = () => badgeCount;
     return () => {
       // Leave stubs rather than deleting — NavController may call after unmount
-      w._fetchTickets      = () => {};
-      w._clearTicketDetail = () => {};
+      w._fetchTickets      = () => { /* noop */ };
+      w._clearTicketDetail = () => { /* noop */ };
     };
   }, [refetch, badgeCount, onOpen]);
 

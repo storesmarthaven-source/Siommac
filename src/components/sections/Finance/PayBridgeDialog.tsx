@@ -16,7 +16,7 @@ import { toast } from '@store';
 import { HrfinWizardModal, HrfinPill } from '@ui';
 import { useCreateDisbursementFromRun, useCreateRemittanceFromRun } from '@api/finance/bridges';
 import { AuthorityPicker } from './_shared/pickers';
-import { fmtMoney, fmtDate } from './financeShared';
+import { fmtMoney } from './financeShared';
 import type { PayrollRun } from '@api/finance/payroll';
 
 // ── Create Disbursement ────────────────────────────────────────────────────────

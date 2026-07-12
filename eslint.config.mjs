@@ -58,6 +58,17 @@ export default [
       // thousands of false positives on JSX, .d.ts globals, type imports, etc.
       'no-undef': 'off',
 
+      // Recognise the _ prefix convention for intentionally-unused params/vars.
+      // TypeScript already enforces unused locals in strict mode; this rule adds
+      // the cross-check but must not fire on deliberate placeholders.
+      '@typescript-eslint/no-unused-vars': ['error', {
+        varsIgnorePattern:       '^_',
+        argsIgnorePattern:       '^_',
+        caughtErrorsIgnorePattern: '^_',
+        destructuredArrayIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
+
       // Allow void operator for intentional fire-and-forget (logger, analytics)
       '@typescript-eslint/no-confusing-void-expression': 'off',
 

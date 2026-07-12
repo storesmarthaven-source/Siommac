@@ -56,7 +56,7 @@ function loadSeenIds(): Set<string> {
 }
 
 function persistSeen(set: Set<string>): void {
-  try { localStorage.setItem(seenKey(), JSON.stringify([...set])); } catch {}
+  try { localStorage.setItem(seenKey(), JSON.stringify([...set])); } catch { /* empty */ }
 }
 
 function ticketBubbleHtml(r: TicketReply, seenIds: Set<string>, currentUser: string): string {
@@ -389,7 +389,7 @@ export function mountTicketsPanel(): () => void {
       updateTicketBadge();
       if (_currentTicketId) { updateTicketDetail(_currentTicketId); }
       else if (!_composing) { showList(); renderList(); }
-    } catch (_) {}
+    } catch (_) { /* empty */ }
     void keepDetail; // suppressed — keepDetail is for caller clarity only
   }
 
@@ -518,7 +518,7 @@ export function mountTicketsPanel(): () => void {
       if (sel) sel.dataset.userChanged = '';
       const t = _tickets.find(x => String(x.id) === String(_currentTicketId));
       if (t) { t.status = status; if (_currentTicketId != null) showDetail(_currentTicketId); renderList(); updateTicketBadge(); }
-    }).catch(() => {});
+    }).catch(() => { /* noop */ });
   }
 
   function onClearClosedClick(): void {

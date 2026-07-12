@@ -30,7 +30,6 @@ import {
   useDisbursementKpis,
   useDisbursementLinesDetail,
   useDisbursementReport,
-  useDisbursementAuditLog,
   useFinanceAuditLog,
   useBankFileStatusReport,
   useBankAccountReadinessReport,
@@ -38,8 +37,6 @@ import {
   financeDisbursementsApi,
   type Disbursement,
   type DisbursementStatus,
-  type BankFileStatusRow,
-  type BankAccountReadinessRow,
 } from '@api/finance/disbursements';
 import {
   useBankAccounts,

@@ -269,5 +269,5 @@ w.swr             = swr;
 w._swrLastHash    = _swrLastHash;
 w.pingApi         = pingApi;
 w.setImgSrc       = (img: HTMLImageElement, url: string) => { if (img && img.src !== url) img.src = url; };
-w._ajaxLoaderStart= () => {};   // no-op (background syncs are silent)
-w._ajaxLoaderDone = () => {};   // no-op
+w._ajaxLoaderStart= () => { /* noop */ };   // no-op (background syncs are silent)
+w._ajaxLoaderDone = () => { /* noop */ };   // no-op

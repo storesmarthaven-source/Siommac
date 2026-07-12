@@ -24,8 +24,6 @@ import { type VNode }                               from 'preact';
 import { useState, useMemo, useCallback }            from 'preact/hooks';
 import { Spinner }                                   from '@shared/Spinner';
 import { DataTable }                                 from '@shared/DataTable';
-import { Avatar }                                    from '@shared/Avatar';
-import { Badge }                                     from '@shared/Badge';
 import { confirm }                                   from '@shared/ConfirmDialog';
 import { useCan }                                     from '@lib/permissions';
 import type { EmployeeListItem, UserRole }            from './types';
@@ -102,7 +100,7 @@ interface EmployeesSectionProps {
   currentUsername: string;
 }
 
-export function EmployeesSection({ currentRole, currentUsername }: EmployeesSectionProps): VNode {
+export function EmployeesSection({ currentRole: _currentRole, currentUsername: _currentUsername }: EmployeesSectionProps): VNode {
   // Capability-based gating (includes superadmin via ROLE_PERMISSIONS, and any
   // per-user grant/override) instead of a raw role === 'admin' check.
   const canAdd    = useCan('employees.add');

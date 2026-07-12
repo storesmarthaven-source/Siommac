@@ -90,7 +90,7 @@ export function ExpClaimDrawer({
   onClose,
   canManage,
   canApprove,
-  actions,
+  actions: _actions,
   onReimbursed,
 }: ExpClaimDrawerProps): VNode {
   const [tab, setTab]         = useState<DrawerTab>('summary');

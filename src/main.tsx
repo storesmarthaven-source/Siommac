@@ -39,52 +39,19 @@ initTheme();
 import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';
-import {
-  mountAttendanceSection,
-  unmountAttendanceSection,
-} from '@sections/Attendance';
-import {
-  mountAdminLeaveSection,
-  unmountAdminLeaveSection,
-} from '@sections/AdminLeave';
-import {
-  mountProfileSection,
-  unmountProfileSection,
-} from '@sections/Profile';
-import {
-  mountSettingsSection,
-  unmountSettingsSection,
-} from '@sections/Settings';
+import { mountAttendanceSection }     from '@sections/Attendance';
+import { mountAdminLeaveSection }     from '@sections/AdminLeave';
+import { mountProfileSection }        from '@sections/Profile';
+import { mountSettingsSection }       from '@sections/Settings';
 import { applyCompanyLogoToDom, applyCompanyNameToDom } from '@sections/Settings/domSync';
-import {
-  mountHourlyRatesSection,
-  unmountHourlyRatesSection,
-} from '@sections/HourlyRates';
-import {
-  mountPayrollSection,
-  unmountPayrollSection,
-} from '@sections/Payroll';
-import {
-  mountDashboardController,
-  unmountDashboardController,
-} from '@sections/Dashboard';
-import {
-  mountLiveMapController,
-  unmountLiveMapController,
-} from '@sections/LiveMap';
-import {
-  mountProjectSitesSection,
-  unmountProjectSitesSection,
-} from '@sections/ProjectSites';
-import {
-  mountEmployeesModule,
-  unmountEmployeesModule,
-} from '@sections/Employees';
-import type { EmployeeSectionId } from '@sections/Employees';
-import {
-  mountAttendanceDashboard,
-  unmountAttendanceDashboard,
-} from '@sections/AttendanceDashboard';
+import { mountHourlyRatesSection }    from '@sections/HourlyRates';
+import { mountPayrollSection }        from '@sections/Payroll';
+import { mountDashboardController }   from '@sections/Dashboard';
+import { mountLiveMapController }     from '@sections/LiveMap';
+import { mountProjectSitesSection }   from '@sections/ProjectSites';
+import { mountEmployeesModule }       from '@sections/Employees';
+import type { EmployeeSectionId }     from '@sections/Employees';
+import { mountAttendanceDashboard }   from '@sections/AttendanceDashboard';
 import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
 import { mountMessageCenterSection, mountMessageDropdown } from '@sections/Messages';
 import '@sections/HSE';                 // self-registers the HSE module
@@ -363,7 +330,7 @@ async function bootApp(): Promise<void> {
   // initDashboardLayoutEditor() / loadChart() on section nav.
   // Invalidating the query triggers the DashboardController to refetch + re-delegate to SiomacCharts.
   (window as unknown as Record<string, unknown>).Dashboard = {
-    loadDashboardCharts:      (forceReload?: boolean) => {
+    loadDashboardCharts:      (_forceReload?: boolean) => {
       void queryClient.invalidateQueries({ queryKey: ['dashboard', 'charts'] });
     },
     loadChart:                () => { void queryClient.invalidateQueries({ queryKey: ['dashboard', 'myChart'] }); },
@@ -384,7 +351,7 @@ async function bootApp(): Promise<void> {
   // window.Sites shim — nav.js calls Sites.loadProjectSites() on section nav.
   // Invalidating the query triggers ProjectSitesSection to refetch.
   (window as unknown as Record<string, unknown>).Sites = {
-    loadProjectSites:    (forceWipe?: boolean, forceRefresh?: boolean) => {
+    loadProjectSites:    (_forceWipe?: boolean, _forceRefresh?: boolean) => {
       void queryClient.invalidateQueries({ queryKey: ['projectSites'] });
     },
     displayProjectSites: () => { void queryClient.invalidateQueries({ queryKey: ['projectSites'] }); },

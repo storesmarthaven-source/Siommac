@@ -20,7 +20,7 @@ import { useCan } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import {
-  PageHeader, Tabs, type TabDef, Modal, EmptyState, TableSkeleton,
+  PageHeader, Tabs, type TabDef, EmptyState, TableSkeleton,
   Field, TextInput, SelectInput, FormGrid,
   exportCsv,
 } from '@ui';

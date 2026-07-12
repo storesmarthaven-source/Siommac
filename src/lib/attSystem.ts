@@ -454,7 +454,7 @@ function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
       rememberMe: !!rememberMe,
     });
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 }
 
 function updateStoredSession(patch: Partial<SessionData>): void {
@@ -462,7 +462,7 @@ function updateStoredSession(patch: Partial<SessionData>): void {
     const s = loadSession();
     if (!s) return;
     localStorage.setItem(SESSION_KEY, JSON.stringify(Object.assign({}, s, patch)));
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 }
 
 function loadSession(): SessionData | null {
@@ -482,7 +482,7 @@ function loadSession(): SessionData | null {
 }
 
 function clearSession(): void {
-  try { localStorage.removeItem(SESSION_KEY); } catch (_) {}
+  try { localStorage.removeItem(SESSION_KEY); } catch (_) { /* empty */ }
   stopSessionTimer();            // clears timers + detaches activity listeners
   _sessWarned = false;
   _lastActivityReset = 0;
@@ -637,7 +637,7 @@ export function _completeLogin(result: Record<string, unknown>): void {
     const store = (w() as Record<string, unknown>).__siomacSessionStore as
       { getState: () => { login: (r: Record<string, unknown>) => void } } | undefined;
     store?.getState().login(result);
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 
   applySession(result, true);
 }
@@ -695,11 +695,11 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
   const def = (sectionDefs[currentRole] ?? [commonItems[1] ?? { id: '' }])[0] ?? { id: '' };
 
   if (announce) {
-    try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch (_) {}
+    try { localStorage.removeItem('siomac_last_section_' + currentRole); } catch (_) { /* empty */ }
     nav?.showSection?.(def.id);
   } else {
     let lastSection: string | null = null;
-    try { lastSection = localStorage.getItem('siomac_last_section_' + currentRole); } catch (_) {}
+    try { lastSection = localStorage.getItem('siomac_last_section_' + currentRole); } catch (_) { /* empty */ }
     nav?.showSection?.((lastSection && document.getElementById(lastSection)) ? lastSection : def.id);
   }
 
@@ -723,7 +723,7 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
     const MAP_VISITED_KEY = 'siomac_map_last_visited';
     const lv = parseInt(localStorage.getItem(MAP_VISITED_KEY) ?? '0', 10) || 0;
     if (!lv) localStorage.setItem(MAP_VISITED_KEY, String(Date.now()));
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 
   if (nav?._doHdrBadgeSync) nav._doHdrBadgeSync();
   const startNotif  = w()._startNotifPolling  as (() => void) | undefined;
@@ -745,7 +745,7 @@ function applySession(result: Record<string, unknown>, announce: boolean): void 
         if (e.username && e.profileImage) _patchPhotoCache(e.username as string, e.profileImage as string);
         if (e.profileImage) { const img = new Image(); img.src = e.profileImage as string; }
       });
-    }).catch(() => {});
+    }).catch(() => { /* noop */ });
   }, 1500);
 }
 
@@ -822,7 +822,7 @@ function handleLogout(): void {
     const store = (w() as Record<string, unknown>).__siomacSessionStore as
       { getState: () => { logout: () => void } } | undefined;
     store?.getState().logout();
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 }
 
 // ── Camera ────────────────────────────────────────────────────────────────────
@@ -1144,7 +1144,7 @@ function setupEventListeners(): void {
           const getLatLng = activeEmpMarker.getLatLng as (() => unknown) | undefined;
           (map.setView as (ll: unknown, z: number, o: unknown) => void)?.(getLatLng?.(), 16, { animate: true });
         } else if (attendanceZones.length) {
-          try { (map.fitBounds as (b: unknown) => void)?.(L.featureGroup(attendanceZones).getBounds().pad(0.25)); } catch (_) {}
+          try { (map.fitBounds as (b: unknown) => void)?.(L.featureGroup(attendanceZones).getBounds().pad(0.25)); } catch (_) { /* empty */ }
         } else {
           (map.setView as (ll: number[], z: number) => void)?.([10.6549, -61.5019], 12);
         }
@@ -1328,7 +1328,7 @@ export function init(): void {
     if (savedPalette) { currentColorScheme = savedPalette; _Nav()?.applyPalette?.(savedPalette); }
     const savedLayout = localStorage.getItem('layoutMode');
     if (savedLayout)  { currentLayoutMode  = savedLayout;  _Nav()?.applyLayout?.(savedLayout); }
-  } catch (_) {}
+  } catch (_) { /* empty */ }
 
   try {
     const cached   = loadSession();
@@ -1361,15 +1361,15 @@ export function init(): void {
             const d = cr.data as Record<string, number>;
             sv?.setStatutoryRates?.({ allowanceAnnual: d.PERSONAL_ALLOWANCE_ANNUAL ?? 90000, nisRate: Math.round((d.NIS_RATE ?? 0.06) * 100), payeRateLow: Math.round((d.PAYE_RATE_LOW ?? 0.25) * 100), payeRateHigh: Math.round((d.PAYE_RATE_HIGH ?? 0.30) * 100) });
           }
-        }).catch(() => {});
+        }).catch(() => { /* noop */ });
       }
 
       try {
         const sess = loadSession();
         if (sess) updateStoredSession({ companyLogoUrl: logoUrl, companyName: name || sess.companyName });
         else localStorage.setItem('siomac_branding', JSON.stringify({ companyLogoUrl: logoUrl, companyName: name }));
-      } catch (_) {}
-    }).catch(() => {});
+      } catch (_) { /* empty */ }
+    }).catch(() => { /* noop */ });
   }
 
   setupEventListeners();

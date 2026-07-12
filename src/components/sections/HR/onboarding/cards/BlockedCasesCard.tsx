@@ -3,7 +3,7 @@ import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { EmptyState } from '@ui';
 import { blockerMeta, fmtDate, humanize, type BlockerRow, type OnboardingSurfaceFilters } from '../../OnboardingCommandCenter.helpers';
-import { Icon, InsightGlyph, PersonAvatar } from '../primitives';
+import { InsightGlyph, PersonAvatar } from '../primitives';
 
 function BlockedCasesCard({ blockers, onOpenBlocked }: { blockers: BlockerRow[]; onOpenBlocked: (filters?: OnboardingSurfaceFilters) => void }): VNode {
   const pageSize = 3;

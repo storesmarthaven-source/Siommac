@@ -15,7 +15,6 @@ import { useContext, useRef, useState, useCallback } from 'preact/hooks';
 import { apiPost }                        from '@lib/api';
 import { useSessionStore }                from '@store/session';
 import { startAuthentication }            from '@simplewebauthn/browser';
-import { toast }                          from '@store';
 import { Modal }                          from '@components/shared';
 import { Spinner }                        from '@components/shared';
 
@@ -184,7 +183,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
       {children}
       <Modal
         open={open}
-        onClose={loading ? () => {} : () => handleResolve(false)}
+        onClose={loading ? () => { /* noop */ } : () => handleResolve(false)}
         closeOnBackdrop={!loading}
         closeOnEscape={!loading}
         size="sm"

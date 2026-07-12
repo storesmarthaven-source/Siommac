@@ -171,7 +171,7 @@ export function StatusDialog({ employeeId, onClose, onToast }: DialogProps): VNo
       <Err m={err} />
       <ModalSection title="Status Change" desc="Controls employee lifecycle and access eligibility.">
         <div class="form-grid">
-          {current ? <L label="Current Status" value={cap(current)} onInput={() => {}} /> : null}
+          {current ? <L label="Current Status" value={cap(current)} onInput={() => { /* noop */ }} /> : null}
           <S label="New Status" value={newStatus} onInput={setNewStatus} options={HR_STATUSES} />
           <L label="Effective Date" type="date" value={effectiveDate} onInput={setEffectiveDate} />
           <L label="Reason" value={reason} onInput={setReason} full />

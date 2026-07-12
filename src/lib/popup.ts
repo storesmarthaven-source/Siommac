@@ -333,9 +333,9 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   };
   document.addEventListener('keydown', _escHandler);
 
-  if (_activeInput) setTimeout(() => { try { _activeInput?.focus(); _activeInput?.select?.(); } catch (_) {} }, 60);
+  if (_activeInput) setTimeout(() => { try { _activeInput?.focus(); _activeInput?.select?.(); } catch (_) { /* empty */ } }, 60);
   if (typeof opts.didOpen === 'function') {
-    setTimeout(() => { try { opts.didOpen!(); } catch (_) {} }, 50);
+    setTimeout(() => { try { opts.didOpen!(); } catch (_) { /* empty */ } }, 50);
   }
 
   return new Promise(resolve => { _activeResolve = resolve; });

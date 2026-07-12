@@ -74,7 +74,7 @@ export function pinCanvas(
 function _spinner(canvasId: string): () => void {
   const canvas = document.getElementById(canvasId) as HTMLCanvasElement | null;
   const box    = canvas?.parentElement;
-  if (!box) return () => {};
+  if (!box) return () => { /* noop */ };
   const el = document.createElement('div');
   el.className = 'chart-spinner-wrap';
   el.innerHTML = '<div class="chart-spinner"></div>';

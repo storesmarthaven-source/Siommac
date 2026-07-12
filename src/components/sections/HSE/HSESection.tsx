@@ -49,7 +49,7 @@ export function HSESection(): VNode {
       const id = (e as CustomEvent<string>).detail;
       if (isHseSection(id)) {
         setSectionId(id);
-        try { localStorage.setItem('siomac_hse_section', id); } catch (_) {}
+        try { localStorage.setItem('siomac_hse_section', id); } catch (_) { /* empty */ }
       }
     }
     window.addEventListener('siomac:section', onSection);

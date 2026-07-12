@@ -8,7 +8,7 @@
  */
 
 import { apiPost } from '@lib/api';
-import type { ProfileData, ActivityEvent } from './types';
+import type { ActivityEvent } from './types';
 
 interface RawEmployee {
   fullName:       string;
@@ -55,12 +55,6 @@ export async function fetchMyProfile(username: string, signal?: AbortSignal): Pr
   );
   if (!res.success) throw new Error(res.message ?? 'Cannot load profile');
   return res.data;
-}
-
-function fmtLocalTime(iso: string | null): string {
-  if (!iso) return '—';
-  try { return new Date(iso).toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }); }
-  catch { return iso; }
 }
 
 function fmtActivity(d: string | undefined): string {

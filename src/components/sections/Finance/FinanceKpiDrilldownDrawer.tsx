@@ -86,7 +86,7 @@ export function FinanceKpiDrilldownDrawer({ kpiType, period = 'mtd', onClose }: 
             page={0} pageCount={1}
             total={data?.rows.length ?? 0}
             pageSize={100}
-            onPage={() => {}}
+            onPage={() => { /* noop */ }}
             noun="records"
             loading={loading}
             emptyMessage="No records found for this KPI and period."

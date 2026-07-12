@@ -22,7 +22,6 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { h }              from 'preact';
 import { useEffect }      from 'preact/hooks';
 import { useQuery }       from '@tanstack/preact-query';
 import { useSessionStore } from '@store/session';

@@ -59,7 +59,7 @@ function Step0Fields({
   periodMonth, setPeriodMonth,
   payFrequency, setPayFrequency,
   weeksInPeriod, setWeeksInPeriod,
-  payGroup, setPayGroup,
+  payGroup: _payGroup, setPayGroup,
   payGroupId, setPayGroupId,
   payDate, setPayDate,
   cutOffDate, setCutOffDate,

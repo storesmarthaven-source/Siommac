@@ -9,7 +9,6 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { h, Fragment }          from 'preact';
 import { useState, useMemo, useRef, useCallback } from 'preact/hooks';
 import { useQuery, useQueryClient } from '@tanstack/preact-query';
 import { toast }                from '@store';

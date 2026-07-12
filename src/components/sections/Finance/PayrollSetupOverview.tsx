@@ -48,7 +48,7 @@ import {
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { EmployeePicker } from './_shared/pickers';
-import { fmtDate, fmtMoney, humanize, statusTone } from './financeShared';
+import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
 
 const empName = (e: HrEmployeeRow): string =>

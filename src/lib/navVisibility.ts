@@ -49,7 +49,7 @@ function loadOrder(ns: string): string[] {
 }
 
 function saveOrder(ns: string, ids: string[]): void {
-  try { localStorage.setItem(orderKey(ns), JSON.stringify(ids)); } catch (_) {}
+  try { localStorage.setItem(orderKey(ns), JSON.stringify(ids)); } catch (_) { /* empty */ }
 }
 
 function load(ns: string): OverrideMap {
@@ -64,7 +64,7 @@ function load(ns: string): OverrideMap {
 }
 
 function save(ns: string, map: OverrideMap): void {
-  try { localStorage.setItem(storageKey(ns), JSON.stringify(map)); } catch (_) {}
+  try { localStorage.setItem(storageKey(ns), JSON.stringify(map)); } catch (_) { /* empty */ }
 }
 
 function emit(ns: string): void {
@@ -137,7 +137,7 @@ export function setOrder(ns: string, ids: readonly string[]): void {
 
 /** Reset a namespace back to registry defaults (both visibility AND order). */
 export function resetVisibility(ns: string): void {
-  try { localStorage.removeItem(storageKey(ns)); } catch (_) {}
-  try { localStorage.removeItem(orderKey(ns)); } catch (_) {}
+  try { localStorage.removeItem(storageKey(ns)); } catch (_) { /* empty */ }
+  try { localStorage.removeItem(orderKey(ns)); } catch (_) { /* empty */ }
   emit(ns);
 }

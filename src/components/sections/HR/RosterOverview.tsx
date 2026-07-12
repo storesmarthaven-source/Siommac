@@ -8,7 +8,7 @@
  * Gated by hr.roster.*; backend enforces, UI hides.
  */
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
@@ -21,8 +21,8 @@ import {
   useRosterMutation, hrRosterApi,
 } from '@api/hr/roster';
 import type {
-  RosterRow, RosterStatus, AssignmentKind, ShiftTemplate, RotationPattern,
-  CoverageRequirement, ShiftAssignment, CoverageGap,
+  RosterStatus, AssignmentKind,
+  ShiftAssignment,
 } from '../../../../types/hrRoster';
 import './onboardingCase.css';
 

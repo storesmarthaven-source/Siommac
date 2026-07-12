@@ -174,7 +174,7 @@ export function FinanceApprovalsInbox({ initialType }: Props): VNode {
         page={0} pageCount={1}
         total={items.length}
         pageSize={100}
-        onPage={() => {}}
+        onPage={() => { /* noop */ }}
         noun="approvals"
         loading={loading}
         emptyMessage="No pending approvals match the current filter."

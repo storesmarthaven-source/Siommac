@@ -19,7 +19,6 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { h, Fragment }       from 'preact';
 import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
 import { useQuery }          from '@tanstack/preact-query';
 import { toast }             from '@store';
@@ -502,7 +501,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
                   <input class="prs-input" type="number" min="0" step="0.01" value={vals.hsThreshold} onInput={(e) => setVal('hsThreshold', (e.target as HTMLInputElement).value)} />
                 </div>
                 <p style="font-size:12px;color:#888;margin:8px 0">High rates (above threshold):</p>
-                {(['Daily','Weekly','Fortnightly','Monthly'] as const).map((lbl, i) => {
+                {(['Daily','Weekly','Fortnightly','Monthly'] as const).map((lbl) => {
                   const key = `hsHigh${lbl}` as keyof PayrollConstants;
                   return (
                     <div class="prs-field" key={key}>
