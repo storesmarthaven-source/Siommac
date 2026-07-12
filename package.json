@@ -4,7 +4,7 @@
   "version": "1.0.0",
   "scripts": {
     "dev": "vite",
-    "dev:netlify": "npm run build:backend:clean && npx netlify-cli dev",
+    "dev:netlify": "npm run build:backend:clean && cross-env NODE_OPTIONS=--max-old-space-size=8192 npx netlify-cli dev",
     "build": "npm run build:backend && npm run build:frontend:clean",
     "build:backend": "tsc -p netlify/functions/tsconfig.json",
     "clean:backend": "node -e \"const fs=require('fs');for(const p of ['dist/netlify','dist/.tsbuildinfo-functions'])fs.rmSync(p,{recursive:true,force:true})\"",
@@ -101,6 +101,7 @@
     "@typescript-eslint/eslint-plugin": "^8.59.3",
     "@typescript-eslint/parser": "^8.59.3",
     "@vitest/ui": "^4.1.6",
+    "cross-env": "^10.1.0",
     "eslint": "^10.4.0",
     "eslint-plugin-react-hooks": "^7.1.1",
     "jest": "^29.7.0",
