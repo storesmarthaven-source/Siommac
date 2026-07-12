@@ -309,12 +309,13 @@ export async function setRunTemplate(
   if (runErr) throw Object.assign(new Error('setRunTemplate/run: ' + runErr.message), { status: 500 });
   if (!run)   throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
 
-  // Guard: template must be active (if provided)
+  // P3 render gate: template must be APPROVED (not draft/pending/archived).
+  // Only approved templates produce reliable payslip output.
   if (templateId) {
     const { data: tmpl, error: tmplErr } = await sb.from('payroll_payslip_templates')
-      .select('id, name').eq('id', templateId).eq('status', 'active').maybeSingle<{ id: string; name: string }>();
+      .select('id, name').eq('id', templateId).eq('status', 'approved').maybeSingle<{ id: string; name: string }>();
     if (tmplErr) throw Object.assign(new Error('setRunTemplate/template: ' + tmplErr.message), { status: 500 });
-    if (!tmpl)   throw Object.assign(new Error('Payslip template not found or archived.'), { status: 404 });
+    if (!tmpl)   throw Object.assign(new Error('Payslip template not found or not approved. Only approved templates can be linked to a payroll run.'), { status: 404 });
   }
 
   const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')

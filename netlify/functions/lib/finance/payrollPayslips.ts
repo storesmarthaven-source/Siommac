@@ -211,10 +211,11 @@ export async function loadRenderTemplate(runId: string): Promise<unknown | null>
   const templateId = run?.template_id ?? null;
   if (!templateId) return null;
 
-  // getTemplate returns only active templates; an archived/deleted one yields
-  // null → the snapshot renderer, never a silent substitute template.
+  // P3 render gate: only APPROVED templates may render; a draft/pending/archived
+  // template yields null -> the snapshot pdfkit renderer, never a substitute.
   const tmpl = await getTemplate(templateId);
-  return tmpl?.design ?? null;
+  if (!tmpl || tmpl.status !== 'approved') return null;
+  return tmpl.design ?? null;
 }
 
 // -- Render a single payslip PDF -> storage ------------------------------------
