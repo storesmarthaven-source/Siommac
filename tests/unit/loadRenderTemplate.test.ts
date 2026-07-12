@@ -100,13 +100,24 @@ describe('loadRenderTemplate — P0 studio boundary', () => {
     expect(t.getTemplate).not.toHaveBeenCalled();
   });
 
-  it('enabled + explicit active template → returns that template design', async () => {
+  it('enabled + explicit APPROVED template → returns that template design', async () => {
     const t = load('true');
     const design = { page: { size: 'a4' }, elements: [] };
     t.sbFrom.mockReturnValue(runRow({ data: { template_id: 'tmpl-9' }, error: null }));
-    t.getTemplate.mockResolvedValue({ id: 'tmpl-9', design });
+    // P3 render gate: template must have status='approved'
+    t.getTemplate.mockResolvedValue({ id: 'tmpl-9', design, status: 'approved' });
     await expect(t.loadRenderTemplate('run-1')).resolves.toBe(design);
     expect(t.getTemplate).toHaveBeenCalledWith('tmpl-9');
+  });
+
+  it('enabled + non-approved template (draft/pending) → null (P3 render gate)', async () => {
+    for (const status of ['draft', 'pending_approval', 'changes_requested']) {
+      const t = load('true');
+      const design = { page: { size: 'a4' }, elements: [] };
+      t.sbFrom.mockReturnValue(runRow({ data: { template_id: 'tmpl-x' }, error: null }));
+      t.getTemplate.mockResolvedValue({ id: 'tmpl-x', design, status });
+      await expect(t.loadRenderTemplate('run-1')).resolves.toBeNull();
+    }
   });
 
   it('enabled + explicit template that is archived/missing → null (no silent substitute)', async () => {
