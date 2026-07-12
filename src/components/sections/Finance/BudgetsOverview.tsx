@@ -77,7 +77,7 @@ function varianceTone(line: BudgetLine): HrfinTone {
 }
 
 function fmtPct(v: number | null): string {
-  if (v === null) return '—';
+  if (v == null) return '—';
   return (v >= 0 ? '+' : '') + v.toFixed(1) + '%';
 }
 
@@ -242,7 +242,7 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
       { header: 'Budgeted (TTD)', value: r => String(r.budgeted) },
       { header: 'Actual (TTD)',   value: r => String(r.actual) },
       { header: 'Variance (TTD)', value: r => String(r.variance) },
-      { header: 'Variance %',     value: r => r.variancePct !== null ? r.variancePct.toFixed(2) : '' },
+      { header: 'Variance %',     value: r => r.variancePct != null ? r.variancePct.toFixed(2) : '' },
     ], `budget-lines-fy${fiscalYear}`);
   }
 
@@ -455,7 +455,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
         label:   `${r.category} · ${r.costCenterName ?? ''}`,
         value:   moneyCompact(r.actual),
         percent: maxBudgeted > 0 ? Math.min(100, Math.round((r.actual / maxBudgeted) * 100)) : 0,
-        tone:    isOver ? ('danger' as const) : (r.variancePct !== null && r.variancePct < 10 ? ('warning' as const) : ('success' as const)),
+        tone:    isOver ? ('danger' as const) : (r.variancePct != null && r.variancePct < 10 ? ('warning' as const) : ('success' as const)),
         note:    `${fmtPct(r.variancePct)} vs ${moneyCompact(r.budgeted)} budget`,
         // §15: click bar → budget-line drawer
         onClick: onDrill ? () => onDrill(r) : undefined,
@@ -471,7 +471,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
       { header: 'Budgeted (TTD)', value: r => String(r.budgeted) },
       { header: 'Actual (TTD)',   value: r => String(r.actual) },
       { header: 'Variance (TTD)', value: r => String(r.variance) },
-      { header: 'Variance %',     value: r => r.variancePct !== null ? r.variancePct.toFixed(2) : '' },
+      { header: 'Variance %',     value: r => r.variancePct != null ? r.variancePct.toFixed(2) : '' },
     ], `budget-variance-fy${fiscalYear}`);
   }
 
@@ -485,7 +485,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
       label: 'Variance',
       sortable: true,
       render: r => {
-        const tone: HrfinTone = r.variance >= 0 ? 'ok' : (r.variancePct !== null && r.variancePct >= -10 ? 'wn' : 'bad');
+        const tone: HrfinTone = r.variance >= 0 ? 'ok' : (r.variancePct != null && r.variancePct >= -10 ? 'wn' : 'bad');
         return <HrfinPill tone={tone}>{money(r.variance)}</HrfinPill>;
       },
     },
@@ -903,7 +903,7 @@ export function BudgetsOverview(): VNode {
       { header: 'Budgeted (TTD)', value: r => String(r.budgeted) },
       { header: 'Actual (TTD)',   value: r => String(r.actual) },
       { header: 'Variance (TTD)', value: r => String(r.variance) },
-      { header: 'Variance %',     value: r => r.variancePct !== null ? r.variancePct.toFixed(2) : '' },
+      { header: 'Variance %',     value: r => r.variancePct != null ? r.variancePct.toFixed(2) : '' },
     ], `budget-lines-fy${fiscalYear}`);
   }
 

@@ -79,7 +79,7 @@ export function StatsCard({
   if (headerBg)    headerStyle.background = headerBg;
   if (headerColor) headerStyle.color = headerColor;
 
-  const hasPercent = percent !== undefined && percent !== null;
+  const hasPercent = percent !== undefined && percent != null;
   const barColor = percentColor ?? (percent != null && percent >= 80 ? '#22c55e' : '#f59e0b');
 
   return (

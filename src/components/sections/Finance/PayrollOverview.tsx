@@ -457,7 +457,7 @@ export function PayrollOverview(): VNode {
         placeholder: 'Reason for rejection…',
         confirmText: 'Reject',
       });
-      if (reason === null) return;
+      if (reason == null) return;
       void runAction(
         rejectRunMut.mutateAsync({ id: run.id, reason: reason.trim() || 'Rejected by approver.' }),
         'Run rejected and returned for revision.',

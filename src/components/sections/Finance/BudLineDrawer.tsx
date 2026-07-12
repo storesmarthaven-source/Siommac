@@ -55,7 +55,7 @@ function varianceTone(line: BudgetLine): HrfinTone {
 
 function varianceLabel(line: BudgetLine): string {
   const pct = line.variancePct;
-  if (pct === null) return 'N/A';
+  if (pct == null) return 'N/A';
   if (pct >= 0) return `${pct.toFixed(1)}% under`;
   return `${Math.abs(pct).toFixed(1)}% over`;
 }

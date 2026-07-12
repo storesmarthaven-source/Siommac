@@ -89,7 +89,10 @@ export default [
 
       // ── General quality ─────────────────────────────────────────────────────
       'no-console':               ['warn', { allow: ['warn', 'error'] }],
-      'eqeqeq':                   ['error', 'always'],
+      // Allow == null / != null checks — they intentionally cover both null and
+      // undefined (null == undefined is true) which is a valid JS/TS idiom.
+      // All other == / != comparisons must use strict equality.
+      'eqeqeq':                   ['error', 'always', { 'null': 'ignore' }],
       'prefer-const':             'error',
       'no-var':                   'error',
     },

@@ -218,7 +218,7 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
       type: 'number',
       confirmText: 'Update',
     });
-    if (raw === null) return;
+    if (raw == null) return;
     const val = parseFloat(raw);
     if (isNaN(val)) { toast('Invalid amount — please enter a number.'); return; }
     try {

@@ -576,7 +576,7 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
 
   const handleReject = async (cr: PayComponentChangeRequest): Promise<void> => {
     const reason = await dialog.prompt({ title: 'Reject this change?', text: 'The component will remain unchanged. Provide a reason (optional):', placeholder: 'e.g. GL code is incorrect' });
-    if (reason === null) return; // cancelled
+    if (reason == null) return; // cancelled
     try { await rejectMut.mutateAsync({ id: cr.id, reason: reason || undefined }); toast('Change request rejected.'); }
     catch (e) { toast.error((e as Error).message); }
   };
@@ -610,7 +610,7 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
 
   // Build a set of component IDs with a pending CR for badge display.
   const pendingCrComponentIds = useMemo(
-    () => new Set(pendingCRs.map(cr => cr.componentId).filter((id): id is string => id !== null)),
+    () => new Set(pendingCRs.map(cr => cr.componentId).filter((id): id is string => id != null)),
     [pendingCRs],
   );
 
@@ -759,7 +759,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       text: 'Confirm this NIS profile is correct and cleared for payroll. Add an optional note.',
       placeholder: 'Verification note (optional)', confirmText: 'Verify', type: 'textarea',
     });
-    if (note === null) return; // cancelled
+    if (note == null) return; // cancelled
     try {
       await verifyMut.mutateAsync({ id, verificationNote: note.trim() || null });
       toast('NIS profile verified.');

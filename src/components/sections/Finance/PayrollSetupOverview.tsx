@@ -210,7 +210,7 @@ function LoansPanel(): VNode {
     if (['draft', 'pending_approval', 'rejected'].includes(l.status)) {
       items.push({ key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger', onClick: async () => {
         const reason = await dialog.prompt({ title: `Cancel ${l.reference}`, text: 'Cancelling withdraws this loan before it takes effect (any open approval is closed). Provide a reason (audit-logged).', placeholder: 'Reason…', confirmText: 'Cancel loan' });
-        if (reason === null) return;
+        if (reason == null) return;
         void run(cancelMut.mutateAsync({ id: l.id, reason: reason.trim() || undefined }), 'Loan cancelled.');
       } });
     }

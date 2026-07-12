@@ -149,7 +149,7 @@ export function navGlobalCatalog(role: string): NavGlobalCatalog {
             visible:     isVisible(t.id, kidVisItems, k.id),
             required:    REQUIRED_MODULE_IDS.has(k.id),
           } satisfies GlobalChildEntry;
-        }).filter((x): x is GlobalChildEntry => x !== null);
+        }).filter((x): x is GlobalChildEntry => x != null);
       }
 
       items.push({
