@@ -5,7 +5,7 @@ const svgURI = (svg: string): string =>
 
 export const LOGOS = {
   hex: svgURI(
-    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5b7cfa"/><stop offset="1" stop-color="#8a5bf0"/></linearGradient></defs><path d="M36 3l28.6 16.5v33L36 69 7.4 52.5v-33z" fill="url(#g)"/><text x="36" y="47" font-family="Inter,Arial" font-size="30" font-weight="800" fill="#fff" text-anchor="middle">S</text></svg>`,
+    `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#fab907"/><stop offset="1" stop-color="#fab907"/></linearGradient></defs><path d="M36 3l28.6 16.5v33L36 69 7.4 52.5v-33z" fill="url(#g)"/><text x="36" y="47" font-family="Inter,Arial" font-size="30" font-weight="800" fill="#fff" text-anchor="middle">S</text></svg>`,
   ),
   mono: svgURI(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 72 72"><rect width="72" height="72" rx="14" fill="none" stroke="#111a3a" stroke-width="3"/><text x="36" y="48" font-family="Fraunces,Georgia,serif" font-size="38" font-weight="600" fill="#111a3a" text-anchor="middle">S</text></svg>`,
