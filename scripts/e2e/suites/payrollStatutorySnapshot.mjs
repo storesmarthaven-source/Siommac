@@ -41,8 +41,9 @@ function seedDateFromTag(tag, salt) {
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
 
-  const ctx = { runId: null, v1Id: null, v2Id: null, createdUserIds: [] };
+  const ctx = { runId: null, v1Id: null, v2Id: null, empId: null, createdUserIds: [] };
   let fmgrId, fmgrToken;
+  const TAXABLE_PAY = 30000; // injected taxable earning so PAYE is observable regardless of roster setup
 
   h.onCleanup(async () => {
     if (ctx.runId) {
@@ -86,6 +87,7 @@ export default async function run(h) {
     // making the run rate-sensitive (a rate change is observable).
     const empR = await acquireActors('employee', 1, { pay_basis: 'salary', monthly_salary: 30000.00 });
     fmgrId = mgrR.actors[0].id;
+    ctx.empId = empR.actors[0].id;
     ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
     fmgrToken = mint({ id: fmgrId, username: mgrR.actors[0].username, role: 'finance_manager', department_id: null });
   });
@@ -106,28 +108,37 @@ export default async function run(h) {
 
     const li = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
     ok(li, `lock-inputs failed: ${li.body.message}`);
-    expect(li.body.data.employeeCount > 0, 'employeeCount should be > 0 (need a salaried actor in the run)');
+
+    // Inject a known TAXABLE earning for our employee so the line has real chargeable
+    // income — acquired actors don't reliably carry base pay, and calc reads inputs
+    // (not the salary attribute). This also guarantees the employee is in the run.
+    const { error: inErr } = await sb.from('finance_payroll_run_inputs').insert({
+      run_id: ctx.runId, employee_id: ctx.empId, source_type: 'pay_item',
+      component_code: 'SNAP_TAXABLE', label: 'Snapshot test taxable earning',
+      amount: TAXABLE_PAY, metadata: { kind: 'earning', is_taxable: true },
+    });
+    expect(!inErr, `inject taxable input failed: ${inErr?.message}`);
 
     const cc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
     ok(cc, `calculate failed: ${cc.body.message}`);
     expect(cc.body.data.status === 'calculated', `status should be calculated, got ${cc.body.data.status}`);
   });
 
-  await test('capture the well-paid employee line PAYE under V1 (must be > 0)', async () => {
+  await test('capture the employee line under V1 (taxable gross must be > 0)', async () => {
     const r = await api('finance/payroll/run-lines/list', fmgrToken, { runId: ctx.runId });
     ok(r, `run-lines/list failed: ${r.body.message}`);
-    const empUserId = ctx.createdUserIds.find(id => id !== fmgrId);
-    const line = r.body.data.find(l => l.employeeId === empUserId) ?? r.body.data[0];
-    expect(line, 'no run line found for the salaried employee');
+    const line = r.body.data.find(l => l.employeeId === ctx.empId);
+    expect(line, `no run line found for the injected employee ${ctx.empId}`);
     payeV1 = Number(line.paye);
     nisV1 = Number(line.nisEmployee);
-    expect(payeV1 > 0, `PAYE under V1 should be > 0 for a 30000 salary (got ${payeV1}) — else the rate change is unobservable`);
+    expect(Number(line.taxableGross) > 0,
+      `taxable gross under V1 should be > 0 (got ${line.taxableGross}) — the injected earning must be present`);
   });
 
   // ── Build a differently-rated, INACTIVE V2 + copy V1 classes ────────────────
   h.section('Statutory Snapshot › Build throwaway V2');
 
-  await test('clone V1 into an inactive V2 with a doubled PAYE band-1 rate', async () => {
+  await test('clone V1 into an inactive V2 with zero personal allowance', async () => {
     // Clear any orphan V2 from a crashed prior run before inserting.
     const { data: orphans } = await sb.from('finance_statutory_versions')
       .select('id').eq('effective_from', V2_EFFECTIVE_FROM).eq('is_active', false);
@@ -140,15 +151,17 @@ export default async function run(h) {
       .select('*').eq('id', ctx.v1Id).single();
     expect(!v1err && v1row, `could not load V1 row: ${v1err?.message}`);
 
-    const { id: _id, created_at: _c, updated_at: _u, activated_at: _a, ...rest } = v1row;
-    const doubled = Math.min(Number(v1row.paye_band1_rate) * 2, 0.9);
+    // Copy V1 verbatim (select * → every real column), then change only what makes V2
+    // distinct + differently-rated. Zero personal allowance raises PAYE monotonically
+    // for any taxable gross > 0, so the difference is observable without depending on
+    // the tax-band structure. is_active stays false — the active version never changes.
+    const { id: _id, created_at: _c, updated_at: _u, ...rest } = v1row;
     const v2insert = {
       ...rest,
       label: `${TAG} ${V2_LABEL_MARK}`,
       effective_from: V2_EFFECTIVE_FROM,
-      paye_band1_rate: doubled,
+      paye_personal_allowance: 0,
       is_active: false,
-      is_current: false,
     };
     const { data: v2row, error: v2err } = await sb.from('finance_statutory_versions')
       .insert(v2insert).select('id').single();
@@ -186,15 +199,15 @@ export default async function run(h) {
 
     const r = await api('finance/payroll/run-lines/list', fmgrToken, { runId: ctx.runId });
     ok(r, `run-lines/list failed: ${r.body.message}`);
-    const empUserId = ctx.createdUserIds.find(id => id !== fmgrId);
-    const line = r.body.data.find(l => l.employeeId === empUserId) ?? r.body.data[0];
+    const line = r.body.data.find(l => l.employeeId === ctx.empId);
+    expect(line, `no run line found for the injected employee ${ctx.empId} after recalculate`);
     const payeV2 = Number(line.paye);
     const nisV2 = Number(line.nisEmployee);
 
-    // The snapshot binding: calc used the run's version (V2), so the doubled band-1
-    // rate raised PAYE. Under the old active-version bug PAYE would equal payeV1.
+    // The snapshot binding: calc used the run's version (V2, zero allowance), so PAYE
+    // rose. Under the old active-version bug calc would have read V1 and PAYE == payeV1.
     expect(payeV2 > payeV1,
-      `PAYE should rise under V2's doubled rate (V1=${payeV1}, V2=${payeV2}) — calc must read the run snapshot, not the active version`);
+      `PAYE should rise under V2's zero allowance (V1=${payeV1}, V2=${payeV2}) — calc must read the run snapshot, not the active version`);
     // NIS classes were copied identically → NIS must be unchanged.
     expect(nisV2 === nisV1,
       `NIS should be unchanged (V1=${nisV1}, V2=${nisV2}) — only the PAYE rate differed between versions`);
