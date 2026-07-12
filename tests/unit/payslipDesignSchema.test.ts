@@ -342,3 +342,44 @@ describe('validateDesign — image element', () => {
     expect(validateDesign(withEl(el))).toBeNull();
   });
 });
+
+// ── Resource limits (P2-b) ───────────────────────────────────────────────────────
+
+describe('validateDesign — resource limits', () => {
+  it('rejects more than 300 elements', () => {
+    const el = validDesign().elements[0];
+    const many = Array.from({ length: 301 }, (_, i) => ({ ...el, id: `e${i}` }));
+    expect(validateDesign(validDesign({ elements: many }))).toMatch(/element limit/i);
+  });
+
+  it('accepts exactly 300 elements', () => {
+    const el = validDesign().elements[0];
+    const many = Array.from({ length: 300 }, (_, i) => ({ ...el, id: `e${i}` }));
+    expect(validateDesign(validDesign({ elements: many }))).toBeNull();
+  });
+
+  it('rejects a coordinate above the 20000px limit', () => {
+    const el = { ...validDesign().elements[0], w: 20001 };
+    expect(validateDesign(validDesign({ elements: [el] }))).toMatch(/limit/i);
+  });
+
+  it('rejects text longer than 10000 chars', () => {
+    const el = { ...validDesign().elements[0], text: 'x'.repeat(10_001) };
+    expect(validateDesign(validDesign({ elements: [el] }))).toMatch(/character limit/i);
+  });
+
+  it('rejects a table with more than 300 rows', () => {
+    const rows = Array.from({ length: 301 }, () => ({ label: 'a', amount: '1' }));
+    expect(validateDesign(validDesign({ elements: [tableEl({ rows })] }))).toMatch(/row limit/i);
+  });
+
+  it('rejects an image src over ~2 MB', () => {
+    const el = { id: 'i1', type: 'image', x: 0, y: 0, w: 80, h: 80, z: 1, src: 'x'.repeat(3_000_001) };
+    expect(validateDesign(validDesign({ elements: [el] }))).toMatch(/2 MB|limit/i);
+  });
+
+  it('rejects a total payload over 4 MB', () => {
+    const big = validDesign({ junk: 'x'.repeat(4_000_001) });
+    expect(validateDesign(big)).toMatch(/byte limit/i);
+  });
+});

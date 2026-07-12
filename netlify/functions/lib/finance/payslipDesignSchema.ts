@@ -31,6 +31,18 @@ const VALID_BINDINGS     = new Set<string>([
 ]);
 const VALID_BORDER_STYLE = new Set<string>(['solid', 'dashed', 'dotted']);
 
+// ── Resource limits (P2-b: reject abusive/oversized designs before storage) ────
+// A payslip is one page of layout; these ceilings are far above any real design
+// but bound memory/PDF work and storage. Image src is a data-URI: cap the base64
+// so it can't exceed the renderer's 2 MB decoded limit (~1.37x inflation).
+const MAX_JSON_BYTES  = 4_000_000;   // whole serialized design
+const MAX_ELEMENTS    = 300;
+const MAX_COORD       = 20_000;      // x/y/w/h upper bound (px in studio space)
+const MAX_TEXT_LEN    = 10_000;      // heading/text body
+const MAX_LABEL_LEN   = 1_000;       // labels/titles/tokens/values
+const MAX_TABLE_ROWS  = 300;
+const MAX_IMAGE_SRC   = 3_000_000;   // data-URI length (~2 MB decoded)
+
 // ── Internal type guards ───────────────────────────────────────────────────────
 
 function isObj(v: unknown): v is Record<string, unknown> {
@@ -65,6 +77,10 @@ function validateBaseEl(el: Record<string, unknown>, i: number): string | null {
     return `element[${i}].x must be >= 0`;
   if ((el['y'] as number) < 0)
     return `element[${i}].y must be >= 0`;
+  for (const k of ['x', 'y', 'w', 'h'] as const) {
+    if ((el[k] as number) > MAX_COORD)
+      return `element[${i}].${k} exceeds the ${MAX_COORD}px limit`;
+  }
   return null;
 }
 
@@ -101,6 +117,8 @@ function validateStyleEl(el: Record<string, unknown>, i: number): string | null 
 function validateTextEl(el: Record<string, unknown>, i: number): string | null {
   if (!isStr(el['text']))
     return `element[${i}].text must be a string`;
+  if ((el['text'] as string).length > MAX_TEXT_LEN)
+    return `element[${i}].text exceeds the ${MAX_TEXT_LEN}-character limit`;
   return null;
 }
 
@@ -151,15 +169,17 @@ function validateTableEl(el: Record<string, unknown>, i: number): string | null 
   // Validate each static row. When binding is set the renderer ignores these
   // rows, but they must still have a valid shape so the stored JSON stays clean.
   const rows = el['rows'] as unknown[];
+  if (rows.length > MAX_TABLE_ROWS)
+    return `element[${i}].rows exceeds the ${MAX_TABLE_ROWS}-row limit`;
   for (let ri = 0; ri < rows.length; ri++) {
     const row = rows[ri];
     if (!isObj(row))
       return `element[${i}].rows[${ri}] must be an object`;
     const r = row as Record<string, unknown>;
-    if (!isStr(r['label']))
-      return `element[${i}].rows[${ri}].label must be a string`;
-    if (!isStr(r['amount']))
-      return `element[${i}].rows[${ri}].amount must be a string`;
+    if (!isStr(r['label']) || (r['label'] as string).length > MAX_LABEL_LEN)
+      return `element[${i}].rows[${ri}].label must be a string <= ${MAX_LABEL_LEN} chars`;
+    if (!isStr(r['amount']) || (r['amount'] as string).length > MAX_LABEL_LEN)
+      return `element[${i}].rows[${ri}].amount must be a string <= ${MAX_LABEL_LEN} chars`;
   }
 
   // Optional binding field: must be a recognised enum value when present.
@@ -188,6 +208,8 @@ function validateDividerEl(el: Record<string, unknown>, i: number): string | nul
 function validateImageEl(el: Record<string, unknown>, i: number): string | null {
   if (!isStr(el['src']))
     return `element[${i}].src must be a string`;
+  if ((el['src'] as string).length > MAX_IMAGE_SRC)
+    return `element[${i}].src exceeds the ${MAX_IMAGE_SRC}-character (~2 MB) limit`;
   return null;
 }
 
@@ -203,6 +225,13 @@ function validateImageEl(el: Record<string, unknown>, i: number): string | null 
 export function validateDesign(design: unknown): string | null {
   if (!isObj(design))
     return 'Design must be a non-null JSON object.';
+
+  // ── total payload size (bounds storage + downstream render work) ────────────
+  let bytes = 0;
+  try { bytes = JSON.stringify(design).length; }
+  catch { return 'Design is not serializable JSON (circular reference?).'; }
+  if (bytes > MAX_JSON_BYTES)
+    return `Design payload (${bytes} bytes) exceeds the ${MAX_JSON_BYTES}-byte limit.`;
 
   // ── page ──────────────────────────────────────────────────────────────────
   const page = design['page'];
@@ -220,6 +249,8 @@ export function validateDesign(design: unknown): string | null {
     return 'Design.elements must be an array.';
 
   const elements = design['elements'] as unknown[];
+  if (elements.length > MAX_ELEMENTS)
+    return `Design.elements exceeds the ${MAX_ELEMENTS}-element limit (${elements.length}).`;
   for (let i = 0; i < elements.length; i++) {
     const el = elements[i];
     if (!isObj(el))
