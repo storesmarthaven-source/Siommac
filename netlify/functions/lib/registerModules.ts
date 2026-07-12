@@ -18,7 +18,8 @@ import { registerFinanceNisProfileAdapter }     from './workflow/financeNisProfi
 import { registerFinancePayComponentAdapter }  from './workflow/financePayComponentAdapter';
 import { registerFinancePayrollAdapter }       from './workflow/financePayrollAdapter';
 import { registerFinanceLoanAdapter }          from './workflow/financeLoanAdapter';
-import { registerFinanceRemittancesAdapter }   from './workflow/financeRemittancesAdapter';
+import { registerFinanceRemittancesAdapter }        from './workflow/financeRemittancesAdapter';
+import { registerFinancePayslipTemplateAdapter }   from './workflow/financePayslipTemplateAdapter';
 
 let registered = false;
 
@@ -41,6 +42,7 @@ export function registerModulesOnce(): void {
   registerFinancePayrollAdapter();
   registerFinanceLoanAdapter();
   registerFinanceRemittancesAdapter();
+  registerFinancePayslipTemplateAdapter();
 
   registered = true;
 }

@@ -11,6 +11,7 @@ import { z, zv } from '../lib/validate';
 import {
   listTemplates, getTemplate, createTemplate, updateTemplate,
   setDefaultTemplate, archiveTemplate, getEditorState, saveEditorState,
+  submitTemplate, decideTemplateApproval, createTemplateVersion,
 } from '../lib/finance/payslipTemplates';
 import type { HonoVariables } from '../../../types/api';
 
@@ -86,6 +87,66 @@ router.post(`${P}/delete`, async c => {
   if (!v.ok) return v.response;
   try {
     return c.json({ success: true, data: await archiveTemplate(v.data.id, actor.id) });
+  } catch (e) { return fail(c, e); }
+});
+
+// ── Maker-checker lifecycle ──────────────────────────────────────────────────
+
+router.post(`${P}/submit`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    return c.json({ success: true, data: await submitTemplate(v.data.id, actor.id) });
+  } catch (e) { return fail(c, e); }
+});
+
+router.post(`${P}/approve`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.approve');
+  const v = zv(c, z.object({
+    id:      z.string().uuid(),
+    comment: z.string().trim().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    return c.json({
+      success: true,
+      data: await decideTemplateApproval({
+        templateId: v.data.id,
+        actor:      { id: actor.id, role: actor.role },
+        decision:   'approved',
+        comment:    v.data.comment,
+      }),
+    });
+  } catch (e) { return fail(c, e); }
+});
+
+router.post(`${P}/request-changes`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.approve');
+  const v = zv(c, z.object({
+    id:      z.string().uuid(),
+    comment: z.string().trim().min(1, 'A reason is required when requesting changes.'),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    return c.json({
+      success: true,
+      data: await decideTemplateApproval({
+        templateId: v.data.id,
+        actor:      { id: actor.id, role: actor.role },
+        decision:   'rejected',
+        comment:    v.data.comment,
+      }),
+    });
+  } catch (e) { return fail(c, e); }
+});
+
+router.post(`${P}/create-version`, async c => {
+  const actor = await requirePermission(c, 'finance.payroll.templates.manage');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    return c.json({ success: true, data: await createTemplateVersion(v.data.id, actor.id) });
   } catch (e) { return fail(c, e); }
 });
 
