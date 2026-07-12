@@ -9,7 +9,7 @@
 -- Updates: status check constraint, partial unique index, and both Postgres RPCs
 --          (set-default and archive) to check status='approved' instead of 'active'.
 -- Seeds:   workflow_templates + version + module_workflow_bindings for the
---          payslip_template_approval workflow (assigned to finance_manager).
+--          payslip_template_approval workflow (assigned to superadmin).
 --
 -- ASCII only, idempotent, named dollar-quote, <6KB.
 --
@@ -189,7 +189,7 @@ revoke all on function public.payroll_archive_template(uuid, text) from authenti
 grant  execute on function public.payroll_archive_template(uuid, text) to service_role;
 
 -- ── Step 7: Seed workflow template + published version + binding ──────────────
--- Approval step assigned to finance_manager.
+-- Approval step assigned to superadmin (CEO). SoD enforced in the adapter + service.
 -- SoD (submitted_by != approver) enforced in the adapter.
 -- sourceStatusMap drives the adapter's status transitions.
 
@@ -255,7 +255,7 @@ begin
           'stepName',         'Finance Manager Template Approval',
           'stepType',         'approval',
           'sequenceNo',       1,
-          'assignment',       jsonb_build_object('type', 'role', 'value', 'finance_manager'),
+          'assignment',       jsonb_build_object('type', 'role', 'value', 'superadmin'),
           'dueDurationHours', 72,
           'required',         true,
           'decisionRules',    dr

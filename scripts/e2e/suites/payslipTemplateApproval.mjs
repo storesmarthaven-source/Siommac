@@ -50,7 +50,7 @@ export default async function run(h) {
 
   // User IDs — prefixed so sweep-orphans can find them
   const makerId    = 'PTA-MAKER-'    + TAG;  // finance_manager: creates and submits templates
-  const approverId = 'PTA-APPROVER-' + TAG;  // finance_manager: approves (different user, SoD)
+  const approverId = 'PTA-APPROVER-' + TAG;  // superadmin: approves (different user, SoD; the workflow assignee)
   const plainId    = 'PTA-PLAIN-'    + TAG;  // employee: no permissions
 
   const ctx = {
@@ -93,16 +93,16 @@ export default async function run(h) {
   h.section('Template approval — Setup');
   // ===========================================================================
 
-  await test('provision maker (finance_manager), approver (finance_manager), plain (employee)', async () => {
+  await test('provision maker (finance_manager), approver (superadmin), plain (employee)', async () => {
     const { error } = await sb.from('app_users').insert([
       { id: makerId,    username: TAG + '_ptam', full_name: 'PTA Maker (E2E)',    role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: approverId, username: TAG + '_ptaa', full_name: 'PTA Approver (E2E)', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: approverId, username: TAG + '_ptaa', full_name: 'PTA Approver (E2E)', role: 'superadmin',      status: 'active', employment_type: 'employee' },
       { id: plainId,    username: TAG + '_ptap', full_name: 'PTA Plain (E2E)',    role: 'employee',        status: 'active', employment_type: 'employee' },
     ]);
     expect(!error, 'seed users failed: ' + error?.message);
 
     makerToken    = mint({ id: makerId,    username: TAG + '_ptam', role: 'finance_manager', department_id: null });
-    approverToken = mint({ id: approverId, username: TAG + '_ptaa', role: 'finance_manager', department_id: null });
+    approverToken = mint({ id: approverId, username: TAG + '_ptaa', role: 'superadmin',      department_id: null });
     plainToken    = mint({ id: plainId,    username: TAG + '_ptap', role: 'employee',        department_id: null });
   });
 
@@ -189,8 +189,8 @@ export default async function run(h) {
       .eq('workflow_id', ctx.workflowId)
       .in('status', ['pending', 'open', 'in_progress']);
     expect((tasks.data ?? []).length > 0, 'at least one open approval task exists');
-    const fmTask = (tasks.data ?? []).find(t => t.assigned_role === 'finance_manager');
-    expect(!!fmTask, 'approval task is assigned to finance_manager role');
+    const approverTask = (tasks.data ?? []).find(t => t.assigned_role === 'superadmin');
+    expect(!!approverTask, 'approval task is assigned to superadmin role');
   });
 
   await test('update of pending_approval template is rejected (422)', async () => {
