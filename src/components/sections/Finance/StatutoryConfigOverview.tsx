@@ -697,7 +697,7 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
                   const isOwnCR = !!currentUserId && cr.createdBy === currentUserId;
                   const relatedComponent = components.find(c => c.id === cr.componentId);
                   const label = cr.changeType === 'create'
-                    ? `New: ${String(cr.payload['code'] ?? cr.payload['name'] ?? '—')}`
+                    ? `New: ${String(cr.payload.code ?? cr.payload.name ?? '—')}`
                     : relatedComponent ? `${relatedComponent.name} (${relatedComponent.code})` : cr.componentId ?? '—';
                   return (
                     <tr key={cr.id}>
@@ -745,13 +745,13 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
 
   // Bulk-resolve employee IDs so table rows use EmployeeCellResolved (one API call).
   const employeeIds = useMemo(
-    () => profiles.map(r => String(r['employeeId'] ?? r['employee_id'] ?? '')).filter(Boolean),
+    () => profiles.map(r => String(r.employeeId ?? r.employee_id ?? '')).filter(Boolean),
     [profiles],
   );
   const { data: nameMap } = useEmployeeNames(employeeIds);
 
   const verify = async (r: NisProfileRow): Promise<void> => {
-    const id = String(r['id'] ?? '');
+    const id = String(r.id ?? '');
     if (!id || !canVerify) return;
     // Compliance sign-off: confirm, and capture an optional verification note for the audit trail.
     const note = await dialog.prompt({
@@ -767,7 +767,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   };
 
   const reject = async (r: NisProfileRow): Promise<void> => {
-    const id = String(r['id'] ?? '');
+    const id = String(r.id ?? '');
     if (!id || !canVerify) return;
     const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Finance cannot verify this profile. HR must correct and re-submit.', placeholder: 'Rejection reason (required)', confirmText: 'Return to HR' });
     if (!reason?.trim()) return;
@@ -818,7 +818,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       key: 'prevEmployer', label: 'Previous Employer', sortAccessor: r => dv(r, 'previousEmployerName', 'previous_employer_name'),
       renderCell: r => { const v = dv(r, 'previousEmployerName', 'previous_employer_name'); return v === '—' ? <span class="sdb-muted-txt">—</span> : v; },
     },
-    { key: 'nisStatus', label: 'Status', sortAccessor: r => String(r['nisStatus'] ?? r['nis_status'] ?? ''), renderCell: r => <StatBadge tone="wn">{humanize(String(r['nisStatus'] ?? r['nis_status'] ?? 'pending_verification'))}</StatBadge> },
+    { key: 'nisStatus', label: 'Status', sortAccessor: r => String(r.nisStatus ?? r.nis_status ?? ''), renderCell: r => <StatBadge tone="wn">{humanize(String(r.nisStatus ?? r.nis_status ?? 'pending_verification'))}</StatBadge> },
     {
       key: 'lastVerified', label: 'Last Verified',
       renderCell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
@@ -826,7 +826,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     {
       key: 'action', label: 'Action', align: 'right',
       renderCell: r => {
-        const id = String(r['id'] ?? '');
+        const id = String(r.id ?? '');
         if (!canVerify || !id) return <span class="sdb-muted-txt">—</span>;
         return (
           <div class="sdb-vactions">
@@ -843,8 +843,8 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   return (
     <DataTable<NisProfileRow>
       columns={columns}
-      rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE) as NisProfileRow[]}
-      rowKey={r => String(r['id'] ?? '')}
+      rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
+      rowKey={r => String(r.id ?? '')}
       loading={profilesQ.isLoading}
       emptyState={{ icon: 'fa-user-check', title: 'Queue clear', text: profilesQ.error ? String(profilesQ.error) : 'No NIS profiles are awaiting verification.' }}
       globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by NIS #, employee or employer…' }}
@@ -870,7 +870,7 @@ const REPORT_COLUMNS: Record<StatutoryReportKey, ReportColumn[]> = {
     { header: 'Effective',   key: 'effectiveFrom', format: 'date' },
     { header: 'Jurisdiction',key: 'jurisdiction' },
     { header: 'Status',      key: 'status' },
-    { header: 'Active',      value: r => String(r['isActive'] ?? '—') },
+    { header: 'Active',      value: r => String(r.isActive ?? '—') },
     { header: 'Approved By', key: 'approvedBy' },
     { header: 'Activated By',key: 'activatedBy' },
     { header: 'Created At',  key: 'createdAt', format: 'date' },
@@ -887,10 +887,10 @@ const REPORT_COLUMNS: Record<StatutoryReportKey, ReportColumn[]> = {
     { header: 'Code',             key: 'code' },
     { header: 'Name',             key: 'name' },
     { header: 'Kind',             key: 'kind' },
-    { header: 'Statutory',        value: r => String(r['isStatutory'] ?? '—') },
-    { header: 'Taxable',          value: r => String(r['isTaxable'] ?? '—') },
-    { header: 'Reduces Charge.',  value: r => String(r['reducesChargeable'] ?? '—') },
-    { header: 'Active',           value: r => String(r['isActive'] ?? '—') },
+    { header: 'Statutory',        value: r => String(r.isStatutory ?? '—') },
+    { header: 'Taxable',          value: r => String(r.isTaxable ?? '—') },
+    { header: 'Reduces Charge.',  value: r => String(r.reducesChargeable ?? '—') },
+    { header: 'Active',           value: r => String(r.isActive ?? '—') },
   ],
   statutory_approval_history: [
     { header: 'Action',     key: 'action' },
@@ -1292,7 +1292,7 @@ function StatEditVersionDialog({ version, onClose }: {
         <div style={fieldStyle}>
           <label style={labelStyle}>Version label *</label>
           <input type="text" style={inputStyle} value={f.label}
-            onInput={e => setF(p => ({ ...p, label: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, label: (e.currentTarget).value }))} />
         </div>
 
         <fieldset style={{ border: '1px solid var(--hrfin-border, #2a3347)', borderRadius: 6, padding: '12px 14px', margin: 0 }}>
@@ -1301,22 +1301,22 @@ function StatEditVersionDialog({ version, onClose }: {
             <div style={fieldStyle}>
               <label style={labelStyle}>Personal Allowance (annual, TTD)</label>
               <input type="number" style={inputStyle} step="0.01" value={f.payePersonalAllowance}
-                onInput={e => setF(p => ({ ...p, payePersonalAllowance: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, payePersonalAllowance: (e.currentTarget).value }))} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Band 1 Ceiling (annual, TTD)</label>
               <input type="number" style={inputStyle} step="0.01" value={f.payeBand1Ceiling}
-                onInput={e => setF(p => ({ ...p, payeBand1Ceiling: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, payeBand1Ceiling: (e.currentTarget).value }))} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Band 1 Rate (0–1, e.g. 0.25 = 25%)</label>
               <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand1Rate}
-                onInput={e => setF(p => ({ ...p, payeBand1Rate: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, payeBand1Rate: (e.currentTarget).value }))} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Band 2 Rate (0–1)</label>
               <input type="number" style={inputStyle} step="0.001" min={0} max={1} value={f.payeBand2Rate}
-                onInput={e => setF(p => ({ ...p, payeBand2Rate: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, payeBand2Rate: (e.currentTarget).value }))} />
             </div>
           </div>
         </fieldset>
@@ -1327,17 +1327,17 @@ function StatEditVersionDialog({ version, onClose }: {
             <div style={fieldStyle}>
               <label style={labelStyle}>Monthly Threshold (TTD)</label>
               <input type="number" style={inputStyle} step="0.01" value={f.hsMonthlyThreshold}
-                onInput={e => setF(p => ({ ...p, hsMonthlyThreshold: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, hsMonthlyThreshold: (e.currentTarget).value }))} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Weekly Rate — High (TTD)</label>
               <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyHigh}
-                onInput={e => setF(p => ({ ...p, hsWeeklyHigh: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, hsWeeklyHigh: (e.currentTarget).value }))} />
             </div>
             <div style={fieldStyle}>
               <label style={labelStyle}>Weekly Rate — Low (TTD)</label>
               <input type="number" style={inputStyle} step="0.01" value={f.hsWeeklyLow}
-                onInput={e => setF(p => ({ ...p, hsWeeklyLow: (e.currentTarget as HTMLInputElement).value }))} />
+                onInput={e => setF(p => ({ ...p, hsWeeklyLow: (e.currentTarget).value }))} />
             </div>
           </div>
         </fieldset>
@@ -1346,7 +1346,7 @@ function StatEditVersionDialog({ version, onClose }: {
           <label style={labelStyle}>NIS Monthly Ceiling (TTD, blank = no ceiling)</label>
           <input type="number" style={inputStyle} step="0.01" placeholder="Optional"
             value={f.nisMonthyCeiling}
-            onInput={e => setF(p => ({ ...p, nisMonthyCeiling: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, nisMonthyCeiling: (e.currentTarget).value }))} />
         </div>
 
         {fieldErrors.map((e, i) => (

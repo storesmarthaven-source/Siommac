@@ -191,26 +191,26 @@ function NewPayItemForm({ emps, components, onDone }: {
       onSubmit={() => void submit()}>
       <div class="fin-form-grid">
         <label class="fin-field"><span>Employee</span>
-          <select value={f.employeeId} onChange={e => setF(p => ({ ...p, employeeId: (e.currentTarget as HTMLSelectElement).value }))}>
+          <select value={f.employeeId} onChange={e => setF(p => ({ ...p, employeeId: (e.currentTarget).value }))}>
             <option value="">— select —</option>
             {emps.map(em => <option value={em.id} key={em.id}>{empName(em)}</option>)}
           </select>
         </label>
         <label class="fin-field"><span>Component</span>
-          <select value={f.componentId} onChange={e => setF(p => ({ ...p, componentId: (e.currentTarget as HTMLSelectElement).value }))}>
+          <select value={f.componentId} onChange={e => setF(p => ({ ...p, componentId: (e.currentTarget).value }))}>
             <option value="">— select —</option>
             {components.map(c => <option value={c.id} key={c.id}>{c.name} ({humanize(c.kind)})</option>)}
           </select>
         </label>
         <label class="fin-field"><span>Basis</span>
-          <select value={f.mode} onChange={e => setF(p => ({ ...p, mode: (e.currentTarget as HTMLSelectElement).value as 'amount' | 'percent' }))}>
+          <select value={f.mode} onChange={e => setF(p => ({ ...p, mode: (e.currentTarget).value as 'amount' | 'percent' }))}>
             <option value="amount">Fixed amount</option><option value="percent">Percent of base</option>
           </select>
         </label>
-        <label class="fin-field"><span>{f.mode === 'amount' ? 'Amount (TTD)' : 'Percent'}</span><input type="number" step="0.01" value={f.value} onInput={e => setF(p => ({ ...p, value: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field"><span>Effective from</span><input type="date" value={f.effectiveFrom} onInput={e => setF(p => ({ ...p, effectiveFrom: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field"><span>Effective to (optional)</span><input type="date" value={f.effectiveTo} onInput={e => setF(p => ({ ...p, effectiveTo: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Note (optional)</span><input type="text" value={f.note} onInput={e => setF(p => ({ ...p, note: (e.currentTarget as HTMLInputElement).value }))} placeholder="Context for approvers" /></label>
+        <label class="fin-field"><span>{f.mode === 'amount' ? 'Amount (TTD)' : 'Percent'}</span><input type="number" step="0.01" value={f.value} onInput={e => setF(p => ({ ...p, value: (e.currentTarget).value }))} /></label>
+        <label class="fin-field"><span>Effective from</span><input type="date" value={f.effectiveFrom} onInput={e => setF(p => ({ ...p, effectiveFrom: (e.currentTarget).value }))} /></label>
+        <label class="fin-field"><span>Effective to (optional)</span><input type="date" value={f.effectiveTo} onInput={e => setF(p => ({ ...p, effectiveTo: (e.currentTarget).value }))} /></label>
+        <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Note (optional)</span><input type="text" value={f.note} onInput={e => setF(p => ({ ...p, note: (e.currentTarget).value }))} placeholder="Context for approvers" /></label>
       </div>
     </EnterpriseFormModal>
   );
@@ -281,7 +281,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
     <div class="obx-section"><div class="obx-section-body">
       <div class="obx-toolbar" style={{ marginBottom: 12, display: 'flex', alignItems: 'center', gap: 8 }}>
         <span class="obx-meta">Employee:</span>
-        <select class="obx-mini-select" style={{ maxWidth: 260 }} value={employeeId} onChange={e => { setEmployeeId((e.currentTarget as HTMLSelectElement).value); setF({ ...EMPTY_PROFILE }); }}>
+        <select class="obx-mini-select" style={{ maxWidth: 260 }} value={employeeId} onChange={e => { setEmployeeId((e.currentTarget).value); setF({ ...EMPTY_PROFILE }); }}>
           <option value="">— select —</option>
           {emps.map(em => <option value={em.id} key={em.id}>{nameOf(em.id)}</option>)}
         </select>
@@ -317,14 +317,14 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
           onCancel={() => setEditOpen(false)}
           onSubmit={() => void capture()}>
           <div class="fin-form-grid">
-            <label class="fin-field"><span>NIS number</span><input type="text" value={f.nisNumber ?? ''} disabled={!canCapture} onInput={e => set('nisNumber', (e.currentTarget as HTMLInputElement).value)} /></label>
-            <label class="fin-field fin-field--check"><input type="checkbox" checked={!!f.nisApplicable} disabled={!canCapture} onChange={e => set('nisApplicable', (e.currentTarget as HTMLInputElement).checked)} /><span>NIS applicable</span></label>
-            <label class="fin-field"><span>Previous employer</span><input type="text" value={f.previousEmployerName ?? ''} disabled={!canCapture} onInput={e => set('previousEmployerName', (e.currentTarget as HTMLInputElement).value)} /></label>
-            <label class="fin-field"><span>Previous employer end date</span><input type="date" value={f.previousEmployerEndDate ?? ''} disabled={!canCapture} onInput={e => set('previousEmployerEndDate', (e.currentTarget as HTMLInputElement).value)} /></label>
-            <label class="fin-field"><span>Opening YTD insurable earnings</span><input type="number" step="0.01" value={f.openingYtdInsurableEarnings} disabled={!canCapture} onInput={e => set('openingYtdInsurableEarnings', Number((e.currentTarget as HTMLInputElement).value))} /></label>
-            <label class="fin-field"><span>Opening YTD NIS (employee)</span><input type="number" step="0.01" value={f.openingYtdNisEmployee} disabled={!canCapture} onInput={e => set('openingYtdNisEmployee', Number((e.currentTarget as HTMLInputElement).value))} /></label>
-            <label class="fin-field"><span>Opening YTD NIS (employer)</span><input type="number" step="0.01" value={f.openingYtdNisEmployer} disabled={!canCapture} onInput={e => set('openingYtdNisEmployer', Number((e.currentTarget as HTMLInputElement).value))} /></label>
-            <label class="fin-field"><span>Opening balance as of</span><input type="date" value={f.openingBalanceAsOf ?? ''} disabled={!canCapture} onInput={e => set('openingBalanceAsOf', (e.currentTarget as HTMLInputElement).value)} /></label>
+            <label class="fin-field"><span>NIS number</span><input type="text" value={f.nisNumber ?? ''} disabled={!canCapture} onInput={e => set('nisNumber', (e.currentTarget).value)} /></label>
+            <label class="fin-field fin-field--check"><input type="checkbox" checked={!!f.nisApplicable} disabled={!canCapture} onChange={e => set('nisApplicable', (e.currentTarget).checked)} /><span>NIS applicable</span></label>
+            <label class="fin-field"><span>Previous employer</span><input type="text" value={f.previousEmployerName ?? ''} disabled={!canCapture} onInput={e => set('previousEmployerName', (e.currentTarget).value)} /></label>
+            <label class="fin-field"><span>Previous employer end date</span><input type="date" value={f.previousEmployerEndDate ?? ''} disabled={!canCapture} onInput={e => set('previousEmployerEndDate', (e.currentTarget).value)} /></label>
+            <label class="fin-field"><span>Opening YTD insurable earnings</span><input type="number" step="0.01" value={f.openingYtdInsurableEarnings} disabled={!canCapture} onInput={e => set('openingYtdInsurableEarnings', Number((e.currentTarget).value))} /></label>
+            <label class="fin-field"><span>Opening YTD NIS (employee)</span><input type="number" step="0.01" value={f.openingYtdNisEmployee} disabled={!canCapture} onInput={e => set('openingYtdNisEmployee', Number((e.currentTarget).value))} /></label>
+            <label class="fin-field"><span>Opening YTD NIS (employer)</span><input type="number" step="0.01" value={f.openingYtdNisEmployer} disabled={!canCapture} onInput={e => set('openingYtdNisEmployer', Number((e.currentTarget).value))} /></label>
+            <label class="fin-field"><span>Opening balance as of</span><input type="date" value={f.openingBalanceAsOf ?? ''} disabled={!canCapture} onInput={e => set('openingBalanceAsOf', (e.currentTarget).value)} /></label>
           </div>
         </EnterpriseFormModal>
       )}

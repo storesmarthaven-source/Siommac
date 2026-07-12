@@ -144,8 +144,8 @@ export const hrOnboardingApi = {
 
   // ── Reports (Phase 6) ──────────────────────────────────────────────────────────
   listReports: () => call<OnboardingReportMeta[]>('hr/onboarding/reports/list', {}),
-  runReport:    (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/run', a as unknown as Record<string, unknown>),
-  exportReport: (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/export', a as unknown as Record<string, unknown>),
+  runReport:    (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/run', a),
+  exportReport: (a: RunOnboardingReportArgs) => call<OnboardingReportResult>('hr/onboarding/reports/export', a),
 
   // ── Custom Onboarding Actions (Phase 5) ─────────────────────────────────────────
   listActionTemplates:  (a: { packageKey: string; includeInactive?: boolean }) => call<OnboardingActionTemplate[]>('hr/onboarding/actions/templates/list', a),
@@ -237,7 +237,7 @@ export function useOnboardingPackages(includeRetired = false) {
 export function useOnboardingIntakePreview(employeeId: string | null, packageKey: string | null) {
   return useQuery({
     queryKey: ['hr', 'onboarding', 'intake-preview', employeeId, packageKey],
-    queryFn:  () => hrOnboardingApi.intakePreview({ employeeId: employeeId as string, packageKey: packageKey as string }),
+    queryFn:  () => hrOnboardingApi.intakePreview({ employeeId: employeeId!, packageKey: packageKey! }),
     enabled:  !!employeeId && !!packageKey,
   });
 }

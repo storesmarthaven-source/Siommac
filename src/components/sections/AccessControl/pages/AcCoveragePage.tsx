@@ -37,7 +37,7 @@ const ago = (iso: string) => { const s = Math.max(0, (Date.now() - new Date(iso)
 const goTo = (id: string) => { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: id })); } catch (_) { /* ignore */ } };
 
 export function AcCoveragePage(): VNode {
-  const modules = useMemo(() => [...new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean))].sort() as string[], []);
+  const modules = useMemo(() => [...new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean))].sort(), []);
   const [module, setModule] = useState<string>(() => modules[0] ?? 'HR');
   const [open, setOpen] = useState<Set<string>>(new Set());
 
@@ -47,7 +47,7 @@ export function AcCoveragePage(): VNode {
   const moduleKeys = useMemo(() => PERMISSION_KEYS.filter(k => PERMISSION_META[k]?.module === module), [module]);
   const groups = useMemo(() => {
     const byGrp = new Map<string, PermissionKey[]>();
-    for (const k of moduleKeys) { const g = PERMISSION_META[k]!.group; (byGrp.get(g) ?? byGrp.set(g, []).get(g)!).push(k); }
+    for (const k of moduleKeys) { const g = PERMISSION_META[k].group; (byGrp.get(g) ?? byGrp.set(g, []).get(g)!).push(k); }
     return byGrp;
   }, [moduleKeys]);
 
@@ -131,7 +131,7 @@ export function AcCoveragePage(): VNode {
                     </tr>
                     {isOpen && keys.map(k => (
                       <tr class="fc-cap-sub" key={k}>
-                        <td class="fc-cap-item">{PERMISSION_META[k]!.label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</td>
+                        <td class="fc-cap-item">{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</td>
                         {COV_ROLES.map(r => <td key={r.key} class="fc-cell">{r.key === 'superadmin' || ROLE_PERMISSIONS[r.key].has(k) ? <span class="acc-dot full" style={{ width: '20px', height: '20px' }}><i class="fas fa-check" style={{ fontSize: '10px' }} /></span> : <span class="acc-dot none" style={{ width: '20px', height: '20px' }}><i class="fas fa-minus" style={{ fontSize: '10px' }} /></span>}</td>)}
                         <td />
                       </tr>
@@ -150,13 +150,13 @@ export function AcCoveragePage(): VNode {
           <div>
             {auditQ.isLoading ? <div class="ac-loading">Loading…</div>
              : roleChanges.length === 0 ? <div class="ac-empty" style={{ padding: '28px 16px' }}>No recent role changes.</div>
-             : (roleChanges as Array<{ id: string; username: string; action: string; entity_id: string; details: string; created_at: string }>).map((l, i) => {
+             : (roleChanges as { id: string; username: string; action: string; entity_id: string; details: string; created_at: string }[]).map((l, i) => {
               let perm = ''; try { perm = (JSON.parse(l.details || '{}').permission as string) ?? ''; } catch { /* ignore */ }
               const grant = l.action === 'role_perm_grant';
               return (
                 <div class={`fc-tl-row${i === roleChanges.length - 1 ? ' fc-tl-last' : ''}`} key={l.id}>
                   <span class="avatar" style={{ width: '34px', height: '34px', fontSize: '12px' }}>{initials(l.username)}</span>
-                  <div class="grow"><div class="fc-tl-name">{l.username}</div><div class="sub">{l.entity_id} role updated</div><div class="fc-tl-cap">{perm && PERMISSION_META[perm as PermissionKey] ? `${PERMISSION_META[perm as PermissionKey]!.module}: ${PERMISSION_META[perm as PermissionKey]!.label}` : perm}</div></div>
+                  <div class="grow"><div class="fc-tl-name">{l.username}</div><div class="sub">{l.entity_id} role updated</div><div class="fc-tl-cap">{perm && PERMISSION_META[perm as PermissionKey] ? `${PERMISSION_META[perm as PermissionKey].module}: ${PERMISSION_META[perm as PermissionKey].label}` : perm}</div></div>
                   <div class="fc-tl-meta"><span class={`badge ${grant ? 'green' : 'red'}`}>{grant ? 'Granted' : 'Revoked'}</span><span class="sub">{ago(l.created_at)}</span></div>
                 </div>
               );

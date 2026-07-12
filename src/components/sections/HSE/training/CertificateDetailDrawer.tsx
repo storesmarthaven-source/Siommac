@@ -91,7 +91,7 @@ export function CertificateDetailDrawer({ certificateId, onClose }: { certificat
                   onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) upload.mutate({ file: f, certificateId }); (e.target as HTMLInputElement).value = ''; }} />
               </label>
             )}
-            {upload.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(upload.error as Error)?.message ?? 'Upload failed'}</div>}
+            {upload.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(upload.error)?.message ?? 'Upload failed'}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>

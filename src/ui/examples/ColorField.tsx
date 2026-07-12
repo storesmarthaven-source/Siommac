@@ -25,7 +25,7 @@ function clamp(n: number, lo: number, hi: number): number { return Math.max(lo, 
 
 function parseColor(value: string): RGBA {
   const v = (value ?? '').trim();
-  const rgba = v.match(/rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/i);
+  const rgba = /rgba?\(\s*([\d.]+)\s*,\s*([\d.]+)\s*,\s*([\d.]+)\s*(?:,\s*([\d.]+)\s*)?\)/i.exec(v);
   if (rgba) {
     return {
       r: clamp(Math.round(+(rgba[1] ?? 0)), 0, 255),

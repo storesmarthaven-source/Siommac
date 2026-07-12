@@ -21,7 +21,7 @@ const DEFAULT_FR: Record<number, number[]> = {
 export function columnFractions(el: TableElement): number[] {
   const n = columnCount(el);
   const fr = el.colFr;
-  if (fr && fr.length === n) {
+  if (fr?.length === n) {
     const sum = fr.reduce((a, b) => a + b, 0) || 1;
     return fr.map((x) => x / sum);
   }

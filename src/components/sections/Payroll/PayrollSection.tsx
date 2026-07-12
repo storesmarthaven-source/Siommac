@@ -221,9 +221,9 @@ function PayrollSettingsModal({ row, onClose, onSaved }: PrsModalProps) {
   const [salary, setSalary] = useState(String(row.monthlySalary || 0));
   const [rate,   setRate]   = useState(String(row.hourlyRate    || 0));
   const [stdHrs, setStdHrs] = useState(String(row.stdHours      || 8));
-  const [nisOn,  setNisOn]  = useState(row.nisApplicable !== false);
-  const [hsOn,   setHsOn]   = useState(row.hsApplicable  !== false);
-  const [taxOn,  setTaxOn]  = useState(row.taxResident   !== false);
+  const [nisOn,  setNisOn]  = useState(row.nisApplicable);
+  const [hsOn,   setHsOn]   = useState(row.hsApplicable);
+  const [taxOn,  setTaxOn]  = useState(row.taxResident);
   const [saving, setSaving] = useState(false);
 
   const est = useMemo(() => calcStatutoryEstimate({
@@ -384,21 +384,21 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
       const cres = await getPayrollConstants();
       if (Object.keys(cres).length) {
         setVals({
-          nisRate:           cres['NIS_RATE']                   != null ? +((cres['NIS_RATE']! * 100).toFixed(4)) : DEFAULT_CONSTANTS.nisRate,
-          nisMonthlyCap:     cres['NIS_MONTHLY_CAP']            ?? DEFAULT_CONSTANTS.nisMonthlyCap,
-          hsThreshold:       cres['HS_THRESHOLD_WEEKLY']        ?? DEFAULT_CONSTANTS.hsThreshold,
-          hsHighDaily:       cres['HS_HIGH_DAILY']              ?? DEFAULT_CONSTANTS.hsHighDaily,
-          hsHighWeekly:      cres['HS_HIGH_WEEKLY']             ?? DEFAULT_CONSTANTS.hsHighWeekly,
-          hsHighFortnightly: cres['HS_HIGH_FORTNIGHTLY']        ?? DEFAULT_CONSTANTS.hsHighFortnightly,
-          hsHighMonthly:     cres['HS_HIGH_MONTHLY']            ?? DEFAULT_CONSTANTS.hsHighMonthly,
-          hsLowDaily:        cres['HS_LOW_DAILY']               ?? DEFAULT_CONSTANTS.hsLowDaily,
-          hsLowWeekly:       cres['HS_LOW_WEEKLY']              ?? DEFAULT_CONSTANTS.hsLowWeekly,
-          hsLowFortnightly:  cres['HS_LOW_FORTNIGHTLY']         ?? DEFAULT_CONSTANTS.hsLowFortnightly,
-          hsLowMonthly:      cres['HS_LOW_MONTHLY']             ?? DEFAULT_CONSTANTS.hsLowMonthly,
-          allowanceAnnual:   cres['PERSONAL_ALLOWANCE_ANNUAL']  ?? DEFAULT_CONSTANTS.allowanceAnnual,
-          payeRateLow:       cres['PAYE_RATE_LOW']              != null ? +((cres['PAYE_RATE_LOW']!  * 100).toFixed(4)) : DEFAULT_CONSTANTS.payeRateLow,
-          payeRateHigh:      cres['PAYE_RATE_HIGH']             != null ? +((cres['PAYE_RATE_HIGH']! * 100).toFixed(4)) : DEFAULT_CONSTANTS.payeRateHigh,
-          payeHighThreshold: cres['PAYE_HIGH_THRESHOLD_ANNUAL'] ?? DEFAULT_CONSTANTS.payeHighThreshold,
+          nisRate:           cres.NIS_RATE                   != null ? +((cres.NIS_RATE * 100).toFixed(4)) : DEFAULT_CONSTANTS.nisRate,
+          nisMonthlyCap:     cres.NIS_MONTHLY_CAP            ?? DEFAULT_CONSTANTS.nisMonthlyCap,
+          hsThreshold:       cres.HS_THRESHOLD_WEEKLY        ?? DEFAULT_CONSTANTS.hsThreshold,
+          hsHighDaily:       cres.HS_HIGH_DAILY              ?? DEFAULT_CONSTANTS.hsHighDaily,
+          hsHighWeekly:      cres.HS_HIGH_WEEKLY             ?? DEFAULT_CONSTANTS.hsHighWeekly,
+          hsHighFortnightly: cres.HS_HIGH_FORTNIGHTLY        ?? DEFAULT_CONSTANTS.hsHighFortnightly,
+          hsHighMonthly:     cres.HS_HIGH_MONTHLY            ?? DEFAULT_CONSTANTS.hsHighMonthly,
+          hsLowDaily:        cres.HS_LOW_DAILY               ?? DEFAULT_CONSTANTS.hsLowDaily,
+          hsLowWeekly:       cres.HS_LOW_WEEKLY              ?? DEFAULT_CONSTANTS.hsLowWeekly,
+          hsLowFortnightly:  cres.HS_LOW_FORTNIGHTLY         ?? DEFAULT_CONSTANTS.hsLowFortnightly,
+          hsLowMonthly:      cres.HS_LOW_MONTHLY             ?? DEFAULT_CONSTANTS.hsLowMonthly,
+          allowanceAnnual:   cres.PERSONAL_ALLOWANCE_ANNUAL  ?? DEFAULT_CONSTANTS.allowanceAnnual,
+          payeRateLow:       cres.PAYE_RATE_LOW              != null ? +((cres.PAYE_RATE_LOW  * 100).toFixed(4)) : DEFAULT_CONSTANTS.payeRateLow,
+          payeRateHigh:      cres.PAYE_RATE_HIGH             != null ? +((cres.PAYE_RATE_HIGH * 100).toFixed(4)) : DEFAULT_CONSTANTS.payeRateHigh,
+          payeHighThreshold: cres.PAYE_HIGH_THRESHOLD_ANNUAL ?? DEFAULT_CONSTANTS.payeHighThreshold,
         });
       }
       setStep('form');
@@ -632,8 +632,8 @@ export function PayrollSection() {
   const fpTo    = useRef<{ setDate: (d: string|null) => void; destroy: () => void } | null>(null);
 
   useEffect(() => {
-    if (typeof (window as unknown as Record<string,unknown>)['flatpickr'] !== 'function') return;
-    const fp = (window as unknown as Record<string, unknown>)['flatpickr'] as (el: HTMLElement, opts: unknown) => unknown;
+    if (typeof (window as unknown as Record<string,unknown>).flatpickr !== 'function') return;
+    const fp = (window as unknown as Record<string, unknown>).flatpickr as (el: HTMLElement, opts: unknown) => unknown;
     const { start, end } = monthBounds();
 
     const opts = reportsMode

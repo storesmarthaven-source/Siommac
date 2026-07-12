@@ -171,7 +171,7 @@ export interface PayrollExport {
 export interface PayrollReportResult {
   report: string;
   generatedAt: string;
-  rows: Array<Record<string, unknown>>;
+  rows: Record<string, unknown>[];
 }
 
 /** Lightweight template descriptor for pickers — no design payload. */
@@ -182,7 +182,7 @@ export interface PayslipTemplateSummary {
   updatedAt: number; // epoch ms
 }
 
-export interface NisProfileRow { [k: string]: unknown }
+export type NisProfileRow = Record<string, unknown>;
 
 export interface RunAuditLogEntry {
   id:            string;
@@ -399,7 +399,7 @@ export const financePayrollApi = {
   // Zod schema is z.object({ report, params?: z.record(...) }), so top-level unknown
   // keys are stripped).  Pass { report, params: { runId, from, to, ... } }.
   runReport:   (a: { report: string; params?: Record<string, unknown> }) => call<PayrollReportResult>('finance/payroll/reports/run', a),
-  listReports: (a: object = {})                        => call<Array<{ key: string; label: string }>>('finance/payroll/reports/list', a),
+  listReports: (a: object = {})                        => call<{ key: string; label: string }[]>('finance/payroll/reports/list', a),
 
   // Warning resolve
   resolveWarning: (a: { warningId: string; note?: string }) =>

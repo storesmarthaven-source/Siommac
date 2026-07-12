@@ -18,7 +18,7 @@ import { money } from './hrfinFormat';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const METHODS: Array<{ value: ApPaymentMethod; label: string }> = [
+const METHODS: { value: ApPaymentMethod; label: string }[] = [
   { value: 'eft',    label: 'EFT / Bank transfer' },
   { value: 'ach',    label: 'ACH' },
   { value: 'wire',   label: 'Wire transfer' },
@@ -51,7 +51,7 @@ interface PayForm {
   memo: string;
 }
 
-interface FieldErrors { [k: string]: string | undefined; }
+type FieldErrors = Record<string, string | undefined>;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -89,11 +89,11 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
 
   function validate(): FieldErrors {
     const e: FieldErrors = {};
-    if (!form.amount || !amountValid)     e['amount'] = 'Enter a valid positive amount.';
+    if (!form.amount || !amountValid)     e.amount = 'Enter a valid positive amount.';
     else if (bill && parsedAmount > bill.balance + 0.005)
-                                          e['amount'] = `Amount (${money(parsedAmount)}) exceeds the outstanding balance (${money(bill.balance)}).`;
-    if (requiresRef && !form.reference.trim()) e['reference'] = `A payment reference is required for ${form.method.toUpperCase()} transfers.`;
-    if (form.memo.length > 500)           e['memo'] = 'Memo must be 500 characters or fewer.';
+                                          e.amount = `Amount (${money(parsedAmount)}) exceeds the outstanding balance (${money(bill.balance)}).`;
+    if (requiresRef && !form.reference.trim()) e.reference = `A payment reference is required for ${form.method.toUpperCase()} transfers.`;
+    if (form.memo.length > 500)           e.memo = 'Memo must be 500 characters or fewer.';
     return e;
   }
 
@@ -154,14 +154,14 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
               <span style={{ fontSize: 14, color: 'var(--text-2)', minWidth: 32 }}>{bill.currency}</span>
               <input
                 id="rp-amount"
-                class={`hrfin-input${errors['amount'] ? ' is-invalid' : ''}`}
+                class={`hrfin-input${errors.amount ? ' is-invalid' : ''}`}
                 type="number" min={0.01} step={0.01}
                 value={form.amount}
                 onInput={e => set('amount', (e.target as HTMLInputElement).value)}
                 style={{ flex: 1 }}
               />
             </div>
-            {errors['amount'] && <p class="ep-error" role="alert">{errors['amount']}</p>}
+            {errors.amount && <p class="ep-error" role="alert">{errors.amount}</p>}
           </div>
 
           <div class="hrfin-field">
@@ -186,11 +186,11 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
               {!requiresRef && <span class="hrfin-field-hint"> (optional)</span>}
             </label>
             <input id="rp-ref"
-              class={`hrfin-input${errors['reference'] ? ' is-invalid' : ''}`}
+              class={`hrfin-input${errors.reference ? ' is-invalid' : ''}`}
               type="text" value={form.reference} maxLength={120}
               placeholder={requiresRef ? `Required for ${form.method.toUpperCase()}` : 'e.g. CHQ-00123'}
               onInput={e => set('reference', (e.target as HTMLInputElement).value)} />
-            {errors['reference'] && <p class="ep-error" role="alert">{errors['reference']}</p>}
+            {errors.reference && <p class="ep-error" role="alert">{errors.reference}</p>}
           </div>
 
           <div class="hrfin-field">
@@ -199,7 +199,7 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
               value={form.memo} maxLength={500}
               placeholder="Internal note"
               onInput={e => set('memo', (e.target as HTMLInputElement).value)} />
-            {errors['memo'] && <p class="ep-error" role="alert">{errors['memo']}</p>}
+            {errors.memo && <p class="ep-error" role="alert">{errors.memo}</p>}
           </div>
 
           {/* Live balance preview */}

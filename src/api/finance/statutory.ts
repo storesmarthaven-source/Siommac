@@ -80,7 +80,7 @@ export interface PayComponent {
   updatedAt: string;
 }
 
-export interface StatutoryReportRow { [k: string]: unknown }
+export type StatutoryReportRow = Record<string, unknown>;
 
 export interface CreateStatutoryVersionArgs {
   effectiveFrom: string;
@@ -120,7 +120,7 @@ export interface NisClassImportRow {
 
 export interface NisClassImportResult {
   imported: number;
-  errors: Array<{ row: number; message: string }>;
+  errors: { row: number; message: string }[];
 }
 
 export interface ApprovalTimelineEntry {

@@ -196,7 +196,7 @@ export function EmployeeMaster(): VNode {
     if (searchDraft === filtersRef.current.query) return; // no real change — skip the pointless re-render
     const t = window.setTimeout(() => setFiltersReset({ ...filtersRef.current, query: searchDraft }), 300);
     return () => window.clearTimeout(t);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [searchDraft]);
 
   const [sortBy, setSortBy] = useState<EmployeeSortCol>('full_name');
@@ -229,7 +229,7 @@ export function EmployeeMaster(): VNode {
   // close over the page's filter/selection/modal state. KPI + insight + workforce
   // widgets come from the global registry (browsable in the Widget Library).
   const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout());
-  const boardItems = layout.zones['main'] ?? [];
+  const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   // New widgets/previews drop at the bottom of the board (never over the stats cards).
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
@@ -361,8 +361,8 @@ export function EmployeeMaster(): VNode {
                   const active = sortBy === c.sortKey;
                   const ariaSort = active ? (sortDir === 'asc' ? 'ascending' : 'descending') : 'none';
                   return (
-                    <th scope="col" aria-sort={ariaSort as 'ascending' | 'descending' | 'none'}>
-                      <button type="button" class="th-sort-btn" onClick={() => toggleSort(c.sortKey as EmployeeSortCol)}>
+                    <th scope="col" aria-sort={ariaSort}>
+                      <button type="button" class="th-sort-btn" onClick={() => toggleSort(c.sortKey!)}>
                         {c.label}
                         <span aria-hidden="true" class="sort-caret">{active ? (sortDir === 'asc' ? '▲' : '▼') : ''}</span>
                       </button>
@@ -460,7 +460,7 @@ export function EmployeeMaster(): VNode {
         demo={demo} onToggleDemo={() => setDemo(d => !d)}
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
-        onAddWidget={inst => addWidget('main', placeBottom(inst as WidgetInstance))}
+        onAddWidget={inst => addWidget('main', placeBottom(inst))}
         onPreviewOnBoard={p => setPreview(placeBottom(p))} />
 
       {/* Profile drawer */}

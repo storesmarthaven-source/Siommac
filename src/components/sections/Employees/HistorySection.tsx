@@ -34,13 +34,13 @@ import {
 
 const COLUMNS = [
   { title: 'Date',      data: 'date'      as keyof HistoryRecord },
-  { title: 'Day',       data: null as null, render: (_v: unknown, _t: string, row: HistoryRecord) => dayOfWeek(row.date) },
-  { title: 'Check In',  data: null as null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkIn  ? fmtLocalTime(row.checkIn)  : '—' },
-  { title: 'Check Out', data: null as null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkOut ? fmtLocalTime(row.checkOut) : '—' },
-  { title: 'Hours',     data: null as null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.hours != null ? `${Number(row.hours).toFixed(1)}h` : '—' },
+  { title: 'Day',       data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => dayOfWeek(row.date) },
+  { title: 'Check In',  data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkIn  ? fmtLocalTime(row.checkIn)  : '—' },
+  { title: 'Check Out', data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkOut ? fmtLocalTime(row.checkOut) : '—' },
+  { title: 'Hours',     data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.hours != null ? `${Number(row.hours).toFixed(1)}h` : '—' },
   {
     title: 'Status',
-    data:  null as null,
+    data:  null,
     render: (_v: unknown, _t: string, row: HistoryRecord) => {
       if (!row.status) return '—';
       const meta = ATTENDANCE_STATUS_COLOR[row.status];
@@ -49,7 +49,7 @@ const COLUMNS = [
   },
   {
     title: 'In Photo',
-    data:  null as null,
+    data:  null,
     orderable: false,
     searchable: false,
     render: (_v: unknown, _t: string, row: HistoryRecord) =>
@@ -59,7 +59,7 @@ const COLUMNS = [
   },
   {
     title: 'Out Photo',
-    data:  null as null,
+    data:  null,
     orderable: false,
     searchable: false,
     render: (_v: unknown, _t: string, row: HistoryRecord) =>

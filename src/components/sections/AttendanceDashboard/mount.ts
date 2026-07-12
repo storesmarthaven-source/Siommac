@@ -20,7 +20,7 @@ import { AttendanceDashboard } from './AttendanceDashboard';
 
 function getUsername(): string {
   const win = window as unknown as Record<string, unknown>;
-  const AS  = win['AppState'] as { get?: (k: string) => string } | undefined;
+  const AS  = win.AppState as { get?: (k: string) => string } | undefined;
   return AS?.get?.('currentUser') ?? '';
 }
 

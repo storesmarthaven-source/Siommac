@@ -120,7 +120,7 @@ const REPORTS: ReportDescriptor[] = [
 ];
 
 /** Dynamic columns derived from the first result row (unknown schema at design time). */
-function dynamicColumns(rows: Array<Record<string, unknown>>): ReportColumn[] {
+function dynamicColumns(rows: Record<string, unknown>[]): ReportColumn[] {
   if (rows.length === 0) return [];
   return Object.keys(rows[0]!).map(k => ({
     key:    k,
@@ -159,7 +159,7 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
           ...(selectedReport === 'audit_comparison' && compareRunId ? { compareRunId } : {}),
         },
       });
-      setResult(res as ReportResult);
+      setResult(res);
     } catch (e) {
       setError((e as Error).message ?? 'Failed to run report.');
       toast((e as Error).message ?? 'Failed to run report.');
@@ -177,7 +177,7 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
         <span style={{ fontSize: 12, fontWeight: 600 }}>Pay run</span>
         <select
           value={runId}
-          onChange={e => { setRunId((e.currentTarget as HTMLSelectElement).value); setResult(null); }}
+          onChange={e => { setRunId((e.currentTarget).value); setResult(null); }}
           style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
                    border: '1px solid var(--hrfin-border)', borderRadius: 6,
                    color: 'var(--hrfin-text-primary)' }}
@@ -191,7 +191,7 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
           <span style={{ fontSize: 12, fontWeight: 600 }}>Compare against</span>
           <select
             value={compareRunId}
-            onChange={e => { setCompareRunId((e.currentTarget as HTMLSelectElement).value); setResult(null); }}
+            onChange={e => { setCompareRunId((e.currentTarget).value); setResult(null); }}
             style={{ fontSize: 13, padding: '8px 10px', background: 'var(--hrfin-surface-2)',
                      border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)' }}
           >
@@ -627,7 +627,7 @@ export function PayrollOverview(): VNode {
           fontSize: 13,
         }}>
           <strong>Failed to load payroll runs.</strong>{' '}
-          {(runsQ.error as Error)?.message ?? 'Unknown error.'}{' '}
+          {(runsQ.error)?.message ?? 'Unknown error.'}{' '}
           <button type="button" class="hrfin-action" style={{ marginLeft: 12 }} onClick={() => void runsQ.refetch()}>
             Retry
           </button>

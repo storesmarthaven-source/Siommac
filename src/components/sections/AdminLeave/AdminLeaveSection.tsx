@@ -60,7 +60,7 @@ function lvStatusClass(status: string): string {
   return map[status.toLowerCase()] ?? 'lv-status-pending';
 }
 
-const LEAVE_TYPES: Array<{ value: string; label: string }> = [
+const LEAVE_TYPES: { value: string; label: string }[] = [
   { value: 'all',     label: 'All Types' },
   { value: 'sick',    label: 'Sick'      },
   { value: 'casual',  label: 'Casual'    },
@@ -68,7 +68,7 @@ const LEAVE_TYPES: Array<{ value: string; label: string }> = [
   { value: 'medical', label: 'Medical'   },
 ];
 
-const TAB_LABELS: Array<{ id: LeaveTabFilter; label: string }> = [
+const TAB_LABELS: { id: LeaveTabFilter; label: string }[] = [
   { id: 'all',      label: 'All'      },
   { id: 'pending',  label: 'Pending'  },
   { id: 'approved', label: 'Approved' },

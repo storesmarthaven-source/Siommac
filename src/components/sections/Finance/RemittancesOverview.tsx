@@ -127,10 +127,10 @@ export function RemittancesOverview(): VNode {
     r.dueDate && r.dueDate < today && !['filed','cancelled'].includes(r.status)
   ).length;
   const paidMtd     = remittances.filter(r =>
-    r.status === 'paid' && r.paidDate && r.paidDate.slice(0, 7) === today.slice(0, 7)
+    r.status === 'paid' && r.paidDate?.slice(0, 7) === today.slice(0, 7)
   ).reduce((s, r) => s + r.totalDue, 0);
   const filedMtd    = remittances.filter(r =>
-    r.status === 'filed' && r.filedDate && r.filedDate.slice(0, 7) === today.slice(0, 7)
+    r.status === 'filed' && r.filedDate?.slice(0, 7) === today.slice(0, 7)
   ).length;
   const authLiability = remittances.filter(r => r.status === 'approved')
     .reduce((s, r) => s + r.totalDue, 0);
@@ -963,7 +963,7 @@ function RemReportsTab({ tabs, activeTab, onTab }: {
           style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--hrfin-border, #2a3347)', background: 'transparent', color: 'inherit', fontSize: 13, width: 100 }}
           value={periodYear ?? ''}
           onInput={e => {
-            const n = Number((e.currentTarget as HTMLInputElement).value);
+            const n = Number((e.currentTarget).value);
             setPeriodYear(Number.isFinite(n) && n > 2000 ? n : undefined);
           }}
         />
@@ -974,7 +974,7 @@ function RemReportsTab({ tabs, activeTab, onTab }: {
           style={{ padding: '5px 8px', borderRadius: 6, border: '1px solid var(--hrfin-border, #2a3347)', background: 'var(--hrfin-surface-2, #1e2535)', color: 'inherit', fontSize: 13 }}
           value={authorityFilter ?? ''}
           onChange={e => {
-            const v = (e.currentTarget as HTMLSelectElement).value as RemittanceAuthority;
+            const v = (e.currentTarget).value as RemittanceAuthority;
             setAuth(v || undefined);
           }}
         >
@@ -1377,7 +1377,7 @@ function DrawerAttachmentsTab({ remittanceId, open }: { remittanceId: string; op
             accept="image/*,application/pdf,.csv,.xls,.xlsx,.doc,.docx"
             style={{ display: 'none' }}
             onChange={e => {
-              const f = (e.currentTarget as HTMLInputElement).files?.[0];
+              const f = (e.currentTarget).files?.[0];
               if (f) void handleUpload(f);
             }}
           />
@@ -1436,8 +1436,8 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
 
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (step === 0 && !runId)        e['runId']     = 'Select a payroll run.';
-    if (step === 1 && !authority)    e['authority'] = 'Select an authority.';
+    if (step === 0 && !runId)        e.runId     = 'Select a payroll run.';
+    if (step === 1 && !authority)    e.authority = 'Select an authority.';
     setErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -1490,7 +1490,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
             label="Approved payroll run"
             value={runId}
             onChange={v => { setRunId(v); setErrors({}); }}
-            error={errors['runId']}
+            error={errors.runId}
             required
           />
         </div>
@@ -1505,7 +1505,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
             label="Authority"
             value={authority}
             onChange={v => { setAuthority(v as RemittanceAuthority | null); setErrors({}); }}
-            error={errors['authority']}
+            error={errors.authority}
             required
           />
         </div>
@@ -1519,7 +1519,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
           {computeQ.isLoading && <div class="hrfin-empty">Computing…</div>}
           {computeQ.isError && (
             <div style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 13 }}>
-              {(computeQ.error as Error).message}
+              {(computeQ.error).message}
             </div>
           )}
           {computed && (
@@ -1545,7 +1545,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
             <input
               type="date"
               value={dueDate}
-              onInput={e => setDueDate((e.currentTarget as HTMLInputElement).value)}
+              onInput={e => setDueDate((e.currentTarget).value)}
               style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--hrfin-border)', background: 'transparent', color: 'inherit', fontSize: 13 }}
             />
           </label>
@@ -1568,7 +1568,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
             A different finance_manager must approve before payment.
           </div>
           {createMut.isError && (
-            <div style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 13 }}>{(createMut.error as Error).message}</div>
+            <div style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 13 }}>{(createMut.error).message}</div>
           )}
         </div>
       )}
@@ -1616,7 +1616,7 @@ function RemMarkPaidDialog({ remittance, onClose }: { remittance: Remittance; on
           <span>Payment date <span style={{ color: 'var(--hrfin-danger, #e05)' }}>*</span></span>
           <input
             type="date" required value={paidDate}
-            onInput={e => { setPaidDate((e.currentTarget as HTMLInputElement).value); setError(''); }}
+            onInput={e => { setPaidDate((e.currentTarget).value); setError(''); }}
             style={{ padding: '7px 10px', borderRadius: 6, border: `1px solid ${!paidDate ? 'var(--hrfin-danger, #e05)' : 'var(--hrfin-border)'}`, background: 'transparent', color: 'inherit', fontSize: 13 }}
           />
           {!paidDate && <span style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 11 }}>Payment date is required.</span>}
@@ -1625,7 +1625,7 @@ function RemMarkPaidDialog({ remittance, onClose }: { remittance: Remittance; on
           <span>Authority reference / receipt no. <span class="hrfin-muted">(optional)</span></span>
           <input
             type="text" placeholder="e.g. NIBTT-2026-00123" value={authRef}
-            onInput={e => setAuthRef((e.currentTarget as HTMLInputElement).value)}
+            onInput={e => setAuthRef((e.currentTarget).value)}
             style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--hrfin-border)', background: 'transparent', color: 'inherit', fontSize: 13 }}
           />
         </label>
@@ -1654,8 +1654,8 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
 
   function validate(): boolean {
     const e: Record<string, string> = {};
-    if (!filedDate)     e['filedDate']    = 'Filed date is required.';
-    if (!filingMethod)  e['filingMethod'] = 'Filing method is required.';
+    if (!filedDate)     e.filedDate    = 'Filed date is required.';
+    if (!filingMethod)  e.filingMethod = 'Filing method is required.';
     setFieldErrors(e);
     return Object.keys(e).length === 0;
   }
@@ -1738,10 +1738,10 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           <span>Filed date <span style={{ color: 'var(--hrfin-danger, #e05)' }}>*</span></span>
           <input
             type="date" required value={filedDate}
-            onInput={e => { setFiledDate((e.currentTarget as HTMLInputElement).value); setFieldErrors(f => ({ ...f, filedDate: '' })); }}
-            style={{ padding: '7px 10px', borderRadius: 6, border: `1px solid ${fieldErrors['filedDate'] ? 'var(--hrfin-danger, #e05)' : 'var(--hrfin-border)'}`, background: 'transparent', color: 'inherit', fontSize: 13 }}
+            onInput={e => { setFiledDate((e.currentTarget).value); setFieldErrors(f => ({ ...f, filedDate: '' })); }}
+            style={{ padding: '7px 10px', borderRadius: 6, border: `1px solid ${fieldErrors.filedDate ? 'var(--hrfin-danger, #e05)' : 'var(--hrfin-border)'}`, background: 'transparent', color: 'inherit', fontSize: 13 }}
           />
-          {fieldErrors['filedDate'] && <span style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 11 }}>{fieldErrors['filedDate']}</span>}
+          {fieldErrors.filedDate && <span style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 11 }}>{fieldErrors.filedDate}</span>}
         </label>
 
         {/* Filing method */}
@@ -1749,13 +1749,13 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           <span>Filing method <span style={{ color: 'var(--hrfin-danger, #e05)' }}>*</span></span>
           <select
             required value={filingMethod}
-            onChange={e => { setFilingMethod((e.currentTarget as HTMLSelectElement).value); setFieldErrors(f => ({ ...f, filingMethod: '' })); }}
-            style={{ padding: '7px 10px', borderRadius: 6, border: `1px solid ${fieldErrors['filingMethod'] ? 'var(--hrfin-danger, #e05)' : 'var(--hrfin-border)'}`, background: 'var(--hrfin-surface-2)', color: 'inherit', fontSize: 13 }}
+            onChange={e => { setFilingMethod((e.currentTarget).value); setFieldErrors(f => ({ ...f, filingMethod: '' })); }}
+            style={{ padding: '7px 10px', borderRadius: 6, border: `1px solid ${fieldErrors.filingMethod ? 'var(--hrfin-danger, #e05)' : 'var(--hrfin-border)'}`, background: 'var(--hrfin-surface-2)', color: 'inherit', fontSize: 13 }}
           >
             <option value="">Select method…</option>
             {FILING_METHOD_OPTIONS.map(m => <option key={m.value} value={m.value}>{m.label}</option>)}
           </select>
-          {fieldErrors['filingMethod'] && <span style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 11 }}>{fieldErrors['filingMethod']}</span>}
+          {fieldErrors.filingMethod && <span style={{ color: 'var(--hrfin-danger, #e05)', fontSize: 11 }}>{fieldErrors.filingMethod}</span>}
         </label>
 
         {/* Authority filing reference */}
@@ -1763,7 +1763,7 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           <span>Authority filing reference <span class="hrfin-muted">(ref # issued by authority)</span></span>
           <input
             type="text" placeholder="e.g. BIR-2026-00123" value={authRef}
-            onInput={e => setAuthRef((e.currentTarget as HTMLInputElement).value)}
+            onInput={e => setAuthRef((e.currentTarget).value)}
             style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--hrfin-border)', background: 'transparent', color: 'inherit', fontSize: 13 }}
           />
         </label>
@@ -1773,7 +1773,7 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           <span>Receipt reference <span class="hrfin-muted">(payment receipt #)</span></span>
           <input
             type="text" placeholder="e.g. RCPT-2026-00456" value={receiptRef}
-            onInput={e => setReceiptRef((e.currentTarget as HTMLInputElement).value)}
+            onInput={e => setReceiptRef((e.currentTarget).value)}
             style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--hrfin-border)', background: 'transparent', color: 'inherit', fontSize: 13 }}
           />
         </label>
@@ -1783,7 +1783,7 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
           <span>Filing notes <span class="hrfin-muted">(optional)</span></span>
           <textarea
             rows={3} value={notes} placeholder="Any notes about this filing…"
-            onInput={e => setNotes((e.currentTarget as HTMLTextAreaElement).value)}
+            onInput={e => setNotes((e.currentTarget).value)}
             style={{ padding: '7px 10px', borderRadius: 6, border: '1px solid var(--hrfin-border)', background: 'transparent', color: 'inherit', fontSize: 13, resize: 'vertical' }}
           />
         </label>
@@ -1801,7 +1801,7 @@ function RemMarkFiledDialog({ remittance, onClose }: { remittance: Remittance; o
               accept="image/*,application/pdf,.csv,.xls,.xlsx"
               style={{ display: 'none' }}
               onChange={e => {
-                const f = (e.currentTarget as HTMLInputElement).files?.[0];
+                const f = (e.currentTarget).files?.[0];
                 setReceiptFile(f ?? null);
                 setUploadErr('');
               }}

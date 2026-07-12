@@ -86,7 +86,7 @@ export async function submitLeave(
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'submitLeave',
-    { ...payload, username } as unknown as Record<string, unknown>,
+    { ...payload, username },
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to submit leave request.');
 }
@@ -95,7 +95,7 @@ export async function reviewLeave(payload: ReviewLeavePayload): Promise<void> {
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'reviewLeave',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to update leave status.');
 }

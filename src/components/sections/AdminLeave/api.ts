@@ -23,7 +23,7 @@ export async function listAllLeaves(signal?: AbortSignal): Promise<LeaveRecord[]
 export async function getLeaveById(leaveId: string, signal?: AbortSignal): Promise<LeaveDetail> {
   const res = await apiPost<{ success: boolean; data: LeaveDetail; message?: string }>(
     'getLeaveById',
-    { leaveId } as unknown as Record<string, unknown>,
+    { leaveId },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Cannot load leave record');
@@ -33,7 +33,7 @@ export async function getLeaveById(leaveId: string, signal?: AbortSignal): Promi
 export async function deleteLeaveApi(leaveId: string, signal?: AbortSignal): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
     'deleteLeave',
-    { leaveId } as unknown as Record<string, unknown>,
+    { leaveId },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to delete leave');

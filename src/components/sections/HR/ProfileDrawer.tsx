@@ -202,7 +202,7 @@ function OverviewTab(
         action={<button class="ui-mini-btn" type="button" onClick={onViewTimeline}>View full timeline</button>}>
         {auditQ.isLoading && !auditQ.data
           ? <Spinner center label="Loading activity…" />
-          : auditQ.data && auditQ.data.length
+          : auditQ.data?.length
             ? <ActivityList items={auditQ.data.slice(0, 5).map((a): ActivityEntry => ({
                 icon: <i class={`fas ${activityIcon(a.action)}`} aria-hidden="true" />,
                 title: humanize(a.action),
@@ -240,7 +240,7 @@ function EmploymentTab({ d }: { d: HrEmployeeDetail }): VNode {
 
 function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
   const e = d.employee;
-  const hist = d.statusHistory as Array<Record<string, unknown>>;
+  const hist = d.statusHistory;
   return (
     <>
       <InfoCard title="Current Assignment">
@@ -259,10 +259,10 @@ function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
             note="Tracks active, suspended, terminated, leave and reinstatement changes with effective dates and workflow references." />}>
           {hist.map(r => (
             <tr>
-              <td>{fmtDate((r['effective_date'] ?? r['changed_at']) as string)}</td>
-              <td>{humanize(String(r['previous_status'] ?? '—'))}</td>
-              <td>{humanize(String(r['new_status'] ?? '—'))}</td>
-              <td>{(r['reason'] as string) ?? '—'}</td>
+              <td>{fmtDate((r.effective_date ?? r.changed_at) as string)}</td>
+              <td>{humanize(String(r.previous_status ?? '—'))}</td>
+              <td>{humanize(String(r.new_status ?? '—'))}</td>
+              <td>{(r.reason as string) ?? '—'}</td>
             </tr>
           ))}
         </MiniTable>
@@ -553,7 +553,7 @@ export function ProfileDrawer(
           )}
 
           <PanelStats items={[
-            { label: 'Training', value: (() => { const b = trainBadge(e.trainingStatus as string); return <Pill tone={b.tone}>{b.label}</Pill>; })() },
+            { label: 'Training', value: (() => { const b = trainBadge(e.trainingStatus); return <Pill tone={b.tone}>{b.label}</Pill>; })() },
             { label: 'Supervisor', value: e.supervisorName ? <><span class="ui-avatar-xs">{initials(e.supervisorName)}</span>{e.supervisorName}</> : '—' },
             { label: 'Open Workflows', value: (
               <button class="ui-wf-mini" type="button" onClick={() => setTab('Workflows')} title="Open workflow queue">
@@ -579,12 +579,12 @@ export function ProfileDrawer(
           <PanelTabs primary={PRIMARY_TABS} more={MORE_TABS} active={tab} onChange={setTab} />
 
           <div class="ui-panel-body">
-            {tab === 'Overview'          && <OverviewTab d={d!} trainQ={trainQ} auditQ={auditQ} onEditContact={() => onAction('Edit Contact')} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} />}
-            {tab === 'Employment'        && <EmploymentTab d={d!} />}
-            {tab === 'Assignments'       && <AssignmentsTab d={d!} />}
+            {tab === 'Overview'          && <OverviewTab d={d} trainQ={trainQ} auditQ={auditQ} onEditContact={() => onAction('Edit Contact')} onViewHistory={() => setTab('Assignments')} onViewTraining={() => setTab('Training')} onViewTimeline={() => setTab('Timeline')} />}
+            {tab === 'Employment'        && <EmploymentTab d={d} />}
+            {tab === 'Assignments'       && <AssignmentsTab d={d} />}
             {tab === 'Documents'         && <DocumentsTab docsQ={docsQ} employeeId={employeeId} onUpload={() => onAction('Upload HR Document')} />}
             {tab === 'Training'          && <TrainingTab trainQ={trainQ} />}
-            {tab === 'Statutory Profile' && <StatutoryTab d={d!} onEdit={() => onAction('Edit Statutory Profile')} />}
+            {tab === 'Statutory Profile' && <StatutoryTab d={d} onEdit={() => onAction('Edit Statutory Profile')} />}
             {tab === 'Onboarding'        && <EmployeeOnboardingSummary employeeId={employeeId} onOpenCase={openOnboardingCase} />}
             {tab === 'Timeline'          && <ActivityTimeline module="hr" recordType="employee" recordId={employeeId} />}
             {tab === 'Leave'             && <ModuleLinkTab title="Leave" body="Leave balances and requests are managed in the Leave module." />}

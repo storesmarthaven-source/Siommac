@@ -1245,5 +1245,5 @@ export function siomacTemplate(): Design {
       "text": "For payroll enquiries, contact payroll@siomac.co.tt or (868) 665-1234."
     }
   ]
-} as Design;
+};
 }

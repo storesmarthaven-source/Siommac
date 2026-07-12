@@ -59,28 +59,28 @@ function countUp(el: HTMLElement | null, n: number, suffix = ''): void {
 // ── Mini-map hook ─────────────────────────────────────────────────────────────
 
 // Opaque Leaflet handle — we only need remove/on/invalidateSize/addTo on the result.
-type LeafletMap = {
+interface LeafletMap {
   setView:      (c: number[], z: number) => LeafletMap;
   on:           (ev: string, fn: (...args: unknown[]) => void) => LeafletMap;
   once:         (ev: string, fn: () => void) => void;
   remove:       () => void;
   invalidateSize: () => void;
-};
-type LeafletLayer = { addTo: (m: LeafletMap) => unknown; setLatLng: (c: number[]) => void; setRadius: (r: number) => void };
-type LeafletMarker = {
+}
+interface LeafletLayer { addTo: (m: LeafletMap) => unknown; setLatLng: (c: number[]) => void; setRadius: (r: number) => void }
+interface LeafletMarker {
   addTo:      (m: LeafletMap) => LeafletMarker;
   on:         (ev: string, fn: (e: { target: { getLatLng: () => { lat: number; lng: number } } }) => void) => void;
   setLatLng:  (c: number[]) => void;
-};
-type LeafletLib = {
+}
+interface LeafletLib {
   map:       (el: HTMLElement, opts?: object) => LeafletMap;
   tileLayer: (url: string, opts?: object) => LeafletLayer;
   circle:    (c: number[], opts?: object) => LeafletLayer;
   marker:    (c: number[], opts?: object) => LeafletMarker;
-};
+}
 
 function getL(): LeafletLib | undefined {
-  return (window as unknown as Record<string, unknown>)['L'] as LeafletLib | undefined;
+  return (window as unknown as Record<string, unknown>).L as LeafletLib | undefined;
 }
 
 /** Inits a read-only Leaflet mini-map inside a container div, cleaned up on unmount. */
@@ -97,7 +97,7 @@ function useMiniMap(
     if (!el || !lat || !lng) return;
 
     // Guard: Leaflet stamps _leaflet_id on initialised elements
-    if ((el as unknown as Record<string, unknown>)['_leaflet_id']) return;
+    if ((el as unknown as Record<string, unknown>)._leaflet_id) return;
 
     const L = getL();
     if (!L) return;
@@ -119,7 +119,7 @@ function useMiniMap(
         m.invalidateSize();
         if (isActive) {
           m.on('click', onMapClick);
-          (el as HTMLDivElement).style.cursor = 'pointer';
+          (el).style.cursor = 'pointer';
         }
       } catch (_) { /* Leaflet not ready */ }
     }, 80);
@@ -149,8 +149,8 @@ function SitePopup({ site, liveRows, onClose }: SitePopupProps): VNode {
   function openInLiveMap(): void {
     onClose();
     const win = window as unknown as Record<string, unknown>;
-    const showSection = win['showSection'] as ((s: string) => void) | undefined;
-    const selectSite  = win['_selectLiveSite'] as ((id: string, name: string) => void) | undefined;
+    const showSection = win.showSection as ((s: string) => void) | undefined;
+    const selectSite  = win._selectLiveSite as ((id: string, name: string) => void) | undefined;
     if (showSection) showSection('s-projectMap');
     if (selectSite)  selectSite(String(site.id), site.name);
   }
@@ -463,7 +463,7 @@ function MapPicker({ show, lat, lng, radius, onCoordsSet }: MapPickerProps): VNo
           // addTo returns `unknown` from the LeafletLayer type; cast explicitly
           circleInst = L.circle([plat, plng], {
             radius: rad, color: '#0074D9', fillColor: '#0074D9', fillOpacity: 0.15, weight: 2,
-          }).addTo(m) as unknown as LeafletLayer;
+          }).addTo(m) as LeafletLayer;
         }
       }
 
@@ -513,7 +513,7 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
   // Org-wide actors (superadmin/admin, scope='all') may assign a site to any
   // department; scoped actors are auto-pinned to their own dept by the server,
   // so we hide the selector for them.
-  const AppSt    = (window as unknown as Record<string, unknown>)['AppState'] as { get: (k: string) => string } | undefined;
+  const AppSt    = (window as unknown as Record<string, unknown>).AppState as { get: (k: string) => string } | undefined;
   const isOrgWide = (AppSt?.get('currentRoleScope') ?? 'own') === 'all';
 
   const deptQuery = useQuery({
@@ -576,7 +576,7 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
     setSaving(true);
     try {
       const win     = window as unknown as Record<string, unknown>;
-      const AppSt   = win['AppState'] as { get: (k: string) => string } | undefined;
+      const AppSt   = win.AppState as { get: (k: string) => string } | undefined;
       const actorId = AppSt?.get('currentUserId') || '';
       const actorUsername = AppSt?.get('currentUser') || '';
 
@@ -657,7 +657,7 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
             {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : (editingSite ? 'Update Site' : 'Add Project Site')}
           </button>
         </div>
-      ) as VNode}
+      )}
     >
       <form id="addProjectForm" onSubmit={e => e.preventDefault()}>
         <div class="row g-3">
@@ -808,7 +808,7 @@ export function ProjectSitesSection(): VNode {
   });
 
   const win   = window as unknown as Record<string, unknown>;
-  const AppSt = win['AppState'] as { get: (k: string) => string } | undefined;
+  const AppSt = win.AppState as { get: (k: string) => string } | undefined;
   const role  = AppSt?.get('currentRole') || 'admin';
   const scope = (role === 'admin' || role === 'superadmin') ? 'all' : (AppSt?.get('currentDeptId') || 'all');
 
@@ -860,7 +860,7 @@ export function ProjectSitesSection(): VNode {
 
   let assignedStat  = 0;
   let attendanceStat = 0;
-  if (selSite && selSite.isActive) {
+  if (selSite?.isActive) {
     const assigned   = (selSite.assignedEmployees || []).length;
     const checkedIn  = liveRows.filter(r => !r.isCheckedOut && String(r.siteId) === String(selSite.id)).length;
     assignedStat  = assigned;

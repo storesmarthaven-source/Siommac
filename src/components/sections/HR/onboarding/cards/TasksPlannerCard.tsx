@@ -128,7 +128,7 @@ function TasksPlannerCard({ tasks, onOpenTasks, onCompleteTask }: {
             <span>Case</span>
             <select
               value={composerCaseId}
-              onChange={event => setComposerCaseId((event.currentTarget as HTMLSelectElement).value)}
+              onChange={event => setComposerCaseId((event.currentTarget).value)}
             >
               <option value="">{casesQ.isLoading ? 'Loading cases…' : 'Select a case…'}</option>
               {pickableCases.map(c => <option key={c.caseId} value={c.caseId}>{c.caseNo} · {c.employeeName ?? '—'}</option>)}
@@ -140,7 +140,7 @@ function TasksPlannerCard({ tasks, onOpenTasks, onCompleteTask }: {
               type="text"
               value={composerTitle}
               placeholder="Task title"
-              onInput={event => setComposerTitle((event.currentTarget as HTMLInputElement).value)}
+              onInput={event => setComposerTitle((event.currentTarget).value)}
             />
           </label>
           <div class="obv-task-composer-grid">
@@ -148,7 +148,7 @@ function TasksPlannerCard({ tasks, onOpenTasks, onCompleteTask }: {
               <span>Assignee</span>
               <select
                 value={composerAssignee}
-                onChange={event => setComposerAssignee((event.currentTarget as HTMLSelectElement).value)}
+                onChange={event => setComposerAssignee((event.currentTarget).value)}
               >
                 <option value="">Unassigned</option>
                 {employees.map(e => <option key={e.id} value={e.id}>{e.full_name ?? e.email ?? e.id}</option>)}
@@ -160,7 +160,7 @@ function TasksPlannerCard({ tasks, onOpenTasks, onCompleteTask }: {
               <input
                 type="checkbox"
                 checked={composerRequiresEvidence}
-                onChange={event => setComposerRequiresEvidence((event.currentTarget as HTMLInputElement).checked)}
+                onChange={event => setComposerRequiresEvidence((event.currentTarget).checked)}
               />
               <span>Evidence</span>
             </label>

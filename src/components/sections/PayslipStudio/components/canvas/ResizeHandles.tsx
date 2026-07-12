@@ -19,7 +19,7 @@ export function ResizeHandles({
           class={`handle ${dir}`}
           onPointerDown={(e) => {
             e.stopPropagation();
-            onStart(dir, e as unknown as PointerEvent);
+            onStart(dir, e);
           }}
         />
       ))}

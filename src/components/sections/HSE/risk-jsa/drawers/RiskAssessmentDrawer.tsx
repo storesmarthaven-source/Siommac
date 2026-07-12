@@ -31,7 +31,7 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type DrawerTab = 'overview' | 'hazards' | 'matrix' | 'controls' | 'files' | 'timeline';
 
-const DRAWER_TABS: ReadonlyArray<TabDef<DrawerTab>> = [
+const DRAWER_TABS: readonly TabDef<DrawerTab>[] = [
   { key: 'overview',  label: 'Overview'     },
   { key: 'hazards',   label: 'Hazards'      },
   { key: 'matrix',    label: 'Risk Matrix'  },
@@ -70,11 +70,11 @@ function HazardsTab({ hazards }: { hazards: unknown[] }): VNode {
   if (hazards.length === 0) return <EmptyState message="No hazards linked to this assessment." />;
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(hazards as Array<Record<string, unknown>>).map((h, i) => {
-        const l = (h['initial_likelihood'] as number | undefined) ?? 1;
-        const s = (h['initial_severity']   as number | undefined) ?? 1;
-        const desc = (h['hazard_description'] as string | undefined) ?? `Hazard ${i + 1}`;
-        const category = h['category'] as string | undefined;
+      {(hazards as Record<string, unknown>[]).map((h, i) => {
+        const l = (h.initial_likelihood as number | undefined) ?? 1;
+        const s = (h.initial_severity   as number | undefined) ?? 1;
+        const desc = (h.hazard_description as string | undefined) ?? `Hazard ${i + 1}`;
+        const category = h.category as string | undefined;
         return (
           <div
             key={i}
@@ -90,19 +90,19 @@ function HazardsTab({ hazards }: { hazards: unknown[] }): VNode {
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginTop: '2px' }}>
               <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Initial:</span>
               <RiskScorePill likelihood={l} severity={s} />
-              {h['residual_likelihood'] != null && h['residual_severity'] != null && (
+              {h.residual_likelihood != null && h.residual_severity != null && (
                 <>
                   <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>Residual:</span>
                   <RiskScorePill
-                    likelihood={h['residual_likelihood'] as number}
-                    severity={h['residual_severity'] as number}
+                    likelihood={h.residual_likelihood as number}
+                    severity={h.residual_severity as number}
                   />
                 </>
               )}
             </div>
-            {h['notes'] && (
+            {h.notes && (
               <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                {h['notes'] as string}
+                {h.notes as string}
               </div>
             )}
           </div>
@@ -119,9 +119,9 @@ function RiskMatrixTab({ hazards, assessment }: { hazards: unknown[]; assessment
 
   if (hazards.length > 0) {
     let maxScore = 0;
-    for (const h of hazards as Array<Record<string, unknown>>) {
-      const l = (h['initial_likelihood'] as number | undefined) ?? 1;
-      const s = (h['initial_severity']   as number | undefined) ?? 1;
+    for (const h of hazards as Record<string, unknown>[]) {
+      const l = (h.initial_likelihood as number | undefined) ?? 1;
+      const s = (h.initial_severity   as number | undefined) ?? 1;
       const score = l * s;
       if (score > maxScore) {
         maxScore = score;
@@ -165,10 +165,10 @@ function ControlsTab({ controls }: { controls: unknown[] }): VNode {
   if (controls.length === 0) return <EmptyState message="No controls recorded for this assessment." />;
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(controls as Array<Record<string, unknown>>).map((c, i) => {
-        const desc        = (c['description']  as string | undefined) ?? '—';
-        const controlType = (c['control_type'] as string | undefined) ?? '';
-        const status      = (c['status']       as string | undefined) ?? '';
+      {(controls as Record<string, unknown>[]).map((c, i) => {
+        const desc        = (c.description  as string | undefined) ?? '—';
+        const controlType = (c.control_type as string | undefined) ?? '';
+        const status      = (c.status       as string | undefined) ?? '';
         return (
           <div
             key={i}
@@ -176,7 +176,7 @@ function ControlsTab({ controls }: { controls: unknown[] }): VNode {
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
               <div style={{ fontWeight: 600, fontSize: '0.85rem' }}>{desc}</div>
-              <VerifyControlButton controlId={(c['id'] as string) ?? ''} status={status} label={desc} />
+              <VerifyControlButton controlId={(c.id as string) ?? ''} status={status} label={desc} />
             </div>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginTop: '2px', flexWrap: 'wrap' }}>
               {controlType && (
@@ -199,9 +199,9 @@ function TimelineTab({ timeline }: { timeline: unknown[] }): VNode {
   if (timeline.length === 0) return <EmptyState message="No timeline events yet." />;
   return (
     <div>
-      {(timeline as Array<Record<string, unknown>>).map((e, i) => {
-        const eventType = (e['event_type'] as string | undefined) ?? 'event';
-        const createdAt = (e['created_at'] as string | undefined);
+      {(timeline as Record<string, unknown>[]).map((e, i) => {
+        const eventType = (e.event_type as string | undefined) ?? 'event';
+        const createdAt = (e.created_at as string | undefined);
         return (
           <div
             key={i}

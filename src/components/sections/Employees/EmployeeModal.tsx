@@ -388,7 +388,7 @@ export function EmployeeModal({ mode, employee, listItem, open, onClose }: Emplo
                   style={inputStyle(false)}
                 >
                   <option value="">— No Department —</option>
-                  {(departments as Department[]).map(d => (
+                  {(departments).map(d => (
                     <option key={d.id} value={d.id}>{d.name}</option>
                   ))}
                 </select>

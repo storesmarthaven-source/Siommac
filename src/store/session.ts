@@ -230,14 +230,14 @@ export const useSessionStore = create<SessionState>()((set) => ({
     // field). A different user gets a clean slate — no cross-user leakage.
     if (payload.userId && payload.token) {
       const prev = loadSession();
-      const keep = prev && prev.userId === payload.userId ? prev : null;
+      const keep = prev?.userId === payload.userId ? prev : null;
       // Scrub any pre-cookie-era plaintext refresh token so the merge can't carry
       // a secret back into localStorage (the cookie is the only home it has now).
-      if (keep) delete (keep as unknown as Record<string, unknown>)['refreshToken'];
+      if (keep) delete (keep as unknown as Record<string, unknown>).refreshToken;
       saveSession({
         ...(keep ?? {}),
-        token:          payload.token!,
-        userId:         payload.userId!,
+        token:          payload.token,
+        userId:         payload.userId,
         username:       payload.username ?? '',
         fullName:       payload.fullName ?? '',
         role:           payload.role ?? '',
@@ -261,7 +261,7 @@ export const useSessionStore = create<SessionState>()((set) => ({
 
   verify(payload) {
     // Same flow as login — verify response carries the full session payload
-    useSessionStore.getState().login(payload as LoginResponse);
+    useSessionStore.getState().login(payload);
   },
 
   setPreAuthToken(token) {

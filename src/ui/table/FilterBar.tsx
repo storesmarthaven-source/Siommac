@@ -37,7 +37,7 @@ export function TableSearch(
       <input
         type="search" value={value} placeholder={placeholder ?? 'Search…'}
         aria-label={ariaLabel ?? placeholder ?? 'Search'}
-        onInput={e => onChange((e.currentTarget as HTMLInputElement).value)}
+        onInput={e => onChange((e.currentTarget).value)}
       />
     </div>
   );
@@ -127,16 +127,16 @@ function AdvSectionView({ section }: { section: AdvSection }): VNode {
       )}
       {section.type === 'dateRange' && (
         <div class="tf-range">
-          <input type="date" value={section.from} aria-label={`${section.title} from`} onInput={e => section.onChange((e.currentTarget as HTMLInputElement).value, section.to)} />
+          <input type="date" value={section.from} aria-label={`${section.title} from`} onInput={e => section.onChange((e.currentTarget).value, section.to)} />
           <span>to</span>
-          <input type="date" value={section.to} aria-label={`${section.title} to`} onInput={e => section.onChange(section.from, (e.currentTarget as HTMLInputElement).value)} />
+          <input type="date" value={section.to} aria-label={`${section.title} to`} onInput={e => section.onChange(section.from, (e.currentTarget).value)} />
         </div>
       )}
       {section.type === 'numberRange' && (
         <div class="tf-range">
-          <input type="number" step={section.step ?? 'any'} value={section.min} placeholder={`Min${section.unit ? ` (${section.unit})` : ''}`} aria-label={`${section.title} minimum`} onInput={e => section.onChange((e.currentTarget as HTMLInputElement).value, section.max)} />
+          <input type="number" step={section.step ?? 'any'} value={section.min} placeholder={`Min${section.unit ? ` (${section.unit})` : ''}`} aria-label={`${section.title} minimum`} onInput={e => section.onChange((e.currentTarget).value, section.max)} />
           <span>to</span>
-          <input type="number" step={section.step ?? 'any'} value={section.max} placeholder={`Max${section.unit ? ` (${section.unit})` : ''}`} aria-label={`${section.title} maximum`} onInput={e => section.onChange(section.min, (e.currentTarget as HTMLInputElement).value)} />
+          <input type="number" step={section.step ?? 'any'} value={section.max} placeholder={`Max${section.unit ? ` (${section.unit})` : ''}`} aria-label={`${section.title} maximum`} onInput={e => section.onChange(section.min, (e.currentTarget).value)} />
         </div>
       )}
     </div>

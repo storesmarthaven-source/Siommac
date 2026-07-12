@@ -114,7 +114,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
   const committed = resolvable.map(c => clampToMinGrid(c, localWidgets));
   const orphanCount = rawCommitted.length - resolvable.length;
   const geometryFixed = resolvable.some(c => clampToMinGrid(c, localWidgets) !== c);
-  const zonePreview = preview && preview.zoneId === zoneId ? preview : null;
+  const zonePreview = preview?.zoneId === zoneId ? preview : null;
   const items: BoardWidgetInstance[] = zonePreview ? [...committed, zonePreview] : committed;
 
   // One-shot guard so the "all widgets orphaned → revert to default" heal below can't loop
@@ -246,11 +246,11 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
             <div
               key={it.instanceId}
               class={`wbi-item${wantsFit(it.widgetId, localWidgets) ? ' wbi-fit' : ''}`}
-              ref={el => { if (el) wrapRefs.current.set(it.instanceId, el as HTMLDivElement); else wrapRefs.current.delete(it.instanceId); }}
+              ref={el => { if (el) wrapRefs.current.set(it.instanceId, el); else wrapRefs.current.delete(it.instanceId); }}
             >
               <WidgetFrame
                 item={it} editing={editing} isPreview={isPrev} local={localWidgets} demo={demo} revealOnMount={revealOnMount}
-                onCommitPreview={isPrev ? () => onCommitPreview?.(it as PreviewWidgetInstance) : undefined}
+                onCommitPreview={isPrev ? () => onCommitPreview?.(it) : undefined}
                 onDiscardPreview={isPrev ? onDiscardPreview : undefined}
                 onRemove={!isPrev ? () => void removeWidget(zoneId, it.instanceId) : undefined}
               />

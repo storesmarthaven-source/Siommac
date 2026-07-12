@@ -119,7 +119,7 @@ export async function clearAllNotifications(_userId: string): Promise<void> {
  */
 export async function sendNotification(payload: SendNotificationPayload): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
-    'sendNotification', payload as unknown as Record<string, unknown>,
+    'sendNotification', payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to send notification.');
 }
@@ -153,7 +153,7 @@ export async function updateMyPreference(
   payload: UpdatePreferencePayload,
 ): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
-    'updateMyPreference', payload as unknown as Record<string, unknown>,
+    'updateMyPreference', payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to update preference.');
 }

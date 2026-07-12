@@ -57,7 +57,7 @@ export const hrCompensationApi = {
   approvePayItem:(a: { id: string })         => call<PayItem>('hr/compensation/pay-items/approve', a),
   rejectPayItem:(a: { id: string; reason?: string }) => call<PayItem>('hr/compensation/pay-items/reject', a),
   retirePayItem:(a: { id: string })          => call<PayItem>('hr/compensation/pay-items/retire', a),
-  listReports:  (a: object = {})             => call<Array<Record<string, unknown>>>('hr/compensation/reports/list', a),
+  listReports:  (a: object = {})             => call<Record<string, unknown>[]>('hr/compensation/reports/list', a),
 };
 
 export const hrCompensationKeys = {

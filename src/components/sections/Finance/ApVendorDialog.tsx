@@ -28,7 +28,7 @@ function validateEmail(v: string): boolean { return !v || /^[^\s@]+@[^\s@]+\.[^\
 function validatePhone(v: string): boolean { return !v || /^[\d\s+\-().]{6,20}$/.test(v); }
 
 const CURRENCIES = ['TTD', 'USD', 'EUR', 'GBP', 'CAD', 'JMD', 'XCD'];
-const METHODS: Array<{ value: ApPaymentMethod; label: string }> = [
+const METHODS: { value: ApPaymentMethod; label: string }[] = [
   { value: 'eft',    label: 'EFT / Bank transfer' },
   { value: 'ach',    label: 'ACH' },
   { value: 'wire',   label: 'Wire transfer' },
@@ -36,7 +36,7 @@ const METHODS: Array<{ value: ApPaymentMethod; label: string }> = [
   { value: 'cash',   label: 'Cash' },
   { value: 'card',   label: 'Card' },
 ];
-const STATUSES: Array<{ value: ApVendorStatus; label: string }> = [
+const STATUSES: { value: ApVendorStatus; label: string }[] = [
   { value: 'active',   label: 'Active' },
   { value: 'inactive', label: 'Inactive' },
   { value: 'on_hold',  label: 'On hold' },
@@ -88,7 +88,7 @@ function fromVendor(v: ApVendor): VendorForm {
   };
 }
 
-interface FieldErrors { [k: string]: string | undefined; }
+type FieldErrors = Record<string, string | undefined>;
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -148,17 +148,17 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
   function validateStep(s: number): FieldErrors {
     const e: FieldErrors = {};
     if (s === 0) {
-      if (!form.name.trim())                        e['name'] = 'Name is required.';
-      if (form.name.trim().length > 200)            e['name'] = 'Name must be 200 characters or fewer.';
-      if (!validateEmail(form.contactEmail))        e['contactEmail'] = 'Enter a valid email address.';
-      if (!validatePhone(form.contactPhone))        e['contactPhone'] = 'Enter a valid phone number.';
+      if (!form.name.trim())                        e.name = 'Name is required.';
+      if (form.name.trim().length > 200)            e.name = 'Name must be 200 characters or fewer.';
+      if (!validateEmail(form.contactEmail))        e.contactEmail = 'Enter a valid email address.';
+      if (!validatePhone(form.contactPhone))        e.contactPhone = 'Enter a valid phone number.';
       const td = Number(form.paymentTermsDays);
-      if (!Number.isInteger(td) || td < 0 || td > 365) e['paymentTermsDays'] = 'Enter a whole number between 0 and 365.';
+      if (!Number.isInteger(td) || td < 0 || td > 365) e.paymentTermsDays = 'Enter a whole number between 0 and 365.';
     }
     if (s === 2 && form.hasBankAccount) {
-      if (!form.bankName.trim())          e['bankName'] = 'Bank name is required.';
-      if (!form.bankAccountName.trim())   e['bankAccountName'] = 'Account name is required.';
-      if (!form.bankAccountNumber.trim()) e['bankAccountNumber'] = 'Account number is required.';
+      if (!form.bankName.trim())          e.bankName = 'Bank name is required.';
+      if (!form.bankAccountName.trim())   e.bankAccountName = 'Account name is required.';
+      if (!form.bankAccountNumber.trim()) e.bankAccountNumber = 'Account number is required.';
     }
     return e;
   }
@@ -182,7 +182,7 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
       contactEmail: form.contactEmail.trim() || undefined,
       contactPhone: form.contactPhone.trim() || undefined,
       paymentTermsDays: Number(form.paymentTermsDays),
-      preferredPaymentMethod: (form.preferredPaymentMethod || undefined) as ApPaymentMethod | undefined,
+      preferredPaymentMethod: (form.preferredPaymentMethod || undefined),
       status: form.status,
       defaultGlAccountCode: form.defaultGlAccountCode ?? undefined,
       defaultCostCenterId: form.defaultCostCenterId ?? undefined,
@@ -208,7 +208,7 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
         });
         toast(`Vendor ${saved.vendorNo} created`);
       } else {
-        saved = await updateVendor.mutateAsync({ id: vendor!.id, ...base });
+        saved = await updateVendor.mutateAsync({ id: vendor.id, ...base });
         toast('Vendor updated');
       }
       onSaved?.(saved);
@@ -243,10 +243,10 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
         <div class="hrfin-dialog-body">
           <div class="hrfin-field">
             <label for="vd-name">Vendor name <span aria-hidden="true" class="ep-required">*</span></label>
-            <input id="vd-name" class={`hrfin-input${errors['name'] ? ' is-invalid' : ''}`} value={form.name}
+            <input id="vd-name" class={`hrfin-input${errors.name ? ' is-invalid' : ''}`} value={form.name}
               placeholder="e.g. Atlas Cement Ltd." maxLength={200}
               onInput={e => set('name', (e.target as HTMLInputElement).value)} />
-            {errors['name'] && <p class="ep-error" role="alert">{errors['name']}</p>}
+            {errors.name && <p class="ep-error" role="alert">{errors.name}</p>}
           </div>
 
           <div class="hrfin-field">
@@ -266,17 +266,17 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
           </div>
           <div class="hrfin-field">
             <label for="vd-cemail">Contact email</label>
-            <input id="vd-cemail" class={`hrfin-input${errors['contactEmail'] ? ' is-invalid' : ''}`}
+            <input id="vd-cemail" class={`hrfin-input${errors.contactEmail ? ' is-invalid' : ''}`}
               type="email" value={form.contactEmail}
               onInput={e => set('contactEmail', (e.target as HTMLInputElement).value)} />
-            {errors['contactEmail'] && <p class="ep-error" role="alert">{errors['contactEmail']}</p>}
+            {errors.contactEmail && <p class="ep-error" role="alert">{errors.contactEmail}</p>}
           </div>
           <div class="hrfin-field">
             <label for="vd-cphone">Contact phone</label>
-            <input id="vd-cphone" class={`hrfin-input${errors['contactPhone'] ? ' is-invalid' : ''}`}
+            <input id="vd-cphone" class={`hrfin-input${errors.contactPhone ? ' is-invalid' : ''}`}
               type="tel" value={form.contactPhone}
               onInput={e => set('contactPhone', (e.target as HTMLInputElement).value)} />
-            {errors['contactPhone'] && <p class="ep-error" role="alert">{errors['contactPhone']}</p>}
+            {errors.contactPhone && <p class="ep-error" role="alert">{errors.contactPhone}</p>}
           </div>
 
           <hr class="hrfin-divider" />
@@ -291,16 +291,16 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
                   options={termsOptions}
                   value={form.paymentTermsDays}
                   onChange={v => set('paymentTermsDays', v ?? '30')}
-                  error={errors['paymentTermsDays']}
+                  error={errors.paymentTermsDays}
                 />
               )
               : (
                 <>
                   <label for="vd-terms-i">Payment terms (days)</label>
-                  <input id="vd-terms-i" class={`hrfin-input${errors['paymentTermsDays'] ? ' is-invalid' : ''}`}
+                  <input id="vd-terms-i" class={`hrfin-input${errors.paymentTermsDays ? ' is-invalid' : ''}`}
                     type="number" min={0} max={365} value={form.paymentTermsDays}
                     onInput={e => set('paymentTermsDays', (e.target as HTMLInputElement).value)} />
-                  {errors['paymentTermsDays'] && <p class="ep-error" role="alert">{errors['paymentTermsDays']}</p>}
+                  {errors.paymentTermsDays && <p class="ep-error" role="alert">{errors.paymentTermsDays}</p>}
                 </>
               )
             }
@@ -378,24 +378,24 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
             <>
               <div class="hrfin-field">
                 <label for="ba-bank">Bank name <span aria-hidden="true" class="ep-required">*</span></label>
-                <input id="ba-bank" class={`hrfin-input${errors['bankName'] ? ' is-invalid' : ''}`}
+                <input id="ba-bank" class={`hrfin-input${errors.bankName ? ' is-invalid' : ''}`}
                   value={form.bankName} maxLength={150}
                   onInput={e => set('bankName', (e.target as HTMLInputElement).value)} />
-                {errors['bankName'] && <p class="ep-error" role="alert">{errors['bankName']}</p>}
+                {errors.bankName && <p class="ep-error" role="alert">{errors.bankName}</p>}
               </div>
               <div class="hrfin-field">
                 <label for="ba-acctname">Account name <span aria-hidden="true" class="ep-required">*</span></label>
-                <input id="ba-acctname" class={`hrfin-input${errors['bankAccountName'] ? ' is-invalid' : ''}`}
+                <input id="ba-acctname" class={`hrfin-input${errors.bankAccountName ? ' is-invalid' : ''}`}
                   value={form.bankAccountName} maxLength={150}
                   onInput={e => set('bankAccountName', (e.target as HTMLInputElement).value)} />
-                {errors['bankAccountName'] && <p class="ep-error" role="alert">{errors['bankAccountName']}</p>}
+                {errors.bankAccountName && <p class="ep-error" role="alert">{errors.bankAccountName}</p>}
               </div>
               <div class="hrfin-field">
                 <label for="ba-acctno">Account number <span aria-hidden="true" class="ep-required">*</span></label>
-                <input id="ba-acctno" class={`hrfin-input${errors['bankAccountNumber'] ? ' is-invalid' : ''}`}
+                <input id="ba-acctno" class={`hrfin-input${errors.bankAccountNumber ? ' is-invalid' : ''}`}
                   value={form.bankAccountNumber} maxLength={50}
                   onInput={e => set('bankAccountNumber', (e.target as HTMLInputElement).value)} />
-                {errors['bankAccountNumber'] && <p class="ep-error" role="alert">{errors['bankAccountNumber']}</p>}
+                {errors.bankAccountNumber && <p class="ep-error" role="alert">{errors.bankAccountNumber}</p>}
               </div>
               <div class="hrfin-field">
                 <label for="ba-routing">Routing / sort code</label>

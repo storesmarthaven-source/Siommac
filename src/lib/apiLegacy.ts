@@ -63,14 +63,14 @@ export function _rawApi(action: string, args: Record<string, unknown> = {}): Pro
   const token = _getSessionToken();
   const body  = JSON.stringify({ action, args, token });
   const headers: HeadersInit = { 'Content-Type': 'text/plain;charset=utf-8' };
-  if (token) (headers as Record<string, string>)['Authorization'] = 'Bearer ' + token;
+  if (token) (headers).Authorization = 'Bearer ' + token;
 
   return fetch(API_PATH, { method: 'POST', headers, body })
     .then(res => res.text())
     .then(text => {
       try {
         const parsed = JSON.parse(text) as ApiResult;
-        if (parsed?.success === false && parsed.message === 'Unauthorized') {
+        if (!(parsed?.success) && parsed.message === 'Unauthorized') {
           const fn = (window as unknown as { handleSessionExpired?: () => void }).handleSessionExpired;
           if (typeof fn === 'function') fn();
         }
@@ -262,12 +262,12 @@ document.addEventListener('click', e => {
 type Win = Window & typeof globalThis & Record<string, unknown>;
 const w = window as Win;
 
-w['api']             = api;
-w['apiSwr']          = apiSwr;
-w['_rawApi']         = _rawApi;
-w['swr']             = swr;
-w['_swrLastHash']    = _swrLastHash;
-w['pingApi']         = pingApi;
-w['setImgSrc']       = (img: HTMLImageElement, url: string) => { if (img && img.src !== url) img.src = url; };
-w['_ajaxLoaderStart']= () => {};   // no-op (background syncs are silent)
-w['_ajaxLoaderDone'] = () => {};   // no-op
+w.api             = api;
+w.apiSwr          = apiSwr;
+w._rawApi         = _rawApi;
+w.swr             = swr;
+w._swrLastHash    = _swrLastHash;
+w.pingApi         = pingApi;
+w.setImgSrc       = (img: HTMLImageElement, url: string) => { if (img && img.src !== url) img.src = url; };
+w._ajaxLoaderStart= () => {};   // no-op (background syncs are silent)
+w._ajaxLoaderDone = () => {};   // no-op

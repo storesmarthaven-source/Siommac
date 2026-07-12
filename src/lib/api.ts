@@ -231,7 +231,7 @@ export interface ApiFetchOptions {
 export async function apiFetch<T extends ApiResponse = ApiResponse>(
   path:    string,
   opts:    ApiFetchOptions = {},
-  attempt: number = 0,
+  attempt = 0,
 ): Promise<T> {
   // Abort immediately if caller already cancelled
   if (opts.signal?.aborted) {
@@ -249,7 +249,7 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
     'Content-Type': 'application/json',
     ...opts.headers,
   };
-  if (token) headers['Authorization'] = `Bearer ${token}`;
+  if (token) headers.Authorization = `Bearer ${token}`;
 
   const init: RequestInit = {
     method:  opts.method ?? (opts.body != null ? 'POST' : 'GET'),
@@ -311,7 +311,7 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
     // Same guard: only treat as session expiry if a session exists.
     if (
       json &&
-      (json as ApiResponse).success === false &&
+      !(json as ApiResponse).success &&
       (json as ApiResponse).message === 'Unauthorized' &&
       !opts.public
     ) {

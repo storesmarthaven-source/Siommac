@@ -44,7 +44,7 @@ function buildEntries(): PaletteEntry[] {
   const isEmployee = appState()?.get('currentIsEmployee') !== false;
 
   const groupLabels = new Map<string, string>(
-    (c.NAV_GROUPS as NavGroupItem[]).map(g => [g.id, g.label || 'General']),
+    (c.NAV_GROUPS).map(g => [g.id, g.label || 'General']),
   );
 
   const main     = c.SECTION_DEFS[role] ?? [];
@@ -123,10 +123,10 @@ function CommandPalette() {
       }
     }
     window.addEventListener('keydown', onKey);
-    (window as unknown as Record<string, unknown>)['openCommandPalette'] = () => setOpen(true);
+    (window as unknown as Record<string, unknown>).openCommandPalette = () => setOpen(true);
     return () => {
       window.removeEventListener('keydown', onKey);
-      delete (window as unknown as Record<string, unknown>)['openCommandPalette'];
+      delete (window as unknown as Record<string, unknown>).openCommandPalette;
     };
   }, []);
 

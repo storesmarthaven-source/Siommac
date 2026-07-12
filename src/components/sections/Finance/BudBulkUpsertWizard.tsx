@@ -260,7 +260,7 @@ function Step3LineEntry({ state, patch }: {
 
 function Step4Review({ state, priorYearBudgets }: {
   state: WizardState;
-  priorYearBudgets: Array<{ category: string; budgeted: number }>;
+  priorYearBudgets: { category: string; budgeted: number }[];
 }): VNode {
   const priorMap = new Map(priorYearBudgets.map(p => [p.category, p.budgeted]));
   const totalNew = state.lines.reduce((s, l) => s + (parseFloat(l.budgeted) || 0), 0);
@@ -492,7 +492,7 @@ export function BudBulkUpsertWizard({ open, onClose, onSuccess }: BudBulkUpsertW
         {step === 0 && <Step0FiscalYear state={state} patch={patch} />}
         {step === 1 && <Step1CostCentre state={state} patch={patch} />}
         {step === 2 && <Step2Categories state={state} patch={p => {
-          if ('selectedCategories' in p) syncLines(p.selectedCategories as string[]);
+          if ('selectedCategories' in p) syncLines(p.selectedCategories!);
           else patch(p);
         }} />}
         {step === 3 && <Step3LineEntry state={state} patch={patch} />}

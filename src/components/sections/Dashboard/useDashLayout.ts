@@ -41,7 +41,7 @@ function snapshotGrid(grid: Element): { order: WidgetId[]; hidden: WidgetId[] } 
   const order: WidgetId[] = [];
   const hidden: WidgetId[] = [];
   grid.querySelectorAll<HTMLElement>('.dash-widget').forEach(w => {
-    const id = w.dataset['widgetId'] as WidgetId | undefined;
+    const id = w.dataset.widgetId as WidgetId | undefined;
     if (!id) return;
     order.push(id);
     if (w.classList.contains('dash-widget-hidden')) hidden.push(id);
@@ -64,10 +64,10 @@ export function useDashLayout() {
     if (order.length) {
       const map: Record<string, HTMLElement> = {};
       grid.querySelectorAll<HTMLElement>('.dash-widget').forEach(w => {
-        const id = w.dataset['widgetId'];
+        const id = w.dataset.widgetId;
         if (id) map[id] = w;
       });
-      order.forEach(id => { if (map[id]) grid.appendChild(map[id]!); });
+      order.forEach(id => { if (map[id]) grid.appendChild(map[id]); });
     }
 
     WIDGET_DEFS.forEach(({ id }) => {
@@ -115,9 +115,9 @@ export function useDashLayout() {
 
       if (next) {
         // Wire Sortable
-        const Sortable = (window as unknown as Record<string, unknown>)['Sortable'];
+        const Sortable = (window as unknown as Record<string, unknown>).Sortable;
         if (Sortable && typeof Sortable === 'function') {
-          sortableRef.current = (Sortable as Function)(grid, {
+          sortableRef.current = (Sortable)(grid, {
             animation:       250,
             ghostClass:      'dash-sortable-ghost',
             dragClass:       'dash-sortable-drag',

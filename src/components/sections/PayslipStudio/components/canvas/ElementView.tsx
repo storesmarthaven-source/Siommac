@@ -19,7 +19,7 @@ interface DragState {
   startY: number;
   origin: Rect;
   /** Origins of every element that moves with this drag (multi-select). */
-  moveSet: Array<{ id: string; x: number; y: number }>;
+  moveSet: { id: string; x: number; y: number }[];
   /** A move only begins once the pointer travels past the threshold. */
   active: boolean;
 }

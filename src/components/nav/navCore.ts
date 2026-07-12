@@ -114,7 +114,7 @@ function groupDisplayLabel(g: NavGroupItem): string {
 export function navGlobalCatalog(role: string): NavGlobalCatalog {
   const all = allItemsForRole(role);
   const { NAV_GROUPS } = cfg();
-  const groupDefs = mergeModuleGroups(NAV_GROUPS as NavGroupItem[], role);
+  const groupDefs = mergeModuleGroups(NAV_GROUPS, role);
 
   const groups: NavGlobalGroup[] = [];
   let total = 0, visible = 0;
@@ -342,7 +342,7 @@ function _wireParentToggles(menu: HTMLElement, role: string): void {
       li.classList.toggle('open', willOpen);
       btn.setAttribute('aria-expanded', String(willOpen));
       const expanded = loadExpandedParents(role);
-      const id = li.dataset['parent'] ?? '';
+      const id = li.dataset.parent ?? '';
       if (willOpen) expanded.add(id); else expanded.delete(id);
       saveExpandedParents(role, expanded);
     });
@@ -386,14 +386,14 @@ export function buildSidebar(role: string): void {
   // Bucket items by group, preserving definition order within each group.
   const byGroup = new Map<NavGroupId, SectionItem[]>();
   for (const it of all) {
-    const g = (it.group ?? 'overview') as NavGroupId;
+    const g = (it.group ?? 'overview');
     (byGroup.get(g) ?? byGroup.set(g, []).get(g)!).push(it);
   }
 
   // Effective group order = built-in groups + any groups declared by registered
   // modules (inserted before 'administration'), so a module can introduce its
   // own group without editing config.
-  const orderedGroups = mergeModuleGroups(NAV_GROUPS as NavGroupItem[], role);
+  const orderedGroups = mergeModuleGroups(NAV_GROUPS, role);
   const groups = orderedGroups.filter(g => (byGroup.get(g.id)?.length ?? 0) > 0);
   // Count only top-level items per group (children render nested under a parent).
   const topCount = (g: NavGroupId) => (byGroup.get(g)?.filter(i => !i.parent).length ?? 0);
@@ -446,7 +446,7 @@ export function buildSidebar(role: string): void {
   // Reflect the active item's highlight + ensure its group is open.
   if (activeId) {
     menu?.querySelectorAll<HTMLButtonElement>('button[data-section]').forEach(b =>
-      b.classList.toggle('active', b.dataset['section'] === activeId));
+      b.classList.toggle('active', b.dataset.section === activeId));
   }
   refreshNavBadges(0);
 }
@@ -460,7 +460,7 @@ function _wireGroupToggles(menu: HTMLElement, role: string): void {
       const open = li.classList.toggle('open');
       btn.setAttribute('aria-expanded', String(open));
       const expanded = loadExpandedGroups(role) ?? new Set<string>();
-      const id = li.dataset['group'] ?? '';
+      const id = li.dataset.group ?? '';
       if (open) expanded.add(id); else expanded.delete(id);
       saveExpandedGroups(role, expanded);
     });
@@ -545,10 +545,10 @@ export async function savePalette(id: string): Promise<void> {
   renderPalettes();
   // Reload charts if on dashboard
   const win = window as unknown as Record<string, { loadDashboardCharts?: (f?: boolean) => void; loadChart?: () => void; loadTrendChart?: () => void }>;
-  if (document.getElementById('s-adm-dashboard')?.classList.contains('active')) win['Dashboard']?.loadDashboardCharts?.(true);
-  const sc = win['SiomacCharts'] as { hasAttendanceChart?: () => boolean; hasTrendChart?: () => boolean } | undefined;
-  if (sc?.hasAttendanceChart?.()) win['Dashboard']?.loadChart?.();
-  if (sc?.hasTrendChart?.())      win['Dashboard']?.loadTrendChart?.();
+  if (document.getElementById('s-adm-dashboard')?.classList.contains('active')) win.Dashboard?.loadDashboardCharts?.(true);
+  const sc = win.SiomacCharts as { hasAttendanceChart?: () => boolean; hasTrendChart?: () => boolean } | undefined;
+  if (sc?.hasAttendanceChart?.()) win.Dashboard?.loadChart?.();
+  if (sc?.hasTrendChart?.())      win.Dashboard?.loadTrendChart?.();
 
   const res = await updateColorScheme({ username: getUser(), scheme: id });
   if (!res.success) {
@@ -582,8 +582,8 @@ export async function saveLayout(mode: string): Promise<void> {
 
 export function showSection(id: string): void {
   const win = window as unknown as Record<string, { getDashEditMode?: () => boolean; toggleEditMode?: () => void }>;
-  if (id !== 's-adm-dashboard' && win['Dashboard']?.getDashEditMode?.()) {
-    win['Dashboard'].toggleEditMode?.();
+  if (id !== 's-adm-dashboard' && win.Dashboard?.getDashEditMode?.()) {
+    win.Dashboard.toggleEditMode?.();
   }
 
   // Registered modules serve every one of their nav items from a single panel
@@ -617,9 +617,9 @@ export function showSection(id: string): void {
   try { localStorage.setItem('siomac_last_section_' + getRole(), id); } catch (_) {}
 
   document.querySelectorAll('.sidebar-menu button[data-section]').forEach(b =>
-    b.classList.toggle('active', (b as HTMLButtonElement).dataset['section'] === id));
+    b.classList.toggle('active', (b as HTMLButtonElement).dataset.section === id));
   document.querySelectorAll('#topTabs button').forEach(b =>
-    b.classList.toggle('active', (b as HTMLButtonElement).dataset['section'] === id));
+    b.classList.toggle('active', (b as HTMLButtonElement).dataset.section === id));
 
   // Ensure the active item's accordion group is expanded so it stays visible.
   const activeBtn = document.querySelector<HTMLButtonElement>(`#sidebarMenu button[data-section="${id}"]`);
@@ -629,7 +629,7 @@ export function showSection(id: string): void {
     grp.querySelector('[data-group-toggle]')?.setAttribute('aria-expanded', 'true');
     const role = getRole();
     const expanded = loadExpandedGroups(role) ?? new Set<string>();
-    expanded.add(grp.dataset['group'] ?? '');
+    expanded.add(grp.dataset.group ?? '');
     saveExpandedGroups(role, expanded);
   }
 
@@ -646,45 +646,45 @@ export function refreshSection(id: string): void {
 
   switch (id) {
     case 's-settings':
-      win['SettingsView']?.['_stgActivatePanel']?.((role === 'admin' || role === 'superadmin') ? 'company' : 'appearance');
+      win.SettingsView?._stgActivatePanel?.((role === 'admin' || role === 'superadmin') ? 'company' : 'appearance');
       renderPalettes(); renderLayouts();
-      win['SettingsView']?.['loadAdminBrandingSettings']?.();
+      win.SettingsView?.loadAdminBrandingSettings?.();
       break;
     case 's-profile':
       document.querySelectorAll('.ep-tab-btn').forEach((b, i) => b.classList.toggle('active', i === 0));
       document.querySelectorAll('.ep-tab-pane').forEach((p, i) => p.classList.toggle('active', i === 0));
-      win['Profile']?.['loadMyProfile']?.();
+      win.Profile?.loadMyProfile?.();
       break;
     case 's-emp-attendance':
       checkStatus?.();
-      (win['Dashboard'] as { loadChart?: () => void; loadTrendChart?: () => void } | undefined)?.loadChart?.();
-      (win['Dashboard'] as { loadChart?: () => void; loadTrendChart?: () => void } | undefined)?.loadTrendChart?.();
+      (win.Dashboard as { loadChart?: () => void; loadTrendChart?: () => void } | undefined)?.loadChart?.();
+      (win.Dashboard as { loadChart?: () => void; loadTrendChart?: () => void } | undefined)?.loadTrendChart?.();
       break;
-    case 's-emp-history':     win['Employees']?.['loadHistoryInline']?.();           break;
+    case 's-emp-history':     win.Employees?.loadHistoryInline?.();           break;
     case 's-projectMap': {
       const lmap = (window as unknown as { AppState?: { get: (k: string) => unknown } }).AppState?.get('map');
-      setTimeout(() => { if (!lmap) win['LiveMap']?.['initializeMap']?.(); else (lmap as { invalidateSize: () => void }).invalidateSize(); }, 80);
-      win['LiveMap']?.['loadLiveAttendance']?.();
+      setTimeout(() => { if (!lmap) win.LiveMap?.initializeMap?.(); else (lmap as { invalidateSize: () => void }).invalidateSize(); }, 80);
+      win.LiveMap?.loadLiveAttendance?.();
       (window as unknown as { _clearMapBadge?: () => void })._clearMapBadge?.();
       break;
     }
-    case 's-emp-leave':       win['Employees']?.['loadLeaveRequests']?.();            break;
-    case 's-emp-payroll':     win['Employees']?.['loadMyPayslips']?.();               break;
-    case 's-mgr-overview':    win['Employees']?.['loadDepartmentData']?.();           break;
-    case 's-mgr-employees':   win['Employees']?.['loadDepartmentEmployees']?.();      break;
-    case 's-mgr-leaves':      win['Employees']?.['loadManagerLeaveApplications']?.(); break;
+    case 's-emp-leave':       win.Employees?.loadLeaveRequests?.();            break;
+    case 's-emp-payroll':     win.Employees?.loadMyPayslips?.();               break;
+    case 's-mgr-overview':    win.Employees?.loadDepartmentData?.();           break;
+    case 's-mgr-employees':   win.Employees?.loadDepartmentEmployees?.();      break;
+    case 's-mgr-leaves':      win.Employees?.loadManagerLeaveApplications?.(); break;
     case 's-adm-dashboard':
-      win['Employees']?.['loadDashboardData']?.();
-      (win['Dashboard'] as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.loadDashboardCharts?.();
-      (win['Dashboard'] as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.initDashboardLayoutEditor?.();
+      win.Employees?.loadDashboardData?.();
+      (win.Dashboard as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.loadDashboardCharts?.();
+      (win.Dashboard as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.initDashboardLayoutEditor?.();
       break;
-    case 's-adm-employees':   win['Employees']?.['loadEmployeeList']?.();             break;
-    case 's-adm-departments': win['Employees']?.['loadDepartments']?.();              break;
-    case 's-adm-projects':    win['Sites']?.['loadProjectSites']?.();                 break;
-    case 's-adm-attendance':  win['AttendanceView']?.['loadAttendanceData']?.();      break;
-    case 's-adm-leaves':      win['LeaveView']?.['loadLeaveApplications']?.();        break;
-    case 's-adm-rates':       win['Payroll']?.['loadHourlyRates']?.();               break;
-    case 's-payroll':         win['Payroll']?.['initPayrollSection']?.();             break;
+    case 's-adm-employees':   win.Employees?.loadEmployeeList?.();             break;
+    case 's-adm-departments': win.Employees?.loadDepartments?.();              break;
+    case 's-adm-projects':    win.Sites?.loadProjectSites?.();                 break;
+    case 's-adm-attendance':  win.AttendanceView?.loadAttendanceData?.();      break;
+    case 's-adm-leaves':      win.LeaveView?.loadLeaveApplications?.();        break;
+    case 's-adm-rates':       win.Payroll?.loadHourlyRates?.();               break;
+    case 's-payroll':         win.Payroll?.initPayrollSection?.();             break;
   }
 }
 
@@ -764,7 +764,7 @@ const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
 const _sbBadgeLastLabel = new Map<string, string>();
 
 function _setSbBadge(btn: HTMLButtonElement, count: number) {
-  const key   = btn.dataset['section'] ?? btn.id;
+  const key   = btn.dataset.section ?? btn.id;
   const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
   if (_sbBadgeLastLabel.get(key) === label) return;
   _sbBadgeLastLabel.set(key, label);
@@ -788,7 +788,7 @@ function _setSbBadge(btn: HTMLButtonElement, count: number) {
 export function refreshNavBadges(unreadLeaveCount: number): void {
   ['#sidebarMenu', '#topTabs'].forEach(sel => {
     document.querySelectorAll<HTMLButtonElement>(`${sel} button[data-section]`).forEach(btn => {
-      if (LEAVE_SECTION_IDS.includes(btn.dataset['section'] ?? '')) {
+      if (LEAVE_SECTION_IDS.includes(btn.dataset.section ?? '')) {
         _setSbBadge(btn, unreadLeaveCount);
       }
     });

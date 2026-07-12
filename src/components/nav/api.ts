@@ -23,22 +23,22 @@ export const getTickets = () =>
   apiAction<TicketResponse>('getTickets', {});
 
 export const createTicket = (args: { category: string; subject: string; body: string }) =>
-  apiAction<BasicResponse>('createTicket', args as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('createTicket', args);
 
 export const replyTicket = (args: { ticketId: string | number; body: string }) =>
-  apiAction<BasicResponse>('replyTicket', args as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('replyTicket', args);
 
 export const updateTicketStatus = (args: { ticketId: string | number; status: string }) =>
-  apiAction<BasicResponse>('updateTicketStatus', args as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('updateTicketStatus', args);
 
 export const deleteTicket = (ticketId: string | number) =>
-  apiAction<BasicResponse>('deleteTicket', { ticketId } as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('deleteTicket', { ticketId });
 
 export const clearClosedTickets = () =>
   apiAction<BasicResponse>('clearClosedTickets', {});
 
 export const updateColorScheme = (args: { username: string; scheme: string }) =>
-  apiAction<BasicResponse>('updateColorScheme', args as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('updateColorScheme', args);
 
 export const updateLayoutMode = (args: { username: string; mode: string }) =>
-  apiAction<BasicResponse>('updateLayoutMode', args as unknown as Record<string, unknown>);
+  apiAction<BasicResponse>('updateLayoutMode', args);

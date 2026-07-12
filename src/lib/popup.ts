@@ -28,7 +28,7 @@ const ICONS: Record<string, string> = {
 };
 
 function _svg(icon: string): string {
-  return '<svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">' + (ICONS[icon] ?? ICONS['info']!) + '</svg>';
+  return '<svg viewBox="0 0 52 52" xmlns="http://www.w3.org/2000/svg">' + (ICONS[icon] ?? ICONS.info!) + '</svg>';
 }
 
 // ── DOM state ─────────────────────────────────────────────────────────────────
@@ -113,23 +113,23 @@ function _ensureDOM(): void {
     '</div>';
   document.body.appendChild(_modal);
 
-  _iconEl    = _modal.querySelector('.cpop-icon')    as HTMLElement;
-  _titleEl   = _modal.querySelector('.cpop-title')   as HTMLElement;
-  _textEl    = _modal.querySelector('.cpop-text')    as HTMLElement;
-  _inputEl    = _modal.querySelector('.cpop-input')    as HTMLInputElement;
-  _textareaEl = _modal.querySelector('.cpop-textarea') as HTMLTextAreaElement;
-  _progEl    = _modal.querySelector('.cpop-progress') as HTMLElement;
+  _iconEl    = _modal.querySelector('.cpop-icon')!;
+  _titleEl   = _modal.querySelector('.cpop-title')!;
+  _textEl    = _modal.querySelector('.cpop-text')!;
+  _inputEl    = _modal.querySelector('.cpop-input')!;
+  _textareaEl = _modal.querySelector('.cpop-textarea')!;
+  _progEl    = _modal.querySelector('.cpop-progress')!;
   _progBar   = _progEl.querySelector('span')         as HTMLElement;
-  _okBtn     = _modal.querySelector('.cpop-btn-ok')  as HTMLButtonElement;
-  _cancelBtn = _modal.querySelector('.cpop-btn-cancel') as HTMLButtonElement;
+  _okBtn     = _modal.querySelector('.cpop-btn-ok')!;
+  _cancelBtn = _modal.querySelector('.cpop-btn-cancel')!;
 
   _okBtn.addEventListener('click',     e => { e.stopPropagation(); _close(true);  });
   _cancelBtn.addEventListener('click', e => { e.stopPropagation(); _close(false); });
-  (_modal.querySelector('.cpop-backdrop') as HTMLElement).addEventListener('click', e => {
+  (_modal.querySelector('.cpop-backdrop')!).addEventListener('click', e => {
     e.stopPropagation();
-    if (_modal.dataset['dismiss'] !== 'false') _close(false);
+    if (_modal.dataset.dismiss !== 'false') _close(false);
   });
-  (_modal.querySelector('.cpop-box') as HTMLElement).addEventListener('click', e => e.stopPropagation());
+  (_modal.querySelector('.cpop-box')!).addEventListener('click', e => e.stopPropagation());
 
   _toastsEl = document.createElement('div');
   _toastsEl.className = 'cpop-toasts';
@@ -216,14 +216,14 @@ function _showToast(opts: CpopOptions): Promise<CpopResult> {
       (opts.text  ? '<div class="cpop-toast-text"></div>'  : '') +
     '</div>' +
     (opts.timerProgressBar ? '<div class="cpop-toast-bar"></div>' : '');
-  if (opts.title) (t.querySelector('.cpop-toast-title') as HTMLElement).textContent = opts.title;
-  if (opts.text)  (t.querySelector('.cpop-toast-text')  as HTMLElement).textContent = opts.text;
+  if (opts.title) (t.querySelector('.cpop-toast-title')!).textContent = opts.title;
+  if (opts.text)  (t.querySelector('.cpop-toast-text')!).textContent = opts.text;
   _toastsEl.appendChild(t);
   requestAnimationFrame(() => t.classList.add('cpop-toast-in'));
 
   const dur = opts.timer ?? 3000;
   if (opts.timerProgressBar) {
-    const bar = t.querySelector('.cpop-toast-bar') as HTMLElement | null;
+    const bar = t.querySelector<HTMLElement>('.cpop-toast-bar');
     if (bar) {
       bar.style.transition = `width ${dur}ms linear`;
       requestAnimationFrame(() => { bar.style.width = '0%'; });
@@ -254,7 +254,7 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
   _freezeBsModals();
   _installMdCapture();
 
-  const box = _modal.querySelector('.cpop-box') as HTMLElement;
+  const box = _modal.querySelector('.cpop-box')!;
   box.className = opts.panelClass ? 'cpop-box ' + opts.panelClass : 'cpop-box';
 
   // Icon
@@ -321,13 +321,13 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
 
   // Dismiss rules: errors/warnings must always be closed explicitly
   const isAlert = opts.icon === 'error' || opts.icon === 'warning';
-  _modal.dataset['dismiss'] = (opts.allowOutsideClick === false || opts.loading || isAlert) ? 'false' : 'true';
+  _modal.dataset.dismiss = (opts.allowOutsideClick === false || opts.loading || isAlert) ? 'false' : 'true';
   _modal.classList.remove('cpop-hidden', 'cpop-closing');
 
   if (opts.timer && !isAlert) _activeTimer = setTimeout(() => _close(false), opts.timer);
 
   _escHandler = (e: KeyboardEvent) => {
-    if (e.key === 'Escape' && _modal.dataset['dismiss'] !== 'false') _close(false);
+    if (e.key === 'Escape' && _modal.dataset.dismiss !== 'false') _close(false);
     // Enter confirms — except in a textarea (where it should insert a newline).
     else if (e.key === 'Enter' && opts.input !== 'textarea' && !_okBtn.classList.contains('hidden') && !opts.loading) _close(true);
   };
@@ -354,5 +354,5 @@ export const cpop = {
 };
 
 // ── Window shims — legacy callers use window.cpop and window.Swal ─────────────
-(window as unknown as Record<string, unknown>)['cpop'] = cpop;
-(window as unknown as Record<string, unknown>)['Swal'] = cpop;   // Sweetalert2-compatible drop-in
+(window as unknown as Record<string, unknown>).cpop = cpop;
+(window as unknown as Record<string, unknown>).Swal = cpop;   // Sweetalert2-compatible drop-in

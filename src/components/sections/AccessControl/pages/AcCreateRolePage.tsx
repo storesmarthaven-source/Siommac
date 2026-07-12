@@ -49,8 +49,8 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
   const groups = useMemo(() => {
     const byMod = new Map<string, PermissionKey[]>();
     for (const k of PERMISSION_KEYS) {
-      if (capSearch && !PERMISSION_META[k]!.label.toLowerCase().includes(capSearch.toLowerCase())) continue;
-      const m = PERMISSION_META[k]!.module; (byMod.get(m) ?? byMod.set(m, []).get(m)!).push(k);
+      if (capSearch && !PERMISSION_META[k].label.toLowerCase().includes(capSearch.toLowerCase())) continue;
+      const m = PERMISSION_META[k].module; (byMod.get(m) ?? byMod.set(m, []).get(m)!).push(k);
     }
     return byMod;
   }, [capSearch]);
@@ -190,7 +190,7 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
                             {keys.map(k => (
                               <div class="cr-cap-row" key={k} onClick={() => toggle(k)}>
                                 <span class={`check${selected.has(k) ? ' on' : ''}`}>{selected.has(k) && <i class="fas fa-check" />}</span>
-                                <span class="cr-cap-name">{PERMISSION_META[k]!.label}</span>
+                                <span class="cr-cap-name">{PERMISSION_META[k].label}</span>
                                 {CRITICAL_GRANT_KEYS.has(k) && <span class="badge red" style={{ fontSize: '10.5px', padding: '2px 7px', marginLeft: '5px' }}>High Risk</span>}
                               </div>
                             ))}
@@ -211,7 +211,7 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
                 <>
                   <div class="cr-accordion" style={{ marginBottom: '16px' }}>
                     {newCritical.map(k => (
-                      <div class="cr-acc-group" key={k}><div class="cr-acc-head" style={{ cursor: 'default' }}><span class="cr-acc-ico" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}><i class="fas fa-shield-halved" /></span><div class="grow"><div class="cr-acc-name">{PERMISSION_META[k as PermissionKey]!.label}</div><div class="cr-acc-desc">{PERMISSION_META[k as PermissionKey]!.module}</div></div><span class="badge red">High Risk</span></div></div>
+                      <div class="cr-acc-group" key={k}><div class="cr-acc-head" style={{ cursor: 'default' }}><span class="cr-acc-ico" style={{ background: 'var(--red-bg)', color: 'var(--red)' }}><i class="fas fa-shield-halved" /></span><div class="grow"><div class="cr-acc-name">{PERMISSION_META[k as PermissionKey].label}</div><div class="cr-acc-desc">{PERMISSION_META[k as PermissionKey].module}</div></div><span class="badge red">High Risk</span></div></div>
                     ))}
                   </div>
                   <label class="field-lbl">Reason for granting these critical capabilities <span class="req">*</span></label>

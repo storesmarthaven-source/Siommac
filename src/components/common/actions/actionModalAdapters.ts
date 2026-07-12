@@ -13,7 +13,7 @@ export function toActionRecord(args: {
   subtitle?: string;
   icon?: string;
   badges?: ActionRecordBadge[];
-  fields?: Array<ActionRecordField | null | undefined | false>;
+  fields?: (ActionRecordField | null | undefined | false)[];
 }): ActionRecord {
   return {
     title: args.title,

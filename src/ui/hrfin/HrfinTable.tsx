@@ -27,7 +27,7 @@ export interface HrfinTableProps<T> {
   onSearch?: (v: string) => void;
   searchPlaceholder?: string;
   filters?: HrfinFilter[];
-  columns: ReadonlyArray<HrfinColumn<T>>;
+  columns: readonly HrfinColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;

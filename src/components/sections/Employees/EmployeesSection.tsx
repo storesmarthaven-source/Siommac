@@ -49,7 +49,7 @@ const COLUMNS = [
   },
   {
     title: 'Employee',
-    data:  null as null,
+    data:  null,
     render: (_v: unknown, _t: string, row: EmpRow) =>
       `<div style="display:flex;align-items:center;gap:10px">
          <img src="${row.profileImage || ''}" alt="${row.fullName}"

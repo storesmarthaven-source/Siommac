@@ -78,7 +78,7 @@ export async function loginApi(payload: {
   username: string;
   password: string;
 }): Promise<LoginResult> {
-  return authPost<LoginResult>('login', payload as unknown as Record<string, unknown>);
+  return authPost<LoginResult>('login', payload);
 }
 
 export async function verify2faApi(payload: {
@@ -87,20 +87,20 @@ export async function verify2faApi(payload: {
   rememberDevice?: boolean;
   deviceLabel?:    string;
 }): Promise<LoginResult> {
-  return authPost<LoginResult>('verify2fa', payload as unknown as Record<string, unknown>);
+  return authPost<LoginResult>('verify2fa', payload);
 }
 
 export async function setup2faApi(payload: {
   preAuthToken: string;
 }): Promise<LoginResult> {
-  return authPost<LoginResult>('setup2fa', payload as unknown as Record<string, unknown>);
+  return authPost<LoginResult>('setup2fa', payload);
 }
 
 export async function confirm2faSetupApi(payload: {
   preAuthToken: string;
   code:         string;
 }): Promise<LoginResult> {
-  return authPost<LoginResult>('confirm2faSetup', payload as unknown as Record<string, unknown>);
+  return authPost<LoginResult>('confirm2faSetup', payload);
 }
 
 export async function logoutApi(payload: {
@@ -122,7 +122,7 @@ export async function logoutApi(payload: {
 export async function webauthnAuthOptions(username?: string): Promise<WebAuthnOptionsResult> {
   return authPost<WebAuthnOptionsResult>(
     'webauthn/auth/options',
-    (username ? { username } : {}) as Record<string, unknown>,
+    (username ? { username } : {}),
   );
 }
 
@@ -141,7 +141,7 @@ export async function webauthnAuthVerify(payload: {
 }): Promise<LoginResult> {
   return authPost<LoginResult>(
     'webauthn/auth/verify',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
 }
 
@@ -172,7 +172,7 @@ export async function webauthnPromptDismissWithToken(token: string): Promise<{ s
 
 /** Pre-auth registration options (mandatory setup at login). */
 export async function webauthnPreauthRegisterOptions(payload: { preAuthToken: string }): Promise<WebAuthnOptionsResult> {
-  return authPost<WebAuthnOptionsResult>('webauthn/register/preauth/options', payload as unknown as Record<string, unknown>);
+  return authPost<WebAuthnOptionsResult>('webauthn/register/preauth/options', payload);
 }
 
 /** Pre-auth registration verify → issues a full session (same shape as /login). */
@@ -182,5 +182,5 @@ export async function webauthnPreauthRegisterVerify(payload: {
   rememberDevice?: boolean;
   deviceLabel?: string;
 }): Promise<LoginResult> {
-  return authPost<LoginResult>('webauthn/register/preauth/verify', payload as unknown as Record<string, unknown>);
+  return authPost<LoginResult>('webauthn/register/preauth/verify', payload);
 }

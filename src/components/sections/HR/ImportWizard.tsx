@@ -301,7 +301,7 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
                 {exceptionRows.map(r => (
                   <tr>
                     <td>{r.row_no}</td>
-                    <td>{`${r.mapped_data['firstName'] ?? ''} ${r.mapped_data['lastName'] ?? ''}`.trim() || '—'}</td>
+                    <td>{`${r.mapped_data.firstName ?? ''} ${r.mapped_data.lastName ?? ''}`.trim() || '—'}</td>
                     <td><span class={`pill ${r.status === 'blocked' ? 'red' : r.status === 'duplicate' ? 'purple' : 'amber'}`}>{cap(r.status)}</span></td>
                     <td>{(errorsByRow.get(r.id) ?? []).join('; ') || '—'}</td>
                     <td><div class="ui-mini-btn-row">

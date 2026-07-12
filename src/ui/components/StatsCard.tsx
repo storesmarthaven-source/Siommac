@@ -131,7 +131,7 @@ export function StatsCard({
         {hasPercent && (
           <div class="ui-stat-bar-wrap">
             <div class="ui-stat-bar-track">
-              <div class="ui-stat-bar-fill" style={{ width: `${Math.max(0, Math.min(100, percent!))}%`, background: barColor }} />
+              <div class="ui-stat-bar-fill" style={{ width: `${Math.max(0, Math.min(100, percent))}%`, background: barColor }} />
             </div>
             {percentTarget && (
               <div class="ui-stat-bar-labels">

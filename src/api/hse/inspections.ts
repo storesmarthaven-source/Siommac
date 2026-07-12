@@ -366,7 +366,7 @@ export interface CreateTemplateArgs {
   name: string;
   inspectionType: string;
   description?: string | null;
-  items: Array<{
+  items: {
     question: string;
     helpText?: string | null;
     responseType: string;
@@ -375,7 +375,7 @@ export interface CreateTemplateArgs {
     requiresEvidenceOnFail?: boolean;
     autoCreateFindingOnFail?: boolean;
     sortOrder?: number;
-  }>;
+  }[];
 }
 
 export function useCreateTemplate() {

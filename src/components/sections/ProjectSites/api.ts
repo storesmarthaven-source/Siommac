@@ -79,7 +79,7 @@ export async function addProjectSiteApi(
 ): Promise<MutateSiteResponse> {
   return apiPost<MutateSiteResponse>(
     'addProjectSite',
-    payload as unknown as Record<string, unknown>,
+    payload,
     { signal },
   );
 }
@@ -101,7 +101,7 @@ export async function updateProjectSiteApi(
 ): Promise<MutateSiteResponse> {
   return apiPost<MutateSiteResponse>(
     'updateProjectSite',
-    payload as unknown as Record<string, unknown>,
+    payload,
     { signal },
   );
 }
@@ -114,7 +114,7 @@ export async function deleteProjectSiteApi(
 ): Promise<MutateSiteResponse> {
   return apiPost<MutateSiteResponse>(
     'deleteProjectSite',
-    { id, actorId, actorUsername } as unknown as Record<string, unknown>,
+    { id, actorId, actorUsername },
     { signal },
   );
 }
@@ -126,7 +126,7 @@ export async function assignSiteEmployeesApi(
 ): Promise<void> {
   await apiPost<MutateSiteResponse>(
     'assignSiteEmployees',
-    { siteId, userIds } as unknown as Record<string, unknown>,
+    { siteId, userIds },
     { signal },
   );
 }

@@ -126,7 +126,7 @@ function TrendChart({ trend, loading }: { trend: DailyTrend[]; loading: boolean 
         chartRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [trend, loading]);
 
   return (
@@ -210,7 +210,7 @@ function DistributionChart({ rows, loading }: { rows: AttendanceRow[]; loading: 
         chartRef.current = null;
       }
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, [rows, loading]);
 
   return (

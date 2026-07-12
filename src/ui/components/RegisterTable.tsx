@@ -19,7 +19,7 @@ export interface Column {
 }
 
 interface RegisterTableProps {
-  columns: ReadonlyArray<Column>;
+  columns: readonly Column[];
   /** `<tr>` rows. */
   children: ComponentChildren;
   /** Optional footer content (e.g. "Showing 12 of 40"). */

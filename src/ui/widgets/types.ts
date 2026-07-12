@@ -252,5 +252,5 @@ export interface BoardLayout {
 }
 
 export function isPreviewWidget(item: BoardWidgetInstance): item is PreviewWidgetInstance {
-  return (item as PreviewWidgetInstance).preview === true;
+  return (item as PreviewWidgetInstance).preview;
 }

@@ -18,9 +18,9 @@ export function RowGuides({ el, zoom }: { el: TableElement; zoom: number }) {
     const elTop = root.getBoundingClientRect().top;
     const out: number[] = [];
     // Header band boundary, then each data-row boundary.
-    const th = root.querySelector('table.pay-tbl thead tr') as HTMLElement | null;
+    const th = root.querySelector('table.pay-tbl thead tr');
     if (th) out.push((th.getBoundingClientRect().bottom - elTop) / zoom);
-    const rows = root.querySelectorAll('table.pay-tbl tbody tr') as NodeListOf<HTMLElement>;
+    const rows = root.querySelectorAll('table.pay-tbl tbody tr');
     for (let i = 0; i < el.rows.length; i++) {
       const tr = rows[i];
       if (tr) out.push((tr.getBoundingClientRect().bottom - elTop) / zoom);

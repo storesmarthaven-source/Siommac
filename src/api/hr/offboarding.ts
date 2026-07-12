@@ -45,7 +45,7 @@ export function useOffboardingCases(status?: string) {
   return useQuery({ queryKey: offbKeys.list(status), queryFn: () => hrOffboardingApi.list(status ? { status } : {}) });
 }
 export function useOffboardingCase(caseId: string | null) {
-  return useQuery({ queryKey: offbKeys.case(caseId ?? ''), queryFn: () => hrOffboardingApi.get(caseId as string), enabled: !!caseId });
+  return useQuery({ queryKey: offbKeys.case(caseId ?? ''), queryFn: () => hrOffboardingApi.get(caseId!), enabled: !!caseId });
 }
 export function useOffboardingStats() {
   return useQuery({ queryKey: offbKeys.stats, queryFn: () => hrOffboardingApi.stats() });

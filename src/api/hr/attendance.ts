@@ -34,9 +34,9 @@ export interface RecordFilter    { employeeId?: string; fromDate?: string; toDat
 export interface TimesheetFilter { employeeId?: string; status?: string; fromPeriod?: string; toPeriod?: string; limit?: number; offset?: number }
 export interface ExceptionFilter { employeeId?: string; status?: string; timesheetId?: string; fromDate?: string; toDate?: string; limit?: number; offset?: number }
 
-type RecordsResult    = { records: AttendanceRecord[]; total: number };
-type TimesheetsResult = { timesheets: Timesheet[]; total: number };
-type ExceptionsResult = { exceptions: AttendanceException[]; total: number };
+interface RecordsResult { records: AttendanceRecord[]; total: number }
+interface TimesheetsResult { timesheets: Timesheet[]; total: number }
+interface ExceptionsResult { exceptions: AttendanceException[]; total: number }
 
 // ── Reads ───────────────────────────────────────────────────────────────────
 export function useAttendanceRecords(filter: RecordFilter = {}) {
@@ -100,7 +100,7 @@ export interface AttendanceImportResult {
   imported: number;
   updated: number;
   skipped: number;
-  errors: Array<{ row: number; employee?: string; message: string }>;
+  errors: { row: number; employee?: string; message: string }[];
   contentHash: string;
 }
 export const useImportAttendance = () =>

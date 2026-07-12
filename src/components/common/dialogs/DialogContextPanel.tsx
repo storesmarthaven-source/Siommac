@@ -10,7 +10,7 @@
 import { type VNode } from 'preact';
 import type { DialogContextPanelConfig, DialogContextSection, DialogTone } from './dialogContextTypes';
 
-function cx(...parts: Array<string | false | null | undefined>): string {
+function cx(...parts: (string | false | null | undefined)[]): string {
   return parts.filter(Boolean).join(' ');
 }
 

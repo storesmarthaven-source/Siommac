@@ -64,17 +64,17 @@ export async function getEmployee<T = unknown>(username: string, signal?: Signal
 }
 
 export async function addEmployee(payload: AddEmployeePayload): Promise<void> {
-  const res = await apiPost<ApiResponse>('addEmployee', payload as unknown as Record<string, unknown>);
+  const res = await apiPost('addEmployee', payload);
   if (!res.success) throw new Error(res.message ?? 'Failed to add employee.');
 }
 
 export async function updateEmployee(payload: UpdateEmployeePayload): Promise<void> {
-  const res = await apiPost<ApiResponse>('updateEmployee', payload as unknown as Record<string, unknown>);
+  const res = await apiPost('updateEmployee', payload);
   if (!res.success) throw new Error(res.message ?? 'Failed to update employee.');
 }
 
 export async function deleteEmployee(username: string): Promise<void> {
-  const res = await apiPost<ApiResponse>('deleteEmployee', { username });
+  const res = await apiPost('deleteEmployee', { username });
   if (!res.success) throw new Error(res.message ?? 'Failed to delete employee.');
 }
 
@@ -92,16 +92,16 @@ export async function listManagers<T = unknown>(signal?: SignalOpt): Promise<T[]
 }
 
 export async function addDepartment(payload: AddDepartmentPayload): Promise<void> {
-  const res = await apiPost<ApiResponse>('addDepartment', payload as unknown as Record<string, unknown>);
+  const res = await apiPost('addDepartment', payload);
   if (!res.success) throw new Error(res.message ?? 'Failed to add department.');
 }
 
 export async function updateDepartment(payload: UpdateDepartmentPayload): Promise<void> {
-  const res = await apiPost<ApiResponse>('updateDepartment', payload as unknown as Record<string, unknown>);
+  const res = await apiPost('updateDepartment', payload);
   if (!res.success) throw new Error(res.message ?? 'Failed to update department.');
 }
 
 export async function deleteDepartment(id: string): Promise<void> {
-  const res = await apiPost<ApiResponse>('deleteDepartment', { id });
+  const res = await apiPost('deleteDepartment', { id });
   if (!res.success) throw new Error(res.message ?? 'Failed to delete department.');
 }

@@ -113,7 +113,7 @@ import { ensureFreshToken }     from '@lib/api';
 // ── Register session store on window so attSystem.ts can sync it ──────────────
 // attSystem._completeLogin() calls window.__siomacSessionStore to update the
 // Zustand store so all Preact components see isAuthenticated=true immediately.
-(window as unknown as Record<string, unknown>)['__siomacSessionStore'] = useSessionStore;
+(window as unknown as Record<string, unknown>).__siomacSessionStore = useSessionStore;
 
 // ── TanStack Query client ─────────────────────────────────────────────────────
 
@@ -195,7 +195,7 @@ async function bootApp(): Promise<void> {
 
   // ── Boot the attendance system (replaces app.js _safeInit) ────────────────
   // Warm IndexedDB SWR cache first so the first render hits the cache, then init.
-  const _siomacDB = (window as unknown as Record<string, { warmSwr?: () => Promise<void> }>)['SiomacDB'];
+  const _siomacDB = (window as unknown as Record<string, { warmSwr?: () => Promise<void> }>).SiomacDB;
   if (_siomacDB?.warmSwr) {
     await _siomacDB.warmSwr().catch(() => undefined);
   }
@@ -255,7 +255,7 @@ async function bootApp(): Promise<void> {
 
   // window.SettingsView shim — nav.js calls SettingsView.loadAdminBrandingSettings()
   // on section nav; we invalidate the settings query so the panel refetches.
-  (window as unknown as Record<string, unknown>)['SettingsView'] = {
+  (window as unknown as Record<string, unknown>).SettingsView = {
     loadAdminBrandingSettings: () => {
       void queryClient.invalidateQueries({ queryKey: ['settings'] });
     },
@@ -286,7 +286,7 @@ async function bootApp(): Promise<void> {
 
   // window.Payroll shim — any legacy call to Payroll.loadHourlyRates() / initPayrollSection()
   // invalidates the relevant TanStack Query caches so sections refetch.
-  (window as unknown as Record<string, unknown>)['Payroll'] = {
+  (window as unknown as Record<string, unknown>).Payroll = {
     loadHourlyRates:   () => { void queryClient.invalidateQueries({ queryKey: ['hourlyRates'] }); },
     initPayrollSection:() => { void queryClient.invalidateQueries({ queryKey: ['payroll'] }); },
     renderHourlyRates: () => { void queryClient.invalidateQueries({ queryKey: ['hourlyRates'] }); },
@@ -341,8 +341,8 @@ async function bootApp(): Promise<void> {
   // window.LiveMap — set by @components/livemap import at top of this file.
   // The block below is a belt-and-suspenders fallback in case the import somehow
   // didn't execute before nav.js runs its first loadLiveAttendance() delegation.
-  if (!(window as unknown as Record<string, unknown>)['LiveMap']) {
-    (window as unknown as Record<string, unknown>)['LiveMap'] = {
+  if (!(window as unknown as Record<string, unknown>).LiveMap) {
+    (window as unknown as Record<string, unknown>).LiveMap = {
       loadLiveAttendance: () => { void queryClient.invalidateQueries({ queryKey: ['liveAttendance'] }); },
       initializeMap:           () => undefined,
       renderLivePanel:         () => undefined,
@@ -362,7 +362,7 @@ async function bootApp(): Promise<void> {
   // window.Dashboard shim — nav.js / app.js calls Dashboard.loadDashboardCharts() /
   // initDashboardLayoutEditor() / loadChart() on section nav.
   // Invalidating the query triggers the DashboardController to refetch + re-delegate to SiomacCharts.
-  (window as unknown as Record<string, unknown>)['Dashboard'] = {
+  (window as unknown as Record<string, unknown>).Dashboard = {
     loadDashboardCharts:      (forceReload?: boolean) => {
       void queryClient.invalidateQueries({ queryKey: ['dashboard', 'charts'] });
     },
@@ -383,7 +383,7 @@ async function bootApp(): Promise<void> {
 
   // window.Sites shim — nav.js calls Sites.loadProjectSites() on section nav.
   // Invalidating the query triggers ProjectSitesSection to refetch.
-  (window as unknown as Record<string, unknown>)['Sites'] = {
+  (window as unknown as Record<string, unknown>).Sites = {
     loadProjectSites:    (forceWipe?: boolean, forceRefresh?: boolean) => {
       void queryClient.invalidateQueries({ queryKey: ['projectSites'] });
     },
@@ -402,7 +402,7 @@ async function bootApp(): Promise<void> {
   // ── Employees module (replaces employees.js — covers 8 sections across 3 roles) ──
   // AppState is populated by app.js (last in SCRIPTS chain) before we reach here.
   const _win     = window as unknown as Record<string, unknown>;
-  const _AppSt   = _win['AppState'] as { get: (k: string) => string } | undefined;
+  const _AppSt   = _win.AppState as { get: (k: string) => string } | undefined;
   const _role    = (_AppSt?.get('currentRole') || 'employee') as Parameters<typeof mountEmployeesModule>[1]['currentRole'];
   const _user    = _AppSt?.get('currentUser') || '';
 
@@ -427,7 +427,7 @@ async function bootApp(): Promise<void> {
 
   // window.Employees shim — nav.js refreshSection calls these on section nav.
   // Each invalidates the corresponding TanStack Query cache so the section refetches.
-  (window as unknown as Record<string, unknown>)['Employees'] = {
+  (window as unknown as Record<string, unknown>).Employees = {
     loadEmployeeList:             () => { void queryClient.invalidateQueries({ queryKey: ['employees'] }); },
     loadDepartments:              () => { void queryClient.invalidateQueries({ queryKey: ['departments'] }); },
     loadLeaveRequests:            () => { void queryClient.invalidateQueries({ queryKey: ['leaves', 'employee'] }); },
@@ -485,7 +485,7 @@ async function bootApp(): Promise<void> {
   // window.Profile shim — nav.js calls Profile.loadMyProfile() on section nav.
   // TanStack Query refetches on window focus; this additionally clears the query
   // so the next render always re-fetches fresh data.
-  (window as unknown as Record<string, unknown>)['Profile'] = {
+  (window as unknown as Record<string, unknown>).Profile = {
     loadMyProfile: () => {
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
     },
@@ -493,7 +493,7 @@ async function bootApp(): Promise<void> {
 
   // window.LeaveView shim — any legacy call to LeaveView.loadLeaveApplications()
   // (e.g. from nav.js refreshSection) simply invalidates the TanStack Query cache.
-  (window as unknown as Record<string, unknown>)['LeaveView'] = {
+  (window as unknown as Record<string, unknown>).LeaveView = {
     loadLeaveApplications: () => {
       void queryClient.invalidateQueries({ queryKey: ['admin', 'leaves'] });
     },
@@ -506,7 +506,7 @@ async function bootApp(): Promise<void> {
   // window.AttendanceView shim — nav.js calls AttendanceView.loadAttendanceData()
   // when navigating to s-adm-attendance. TanStack Query auto-refetches on focus,
   // but we also invalidate the cache explicitly so a manual nav always refreshes.
-  (window as unknown as Record<string, unknown>)['AttendanceView'] = {
+  (window as unknown as Record<string, unknown>).AttendanceView = {
     loadAttendanceData: () => {
       void queryClient.invalidateQueries({ queryKey: ['attendance', 'log'] });
     },

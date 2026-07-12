@@ -36,7 +36,7 @@ export interface BulkImportResult {
 }
 
 export async function bulkImportRatesApi(
-  rows: Array<{ username: string; rate: number }>,
+  rows: { username: string; rate: number }[],
   signal?: AbortSignal,
 ): Promise<BulkImportResult> {
   const res = await apiPost<BulkImportResponse>('bulkImportRates', { rows }, signal ? { signal } : undefined);
@@ -50,7 +50,7 @@ export async function bulkImportRatesApi(
 }
 
 /** Parse a CSV string into { username, rate } pairs. */
-export function parseRatesCsv(text: string): Array<{ username: string; rate: number }> {
+export function parseRatesCsv(text: string): { username: string; rate: number }[] {
   const rows: string[][] = [];
   let i = 0, inQuote = false, field = '', row: string[] = [];
   const push = () => { row.push(field); field = ''; };

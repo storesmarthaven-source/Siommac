@@ -60,7 +60,7 @@ export default function LoginShell() {
       if (rememberMe) localStorage.setItem('rememberedUser', username || (result.username ?? ''));
       else            localStorage.removeItem('rememberedUser');
     } catch { /* ignore storage errors */ }
-    const sys = (window as unknown as Record<string, { _completeLogin?: (r: LoginResult) => void }>)['AttendanceSystem'];
+    const sys = (window as unknown as Record<string, { _completeLogin?: (r: LoginResult) => void }>).AttendanceSystem;
     sys?._completeLogin?.(result);
     // Reset for the next sign-in (e.g. after logout → remount).
     setPhase('credentials');

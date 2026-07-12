@@ -56,7 +56,7 @@ export const hrOvertimeApi = {
   approveOvertime:(a: { id: string })                => call<OvertimeEntry>('hr/overtime/approve', a),
   rejectOvertime:(a: { id: string; reason?: string })=> call<OvertimeEntry>('hr/overtime/reject', a),
   cancelOvertime:(a: { id: string })                 => call<OvertimeEntry>('hr/overtime/cancel', a),
-  listReports:  (a: object = {})                     => call<Array<Record<string, unknown>>>('hr/overtime/reports/list', a),
+  listReports:  (a: object = {})                     => call<Record<string, unknown>[]>('hr/overtime/reports/list', a),
 };
 
 export const hrOvertimeKeys = {

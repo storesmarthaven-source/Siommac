@@ -90,7 +90,7 @@ beforeAll(() => {
       msg.includes('Consider adding an error boundary') ||
       msg.includes('The above error occurred')
     ) return;
-    // eslint-disable-next-line no-console
+     
     console.warn('[test console.error suppressed]', ...args);
   });
 });

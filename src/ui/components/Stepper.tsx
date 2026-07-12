@@ -20,7 +20,7 @@ export interface StepperStep {
 }
 
 export interface StepperProps {
-  steps: ReadonlyArray<StepperStep>;
+  steps: readonly StepperStep[];
   /** Index of the current step (0-based). */
   activeIndex: number;
   /** Click handler for a reachable step (omit for a non-interactive stepper). */

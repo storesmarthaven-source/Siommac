@@ -163,7 +163,7 @@ function ImportModal({ open, onClose, onDone }: ImportModalProps) {
 
   const handleFile = (file: File) => {
     const reader = new FileReader();
-    reader.onload = (e) => setCsvText((e.target as FileReader).result as string);
+    reader.onload = (e) => setCsvText((e.target!).result as string);
     reader.readAsText(file);
   };
 
@@ -175,7 +175,7 @@ function ImportModal({ open, onClose, onDone }: ImportModalProps) {
 
   const handleConfirm = async () => {
     if (!csvText.trim()) { toast.error('Paste CSV data or select a file'); return; }
-    let parsed: Array<{ username: string; rate: number }>;
+    let parsed: { username: string; rate: number }[];
     try { parsed = parseRatesCsv(csvText); }
     catch (err) { toast.error(`CSV parse error: ${(err as Error).message}`); return; }
     if (!parsed.length) { toast.error('No valid rows found. Format: username,rate'); return; }

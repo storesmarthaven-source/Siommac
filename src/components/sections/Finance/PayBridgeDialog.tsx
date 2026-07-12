@@ -109,7 +109,7 @@ export function PayCreateRemittanceDialog({
   const createMut = useCreateRemittanceFromRun();
 
   const errors: Record<string, string> = {};
-  if (!authority) errors['authority'] = 'Select an authority.';
+  if (!authority) errors.authority = 'Select an authority.';
 
   async function submit(): Promise<void> {
     if (Object.keys(errors).length) return;
@@ -156,7 +156,7 @@ export function PayCreateRemittanceDialog({
           label="Authority *"
           value={authority}
           onChange={setAuthority}
-          error={authority === null ? undefined : errors['authority']}
+          error={authority === null ? undefined : errors.authority}
           required
         />
 
@@ -167,7 +167,7 @@ export function PayCreateRemittanceDialog({
           <input
             type="date"
             value={dueDate}
-            onInput={e => setDueDate((e.currentTarget as HTMLInputElement).value)}
+            onInput={e => setDueDate((e.currentTarget).value)}
             style={{ width: '100%', fontSize: 13, padding: '8px 10px',
                      background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
                      borderRadius: 6, color: 'var(--hrfin-text-primary)' }}

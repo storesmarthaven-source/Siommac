@@ -128,7 +128,7 @@ function set(key: string, val: StoreValue): void {
 /** Subscribe to a key change. Returns an unsubscribe function. */
 function on(key: string, fn: Listener): () => void {
   if (!_listeners[key]) _listeners[key] = new Set();
-  _listeners[key]!.add(fn);
+  _listeners[key].add(fn);
   return () => { _listeners[key]?.delete(fn); };
 }
 
@@ -173,4 +173,4 @@ function reset(): void {
 export const AppState = { get, set, on, seed, reset };
 
 // ── Register on window so app.js / legacy scripts keep working ────────────────
-(window as unknown as Record<string, unknown>)['AppState'] = AppState;
+(window as unknown as Record<string, unknown>).AppState = AppState;

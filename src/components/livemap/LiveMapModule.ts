@@ -147,7 +147,7 @@ function initializeMap(): void {
 
     // Destroy existing map instance
     let lmap = AppState.get('map') as any;
-    if (lmap && lmap._container) { lmap.remove(); lmap = null; AppState.set('map', null); }
+    if (lmap?._container) { lmap.remove(); lmap = null; AppState.set('map', null); }
 
     const defaultCenter: [number, number] = [10.6549, -61.5019];
 
@@ -186,7 +186,7 @@ function initializeMap(): void {
 
     // Fetch project sites, draw zones and pins, then fit view
     api('listProjectSites', {}).then(res => {
-      const sites = (res && res.success && res.data) || [];
+      const sites = (res?.success && res.data) || [];
       const attendanceZones = AppState.get('attendanceZones') as any[];
       attendanceZones.forEach(z => { try { lmap.removeLayer(z); } catch (_) {} });
       AppState.set('attendanceZones', []);
@@ -377,7 +377,7 @@ function _populateSiteSelect(): void {
     const isActive = (liveData || []).some((r: any) => !r.isCheckedOut && String(r.siteId) === String(site.id));
     const opt = document.createElement('div');
     opt.className  = 'lm-cs-option' + (String(site.id) === current ? ' selected' : '');
-    opt.dataset['value'] = site.id;
+    opt.dataset.value = site.id;
     opt.innerHTML = `
       <div class="lm-cs-opt-icon ${isActive ? 'lm-cs-opt-icon-active' : 'lm-cs-opt-icon-inactive'}">
         <i class="fas fa-building"></i>
@@ -442,10 +442,10 @@ function _initCustomSelect(): void {
   });
 
   document.getElementById('lmCustomSelectDropdown')?.addEventListener('click', e => {
-    const opt = (e.target as Element).closest('.lm-cs-option') as HTMLElement | null;
+    const opt = (e.target as Element).closest<HTMLElement>('.lm-cs-option');
     if (!opt) return;
     wrap.classList.remove('open');
-    const val = opt.dataset['value'] ?? '';
+    const val = opt.dataset.value ?? '';
     const hiddenSel = document.getElementById('lmSiteSelect') as HTMLSelectElement | null;
     if (hiddenSel) {
       hiddenSel.value = val;
@@ -507,7 +507,7 @@ function loadLiveAttendance(): void {
 
   apiSwr('getLiveAttendance', { scope }, {
     onData: (res: any) => {
-      const fresh: any[] = (res && res.success && res.data) || [];
+      const fresh: any[] = (res?.success && res.data) || [];
       const hash = fresh.length
         ? fresh.map((r: any) => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';')
         : '__empty__';
@@ -530,7 +530,7 @@ function loadLiveAttendance(): void {
         const projectSites = AppState.get('projectSites') as any[];
         if (projectSites.length) {
           const activeSec = document.querySelector('.app-section.active');
-          if (activeSec && activeSec.id === 's-adm-projects') {
+          if (activeSec?.id === 's-adm-projects') {
             w().displayProjectSites?.(projectSites);
           }
         }
@@ -620,7 +620,7 @@ function renderLivePanel(rows: any[]): void {
 
   // Strip skeleton / empty-state nodes (no data-id)
   Array.from(listEl.children).forEach(c => {
-    if (!(c as HTMLElement).dataset['id']) listEl.removeChild(c);
+    if (!(c as HTMLElement).dataset.id) listEl.removeChild(c);
   });
 
   if (!AppState.get('_selectedSiteId')) {
@@ -672,7 +672,7 @@ function renderLivePanel(rows: any[]): void {
 
   // In-place DOM diff — only update changed rows to avoid CSS animation replay
   const existingById = new Map<string, HTMLElement>();
-  listEl.querySelectorAll('[data-id]').forEach(el => existingById.set((el as HTMLElement).dataset['id']!, el as HTMLElement));
+  listEl.querySelectorAll('[data-id]').forEach(el => existingById.set((el as HTMLElement).dataset.id!, el as HTMLElement));
   const seen = new Set(sorted.map((r: any) => String(r.userId)));
   existingById.forEach((el, id) => {
     if (!seen.has(id) && el.parentNode === listEl) listEl.removeChild(el);
@@ -687,13 +687,13 @@ function renderLivePanel(rows: any[]): void {
       const tmp = document.createElement('div');
       tmp.innerHTML = liveEmpRowHtml(r);
       el = tmp.firstElementChild as HTMLElement;
-      el.dataset['rowKey'] = key;
+      el.dataset.rowKey = key;
       listEl.appendChild(el);
-    } else if (el.dataset['rowKey'] !== key) {
+    } else if (el.dataset.rowKey !== key) {
       const tmp = document.createElement('div');
       tmp.innerHTML = liveEmpRowHtml(r);
       const fresh = tmp.firstElementChild as HTMLElement;
-      fresh.dataset['rowKey'] = key;
+      fresh.dataset.rowKey = key;
       el.replaceWith(fresh);
       existingById.set(id, fresh);
       el = fresh;
@@ -707,7 +707,7 @@ function renderLivePanel(rows: any[]): void {
   sorted.forEach((r: any) => {
     const src = r.profileImage || r.checkInPhotoUrl || '';
     if (!src) return;
-    const avatarEl = listEl.querySelector(`.lm-emp-avatar[data-uid="${r.userId}"]`) as HTMLElement | null;
+    const avatarEl = listEl.querySelector<HTMLElement>(`.lm-emp-avatar[data-uid="${r.userId}"]`);
     if (!avatarEl) return;
     const img = new Image();
     img.onload = () => {
@@ -900,4 +900,4 @@ export const LiveMap = {
 };
 
 // Register on window so app.js / legacy callers keep working unchanged
-(window as Win)['LiveMap'] = LiveMap;
+(window as Win).LiveMap = LiveMap;

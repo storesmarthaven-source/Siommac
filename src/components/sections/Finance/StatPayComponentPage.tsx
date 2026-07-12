@@ -81,7 +81,7 @@ export function StatPayComponentPage({ edit, onClose }: {
         toast(`Update request for ${edit.code} submitted for approval.`);
       } else {
         await createMut.mutateAsync({
-          code: f.code.trim().toUpperCase(), name: f.name.trim(), kind: f.kind as 'earning' | 'deduction',
+          code: f.code.trim().toUpperCase(), name: f.name.trim(), kind: f.kind,
           isStatutory: f.isStatutory, isTaxable: f.isTaxable, reducesChargeable: f.reducesChargeable,
           glAccountCode: f.glAccountCode.trim() || null, costAllocationRequired: f.costAllocationRequired,
         });

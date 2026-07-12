@@ -110,7 +110,7 @@ function LinesTab({ disbursementId }: { disbursementId: string }): VNode {
   const { data: nameMap } = useEmployeeNames(allIds);
 
   if (linesQ.isLoading) return <div class="hrfin-empty">Loading lines…</div>;
-  if (linesQ.error) return <div class="hrfin-callout is-danger"><HrfinIcon name="alert" /><span>{(linesQ.error as Error).message}</span></div>;
+  if (linesQ.error) return <div class="hrfin-callout is-danger"><HrfinIcon name="alert" /><span>{(linesQ.error).message}</span></div>;
   if (lines.length === 0) return <div class="hrfin-empty">No lines found.</div>;
 
   return (
@@ -324,7 +324,7 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
             style={{ display: 'none' }}
             accept=".pdf,.csv,.xlsx,.png,.jpg"
             onChange={e => {
-              const f = (e.currentTarget as HTMLInputElement).files?.[0];
+              const f = (e.currentTarget).files?.[0];
               if (f) void handleUploadSupport(f);
             }}
           />
@@ -498,7 +498,7 @@ function PaymentsTab({ d }: { d: Disbursement }): VNode {
 function TimelineTab({ d }: { d: Disbursement }): VNode {
   // Real timestamps are stored in metadata at each state transition (server-side).
   const meta = d.metadata as Record<string, string | null | undefined>;
-  const events: Array<{ label: string; date: string | null; active: boolean }> = [
+  const events: { label: string; date: string | null; active: boolean }[] = [
     { label: 'Created (Draft)',     date: d.createdAt,                active: true },
     { label: 'Submitted',           date: meta.submittedAt ?? null,   active: ['submitted', 'approved', 'file_generated', 'paid'].includes(d.status) },
     { label: 'Approved',            date: meta.approvedAt ?? null,    active: ['approved', 'file_generated', 'paid'].includes(d.status) },
@@ -534,7 +534,7 @@ function AuditTab({ d }: { d: Disbursement }): VNode {
   if (auditQ.error) return (
     <div class="hrfin-callout is-danger">
       <HrfinIcon name="alert" />
-      <span>{(auditQ.error as Error).message}</span>
+      <span>{(auditQ.error).message}</span>
     </div>
   );
   if (entries.length === 0) return <div class="hrfin-empty">No audit entries yet.</div>;
@@ -587,7 +587,7 @@ function RelatedRunTab({ d }: { d: Disbursement }): VNode {
   if (runQ.error) return (
     <div class="hrfin-callout is-danger">
       <HrfinIcon name="alert" />
-      <span>{(runQ.error as Error).message}</span>
+      <span>{(runQ.error).message}</span>
     </div>
   );
   if (!run) return <div class="hrfin-empty">Payroll run not found.</div>;

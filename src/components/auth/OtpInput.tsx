@@ -103,7 +103,7 @@ export function otpClear(rowId: string): void {
 export function wireOtpRow(rowId: string, onComplete: () => void): () => void {
   const digits = document.querySelectorAll<HTMLInputElement>(`#${rowId} .tfa-otp-digit`);
   const arr    = [...digits];
-  const handlers: Array<[Element, string, EventListener]> = [];
+  const handlers: [Element, string, EventListener][] = [];
 
   function on(el: Element, evt: string, fn: EventListener) {
     el.addEventListener(evt, fn);

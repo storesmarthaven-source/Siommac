@@ -32,7 +32,7 @@ export const SWZ_ICONS: Record<string, string> = {
 
 /** Render an inline SVG icon by key. `display:contents` so CSS sizes the <svg> directly. */
 export function SwzIcon({ name }: { name: string }): VNode {
-  return <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: SWZ_ICONS[name] ?? SWZ_ICONS['GEAR']! }} />;
+  return <span style={{ display: 'contents' }} dangerouslySetInnerHTML={{ __html: SWZ_ICONS[name] ?? SWZ_ICONS.GEAR! }} />;
 }
 
 /** Per-card icon — cycles a small set like the design's iconFor(i). */

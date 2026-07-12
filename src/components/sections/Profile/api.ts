@@ -50,7 +50,7 @@ function humanizeEventType(eventType: string): string {
 export async function fetchMyProfile(username: string, signal?: AbortSignal): Promise<RawEmployee> {
   const res = await apiPost<{ success: boolean; data: RawEmployee; message?: string }>(
     'getEmployeeByUsername',
-    { username } as unknown as Record<string, unknown>,
+    { username },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Cannot load profile');
@@ -221,7 +221,7 @@ export async function updateMyPassword(
 ): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
     'auth/password/change',
-    { currentPassword: payload.oldPassword, newPassword: payload.newPassword } as unknown as Record<string, unknown>,
+    { currentPassword: payload.oldPassword, newPassword: payload.newPassword },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Password change failed');

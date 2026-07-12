@@ -66,6 +66,6 @@ export async function markAttendance(payload: {
 }): Promise<MarkAttendanceResponse> {
   return apiPost<MarkAttendanceResponse>(
     'markAttendance',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
 }

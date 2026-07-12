@@ -36,7 +36,7 @@ export function TextInput({ value, onInput, placeholder, type = 'text' }: {
 
 export function SelectInput({ value, onInput, options, placeholder }: {
   value: string; onInput: (v: string) => void;
-  options: readonly string[] | ReadonlyArray<{ value: string; label: string }>;
+  options: readonly string[] | readonly { value: string; label: string }[];
   placeholder?: string;
 }): VNode {
   return (

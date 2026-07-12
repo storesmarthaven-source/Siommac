@@ -26,7 +26,7 @@ interface SettingsViewShim {
 }
 
 function settingsView(): SettingsViewShim | undefined {
-  return (window as unknown as Record<string, SettingsViewShim | undefined>)['SettingsView'];
+  return (window as unknown as Record<string, SettingsViewShim | undefined>).SettingsView;
 }
 
 /** Patch the cached session so a reload starts with the fresh branding. */
@@ -35,8 +35,8 @@ function patchSessionCache(logoUrl: string, name: string): void {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return;
     const s = JSON.parse(raw) as Record<string, unknown>;
-    s['companyLogoUrl'] = logoUrl;
-    s['companyName']    = name;
+    s.companyLogoUrl = logoUrl;
+    s.companyName    = name;
     localStorage.setItem(SESSION_KEY, JSON.stringify(s));
   } catch { /* non-fatal */ }
 }

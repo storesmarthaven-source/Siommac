@@ -98,8 +98,8 @@ export function ActionModal({ open, config, busy, onCancel, onConfirm }: Props):
             <label class="am-reason">
               <span>{config.reason.label ?? 'Reason'}{config.reason.required ? ' *' : ' (optional)'}</span>
               {config.reason.type === 'text'
-                ? <input type="text" value={reason} placeholder={config.reason.placeholder} onInput={(e) => setReason((e.currentTarget as HTMLInputElement).value)} />
-                : <textarea rows={3} value={reason} placeholder={config.reason.placeholder} onInput={(e) => setReason((e.currentTarget as HTMLTextAreaElement).value)} />}
+                ? <input type="text" value={reason} placeholder={config.reason.placeholder} onInput={(e) => setReason((e.currentTarget).value)} />
+                : <textarea rows={3} value={reason} placeholder={config.reason.placeholder} onInput={(e) => setReason((e.currentTarget).value)} />}
             </label>
           )}
 

@@ -53,11 +53,11 @@ vi.mock('@api/tickets', () => ({
 }));
 
 // Realtime — store the subscribed callbacks so tests can trigger them
-const realtimeSubs: Record<string, Array<() => void>> = {};
+const realtimeSubs: Record<string, (() => void)[]> = {};
 vi.mock('@store/realtime', () => ({
   onRealtimeEvent: vi.fn((event: string, cb: () => void) => {
     if (!realtimeSubs[event]) realtimeSubs[event] = [];
-    realtimeSubs[event]!.push(cb);
+    realtimeSubs[event].push(cb);
     return () => {
       realtimeSubs[event] = (realtimeSubs[event] ?? []).filter(f => f !== cb);
     };
@@ -574,9 +574,9 @@ describe('useTicketRealtime', () => {
 
     renderHook(() => useTicketRealtime(), { wrapper: wrap(client) });
 
-    await waitFor(() => expect((realtimeSubs['support_tickets'] ?? []).length).toBeGreaterThan(0));
+    await waitFor(() => expect((realtimeSubs.support_tickets ?? []).length).toBeGreaterThan(0));
 
-    act(() => { realtimeSubs['support_tickets']?.forEach(cb => cb()); });
+    act(() => { realtimeSubs.support_tickets?.forEach(cb => cb()); });
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith(
@@ -591,9 +591,9 @@ describe('useTicketRealtime', () => {
 
     renderHook(() => useTicketRealtime(), { wrapper: wrap(client) });
 
-    await waitFor(() => expect((realtimeSubs['ticket_replies'] ?? []).length).toBeGreaterThan(0));
+    await waitFor(() => expect((realtimeSubs.ticket_replies ?? []).length).toBeGreaterThan(0));
 
-    act(() => { realtimeSubs['ticket_replies']?.forEach(cb => cb()); });
+    act(() => { realtimeSubs.ticket_replies?.forEach(cb => cb()); });
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith(
@@ -607,17 +607,17 @@ describe('useTicketRealtime', () => {
 
     const { unmount } = renderHook(() => useTicketRealtime(), { wrapper: wrap(client) });
 
-    await waitFor(() => expect((realtimeSubs['support_tickets'] ?? []).length).toBeGreaterThan(0));
+    await waitFor(() => expect((realtimeSubs.support_tickets ?? []).length).toBeGreaterThan(0));
 
     const before =
-      (realtimeSubs['support_tickets']?.length ?? 0) +
-      (realtimeSubs['ticket_replies']?.length ?? 0);
+      (realtimeSubs.support_tickets?.length ?? 0) +
+      (realtimeSubs.ticket_replies?.length ?? 0);
 
     act(() => { unmount(); });
 
     const after =
-      (realtimeSubs['support_tickets']?.length ?? 0) +
-      (realtimeSubs['ticket_replies']?.length ?? 0);
+      (realtimeSubs.support_tickets?.length ?? 0) +
+      (realtimeSubs.ticket_replies?.length ?? 0);
 
     expect(after).toBeLessThan(before);
   });

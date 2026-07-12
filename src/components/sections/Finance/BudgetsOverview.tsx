@@ -192,9 +192,9 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
   async function onEditSubmit(): Promise<void> {
     const f = editModal.form;
     const errors: Record<string, string> = {};
-    if (!f.costCenterId) errors['costCenterId'] = 'Cost centre is required.';
-    if (!f.category)     errors['category']     = 'Category is required.';
-    if (f.budgeted < 0)  errors['budgeted']     = 'Amount cannot be negative.';
+    if (!f.costCenterId) errors.costCenterId = 'Cost centre is required.';
+    if (!f.category)     errors.category     = 'Category is required.';
+    if (f.budgeted < 0)  errors.budgeted     = 'Amount cannot be negative.';
     if (Object.keys(errors).length) { setEditModal(m => ({ ...m, errors })); return; }
 
     setEditModal(m => ({ ...m, busy: true, errors: {} }));
@@ -246,7 +246,7 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
     ], `budget-lines-fy${fiscalYear}`);
   }
 
-  const columns: Array<HrfinColumn<BudgetLine>> = [
+  const columns: HrfinColumn<BudgetLine>[] = [
     {
       key: 'category',
       label: 'Category',
@@ -362,12 +362,12 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
               <div class="hrfin-field">
                 <label class="hrfin-label">Budgeted Amount (TTD) <span style={{ color: 'var(--hrfin-danger)' }}>*</span></label>
                 <input
-                  class={`hrfin-input${editModal.errors['budgeted'] ? ' is-error' : ''}`}
+                  class={`hrfin-input${editModal.errors.budgeted ? ' is-error' : ''}`}
                   type="number" min="0" step="0.01"
                   value={editModal.form.budgeted}
                   onInput={e => setEditModal(m => ({ ...m, form: { ...m.form, budgeted: Number((e.target as HTMLInputElement).value) }, errors: { ...m.errors, budgeted: '' } }))}
                 />
-                {editModal.errors['budgeted'] && <div class="hrfin-field-error">{editModal.errors['budgeted']}</div>}
+                {editModal.errors.budgeted && <div class="hrfin-field-error">{editModal.errors.budgeted}</div>}
               </div>
               {/* Label */}
               <div class="hrfin-field">
@@ -475,7 +475,7 @@ function VarianceTab({ fiscalYear, costCentreFilter, onDrill }: {
     ], `budget-variance-fy${fiscalYear}`);
   }
 
-  const columns: Array<HrfinColumn<BudgetVarianceRow>> = [
+  const columns: HrfinColumn<BudgetVarianceRow>[] = [
     { key: 'cc',       label: 'Cost Centre', sortable: true, render: r => r.costCenterName ?? r.costCenterId },
     { key: 'category', label: 'Category',    sortable: true, render: r => <strong>{r.category}</strong> },
     { key: 'budgeted', label: 'Budget',      sortable: true, render: r => <span style={{ fontFamily: 'monospace' }}>{money(r.budgeted)}</span> },
@@ -588,13 +588,13 @@ function ActualsTab({ fiscalYear, costCentreFilter }: {
       { header: 'Source Module', value: r => r.sourceModule },
       { header: 'Entity Type',  value: r => r.sourceEntityType },
       { header: 'Entity ID',    value: r => r.sourceEntityId },
-      { header: 'Amount (TTD)', value: r => String((r as CostEntryRow).amount) },
+      { header: 'Amount (TTD)', value: r => String((r).amount) },
       { header: 'Status',       value: r => r.status },
       { header: 'Created At',   value: r => r.createdAt },
     ], `budget-actuals-fy${fiscalYear}`);
   }
 
-  const columns: Array<HrfinColumn<CostEntryRow>> = [
+  const columns: HrfinColumn<CostEntryRow>[] = [
     { key: 'ref',    label: 'Ref',    sortable: true, render: r => <code style={{ fontSize: 11 }}>{r.ref ?? r.id.slice(0, 10)}</code> },
     { key: 'module', label: 'Module', sortable: true, render: r => humanModule(r.sourceModule) },
     { key: 'type',   label: 'Type',   sortable: true, render: r => r.sourceEntityType.replace(/_/g, ' ') },
@@ -642,12 +642,12 @@ const BUDGET_VARIANCE_COLS: ReportColumn[] = [
   { header: 'Budgeted',     key: 'budgeted',    format: 'currency' },
   { header: 'Actual',       key: 'actual',      format: 'currency' },
   { header: 'Variance',     key: 'variance',    format: 'currency' },
-  { header: 'Variance %',   value: r => (r['variancePct'] != null ? Number(r['variancePct']).toFixed(2) + '%' : '—') },
+  { header: 'Variance %',   value: r => (r.variancePct != null ? Number(r.variancePct).toFixed(2) + '%' : '—') },
 ];
 
 const BUDGET_ACTUALS_COLS: ReportColumn[] = [
   { header: 'Ref',          key: 'ref' },
-  { header: 'Module',       value: r => humanModule(String(r['sourceModule'] ?? '')) },
+  { header: 'Module',       value: r => humanModule(String(r.sourceModule ?? '')) },
   { header: 'Amount',       key: 'amount', format: 'currency' },
   { header: 'Status',       key: 'status' },
   { header: 'Date',         key: 'createdAt', format: 'date' },
@@ -713,14 +713,14 @@ function ImportsTab({ fiscalYear, costCentreId, canManage }: {
   canManage: boolean;
 }): VNode {
   const [file, setFile]           = useState<File | null>(null);
-  const [preview, setPreview]     = useState<Array<Record<string, string>>>([]);
+  const [preview, setPreview]     = useState<Record<string, string>[]>([]);
   const [importing, setImporting] = useState(false);
   const [importErr, setImportErr] = useState<string | null>(null);
   const [importOk, setImportOk]   = useState<string | null>(null);
 
   const bulkMut = useBudgetMutation(financeBudgetsApi.bulkUpsert);
 
-  function parseCsv(text: string): Array<Record<string, string>> {
+  function parseCsv(text: string): Record<string, string>[] {
     const lines = text.split(/\r?\n/).filter(l => l.trim());
     if (lines.length < 2) return [];
     const headers = (lines[0] ?? '').split(',').map(h => h.trim().toLowerCase());
@@ -757,10 +757,10 @@ function ImportsTab({ fiscalYear, costCentreId, canManage }: {
       const lines = rows.map(r => ({
         costCenterId: costCentreId,
         fiscalYear,
-        category: r['category'] ?? '',
-        label:    r['label'] || null,
-        notes:    r['notes'] || null,
-        budgeted: parseFloat(r['budgeted'] ?? r['amount'] ?? '0') || 0,
+        category: r.category ?? '',
+        label:    r.label || null,
+        notes:    r.notes || null,
+        budgeted: parseFloat(r.budgeted ?? r.amount ?? '0') || 0,
         currency: 'TTD' as const,
       })).filter(l => l.category && l.budgeted >= 0);
 

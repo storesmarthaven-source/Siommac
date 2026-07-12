@@ -523,7 +523,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
                   value={l.amount}
                   onInput={e => setLine(i, { amount: (e.target as HTMLInputElement).value })}
                 />
-                {lineErrors.lines?.[i]?.amount && <span class="hrfin-error">{lineErrors.lines[i]!.amount}</span>}
+                {lineErrors.lines?.[i]?.amount && <span class="hrfin-error">{lineErrors.lines[i].amount}</span>}
               </div>
 
               <div class="hrfin-field" style={{ marginTop: 8 }}>

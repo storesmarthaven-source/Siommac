@@ -54,7 +54,7 @@ export function useAllRequests(filters?: { status?: string; requestType?: string
 export function useRequest(requestId: string | null) {
   return useQuery({
     queryKey: reqKeys.detail(requestId ?? ''),
-    queryFn:  () => hrRequestsApi.get(requestId as string),
+    queryFn:  () => hrRequestsApi.get(requestId!),
     enabled:  !!requestId,
   });
 }

@@ -110,7 +110,7 @@ describe('Boot invariant 2 — showSection activates the correct DOM section', (
     buildShellDom(['s-adm-dashboard', 's-adm-employees', 's-adm-leaves']);
     window.AppState = {
       get: (k: string) => (k === 'currentRole' ? 'admin' : ''),
-      set: vi.fn() as unknown as Window['AppState']['set'],
+      set: vi.fn(),
       _photoCache: {},
     };
   });
@@ -226,7 +226,7 @@ describe('Boot invariant 4 — registerWindowShims: all required shims are funct
   // If any of these are undefined, navCore.refreshSection is a silent no-op
   // and the section never loads data.
 
-  const REQUIRED_SHIMS: Array<[keyof Window, string[]]> = [
+  const REQUIRED_SHIMS: [keyof Window, string[]][] = [
     ['Dashboard',      ['loadDashboardCharts', 'getDashEditMode', 'toggleEditMode']],
     ['SettingsView',   ['loadAdminBrandingSettings', 'refreshCompanySettings', 'applyCompanyLogo', 'applyCompanyName']],
     ['Payroll',        ['loadHourlyRates', 'initPayrollSection']],
@@ -292,7 +292,7 @@ describe('Boot invariant 5 — flatpickr: does not assign pickers when elements 
   afterEach(() => {
     document.getElementById('attDateFrom')?.remove();
     document.getElementById('attDateTo')?.remove();
-    delete (window as unknown as Record<string, unknown>)['flatpickr'];
+    delete (window as unknown as Record<string, unknown>).flatpickr;
   });
 
   it('flatpickr is NOT called when #attDateFrom / #attDateTo are absent', () => {
@@ -300,7 +300,7 @@ describe('Boot invariant 5 — flatpickr: does not assign pickers when elements 
     expect(document.getElementById('attDateTo')).toBeNull();
 
     const flatpickrSpy = vi.fn().mockReturnValue([]);
-    (window as unknown as Record<string, unknown>)['flatpickr'] = flatpickrSpy;
+    (window as unknown as Record<string, unknown>).flatpickr = flatpickrSpy;
 
     // Reproduce the guard added in the fix
     const fromEl = document.getElementById('attDateFrom');
@@ -324,7 +324,7 @@ describe('Boot invariant 5 — flatpickr: does not assign pickers when elements 
     document.body.appendChild(toEl);
 
     const flatpickrSpy = vi.fn().mockReturnValue({ selectedDates: [], destroy: vi.fn() });
-    (window as unknown as Record<string, unknown>)['flatpickr'] = flatpickrSpy;
+    (window as unknown as Record<string, unknown>).flatpickr = flatpickrSpy;
 
     const from = document.getElementById('attDateFrom');
     const to   = document.getElementById('attDateTo');
@@ -350,7 +350,7 @@ describe('Boot invariant 6 — hard refresh: session is restored and nav is usab
     buildShellDom(['s-adm-dashboard', 's-adm-employees']);
     window.AppState = {
       get: (k: string) => (k === 'currentRole' ? 'admin' : ''),
-      set: vi.fn() as unknown as Window['AppState']['set'],
+      set: vi.fn(),
       _photoCache: {},
     };
   });

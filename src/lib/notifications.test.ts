@@ -327,7 +327,7 @@ describe('notificationKeys', () => {
 
 describe('NOTIFICATION_TYPE_LABELS', () => {
   it('has a label for every NotificationType enum value', () => {
-    const enumValues = NotificationTypeSchema.options as NotificationType[];
+    const enumValues = NotificationTypeSchema.options;
     enumValues.forEach(type => {
       expect(NOTIFICATION_TYPE_LABELS[type]).toBeTruthy();
       expect(typeof NOTIFICATION_TYPE_LABELS[type]).toBe('string');
@@ -336,7 +336,7 @@ describe('NOTIFICATION_TYPE_LABELS', () => {
 
   it('does not have labels for values outside the enum', () => {
     const labels = NOTIFICATION_TYPE_LABELS as Record<string, string>;
-    expect(labels['ticket_reply']).toBeUndefined();
-    expect(labels['unknown']).toBeUndefined();
+    expect(labels.ticket_reply).toBeUndefined();
+    expect(labels.unknown).toBeUndefined();
   });
 });

@@ -198,7 +198,7 @@ export function AcRolesPage(): VNode {
                             </td>
                           </tr>
                           {open && keys.map(k => {
-                            const meta = PERMISSION_META[k]!;
+                            const meta = PERMISSION_META[k];
                             return (
                               <tr class="acc-row" key={k}>
                                 <td class="cap-name">{meta.label}</td>

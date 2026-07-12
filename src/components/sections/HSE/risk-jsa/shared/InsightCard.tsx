@@ -35,7 +35,7 @@ const TONE_VALUE: Record<InsightTone, string> = {
   danger: '#dc2626', warning: '#b45309', success: '#16a34a',
 };
 
-function Donut({ segments, navy }: { segments: Array<{ value: number; color: string }>; navy?: boolean }): VNode {
+function Donut({ segments, navy }: { segments: { value: number; color: string }[]; navy?: boolean }): VNode {
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
   const R = 30, C = 2 * Math.PI * R;
   let offset = 0;
@@ -57,12 +57,12 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
   const d = (data ?? {}) as Record<string, unknown>;
   switch (variant) {
     case 'donut':
-      return <Donut navy={navy} segments={(d.segments as Array<{ value: number; color: string }>) ?? []} />;
+      return <Donut navy={navy} segments={(d.segments as { value: number; color: string }[]) ?? []} />;
     case 'bar':
       return (
         <div style={{ display: 'grid', gap: '8px', width: '100%' }}>
-          {((d.bars as Array<{ label: string; value: number; max?: number; color?: string }>) ?? []).slice(0, 4).map((b, i) => (
-            <BarRow key={i} label={b.label} value={b.value} max={b.max ?? Math.max(...(((d.bars as Array<{ value: number }>) ?? []).map(x => x.value)), 1)} color={b.color} />
+          {((d.bars as { label: string; value: number; max?: number; color?: string }[]) ?? []).slice(0, 4).map((b, i) => (
+            <BarRow key={i} label={b.label} value={b.value} max={b.max ?? Math.max(...(((d.bars as { value: number }[]) ?? []).map(x => x.value)), 1)} color={b.color} />
           ))}
         </div>
       );
@@ -75,7 +75,7 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
     case 'queue':
       return (
         <div style={{ display: 'grid', gap: '6px', width: '100%' }}>
-          {((d.items as Array<{ ref?: string; title: string; tag?: string; tagTone?: 'danger' | 'warning' | 'info' | 'neutral' }>) ?? []).slice(0, 2).map((it, i) => (
+          {((d.items as { ref?: string; title: string; tag?: string; tagTone?: 'danger' | 'warning' | 'info' | 'neutral' }[]) ?? []).slice(0, 2).map((it, i) => (
             <QueueItem key={i} ref={it.ref} title={it.title} tag={it.tag} tagTone={it.tagTone} onDark={navy} />
           ))}
         </div>
@@ -83,7 +83,7 @@ function Visual({ variant, data, navy }: { variant: InsightCardVariant; data: un
     case 'status-grid':
       return (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '7px', width: '100%' }}>
-          {((d.tiles as Array<{ value: number | string; label: string; tone?: string }>) ?? []).slice(0, 4).map((t, i) => (
+          {((d.tiles as { value: number | string; label: string; tone?: string }[]) ?? []).slice(0, 4).map((t, i) => (
             <div key={i} style={{ padding: '8px', borderRadius: '8px', textAlign: 'center', background: navy ? 'rgba(255,255,255,.07)' : 'var(--bg-subtle)' }}>
               <div style={{ fontSize: '1.1rem', fontWeight: 600, lineHeight: 1, color: t.tone ?? (navy ? '#fff' : 'var(--siomac-navy)') }}>{t.value}</div>
               <div style={{ fontSize: '0.56rem', color: navy ? 'rgba(255,255,255,.45)' : 'var(--text-muted)', marginTop: '3px' }}>{t.label}</div>

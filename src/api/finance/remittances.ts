@@ -94,13 +94,13 @@ export interface ComputedRemittance {
   employerPortion: number;
   totalDue: number;
   lineCount: number;
-  lines: Array<{
+  lines: {
     employeeId: string;
     sourceLineId: string;
     employeePortion: number;
     employerPortion: number;
     lineTotal: number;
-  }>;
+  }[];
 }
 
 /** ReportResult shape returned by /reports/run (for ReportPanel). */

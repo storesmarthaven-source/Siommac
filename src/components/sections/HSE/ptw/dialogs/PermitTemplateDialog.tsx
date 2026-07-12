@@ -92,7 +92,7 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
       setName(template.name);
       setPermitType(template.permit_type);
       setDescription(template.description ?? '');
-      setRiskLevel((template.risk_level as PermitRiskLevel | null) ?? '');
+      setRiskLevel((template.risk_level) ?? '');
       setRequiresJsa(template.requires_jsa);
       setRequiresIsolation(template.requires_isolation);
       setHazards(listToText(template.hazards));
@@ -124,7 +124,7 @@ export function PermitTemplateDialog({ open, onClose, template }: PermitTemplate
       name:               name.trim(),
       permitType,
       description:        description.trim() || undefined,
-      riskLevel:          (riskLevel || null) as PermitRiskLevel | null,
+      riskLevel:          (riskLevel || null),
       requiresJsa,
       requiresIsolation,
       hazards,

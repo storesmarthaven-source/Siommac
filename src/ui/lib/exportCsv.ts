@@ -24,7 +24,7 @@ function csvField(raw: string | number | null | undefined): string {
 }
 
 /** Build CSV text (header + rows) from a column spec. */
-export function toCsv<T>(rows: readonly T[], columns: ReadonlyArray<CsvColumn<T>>): string {
+export function toCsv<T>(rows: readonly T[], columns: readonly CsvColumn<T>[]): string {
   const head = columns.map(c => csvField(c.header)).join(',');
   const body = rows.map(r => columns.map(c => csvField(c.value(r))).join(',')).join('\r\n');
   return body ? `${head}\r\n${body}` : head;
@@ -36,7 +36,7 @@ export function toCsv<T>(rows: readonly T[], columns: ReadonlyArray<CsvColumn<T>
  */
 export function exportCsv<T>(
   rows: readonly T[],
-  columns: ReadonlyArray<CsvColumn<T>>,
+  columns: readonly CsvColumn<T>[],
   filenameBase: string,
 ): void {
   const csv  = toCsv(rows, columns);

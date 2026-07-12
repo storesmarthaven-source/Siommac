@@ -56,7 +56,7 @@ export async function createTicket(
   payload: CreateTicketPayload,
 ): Promise<{ id: string; ticketNumber: string }> {
   const res = await apiPost<{ success: boolean; id?: string; ticketNumber?: string; message?: string }>(
-    'createTicket', payload as unknown as Record<string, unknown>,
+    'createTicket', payload,
   );
   if (!res.success || !res.id) {
     throw new Error(res.message ?? 'Failed to create ticket.');

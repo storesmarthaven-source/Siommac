@@ -116,7 +116,7 @@ export function displayAttendanceChart(stats: {
 }
 
 /** Personal hours trend bar chart (employee view). */
-export function displayTrendChart(records: Array<{ date: string; hours: number | string }>): void {
+export function displayTrendChart(records: { date: string; hours: number | string }[]): void {
   const canvas = document.getElementById('attendanceTrendChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   if (_trendChart) _trendChart.destroy();
@@ -155,12 +155,12 @@ export function displayTrendChart(records: Array<{ date: string; hours: number |
 
 // ── Admin dashboard chart renderers ───────────────────────────────────────────
 
-function _renderTrendLine(data: Array<{ date: string; present: number; late: number }>, rmSpinner: () => void): void {
+function _renderTrendLine(data: { date: string; present: number; late: number }[], rmSpinner: () => void): void {
   _destroyDash('trend');
   const canvas = document.getElementById('trendLineChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 600, 260);
-  _dashCharts['trend'] = new Chart(canvas.getContext('2d'), {
+  _dashCharts.trend = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
       labels: data.map(d => String(d.date).slice(5)),
@@ -212,12 +212,12 @@ function _renderTrendLine(data: Array<{ date: string; present: number; late: num
   rmSpinner();
 }
 
-function _renderDeptDist(data: Array<{ name: string; count: number }>, rmSpinner: () => void): void {
+function _renderDeptDist(data: { name: string; count: number }[], rmSpinner: () => void): void {
   _destroyDash('dept');
   const canvas = document.getElementById('deptDistChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 260, 260);
-  _dashCharts['dept'] = new Chart(canvas.getContext('2d'), {
+  _dashCharts.dept = new Chart(canvas.getContext('2d'), {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.name),
@@ -249,7 +249,7 @@ function _renderStatusBars(
   const canvas = document.getElementById('statusBarChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 320, 260);
-  _dashCharts['status'] = new Chart(canvas.getContext('2d'), {
+  _dashCharts.status = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
       labels: ['Present', 'Late', 'Absent', 'On Leave'],
@@ -293,7 +293,7 @@ function _renderLeaveTypes(
   const canvas = document.getElementById('leaveTypesChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 260, 260);
-  _dashCharts['leaves'] = new Chart(canvas.getContext('2d'), {
+  _dashCharts.leaves = new Chart(canvas.getContext('2d'), {
     type: 'doughnut',
     data: {
       labels: ['Sick', 'Casual', 'Annual', 'Medical'],
@@ -328,7 +328,7 @@ function _setText(id: string, v: number | string | null | undefined): void {
   if (el) el.textContent = String(v ?? '—');
 }
 
-function _populateDeptStats(depts: Array<{ name: string; count?: number }>): void {
+function _populateDeptStats(depts: { name: string; count?: number }[]): void {
   const list = document.getElementById('deptStatsList');
   if (!list) return;
   const total = depts.reduce((s, d) => s + (d.count ?? 0), 0);
@@ -363,8 +363,8 @@ function _populateLeaveStats(l: { sick?: number; casual?: number; annual?: numbe
 // ── Composite render / update ─────────────────────────────────────────────────
 
 export interface DashboardChartData {
-  dailyTrend:        Array<{ date: string; present: number; late: number }>;
-  deptDistribution:  Array<{ name: string; count: number }>;
+  dailyTrend:        { date: string; present: number; late: number }[];
+  deptDistribution:  { name: string; count: number }[];
   statusBreakdown:   { present: number; late: number; absent: number; onLeave: number };
   leaveTypes:        { sick: number; casual: number; annual: number; medical: number };
 }
@@ -392,29 +392,29 @@ export function renderDashboardCharts(data: DashboardChartData): void {
 
 /** Silent in-place update — patches existing chart instances without redraw flicker. */
 export function updateDashboardCharts(data: Partial<DashboardChartData>): void {
-  if (_dashCharts['trend'] && data.dailyTrend) {
-    const t = _dashCharts['trend'];
+  if (_dashCharts.trend && data.dailyTrend) {
+    const t = _dashCharts.trend;
     t.data.labels              = data.dailyTrend.map(d => String(d.date).slice(5));
     t.data.datasets[0].data    = data.dailyTrend.map(d => d.present);
     t.data.datasets[1].data    = data.dailyTrend.map(d => d.late);
     t.update('none');
   }
-  if (_dashCharts['dept'] && data.deptDistribution) {
-    _dashCharts['dept'].data.labels              = data.deptDistribution.map(d => d.name);
-    _dashCharts['dept'].data.datasets[0].data    = data.deptDistribution.map(d => d.count);
-    _dashCharts['dept'].update('none');
+  if (_dashCharts.dept && data.deptDistribution) {
+    _dashCharts.dept.data.labels              = data.deptDistribution.map(d => d.name);
+    _dashCharts.dept.data.datasets[0].data    = data.deptDistribution.map(d => d.count);
+    _dashCharts.dept.update('none');
     _populateDeptStats(data.deptDistribution);
   }
-  if (_dashCharts['status'] && data.statusBreakdown) {
+  if (_dashCharts.status && data.statusBreakdown) {
     const s = data.statusBreakdown;
-    _dashCharts['status'].data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
-    _dashCharts['status'].update('none');
+    _dashCharts.status.data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
+    _dashCharts.status.update('none');
     _populateStatusStats(s);
   }
-  if (_dashCharts['leaves'] && data.leaveTypes) {
+  if (_dashCharts.leaves && data.leaveTypes) {
     const l = data.leaveTypes;
-    _dashCharts['leaves'].data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];
-    _dashCharts['leaves'].update('none');
+    _dashCharts.leaves.data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];
+    _dashCharts.leaves.update('none');
     _populateLeaveStats(l);
   }
 }
@@ -435,4 +435,4 @@ export const SiomacCharts = {
 };
 
 // ── window shim — legacy callers use window.SiomacCharts ─────────────────────
-(window as unknown as Record<string, unknown>)['SiomacCharts'] = SiomacCharts;
+(window as unknown as Record<string, unknown>).SiomacCharts = SiomacCharts;

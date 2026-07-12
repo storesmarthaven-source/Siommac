@@ -191,7 +191,7 @@ export type Theme       = 'light' | 'dark';
 // Registers the config object on window so legacy scripts (nav.js, app.js) that
 // read `window.SiomacConfig` keep working unchanged during the transition.
 // The shape matches what config.js previously set: { SECTION_DEFS, COMMON_ITEMS, PALETTES, LAYOUTS }.
-(window as unknown as Record<string, unknown>)['SiomacConfig'] = {
+(window as unknown as Record<string, unknown>).SiomacConfig = {
   SECTION_DEFS,
   BASELINE_SECTIONS,               // self-service sections every role gets
   COMMON_ITEMS: COMMON_SECTIONS,   // legacy name was COMMON_ITEMS

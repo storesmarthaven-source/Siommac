@@ -106,7 +106,7 @@ export function useRosters(filters: {
 export function useRoster(rosterId: string | null) {
   return useQuery({
     queryKey: rosterKeys.detail(rosterId ?? ''),
-    queryFn: () => hrRosterApi.getRoster({ rosterId: rosterId as string }),
+    queryFn: () => hrRosterApi.getRoster({ rosterId: rosterId! }),
     enabled: !!rosterId,
   });
 }
@@ -114,7 +114,7 @@ export function useRoster(rosterId: string | null) {
 export function useCoverageGaps(rosterId: string | null) {
   return useQuery({
     queryKey: rosterKeys.gaps(rosterId ?? ''),
-    queryFn: () => hrRosterApi.coverageGaps({ rosterId: rosterId as string }),
+    queryFn: () => hrRosterApi.coverageGaps({ rosterId: rosterId! }),
     enabled: !!rosterId,
   });
 }
@@ -130,7 +130,7 @@ export function useRosterStats(filters: { siteId?: string; departmentId?: string
 export function useEmployeeHours(rosterId: string | null) {
   return useQuery({
     queryKey: rosterKeys.hours(rosterId ?? ''),
-    queryFn: () => hrRosterApi.hoursReport({ rosterId: rosterId as string }),
+    queryFn: () => hrRosterApi.hoursReport({ rosterId: rosterId! }),
     enabled: !!rosterId,
   });
 }

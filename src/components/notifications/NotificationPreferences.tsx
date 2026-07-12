@@ -35,7 +35,7 @@ import { toast }                       from '@store';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const ALL_TYPES = NotificationTypeSchema.options as NotificationType[];
+const ALL_TYPES = NotificationTypeSchema.options;
 
 /** Default preference when the DB has no row for a type */
 const DEFAULT_PREF: Omit<NotificationPreferenceRow, 'user_id' | 'type'> = {

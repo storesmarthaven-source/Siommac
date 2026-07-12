@@ -539,7 +539,7 @@ function AdminDashboardSection() {
               {/* INTENTIONAL: onclick inline — navigates to attendance section via window global */}
               <button
                 class="btn btn-sm btn-outline-primary"
-                onClick={() => { (window as unknown as Record<string, Record<string, (s: string) => void>>)['AttendanceSystem']?.['goTo']?.('s-adm-attendance'); }}
+                onClick={() => { (window as unknown as Record<string, Record<string, (s: string) => void>>).AttendanceSystem?.goTo?.('s-adm-attendance'); }}
               >
                 <i class="fas fa-arrow-right" /> View All
               </button>

@@ -22,7 +22,7 @@ export interface ProjectSiteOption {
   latitude: number | string;
   longitude: number | string;
   radius:   number;
-  assignedEmployees?: Array<{ id: string | number }>;
+  assignedEmployees?: { id: string | number }[];
 }
 
 export interface LocationData {

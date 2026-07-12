@@ -78,7 +78,7 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
               : currentRole === 'manager' ? mgrQuery
               : empQuery;
 
-  const leaves: LeaveRequest[] = (query.data ?? []) as LeaveRequest[];
+  const leaves: LeaveRequest[] = (query.data ?? []);
 
   // ── UI state ──────────────────────────────────────────────────────────────
   const [tab,        setTab]       = useState<string>('all');
@@ -291,7 +291,7 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
                       )}
                       <td>
                         <span class={`lv-type-badge ${typeClass}`}>
-                          {LEAVE_TYPE_LABEL[r.type as LeaveType] ?? r.type}
+                          {LEAVE_TYPE_LABEL[r.type] ?? r.type}
                         </span>
                       </td>
                       <td>{fmtDate(r.from ?? r.fromDate)}</td>
@@ -301,7 +301,7 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
                       {!showEmployee && <td>{fmtDate(r.appliedOn)}</td>}
                       <td>
                         <span class={`lv-status-badge ${statusClass}`}>
-                          {LEAVE_STATUS_LABEL[r.status as LeaveStatus]}
+                          {LEAVE_STATUS_LABEL[r.status]}
                         </span>
                       </td>
                       <td>

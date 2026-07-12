@@ -56,14 +56,14 @@ const empName = (e: HrEmployeeRow): string =>
 
 const todayIso = (): string => new Date().toISOString().slice(0, 10);
 
-const FREQUENCIES: ReadonlyArray<{ value: PayGroup['frequency']; label: string }> = [
+const FREQUENCIES: readonly { value: PayGroup['frequency']; label: string }[] = [
   { value: 'weekly',       label: 'Weekly' },
   { value: 'fortnightly',  label: 'Fortnightly' },
   { value: 'semi_monthly', label: 'Semi-monthly' },
   { value: 'monthly',      label: 'Monthly' },
 ];
 
-const OT_EVENT_TYPES: ReadonlyArray<{ value: OvertimeEventType; label: string; typical: number }> = [
+const OT_EVENT_TYPES: readonly { value: OvertimeEventType; label: string; typical: number }[] = [
   { value: 'regular_overtime', label: 'Regular overtime',       typical: 1.5 },
   { value: 'public_holiday',   label: 'Public holiday',         typical: 2 },
   { value: 'rest_day',         label: 'Rest day (e.g. Sunday)', typical: 2 },
@@ -127,7 +127,7 @@ export function PayrollSetupOverview(): VNode {
 // Loans & Advances (Wave 5)
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const LOAN_TYPES: ReadonlyArray<{ value: LoanType; label: string }> = [
+const LOAN_TYPES: readonly { value: LoanType; label: string }[] = [
   { value: 'loan',    label: 'Loan' },
   { value: 'advance', label: 'Salary advance' },
 ];
@@ -250,7 +250,7 @@ function LoansPanel(): VNode {
         onPage={setPage}
         noun="loans"
         loading={loansQ.isLoading && !loansQ.data}
-        error={loansQ.isError ? (/loan|schema cache|does not exist/i.test((loansQ.error as Error)?.message ?? '') ? 'Loans are unavailable — apply migration 20260918000090 (finance_employee_loans) and reload the PostgREST schema.' : ((loansQ.error as Error)?.message ?? 'Failed to load loans.')) : undefined}
+        error={loansQ.isError ? (/loan|schema cache|does not exist/i.test((loansQ.error)?.message ?? '') ? 'Loans are unavailable — apply migration 20260918000090 (finance_employee_loans) and reload the PostgREST schema.' : ((loansQ.error)?.message ?? 'Failed to load loans.')) : undefined}
         emptyMessage={search || statusFilter ? 'No loans match.' : 'No loans yet. Click New Loan to create one.'}
       />
 
@@ -330,27 +330,27 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
           <EmployeePicker label="Employee" value={f.employeeId} onChange={id => setF(p => ({ ...p, employeeId: id }))} required error={errors.employee} />
         </div>
         <label class="fin-field"><span>Type</span>
-          <select value={f.loanType} onChange={e => setF(p => ({ ...p, loanType: (e.currentTarget as HTMLSelectElement).value as LoanType }))}>
+          <select value={f.loanType} onChange={e => setF(p => ({ ...p, loanType: (e.currentTarget).value as LoanType }))}>
             {LOAN_TYPES.map(t => <option value={t.value} key={t.value}>{t.label}</option>)}
           </select>
         </label>
         <label class="fin-field"><span>Principal (TTD)</span>
-          <input type="number" step="0.01" min="0" value={f.principal} onInput={e => setF(p => ({ ...p, principal: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="number" step="0.01" min="0" value={f.principal} onInput={e => setF(p => ({ ...p, principal: (e.currentTarget).value }))} />
           {errors.principal && <small class="fin-field-error">{errors.principal}</small>}
         </label>
         <label class="fin-field"><span>Interest (flat, optional)</span>
-          <input type="number" step="0.01" min="0" value={f.interest} placeholder="0.00" onInput={e => setF(p => ({ ...p, interest: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="number" step="0.01" min="0" value={f.interest} placeholder="0.00" onInput={e => setF(p => ({ ...p, interest: (e.currentTarget).value }))} />
           {errors.interest && <small class="fin-field-error">{errors.interest}</small>}
         </label>
         <label class="fin-field"><span>Installment / period (TTD)</span>
-          <input type="number" step="0.01" min="0" value={f.installment} onInput={e => setF(p => ({ ...p, installment: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="number" step="0.01" min="0" value={f.installment} onInput={e => setF(p => ({ ...p, installment: (e.currentTarget).value }))} />
           {errors.installment && <small class="fin-field-error">{errors.installment}</small>}
         </label>
         <label class="fin-field"><span>Start period (optional)</span>
-          <input type="date" value={f.startPeriod} onInput={e => setF(p => ({ ...p, startPeriod: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="date" value={f.startPeriod} onInput={e => setF(p => ({ ...p, startPeriod: (e.currentTarget).value }))} />
         </label>
         <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Reason / notes</span>
-          <input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget).value }))} />
         </label>
       </div>
     </EnterpriseFormModal>
@@ -431,7 +431,7 @@ function PayGroupsPanel(): VNode {
         onPage={setPage}
         noun="pay groups"
         loading={groupsQ.isLoading && !groupsQ.data}
-        error={groupsQ.isError ? ((groupsQ.error as Error)?.message ?? 'Failed to load pay groups.') : undefined}
+        error={groupsQ.isError ? ((groupsQ.error)?.message ?? 'Failed to load pay groups.') : undefined}
         emptyMessage={search ? 'No pay groups match your search.' : 'No pay groups yet. Click New Pay Group to create the first one.'}
       />
 
@@ -511,27 +511,27 @@ function NewPayGroupModal({ onClose, onCreated }: { onClose: () => void; onCreat
       <div class="fin-form-grid fin-form-grid--tight">
         <label class="fin-field"><span>Code</span>
           <input type="text" maxLength={20} value={f.code} placeholder="e.g. WKLY-OPS"
-            onInput={e => setF(p => ({ ...p, code: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, code: (e.currentTarget).value }))} />
           {errors.code && <small class="fin-field-error">{errors.code}</small>}
         </label>
         <label class="fin-field"><span>Name</span>
           <input type="text" maxLength={120} value={f.name} placeholder="e.g. Weekly — Operations"
-            onInput={e => setF(p => ({ ...p, name: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, name: (e.currentTarget).value }))} />
           {errors.name && <small class="fin-field-error">{errors.name}</small>}
         </label>
         <label class="fin-field"><span>Frequency</span>
-          <select value={f.frequency} onChange={e => setF(p => ({ ...p, frequency: (e.currentTarget as HTMLSelectElement).value as PayGroup['frequency'] }))}>
+          <select value={f.frequency} onChange={e => setF(p => ({ ...p, frequency: (e.currentTarget).value as PayGroup['frequency'] }))}>
             {FREQUENCIES.map(fq => <option value={fq.value} key={fq.value}>{fq.label}</option>)}
           </select>
         </label>
         <label class="fin-field"><span>Default pay day {needsPayDay ? '' : '(optional)'}</span>
           <input type="number" min="1" max="31" value={f.defaultPayDay} placeholder="1–31"
-            onInput={e => setF(p => ({ ...p, defaultPayDay: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, defaultPayDay: (e.currentTarget).value }))} />
           {errors.payDay && <small class="fin-field-error">{errors.payDay}</small>}
         </label>
         <label class="fin-field"><span>Cut-off (days before pay day)</span>
           <input type="number" min="0" max="31" value={f.cutoff}
-            onInput={e => setF(p => ({ ...p, cutoff: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, cutoff: (e.currentTarget).value }))} />
           {errors.cutoff && <small class="fin-field-error">{errors.cutoff}</small>}
         </label>
       </div>
@@ -600,7 +600,7 @@ function PayGroupMembersModal({ group, canManage, onClose }: { group: PayGroup; 
             <EmployeePicker label="Employee" value={empId} onChange={setEmpId} required
               error={alreadyMember ? 'Already an active member' : null} />
             <label class="fin-field"><span>Effective from</span>
-              <input type="date" value={effFrom} onInput={e => setEffFrom((e.currentTarget as HTMLInputElement).value)} />
+              <input type="date" value={effFrom} onInput={e => setEffFrom((e.currentTarget).value)} />
             </label>
           </>
         )}
@@ -613,7 +613,7 @@ function PayGroupMembersModal({ group, canManage, onClose }: { group: PayGroup; 
         {membersQ.isLoading && !membersQ.data ? (
           <div class="hrfin-empty" style={{ padding: 16 }}>Loading members…</div>
         ) : membersQ.isError ? (
-          <div class="fin-field-error" style={{ padding: 8 }}>{(membersQ.error as Error)?.message ?? 'Failed to load members.'}</div>
+          <div class="fin-field-error" style={{ padding: 8 }}>{(membersQ.error)?.message ?? 'Failed to load members.'}</div>
         ) : members.length === 0 ? (
           <div class="hrfin-empty" style={{ padding: 16 }}>No employees assigned yet.</div>
         ) : (
@@ -701,9 +701,9 @@ function OvertimeRulesPanel(): VNode {
   // The finance_overtime_rules table ships with migration 20260918000070. Surface a
   // clear message (not a silent empty) when that migration hasn't been applied yet.
   const loadError = rulesQ.isError
-    ? (/overtime_rules|schema cache|does not exist/i.test((rulesQ.error as Error)?.message ?? '')
+    ? (/overtime_rules|schema cache|does not exist/i.test((rulesQ.error)?.message ?? '')
         ? 'Overtime rules are unavailable — apply migration 20260918000070 (finance_overtime_rules) and reload the PostgREST schema.'
-        : ((rulesQ.error as Error)?.message ?? 'Failed to load overtime rules.'))
+        : ((rulesQ.error)?.message ?? 'Failed to load overtime rules.'))
     : undefined;
 
   return (
@@ -820,12 +820,12 @@ function NewOvertimeRuleModal({ onClose, onCreated }: { onClose: () => void; onC
       <div class="fin-form-grid fin-form-grid--tight">
         <label class="fin-field"><span>Code</span>
           <input type="text" maxLength={20} value={f.code} placeholder="e.g. OT-HOLIDAY"
-            onInput={e => setF(p => ({ ...p, code: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, code: (e.currentTarget).value }))} />
           {errors.code && <small class="fin-field-error">{errors.code}</small>}
         </label>
         <label class="fin-field"><span>Event type</span>
           <select value={f.eventType} onChange={e => {
-            const eventType = (e.currentTarget as HTMLSelectElement).value as OvertimeEventType;
+            const eventType = (e.currentTarget).value as OvertimeEventType;
             const t = OT_EVENT_TYPES.find(o => o.value === eventType)?.typical;
             setF(p => ({ ...p, eventType, multiplier: t != null ? String(t) : p.multiplier }));
           }}>
@@ -834,20 +834,20 @@ function NewOvertimeRuleModal({ onClose, onCreated }: { onClose: () => void; onC
         </label>
         <label class="fin-field"><span>Multiplier</span>
           <input type="number" step="0.05" min="0" value={f.multiplier}
-            onInput={e => setF(p => ({ ...p, multiplier: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, multiplier: (e.currentTarget).value }))} />
           {errors.multiplier && <small class="fin-field-error">{errors.multiplier}</small>}
         </label>
         <label class="fin-field"><span>Minimum billable hours (optional)</span>
           <input type="number" step="0.5" min="0" value={f.minHours} placeholder="e.g. 3 for call-outs"
-            onInput={e => setF(p => ({ ...p, minHours: (e.currentTarget as HTMLInputElement).value }))} />
+            onInput={e => setF(p => ({ ...p, minHours: (e.currentTarget).value }))} />
           {errors.minHours && <small class="fin-field-error">{errors.minHours}</small>}
         </label>
         <label class="fin-field"><span>Effective from</span>
-          <input type="date" value={f.effFrom} onInput={e => setF(p => ({ ...p, effFrom: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="date" value={f.effFrom} onInput={e => setF(p => ({ ...p, effFrom: (e.currentTarget).value }))} />
           {errors.effFrom && <small class="fin-field-error">{errors.effFrom}</small>}
         </label>
         <label class="fin-field"><span>Effective to (optional)</span>
-          <input type="date" min={f.effFrom} value={f.effTo} onInput={e => setF(p => ({ ...p, effTo: (e.currentTarget as HTMLInputElement).value }))} />
+          <input type="date" min={f.effFrom} value={f.effTo} onInput={e => setF(p => ({ ...p, effTo: (e.currentTarget).value }))} />
           {errors.effTo && <small class="fin-field-error">{errors.effTo}</small>}
         </label>
       </div>

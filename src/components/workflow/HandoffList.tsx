@@ -40,7 +40,7 @@ export function HandoffList({ limit }: { limit?: number }): VNode {
       {rows.length === 0 ? (
         <div class="wf-empty"><i class="fas fa-right-left" /><div><strong>No handoffs yet</strong><p>Approved workflows hand off cost and impact to other modules.</p></div></div>
       ) : rows.map(h => {
-        const tone = STATUS_TONE[h.status] ?? STATUS_TONE['pending']!;
+        const tone = STATUS_TONE[h.status] ?? STATUS_TONE.pending!;
         return (
           <article class="wf-handoff" key={h.id}>
             <i class={`fas ${TARGET_ICON[h.target_module] ?? 'fa-right-left'}`} />

@@ -118,7 +118,7 @@ export function StepUpProvider({ children }: { children: VNode | VNode[] }): VNo
       });
       const res = await apiPost<StepUpVerifyResponse>('auth/step-up/verify', {
         method:   'webauthn',
-        response: authResponse as unknown as Record<string, unknown>,
+        response: authResponse,
       });
       if (res.success && res.token) {
         applyToken(res.token);

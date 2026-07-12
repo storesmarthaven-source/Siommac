@@ -54,7 +54,7 @@ export function useContracts(filters: ContractFilters = {}) {
   return useQuery({ queryKey: contractKeys.list(filters), queryFn: () => hrContractsApi.list(filters) });
 }
 export function useContract(contractId: string | null) {
-  return useQuery({ queryKey: contractKeys.contract(contractId ?? ''), queryFn: () => hrContractsApi.get(contractId as string), enabled: !!contractId });
+  return useQuery({ queryKey: contractKeys.contract(contractId ?? ''), queryFn: () => hrContractsApi.get(contractId!), enabled: !!contractId });
 }
 export function useContractStats() {
   return useQuery({ queryKey: contractKeys.stats, queryFn: () => hrContractsApi.stats() });

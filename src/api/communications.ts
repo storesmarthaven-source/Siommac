@@ -126,14 +126,14 @@ export interface CanonicalTicket {
 
 export interface CanonicalTicketDetail {
   ticket:   CanonicalTicket & { description: string; resolved_at: string | null; closed_at: string | null };
-  comments: Array<{
+  comments: {
     id:             string;
     author_user_id: string | null;
     body:           string;
     is_internal:    boolean;
     is_system:      boolean;
     created_at:     string;
-  }>;
+  }[];
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────

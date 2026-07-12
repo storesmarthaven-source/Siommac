@@ -79,7 +79,7 @@ function ColorRow({
 
 export function GeometrySection({ el, set, commit }: Props<DesignElement>) {
   const num = (prop: 'x' | 'y' | 'w' | 'h') => (
-    <NumberInput value={el[prop]} onInput={(v) => set({ [prop]: v } as ElementPatch)} onCommit={commit} />
+    <NumberInput value={el[prop]} onInput={(v) => set({ [prop]: v })} onCommit={commit} />
   );
   return (
     <>

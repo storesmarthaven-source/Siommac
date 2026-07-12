@@ -99,7 +99,7 @@ export interface KpiDrilldownResult {
   total: number;
 }
 
-export function useKpiDrilldown(kpiType: KpiType | null, period: string = 'mtd') {
+export function useKpiDrilldown(kpiType: KpiType | null, period = 'mtd') {
   return useQuery({
     queryKey: financeQueryKeys.overviewKpiDrilldown(kpiType ?? '', period),
     enabled: !!kpiType,

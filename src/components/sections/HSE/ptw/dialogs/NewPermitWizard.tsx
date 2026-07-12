@@ -596,7 +596,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
   const hazardProfile = useMemo(() => getHazardProfile(permitType), [permitType]);
 
   // ── All catalog hazards (required + recommended) ───────────────────────────
-  const allCatalogHazards: Array<CatalogHazard & { isRequired: boolean }> = useMemo(() => [
+  const allCatalogHazards: (CatalogHazard & { isRequired: boolean })[] = useMemo(() => [
     ...hazardProfile.required.map(h => ({ ...h, isRequired: true })),
     ...hazardProfile.recommended.map(h => ({ ...h, isRequired: false })),
   ], [hazardProfile]);
@@ -853,7 +853,7 @@ export function NewPermitWizard({ open, onClose }: { open: boolean; onClose: () 
         [selectedTypeCfg.requires_lifting_plan,       'Lifting plan',             false],
         [selectedTypeCfg.requires_line_break_cert,    'Line break certificate',   false],
         [selectedTypeCfg.requires_energized_cert,     'Energized work certificate', false],
-      ] as Array<[boolean, string, boolean]>)
+      ] as [boolean, string, boolean][])
         .filter(([required]) => required)
     : [];
 

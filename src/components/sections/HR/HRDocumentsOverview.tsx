@@ -676,7 +676,7 @@ function RequirementModal({ existing, onClose }: {
 
 function StatsRow(): VNode {
   const { data: stats, isLoading } = useDocumentsStats();
-  const items: Array<{ label: string; value: number | undefined }> = [
+  const items: { label: string; value: number | undefined }[] = [
     { label: 'Total Documents',  value: stats?.total },
     { label: 'Pending Review',   value: stats?.uploaded },
     { label: 'Verified',         value: stats?.verified },

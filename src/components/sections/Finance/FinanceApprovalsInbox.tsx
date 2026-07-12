@@ -153,7 +153,7 @@ export function FinanceApprovalsInbox({ initialType }: Props): VNode {
           <input
             type="checkbox"
             checked={filters.priority === 'high'}
-            onChange={e => setFilters(f => ({ ...f, priority: (e.currentTarget as HTMLInputElement).checked ? 'high' : undefined }))}
+            onChange={e => setFilters(f => ({ ...f, priority: (e.currentTarget).checked ? 'high' : undefined }))}
           />
         </label>
       </div>

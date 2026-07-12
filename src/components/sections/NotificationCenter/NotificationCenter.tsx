@@ -27,7 +27,7 @@ const TABS: AreaTab[] = [
   { key: 'archived', label: 'Archived',        icon: 'fa-box-archive' },
 ];
 
-const MODULE_OPTIONS: Array<{ value: string; label: string }> = [
+const MODULE_OPTIONS: { value: string; label: string }[] = [
   { value: 'hse.incidents',     label: 'Incidents' },
   { value: 'hse.investigations',label: 'Investigations' },
   { value: 'hse.capa',          label: 'CAPA' },
@@ -49,7 +49,7 @@ function dateGroup(iso: string): typeof GROUP_ORDER[number] {
   return 'Older';
 }
 
-function groupByDate(rows: CanonicalNotification[]): Array<[string, CanonicalNotification[]]> {
+function groupByDate(rows: CanonicalNotification[]): [string, CanonicalNotification[]][] {
   const buckets = new Map<string, CanonicalNotification[]>();
   for (const n of rows) {
     const g = dateGroup(n.created_at);

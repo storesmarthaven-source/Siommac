@@ -190,7 +190,7 @@ export function InspectionDetailDrawer({ inspectionId, onClose }: { inspectionId
                   onChange={e => { const f = (e.target as HTMLInputElement).files?.[0]; if (f) uploadEvidence.mutate({ file: f, inspectionId }); (e.target as HTMLInputElement).value = ''; }} />
               </label>
             )}
-            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(uploadEvidence.error as Error)?.message ?? 'Upload failed'}</div>}
+            {uploadEvidence.isError && <div style={{ color: 'var(--siomac-red)', fontSize: '0.78rem' }}>{(uploadEvidence.error)?.message ?? 'Upload failed'}</div>}
             {(d?.evidence ?? []).length === 0 && <div class="hse-muted">No evidence attached.</div>}
             {(d?.evidence ?? []).map(ev => (
               <div key={ev.id} class="vt-table-card" style={{ padding: '8px 12px', display: 'flex', gap: '8px', alignItems: 'center' }}>

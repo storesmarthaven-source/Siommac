@@ -47,7 +47,7 @@ import { DiscussionButton } from '@components/sections/Messages/DiscussionButton
 
 type DrawerTabKey = 'overview' | 'hazards' | 'isolations' | 'simops' | 'approvals' | 'timeline';
 
-const DRAWER_TABS: ReadonlyArray<TabDef<DrawerTabKey>> = [
+const DRAWER_TABS: readonly TabDef<DrawerTabKey>[] = [
   { key: 'overview',   label: 'Overview'   },
   { key: 'hazards',    label: 'Hazards'    },
   { key: 'isolations', label: 'Isolations' },
@@ -216,31 +216,31 @@ function HazardsTab({ hazards, controls }: { hazards: unknown[]; controls: unkno
   if (hazards.length === 0 && controls.length === 0) {
     return <EmptyState message="No hazards or controls recorded on this permit." />;
   }
-  const controlArr = controls as Array<Record<string, unknown>>;
+  const controlArr = controls as Record<string, unknown>[];
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(hazards as Array<Record<string, unknown>>).map((h, i) => (
+      {(hazards as Record<string, unknown>[]).map((h, i) => (
         <div key={i} style={{ padding: '10px 12px', background: 'var(--surface-alt)', borderRadius: '8px', border: '1px solid var(--border)' }}>
           <div style={{ fontSize: '0.76rem', color: 'var(--siomac-red)', fontWeight: 600, marginBottom: '4px' }}>
             <i class="fas fa-triangle-exclamation" style={{ marginRight: '5px' }} />
-            {(h['description'] ?? h['hazard_description']) as string ?? `Hazard ${i + 1}`}
+            {(h.description ?? h.hazard_description) as string ?? `Hazard ${i + 1}`}
           </div>
           {controlArr
-            .filter(c => c['hazard_id'] === h['id'])
+            .filter(c => c.hazard_id === h.id)
             .map((c, ci) => (
               <div key={ci} style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '4px', paddingLeft: '12px' }}>
                 <i class="fas fa-shield-halved" style={{ marginRight: '4px' }} />
-                {c['description'] as string}
-                {c['control_type'] && <span style={{ color: 'var(--text-muted)' }}> · {(c['control_type'] as string).replace(/_/g, ' ')}</span>}
+                {c.description as string}
+                {c.control_type && <span style={{ color: 'var(--text-muted)' }}> · {(c.control_type as string).replace(/_/g, ' ')}</span>}
               </div>
             ))}
         </div>
       ))}
       {/* Orphan controls with no hazard link */}
-      {controlArr.filter(c => !c['hazard_id']).map((c, i) => (
+      {controlArr.filter(c => !c.hazard_id).map((c, i) => (
         <div key={`ctrl-${i}`} style={{ padding: '8px 12px', background: 'rgba(34,197,94,.06)', borderRadius: '8px', border: '1px solid rgba(34,197,94,.2)', fontSize: '0.78rem', color: 'var(--color-success)' }}>
           <i class="fas fa-shield-halved" style={{ marginRight: '5px' }} />
-          {c['description'] as string}
+          {c.description as string}
         </div>
       ))}
     </div>
@@ -508,18 +508,18 @@ function TimelineTab({ timeline }: { timeline: unknown[] }): VNode {
   if (timeline.length === 0) return <EmptyState message="No timeline events recorded yet." />;
   return (
     <div>
-      {(timeline as Array<Record<string, unknown>>).map((e, i) => (
+      {(timeline as Record<string, unknown>[]).map((e, i) => (
         <div key={i} style={{ display: 'flex', gap: '10px', padding: '8px 0', borderBottom: '1px solid var(--border)' }}>
           <i class="fas fa-circle-dot" style={{ color: 'var(--siomac-navy)', marginTop: '3px', fontSize: '0.7rem', flexShrink: 0 }} />
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-              {((e['event_type'] ?? e['type']) as string | undefined)?.replace(/\./g, ' ') ?? 'Event'}
+              {((e.event_type ?? e.type) as string | undefined)?.replace(/\./g, ' ') ?? 'Event'}
             </div>
-            {e['description'] && (
-              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e['description'] as string}</div>
+            {e.description && (
+              <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{e.description as string}</div>
             )}
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              {new Date((e['created_at'] ?? e['timestamp']) as string).toLocaleString()}
+              {new Date((e.created_at ?? e.timestamp) as string).toLocaleString()}
             </div>
           </div>
         </div>
@@ -543,10 +543,10 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
   // Full permit detail (includes hazards, controls, timeline)
   const { data: detailRes, refetch: refetchDetail } = usePermit(permit.id);
   const detail    = detailRes?.data;
-  const permitRec = (detail?.permit   as Record<string, unknown>) ?? {};
-  const hazards   = (detail?.hazards  as unknown[]) ?? [];
-  const controls  = (detail?.controls as unknown[]) ?? [];
-  const timeline  = (detail?.timeline as unknown[]) ?? [];
+  const permitRec = (detail?.permit!) ?? {};
+  const hazards   = (detail?.hazards!) ?? [];
+  const controls  = (detail?.controls!) ?? [];
+  const timeline  = (detail?.timeline!) ?? [];
 
   // Sub-register live data
   const { data: isoRes,       refetch: refetchIso  } = usePermitIsolations(permit.id);

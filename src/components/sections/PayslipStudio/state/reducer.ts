@@ -129,7 +129,7 @@ export function reducer(state: DesignerState, action: Action): DesignerState {
     case 'patch': {
       const checkpoint = state.checkpoint ?? state.design;
       const design = mapElements(state.design, (el) =>
-        el.id === action.id ? ({ ...el, ...action.patch } as DesignElement) : el,
+        el.id === action.id ? ({ ...el, ...action.patch }) : el,
       );
       return { ...state, design, checkpoint };
     }
@@ -138,7 +138,7 @@ export function reducer(state: DesignerState, action: Action): DesignerState {
       const checkpoint = state.checkpoint ?? state.design;
       const map = new Map(action.patches.map((p) => [p.id, p.patch]));
       const design = mapElements(state.design, (el) =>
-        map.has(el.id) ? ({ ...el, ...map.get(el.id) } as DesignElement) : el,
+        map.has(el.id) ? ({ ...el, ...map.get(el.id) }) : el,
       );
       return { ...state, design, checkpoint };
     }
@@ -173,7 +173,7 @@ export function reducer(state: DesignerState, action: Action): DesignerState {
           if (!groupRemap.has(group)) groupRemap.set(group, `g${nextId()}`);
           group = groupRemap.get(group);
         }
-        return { ...src, id: nextId(), x: src.x + 14, y: src.y + 14, z: z++, group } as DesignElement;
+        return { ...src, id: nextId(), x: src.x + 14, y: src.y + 14, z: z++, group };
       });
       const design = { ...state.design, elements: [...state.design.elements, ...copies] };
       return { ...commitNow(state, design), selectedIds: copies.map((c) => c.id) };

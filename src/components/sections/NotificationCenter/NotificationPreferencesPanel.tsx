@@ -15,8 +15,8 @@ import {
   type NotificationPreference,
 } from '@api/communications';
 
-type Row = { eventType: string; label: string; sub: string };
-type Group = { title: string; sub?: string; locked?: boolean; rows: Row[] };
+interface Row { eventType: string; label: string; sub: string }
+interface Group { title: string; sub?: string; locked?: boolean; rows: Row[] }
 
 /** Safety-critical alerts: in-app delivery cannot be turned off. */
 const CRITICAL: Group = {

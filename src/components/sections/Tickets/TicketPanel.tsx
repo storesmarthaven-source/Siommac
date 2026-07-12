@@ -80,16 +80,16 @@ export function TicketPanel({ onOpen }: TicketPanelProps) {
   // — these replace window._fetchTickets / _clearTicketDetail / _ticketModalOpened
   useEffect(() => {
     const w = window as unknown as Record<string, unknown>;
-    w['_fetchTickets']         = () => { void refetch(); };
-    w['_clearTicketDetail']    = () => { setPane('list'); setActiveId(null); };
-    w['_ticketModalOpened']    = () => { void refetch(); onOpen?.(); };
-    w['_ticketModalClosed']    = () => { /* nothing — TQ handles background refresh */ };
-    w['_updateTicketBadgeNow'] = () => { /* badge is reactive — no-op needed */ };
-    w['_getTicketUnreadCount'] = () => badgeCount;
+    w._fetchTickets         = () => { void refetch(); };
+    w._clearTicketDetail    = () => { setPane('list'); setActiveId(null); };
+    w._ticketModalOpened    = () => { void refetch(); onOpen?.(); };
+    w._ticketModalClosed    = () => { /* nothing — TQ handles background refresh */ };
+    w._updateTicketBadgeNow = () => { /* badge is reactive — no-op needed */ };
+    w._getTicketUnreadCount = () => badgeCount;
     return () => {
       // Leave stubs rather than deleting — NavController may call after unmount
-      w['_fetchTickets']      = () => {};
-      w['_clearTicketDetail'] = () => {};
+      w._fetchTickets      = () => {};
+      w._clearTicketDetail = () => {};
     };
   }, [refetch, badgeCount, onOpen]);
 

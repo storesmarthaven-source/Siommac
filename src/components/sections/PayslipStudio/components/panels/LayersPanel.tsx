@@ -14,7 +14,7 @@ const ICONS: Record<ElementType, string> = {
   box: '▢',
 };
 
-const CATEGORIES: Array<{ type: ElementType; label: string }> = [
+const CATEGORIES: { type: ElementType; label: string }[] = [
   { type: 'heading', label: 'Headings' },
   { type: 'text', label: 'Text' },
   { type: 'field', label: 'Data fields' },

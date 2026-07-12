@@ -77,7 +77,7 @@ function MetricGauge({ tone, percent, change, trend }: { tone: Tone; percent: nu
           d="M17 62 A42 42 0 0 1 101 62"
           pathLength="100"
           stroke-dasharray={`${percent} 100`}
-          style={{ '--obv-gauge-percent': String(percent) } as Record<string, string>}
+          style={{ '--obv-gauge-percent': String(percent) }}
         />
       </svg>
       {change ? (

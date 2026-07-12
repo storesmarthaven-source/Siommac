@@ -136,7 +136,7 @@ function MetricStrip({ stats }: { stats: OffboardingDashboardStats }): VNode {
 // ── large: exit readiness ──────────────────────────────────────────────────────────
 function ExitReadinessCard({ stats, onReviewBlocked }: { stats: OffboardingDashboardStats; onReviewBlocked: () => void }): VNode {
   const clearance = pct(stats.taskClearance.done, stats.taskClearance.total);
-  const facts: Array<{ label: string; value: number; tone?: string }> = [
+  const facts: { label: string; value: number; tone?: string }[] = [
     { label: 'Active', value: stats.activeCases },
     { label: 'Ready', value: stats.readyForExit },
     { label: 'Blocked', value: stats.blocked, tone: stats.blocked ? 'red' : undefined },

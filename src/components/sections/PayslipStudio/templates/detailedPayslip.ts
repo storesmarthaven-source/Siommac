@@ -9,7 +9,7 @@ export interface DetailedPayslipOptions {
   /** 'band' = navy header bar (SIOMAC); 'plain' = white header + rule (PROLAS/ICT). */
   header: 'band' | 'plain';
   headerBg?: string;
-  headerRules?: Array<{ x: number; w: number; color: string }>;
+  headerRules?: { x: number; w: number; color: string }[];
   companyNameColor: string;
   companyLineColor: string;
   /** Accent for section headings, table headers, and the totals-bar icons. */
@@ -30,7 +30,7 @@ export interface DetailedPayslipOptions {
 const INK = '#243049';
 const RULE = '#e6e9f1';
 
-const EMPLOYEE_FIELDS: Array<[string, string]> = [
+const EMPLOYEE_FIELDS: [string, string][] = [
   ['Employee Name', 'employee.name'],
   ['Employee ID', 'employee.id'],
   ['National ID', 'employee.tin'],
@@ -39,7 +39,7 @@ const EMPLOYEE_FIELDS: Array<[string, string]> = [
   ['Pay Frequency', 'pay.frequency'],
 ];
 
-const PAY_PERIOD_FIELDS: Array<[string, string]> = [
+const PAY_PERIOD_FIELDS: [string, string][] = [
   ['Pay Period', 'pay.period'],
   ['Pay Date', 'pay.date'],
   ['Payment Method', 'pay.method'],
@@ -110,7 +110,7 @@ export function buildDetailedPayslip(o: DetailedPayslipOptions): Design {
   const deductions = sum(o.deductions);
 
   b.add({ type: 'box', x: 24, y: 612, w: 1075, h: 112, bg: '#ffffff', borderW: 2, borderColor: '#1a1a1a', radius: 8, padding: 0 });
-  const totals: Array<[string, string, string, number]> = [
+  const totals: [string, string, string, number][] = [
     ['$', 'GROSS PAY', fmt(gross), 48],
     ['−', 'TOTAL DEDUCTIONS', fmt(deductions), 352],
     ['=', 'NET PAY', fmt(gross - deductions), 656],

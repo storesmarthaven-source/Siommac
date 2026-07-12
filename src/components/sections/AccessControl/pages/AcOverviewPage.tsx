@@ -59,7 +59,7 @@ const CovCell = ({ c }: { c: Cov }): VNode =>
 // the real cell counts. Colour anchors sit at each category's proportional centre so the
 // three legend colours blend across the arc.
 const GAUGE_N = 13;
-type Hsl = { h: number; s: number; l: number };
+interface Hsl { h: number; s: number; l: number }
 // Anchors in HSL so the blend is clean: green→yellow→amber (hue 142→38 passes through
 // yellow, not olive), then amber desaturates+lightens to a warm grey (hue held near amber
 // so it never swings toward blue). Full · Partial · None.
@@ -367,7 +367,7 @@ export function AcOverviewPage(): VNode {
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs.slice(0, 5) as Array<{ id: string; username: string; action: string; entity_id: string; created_at: string }>).map(l => (
+            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; username: string; action: string; entity_id: string; created_at: string }[]).map(l => (
               <div class="rc-item" key={l.id}>
                 <span class="avatar" style={{ width: '32px', height: '32px', background: '#64748b' }}>{initials(l.username)}</span>
                 <div class="grow"><div class="hr-name">{l.username || 'system'}</div><div class="sub">{ACTION_LABEL[l.action] ?? l.action}{l.entity_id ? ` · ${l.entity_id}` : ''}</div></div>

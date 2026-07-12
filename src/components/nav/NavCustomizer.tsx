@@ -185,7 +185,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
     if (fromIndex < 0) return;
     const rects = els.map(el => el.getBoundingClientRect());
     drag.current = {
-      ns: (nsAttr === 'group' ? container.dataset['group'] : container.dataset['parent']) ?? '',
+      ns: (nsAttr === 'group' ? container.dataset.group : container.dataset.parent) ?? '',
       blockSel, els, dragEl,
       centers:   rects.map(r => r.top + r.height / 2),
       fromIndex, targetIndex: fromIndex, startY: e.clientY,
@@ -223,7 +223,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
     document.body.style.cursor = '';
     if (st) { st.els.forEach(el => { el.style.transform = ''; }); st.dragEl.classList.remove('is-dragging'); }
     if (!st || st.targetIndex === st.fromIndex) return;
-    const ids = st.els.map(el => el.dataset['id'] ?? '');
+    const ids = st.els.map(el => el.dataset.id ?? '');
     const [moved] = ids.splice(st.fromIndex, 1);
     ids.splice(st.targetIndex, 0, moved!);
     setOrder(st.ns, ids);
@@ -351,7 +351,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
                           <span
                             class="navcfg-grip"
                             aria-label={`Drag to reorder ${mod.label}`}
-                            onPointerDown={(e) => startDrag(e as unknown as PointerEvent, '.navcfg-group-body', '.navcfg-mod-block', 'group')}
+                            onPointerDown={(e) => startDrag(e, '.navcfg-group-body', '.navcfg-mod-block', 'group')}
                           >
                             <GripDots />
                           </span>
@@ -395,7 +395,7 @@ function GlobalCustomizer({ onClose }: { onClose: () => void }): VNode {
                                   <span
                                     class="navcfg-grip navcfg-grip--child"
                                     aria-label={`Drag to reorder ${child.label}`}
-                                    onPointerDown={(e) => startDrag(e as unknown as PointerEvent, '.navcfg-child-list', '.navcfg-child-row', 'parent')}
+                                    onPointerDown={(e) => startDrag(e, '.navcfg-child-list', '.navcfg-child-row', 'parent')}
                                   >
                                     <GripDots />
                                   </span>
@@ -454,7 +454,7 @@ function NavCustomizerRoot(): VNode | null {
 
   useEffect(() => {
     // Any argument (legacy per-group id) is ignored — there is one global surface.
-    (window as unknown as Record<string, unknown>)['openNavCustomizer'] = () => setOpen(true);
+    (window as unknown as Record<string, unknown>).openNavCustomizer = () => setOpen(true);
 
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'Escape') setOpen(false);
@@ -463,7 +463,7 @@ function NavCustomizerRoot(): VNode | null {
 
     return () => {
       window.removeEventListener('keydown', onKey);
-      delete (window as unknown as Record<string, unknown>)['openNavCustomizer'];
+      delete (window as unknown as Record<string, unknown>).openNavCustomizer;
     };
   }, []);
 

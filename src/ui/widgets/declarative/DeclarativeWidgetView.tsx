@@ -18,10 +18,10 @@ function htmlDoc(view: DeclHtml): string {
     + `<style>${view.css ?? ''}</style>`
     + `<style>html,body{margin:0!important;padding:0!important;width:100%;height:100%;background:transparent!important}`
     + `body{display:flex}body>*{flex:1 1 auto;min-width:0;box-sizing:border-box}</style></head><body>`
-    + `${view.html}`
+    + view.html
     // Package JS runs sandboxed (allow-scripts) with CSP default-src 'none' — animations/interactivity
     // only; it cannot reach the network, the parent app, or storage. Inline only (no external src).
-    + `${view.js ? `<script>${view.js}</script>` : ''}`
+    + (view.js ? `<script>${view.js}</script>` : '')
     + `</body></html>`;
 }
 

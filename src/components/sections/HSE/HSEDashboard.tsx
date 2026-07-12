@@ -935,7 +935,7 @@ export function HSEDashboard(): VNode {
           { icon: 'fa-triangle-exclamation', label: 'Open HSE work',         value: 72,           sub: 'across modules',  color: 'gold'  as const },
           { icon: 'fa-ban',                  label: 'OSH/EMA blockers',      value: 6,            sub: 'need clearance',  color: 'red'   as const },
           { icon: 'fa-id-badge',             label: 'PTW active',            value: 11,           sub: 'live permits',    color: 'blue'  as const },
-          { icon: 'fa-inbox',                label: 'Pending approvals',     value: pendingCount, sub: 'awaiting action', color: (pendingCount > 0 ? 'gold' : 'green') as 'gold' | 'green' },
+          { icon: 'fa-inbox',                label: 'Pending approvals',     value: pendingCount, sub: 'awaiting action', color: (pendingCount > 0 ? 'gold' : 'green') },
         ]}
         footerItems={[
           { icon: 'fa-heart-pulse',  label: 'HSE Health Score', value: `${HSE_HEALTH_SCORE}%`, pill: HSE_HEALTH_SCORE >= 80 ? '● Healthy' : '● At Risk', pillVariant: HSE_HEALTH_SCORE >= 80 ? 'green' : 'amber' },

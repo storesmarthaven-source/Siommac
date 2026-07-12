@@ -70,7 +70,7 @@ export function FinanceExportDialog({ open, onClose }: Props): VNode | null {
             <select
               value={type}
               disabled={exportMut.isPending}
-              onChange={e => setType((e.currentTarget as HTMLSelectElement).value as ExportType)}
+              onChange={e => setType((e.currentTarget).value as ExportType)}
             >
               {EXPORT_TYPES.map(t => (
                 <option key={t.value} value={t.value}>{t.label}</option>

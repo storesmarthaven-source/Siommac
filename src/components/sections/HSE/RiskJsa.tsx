@@ -62,7 +62,7 @@ const HAZARD_CATEGORIES = [
 
 /** Canonical 5×5 band from an L×S score — delegates to the shared RiskScorePill helper. */
 function riskLevelFrom(score: number): RiskLevel {
-  return calculateRiskBand(score) as RiskLevel;
+  return calculateRiskBand(score);
 }
 
 /** Per-risk colour map — each band reads as its own tag (Critical=red, not grey). */

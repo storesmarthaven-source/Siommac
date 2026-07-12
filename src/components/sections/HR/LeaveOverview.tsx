@@ -20,7 +20,7 @@ import {
 import type { LeaveRequest, LeaveStatus, LeaveListArgs } from '../../../../types/hrLeave';
 import './onboardingCase.css';
 
-const STATUS_OPTIONS: Array<{ v: LeaveStatus | 'all'; label: string }> = [
+const STATUS_OPTIONS: { v: LeaveStatus | 'all'; label: string }[] = [
   { v: 'all', label: 'All statuses' },
   { v: 'pending_approval', label: 'Pending' },
   { v: 'approved', label: 'Approved' },
@@ -96,7 +96,7 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
     ] : [{ label: 'Requested', value: days, tone: 'info' }],
     validation: [
       ...(dateError ? [{ message: 'End date is before the start date.', tone: 'danger' as const }] : []),
-      ...(exceeds ? [{ message: `Requested ${days} day(s) exceeds your available ${bal!.available}.`, tone: 'warning' as const }] : []),
+      ...(exceeds ? [{ message: `Requested ${days} day(s) exceeds your available ${bal.available}.`, tone: 'warning' as const }] : []),
       ...(overlaps.length ? [{ message: `Overlaps ${overlaps.length} existing request(s) in this range.`, tone: 'warning' as const }] : []),
     ],
     approval: { required: true, risk: 'low', message: 'Submitting sends this to your manager / HR for approval.' },
@@ -167,7 +167,7 @@ export function LeaveOverview(): VNode {
   const canSubmit  = can('hr.leave.submit');
 
   const listArgs: LeaveListArgs = useMemo(() => ({
-    statuses: statusFilter === 'all' ? undefined : [statusFilter as LeaveStatus],
+    statuses: statusFilter === 'all' ? undefined : [statusFilter],
     pageSize: 50,
   }), [statusFilter]);
 
@@ -179,7 +179,7 @@ export function LeaveOverview(): VNode {
   const isLoading = isAdmin ? (allQ.isLoading && !allQ.data) : (myQ.isLoading && !myQ.data);
   const stats = statsQ.data;
 
-  const statCells: Array<[string, number]> = isAdmin ? [
+  const statCells: [string, number][] = isAdmin ? [
     ['My Pending', stats?.myPending ?? 0],
     ['Pending Approvals', stats?.pendingApprovals ?? 0],
     ['Team Pending', stats?.teamPending ?? 0],

@@ -104,7 +104,7 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
 
   const colStyle = (c: DtColumn<T>) => c.width ? { width: c.width } : undefined;
   const showToolbar = !!(filterChips || advancedFilter || toolbarRight || globalSearch);
-  const showActiveBar = !!(activeFilters && activeFilters.length);
+  const showActiveBar = !!(activeFilters?.length);
 
   return (
     <div class="dt">
@@ -124,7 +124,7 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
       {showActiveBar && (
         <div class="dt-active-filters">
           <strong>Active filters:</strong>
-          {activeFilters!.map(f => (
+          {activeFilters.map(f => (
             <button key={f.label} type="button" class="dt-fchip" onClick={f.onRemove}>{f.label} <LucideIcon name="X" size={12} strokeWidth={2.5} /></button>
           ))}
           {onClearFilters && <button type="button" class="dt-clear" onClick={onClearFilters}>Clear all</button>}
@@ -139,12 +139,12 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
               {columns.map(c => {
                 const sortable = !!c.sortAccessor;
                 const active = sort?.field === c.key;
-                const ariaSort = active ? (sort!.dir === 'asc' ? 'ascending' : 'descending') : 'none';
+                const ariaSort = active ? (sort.dir === 'asc' ? 'ascending' : 'descending') : 'none';
                 return (
                   <th
                     key={c.key} scope="col"
                     class={`${c.align ? `dt-al-${c.align}` : ''}${c.isPinned ? ' dt-pin' : ''}`}
-                    style={colStyle(c)} aria-sort={sortable ? (ariaSort as 'ascending' | 'descending' | 'none') : undefined}
+                    style={colStyle(c)} aria-sort={sortable ? (ariaSort) : undefined}
                   >
                     {sortable && sort
                       ? <button type="button" class="dt-sort" onClick={() => sort.onSort(c.key, active && sort.dir === 'asc' ? 'desc' : 'asc')}>
@@ -210,7 +210,7 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
       {(pagination || rowsPerPage) && (
         <div class="dt-pagination">
           <div class="dt-page-info">
-            {pagination && pagination.total
+            {pagination?.total
               ? `Showing ${(pagination.page) * (rowsPerPage?.value ?? 0) + 1}–${Math.min((pagination.page + 1) * (rowsPerPage?.value ?? pagination.total), pagination.total)} of ${pagination.total} ${noun}`
               : `${pagination?.total ?? rows.length} ${noun}`}
           </div>
@@ -219,14 +219,14 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
               <button type="button" class="dt-page-btn" aria-label="Previous page" disabled={pagination.page <= 0} onClick={() => pagination.onPage(pagination.page - 1)}>‹</button>
               {pageWindow(pagination.page + 1, pagination.pageCount).map((p, i) => p === '…'
                 ? <span key={`e${i}`} aria-hidden="true" class="dt-page-gap">…</span>
-                : <button key={p} type="button" class={`dt-page-btn${p === pagination.page + 1 ? ' is-on' : ''}`} aria-current={p === pagination.page + 1 ? 'page' : undefined} onClick={() => pagination.onPage((p as number) - 1)}>{p}</button>)}
+                : <button key={p} type="button" class={`dt-page-btn${p === pagination.page + 1 ? ' is-on' : ''}`} aria-current={p === pagination.page + 1 ? 'page' : undefined} onClick={() => pagination.onPage((p) - 1)}>{p}</button>)}
               <button type="button" class="dt-page-btn" aria-label="Next page" disabled={pagination.page >= pagination.pageCount - 1} onClick={() => pagination.onPage(pagination.page + 1)}>›</button>
             </nav>
           )}
           {rowsPerPage && (
             <div class="dt-rows-sel">
               <label>Rows per page</label>
-              <select value={String(rowsPerPage.value)} onChange={e => rowsPerPage.onChange(Number((e.currentTarget as HTMLSelectElement).value))}>
+              <select value={String(rowsPerPage.value)} onChange={e => rowsPerPage.onChange(Number((e.currentTarget).value))}>
                 {rowsPerPage.options.map(o => <option key={o} value={String(o)}>{o}</option>)}
               </select>
             </div>

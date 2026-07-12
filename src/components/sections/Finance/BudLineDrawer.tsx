@@ -126,7 +126,7 @@ function ActualsTab({ lineId, actualsQ }: {
   void lineId;
   if (actualsQ.isLoading) return <div class="hrfin-empty">Loading actuals…</div>;
   if (actualsQ.error) return <div class="hrfin-empty" style={{ color: 'var(--hrfin-danger)' }}>Failed to load actuals.</div>;
-  const result = actualsQ.data as BudgetActualsResult | undefined;
+  const result = actualsQ.data;
   if (!result) return <div class="hrfin-empty">No actuals data.</div>;
   const { entries, totalActual } = result;
   if (!entries.length) return <div class="hrfin-empty">No approved cost entries found for this budget line.</div>;
@@ -190,8 +190,8 @@ function VarianceTrendTab({ line, actualsQ }: {
   actualsQ: ReturnType<typeof useBudgetLineActuals>;
 }): VNode {
   if (actualsQ.isLoading) return <div class="hrfin-empty">Loading trend data…</div>;
-  const result = actualsQ.data as BudgetActualsResult | undefined;
-  if (!result || !result.byMonth.length) {
+  const result = actualsQ.data;
+  if (!result?.byMonth.length) {
     return <div class="hrfin-empty">No monthly data available for FY {line.fiscalYear}.</div>;
   }
 
@@ -250,7 +250,7 @@ function RelatedTransactionsTab({ actualsQ }: {
   if (actualsQ.isLoading) return <div class="hrfin-empty">Loading related transactions…</div>;
   if (actualsQ.error) return <div class="hrfin-empty" style={{ color: 'var(--hrfin-danger)' }}>Failed to load related transactions.</div>;
 
-  const result = actualsQ.data as BudgetActualsResult | undefined;
+  const result = actualsQ.data;
   const entries: CostEntryRow[] = result?.entries ?? [];
 
   if (!entries.length) {

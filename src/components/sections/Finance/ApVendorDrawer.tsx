@@ -157,7 +157,7 @@ function PaymentsTab({ vendorId }: { vendorId: string }): VNode {
   return (
     <HrfinTable<PayRow>
       columns={cols}
-      rows={(data ?? []) as PayRow[]}
+      rows={(data ?? [])}
       rowKey={p => p.id}
       total={data?.length ?? 0}
       page={0} pageCount={1} pageSize={50}

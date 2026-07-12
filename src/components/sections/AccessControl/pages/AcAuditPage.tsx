@@ -70,7 +70,7 @@ export function AcAuditPage(): VNode {
           <table class="tbl">
             <thead><tr><th>Time</th><th>User</th><th>Action</th><th>Entity</th><th>Record</th><th>Details</th><th>IP</th></tr></thead>
             <tbody>
-              {(logs as Array<{ id: string; created_at: string; username: string; action: string; entity: string; entity_id: string; details: string; ip_address: string | null }>).map(l => (
+              {(logs as { id: string; created_at: string; username: string; action: string; entity: string; entity_id: string; details: string; ip_address: string | null }[]).map(l => (
                 <tr key={l.id}>
                   <td class="sub" style={{ whiteSpace: 'nowrap' }}>{dateLong(l.created_at)}</td>
                   <td style={{ fontWeight: 600 }}>{l.username || '—'}</td>

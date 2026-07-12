@@ -481,7 +481,7 @@ function RequestsTab(): VNode {
                 ['fa-shield-halved', 'HSE Check', 'Validates PPE matrix, fit test, and training evidence.'],
                 ['fa-box-open', 'Warehouse', 'Reserves stock, serials, lot numbers, and expiry dates.'],
                 ['fa-signature', 'Issue', 'Employee acknowledgement and assignment record.']].map(([ic, t, s]) => (
-                <div class="ppe-step" key={t as string}><i class={`fas ${ic}`} /><strong>{t}</strong><span>{s}</span></div>
+                <div class="ppe-step" key={t!}><i class={`fas ${ic}`} /><strong>{t}</strong><span>{s}</span></div>
               ))}
             </div>
           </div>

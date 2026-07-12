@@ -282,14 +282,14 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
             {hasResidual ? (
               <div style={{ display: 'grid', gap: 'var(--space-3)' }}>
                 <RiskMatrixPicker
-                  likelihood={residualLikelihood!}
-                  severity={residualSeverity!}
+                  likelihood={residualLikelihood}
+                  severity={residualSeverity}
                   onChange={(l, s) => { setResidualLikelihood(l); setResidualSeverity(s); }}
                 />
                 <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-3)', flexWrap: 'wrap' }}>
-                  <RiskScorePill likelihood={residualLikelihood!} severity={residualSeverity!} />
+                  <RiskScorePill likelihood={residualLikelihood} severity={residualSeverity} />
                   <span style={{ fontSize: '0.82rem', color: 'var(--text-muted)' }}>
-                    Residual: {residualLikelihood} × {residualSeverity} = {residualLikelihood! * residualSeverity!}
+                    Residual: {residualLikelihood} × {residualSeverity} = {residualLikelihood * residualSeverity}
                   </span>
                   <button
                     type="button"
@@ -359,9 +359,9 @@ export function NewHazardDialog({ open, onClose }: NewHazardDialogProps): VNode 
               {hasResidual && (
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                   <span style={{ color: 'var(--text-muted)', minWidth: '120px' }}>Residual Risk</span>
-                  <RiskScorePill likelihood={residualLikelihood!} severity={residualSeverity!} />
+                  <RiskScorePill likelihood={residualLikelihood} severity={residualSeverity} />
                   <span style={{ color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-                    ({residualLikelihood} × {residualSeverity} = {residualLikelihood! * residualSeverity!})
+                    ({residualLikelihood} × {residualSeverity} = {residualLikelihood * residualSeverity})
                   </span>
                 </div>
               )}

@@ -113,7 +113,7 @@ export function useApVendorPayments(vendorId: string | null) {
     queryKey: financeQueryKeys.apVendorPayments(vendorId ?? ''),
     enabled: !!vendorId,
     queryFn: ({ signal }: QueryFunctionContext) =>
-      post<Array<ApPayment & { billNo: string }>>('finance/ap/vendors/payments', { vendorId }, signal),
+      post<(ApPayment & { billNo: string })[]>('finance/ap/vendors/payments', { vendorId }, signal),
   });
 }
 
@@ -121,7 +121,7 @@ export function useApPayments() {
   return useQuery({
     queryKey: financeQueryKeys.apPayments(),
     queryFn: ({ signal }: QueryFunctionContext) =>
-      post<Array<ApPayment & { billNo: string }>>('finance/ap/payments/list', {}, signal),
+      post<(ApPayment & { billNo: string })[]>('finance/ap/payments/list', {}, signal),
   });
 }
 
@@ -308,7 +308,7 @@ export function useResolveDuplicateRisk() {
 
 export interface BulkApproveResult {
   approved: ApBill[];
-  blocked: Array<{ bill: ApBill; reason: string }>;
+  blocked: { bill: ApBill; reason: string }[];
 }
 
 export function useBulkApproveBills() {

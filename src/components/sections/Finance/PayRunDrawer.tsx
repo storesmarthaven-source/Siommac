@@ -223,7 +223,7 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
     if (isNaN(val)) { toast('Invalid amount — please enter a number.'); return; }
     try {
       const { apiPost } = await import('@lib/api');
-      await apiPost('finance/payroll/inputs/edit', { inputId: inp.id, amount: val } as Record<string, unknown>);
+      await apiPost('finance/payroll/inputs/edit', { inputId: inp.id, amount: val });
       toast('Input updated.');
     } catch (e) {
       toast((e as Error).message ?? 'Failed to update input.');
@@ -240,7 +240,7 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
     if (!confirmed) return;
     try {
       const { apiPost } = await import('@lib/api');
-      await apiPost('finance/payroll/inputs/exclude', { inputId: inp.id } as Record<string, unknown>);
+      await apiPost('finance/payroll/inputs/exclude', { inputId: inp.id });
       toast('Input excluded from run.');
     } catch (e) {
       toast((e as Error).message ?? 'Exclude failed.');
@@ -357,7 +357,7 @@ function WarningsTab({
         body:     w.message,
         priority: w.severity === 'blocker' || w.severity === 'error' ? 'high' : 'medium',
         metadata: { sourceType: 'payroll_warning', sourceId: w.id, runId },
-      } as Record<string, unknown>);
+      });
       toast('Ticket created.');
     } catch (e) {
       toast((e as Error).message ?? 'Failed to create ticket.');
@@ -528,7 +528,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       const { apiPost } = await import('@lib/api');
       const res = await apiPost<{ success: boolean; data?: { notified: number }; message?: string }>(
         'finance/payroll/payslips/notify',
-        { runId } as Record<string, unknown>,
+        { runId },
       );
       if (!res.success) throw new Error(res.message ?? 'Notify failed.');
       toast(`${res.data?.notified ?? 0} employee(s) notified.`);
@@ -776,7 +776,7 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       {(lines?.length ?? 0) > 0 && (
         <div style={{ border: '1px solid var(--hrfin-border)', borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8, borderBottom: '1px solid var(--hrfin-border)' }}>
-            <input value={search} placeholder="Filter employees…" onInput={e => setSearch((e.currentTarget as HTMLInputElement).value)} style={{ ...fieldStyle, flex: 1 }} />
+            <input value={search} placeholder="Filter employees…" onInput={e => setSearch((e.currentTarget).value)} style={{ ...fieldStyle, flex: 1 }} />
             <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>{selected.size} selected · {gridRows.length} shown</span>
             {canOverride && editable && (
               <button type="button" class="hrfin-action" style={{ fontSize: 11 }} onClick={() => setBackPayOpen(true)}>
@@ -805,25 +805,25 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
         <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.9fr 1.2fr 0.8fr 1.4fr auto', gap: 6, alignItems: 'end',
                       padding: '8px', border: '1px dashed var(--hrfin-border)', borderRadius: 8 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>EMPLOYEE
-            <select value={empId} onChange={e => setEmpId((e.currentTarget as HTMLSelectElement).value)} style={fieldStyle}>
+            <select value={empId} onChange={e => setEmpId((e.currentTarget).value)} style={fieldStyle}>
               <option value="">Select…</option>
               {empIds.map(id => <option key={id} value={id}>{nameMap?.get(id)?.fullName ?? id}</option>)}
             </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>TYPE
-            <select value={kind} onChange={e => setKind((e.currentTarget as HTMLSelectElement).value as 'earning' | 'deduction')} style={fieldStyle}>
+            <select value={kind} onChange={e => setKind((e.currentTarget).value as 'earning' | 'deduction')} style={fieldStyle}>
               <option value="earning">Earning</option>
               <option value="deduction">Deduction</option>
             </select>
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>LABEL
-            <input value={label} placeholder="e.g. Retro adjustment" onInput={e => setLabel((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input value={label} placeholder="e.g. Retro adjustment" onInput={e => setLabel((e.currentTarget).value)} style={fieldStyle} />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>AMOUNT
-            <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget).value)} style={fieldStyle} />
           </label>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON
-            <input value={reason} placeholder="Required" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input value={reason} placeholder="Required" onInput={e => setReason((e.currentTarget).value)} style={fieldStyle} />
           </label>
           <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={addMut.isPending} onClick={() => void add()}>
             {addMut.isPending ? 'Adding…' : 'Add'}
@@ -930,17 +930,17 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
         </p>
         <div style={{ display: 'grid', gap: 10 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>EMPLOYEE
-            <select value={empId} onChange={e => { setEmpId((e.currentTarget as HTMLSelectElement).value); setPreview(null); }} style={fieldStyle}>
+            <select value={empId} onChange={e => { setEmpId((e.currentTarget).value); setPreview(null); }} style={fieldStyle}>
               <option value="">Select…</option>
               {employeeIds.map(id => <option key={id} value={id}>{nameMap?.get(id)?.fullName ?? id}</option>)}
             </select>
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>FROM PERIOD
-              <input type="month" value={fromMonth} onInput={e => { setFrom((e.currentTarget as HTMLInputElement).value); setPreview(null); }} style={fieldStyle} />
+              <input type="month" value={fromMonth} onInput={e => { setFrom((e.currentTarget).value); setPreview(null); }} style={fieldStyle} />
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>CORRECTED BASE / PERIOD
-              <input type="number" min="0.01" step="0.01" value={base} onInput={e => { setBase((e.currentTarget as HTMLInputElement).value); setPreview(null); }} style={fieldStyle} />
+              <input type="number" min="0.01" step="0.01" value={base} onInput={e => { setBase((e.currentTarget).value); setPreview(null); }} style={fieldStyle} />
             </label>
           </div>
           <button type="button" class="hrfin-action" style={{ fontSize: 11, alignSelf: 'flex-start' }} disabled={!canPreview || previewMut.isPending} onClick={() => void runPreview()}>
@@ -969,7 +969,7 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
           )}
 
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON (required)
-            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget).value)} style={fieldStyle} />
           </label>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>
@@ -1001,7 +1001,7 @@ function WorksheetVirtualRows({ rows, rowHeight, viewportHeight, selectable, sel
   if (rows.length === 0) return <div class="hrfin-empty" style={{ padding: 14 }}>No employees match the filter.</div>;
 
   return (
-    <div style={{ maxHeight: viewportHeight, overflowY: 'auto' }} onScroll={e => setScrollTop((e.currentTarget as HTMLDivElement).scrollTop)}>
+    <div style={{ maxHeight: viewportHeight, overflowY: 'auto' }} onScroll={e => setScrollTop((e.currentTarget).scrollTop)}>
       <div style={{ paddingTop: padTop, paddingBottom: padBottom }}>
         {rows.slice(start, end).map(r => (
           <div key={r.employeeId} style={{ display: 'flex', alignItems: 'center', height: rowHeight, padding: '0 8px', fontSize: 12, borderBottom: '1px solid var(--hrfin-border)' }}>
@@ -1051,21 +1051,21 @@ function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
         </p>
         <div style={{ display: 'grid', gap: 10 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>LABEL
-            <input value={label} placeholder="e.g. COLA allowance" onInput={e => setLabel((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input value={label} placeholder="e.g. COLA allowance" onInput={e => setLabel((e.currentTarget).value)} style={fieldStyle} />
           </label>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>TYPE
-              <select value={kind} onChange={e => setKind((e.currentTarget as HTMLSelectElement).value as 'earning' | 'deduction')} style={fieldStyle}>
+              <select value={kind} onChange={e => setKind((e.currentTarget).value as 'earning' | 'deduction')} style={fieldStyle}>
                 <option value="earning">Earning</option>
                 <option value="deduction">Deduction</option>
               </select>
             </label>
             <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>AMOUNT (each)
-              <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+              <input type="number" min="0.01" step="0.01" value={amount} onInput={e => setAmount((e.currentTarget).value)} style={fieldStyle} />
             </label>
           </div>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>REASON (required)
-            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget as HTMLInputElement).value)} style={fieldStyle} />
+            <input value={reason} placeholder="Audit-logged" onInput={e => setReason((e.currentTarget).value)} style={fieldStyle} />
           </label>
         </div>
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 16 }}>

@@ -83,7 +83,7 @@ export function Select<T extends string>({
   onChange,
 }: {
   value: T;
-  options: ReadonlyArray<{ value: T; label: string }>;
+  options: readonly { value: T; label: string }[];
   onChange: (v: T) => void;
 }) {
   return (
@@ -103,7 +103,7 @@ export function Segmented<T extends string>({
   onChange,
 }: {
   value: T;
-  options: ReadonlyArray<{ value: T; label: JSX.Element | string }>;
+  options: readonly { value: T; label: JSX.Element | string }[];
   onChange: (v: T) => void;
 }) {
   return (

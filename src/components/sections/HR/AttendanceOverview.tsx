@@ -24,7 +24,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import './onboardingCase.css';
 import '../Finance/finance.css';
 
-type ExcRow = { id: string; workDate: string; employeeId: string; exceptionType: string; minutes: number | null; status: string };
+interface ExcRow { id: string; workDate: string; employeeId: string; exceptionType: string; minutes: number | null; status: string }
 
 const STATUS_OPTIONS: AttendanceRecord['status'][] = ['present', 'absent', 'late', 'half_day', 'on_leave', 'holiday', 'missing_punch', 'short_hours', 'over_hours'];
 const SOURCE_OPTIONS: AttendanceRecord['source'][] = ['manual', 'kiosk', 'mobile', 'import'];
@@ -288,7 +288,7 @@ function CorrectRecordModal({ record, onClose }: { record: AttendanceRecord; onC
 
   const context: DialogContextPanelConfig = {
     eyebrow: 'HR · Attendance', title: 'Correction Preview', description: 'A correction is audit-logged with the old and new value; punch changes recompute worked/late/OT minutes.',
-    preview: { icon: 'FIX', title: `${record.recordNo}`, subtitle: `${record.employeeId} · ${record.workDate}` },
+    preview: { icon: 'FIX', title: record.recordNo, subtitle: `${record.employeeId} · ${record.workDate}` },
     derived: { title: 'Field change', fields: [
       { label: 'Field', value: spec.label },
       { label: 'Current', value: currentDisplay() },
@@ -319,21 +319,21 @@ function CorrectRecordModal({ record, onClose }: { record: AttendanceRecord; onC
       onSubmit={() => void submit()}>
       <div class="fin-form-grid fin-form-grid--tight">
         <label class="fin-field"><span>Field to correct</span>
-          <select value={field} onChange={e => pickField((e.currentTarget as HTMLSelectElement).value)}>
+          <select value={field} onChange={e => pickField((e.currentTarget).value)}>
             {CORRECTABLE.map(c => <option value={c.field} key={c.field}>{c.label}</option>)}
           </select>
         </label>
         <label class="fin-field"><span>New value</span>
           {spec.kind === 'datetime'
-            ? <input type="datetime-local" value={newValue} onInput={e => setNewValue((e.currentTarget as HTMLInputElement).value)} />
+            ? <input type="datetime-local" value={newValue} onInput={e => setNewValue((e.currentTarget).value)} />
             : spec.kind === 'status'
-            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget as HTMLSelectElement).value)}>{STATUS_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
+            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget).value)}>{STATUS_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
             : spec.kind === 'source'
-            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget as HTMLSelectElement).value)}>{SOURCE_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
-            : <input type="text" value={newValue} onInput={e => setNewValue((e.currentTarget as HTMLInputElement).value)} placeholder="New note" />}
+            ? <select value={newValue} onChange={e => setNewValue((e.currentTarget).value)}>{SOURCE_OPTIONS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}</select>
+            : <input type="text" value={newValue} onInput={e => setNewValue((e.currentTarget).value)} placeholder="New note" />}
         </label>
         <label class="fin-field" style={{ gridColumn: '1 / -1' }}><span>Reason (required)</span>
-          <textarea value={reason} onInput={e => setReason((e.currentTarget as HTMLTextAreaElement).value)} rows={3} placeholder="Why is this correction being made? (audit-logged)" />
+          <textarea value={reason} onInput={e => setReason((e.currentTarget).value)} rows={3} placeholder="Why is this correction being made? (audit-logged)" />
         </label>
       </div>
     </EnterpriseFormModal>
@@ -477,14 +477,14 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
             <input type="file" accept=".csv,text/csv" onChange={onFile} />
           </label>
           <label class="fin-field"><span>…or paste CSV rows</span>
-            <textarea value={text} onInput={e => setText((e.currentTarget as HTMLTextAreaElement).value)} rows={10}
+            <textarea value={text} onInput={e => setText((e.currentTarget).value)} rows={10}
               placeholder={CSV_TEMPLATE} style={{ fontFamily: 'monospace', fontSize: 12 }} />
           </label>
           <label class="fin-field" style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
             <input
               type="checkbox"
               checked={overwrite}
-              onChange={e => setOverwrite((e.currentTarget as HTMLInputElement).checked)}
+              onChange={e => setOverwrite((e.currentTarget).checked)}
             />
             <span style={{ margin: 0 }}>
               Overwrite existing live/manual punches (correction mode)

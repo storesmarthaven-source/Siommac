@@ -28,7 +28,7 @@ export function usePagination<T>(items: readonly T[], pageSize: number = DEFAULT
   const total = items.length;
   const pageCount = Math.max(1, Math.ceil(total / pageSize));
   const clamped = Math.min(page, pageCount - 1);
-  const pageItems = items.slice(clamped * pageSize, clamped * pageSize + pageSize) as T[];
+  const pageItems = items.slice(clamped * pageSize, clamped * pageSize + pageSize);
   return { page: clamped, setPage, pageCount, pageItems, total, pageSize };
 }
 

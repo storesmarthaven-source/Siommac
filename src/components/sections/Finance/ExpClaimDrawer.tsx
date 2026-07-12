@@ -334,11 +334,11 @@ export function ExpClaimDrawer({
                       const r = claim.metadata.reimbursement as Record<string, unknown>;
                       return (
                         <>
-                          {r['paymentMethod'] && <div class="hrfin-metric-row"><span>Method</span><b>{humanize(String(r['paymentMethod']))}</b></div>}
-                          {r['reference']     && <div class="hrfin-metric-row"><span>Reference</span><b>{String(r['reference'])}</b></div>}
-                          {r['paidAmount'] != null && <div class="hrfin-metric-row"><span>Amount paid</span><b>{fmtMoney(Number(r['paidAmount']))}</b></div>}
-                          {r['sourceDisbursement'] && <div class="hrfin-metric-row"><span>Disbursement</span><b>{String(r['sourceDisbursement'])}</b></div>}
-                          {r['notes']         && <div class="hrfin-metric-row"><span>Notes</span><b>{String(r['notes'])}</b></div>}
+                          {r.paymentMethod && <div class="hrfin-metric-row"><span>Method</span><b>{humanize(String(r.paymentMethod))}</b></div>}
+                          {r.reference     && <div class="hrfin-metric-row"><span>Reference</span><b>{String(r.reference)}</b></div>}
+                          {r.paidAmount != null && <div class="hrfin-metric-row"><span>Amount paid</span><b>{fmtMoney(Number(r.paidAmount))}</b></div>}
+                          {r.sourceDisbursement && <div class="hrfin-metric-row"><span>Disbursement</span><b>{String(r.sourceDisbursement)}</b></div>}
+                          {r.notes         && <div class="hrfin-metric-row"><span>Notes</span><b>{String(r.notes)}</b></div>}
                         </>
                       );
                     })()

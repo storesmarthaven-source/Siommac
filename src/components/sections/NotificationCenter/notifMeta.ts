@@ -12,7 +12,7 @@ export const SEV_COLOR: Record<string, string> = {
   critical: '#ef4444', warning: '#f59e0b', success: '#16a34a', info: '#3b82f6',
 };
 
-const MODULE_META: Array<[RegExp, string, string]> = [
+const MODULE_META: [RegExp, string, string][] = [
   // [matcher, icon, human label]
   [/incident/,                'fa-triangle-exclamation',  'Incidents'],
   [/capa/,                    'fa-list-check',            'CAPA'],

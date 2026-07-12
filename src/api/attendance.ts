@@ -158,7 +158,7 @@ export async function checkIn(payload: CheckInPayload): Promise<void> {
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'checkIn',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Check-in failed.');
 }
@@ -170,7 +170,7 @@ export async function checkOut(payload: CheckOutPayload): Promise<void> {
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'checkOut',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Check-out failed.');
 }

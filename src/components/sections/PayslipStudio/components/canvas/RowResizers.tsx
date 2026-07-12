@@ -23,8 +23,8 @@ export function RowResizers({ el, zoom }: { el: TableElement; zoom: number }) {
   const drag = useRef<(DragKind & { startY: number; startH: number }) | null>(null);
 
   const root = () => anchor.current?.closest('.el') as HTMLElement | null;
-  const dataRows = () => root()?.querySelectorAll('table.pay-tbl tbody tr') as NodeListOf<HTMLElement> | undefined;
-  const headRow = () => root()?.querySelector('table.pay-tbl thead tr') as HTMLElement | null | undefined;
+  const dataRows = () => root()?.querySelectorAll('table.pay-tbl tbody tr');
+  const headRow = () => root()?.querySelector('table.pay-tbl thead tr');
 
   const sig = `${el.rows.map((r) => r.height ?? 'a').join(',')}|${el.h}|${el.fontSize}|${el.showHoursRate}|${el.titleFontSize ?? ''}|${el.headHeight ?? ''}|${el.headFontSize ?? ''}|${el.showHead}|${zoom}`;
   useLayoutEffect(() => {

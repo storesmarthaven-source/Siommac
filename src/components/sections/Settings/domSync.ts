@@ -49,16 +49,16 @@ export function applyCompanyLogoToDom(url: string): void {
   }
 
   // Sidebar brand
-  const brand = document.querySelector('.sidebar-brand') as HTMLElement | null;
+  const brand = document.querySelector<HTMLElement>('.sidebar-brand');
   if (!brand) return;
-  const icon      = brand.querySelector('i') as HTMLElement | null;
-  const nameSpan  = brand.querySelector('#companyName') as HTMLElement | null;
-  const existImg  = brand.querySelector('img.sb-brand-img') as HTMLImageElement | null;
+  const icon      = brand.querySelector<HTMLElement>('i');
+  const nameSpan  = brand.querySelector<HTMLElement>('#companyName');
+  const existImg  = brand.querySelector<HTMLImageElement>('img.sb-brand-img');
 
   if (url) {
     if (icon)     icon.style.display     = 'none';
     if (nameSpan) nameSpan.style.display = 'none';
-    const img = existImg ?? document.createElement('img') as HTMLImageElement;
+    const img = existImg ?? document.createElement('img');
     img.className = 'sb-brand-img';
     img.alt       = 'Logo';
     img.style.cssText = 'height:72px;max-width:180px;width:auto;object-fit:contain;display:block;';

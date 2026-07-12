@@ -25,7 +25,7 @@ function tally<T>(rows: T[], key: (r: T) => string | null | undefined): Record<s
   for (const r of rows) { const k = key(r); if (k) m[k] = (m[k] ?? 0) + 1; }
   return m;
 }
-function monthlyTrend(dates: Array<string | null | undefined>, months = 6): number[] {
+function monthlyTrend(dates: (string | null | undefined)[], months = 6): number[] {
   const now = new Date();
   const buckets = new Array<number>(months).fill(0);
   for (const iso of dates) {

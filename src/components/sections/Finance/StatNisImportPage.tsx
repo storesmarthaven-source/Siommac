@@ -86,7 +86,7 @@ function validateCsv(text: string): { rows: ValRow[]; headerError: string | null
 
     if (!Number.isInteger(classNo) || classNo < 1) flagErr('Invalid Class No', `Class number '${classNoRaw}' is not a whole number ≥ 1.`, 'Use a whole number ≥ 1.');
     if (isNaN(weeklyMin) || weeklyMin < 0) flagErr('Missing Min', 'Weekly minimum is missing or negative.', 'Provide a weekly minimum ≥ 0.');
-    if (maxStr !== '' && isNaN(weeklyMax as number)) flagErr('Invalid Max', `Weekly maximum '${maxStr}' is not a number.`, 'Use a number or leave blank for the top band.');
+    if (maxStr !== '' && isNaN(weeklyMax!)) flagErr('Invalid Max', `Weekly maximum '${maxStr}' is not a number.`, 'Use a number or leave blank for the top band.');
     if (weeklyMax != null && !isNaN(weeklyMin) && weeklyMax <= weeklyMin) flagErr('Bad Band', 'Weekly maximum is not greater than the minimum.', 'Weekly maximum must exceed the minimum.');
     if (isNaN(employeeWeekly) || employeeWeekly < 0) flagErr('Missing Rate', 'Employee weekly contribution is missing or invalid.', 'Provide an employee contribution ≥ 0.');
     if (isNaN(employerWeekly) || employerWeekly < 0) flagErr('Missing Rate', 'Employer weekly contribution is missing or invalid.', 'Provide an employer contribution ≥ 0.');
@@ -120,14 +120,14 @@ function validateCsv(text: string): { rows: ValRow[]; headerError: string | null
   return { rows, headerError: null };
 }
 
-const COL_MAP: ReadonlyArray<{ csv: string; to: string }> = [
+const COL_MAP: readonly { csv: string; to: string }[] = [
   { csv: 'class_no', to: 'Class Number' },
   { csv: 'weekly_min', to: 'Weekly Minimum' },
   { csv: 'weekly_max', to: 'Weekly Maximum' },
   { csv: 'employee_weekly', to: 'Employee Weekly' },
   { csv: 'employer_weekly', to: 'Employer Weekly' },
 ];
-const RULES: ReadonlyArray<{ tone: string; name: string; desc: string }> = [
+const RULES: readonly { tone: string; name: string; desc: string }[] = [
   { tone: 'red', name: 'Duplicate Class No', desc: 'Class numbers must be unique.' },
   { tone: 'amber', name: 'Overlapping Bands', desc: 'Band ranges must not overlap.' },
   { tone: 'blue', name: 'Missing Contributions', desc: 'Employee & employer weekly amounts are required.' },
@@ -147,7 +147,7 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
   const [fileName, setFileName] = useState<string | null>(null);
   const [fileSize, setFileSize] = useState(0);
   const [dragging, setDragging] = useState(false);
-  const [result, setResult] = useState<{ imported: number; errors: Array<{ row: number; message: string }> } | null>(null);
+  const [result, setResult] = useState<{ imported: number; errors: { row: number; message: string }[] } | null>(null);
 
   const { rows, headerError } = useMemo(() => validateCsv(csvText), [csvText]);
   const errorCount = rows.filter(r => r.severity === 'error').length;
@@ -204,7 +204,7 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
                     <span class="sfp-dz-or">or</span>
                     <button type="button" class="sfp-browse" onClick={e => { e.stopPropagation(); fileRef.current?.click(); }}>Browse Files</button>
                     <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
-                      onChange={e => onFile((e.currentTarget as HTMLInputElement).files?.[0] ?? undefined)} />
+                      onChange={e => onFile((e.currentTarget).files?.[0] ?? undefined)} />
                   </div>
                   <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
                     <button type="button" class="sfp-browse" onClick={() => { setFileName('template.csv'); setFileSize(TEMPLATE.length); loadText(TEMPLATE); }}>Load sample</button>
@@ -221,7 +221,7 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
                       <div class="sfp-file-meta"><div class="fn">{fileName}</div><div class="fs">{(fileSize / 1024).toFixed(1)} KB · {rows.length} row{rows.length !== 1 ? 's' : ''} detected</div></div>
                       <span style={{ color: '#16b364', display: 'inline-flex' }}><IconOk /></span>
                     </div>
-                    <textarea class="sfp-textarea" value={csvText} onInput={e => setCsvText((e.currentTarget as HTMLTextAreaElement).value)} />
+                    <textarea class="sfp-textarea" value={csvText} onInput={e => setCsvText((e.currentTarget).value)} />
                     {headerError && <p class="sfp-err-msg" style={{ marginTop: 8 }}>{headerError}</p>}
                   </div>
                 )}

@@ -67,7 +67,7 @@ function messageTone(post: MessagePostRow, myId: string | null): BubbleTone {
 }
 /** Centered timeline label for a system-event post (from its payload). */
 function systemEventLabel(post: MessagePostRow): string {
-  const p = (post.systemEventPayload ?? {}) as Record<string, unknown>;
+  const p = (post.systemEventPayload ?? {});
   const s = (k: string) => String(p[k] ?? '');
   switch (post.systemEventType) {
     case 'participant_added':   return `${s('addedUserName')} was added to the conversation by ${s('actorName')}`;
@@ -386,7 +386,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
   const [replyTo, setReplyTo] = useState<MessagePostRow | null>(null);
 
   const isOwner   = thread.myRole === 'owner';
-  const pinByPost = new Map(pins.filter(p => p.pinType === 'post' && p.postId).map(p => [p.postId as string, p]));
+  const pinByPost = new Map(pins.filter(p => p.pinType === 'post' && p.postId).map(p => [p.postId!, p]));
 
   // Mark read when thread opens
   useEffect(() => {
@@ -426,7 +426,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
     if (!files.length) return;
 
     for (const file of files) {
-      const localId: string = `${Date.now()}-${Math.random()}`;
+      const localId = `${Date.now()}-${Math.random()}`;
       const entry: PendingAttachment = { localId, file, state: 'uploading', attachId: null, error: null };
       setPending(prev => [...prev, entry]);
 
@@ -450,7 +450,7 @@ function Conversation({ thread, detailsOpen, onToggleDetails }: {
 
   function handleSend() {
     if (!canSend) return;
-    const attachmentIds = pending.filter(p => p.state === 'done' && p.attachId).map(p => p.attachId as string);
+    const attachmentIds = pending.filter(p => p.state === 'done' && p.attachId).map(p => p.attachId!);
     postMsg.mutate({ threadId: thread.id, body: body.trim() || '​', attachmentIds: attachmentIds.length ? attachmentIds : undefined, replyToPostId: replyTo?.id ?? null }, {
       onSuccess: () => {
         setBody('');

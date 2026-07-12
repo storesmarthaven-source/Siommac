@@ -13,7 +13,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { PageHeader } from '@ui';
 
 // ── Icons (ported from the 2026-07 mockups) ─────────────────────────────────────
-type IconProps = { size?: number };
+interface IconProps { size?: number }
 const svg = (size: number, inner: ComponentChildren, sw = 1.7): VNode => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width={sw} stroke-linecap="round" stroke-linejoin="round">{inner}</svg>
 );
@@ -142,7 +142,7 @@ export function TextField({ label, hint, value, onInput, error, show, required, 
       <div class="sfp-ctl">
         <input class={`sfp-inp${bad ? ' is-bad' : ok ? ' is-ok' : ''}`} value={value} disabled={disabled} placeholder={placeholder}
           style={mono ? { fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace' } : undefined}
-          onInput={e => onInput((e.currentTarget as HTMLInputElement).value)} />
+          onInput={e => onInput((e.currentTarget).value)} />
         {bad ? <span key="bad" class="sfp-state bad"><IconBad /></span> : ok ? <span key="ok" class="sfp-state ok"><IconOk /></span> : null}
       </div>
       {bad ? <span class="sfp-err-msg">{effError}</span> : hint ? <span class="sfp-hint">{hint}</span> : null}
@@ -164,7 +164,7 @@ export function MoneyField({ label, hint, value, onInput, error, show, required,
       <div class={`sfp-cur-grp${ok ? ' is-ok' : ''}${bad ? ' is-bad' : ''}`}>
         <span class="sfp-cur">{currency}</span>
         <input type="number" step="0.01" inputMode="decimal" value={value} disabled={disabled} placeholder={placeholder}
-          onInput={e => onInput((e.currentTarget as HTMLInputElement).value)} />
+          onInput={e => onInput((e.currentTarget).value)} />
         {ok && <span class="sfp-state ok"><IconOk /></span>}
         {bad && <span class="sfp-state bad"><IconBad /></span>}
       </div>
@@ -176,7 +176,7 @@ export function MoneyField({ label, hint, value, onInput, error, show, required,
 // ── Select field (native, styled) ───────────────────────────────────────────────
 export function SelectField({ label, hint, value, onChange, options, error, show, required, disabled }: {
   label: string; hint?: string; value: string; onChange: (v: string) => void;
-  options: ReadonlyArray<{ value: string; label: string }>;
+  options: readonly { value: string; label: string }[];
   error?: string; show: boolean; required?: boolean; disabled?: boolean;
 }): VNode {
   const hasVal = value.trim() !== '';
@@ -187,7 +187,7 @@ export function SelectField({ label, hint, value, onChange, options, error, show
       <label class="sfp-lab">{label}{required && <span class="sfp-req">*</span>} <InfoHint hint={hint} /></label>
       <div class="sfp-ctl">
         <select class={`sfp-select${bad ? ' is-bad' : ok ? ' is-ok' : ''}${ok || bad ? ' has-state' : ''}`} value={value} disabled={disabled}
-          onChange={e => onChange((e.currentTarget as HTMLSelectElement).value)}>
+          onChange={e => onChange((e.currentTarget).value)}>
           {options.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
         </select>
         {ok && <span class="sfp-state ok" style={{ right: 34 }}><IconOk /></span>}

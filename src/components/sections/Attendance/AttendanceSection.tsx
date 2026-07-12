@@ -157,7 +157,7 @@ export function AttendanceSection(): VNode {
     const target  = e.target as HTMLElement;
     const btn     = target.closest<HTMLElement>('[data-username]');
     if (!btn) return;
-    const username = btn.dataset['username'];
+    const username = btn.dataset.username;
     if (username) setSelectedUsername(username);
   }, []);
 

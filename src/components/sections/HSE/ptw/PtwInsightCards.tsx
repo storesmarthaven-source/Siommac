@@ -35,7 +35,7 @@ function hoursUntil(iso?: string | null): number | null {
 }
 
 /** Real series: records created in each of the last `months` months. */
-function monthlyTrend(dates: Array<string | null | undefined>, months = 6): number[] {
+function monthlyTrend(dates: (string | null | undefined)[], months = 6): number[] {
   const now = new Date();
   const buckets = new Array<number>(months).fill(0);
   for (const iso of dates) {

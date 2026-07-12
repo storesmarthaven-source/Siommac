@@ -225,10 +225,10 @@ export function WidgetLibraryModal({
   function selectWidget(w: WidgetDef): void { setSelectedId(w.id); setSizeKey(w.defaultSize); setConfig({ ...w.defaultConfig }); }
   function handleAdd(): void {
     if (!canPlaceSelected) return;
-    void onAddWidget(createWidgetInstance({ widget: selected!, pageKey, zoneId, sizeKey, config }));
-    setAddedInfo({ widget: selected! });
+    void onAddWidget(createWidgetInstance({ widget: selected, pageKey, zoneId, sizeKey, config }));
+    setAddedInfo({ widget: selected });
   }
-  function handlePreview(): void { if (canPlaceSelected) { onPreviewOnBoard(createPreviewWidgetInstance({ widget: selected!, pageKey, zoneId, sizeKey, config })); onClose(); } }
+  function handlePreview(): void { if (canPlaceSelected) { onPreviewOnBoard(createPreviewWidgetInstance({ widget: selected, pageKey, zoneId, sizeKey, config })); onClose(); } }
 
   return (
     <div class="wlib-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>

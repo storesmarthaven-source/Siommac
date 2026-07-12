@@ -273,7 +273,7 @@ export function StatutoryDashboard({
   const rateTrend = useMemo(() => {
     const pts = versions
       .filter(v => v.nisRatePercent != null)
-      .map(v => ({ id: v.id, year: v.effectiveFrom.slice(0, 4), rate: v.nisRatePercent as number, isActive: v.isActive, effectiveFrom: v.effectiveFrom, status: v.status }))
+      .map(v => ({ id: v.id, year: v.effectiveFrom.slice(0, 4), rate: v.nisRatePercent!, isActive: v.isActive, effectiveFrom: v.effectiveFrom, status: v.status }))
       .sort((a, b) => (a.year < b.year ? -1 : a.year > b.year ? 1 : 0));
     const rates = pts.map(p => p.rate);
     const lo = rates.length ? Math.floor(Math.min(...rates)) - 1 : 0;
@@ -419,7 +419,7 @@ export function StatutoryDashboard({
   const [demo, setDemo]       = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
   const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
-  const boardItems = layout.zones['main'] ?? [];
+  const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T =>
     ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
@@ -719,7 +719,7 @@ export function StatutoryDashboard({
         demo={demo} onToggleDemo={() => setDemo(d => !d)}
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
-        onAddWidget={inst => addWidget('main', placeBottom(inst as WidgetInstance))}
+        onAddWidget={inst => addWidget('main', placeBottom(inst))}
         onPreviewOnBoard={p => setPreview(placeBottom(p))} />
       </div>
     </>

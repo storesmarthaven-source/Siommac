@@ -83,7 +83,7 @@ export async function createPayrollRun(payload: CreatePayrollRunPayload): Promis
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'createPayrollRun',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to create payroll run.');
 }
@@ -143,7 +143,7 @@ export async function setHourlyRate(payload: SetHourlyRatePayload): Promise<void
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'setHourlyRate',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to set hourly rate.');
 }

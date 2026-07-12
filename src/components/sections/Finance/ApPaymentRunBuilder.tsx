@@ -25,7 +25,7 @@ import {
 import { openActionModal } from '@/components/common/actions';
 import { money } from './hrfinFormat';
 
-const METHODS: Array<{ value: ApPaymentMethod; label: string }> = [
+const METHODS: { value: ApPaymentMethod; label: string }[] = [
   { value: 'eft', label: 'EFT' }, { value: 'ach', label: 'ACH' },
   { value: 'wire', label: 'Wire Transfer' }, { value: 'cheque', label: 'Cheque' },
   { value: 'cash', label: 'Cash' }, { value: 'card', label: 'Card' },

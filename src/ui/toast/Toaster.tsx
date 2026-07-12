@@ -147,7 +147,7 @@ function ToasterInner({ toasts }: ToasterInnerProps) {
 
   return (
     <section
-      ref={containerRef as any}
+      ref={containerRef}
       className="siomac-toaster"
       aria-label="Notifications"
       aria-relevant="additions removals"

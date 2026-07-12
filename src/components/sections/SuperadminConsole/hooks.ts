@@ -34,7 +34,7 @@ export function useConsoleUsers(enabled: boolean) {
     queryFn:  async () => {
       const res = await listUsersApi();
       if (!res.success || !res.users) throw new Error(res.message ?? 'Failed to load users');
-      return res.users as ConsoleUser[];
+      return res.users;
     },
   });
 }
@@ -47,7 +47,7 @@ export function useUserPermissions(userId: string | null) {
     queryFn:  async () => {
       const res = await getUserPermissionsApi(userId!);
       if (!res.success) throw new Error(res.message ?? 'Failed to load permissions');
-      return (res.permissions ?? []) as UserPermissionRow[];
+      return (res.permissions ?? []);
     },
   });
 }
@@ -93,7 +93,7 @@ export function useActiveSessions(enabled: boolean) {
     queryFn: async () => {
       const res = await getActiveSessionsApi();
       if (!res.success) throw new Error(res.message ?? 'Failed to load sessions');
-      return (res.sessions ?? []) as ActiveSession[];
+      return (res.sessions ?? []);
     },
   });
 }
@@ -143,7 +143,7 @@ export function useRoles(enabled: boolean) {
     queryFn: async () => {
       const res = await listRolesApi();
       if (!res.success || !res.roles) throw new Error(res.message ?? 'Failed to load roles');
-      return res.roles as RoleRow[];
+      return res.roles;
     },
   });
 }
@@ -156,7 +156,7 @@ export function useRolePermissions(roleName: string | null) {
     queryFn: async () => {
       const res = await getRolePermissionsApi(roleName!);
       if (!res.success) throw new Error(res.message ?? 'Failed to load role permissions');
-      return (res.permissions ?? []) as string[];
+      return (res.permissions ?? []);
     },
   });
 }
@@ -229,7 +229,7 @@ export function usePermissionApprovals(status?: ApprovalStatus) {
     queryFn: async () => {
       const res = await listApprovalsApi(status);
       if (!res.success) throw new Error(res.message ?? 'Failed to load approvals');
-      return (res.approvals ?? []) as PermissionApproval[];
+      return (res.approvals ?? []);
     },
   });
 }

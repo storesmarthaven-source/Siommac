@@ -48,7 +48,7 @@ async function _loadSentry(): Promise<void> {
     // The string variable form prevents TypeScript from resolving the module
     // at compile time while Vite's @vite-ignore comment suppresses the warning.
     const pkg = '@sentry/browser';
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
+     
     const Sentry = await (
       // Vite resolves this as an external dynamic import at runtime
       import(/* @vite-ignore */ pkg)

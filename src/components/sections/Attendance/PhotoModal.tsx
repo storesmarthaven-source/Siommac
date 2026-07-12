@@ -56,8 +56,8 @@ function PhotoPane({
               cursor:       'pointer',
               transition:   'transform 0.15s ease',
             }}
-            onMouseOver={(e) => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1.02)'; }}
-            onMouseOut={(e)  => { (e.currentTarget as HTMLImageElement).style.transform = 'scale(1)'; }}
+            onMouseOver={(e) => { (e.currentTarget).style.transform = 'scale(1.02)'; }}
+            onMouseOut={(e)  => { (e.currentTarget).style.transform = 'scale(1)'; }}
           />
         </a>
       ) : (

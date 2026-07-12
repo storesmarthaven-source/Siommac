@@ -69,11 +69,11 @@ export const orgKeys = {
 // ── Queries ─────────────────────────────────────────────────────────────────────
 
 export function useOrgUnits() { return useQuery({ queryKey: orgKeys.tree, queryFn: () => hrOrganizationApi.listOrgUnits() }); }
-export function useOrgUnit(unitId: string | null) { return useQuery({ queryKey: orgKeys.unit(unitId ?? ''), queryFn: () => hrOrganizationApi.getOrgUnit(unitId as string), enabled: !!unitId }); }
+export function useOrgUnit(unitId: string | null) { return useQuery({ queryKey: orgKeys.unit(unitId ?? ''), queryFn: () => hrOrganizationApi.getOrgUnit(unitId!), enabled: !!unitId }); }
 export function useOrgStats() { return useQuery({ queryKey: orgKeys.stats, queryFn: () => hrOrganizationApi.getStats() }); }
 export function useOrgHealth() { return useQuery({ queryKey: orgKeys.health, queryFn: () => hrOrganizationApi.getHealth() }); }
 export function usePositions() { return useQuery({ queryKey: orgKeys.positions, queryFn: () => hrOrganizationApi.listPositions() }); }
-export function usePosition(positionId: string | null) { return useQuery({ queryKey: orgKeys.position(positionId ?? ''), queryFn: () => hrOrganizationApi.getPosition(positionId as string), enabled: !!positionId }); }
+export function usePosition(positionId: string | null) { return useQuery({ queryKey: orgKeys.position(positionId ?? ''), queryFn: () => hrOrganizationApi.getPosition(positionId!), enabled: !!positionId }); }
 export function useCostCenters() { return useQuery({ queryKey: orgKeys.costCenters, queryFn: () => hrOrganizationApi.listCostCenters() }); }
 export function useOrgChangeRequests(args: OrgChangeListArgs = {}) {
   return useQuery({ queryKey: [...orgKeys.changeRequests, args], queryFn: () => hrOrganizationApi.listChangeRequests(args) });

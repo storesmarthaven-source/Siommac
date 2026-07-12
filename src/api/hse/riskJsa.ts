@@ -121,8 +121,8 @@ export interface RiskJsaSummary {
   openJsa:                 number;
   riskReductionPct:        number;
   highRiskQueue:           HazardRow[];
-  recentHighRisk:          Array<{ id: string; ref: string; title: string; category: string; initial_score: number; risk_level: RiskLevel }>;
-  overdueAssessmentsDetail: Array<{ id: string; ref: string; title: string; review_due_at: string; status: string }>;
+  recentHighRisk:          { id: string; ref: string; title: string; category: string; initial_score: number; risk_level: RiskLevel }[];
+  overdueAssessmentsDetail: { id: string; ref: string; title: string; review_due_at: string; status: string }[];
 }
 
 export interface ControlRow {
@@ -191,12 +191,12 @@ export interface CreateHazardArgs extends Record<string, unknown> {
   residualSeverity?:   number | null;
   status?:             'draft' | 'registered';
   reviewDueAt?:        string | null;
-  controls?: Array<{
+  controls?: {
     description:  string;
     controlType?: string;
     ownerUserId?: string | null;
     dueAt?:       string | null;
-  }>;
+  }[];
 }
 
 export function useCreateHazard() {
@@ -312,7 +312,7 @@ export interface CreateAssessmentArgs extends Record<string, unknown> {
   ownerUserId?:    string | null;
   reviewCycle?:    string;
   reviewDueAt?:    string | null;
-  hazards?: Array<{
+  hazards?: {
     hazardId?:           string | null;
     hazardDescription?:  string | null;
     category?:           string | null;
@@ -321,7 +321,7 @@ export interface CreateAssessmentArgs extends Record<string, unknown> {
     residualLikelihood?: number | null;
     residualSeverity?:   number | null;
     notes?:              string | null;
-  }>;
+  }[];
 }
 
 export function useCreateAssessment() {
@@ -376,7 +376,7 @@ export interface JsaStepHazard {
   initialSeverity?:    number | null;
   residualLikelihood?: number | null;
   residualSeverity?:   number | null;
-  controls?:           Array<{ description: string; controlType?: string }>;
+  controls?:           { description: string; controlType?: string }[];
 }
 
 export interface JsaStep {
@@ -403,20 +403,20 @@ export interface CreateJsaArgs extends Record<string, unknown> {
   /** Source RA id when this JSA was generated from a risk assessment. */
   linkedRiskAssessmentId?: string | null;
   steps?:         JsaStep[];
-  ppeItems?: Array<{ ppeItem: string; required?: boolean; notes?: string | null }>;
-  trainingLinks?: Array<{
+  ppeItems?: { ppeItem: string; required?: boolean; notes?: string | null }[];
+  trainingLinks?: {
     requirementDescription:  string;
     certificationRequired?:  boolean;
     competencyVerification?: boolean;
     notes?:                  string | null;
-  }>;
-  crewMembers?: Array<{
+  }[];
+  crewMembers?: {
     userId?:             string | null;
     crewName:            string;
     roleTitle?:          string | null;
     required?:           boolean;
     competencyVerified?: boolean;
-  }>;
+  }[];
 }
 
 export interface JsaCrewMember {
@@ -734,7 +734,7 @@ export interface WorkflowTemplate {
   name:        string;
   description: string;
   is_active:   boolean;
-  definition:  { steps?: Array<{ key: string; label: string; role?: string; action?: string }> };
+  definition:  { steps?: { key: string; label: string; role?: string; action?: string }[] };
   created_at:  string;
 }
 

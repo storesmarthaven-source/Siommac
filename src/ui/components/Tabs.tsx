@@ -17,7 +17,7 @@ export interface TabDef<K extends string = string> {
 }
 
 interface TabsProps<K extends string> {
-  tabs: ReadonlyArray<TabDef<K>>;
+  tabs: readonly TabDef<K>[];
   active: K;
   onChange: (key: K) => void;
   counts?: Partial<Record<K, number>>;

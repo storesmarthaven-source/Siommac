@@ -158,7 +158,7 @@ export const SiomacDB = {
    */
   async warmSwr(): Promise<void> {
     const db = await _openDB();
-    type SWRGlobal = { _cache: Map<string, { data: unknown; ts: number }> };
+    interface SWRGlobal { _cache: Map<string, { data: unknown; ts: number }> }
     const swrGlobal = (window as unknown as { swr?: SWRGlobal }).swr;
     if (!db || !swrGlobal) return;
     return new Promise(resolve => {
@@ -166,7 +166,7 @@ export const SiomacDB = {
         const tx  = db.transaction(STORE, 'readonly');
         const req = tx.objectStore(STORE).getAll();
         req.onsuccess = (e) => {
-          const rows = (e.target as IDBRequest<Array<{ key: string; data: unknown; ts: number }>>).result ?? [];
+          const rows = (e.target as IDBRequest<{ key: string; data: unknown; ts: number }[]>).result ?? [];
           let warmed = 0;
           rows.forEach(row => {
             const existing = swrGlobal._cache.get(row.key);
@@ -236,7 +236,7 @@ export const SwCacheManager = {
   clearAll(): void {
     _sendSW({ type: 'CLEAR_ALL_CACHES' });
     void SiomacDB.clearAll();
-    type SWRGlobal = { clear: (key?: string) => void; _cache: Map<string, unknown> };
+    interface SWRGlobal { clear: (key?: string) => void; _cache: Map<string, unknown> }
     const swrGlobal = (window as unknown as { swr?: SWRGlobal }).swr;
     if (swrGlobal) {
       swrGlobal.clear();
@@ -279,11 +279,11 @@ export const SwCacheManager = {
 // DOMContentLoaded (api.js loads synchronously after this module in the chain).
 
 function _patchSwrPersistence(): boolean {
-  type SWRGlobal = {
+  interface SWRGlobal {
     set:    (key: string, data: unknown) => void;
     clear:  (key?: string) => void;
     _cache: Map<string, { data: unknown; ts: number }>;
-  };
+  }
   const swrGlobal = (window as unknown as { swr?: SWRGlobal }).swr;
   if (!swrGlobal) return false;
 
@@ -320,5 +320,5 @@ if (!_patchSwrPersistence()) {
 
 
 // ── 4. Register globals so app.js keeps working unchanged ────────────────────
-(window as unknown as Record<string, unknown>)['SiomacDB']       = SiomacDB;
-(window as unknown as Record<string, unknown>)['SwCacheManager'] = SwCacheManager;
+(window as unknown as Record<string, unknown>).SiomacDB       = SiomacDB;
+(window as unknown as Record<string, unknown>).SwCacheManager = SwCacheManager;

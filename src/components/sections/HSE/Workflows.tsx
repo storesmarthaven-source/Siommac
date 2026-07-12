@@ -641,12 +641,12 @@ function HandoffsTab(): VNode {
 
 // ── Wizard tab ────────────────────────────────────────────────────────────────
 
-type SeededTemplate = {
+interface SeededTemplate {
   id: string; label: string; sourceModule: string; defaultPriority: string;
-  approvalRoute: Array<{ role: string; label: string }>;
-  evidence: Array<{ key: string; label: string; required: boolean }>;
-  handoffsOnApproval: Array<{ target: string; summary: string }>;
-};
+  approvalRoute: { role: string; label: string }[];
+  evidence: { key: string; label: string; required: boolean }[];
+  handoffsOnApproval: { target: string; summary: string }[];
+}
 
 const SEEDED_TEMPLATES: SeededTemplate[] = [
   {

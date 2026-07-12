@@ -32,7 +32,7 @@ export interface StatTableProps<T> {
   toolbarLeft?: ComponentChildren;
   /** Primary / secondary actions rendered at the far right of the toolbar. */
   toolbarRight?: ComponentChildren;
-  columns: ReadonlyArray<StatColumn<T>>;
+  columns: readonly StatColumn<T>[];
   rows: T[];
   rowKey: (row: T) => string;
   onRowClick?: (row: T) => void;

@@ -21,7 +21,7 @@ export function reducedMotion(): boolean {
 }
 
 // motion's controls type varies across entrypoints; we only ever call .stop().
-type Stoppable = { stop?: () => void };
+interface Stoppable { stop?: () => void }
 const stop = (c: unknown): void => { try { (c as Stoppable)?.stop?.(); } catch { /* already done */ } };
 
 export interface MountRevealOpts {

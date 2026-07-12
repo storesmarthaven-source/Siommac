@@ -22,7 +22,7 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type JsaTabKey = 'overview' | 'steps' | 'ppe' | 'training' | 'crew' | 'files' | 'timeline';
 
-const JSA_TABS: ReadonlyArray<TabDef<JsaTabKey>> = [
+const JSA_TABS: readonly TabDef<JsaTabKey>[] = [
   { key: 'overview',  label: 'Overview'  },
   { key: 'steps',     label: 'Job Steps' },
   { key: 'ppe',       label: 'PPE'       },
@@ -142,7 +142,7 @@ function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
   }
   return (
     <div style={{ display: 'grid', gap: '10px' }}>
-      {(steps as Array<Record<string, unknown>>).map((s, i) => (
+      {(steps as Record<string, unknown>[]).map((s, i) => (
         <div
           key={i}
           style={{
@@ -153,38 +153,38 @@ function JsaStepsTab({ steps }: { steps: unknown[] }): VNode {
           }}
         >
           <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.72rem', color: 'var(--siomac-navy)', marginBottom: '4px' }}>
-            Step {s['step_number'] as number}
+            Step {s.step_number as number}
           </div>
           <div style={{ fontSize: '0.82rem', fontWeight: 600, marginBottom: '4px' }}>
-            {s['task_step'] as string}
+            {s.task_step as string}
           </div>
           {/* Nested per-step hazards (each with its controls) */}
-          {((s['hazards'] as Array<Record<string, unknown>>) ?? []).map((h, hi) => (
+          {((s.hazards as Record<string, unknown>[]) ?? []).map((h, hi) => (
             <div key={hi} style={{ marginTop: '6px', paddingLeft: '8px', borderLeft: '2px solid var(--border)' }}>
               <div style={{ fontSize: '0.76rem', color: 'var(--color-danger)', display: 'flex', alignItems: 'center', gap: '6px' }}>
                 <i class="fas fa-triangle-exclamation" />
-                <span style={{ flex: 1 }}>{h['description'] as string}</span>
-                {h['initial_score'] != null && <RiskScorePill score={h['initial_score'] as number} />}
+                <span style={{ flex: 1 }}>{h.description as string}</span>
+                {h.initial_score != null && <RiskScorePill score={h.initial_score as number} />}
               </div>
-              {((h['controls'] as Array<Record<string, unknown>>) ?? []).map((c, ci) => (
+              {((h.controls as Record<string, unknown>[]) ?? []).map((c, ci) => (
                 <div key={ci} style={{ fontSize: '0.73rem', color: 'var(--color-success)', marginTop: '2px', paddingLeft: '14px' }}>
                   <i class="fas fa-shield-halved" style={{ marginRight: '4px' }} />
-                  {c['description'] as string} <span style={{ color: 'var(--text-muted)' }}>· {(c['control_type'] as string)?.replace(/_/g, ' ')}</span>
+                  {c.description as string} <span style={{ color: 'var(--text-muted)' }}>· {(c.control_type as string)?.replace(/_/g, ' ')}</span>
                 </div>
               ))}
             </div>
           ))}
           {/* Legacy single-hazard fallback */}
-          {!((s['hazards'] as unknown[])?.length) && s['hazard_description'] && (
+          {!((s.hazards as unknown[])?.length) && s.hazard_description && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-danger)', marginTop: '3px' }}>
               <i class="fas fa-triangle-exclamation" style={{ marginRight: '4px' }} />
-              {s['hazard_description'] as string}
+              {s.hazard_description as string}
             </div>
           )}
-          {!((s['hazards'] as unknown[])?.length) && s['controls_summary'] && (
+          {!((s.hazards as unknown[])?.length) && s.controls_summary && (
             <div style={{ fontSize: '0.75rem', color: 'var(--color-success)', marginTop: '3px' }}>
               <i class="fas fa-shield-alt" style={{ marginRight: '4px' }} />
-              {s['controls_summary'] as string}
+              {s.controls_summary as string}
             </div>
           )}
         </div>
@@ -199,7 +199,7 @@ function JsaPpeTab({ ppe }: { ppe: unknown[] }): VNode {
   }
   return (
     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
-      {(ppe as Array<Record<string, unknown>>).map((p, i) => (
+      {(ppe as Record<string, unknown>[]).map((p, i) => (
         <div
           key={i}
           style={{
@@ -213,7 +213,7 @@ function JsaPpeTab({ ppe }: { ppe: unknown[] }): VNode {
           }}
         >
           <i class="fas fa-check-circle" style={{ color: 'var(--color-success)', flexShrink: 0 }} />
-          <span style={{ fontWeight: 500 }}>{p['ppe_item'] as string}</span>
+          <span style={{ fontWeight: 500 }}>{p.ppe_item as string}</span>
         </div>
       ))}
     </div>
@@ -226,7 +226,7 @@ function JsaTrainingTab({ training }: { training: unknown[] }): VNode {
   }
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(training as Array<Record<string, unknown>>).map((t, i) => (
+      {(training as Record<string, unknown>[]).map((t, i) => (
         <div
           key={i}
           style={{
@@ -237,13 +237,13 @@ function JsaTrainingTab({ training }: { training: unknown[] }): VNode {
           }}
         >
           <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
-            {(t['requirement_description'] ?? t['requirementDescription']) as string}
+            {(t.requirement_description ?? t.requirementDescription) as string}
           </div>
           <div style={{ display: 'flex', gap: '10px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            {(t['certification_required'] ?? t['certificationRequired']) && (
+            {(t.certification_required ?? t.certificationRequired) && (
               <span><i class="fas fa-certificate" style={{ marginRight: '3px' }} />Certification required</span>
             )}
-            {(t['competency_verification'] ?? t['competencyVerification']) && (
+            {(t.competency_verification ?? t.competencyVerification) && (
               <span><i class="fas fa-clipboard-check" style={{ marginRight: '3px' }} />Competency verification</span>
             )}
           </div>
@@ -298,7 +298,7 @@ function JsaTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
   }
   return (
     <div>
-      {(timeline as Array<Record<string, unknown>>).map((e, i) => (
+      {(timeline as Record<string, unknown>[]).map((e, i) => (
         <div
           key={i}
           style={{
@@ -314,10 +314,10 @@ function JsaTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
           />
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-              {(e['event_type'] as string).replace(/\./g, ' ')}
+              {(e.event_type as string).replace(/\./g, ' ')}
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              {new Date(e['created_at'] as string).toLocaleString()}
+              {new Date(e.created_at as string).toLocaleString()}
             </div>
           </div>
         </div>

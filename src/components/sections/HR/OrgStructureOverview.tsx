@@ -31,7 +31,7 @@ import type {
 import './onboardingCase.css';
 import './orgStructure.css';
 
-type Opt = { value: string; label: string };
+interface Opt { value: string; label: string }
 const ORG_UNIT_TYPES: OrgUnitType[] = ['company', 'division', 'department', 'team', 'crew', 'site_department'];
 /** Union-aware toast: applied vs held for approval (Phase B). */
 function toastResult(res: OrgMutationResult, appliedMsg: string): void {
@@ -45,7 +45,7 @@ function ImpactModal({ open, title, impact, confirmLabel, confirmDisabled, busy,
   open: boolean; title: string; impact: OrgChangeImpactSummary | null;
   confirmLabel: string; confirmDisabled: boolean; busy: boolean; onConfirm: () => void; onClose: () => void;
 }): VNode {
-  const rows: Array<[string, number]> = impact ? ([
+  const rows: [string, number][] = impact ? ([
     ['Employees affected', impact.affectedEmployees],
     ['Positions affected', impact.affectedPositions],
     ['Child units affected', impact.affectedChildUnits],
@@ -53,7 +53,7 @@ function ImpactModal({ open, title, impact, confirmLabel, confirmDisabled, busy,
     ['Active offboarding cases', impact.affectedOffboardingCases],
     ['Pending change requests', impact.affectedPendingTransfers],
     ['Finance references', impact.affectedFinanceReferences],
-  ] as Array<[string, number]>).filter(([, n]) => n > 0) : [];
+  ] as [string, number][]).filter(([, n]) => n > 0) : [];
   return (
     <Modal open={open} title={title} icon="fa-triangle-exclamation" onClose={onClose}
       onSubmit={onConfirm} submitLabel={confirmLabel} submitDisabled={confirmDisabled || busy}>
@@ -144,7 +144,7 @@ function UnitModal({ open, editing, defaultParentId, units, siteOpts, ccOpts, pe
   );
   const codeTrim   = f.code.trim();
   const codeClash  = codeTrim ? units.some(u => u.id !== editing?.id && (u.code ?? '').toLowerCase() === codeTrim.toLowerCase()) : false;
-  const typeInfo   = UNIT_TYPE_INFO[f.orgUnitType as OrgUnitType];
+  const typeInfo   = UNIT_TYPE_INFO[f.orgUnitType];
   const inheritSite = !f.siteId && parentUnit?.siteName ? parentUnit.siteName : null;
   const inheritCc   = !f.costCenterId && parentUnit?.costCenterName ? parentUnit.costCenterName : null;
   const previewName = f.name.trim() || 'New unit';
@@ -155,13 +155,13 @@ function UnitModal({ open, editing, defaultParentId, units, siteOpts, ccOpts, pe
       if (editing) {
         const res = await update.mutateAsync({
           unitId: editing.id, expectedUpdatedAt: editing.updatedAt, name: f.name.trim(), code: f.code.trim() || null,
-          orgUnitType: f.orgUnitType as OrgUnitType, siteId: f.siteId || null, managerId: f.managerId || null,
+          orgUnitType: f.orgUnitType, siteId: f.siteId || null, managerId: f.managerId || null,
           costCenterId: f.costCenterId || null, description: f.description.trim() || null,
         });
         toastResult(res, 'Org unit updated');
       } else {
         await create.mutateAsync({
-          name: f.name.trim(), code: f.code.trim() || null, orgUnitType: f.orgUnitType as OrgUnitType,
+          name: f.name.trim(), code: f.code.trim() || null, orgUnitType: f.orgUnitType,
           parentId: defaultParentId, siteId: f.siteId || null, managerId: f.managerId || null,
           costCenterId: f.costCenterId || null, description: f.description.trim() || null,
         });
@@ -314,7 +314,7 @@ function PositionModal({ open, editing, positions, unitOpts, siteOpts, peopleOpt
       onClose();
     } catch (e) { toast(e instanceof Error ? e.message : 'Failed to save position'); }
   }
-  const reportsToOpts = positionOpts.filter(o => !editing || o.value !== editing.id);
+  const reportsToOpts = positionOpts.filter(o => o.value !== editing?.id);
   const nameFrom = (opts: Opt[], id: string): string | undefined => (id ? opts.find(o => o.value === id)?.label : undefined);
   const keyTrim = f.positionKey.trim();
   const duplicateKey = !editing && keyTrim ? positions.some(p => p.positionKey.toLowerCase() === keyTrim.toLowerCase()) : false;
@@ -559,7 +559,7 @@ export function OrgStructureOverview(): VNode {
   // ── inner render helpers (closures over state) ──
   function StatRow(): VNode {
     const s = statsQ.data;
-    const cells: Array<[string, number | string]> = [
+    const cells: [string, number | string][] = [
       ['Org units', s?.activeUnitCount ?? 0], ['Positions', s?.activePositionCount ?? 0],
       ['Filled / budgeted', s ? `${s.filledHeadcount} / ${s.budgetedHeadcount}` : '—'],
       ['Cost centres', s?.costCenterCount ?? 0], ['No unit', s?.employeesWithoutUnit ?? 0], ['No supervisor', s?.employeesWithoutSupervisor ?? 0],

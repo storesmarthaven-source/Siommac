@@ -32,11 +32,11 @@ export interface DialogLivePreview {
   /** Short glyph text ("POS") or a font-awesome class fragment via the icon slot. */
   icon?: string;
   badges?: DialogPreviewBadge[];
-  meta?: Array<{
+  meta?: {
     label: string;
     value: string | number | null | undefined;
     tone?: DialogTone;
-  }>;
+  }[];
 }
 
 export interface DialogContextMetric {

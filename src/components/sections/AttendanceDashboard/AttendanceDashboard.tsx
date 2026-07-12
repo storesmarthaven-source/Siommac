@@ -80,13 +80,13 @@ function getCurrentLocation(): Promise<LocationData> {
 
 function getAppStateUsername(): string {
   const win  = window as unknown as Record<string, unknown>;
-  const AS   = win['AppState'] as { get?: (k: string) => string } | undefined;
+  const AS   = win.AppState as { get?: (k: string) => string } | undefined;
   return AS?.get?.('currentUser') ?? '';
 }
 
 function getAppStateUserId(): string {
   const win = window as unknown as Record<string, unknown>;
-  const AS  = win['AppState'] as { get?: (k: string) => string } | undefined;
+  const AS  = win.AppState as { get?: (k: string) => string } | undefined;
   return AS?.get?.('currentUserId') ?? '';
 }
 
@@ -309,7 +309,7 @@ function CameraModal({ action, sites, onSuccess, onClose }: CameraModalProps) {
   function handleCapture() {
     const video  = videoRef.current;
     const canvas = canvasRef.current;
-    if (!video || video.readyState !== 4 || !canvas) {
+    if (video?.readyState !== 4 || !canvas) {
       setError('Camera is not ready. Please wait a moment.');
       return;
     }
@@ -537,7 +537,7 @@ export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
       if (target.closest('#checkOutBtn')) { e.preventDefault(); setModalAction('CheckOut'); }
       if (target.closest('#viewHistoryBtn')) {
         e.preventDefault();
-        const nav = (window as unknown as Record<string, unknown>)['Nav'] as { showSection?: (id: string) => void } | undefined;
+        const nav = (window as unknown as Record<string, unknown>).Nav as { showSection?: (id: string) => void } | undefined;
         nav?.showSection?.('s-emp-history');
       }
     }
@@ -562,7 +562,7 @@ export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
     }
 
     // Show success popup via cpop (legacy SweetAlert2 wrapper still on window)
-    const cpop = (window as unknown as Record<string, unknown>)['cpop'] as {
+    const cpop = (window as unknown as Record<string, unknown>).cpop as {
       fire?: (opts: Record<string, unknown>) => void;
     } | undefined;
     const actionText  = modalAction === 'CheckIn' ? 'Check In' : 'Check Out';
@@ -582,8 +582,8 @@ export function AttendanceDashboard({ username }: AttendanceDashboardProps) {
 
     // Notify legacy LiveMap / Nav (still on window)
     const win = window as unknown as Record<string, unknown>;
-    const LM  = win['LiveMap']  as { loadLiveAttendance?: () => void } | undefined;
-    const Nav = win['Nav']      as { _scheduleHdrBadgeSync?: () => void } | undefined;
+    const LM  = win.LiveMap  as { loadLiveAttendance?: () => void } | undefined;
+    const Nav = win.Nav      as { _scheduleHdrBadgeSync?: () => void } | undefined;
     LM?.loadLiveAttendance?.();
     Nav?._scheduleHdrBadgeSync?.();
   }

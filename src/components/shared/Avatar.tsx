@@ -122,7 +122,7 @@ export function Avatar({
     return (
       <span class={`siomac-avatar ${className}`} style={baseStyle} aria-label={name}>
         <img
-          src={src!}
+          src={src}
           alt={name}
           width={size}
           height={size}

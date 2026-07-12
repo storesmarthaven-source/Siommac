@@ -51,7 +51,7 @@ export function SetPasswordPage(): VNode {
         method: 'POST', headers: { 'content-type': 'application/json' },
         body: JSON.stringify({ args: { token, password: pw } }),
       });
-      const body = await res.json().catch(() => ({} as { success?: boolean; message?: string }));
+      const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.success) {
         setError(body?.message || 'Could not set your password. This link may have expired or already been used.');
         setBusy(false);

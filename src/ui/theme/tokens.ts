@@ -21,7 +21,7 @@ export interface TokenDef {
   label:    string;   // descriptive, says what it controls
   kind:     TokenKind;
   hint?:    string;
-  options?: ReadonlyArray<{ value: string; label: string }>;
+  options?: readonly { value: string; label: string }[];
 }
 
 export interface TokenGroup {

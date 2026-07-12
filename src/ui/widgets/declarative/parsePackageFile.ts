@@ -69,7 +69,7 @@ function htmlNodeToSpec(el: HTMLElement, css: string, js: string): DeclarativeWi
 function manifestFromJson(parsed: unknown, text: Record<string, string>, fallbackName: string): DeclarativePackageManifest {
   const m = parsed as Record<string, unknown> | null;
   if (!m || typeof m !== 'object' || !Array.isArray(m.widgets)) throw new Error('Invalid manifest: needs { name, widgets: [ … ] }.');
-  const widgets = (m.widgets as Array<Record<string, unknown>>).map(e => entryToSpec(e, text)).filter((w): w is DeclarativeWidgetSpec => !!w);
+  const widgets = (m.widgets as Record<string, unknown>[]).map(e => entryToSpec(e, text)).filter((w): w is DeclarativeWidgetSpec => !!w);
   if (!widgets.length) throw new Error('The manifest has no valid widgets.');
   return { name: typeof m.name === 'string' ? m.name : fallbackName, version: typeof m.version === 'string' ? m.version : '1.0.0', widgets };
 }

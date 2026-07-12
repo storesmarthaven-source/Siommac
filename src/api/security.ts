@@ -236,7 +236,7 @@ export function useRegisterPasskey() {
 
       // 3. Verify with server
       return apiPost<PasskeyRegisterVerifyResponse>('webauthn/register/verify', {
-        response: registrationResponse as unknown as Record<string, unknown>,
+        response: registrationResponse,
         ...(label ? { label } : {}),
       });
     },

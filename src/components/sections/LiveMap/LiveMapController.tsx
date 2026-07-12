@@ -28,17 +28,17 @@ import { useQuery }       from '@tanstack/preact-query';
 import { useSessionStore } from '@store/session';
 import { getLiveAttendance } from './api';
 
-type LiveMapGlobal = {
+interface LiveMapGlobal {
   plotLiveEmployees:    (rows: unknown[]) => void;
   renderLivePanel:      (rows: unknown[]) => void;
   focusLiveEmployee:    (userId: string)  => void;
   loadLiveAttendance:   () => void;
   initializeMap:        () => void;
   updateUserLocationOnMap: () => void;
-};
+}
 
 function getLiveMap(): LiveMapGlobal | null {
-  return (window as unknown as Record<string, unknown>)['LiveMap'] as LiveMapGlobal | null;
+  return (window as unknown as Record<string, unknown>).LiveMap as LiveMapGlobal | null;
 }
 
 // ── Employee list click delegation ────────────────────────────────────────────
@@ -51,9 +51,9 @@ function useLiveListClick() {
 
     const handler = (e: Event) => {
       const item = (e.target as Element).closest<HTMLElement>('[data-id]');
-      if (!item?.dataset['id']) return;
+      if (!item?.dataset.id) return;
       const lm = getLiveMap();
-      if (lm?.focusLiveEmployee) lm.focusLiveEmployee(item.dataset['id']);
+      if (lm?.focusLiveEmployee) lm.focusLiveEmployee(item.dataset.id);
     };
 
     section.addEventListener('click', handler);
@@ -82,9 +82,9 @@ export function LiveMapController() {
       if (!lm) return rows;
 
       // Update AppState so sites.js can read liveData directly
-      const appState = (window as unknown as Record<string, unknown>)['AppState'] as
+      const appState = (window as unknown as Record<string, unknown>).AppState as
         Record<string, Function> | undefined;
-      if (appState?.['set']) appState['set']('liveData', rows);
+      if (appState?.set) appState.set('liveData', rows);
 
       // Delegate map rendering to the Leaflet module
       if (lm.plotLiveEmployees) lm.plotLiveEmployees(rows);

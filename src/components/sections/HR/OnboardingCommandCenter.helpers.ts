@@ -17,16 +17,16 @@ export type OnboardingSurface =
 
 export type OnboardingSurfaceFilters = Record<string, string | number | boolean | string[] | undefined>;
 
-export type OnboardingCommandCenterProps = {
+export interface OnboardingCommandCenterProps {
   onOpenSurface?: (surface: OnboardingSurface, filters?: OnboardingSurfaceFilters) => void;
   onOpenCase?: (caseId: string) => void;
   onNewCase?: () => void;
   onToast?: (message: string) => void;
-};
+}
 
 export type DashboardMode = 'manager' | 'staff';
 
-export type KpiRow = {
+export interface KpiRow {
   key: string;
   title: string;
   subtitle: string;
@@ -37,9 +37,9 @@ export type KpiRow = {
   gaugePercent?: number;
   variant: 'gauge' | 'compact';
   icon: 'people' | 'play' | 'check' | 'clock' | 'percent' | 'document' | 'alert' | 'calendar' | 'upload' | 'handoffFailed';
-};
+}
 
-export type CaseRow = {
+export interface CaseRow {
   caseId: string;
   caseNo: string;
   employeeName: string;
@@ -58,9 +58,9 @@ export type CaseRow = {
   dueAt: string | null;
   startedAt: string | null;
   workerType: string;
-};
+}
 
-export type TaskRow = {
+export interface TaskRow {
   taskId: string;
   caseId: string;
   caseNo: string;
@@ -78,9 +78,9 @@ export type TaskRow = {
   isBlocking: boolean;
   requiresEvidence: boolean;
   priority: string;
-};
+}
 
-export type BlockerRow = {
+export interface BlockerRow {
   blockerId: string;
   caseId: string;
   caseNo: string;
@@ -95,9 +95,9 @@ export type BlockerRow = {
   ageDays: number;
   taskId: string | null;
   handoffId: string | null;
-};
+}
 
-export type DeadlineRow = {
+export interface DeadlineRow {
   id: string;
   month: string;
   day: string;
@@ -107,16 +107,16 @@ export type DeadlineRow = {
   dueLabel: string;
   tone?: BadgeTone;
   date: Date;
-};
+}
 
-export type ActivityRow = {
+export interface ActivityRow {
   id: string;
   title: string;
   actorName: string;
   occurredAt: string;
   tone: Tone;
   icon: 'check' | 'arrow' | 'plus' | 'alert' | 'shield';
-};
+}
 
 export function humanize(value: string): string {
   return value.replace(/[_.-]+/g, ' ').replace(/\b\w/g, c => c.toUpperCase());

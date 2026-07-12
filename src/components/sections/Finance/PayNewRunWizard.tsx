@@ -90,11 +90,11 @@ function Step0Fields({
           <input
             type="month"
             value={periodMonth}
-            onInput={e => setPeriodMonth((e.currentTarget as HTMLInputElement).value)}
-            style={{ ...FIELD_STYLE, borderColor: errors['periodMonth'] ? 'var(--danger)' : 'var(--hrfin-border)' }}
+            onInput={e => setPeriodMonth((e.currentTarget).value)}
+            style={{ ...FIELD_STYLE, borderColor: errors.periodMonth ? 'var(--danger)' : 'var(--hrfin-border)' }}
           />
-          {errors['periodMonth'] && (
-            <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors['periodMonth']}</span>
+          {errors.periodMonth && (
+            <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors.periodMonth}</span>
           )}
         </label>
 
@@ -103,7 +103,7 @@ function Step0Fields({
           <select
             value={payGroupId}
             onChange={e => {
-              const id = (e.currentTarget as HTMLSelectElement).value;
+              const id = (e.currentTarget).value;
               setPayGroupId(id);
               const g = groups.find(x => x.id === id);
               if (g) {
@@ -135,7 +135,7 @@ function Step0Fields({
           <select
             value={payFrequency}
             onChange={e => {
-              const v = (e.currentTarget as HTMLSelectElement).value;
+              const v = (e.currentTarget).value;
               setPayFrequency(v);
               setWeeksInPeriod(String(WEEKS_MAP[v] ?? 4.333));
             }}
@@ -150,12 +150,12 @@ function Step0Fields({
           <input
             type="number"
             value={weeksInPeriod}
-            onInput={e => setWeeksInPeriod((e.currentTarget as HTMLInputElement).value)}
+            onInput={e => setWeeksInPeriod((e.currentTarget).value)}
             min="0.5" max="5.5" step="0.001"
-            style={{ ...FIELD_STYLE, borderColor: errors['weeks'] ? 'var(--danger)' : 'var(--hrfin-border)' }}
+            style={{ ...FIELD_STYLE, borderColor: errors.weeks ? 'var(--danger)' : 'var(--hrfin-border)' }}
           />
-          {errors['weeks']
-            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors['weeks']}</span>
+          {errors.weeks
+            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors.weeks}</span>
             : <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Auto-set from frequency.</span>}
         </label>
       </div>
@@ -167,11 +167,11 @@ function Step0Fields({
           <input
             type="date"
             value={payDate}
-            onInput={e => setPayDate((e.currentTarget as HTMLInputElement).value)}
-            style={{ ...FIELD_STYLE, borderColor: errors['payDate'] ? 'var(--danger)' : 'var(--hrfin-border)' }}
+            onInput={e => setPayDate((e.currentTarget).value)}
+            style={{ ...FIELD_STYLE, borderColor: errors.payDate ? 'var(--danger)' : 'var(--hrfin-border)' }}
           />
-          {errors['payDate']
-            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors['payDate']}</span>
+          {errors.payDate
+            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors.payDate}</span>
             : <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Date employees are paid.</span>}
         </label>
 
@@ -180,11 +180,11 @@ function Step0Fields({
           <input
             type="date"
             value={cutOffDate}
-            onInput={e => setCutOffDate((e.currentTarget as HTMLInputElement).value)}
-            style={{ ...FIELD_STYLE, borderColor: errors['cutOffDate'] ? 'var(--danger)' : 'var(--hrfin-border)' }}
+            onInput={e => setCutOffDate((e.currentTarget).value)}
+            style={{ ...FIELD_STYLE, borderColor: errors.cutOffDate ? 'var(--danger)' : 'var(--hrfin-border)' }}
           />
-          {errors['cutOffDate']
-            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors['cutOffDate']}</span>
+          {errors.cutOffDate
+            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors.cutOffDate}</span>
             : <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Changes after this date excluded.</span>}
         </label>
       </div>
@@ -505,7 +505,7 @@ export function PayNewRunWizard({
   const [step, setStep]               = useState(0);
   const [periodMonth, setPeriodMonth] = useState('');
   const [payFrequency, setPayFreq]    = useState('monthly');
-  const [weeksInPeriod, setWeeks]     = useState(String(WEEKS_MAP['monthly']));
+  const [weeksInPeriod, setWeeks]     = useState(String(WEEKS_MAP.monthly));
   const [payGroup, setPayGroup]       = useState('');
   const [payGroupId, setPayGroupId]   = useState('');
   const [payDate, setPayDate]         = useState('');
@@ -515,15 +515,15 @@ export function PayNewRunWizard({
 
   const errors: Record<string, string> = {};
   if (step === 0) {
-    if (!periodMonth) errors['periodMonth'] = 'Pay month is required.';
+    if (!periodMonth) errors.periodMonth = 'Pay month is required.';
     const wk = parseFloat(weeksInPeriod);
-    if (isNaN(wk) || wk < 0.5 || wk > 5.5) errors['weeks'] = 'Weeks must be 0.5–5.5.';
+    if (isNaN(wk) || wk < 0.5 || wk > 5.5) errors.weeks = 'Weeks must be 0.5–5.5.';
     if (payDate && cutOffDate && payDate < cutOffDate) {
-      errors['payDate'] = 'Pay date is before cut-off date.';
+      errors.payDate = 'Pay date is before cut-off date.';
     }
   }
 
-  const canProceed = step !== 0 || (!!periodMonth && !errors['weeks'] && !errors['payDate']);
+  const canProceed = step !== 0 || (!!periodMonth && !errors.weeks && !errors.payDate);
   const isLastStep = step === STEP_LABELS.length - 1;
 
   async function handlePrimary(): Promise<void> {

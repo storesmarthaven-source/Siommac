@@ -122,7 +122,7 @@ export async function createSite(payload: CreateSitePayload): Promise<void> {
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'addProjectSite',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to create project site.');
 }
@@ -131,7 +131,7 @@ export async function updateSite(payload: UpdateSitePayload): Promise<void> {
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'updateProjectSite',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to update project site.');
 }
@@ -149,7 +149,7 @@ export async function assignSiteMembers(payload: AssignSiteMembersPayload): Prom
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'assignSiteEmployees',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to assign site members.');
 }

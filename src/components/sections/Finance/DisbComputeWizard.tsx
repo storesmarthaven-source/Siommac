@@ -167,7 +167,7 @@ function PaymentSettingsStep({
           <select
             class="hrfin-input"
             value={settings.currency}
-            onChange={e => onChange({ currency: (e.currentTarget as HTMLSelectElement).value })}
+            onChange={e => onChange({ currency: (e.currentTarget).value })}
           >
             {CURRENCIES.map(c => <option key={c} value={c}>{c}</option>)}
           </select>
@@ -179,7 +179,7 @@ function PaymentSettingsStep({
             type="date"
             class="hrfin-input"
             value={settings.effectiveDate}
-            onInput={e => onChange({ effectiveDate: (e.currentTarget as HTMLInputElement).value })}
+            onInput={e => onChange({ effectiveDate: (e.currentTarget).value })}
           />
         </label>
 
@@ -190,7 +190,7 @@ function PaymentSettingsStep({
             rows={3}
             placeholder="Internal notes for this disbursement…"
             value={settings.notes}
-            onInput={e => onChange({ notes: (e.currentTarget as HTMLTextAreaElement).value })}
+            onInput={e => onChange({ notes: (e.currentTarget).value })}
           />
         </label>
       </div>
@@ -346,7 +346,7 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
               label="Approved payroll run"
               value={runId}
               onChange={v => { setRunId(v); setErrors({}); }}
-              error={errors['runId'] ?? null}
+              error={errors.runId ?? null}
               required
               placeholder="Search approved / locked runs…"
             />
@@ -360,7 +360,7 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
           computeQ.isLoading
             ? <div class="hrfin-empty">Computing bank readiness…</div>
             : computeQ.error
-              ? <div class="hrfin-callout is-danger"><HrfinIcon name="alert" /><span>{(computeQ.error as Error).message}</span></div>
+              ? <div class="hrfin-callout is-danger"><HrfinIcon name="alert" /><span>{(computeQ.error).message}</span></div>
               : computed
                 ? <BankReadinessStep computed={computed} />
                 : <div class="hrfin-empty">No data available.</div>
@@ -373,7 +373,7 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
             settings={settings}
             onChange={patch => {
               setSettings(s => ({ ...s, ...patch }));
-              if (patch.effectiveDate) setErrors(e => { const n = { ...e }; delete n['effectiveDate']; return n; });
+              if (patch.effectiveDate) setErrors(e => { const n = { ...e }; delete n.effectiveDate; return n; });
             }}
           />
         )}

@@ -95,7 +95,7 @@ export function TicketDetail({ ticketId, onBack }: TicketDetailProps) {
   const role       = useSessionStore(s => s.role);
   const isAdmin    = role === 'admin' || role === 'manager';
 
-  const ticket = tickets.find(t => t.id === ticketId) as TicketRow | undefined;
+  const ticket = tickets.find(t => t.id === ticketId);
 
   const replyMut      = useSendReply(ticketId);
   const statusMut     = useUpdateStatus(ticketId);

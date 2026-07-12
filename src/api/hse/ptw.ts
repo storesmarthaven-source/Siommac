@@ -72,12 +72,12 @@ export interface PermitStats {
     total:        number;
     highRisk:     number;
     criticalAreas:number;
-    byType:       Array<{ type: string; count: number }>;
+    byType:       { type: string; count: number }[];
   };
   expiringSoon: {
     total:          number;
     withinTwoHours: number;
-    buckets:        Array<{ label: string; count: number }>;
+    buckets:        { label: string; count: number }[];
   };
   isolationReadiness: {
     percentage: number;
@@ -86,7 +86,7 @@ export interface PermitStats {
   };
   approvalBottlenecks: {
     total:   number;
-    byStage: Array<{ stage: string; count: number }>;
+    byStage: { stage: string; count: number }[];
   };
 }
 
@@ -560,7 +560,7 @@ export function useCreatePermitTemplate() {
     mutationFn: ({ hazards, controls, ...rest }: CreateTemplateArgs) =>
       apiPost<{ success: boolean; data: { id: string } }>(
         'hse/ptw/permit-templates/create',
-        { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) },
+        { ...rest, hazards: parseTextList(hazards), controls: parseTextList(controls) },
         { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),
@@ -573,7 +573,7 @@ export function useUpdatePermitTemplate() {
     mutationFn: ({ hazards, controls, ...rest }: UpdateTemplateArgs) =>
       apiPost<{ success: boolean }>(
         'hse/ptw/permit-templates/update',
-        { ...rest, hazards: parseTextList(hazards as string | undefined), controls: parseTextList(controls as string | undefined) },
+        { ...rest, hazards: parseTextList(hazards), controls: parseTextList(controls) },
         { retryable: false },
       ),
     onSuccess: () => void qc.invalidateQueries({ queryKey: ptwKeys.templates() }),

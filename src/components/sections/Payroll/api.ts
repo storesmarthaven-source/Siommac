@@ -32,7 +32,7 @@ export async function listPayrollRun(params: {
   department?: string | null;
   employeeIds?: string[] | null;
 }, signal?: AbortSignal): Promise<PayrollRunData> {
-  const res = await apiPost<RunPayrollResponse>('listPayrollRun', params as unknown as Record<string, unknown>, signal ? { signal } : undefined);
+  const res = await apiPost<RunPayrollResponse>('listPayrollRun', params, signal ? { signal } : undefined);
   if (!res.success || !res.data) throw new Error(res.message || 'Payroll run failed');
   return res.data;
 }
@@ -68,7 +68,7 @@ export async function updateEmployeePayroll(params: {
   healthSurchargeApplicable: boolean;
   taxResident:               boolean;
 }, signal?: AbortSignal): Promise<{ success: boolean; message?: string }> {
-  return apiPost<ApiResponse>('updateEmployeePayroll', params as unknown as Record<string, unknown>, signal ? { signal } : undefined);
+  return apiPost<ApiResponse>('updateEmployeePayroll', params, signal ? { signal } : undefined);
 }
 
 // ── Payroll approval ──────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export async function approvePayroll(params: {
   cycleFilter: string;
   approvedBy:  string;
 }, signal?: AbortSignal): Promise<{ success: boolean; message?: string }> {
-  return apiPost<ApiResponse>('approvePayroll', params as unknown as Record<string, unknown>, signal ? { signal } : undefined);
+  return apiPost<ApiResponse>('approvePayroll', params, signal ? { signal } : undefined);
 }
 
 // ── Payroll constants ─────────────────────────────────────────────────────────

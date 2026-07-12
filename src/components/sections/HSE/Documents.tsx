@@ -289,7 +289,7 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
     },
     {
       label: 'SDS Library', value: String(sds.length), sub: 'Chemicals registered on-site',
-      delta: `${expiredSds > 0 ? `${expiredSds} expired` : 'All current'}`, deltaUp: expiredSds > 0, color: '#60a5fa',
+      delta: expiredSds > 0 ? `${expiredSds} expired` : 'All current', deltaUp: expiredSds > 0, color: '#60a5fa',
       sparkPoints: [0, 0, 0, 0, 0, sds.length], sparkColor: '#60a5fa',
     },
     {

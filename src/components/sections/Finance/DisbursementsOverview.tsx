@@ -401,7 +401,7 @@ function LinesTab(): VNode {
             class="hrfin-input"
             style={{ width: 'auto', fontSize: 12 }}
             value={disbId ?? ''}
-            onChange={e => setSelectedDisbId((e.currentTarget as HTMLSelectElement).value || null)}
+            onChange={e => setSelectedDisbId((e.currentTarget).value || null)}
           >
             {disbursements.map(d => (
               <option key={d.id} value={d.id}>{d.disbursementNo} — {humanize(d.status)}</option>
@@ -525,9 +525,9 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
 
   const validate = (): boolean => {
     const e: Record<string, string> = {};
-    if (!form.employeeId) e['employeeId'] = 'Employee is required.';
-    if (!form.bankName.trim()) e['bankName'] = 'Bank name is required.';
-    if (form.accountNumber.replace(/\s/g, '').length < 4) e['accountNumber'] = 'Account number must be at least 4 digits.';
+    if (!form.employeeId) e.employeeId = 'Employee is required.';
+    if (!form.bankName.trim()) e.bankName = 'Bank name is required.';
+    if (form.accountNumber.replace(/\s/g, '').length < 4) e.accountNumber = 'Account number must be at least 4 digits.';
     setErrors(e);
     return Object.keys(e).length === 0;
   };
@@ -624,8 +624,8 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
               <EmployeePicker
                 label="Employee"
                 value={form.employeeId}
-                onChange={v => { setForm(f => ({ ...f, employeeId: v })); setErrors(e => { const n = { ...e }; delete n['employeeId']; return n; }); }}
-                error={errors['employeeId'] ?? null}
+                onChange={v => { setForm(f => ({ ...f, employeeId: v })); setErrors(e => { const n = { ...e }; delete n.employeeId; return n; }); }}
+                error={errors.employeeId ?? null}
                 required
               />
             </div>
@@ -635,9 +635,9 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 class="hrfin-input"
                 placeholder="e.g. Republic Bank"
                 value={form.bankName}
-                onInput={e => { setForm(f => ({ ...f, bankName: (e.currentTarget as HTMLInputElement).value })); setErrors(er => { const n = { ...er }; delete n['bankName']; return n; }); }}
+                onInput={e => { setForm(f => ({ ...f, bankName: (e.currentTarget).value })); setErrors(er => { const n = { ...er }; delete n.bankName; return n; }); }}
               />
-              {errors['bankName'] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors['bankName']}</span>}
+              {errors.bankName && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors.bankName}</span>}
             </label>
             <label>
               <span class="hrfin-wiz-label">Branch (optional)</span>
@@ -645,7 +645,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 class="hrfin-input"
                 placeholder="e.g. Port of Spain"
                 value={form.branch}
-                onInput={e => setForm(f => ({ ...f, branch: (e.currentTarget as HTMLInputElement).value }))}
+                onInput={e => setForm(f => ({ ...f, branch: (e.currentTarget).value }))}
               />
             </label>
             <label>
@@ -653,7 +653,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
               <select
                 class="hrfin-input"
                 value={form.accountType}
-                onChange={e => setForm(f => ({ ...f, accountType: (e.currentTarget as HTMLSelectElement).value as 'savings' | 'chequing' }))}
+                onChange={e => setForm(f => ({ ...f, accountType: (e.currentTarget).value as 'savings' | 'chequing' }))}
               >
                 <option value="savings">Savings</option>
                 <option value="chequing">Chequing</option>
@@ -665,9 +665,9 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 class="hrfin-input"
                 placeholder="Full account number"
                 value={form.accountNumber}
-                onInput={e => { setForm(f => ({ ...f, accountNumber: (e.currentTarget as HTMLInputElement).value })); setErrors(er => { const n = { ...er }; delete n['accountNumber']; return n; }); }}
+                onInput={e => { setForm(f => ({ ...f, accountNumber: (e.currentTarget).value })); setErrors(er => { const n = { ...er }; delete n.accountNumber; return n; }); }}
               />
-              {errors['accountNumber'] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors['accountNumber']}</span>}
+              {errors.accountNumber && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errors.accountNumber}</span>}
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>Stored masked — only last 4 digits visible.</span>
             </label>
             <label>
@@ -676,7 +676,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 class="hrfin-input"
                 placeholder="e.g. 001"
                 value={form.transitNumber}
-                onInput={e => setForm(f => ({ ...f, transitNumber: (e.currentTarget as HTMLInputElement).value }))}
+                onInput={e => setForm(f => ({ ...f, transitNumber: (e.currentTarget).value }))}
               />
               <span style={{ fontSize: 11, color: 'var(--muted)' }}>Branch routing/transit written into the direct-credit bank file.</span>
             </label>
@@ -686,7 +686,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 class="hrfin-input"
                 placeholder="e.g. 026009593"
                 value={form.routingNumber}
-                onInput={e => setForm(f => ({ ...f, routingNumber: (e.currentTarget as HTMLInputElement).value }))}
+                onInput={e => setForm(f => ({ ...f, routingNumber: (e.currentTarget).value }))}
               />
             </label>
             <label>
@@ -694,7 +694,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
               <select
                 class="hrfin-input"
                 value={form.verificationStatus}
-                onChange={e => setForm(f => ({ ...f, verificationStatus: (e.currentTarget as HTMLSelectElement).value as BankAccountFormState['verificationStatus'] }))}
+                onChange={e => setForm(f => ({ ...f, verificationStatus: (e.currentTarget).value as BankAccountFormState['verificationStatus'] }))}
               >
                 <option value="unverified">Unverified</option>
                 <option value="pending">Pending verification</option>
@@ -707,7 +707,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 type="checkbox"
                 id="isPrimary"
                 checked={form.isPrimary}
-                onChange={e => setForm(f => ({ ...f, isPrimary: (e.currentTarget as HTMLInputElement).checked }))}
+                onChange={e => setForm(f => ({ ...f, isPrimary: (e.currentTarget).checked }))}
               />
               <label for="isPrimary" style={{ fontSize: 13 }}>Set as primary (default) account</label>
             </div>
@@ -1069,7 +1069,7 @@ function ReportsTab(): VNode {
           class="hrfin-input"
           style={{ width: 'auto', fontSize: 12 }}
           value={statusFilter}
-          onChange={e => setStatusFilter((e.currentTarget as HTMLSelectElement).value as DisbursementStatus | '')}
+          onChange={e => setStatusFilter((e.currentTarget).value as DisbursementStatus | '')}
         >
           <option value="">All statuses</option>
           <option value="draft">Draft</option>
@@ -1098,7 +1098,7 @@ function ReportsTab(): VNode {
       columns={activeCols}
       exportFilename={exportFilename}
       loading={activeQ.isLoading}
-      error={activeQ.error ? (activeQ.error as Error).message : null}
+      error={activeQ.error ? (activeQ.error).message : null}
     />
   );
 }

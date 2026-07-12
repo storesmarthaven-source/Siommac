@@ -41,7 +41,7 @@ function callWin(name: string, ...args: unknown[]): void {
 export function NavController(): h.JSX.Element {
 
   useEffect(() => {
-    const cleanups: Array<() => void> = [];
+    const cleanups: (() => void)[] = [];
 
     // ── 1. Build sidebar / top-tabs from config ─────────────────────────────
     const role = getRole();
@@ -88,7 +88,7 @@ export function NavController(): h.JSX.Element {
     function onSidebarMenuClick(e: Event): void {
       const btn = (e.target as Element).closest<HTMLElement>('button[data-section]');
       if (btn) {
-        showSection(btn.dataset['section'] ?? '');
+        showSection(btn.dataset.section ?? '');
         setMobileOpen(false);
       }
     }
@@ -100,7 +100,7 @@ export function NavController(): h.JSX.Element {
 
     function onTopTabsClick(e: Event): void {
       const btn = (e.target as Element).closest<HTMLElement>('button[data-section]');
-      if (btn) showSection(btn.dataset['section'] ?? '');
+      if (btn) showSection(btn.dataset.section ?? '');
     }
     topTabs?.addEventListener('click', onTopTabsClick);
     cleanups.push(() => topTabs?.removeEventListener('click', onTopTabsClick));
@@ -173,7 +173,7 @@ export function NavController(): h.JSX.Element {
     function onPillActionClick(e: Event): void {
       const trigger = (e.target as Element).closest<HTMLElement>('[data-pill-action]');
       if (!trigger) return;
-      const kind = trigger.dataset['pillAction'] as HdrKind | undefined;
+      const kind = trigger.dataset.pillAction as HdrKind | undefined;
       if (kind !== 'notif' && kind !== 'msg' && kind !== 'ticket') return;
       e.stopPropagation();
       toggleHdrModal(trigger, kind);
@@ -244,7 +244,7 @@ export function NavController(): h.JSX.Element {
 
     // ── 13. Expose Nav shim on window ─────────────────────────────────────────
     //    Other scripts call window.Nav.buildSidebar etc. after login.
-    (window as unknown as Win)['Nav'] = {
+    (window as unknown as Win).Nav = {
       buildSidebar,
       buildTopTabs,
       showSection,
@@ -259,7 +259,7 @@ export function NavController(): h.JSX.Element {
     return () => {
       cleanups.forEach(fn => fn());
     };
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   }, []); // run once on mount
 
   return h(Fragment, null);

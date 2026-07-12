@@ -83,7 +83,7 @@ export async function updateSetting(
 ): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
     'updateSetting',
-    { key, value } as unknown as Record<string, unknown>,
+    { key, value },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? `Failed to save ${key}`);
@@ -124,7 +124,7 @@ export async function saveWorkHoursApi(
 ): Promise<void> {
   const res = await apiPost<{ success: boolean; message?: string }>(
     'saveWorkHours',
-    { start, end } as unknown as Record<string, unknown>,
+    { start, end },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Could not save work hours');
@@ -136,7 +136,7 @@ export async function uploadLogoApi(
 ): Promise<string> {
   const res = await apiPost<{ success: boolean; url?: string; message?: string }>(
     'uploadLogo',
-    { base64 } as unknown as Record<string, unknown>,
+    { base64 },
     signal ? { signal } : undefined,
   );
   if (!res.success) throw new Error(res.message ?? 'Upload failed');

@@ -72,7 +72,7 @@ export function PayWarningResolveDialog({
           </span>
           <textarea
             value={note}
-            onInput={e => setNote((e.currentTarget as HTMLTextAreaElement).value)}
+            onInput={e => setNote((e.currentTarget).value)}
             placeholder="Describe how this warning was resolved…"
             maxLength={500}
             rows={4}

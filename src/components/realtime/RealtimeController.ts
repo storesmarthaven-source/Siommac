@@ -164,5 +164,5 @@ export function initRealtime(): void {
 
 // ── Register on window so app.js can call unchanged ──────────────────────────
 
-(window as unknown as Record<string, unknown>)['_initRealtime']     = initRealtime;
-(window as unknown as Record<string, unknown>)['_teardownRealtime'] = teardownRealtime;
+(window as unknown as Record<string, unknown>)._initRealtime     = initRealtime;
+(window as unknown as Record<string, unknown>)._teardownRealtime = teardownRealtime;

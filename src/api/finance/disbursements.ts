@@ -43,14 +43,14 @@ export interface ComputedDisbursement {
   payrollRunId: string;
   totalAmount: number;
   employeeCount: number;
-  lines: Array<{
+  lines: {
     employeeId: string;
     bankAccountId: string | null;
     accountNumberMasked: string | null;
     bankName: string | null;
     netAmount: number;
     hasBankAccount: boolean;
-  }>;
+  }[];
   missingBankAccounts: string[];
 }
 
@@ -82,7 +82,7 @@ export interface DisbursementKpis {
   totalMtdAmount: number;
   missingBankAccountCount: number;
   failedLineCount: number;
-  trend: Array<{ month: string; total: number; count: number }>;
+  trend: { month: string; total: number; count: number }[];
 }
 
 export interface DisbursementReportRow {

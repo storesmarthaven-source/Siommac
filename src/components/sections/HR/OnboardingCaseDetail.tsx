@@ -386,7 +386,7 @@ export function OnboardingCaseDetail({
         demo={demo} onToggleDemo={() => setDemo(d => !d)}
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
-        onAddWidget={inst => addWidget(CASE_ZONE, placeBottom(inst as WidgetInstance))}
+        onAddWidget={inst => addWidget(CASE_ZONE, placeBottom(inst))}
         onPreviewOnBoard={p => setPreview(placeBottom(p))}
       />
 

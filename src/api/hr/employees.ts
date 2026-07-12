@@ -86,24 +86,24 @@ export interface HrStatutoryRow {
 
 export interface HrEmployeeDetail {
   employee: HrEmployeeRow & { supervisorName: string | null; departmentName: string | null };
-  statusHistory: Array<Record<string, unknown>>;
+  statusHistory: Record<string, unknown>[];
   currentAssignment: Record<string, unknown> | null;
   statutory: HrStatutoryRow | null;
   payrollReadiness: PayrollReadiness | null;
 }
 
 export interface HrDashboardStats {
-  active_workforce: { total: number; employees: number; contractors: number; trend: Array<{ period: string; count: number }> };
-  hr_work_queue:    { total: number; urgent: number; mix: Array<{ type: string; count: number }> };
+  active_workforce: { total: number; employees: number; contractors: number; trend: { period: string; count: number }[] };
+  hr_work_queue:    { total: number; urgent: number; mix: { type: string; count: number }[] };
   readiness:        { percent: number; payroll_ready: number; training_current: number; blocked: number };
-  exceptions:       { total: number; items: Array<{ type: string; count: number }> };
+  exceptions:       { total: number; items: { type: string; count: number }[] };
 }
 
 export interface HrWorkflowSummary {
   employee_id: string;
   open_count: number;
   urgent_count: number;
-  items: Array<{ workflow_id: string; workflow_no: string | null; workflow_type: string; current_step: string | null; status: string; due_at: string | null; urgent: boolean }>;
+  items: { workflow_id: string; workflow_no: string | null; workflow_type: string; current_step: string | null; status: string; due_at: string | null; urgent: boolean }[];
 }
 
 // ── Reads ─────────────────────────────────────────────────────────────────────
@@ -135,7 +135,7 @@ export interface HrEmployeePageFilter {
 
 export interface HrEmployeePageMeta {
   total: number; page: number; pageSize: number;
-  departments: Array<{ id: string; name: string }>;
+  departments: { id: string; name: string }[];
   statuses: string[]; employmentTypes: string[]; trainingStatuses: TrainingStatus[];
 }
 
@@ -172,7 +172,7 @@ export function useHrEmployee(employeeId: string | null) {
   return useRecordQuery<HrEmployeeDetail>({
     recordId: employeeId,
     queryKey: hrEmployeeKeys.detail(employeeId ?? ''),
-    queryFn:  (signal) => fetchHrEmployeeDetail(employeeId as string, signal),
+    queryFn:  (signal) => fetchHrEmployeeDetail(employeeId!, signal),
     getId:    d => d.employee.id,
     // INSTANT OPEN: seed from the register row we already hold (real data, not a
     // fake); the full detail (statutory / history / readiness) fills in on fetch.
@@ -265,7 +265,7 @@ export interface HrDocument {
 
 export interface HrTrainingSummary {
   total: number; current: number; dueSoon: number; expired: number; pending: number;
-  certificates: Array<{ status: string; expires_at: string | null; course_name: string }>;
+  certificates: { status: string; expires_at: string | null; course_name: string }[];
 }
 
 export function useHrAudit(employeeId: string | null) {

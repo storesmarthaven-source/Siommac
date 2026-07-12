@@ -123,13 +123,13 @@ export function TransfersOverview(): VNode {
 function summarizeChanges(r: TransferRequestRow): string {
   const rv = r.requestedValue as unknown as Record<string, unknown>;
   const parts: string[] = [];
-  if ('departmentId'  in rv && rv['departmentId']  != null) parts.push('Dept');
-  if ('siteId'        in rv && rv['siteId']        != null) parts.push('Site');
-  if ('positionId'    in rv && rv['positionId']    != null) parts.push('Position');
-  if ('supervisorId'  in rv && rv['supervisorId']  != null) parts.push('Supervisor');
-  if ('role'          in rv && rv['role']          != null) parts.push('Role');
-  if ('monthlySalary' in rv && rv['monthlySalary'] != null) parts.push('Salary');
-  if ('hourlyRate'    in rv && rv['hourlyRate']    != null) parts.push('Rate');
+  if ('departmentId'  in rv && rv.departmentId  != null) parts.push('Dept');
+  if ('siteId'        in rv && rv.siteId        != null) parts.push('Site');
+  if ('positionId'    in rv && rv.positionId    != null) parts.push('Position');
+  if ('supervisorId'  in rv && rv.supervisorId  != null) parts.push('Supervisor');
+  if ('role'          in rv && rv.role          != null) parts.push('Role');
+  if ('monthlySalary' in rv && rv.monthlySalary != null) parts.push('Salary');
+  if ('hourlyRate'    in rv && rv.hourlyRate    != null) parts.push('Rate');
   return parts.length ? parts.join(', ') : '—';
 }
 
@@ -189,7 +189,7 @@ function NewRequestModal({
   }
 
   const empName = peopleOpts.find(o => o.value === f.employeeId)?.label;
-  const changes: Array<{ label: string; value: string }> = [];
+  const changes: { label: string; value: string }[] = [];
   if (f.departmentId)  changes.push({ label: 'Department', value: f.departmentId });
   if (f.siteId)        changes.push({ label: 'Site', value: f.siteId });
   if (f.positionId)    changes.push({ label: 'Position', value: f.positionId });

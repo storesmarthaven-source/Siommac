@@ -216,7 +216,7 @@ export function AcUsersPage(): VNode {
            : (auditQ.data?.logs ?? []).length === 0 ? <div class="ac-empty">No recent override changes.</div>
            : (
             <div class="u-ovr-list">
-              {(auditQ.data!.logs as Array<{ id: string; username: string; action: string; details: string; created_at: string }>).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
+              {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string }[]).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
                 let perm = ''; try { perm = (JSON.parse(l.details || '{}').permission as string) ?? ''; } catch { /* plain text */ }
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
@@ -329,7 +329,7 @@ export function AcUsersPage(): VNode {
                             const t = target(k); const ov = t !== 'inherit'; const submitted = localPending.has(k);
                             return (
                               <tr key={k} class={ov ? 'u-row-override' : undefined}>
-                                <td style={{ fontWeight: 500 }}>{PERMISSION_META[k]!.label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</td>
+                                <td style={{ fontWeight: 500 }}>{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</td>
                                 <td><CapCell allow={roleDefault(k)} /></td>
                                 <td>
                                   {submitted ? <span class="badge amber" style={{ fontSize: '11px' }}>Pending approval</span> : (

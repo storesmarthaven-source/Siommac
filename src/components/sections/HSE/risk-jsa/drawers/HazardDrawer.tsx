@@ -22,7 +22,7 @@ const EDITABLE = ['draft', 'registered', 'changes_requested', 'returned'];
 
 type HazardTabKey = 'overview' | 'controls' | 'capa' | 'workflow' | 'files' | 'timeline';
 
-const HAZARD_TABS: ReadonlyArray<TabDef<HazardTabKey>> = [
+const HAZARD_TABS: readonly TabDef<HazardTabKey>[] = [
   { key: 'overview',  label: 'Overview'  },
   { key: 'controls',  label: 'Controls'  },
   { key: 'capa',      label: 'CAPA'      },
@@ -136,7 +136,7 @@ function HazardControlsTab({ controls }: { controls: unknown[] }): VNode {
   }
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(controls as Array<Record<string, unknown>>).map((c, i) => (
+      {(controls as Record<string, unknown>[]).map((c, i) => (
         <div
           key={i}
           style={{
@@ -148,21 +148,21 @@ function HazardControlsTab({ controls }: { controls: unknown[] }): VNode {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'flex-start' }}>
             <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '4px' }}>
-              {c['description'] as string}
+              {c.description as string}
             </div>
             <VerifyControlButton
-              controlId={c['id'] as string}
-              status={c['status'] as string}
-              label={c['description'] as string}
+              controlId={c.id as string}
+              status={c.status as string}
+              label={c.description as string}
             />
           </div>
           <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
             <span style={{ textTransform: 'capitalize' }}>
-              {(c['control_type'] as string).replace(/_/g, ' ')}
+              {(c.control_type as string).replace(/_/g, ' ')}
             </span>
             <span>·</span>
-            <span>{c['status'] as string}</span>
-            {c['effectiveness'] != null && (<><span>·</span><span style={{ textTransform: 'capitalize' }}>{(c['effectiveness'] as string).replace(/_/g, ' ')}</span></>)}
+            <span>{c.status as string}</span>
+            {c.effectiveness != null && (<><span>·</span><span style={{ textTransform: 'capitalize' }}>{(c.effectiveness as string).replace(/_/g, ' ')}</span></>)}
           </div>
         </div>
       ))}
@@ -176,7 +176,7 @@ function HazardCapaTab({ capa }: { capa: unknown[] }): VNode {
   }
   return (
     <div style={{ display: 'grid', gap: '8px' }}>
-      {(capa as Array<Record<string, unknown>>).map((a, i) => (
+      {(capa as Record<string, unknown>[]).map((a, i) => (
         <div
           key={i}
           style={{
@@ -187,12 +187,12 @@ function HazardCapaTab({ capa }: { capa: unknown[] }): VNode {
           }}
         >
           <div style={{ fontWeight: 600, fontSize: '0.82rem', marginBottom: '2px' }}>
-            {a['ref'] as string} — {a['title'] as string}
+            {a.ref as string} — {a.title as string}
           </div>
           <div style={{ display: 'flex', gap: '8px', fontSize: '0.72rem', color: 'var(--text-muted)' }}>
-            <span style={{ textTransform: 'capitalize' }}>{a['priority'] as string} priority</span>
+            <span style={{ textTransform: 'capitalize' }}>{a.priority as string} priority</span>
             <span>·</span>
-            <span>{a['status'] as string}</span>
+            <span>{a.status as string}</span>
           </div>
         </div>
       ))}
@@ -214,10 +214,10 @@ function HazardWorkflowTab({ workflow }: { workflow: Record<string, unknown> | n
       }}
     >
       <div style={{ fontWeight: 'var(--font-weight-bold)', fontSize: '0.85rem', marginBottom: '6px' }}>
-        {workflow['ref'] as string}
+        {workflow.ref as string}
       </div>
-      <span class={hsePill(workflow['status'] as string)}>
-        {(workflow['status'] as string).replace(/_/g, ' ')}
+      <span class={hsePill(workflow.status as string)}>
+        {(workflow.status as string).replace(/_/g, ' ')}
       </span>
     </div>
   );
@@ -229,7 +229,7 @@ function HazardTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
   }
   return (
     <div>
-      {(timeline as Array<Record<string, unknown>>).map((e, i) => (
+      {(timeline as Record<string, unknown>[]).map((e, i) => (
         <div
           key={i}
           style={{
@@ -245,10 +245,10 @@ function HazardTimelineTab({ timeline }: { timeline: unknown[] }): VNode {
           />
           <div>
             <div style={{ fontSize: '0.8rem', fontWeight: 600 }}>
-              {(e['event_type'] as string).replace(/\./g, ' ')}
+              {(e.event_type as string).replace(/\./g, ' ')}
             </div>
             <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>
-              {new Date(e['created_at'] as string).toLocaleString()}
+              {new Date(e.created_at as string).toLocaleString()}
             </div>
           </div>
         </div>

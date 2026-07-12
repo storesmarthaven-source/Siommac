@@ -53,6 +53,11 @@ export default [
       ...tsPlugin.configs['strict-type-checked'].rules,
       ...tsPlugin.configs['stylistic-type-checked'].rules,
 
+      // TypeScript handles all undefined-reference checks at compile time;
+      // ESLint's no-undef doesn't understand TS types/globals and produces
+      // thousands of false positives on JSX, .d.ts globals, type imports, etc.
+      'no-undef': 'off',
+
       // Allow void operator for intentional fire-and-forget (logger, analytics)
       '@typescript-eslint/no-confusing-void-expression': 'off',
 

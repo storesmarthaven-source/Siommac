@@ -86,7 +86,7 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
               placeholder={f.placeholder ?? ''}
               disabled={!canManage}
               value={String((model as Record<string, unknown>)?.[f.key] ?? '')}
-              onInput={e => { set(f.key, (e.currentTarget as HTMLInputElement).value); setErrs(x => { const n = { ...x }; delete n[f.key]; return n; }); }}
+              onInput={e => { set(f.key, (e.currentTarget).value); setErrs(x => { const n = { ...x }; delete n[f.key]; return n; }); }}
             />
             {errs[f.key] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errs[f.key]}</span>}
           </label>
@@ -141,7 +141,7 @@ function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: 
       <label style={{ display: 'block', marginBottom: 16, maxWidth: 200 }}>
         <span class="hrfin-wiz-label">Tax year</span>
         <input class="hrfin-input" type="number" min={2000} max={2100} value={year}
-          onInput={e => setYear(Number((e.currentTarget as HTMLInputElement).value) || CURRENT_YEAR)} />
+          onInput={e => setYear(Number((e.currentTarget).value) || CURRENT_YEAR)} />
       </label>
 
       <div style={{ border: '1px solid var(--border)', borderRadius: 10, padding: 16, marginBottom: 14 }}>
@@ -172,14 +172,14 @@ function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: 
         <div style={{ display: 'flex', gap: 10, marginBottom: 12, flexWrap: 'wrap' }}>
           <label style={{ maxWidth: 160 }}>
             <span class="hrfin-wiz-label">Month</span>
-            <select class="hrfin-input" value={niMonth} onChange={e => setNiMonth(Number((e.currentTarget as HTMLSelectElement).value))}>
+            <select class="hrfin-input" value={niMonth} onChange={e => setNiMonth(Number((e.currentTarget).value))}>
               {MONTHS.map((m, i) => <option key={m} value={i + 1}>{m}</option>)}
             </select>
           </label>
           <label style={{ maxWidth: 120 }}>
             <span class="hrfin-wiz-label">Year</span>
             <input class="hrfin-input" type="number" min={2000} max={2100} value={niYear}
-              onInput={e => setNiYear(Number((e.currentTarget as HTMLInputElement).value) || CURRENT_YEAR)} />
+              onInput={e => setNiYear(Number((e.currentTarget).value) || CURRENT_YEAR)} />
           </label>
         </div>
         <button type="button" class="hrfin-action is-primary" disabled={!canGenerate || !profileReady || niMut.isPending} onClick={() => void genNi()}>
@@ -216,7 +216,7 @@ function FormsTab({ canView }: { canView: boolean }): VNode {
     { key: 'type', label: 'Form', render: f => <HrfinPill tone={formTone(f.formType)}>{FORM_LABEL[f.formType]}</HrfinPill> },
     { key: 'year', label: 'Year / Period', render: f => <span style={{ fontSize: 12 }}>{f.taxYear ?? (f.periodStart ? `${fmtDate(f.periodStart)}–${fmtDate(f.periodEnd)}` : '—')}</span> },
     { key: 'emp', label: 'Employee', render: f => f.employeeId ? <EmployeeCell employeeId={f.employeeId} /> : <span class="hse-muted" style={{ fontSize: 12 }}>Employer-level</span> },
-    { key: 'totals', label: 'Emoluments', render: f => <span style={{ fontSize: 12 }}>{typeof f.totals?.totalEmoluments === 'number' ? money(f.totals.totalEmoluments as number) : '—'}</span> },
+    { key: 'totals', label: 'Emoluments', render: f => <span style={{ fontSize: 12 }}>{typeof f.totals?.totalEmoluments === 'number' ? money(f.totals.totalEmoluments) : '—'}</span> },
     { key: 'created', label: 'Generated', render: f => <span style={{ color: 'var(--muted)', fontSize: 12 }}>{fmtDate(f.createdAt)}</span> },
   ];
 

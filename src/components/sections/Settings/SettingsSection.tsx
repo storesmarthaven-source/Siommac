@@ -1369,10 +1369,10 @@ export function SettingsSection(): VNode {
       const btn = target.closest<HTMLElement>('[data-stg-page]');
       if (btn) {
         e.preventDefault();
-        const p = btn.dataset['stgPage']!;
+        const p = btn.dataset.stgPage!;
         setPage(p);
         document.querySelectorAll<HTMLElement>('#sidebarMenu [data-stg-page]')
-          .forEach(b => b.classList.toggle('active', b.dataset['stgPage'] === p));
+          .forEach(b => b.classList.toggle('active', b.dataset.stgPage === p));
       }
     };
     window.addEventListener('siomac:section', onSection);

@@ -37,7 +37,7 @@ export async function getSettingsMap(signal?: AbortSignal): Promise<SettingsMap>
   }
 
   const map: SettingsMap = {};
-  for (const row of (data ?? []) as Array<{ key: string; value: string }>) {
+  for (const row of (data ?? []) as { key: string; value: string }[]) {
     map[row.key] = row.value;
   }
   return map;
@@ -51,7 +51,7 @@ export async function saveCompanySettings(
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'saveSettings',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to save company settings.');
 }
@@ -62,7 +62,7 @@ export async function saveStatutoryRates(
   const { apiPost } = await import('@lib/api');
   const res = await apiPost<{ success: boolean; message?: string }>(
     'saveStatutoryRates',
-    payload as unknown as Record<string, unknown>,
+    payload,
   );
   if (!res.success) throw new Error(res.message ?? 'Failed to save statutory rates.');
 }

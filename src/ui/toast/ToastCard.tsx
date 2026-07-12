@@ -156,7 +156,7 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
 
   return (
     <article
-      ref={cardRef as any}
+      ref={cardRef}
       className={[
         "siomac-toast",
         `siomac-toast--${toast.variant}`,

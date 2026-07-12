@@ -165,7 +165,7 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
 
   // ── Checklist ────────────────────────────────────────────────────────────────
   const rate1 = n(f.payeBand1RatePct), rate2 = n(f.payeBand2RatePct);
-  const checks: Array<{ label: string; state: 'ok' | 'pend' | 'warn' }> = [
+  const checks: { label: string; state: 'ok' | 'pend' | 'warn' }[] = [
     { label: 'Version label & effective date', state: f.label.trim().length >= 3 && f.effectiveFrom ? 'ok' : 'pend' },
     { label: 'PAYE allowance & band-1 ceiling', state: n(f.payePersonalAllowance) > 0 && n(f.payeBand1Ceiling) > 0 ? 'ok' : 'pend' },
     { label: 'PAYE rates within 0–100%', state: (!isNaN(rate1) && !isNaN(rate2) && rate1 >= 0 && rate1 <= 100 && rate2 >= 0 && rate2 <= 100) ? 'ok' : 'pend' },
@@ -230,7 +230,7 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
                     <label class="sfp-lab">Effective From <span class="sfp-req">*</span> <span class="sfp-info" data-tip="The date this rate version starts applying to payroll calculations." tabIndex={0} role="img" aria-label="The date this rate version starts applying to payroll calculations."><IconInfo /></span></label>
                     <div class="sfp-ctl">
                       <input class={`sfp-inp${submitAttempted && !f.effectiveFrom ? ' is-bad' : f.effectiveFrom ? ' is-ok' : ''}`} type="date" value={f.effectiveFrom}
-                        onInput={e => set('effectiveFrom')((e.currentTarget as HTMLInputElement).value)} />
+                        onInput={e => set('effectiveFrom')((e.currentTarget).value)} />
                     </div>
                     {submitAttempted && !f.effectiveFrom ? <span class="sfp-err-msg">Effective date is required.</span> : <span class="sfp-hint">Rates apply from this date.</span>}
                   </div>
@@ -288,13 +288,13 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
                         const roman = /^\d+$/.test(b.classNo.trim()) ? toRoman(parseInt(b.classNo, 10)) : '';
                         return (
                           <tr key={i}>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" title={roman ? `Class ${roman}` : undefined} value={b.classNo} onInput={e2 => setBand(i, 'classNo')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.weeklyMin} onInput={e2 => setBand(i, 'weeklyMin')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" placeholder="∞" value={b.weeklyMax} onInput={e2 => setBand(i, 'weeklyMax')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.assumedAvgWeekly} onInput={e2 => setBand(i, 'assumedAvgWeekly')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employeeWeekly} onInput={e2 => setBand(i, 'employeeWeekly')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employerWeekly} onInput={e2 => setBand(i, 'employerWeekly')((e2.currentTarget as HTMLInputElement).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.classZWeekly} onInput={e2 => setBand(i, 'classZWeekly')((e2.currentTarget as HTMLInputElement).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" title={roman ? `Class ${roman}` : undefined} value={b.classNo} onInput={e2 => setBand(i, 'classNo')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.weeklyMin} onInput={e2 => setBand(i, 'weeklyMin')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" placeholder="∞" value={b.weeklyMax} onInput={e2 => setBand(i, 'weeklyMax')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.assumedAvgWeekly} onInput={e2 => setBand(i, 'assumedAvgWeekly')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employeeWeekly} onInput={e2 => setBand(i, 'employeeWeekly')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employerWeekly} onInput={e2 => setBand(i, 'employerWeekly')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.classZWeekly} onInput={e2 => setBand(i, 'classZWeekly')((e2.currentTarget).value)} /></td>
                             <td><button type="button" class="sfp-iconbtn del" disabled={bands.length === 1} aria-label="Remove band" onClick={() => setBands(p => p.filter((_, ix) => ix !== i))}><IconClose size={15} /></button></td>
                           </tr>
                         );

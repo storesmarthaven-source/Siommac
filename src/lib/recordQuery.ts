@@ -61,9 +61,9 @@ export function useRecordQuery<T>({
     if (!recordId || !placeholder) return undefined;
     const value = placeholder();
     return value && getId(value) === recordId ? value : undefined;
-  }) as unknown as UseQueryOptions<T, Error, T, QueryKey>['placeholderData'];
+  }) as unknown as UseQueryOptions<T, Error, T>['placeholderData'];
 
-  const query = useQuery<T, Error, T, QueryKey>({
+  const query = useQuery<T, Error, T>({
     queryKey,
     enabled: enabled && !!recordId,
     staleTime,

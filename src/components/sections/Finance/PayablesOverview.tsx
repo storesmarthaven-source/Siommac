@@ -39,7 +39,7 @@ import { ApPaymentRunBuilder } from './ApPaymentRunBuilder';
 import { ApImportWizard } from './ApImportWizard';
 
 const fmtDue = (iso: string | null): string => (iso ? new Date(iso).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) : '—');
-const AGING_TONE: Array<'accent' | 'warning' | 'danger'> = ['accent', 'accent', 'warning', 'danger'];
+const AGING_TONE: ('accent' | 'warning' | 'danger')[] = ['accent', 'accent', 'warning', 'danger'];
 
 function billTone(b: ApBill, today: string): { tone: HrfinTone; label: string } {
   if ((b.status === 'approved' || b.status === 'partially_paid') && b.dueDate && b.dueDate < today) return { tone: 'bad', label: 'Overdue' };
@@ -139,7 +139,7 @@ export function PayablesOverview(): VNode {
     ...(canManage ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => { if (open[0]) openPay(open[0]); } } as QuickAction] : []),
     ...(canCreateVendor ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => { setEditingVendor(null); setVendorDialogOpen(true); } } as QuickAction] : []),
     ...(canImport ? [{ key: 'import', label: 'Import', icon: 'file', onClick: () => setImportOpen(true) } as QuickAction] : []),
-    { key: 'export', label: 'Export', icon: 'download', onClick: exportBills } as QuickAction,
+    { key: 'export', label: 'Export', icon: 'download', onClick: exportBills },
   ];
 
   const billCols: HrfinColumn<ApBill>[] = [
@@ -216,7 +216,7 @@ export function PayablesOverview(): VNode {
               { label: 'Export', icon: 'download', onClick: exportBills },
             ] : [{ label: 'Export', icon: 'download', onClick: exportBills }]}
             columns={(tab === 'bills' ? billCols : tab === 'vendors' ? vendorCols : paymentCols) as HrfinColumn<ApBill | Record<string, unknown>>[]}
-            rows={(tab === 'bills' ? (billsQ.data?.rows ?? []) : tab === 'vendors' ? (vendorsQ.data ?? []) : (paymentsQ.data ?? [])) as Array<ApBill | Record<string, unknown>>}
+            rows={(tab === 'bills' ? (billsQ.data?.rows ?? []) : tab === 'vendors' ? (vendorsQ.data ?? []) : (paymentsQ.data ?? [])) as (ApBill | Record<string, unknown>)[]}
             rowKey={r => (r as { id: string }).id}
             onRowClick={tab === 'bills'
               ? (r => setDrawerId((r as ApBill).id))

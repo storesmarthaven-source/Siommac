@@ -271,7 +271,7 @@ export function getSession(): FullSession | null {
   // Read synchronously via the window-bridged store (registered in main.tsx).
   // Avoids a static import cycle while staying browser-safe (no require()).
   try {
-    const store = (globalThis as unknown as Record<string, unknown>)['__siomacSessionStore'] as
+    const store = (globalThis as unknown as Record<string, unknown>).__siomacSessionStore as
       { getState(): import('@store/session').SessionState } | undefined;
     if (!store) return null;
     const s = store.getState();

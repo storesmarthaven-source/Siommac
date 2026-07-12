@@ -30,7 +30,7 @@ const STATUS_FILTERS = ['submitted', 'approved', 'rejected', 'paid', 'cancelled'
  * rule engine re-resolves the authoritative multiplier + minimum billable hours from
  * the active finance_overtime_rules row for this type at lock-inputs time.
  */
-const OT_TYPES: ReadonlyArray<{ value: OvertimeType; label: string; indicative: number; hint: string }> = [
+const OT_TYPES: readonly { value: OvertimeType; label: string; indicative: number; hint: string }[] = [
   { value: 'regular_overtime', label: 'Regular overtime',        indicative: 1.5,  hint: 'Time-and-a-half' },
   { value: 'public_holiday',   label: 'Public holiday',          indicative: 2,    hint: 'Double time' },
   { value: 'rest_day',         label: 'Rest day (e.g. Sunday)',  indicative: 2,    hint: 'Double time' },
@@ -94,7 +94,7 @@ export function OvertimeOverview(): VNode {
 
       <div class="obx-toolbar" style={{ margin: '10px 0', display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' }}>
         <span class="obx-meta">Status:</span>
-        <select class="obx-mini-select" value={status} onChange={e => setStatus((e.currentTarget as HTMLSelectElement).value)}>
+        <select class="obx-mini-select" value={status} onChange={e => setStatus((e.currentTarget).value)}>
           <option value="">All</option>
           {STATUS_FILTERS.map(s => <option value={s} key={s}>{humanize(s)}</option>)}
         </select>
@@ -208,14 +208,14 @@ function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
       onCancel={onDone}
       onSubmit={() => void submit()}>
       <div class="fin-form-grid fin-form-grid--tight">
-        <label class="fin-field"><span>Work date</span><input type="date" max={today} value={f.workDate} onInput={e => setF(p => ({ ...p, workDate: (e.currentTarget as HTMLInputElement).value }))} /></label>
-        <label class="fin-field"><span>Hours</span><input type="number" step="0.25" min="0" value={f.hours} onInput={e => setF(p => ({ ...p, hours: (e.currentTarget as HTMLInputElement).value }))} /></label>
+        <label class="fin-field"><span>Work date</span><input type="date" max={today} value={f.workDate} onInput={e => setF(p => ({ ...p, workDate: (e.currentTarget).value }))} /></label>
+        <label class="fin-field"><span>Hours</span><input type="number" step="0.25" min="0" value={f.hours} onInput={e => setF(p => ({ ...p, hours: (e.currentTarget).value }))} /></label>
         <label class="fin-field"><span>Overtime type</span>
-          <select value={f.otType} onChange={e => setF(p => ({ ...p, otType: (e.currentTarget as HTMLSelectElement).value as OvertimeType }))}>
+          <select value={f.otType} onChange={e => setF(p => ({ ...p, otType: (e.currentTarget).value as OvertimeType }))}>
             {OT_TYPES.map(o => <option value={o.value} key={o.value}>{o.label} — {o.indicative}× ({o.hint})</option>)}
           </select>
         </label>
-        <label class="fin-field"><span>Reason</span><input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget as HTMLInputElement).value }))} /></label>
+        <label class="fin-field"><span>Reason</span><input type="text" maxLength={500} value={f.reason} onInput={e => setF(p => ({ ...p, reason: (e.currentTarget).value }))} /></label>
       </div>
     </EnterpriseFormModal>
   );

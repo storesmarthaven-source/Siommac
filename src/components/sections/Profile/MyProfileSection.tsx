@@ -1290,7 +1290,7 @@ export function MyProfileSection(): VNode {
                   <div class="profile-panel-note">Dashboard and module access assigned to this account.</div>
                   <div class="profile-access-list redesigned-access-list">
                     {(() => {
-                      const managerial = ['admin', 'superadmin', 'manager'].includes(role) || /_manager$/.test(role);
+                      const managerial = ['admin', 'superadmin', 'manager'].includes(role) || role.endsWith("_manager");
                       const isAdmin    = ['admin', 'superadmin'].includes(role);
                       const rows = [
                         { icon: <SolGrid />,        title: 'Employee Dashboard', desc: 'Self-service profile, security, and documents', on: true },

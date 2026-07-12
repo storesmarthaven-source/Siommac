@@ -13,7 +13,7 @@ import {
   type AttachEntityType,
 } from '@api/hse/riskJsa';
 
-const ICON: Array<[RegExp, string]> = [
+const ICON: [RegExp, string][] = [
   [/pdf/, 'fa-file-pdf'],
   [/word|document/, 'fa-file-word'],
   [/sheet|excel|csv/, 'fa-file-excel'],

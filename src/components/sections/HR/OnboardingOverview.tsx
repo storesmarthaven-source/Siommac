@@ -136,7 +136,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
 
   const casesQ = useOnboardingCases({
     query: query.trim() || undefined,
-    statuses: status.length ? (status as OnboardingCaseStatus[]) : undefined,
+    statuses: status.length ? (status) : undefined,
     packageKeys: pkgKeys.length ? pkgKeys : undefined,
     workerTypes: workerTypes.length ? workerTypes : undefined,
     dueState: dueState !== 'all' ? dueState : undefined,
@@ -271,7 +271,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
         <TableSearch value={query} onChange={v => { setQuery(v); setPage(1); }}
           placeholder="Search employee, case no, package…" ariaLabel="Search onboarding cases" />
         <FilterDropdown id="onb-status" label="Status"
-          options={CASE_STATUS_OPTIONS as string[]} selected={status}
+          options={CASE_STATUS_OPTIONS} selected={status}
           onChange={v => { setStatus(v); setPage(1); }}
           openId={openId} setOpenId={setOpenId}
           labelFn={s => caseStatusPill(s as OnboardingCaseStatus).label} />
@@ -375,7 +375,7 @@ export function OnboardingOverview({ initialCaseId = null }: { initialCaseId?: s
   // shows cases, so those just stay on the overview.
   function handleOpenSurface(commandSurface: CommandCenterSurface, filters?: OnboardingSurfaceFilters): void {
     if (filters?.dueState && (filters.dueState === 'due_this_week' || filters.dueState === 'overdue' || filters.dueState === 'due_today')) {
-      setDue(filters.dueState as DueState);
+      setDue(filters.dueState);
     }
     switch (commandSurface) {
       case 'tasks': setSurface('tasks'); break;

@@ -317,7 +317,7 @@ export function ExpensesOverview(): VNode {
     if (mapped) { setSortField(mapped); setSortDir(dir); setPage(0); }
   }, []);
 
-  const columns: ReadonlyArray<HrfinColumn<ExpenseClaim>> = [
+  const columns: readonly HrfinColumn<ExpenseClaim>[] = [
     {
       key: 'claimNo', label: 'Claim No', sortable: true,
       render: c => <b style={{ fontFamily: 'monospace', fontSize: 13 }}>{c.claimNo}</b>,

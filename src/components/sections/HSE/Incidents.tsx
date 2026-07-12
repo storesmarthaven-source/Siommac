@@ -189,7 +189,7 @@ const INCIDENT_TYPES: IncidentType[] = [
 ];
 const SEVERITIES = ['Critical', 'High', 'Moderate', 'Minor'] as const;
 
-const OSH_CLASSES: Array<{ value: OshClass; label: string }> = [
+const OSH_CLASSES: { value: OshClass; label: string }[] = [
   { value: 'first-aid',            label: 'First Aid Case (FAC)' },
   { value: 'medical-treatment',    label: 'Medical Treatment Case (MTC)' },
   { value: 'restricted-duty',      label: 'Restricted Work Case (RWC)' },
@@ -253,7 +253,7 @@ export function OWQPanel({ incidents, capa, onOpenIncident, onOpenCapa }: {
 }): VNode {
   const [owqFilter, setOwqFilter] = useState<OWQFilter>('all');
 
-  type OWQItem = {
+  interface OWQItem {
     key: string;
     icon: string;
     iconClass: string;
@@ -267,7 +267,7 @@ export function OWQPanel({ incidents, capa, onOpenIncident, onOpenCapa }: {
     nextAction: string;
     type: 'incident' | 'capa';
     raw: IncidentRecord | CapaItem;
-  };
+  }
 
   const allItems: OWQItem[] = [
     // Critical unassigned incidents
@@ -1204,7 +1204,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
   incidents: IncidentRecord[];
   savedView: string;
   setSavedView: (v: string) => void;
-  views: ReadonlyArray<{ key: string; label: string; count: number }>;
+  views: readonly { key: string; label: string; count: number }[];
   capa: CapaItem[];
   onOpen: (i: IncidentRecord) => void;
   onReport: () => void;
@@ -1307,7 +1307,7 @@ function RegisterTab({ incidents, savedView, setSavedView, views, capa, onOpen, 
               ) : pg.pageItems.map(i => {
                 const days      = daysOpen(i.date);
                 const closed    = /closed/i.test(i.status);
-                const sev       = SEVERITY_META[i.severity] ?? SEVERITY_META['success']!;
+                const sev       = SEVERITY_META[i.severity] ?? SEVERITY_META.success!;
                 const summary   = i.description.length > 55 ? i.description.slice(0, 53) + '…' : i.description;
                 const isInvest  = /investigation/i.test(i.status);
                 const capaCount = capa.filter(c => c.source === i.ref && !/closed|verified/i.test(c.status)).length;
@@ -1408,7 +1408,7 @@ function buildAuditTrail(incidents: IncidentRecord[], capa: CapaItem[]): AuditEn
   const ts = (d: string) => auditTs(d);
 
   for (const i of incidents) {
-    const sev = SEVERITY_META[i.severity] ?? SEVERITY_META['success']!;
+    const sev = SEVERITY_META[i.severity] ?? SEVERITY_META.success!;
     // Reported
     entries.push({
       ref: i.ref, action: 'Incident reported', actor: i.reporter,
@@ -1479,14 +1479,14 @@ const HSE_SHIFTS  = ['Day (06:00–18:00)', 'Night (18:00–06:00)', 'Morning (0
 const SPILL_TYPES = ['Oil / Hydrocarbon', 'Chemical', 'Produced Water', 'Drilling Fluid', 'Sewage', 'Other'];
 const SPILL_MEDIA = ['Soil / Ground', 'Storm Drain', 'Watercourse / River', 'Sea / Marine', 'Bund / Containment', 'Air / Atmosphere'];
 
-type ReportPayload = {
+interface ReportPayload {
   type: IncidentType; severity: string; site: string;
   classification?: OshClass; injuryType?: string; bodyPart?: string;
   lostDays?: number; returnToWork?: string;
   description: string; immediateActions: string;
   peopleInvolved: PersonInvolved[]; witnesses: Witness[];
   costImpact: boolean; equipmentDamage: boolean;
-};
+}
 
 const WIZARD_STEPS = [
   { label: 'Event Basics',    icon: 'fa-tag',            sub: 'Type, severity, site, date & location' },
@@ -1768,7 +1768,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
               ['Supervisor notified?',              ctrlSupv,  setCtrlSupv],
               ['HSE department notified?',          ctrlHSE,   setCtrlHSE],
               ['Emergency response activated?',     ctrlEmg,   setCtrlEmg],
-            ] as Array<[string, boolean | null, (v: boolean | null) => void]>).map(([label, val, setter]) => (
+            ] as [string, boolean | null, (v: boolean | null) => void][]).map(([label, val, setter]) => (
               <div class="ir-check-row" key={label}>
                 <span>{label}</span>
                 <YNToggle value={val} onChange={setter} />
@@ -1973,7 +1973,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
           <div class="ir-services-row" style={{ marginTop: '14px' }}>
             <span class="ir-yn-label">Emergency services notified:</span>
             <div class="ir-services-chips">
-              {([['Police', policeNotified, setPolice], ['Ambulance', ambulance, setAmb], ['Fire Service', fire, setFire]] as Array<[string, boolean, (v: boolean) => void]>).map(([label, val, setter]) => (
+              {([['Police', policeNotified, setPolice], ['Ambulance', ambulance, setAmb], ['Fire Service', fire, setFire]] as [string, boolean, (v: boolean) => void][]).map(([label, val, setter]) => (
                 <button key={label} class={`ir-service-chip${val ? ' active' : ''}`} onClick={() => setter(!val)}>
                   <i class={`fas ${label === 'Police' ? 'fa-shield-halved' : label === 'Ambulance' ? 'fa-truck-medical' : 'fa-fire-extinguisher'}`} /> {label}
                 </button>
@@ -2411,7 +2411,7 @@ const INV_TABS = ['Progress', 'Overview', 'Evidence', '5-Whys', 'Root Cause', 'C
 function InvestigationsTab({ investigations, capa }: { investigations: Investigation[]; capa: CapaItem[] }): VNode {
   const [selected,    setSelected]    = useState<Investigation | null>(null);
   const [invTab,      setInvTab]      = useState<typeof INV_TABS[number]>('Overview');
-  const [whyDraft,    setWhyDraft]    = useState<Array<{ why: string; because: string }>>([]);
+  const [whyDraft,    setWhyDraft]    = useState<{ why: string; because: string }[]>([]);
   const [rootCause,   setRootCause]   = useState('');
   const [rcaCat,      setRcaCat]      = useState('');
   const [capaOpen,    setCapaOpen]    = useState(false);
@@ -3470,7 +3470,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
           for (const p of people) {
             const k = p.person_type ?? 'other';
             if (!grouped[k]) grouped[k] = [];
-            grouped[k]!.push(p);
+            grouped[k].push(p);
           }
           return (
             <div class="hse-idrawer-section">
@@ -3512,7 +3512,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
     for (const p of people) {
       const k = p.person_type ?? 'other';
       if (!grouped[k]) grouped[k] = [];
-      grouped[k]!.push(p);
+      grouped[k].push(p);
     }
     return (
       <div>
@@ -3844,7 +3844,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
                 <i class="fas fa-triangle-exclamation" />
                 <div class="hse-idrawer-banner-text">
                   <strong>Failed to load incident detail</strong>
-                  <span>{(detailQ.error as Error)?.message ?? 'Unknown error'}</span>
+                  <span>{(detailQ.error)?.message ?? 'Unknown error'}</span>
                 </div>
               </div>
             )}

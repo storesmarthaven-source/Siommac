@@ -234,19 +234,19 @@ export function mountTicketsPanel(): () => void {
     if (empty) list.innerHTML = '';
     const existingById = new Map<string, Element>();
     list.querySelectorAll<HTMLElement>('.hdr-ticket-item[data-ticket-id]').forEach(el =>
-      existingById.set(el.dataset['ticketId'] ?? '', el)
+      existingById.set(el.dataset.ticketId ?? '', el)
     );
     const frag = document.createDocumentFragment();
     visible.forEach(t => {
       const id  = String(t.id);
       const key = ticketRowKey(t);
       let el = existingById.get(id);
-      if (!el || (el as HTMLElement).dataset['ticketKey'] !== key) {
+      if (!el || (el as HTMLElement).dataset.ticketKey !== key) {
         const tmp = document.createElement('div');
         tmp.innerHTML = ticketRowHtml(t);
         el = tmp.firstElementChild ?? undefined;
       }
-      if (el) { (el as HTMLElement).dataset['ticketKey'] = key; frag.appendChild(el); }
+      if (el) { (el as HTMLElement).dataset.ticketKey = key; frag.appendChild(el); }
     });
     list.innerHTML = '';
     list.appendChild(frag);
@@ -278,7 +278,7 @@ export function mountTicketsPanel(): () => void {
     const statusSave  = document.getElementById('ticketStatusSaveBtn');
     if (statusSel)  statusSel.style.display  = adminView ? '' : 'none';
     if (statusSave) statusSave.style.display = adminView ? '' : 'none';
-    if (adminView && statusSel) { statusSel.value = t.status; statusSel.dataset['userChanged'] = ''; }
+    if (adminView && statusSel) { statusSel.value = t.status; statusSel.dataset.userChanged = ''; }
 
     const isDeleted   = t.status === 'deleted';
     const css         = STATUS_CSS[t.status] ?? 'open';
@@ -343,13 +343,13 @@ export function mountTicketsPanel(): () => void {
       statusEl.textContent = lbl;
       const sel = document.getElementById('ticketStatusSelect') as HTMLSelectElement | null;
       const detailPane = document.getElementById('ticketDetailPane');
-      if (sel && detailPane?.style.display !== 'none' && sel.dataset['userChanged'] !== '1') {
+      if (sel && detailPane?.style.display !== 'none' && sel.dataset.userChanged !== '1') {
         sel.value = t.status;
       }
     }
 
     const currentUser = getUser();
-    const existingIds = new Set([...repliesEl.querySelectorAll<HTMLElement>('[data-reply-id]')].map(el => el.dataset['replyId'] ?? ''));
+    const existingIds = new Set([...repliesEl.querySelectorAll<HTMLElement>('[data-reply-id]')].map(el => el.dataset.replyId ?? ''));
     let appended = false;
     (t.replies ?? []).forEach(r => {
       if (existingIds.has(String(r.id))) return;
@@ -447,7 +447,7 @@ export function mountTicketsPanel(): () => void {
   function onCancelClick()   { showList(); }
   function onDetailBack()    { showList(); renderList(); }
   function onReplyInput()    { syncTicketReplyBtn(); }
-  function onStatusChange()  { if (statusSelectEl) statusSelectEl.dataset['userChanged'] = '1'; }
+  function onStatusChange()  { if (statusSelectEl) statusSelectEl.dataset.userChanged = '1'; }
   function onRefreshClick()  {
     (window as unknown as { _spinBtn?: (id: string) => void })._spinBtn?.('ticketRefreshBtn');
     void fetchTickets(_currentTicketId != null);
@@ -515,7 +515,7 @@ export function mountTicketsPanel(): () => void {
     updateTicketStatus({ ticketId: _currentTicketId!, status }).then(res => {
       const win = window as unknown as { showPopup?: (t: string, h: string, m: string) => void };
       if (!res.success) { win.showPopup?.('error', 'Failed', res.message ?? ''); return; }
-      if (sel) sel.dataset['userChanged'] = '';
+      if (sel) sel.dataset.userChanged = '';
       const t = _tickets.find(x => String(x.id) === String(_currentTicketId));
       if (t) { t.status = status; if (_currentTicketId != null) showDetail(_currentTicketId); renderList(); updateTicketBadge(); }
     }).catch(() => {});
@@ -552,7 +552,7 @@ export function mountTicketsPanel(): () => void {
     const btn = (e.target as Element).closest<HTMLElement>('[data-delete-ticket-id]');
     if (!btn) return;
     e.stopPropagation();
-    const ticketId = btn.dataset['deleteTicketId'];
+    const ticketId = btn.dataset.deleteTicketId;
     const t        = _tickets.find(x => String(x.id) === String(ticketId));
     const cpop = (window as unknown as { cpop?: { fire: (o: object) => Promise<{ isConfirmed: boolean }> } }).cpop;
     if (!cpop) return;
@@ -574,7 +574,7 @@ export function mountTicketsPanel(): () => void {
     if ((e.target as Element).closest('[data-delete-ticket-id]')) return;
     const row = (e.target as Element).closest<HTMLElement>('.hdr-ticket-item[data-ticket-id]');
     if (!row) return;
-    showDetail(row.dataset['ticketId'] ?? '');
+    showDetail(row.dataset.ticketId ?? '');
   }
 
   // Register listeners
@@ -597,27 +597,27 @@ export function mountTicketsPanel(): () => void {
   // ── Expose globals ────────────────────────────────────────────────────────
 
   const win = window as unknown as Record<string, unknown>;
-  win['_applyTicketData']      = (res: { success: boolean; data?: TicketItem[] }) => {
+  win._applyTicketData      = (res: { success: boolean; data?: TicketItem[] }) => {
     if (!res?.success) return;
     _tickets = res.data ?? [];
     updateTicketBadge();
     showList();
     renderList();
   };
-  win['_startTicketSystem']    = start;
-  win['_stopTicketSystem']     = stop;
-  win['_fetchTickets']         = () => { void fetchTickets(_currentTicketId != null); };
-  win['_updateTicketBadgeNow'] = updateTicketBadge;
-  win['_getTicketUnreadCount'] = () => {
+  win._startTicketSystem    = start;
+  win._stopTicketSystem     = stop;
+  win._fetchTickets         = () => { void fetchTickets(_currentTicketId != null); };
+  win._updateTicketBadgeNow = updateTicketBadge;
+  win._getTicketUnreadCount = () => {
     const r = getRole();
     return (r === 'admin' || r === 'manager') ? _tickets.filter(t => t.status === 'open').length : 0;
   };
-  win['_clearTicketDetail']    = () => { _currentTicketId = null; _composing = false; };
-  win['_ticketModalOpened']    = () => {
+  win._clearTicketDetail    = () => { _currentTicketId = null; _composing = false; };
+  win._ticketModalOpened    = () => {
     if (_pollTimer) clearInterval(_pollTimer);
     _pollTimer = setInterval(() => { void fetchTickets(); }, 3_000);
   };
-  win['_ticketModalClosed']    = () => {
+  win._ticketModalClosed    = () => {
     if (_pollTimer) clearInterval(_pollTimer);
     _pollTimer = setInterval(() => { void fetchTickets(); }, 10_000);
   };

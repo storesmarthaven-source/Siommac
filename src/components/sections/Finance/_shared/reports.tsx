@@ -155,7 +155,7 @@ export function ReportDataTable({ columns, rows, maxVisible = 200 }: ReportDataT
         </thead>
         <tbody>
           {displayRows.map((row, i) => (
-            <tr key={String(row['id'] ?? i)} class="rpt-row">
+            <tr key={String(row.id ?? i)} class="rpt-row">
               {visibleCols.map(col => (
                 <td
                   key={col.key ?? col.header}

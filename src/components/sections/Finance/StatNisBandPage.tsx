@@ -88,7 +88,7 @@ function MoneyField({ label, hint, value, onInput, error, show, required, disabl
       <div class={`sfp-cur-grp${ok ? ' is-ok' : ''}${bad ? ' is-bad' : ''}`}>
         <span class="sfp-cur">TTD</span>
         <input type="number" step="0.01" inputMode="decimal" value={value} disabled={disabled} placeholder={placeholder}
-          onInput={e => onInput((e.currentTarget as HTMLInputElement).value)} />
+          onInput={e => onInput((e.currentTarget).value)} />
         {ok && <span class="sfp-state ok"><IconOk /></span>}
         {bad && <span class="sfp-state bad"><IconBad /></span>}
       </div>
@@ -264,7 +264,7 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
                     <div class="sfp-ctl">
                       <input class={`sfp-inp${err.classNo && (f.classNo.trim() !== '' || show) ? ' is-bad' : !err.classNo && f.classNo.trim() !== '' ? ' is-ok' : ''}`}
                         type="number" step="1" inputMode="numeric" value={f.classNo} disabled={readOnly}
-                        onInput={e => set('classNo')((e.currentTarget as HTMLInputElement).value)} />
+                        onInput={e => set('classNo')((e.currentTarget).value)} />
                       {err.classNo && (f.classNo.trim() !== '' || show) ? <span key="bad" class="sfp-state bad"><IconBad /></span>
                         : (!err.classNo && f.classNo.trim() !== '' ? <span key="ok" class="sfp-state ok"><IconOk /></span> : null)}
                     </div>

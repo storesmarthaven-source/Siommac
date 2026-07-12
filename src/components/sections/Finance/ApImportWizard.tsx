@@ -66,7 +66,7 @@ export function ApImportWizard({ open, onClose, onImported }: Props): VNode {
 
   function handleFile(file: File): void {
     const reader = new FileReader();
-    reader.onload = e => { setCsvText((e.target as FileReader).result as string); setParseError(''); };
+    reader.onload = e => { setCsvText((e.target!).result as string); setParseError(''); };
     reader.readAsText(file);
   }
 
@@ -86,7 +86,7 @@ export function ApImportWizard({ open, onClose, onImported }: Props): VNode {
       const missing = REQUIRED_HEADERS.filter(r => !colIdx.has(r));
       if (missing.length) { setParseError(`Missing required columns: ${missing.join(', ')}`); return; }
 
-      const parsed: ImportBillRow[] = (lines.slice(1) as string[][]).map((row, i) => ({
+      const parsed: ImportBillRow[] = (lines.slice(1)).map((row, i) => ({
         rowIndex: i + 2,
         vendorName:      row[colIdx.get('vendorName') ?? -1] ?? '',
         vendorInvoiceNo: row[colIdx.get('vendorInvoiceNo') ?? -1] ?? '',
@@ -193,13 +193,13 @@ export function ApImportWizard({ open, onClose, onImported }: Props): VNode {
               </thead>
               <tbody>
                 {rows.map(r => {
-                  const hasError = !r.vendorName || !r.billDate.match(/^\d{4}-\d{2}-\d{2}$/) || !r.description || isNaN(Number(r.amount)) || Number(r.amount) <= 0;
+                  const hasError = !r.vendorName || !(/^\d{4}-\d{2}-\d{2}$/.exec(r.billDate)) || !r.description || isNaN(Number(r.amount)) || Number(r.amount) <= 0;
                   return (
                     <tr key={r.rowIndex} style={{ borderBottom: '1px solid var(--border)', background: hasError ? 'var(--danger-surface, #fff5f5)' : undefined }}>
                       <td style={{ padding: '4px 8px' }}>{r.rowIndex}</td>
                       <td style={{ padding: '4px 8px', color: !r.vendorName ? 'var(--danger)' : undefined }}>{r.vendorName || '⚠ missing'}</td>
                       <td style={{ padding: '4px 8px' }}>{r.vendorInvoiceNo || '—'}</td>
-                      <td style={{ padding: '4px 8px', color: !r.billDate.match(/^\d{4}-\d{2}-\d{2}$/) ? 'var(--danger)' : undefined }}>{r.billDate || '⚠ missing'}</td>
+                      <td style={{ padding: '4px 8px', color: !(/^\d{4}-\d{2}-\d{2}$/.exec(r.billDate)) ? 'var(--danger)' : undefined }}>{r.billDate || '⚠ missing'}</td>
                       <td style={{ padding: '4px 8px', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis' }}>{r.description}</td>
                       <td style={{ padding: '4px 8px', color: isNaN(Number(r.amount)) || Number(r.amount) <= 0 ? 'var(--danger)' : undefined }}>{r.amount}</td>
                     </tr>

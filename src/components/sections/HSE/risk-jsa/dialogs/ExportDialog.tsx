@@ -16,7 +16,7 @@ export interface ExportDialogProps<T> {
   /** Human label for the register being exported, e.g. "Hazard Register". */
   registerLabel: string;
   rows: readonly T[];
-  columns: ReadonlyArray<CsvColumn<T>>;
+  columns: readonly CsvColumn<T>[];
   filenameBase: string;
 }
 

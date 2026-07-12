@@ -53,7 +53,7 @@ function HiddenBar({ hidden, onRestore }: HiddenBarProps) {
     ).join('');
     const clickHandler = (e: Event) => {
       const btn = (e.target as Element).closest<HTMLElement>('.dash-restore-btn');
-      if (btn?.dataset['widgetId']) onRestore(btn.dataset['widgetId']);
+      if (btn?.dataset.widgetId) onRestore(btn.dataset.widgetId);
     };
     container.addEventListener('click', clickHandler);
     return () => container.removeEventListener('click', clickHandler);
@@ -71,7 +71,7 @@ function useHideBtnWiring(editMode: boolean, onHide: (id: string) => void) {
     if (!section) return;
     const handler = (e: Event) => {
       const btn = (e.target as Element).closest<HTMLElement>('.dash-hide-btn');
-      if (btn?.dataset['widgetId']) onHide(btn.dataset['widgetId']);
+      if (btn?.dataset.widgetId) onHide(btn.dataset.widgetId);
     };
     section.addEventListener('click', handler);
     return () => section.removeEventListener('click', handler);
@@ -132,7 +132,7 @@ export function DashboardController() {
   // Hidden widgets bar (portal into #dashHiddenWidgets)
   const hiddenWithTitles: { id: string; title: string }[] = hidden.flatMap(id => {
     const def = widgetDefs.find(w => w.id === id);
-    return def ? [{ id: id as string, title: def.title as string }] : [];
+    return def ? [{ id: id, title: def.title }] : [];
   });
 
   const isAuthenticated = useSessionStore(s => s.isAuthenticated);
@@ -146,11 +146,11 @@ export function DashboardController() {
     enabled:   isAuthenticated,
     select:    (data) => {
       // Delegate to SiomacCharts — it owns the canvas rendering
-      const SC = (window as unknown as Record<string, unknown>)['SiomacCharts'] as
+      const SC = (window as unknown as Record<string, unknown>).SiomacCharts as
         Record<string, Function> | undefined;
       if (SC) {
-        if (typeof SC['renderDashboardCharts'] === 'function') SC['renderDashboardCharts'](data);
-        else if (typeof SC['updateDashboardCharts'] === 'function') SC['updateDashboardCharts'](data);
+        if (typeof SC.renderDashboardCharts === 'function') SC.renderDashboardCharts(data);
+        else if (typeof SC.updateDashboardCharts === 'function') SC.updateDashboardCharts(data);
       }
       return data;
     },
@@ -162,9 +162,9 @@ export function DashboardController() {
     staleTime: 60_000,
     enabled:   isAuthenticated && !!username,
     select:    (data) => {
-      const SC = (window as unknown as Record<string, unknown>)['SiomacCharts'] as
+      const SC = (window as unknown as Record<string, unknown>).SiomacCharts as
         Record<string, Function> | undefined;
-      if (SC && typeof SC['displayAttendanceChart'] === 'function') SC['displayAttendanceChart'](data);
+      if (SC && typeof SC.displayAttendanceChart === 'function') SC.displayAttendanceChart(data);
       // Update stat display elements
       const set = (id: string, val: number | undefined) => {
         const el = document.getElementById(id);

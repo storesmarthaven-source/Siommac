@@ -152,9 +152,9 @@ export function SecurityPolicyTab(): VNode {
     const p = policyRes.policy;
     setForm({
       trustedDevicesEnabled:       p.trustedDevicesEnabled,
-      trustedDeviceDefaultDays:    p.trustedDeviceTtlByRole['employee'] ?? 30,
-      trustedDeviceAdminDays:      p.trustedDeviceTtlByRole['admin'] ?? 14,
-      trustedDeviceSuperAdminDays: p.trustedDeviceTtlByRole['superadmin'] ?? 7,
+      trustedDeviceDefaultDays:    p.trustedDeviceTtlByRole.employee ?? 30,
+      trustedDeviceAdminDays:      p.trustedDeviceTtlByRole.admin ?? 14,
+      trustedDeviceSuperAdminDays: p.trustedDeviceTtlByRole.superadmin ?? 7,
       requireMfaForSuperAdmin:     p.requireMfaRoles.includes('superadmin'),
       requireMfaForAdmin:          p.requireMfaRoles.includes('admin'),
       requireMfaForManager:        p.requireMfaRoles.includes('manager'),

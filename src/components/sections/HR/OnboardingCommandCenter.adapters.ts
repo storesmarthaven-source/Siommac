@@ -44,7 +44,7 @@ export function adaptBlocker(row: OnboardingBlockerRow): BlockerRow {
   };
 }
 
-const ACTIVITY_TONE_BY_KEYWORD: Array<{ test: RegExp; tone: Tone; icon: ActivityRow['icon'] }> = [
+const ACTIVITY_TONE_BY_KEYWORD: { test: RegExp; tone: Tone; icon: ActivityRow['icon'] }[] = [
   { test: /block/i, tone: 'amber', icon: 'shield' },
   { test: /fail|reject|cancel/i, tone: 'red', icon: 'alert' },
   { test: /complet|approv|ready|resolv/i, tone: 'green', icon: 'check' },
