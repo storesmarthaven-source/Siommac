@@ -88,27 +88,26 @@ export interface RecordStatutoryFormInput {
  * Insert a form row + emit its `finance.payroll.statutory_form.generated` event
  * and hr_audit_log. Supersedes any prior GENERATED form with the same identity
  * (type + year/period + employee) so a re-run keeps a clean "current" set.
+ *
+ * The supersede + insert run in ONE transaction via finance_record_statutory_form_commit
+ * — a mid-operation failure can never leave an identity with zero or two 'generated'
+ * rows. (The artifact upload happens before this call; object storage is external to
+ * the DB txn, so an orphaned artifact on a failed commit is harmless / overwritten.)
  */
 export async function recordStatutoryForm(input: RecordStatutoryFormInput): Promise<StatutoryFormDto> {
-  // Mark prior generations of the same identity superseded (kept for audit history).
-  let sup = sb.from('finance_statutory_forms').update({ status: 'superseded' })
-    .eq('form_type', input.formType).eq('status', 'generated');
-  sup = input.taxYear != null ? sup.eq('tax_year', input.taxYear) : sup.is('tax_year', null);
-  sup = input.employeeId ? sup.eq('employee_id', input.employeeId) : sup.is('employee_id', null);
-  if (input.periodStart) sup = sup.eq('period_start', input.periodStart);
-  try { await sup; } catch { /* best-effort supersede */ }
-
-  const { data, error } = await sb.from('finance_statutory_forms').insert({
-    form_type: input.formType, tax_year: input.taxYear ?? null,
-    period_start: input.periodStart ?? null, period_end: input.periodEnd ?? null,
-    employee_id: input.employeeId ?? null, run_id: input.runId ?? null,
-    scope: input.scope ?? (input.employeeId ? 'employee' : 'employer'),
-    format: input.format ?? 'pdf', file_path: input.filePath, data_file_path: input.dataFilePath ?? null,
-    totals: input.totals ?? {}, checksum: input.checksum ?? null, generated_by: input.actorId,
-    metadata: input.metadata ?? {},
-  }).select().single<DbRow>();
+  const { data, error } = await sb.rpc('finance_record_statutory_form_commit', {
+    p_form: {
+      form_type: input.formType, tax_year: input.taxYear ?? null,
+      period_start: input.periodStart ?? null, period_end: input.periodEnd ?? null,
+      employee_id: input.employeeId ?? null, run_id: input.runId ?? null,
+      scope: input.scope ?? (input.employeeId ? 'employee' : 'employer'),
+      format: input.format ?? 'pdf', file_path: input.filePath, data_file_path: input.dataFilePath ?? null,
+      totals: input.totals ?? {}, checksum: input.checksum ?? null, generated_by: input.actorId,
+      metadata: input.metadata ?? {},
+    },
+  });
   if (error) throw Object.assign(new Error('recordStatutoryForm: ' + error.message), { status: 500 });
-  const dto = toDto(data);
+  const dto = toDto(data as DbRow);
 
   void emitAppEvent({
     eventType: 'finance.payroll.statutory_form.generated',

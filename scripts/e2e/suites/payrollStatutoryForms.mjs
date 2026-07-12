@@ -160,7 +160,34 @@ export default async function run(h) {
     ok(await api('finance/statutory-forms/td4/generate-year', fmgr1T, { taxYear: YEAR }), 're-generate failed');
     const { data: current } = await sb.from('finance_statutory_forms').select('id, form_type').eq('tax_year', YEAR).eq('status', 'generated');
     const td4 = (current ?? []).filter(f => f.form_type === 'td4');
+    const summary = (current ?? []).filter(f => f.form_type === 'td4_summary');
     expect(td4.length === 2, `expected 2 CURRENT td4 after re-gen, got ${td4.length}`);
+    expect(summary.length === 1, `expected exactly 1 CURRENT td4_summary after re-gen (no dup), got ${summary.length}`);
+    // 2c: the atomic commit superseded the prior generation, not silently dropped it.
+    const { count: supersededCount } = await sb.from('finance_statutory_forms')
+      .select('id', { count: 'exact', head: true }).eq('tax_year', YEAR).eq('status', 'superseded');
+    expect((supersededCount ?? 0) >= 3, `expected the prior 2 td4 + 1 summary superseded, got ${supersededCount}`);
+  });
+
+  await test('2c: a failing form commit rolls back — the employee keeps its current form', async () => {
+    // The prior generation left a CURRENT td4 for emp1. Call the atomic commit RPC
+    // with a bad payload (no file_path) for the SAME identity: the raise must roll
+    // back the supersede, so emp1 is never left with zero current td4.
+    const before = await sb.from('finance_statutory_forms')
+      .select('id', { count: 'exact', head: true })
+      .eq('tax_year', YEAR).eq('form_type', 'td4').eq('employee_id', emp1Id).eq('status', 'generated');
+    expect((before.count ?? 0) === 1, `expected exactly 1 current td4 for emp1 before, got ${before.count}`);
+
+    const { error: rpcErr } = await sb.rpc('finance_record_statutory_form_commit', {
+      p_form: { form_type: 'td4', tax_year: YEAR, employee_id: emp1Id }, // file_path missing → raise
+    });
+    expect(rpcErr, 'commit with no file_path should have raised');
+
+    const after = await sb.from('finance_statutory_forms')
+      .select('id', { count: 'exact', head: true })
+      .eq('tax_year', YEAR).eq('form_type', 'td4').eq('employee_id', emp1Id).eq('status', 'generated');
+    expect((after.count ?? 0) === 1,
+      `emp1 must still have exactly 1 current td4 after the rolled-back commit, got ${after.count}`);
   });
 
   await test('single-employee td4/generate reconciles to that employee', async () => {
