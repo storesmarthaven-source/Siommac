@@ -132,40 +132,89 @@
 /* ---------------- Designs menu ---------------- */
 .designs-menu { position: relative; display: inline-flex; }
 .designs-pop {
-  position: absolute; top: 40px; right: 0; width: 290px; z-index: 60;
-  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 10px;
-  box-shadow: 0 22px 55px -14px rgba(20, 30, 70, 0.42); padding: 12px; cursor: default;
+  position: absolute; top: 40px; right: 0; width: 400px; z-index: 60;
+  background: #fff; color: var(--ink); border: 1px solid var(--line); border-radius: 12px;
+  box-shadow: 0 22px 55px -14px rgba(20, 30, 70, 0.42); cursor: default; overflow: hidden;
 }
-.dz-openrow { display: flex; align-items: center; gap: 6px; font-size: 12.5px; margin-bottom: 8px; }
-.dz-openlabel { font-weight: 700; color: var(--muted); text-transform: uppercase; font-size: 10px; letter-spacing: .05em; }
-.dz-openname { font-weight: 700; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.dz-unsaved { color: var(--muted); font-style: italic; }
-.dz-update { width: 100%; height: 34px; border: none; border-radius: 7px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; margin-bottom: 10px; transition: background .12s, opacity .12s; }
-.dz-update:hover:not(:disabled) { background: #4a5468; }
-.dz-update:disabled { opacity: .5; cursor: default; }
-.dz-badge { font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; color: #12a25a; background: #e6f6ee; border-radius: 999px; padding: 1px 6px; margin-left: 8px; vertical-align: middle; }
-.dz-item.current .dz-open { background: #eef6f0; border-color: #cdeadb; }
 
-.dz-save { display: flex; gap: 6px; }
-.dz-save input { flex: 1; min-width: 0; height: 32px; border: 1px solid var(--line); border-radius: 6px; padding: 0 8px; font-size: 12.5px; color: var(--ink); }
-.dz-save input:focus { outline: none; border-color: var(--brand); }
-.dz-savebtn { height: 32px; padding: 0 14px; border: none; border-radius: 6px; background: #58637d; color: #fff; font-size: 12.5px; font-weight: 700; cursor: pointer; transition: background .12s, opacity .12s; }
-.dz-savebtn:hover:not(:disabled) { background: #4a5468; }
-.dz-savebtn:disabled { opacity: .5; cursor: default; }
-.dz-head { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin: 14px 0 6px; }
-.dz-list { max-height: 260px; overflow-y: auto; display: flex; flex-direction: column; gap: 2px; }
-.dz-empty { padding: 16px; text-align: center; color: var(--muted); font-size: 12.5px; }
-.dz-item { display: flex; align-items: center; gap: 4px; }
-.dz-star { flex: none; width: 26px; height: 28px; border: none; background: transparent; cursor: pointer; font-size: 15px; color: #c4cbde; line-height: 1; }
-.dz-star:hover { color: #f5b800; }
+/* ── Header ─────────────────────────────────────────────────────────────────── */
+.dz-header { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; border-bottom: 1px solid var(--line); }
+.dz-title { font-size: 14px; font-weight: 500; color: var(--ink); }
+.dz-count { font-size: 11.5px; color: var(--muted); }
+
+/* ── Currently-open card ────────────────────────────────────────────────────── */
+.dz-opencard { padding: 12px 16px; background: var(--line-soft); border-bottom: 1px solid var(--line); }
+.dz-opencard-label { font-size: 10px; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); margin-bottom: 7px; }
+.dz-opencard-title { display: flex; align-items: center; gap: 7px; }
+.dz-opencard-name { font-size: 13.5px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dz-hint { margin: 6px 0 11px; font-size: 11.5px; line-height: 1.45; color: var(--ink-soft); }
+.dz-opencard-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.dz-btn { height: 32px; padding: 0 13px; border-radius: 7px; border: 1px solid #d8dce8; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s; }
+.dz-btn:hover:not(:disabled) { background: #f2f4f8; }
+.dz-btn:disabled { opacity: .5; cursor: default; }
+.dz-btn-submit { background: #2f5da8; border-color: #2f5da8; color: #fff; }
+.dz-btn-submit:hover:not(:disabled) { background: #27508f; }
+
+/* ── Status badges — one colour per lifecycle stage ────────────────────────── */
+.dz-badge { font-size: 9.5px; font-weight: 500; text-transform: uppercase; letter-spacing: .03em; border-radius: 999px; padding: 2px 8px; vertical-align: middle; white-space: nowrap; color: #5a6480; background: var(--line-soft); }
+.dz-status-draft { color: #5a6480; background: #eef1f7; }
+.dz-status-pending_approval { color: #9a6a00; background: #fdf0d3; }
+.dz-status-changes_requested { color: #b5451b; background: #fbe4d8; }
+.dz-status-approved { color: #12a25a; background: #e6f6ee; }
+
+/* ── List section ───────────────────────────────────────────────────────────── */
+.dz-section { padding: 10px 8px 4px; }
+.dz-head { font-size: 10px; font-weight: 500; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); padding: 0 8px 6px; }
+.dz-empty { padding: 14px 12px; text-align: center; color: var(--muted); font-size: 12px; display: flex; flex-direction: column; align-items: center; gap: 10px; line-height: 1.45; }
+.dz-list { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 1px; }
+
+/* ── Design row ─────────────────────────────────────────────────────────────── */
+.dz-row { border-radius: 8px; }
+.dz-row.is-default { background: #f2faf5; }
+.dz-row-main { display: flex; align-items: center; gap: 8px; padding: 7px 8px; }
+.dz-star { flex: none; width: 22px; height: 26px; border: none; background: transparent; cursor: pointer; font-size: 15px; color: #cfd5e4; line-height: 1; }
+.dz-star:hover:not(:disabled) { color: #f5b800; }
 .dz-star.on { color: #f5b800; }
-.dz-badge.default { color: #b47e00; background: #fdf3d6; }
-.dz-open { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; background: transparent; border: 1px solid transparent; border-radius: 7px; padding: 7px 8px; cursor: pointer; text-align: left; }
-.dz-open:hover { background: #f2f4f8; border-color: #e4e7ef; }
-.dz-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 210px; }
-.dz-date { font-size: 11px; color: var(--muted); }
-.dz-del { flex: none; width: 28px; height: 28px; border: 1px solid var(--line); background: #fff; border-radius: 6px; color: var(--muted); cursor: pointer; }
-.dz-del:hover { border-color: var(--danger); color: var(--danger); }
+.dz-star:disabled { cursor: default; }
+.dz-star:disabled:not(.on) { opacity: .3; }
+.dz-openbtn { flex: 1; min-width: 0; display: flex; flex-direction: column; align-items: flex-start; gap: 1px; background: transparent; border: none; border-radius: 6px; padding: 3px 4px; cursor: pointer; text-align: left; }
+.dz-openbtn:hover { background: #eef1f6; }
+.dz-name { font-size: 13px; font-weight: 500; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 185px; display: flex; align-items: center; }
+.dz-ver { font-size: 10px; font-weight: 500; color: var(--muted); background: var(--line-soft); border-radius: 4px; padding: 0 4px; margin-left: 6px; }
+.dz-meta { font-size: 11px; color: var(--muted); }
+
+/* ── Row actions — one consistent button system ────────────────────────────── */
+.dz-actions { display: flex; align-items: center; gap: 5px; flex: none; }
+.dz-abtn { height: 28px; padding: 0 11px; border-radius: 6px; border: 1px solid var(--line); background: #fff; color: var(--ink-soft); font-size: 11.5px; font-weight: 500; cursor: pointer; transition: background .12s, border-color .12s, color .12s; }
+.dz-abtn:hover:not(:disabled) { background: #f2f4f8; }
+.dz-abtn:disabled { opacity: .5; cursor: default; }
+.dz-abtn-submit { border-color: #cbd7e8; color: #2f5da8; }
+.dz-abtn-submit:hover:not(:disabled) { background: #eef4fc; }
+.dz-abtn-review { background: var(--brand); border-color: var(--brand); color: #fff; }
+.dz-abtn-review:hover:not(:disabled) { background: #4a5468; }
+.dz-abtn-approve { background: #2f7d55; border-color: #2f7d55; color: #fff; }
+.dz-abtn-approve:hover:not(:disabled) { background: #276847; }
+.dz-abtn-changes { background: #fff; border-color: #e6b673; color: #9a6a00; }
+.dz-abtn-changes:hover:not(:disabled) { background: #fdf6ea; }
+.dz-abtn-ghost { color: var(--muted); }
+.dz-abtn-retire:hover:not(:disabled) { border-color: var(--danger); color: var(--danger); }
+.dz-abtn-danger { background: var(--danger); border-color: var(--danger); color: #fff; }
+.dz-abtn-danger:hover:not(:disabled) { background: #cf3b40; }
+.dz-confirm { display: inline-flex; align-items: center; gap: 5px; font-size: 11.5px; color: var(--ink-soft); }
+
+/* ── Inline review panel (approver: Approve / Request changes) ─────────────── */
+.dz-review-panel { margin: 0 8px 8px 34px; padding: 9px; background: #f8fafd; border: 1px solid var(--line); border-radius: 8px; }
+.dz-review-comment { width: 100%; box-sizing: border-box; resize: vertical; border: 1px solid var(--line); border-radius: 6px; padding: 6px 8px; font-size: 12px; font-family: inherit; color: var(--ink); }
+.dz-review-comment:focus { outline: none; border-color: var(--brand); }
+.dz-review-btns { display: flex; gap: 6px; margin-top: 8px; }
+
+/* ── Footer — save a new design ─────────────────────────────────────────────── */
+.dz-footer { display: flex; gap: 8px; padding: 12px 16px; border-top: 1px solid var(--line); background: var(--line-soft); }
+.dz-footer input { flex: 1; min-width: 0; height: 34px; border: 1px solid var(--line); border-radius: 7px; padding: 0 10px; font-size: 12.5px; color: var(--ink); background: #fff; }
+.dz-footer input:focus { outline: none; border-color: var(--brand); }
+.dz-savebtn { height: 34px; padding: 0 16px; border: 1px solid #d8dce8; border-radius: 7px; background: #fff; color: var(--ink); font-size: 12.5px; font-weight: 500; cursor: pointer; transition: background .12s; }
+.dz-savebtn:hover:not(:disabled) { background: #f2f4f8; }
+.dz-savebtn:disabled { opacity: .5; cursor: default; }
 
 /* ---------------- Layout ---------------- */
 .body { flex: 1; display: flex; min-height: 0; }

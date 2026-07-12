@@ -22,6 +22,14 @@ const STATUS_LABEL: Record<string, string> = {
   approved:          'Approved',
 };
 
+// One-line "what to do next" per lifecycle stage — shown for the open design.
+const STATUS_HINT: Record<string, string> = {
+  draft:             'Submit it for approval when the layout is ready.',
+  pending_approval:  'Waiting for the approver to review it.',
+  changes_requested: 'Changes were requested — revise, then re-submit.',
+  approved:          'Live. Set it as the default, edit as a new version, or retire it.',
+};
+
 function StatusBadge({ status }: { status: string }) {
   return (
     <span class={`dz-badge dz-status-${status}`}>
@@ -41,6 +49,7 @@ export function DesignsMenu() {
   const [busy, setBusy] = useState<BusyKind>(null);
   const [reviewComment, setReviewComment] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
+  const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
 
   const canApprove = useCan('finance.payroll.templates.approve');
@@ -110,14 +119,18 @@ export function DesignsMenu() {
     showToast(`Opened "${item.name}"`);
   };
 
+  // Delete (draft) or Retire/archive (approved) — same archive route; the backend
+  // promotes the next approved template to default when an approved default retires.
   const remove = async (item: StoredTemplate) => {
+    const retire = item.status === 'approved';
+    setConfirmRemoveId(null);
     try {
       await templateStore.remove(item.id);
       if (active?.id === item.id) dispatch({ kind: 'setSavedRef', ref: null });
       refresh();
-      showToast(`Deleted "${item.name}"`);
+      showToast(`${retire ? 'Retired' : 'Deleted'} "${item.name}"`);
     } catch (e) {
-      showToast((e as Error)?.message || 'Could not delete the design.', 'error');
+      showToast((e as Error)?.message || `Could not ${retire ? 'retire' : 'delete'} the design.`, 'error');
     }
   };
 
@@ -217,53 +230,136 @@ export function DesignsMenu() {
       </button>
       {open && (
         <div class="designs-pop">
-          {active ? (
-            <>
-              <div class="dz-openrow">
-                <span class="dz-openlabel">Open:</span>
-                <span class="dz-openname" title={active.name}>{active.name}</span>
-                {openItem && <StatusBadge status={openItem.status ?? 'draft'} />}
+          <div class="dz-header">
+            <span class="dz-title">Payslip designs</span>
+            <span class="dz-count">{items.length} {items.length === 1 ? 'design' : 'designs'}</span>
+          </div>
+
+          {active && openItem && (
+            <div class="dz-opencard">
+              <div class="dz-opencard-label">Currently open</div>
+              <div class="dz-opencard-title">
+                <span class="dz-opencard-name" title={active.name}>{active.name}</span>
+                {openItem.version > 1 && <span class="dz-ver">v{openItem.version}</span>}
+                <StatusBadge status={openItem.status ?? 'draft'} />
               </div>
-              {/* Update: only for editable (draft / changes_requested) templates */}
-              {openItemEditable && (
-                <button
-                  class="dz-update"
-                  onClick={() => void updateActive()}
-                  disabled={busy !== null || !dirty}
-                >
-                  {busy === 'update' ? 'Updating…' : dirty ? 'Update this design' : 'No changes to update'}
-                </button>
-              )}
-              {/* Create new version: for approved templates */}
-              {openItem?.status === 'approved' && (
-                <button
-                  class="dz-update"
-                  onClick={() => void createVersion(openItem)}
-                  disabled={busy !== null}
-                  title="Creates a new draft version for editing — the approved template stays intact"
-                >
-                  {busy === 'create-version' ? 'Creating…' : 'Edit as new version'}
-                </button>
-              )}
-              {/* Submit: for draft / changes_requested */}
-              {openItem && ['draft', 'changes_requested'].includes(openItem.status ?? '') && (
-                <button
-                  class="dz-submit"
-                  onClick={() => void submitForApproval(openItem)}
-                  disabled={busy !== null}
-                >
-                  {busy === 'submit' ? 'Submitting…' : 'Submit for approval'}
-                </button>
-              )}
-            </>
-          ) : (
-            <div class="dz-openrow dz-unsaved">Unsaved design</div>
+              <p class="dz-hint">{STATUS_HINT[openItem.status ?? 'draft']}</p>
+              <div class="dz-opencard-actions">
+                {openItemEditable && dirty && (
+                  <button class="dz-btn dz-btn-quiet" disabled={busy !== null} onClick={() => void updateActive()}>
+                    {busy === 'update' ? 'Updating…' : 'Update this design'}
+                  </button>
+                )}
+                {['draft', 'changes_requested'].includes(openItem.status ?? '') && (
+                  <button class="dz-btn dz-btn-submit" disabled={busy !== null} onClick={() => void submitForApproval(openItem)}>
+                    {busy === 'submit' ? 'Submitting…' : 'Submit for approval'}
+                  </button>
+                )}
+                {openItem.status === 'approved' && (
+                  <button class="dz-btn dz-btn-quiet" disabled={busy !== null}
+                    title="Creates a new draft version — the approved design stays live until the new one is approved"
+                    onClick={() => void createVersion(openItem)}>
+                    {busy === 'create-version' ? 'Creating…' : 'Edit as new version'}
+                  </button>
+                )}
+              </div>
+            </div>
           )}
 
-          <div class="dz-save">
+          <div class="dz-section">
+            <div class="dz-head">All designs</div>
+            {items.length === 0 ? (
+              <div class="dz-empty">
+                <span>No designs yet. Start from a template or save your current layout.</span>
+                <button class="dz-btn dz-btn-quiet" onClick={() => void loadStarterTemplates()} disabled={busy !== null}>
+                  {busy === 'seed' ? 'Loading…' : 'Load starter templates'}
+                </button>
+              </div>
+            ) : (
+              <div class="dz-list">
+                {items.map((item) => {
+                  const st = item.status ?? 'draft';
+                  const removable = ['draft', 'changes_requested', 'approved'].includes(st);
+                  return (
+                    <div class={`dz-row dz-row-${st}${item.isDefault ? ' is-default' : ''}${active?.id === item.id ? ' is-open' : ''}`} key={item.id}>
+                      <div class="dz-row-main">
+                        <button
+                          class={`dz-star${item.isDefault ? ' on' : ''}`}
+                          title={st !== 'approved' ? 'Only approved designs can be the default' : item.isDefault ? 'Default design' : 'Set as default'}
+                          onClick={() => st === 'approved' && void makeDefault(item)}
+                          disabled={st !== 'approved'}
+                          aria-label="Set as default"
+                        >★</button>
+                        <button class="dz-openbtn" onClick={() => openDesign(item)}>
+                          <span class="dz-name">
+                            {item.name}
+                            {item.version > 1 && <span class="dz-ver">v{item.version}</span>}
+                          </span>
+                          <span class="dz-meta">{item.isDefault ? 'Default · ' : ''}{formatDate(item.updatedAt)}</span>
+                        </button>
+                        <StatusBadge status={st} />
+                        <div class="dz-actions">
+                          {['draft', 'changes_requested'].includes(st) && reviewingId !== item.id && confirmRemoveId !== item.id && (
+                            <button class="dz-abtn dz-abtn-submit" disabled={busy !== null} onClick={() => void submitForApproval(item)}>
+                              {busy === 'submit' ? '…' : 'Submit'}
+                            </button>
+                          )}
+                          {st === 'pending_approval' && canApprove && reviewingId !== item.id && (
+                            <button class="dz-abtn dz-abtn-review" onClick={() => { setReviewingId(item.id); setReviewComment(''); setConfirmRemoveId(null); }}>
+                              Review
+                            </button>
+                          )}
+                          {removable && reviewingId !== item.id && (
+                            confirmRemoveId === item.id ? (
+                              <span class="dz-confirm">
+                                {st === 'approved' ? 'Retire?' : 'Delete?'}
+                                <button class="dz-abtn dz-abtn-danger" disabled={busy !== null} onClick={() => void remove(item)}>Yes</button>
+                                <button class="dz-abtn" onClick={() => setConfirmRemoveId(null)}>No</button>
+                              </span>
+                            ) : (
+                              <button
+                                class={`dz-abtn dz-abtn-ghost${st === 'approved' ? ' dz-abtn-retire' : ''}`}
+                                title={st === 'approved' ? 'Retire (archive) this approved design' : 'Delete this draft'}
+                                onClick={() => { setConfirmRemoveId(item.id); setReviewingId(null); }}>
+                                {st === 'approved' ? 'Retire' : 'Delete'}
+                              </button>
+                            )
+                          )}
+                        </div>
+                      </div>
+                      {st === 'pending_approval' && canApprove && reviewingId === item.id && (
+                        <div class="dz-review-panel">
+                          <textarea
+                            class="dz-review-comment"
+                            placeholder="Reason (required to request changes)…"
+                            value={reviewComment}
+                            onInput={(e) => setReviewComment((e.target as HTMLTextAreaElement).value)}
+                            rows={2}
+                          />
+                          <div class="dz-review-btns">
+                            <button class="dz-abtn dz-abtn-approve" disabled={busy !== null} onClick={() => void approveTemplate(item)}>
+                              {busy === 'approve' ? 'Approving…' : 'Approve'}
+                            </button>
+                            <button class="dz-abtn dz-abtn-changes" disabled={busy !== null || !reviewComment.trim()} onClick={() => void requestChanges(item)}>
+                              {busy === 'request-changes' ? 'Sending…' : 'Request changes'}
+                            </button>
+                            <button class="dz-abtn" onClick={() => { setReviewingId(null); setReviewComment(''); }}>
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+
+          <div class="dz-footer">
             <input
               type="text"
-              placeholder={active ? 'Save as new name…' : 'Name this design…'}
+              placeholder="Name a new design…"
               value={name}
               onInput={(e) => setName((e.target as HTMLInputElement).value)}
               onKeyDown={(e) => { if (e.key === 'Enter') void saveAsNew(); }}
@@ -271,114 +367,6 @@ export function DesignsMenu() {
             <button class="dz-savebtn" onClick={() => void saveAsNew()} disabled={busy !== null}>
               {busy === 'save' ? 'Saving…' : active ? 'Save as new' : 'Save'}
             </button>
-          </div>
-
-          <div class="dz-head">My designs</div>
-          <div class="dz-list">
-            {items.length === 0 ? (
-              <div class="dz-empty">
-                <span>No saved designs yet.</span>
-                <button
-                  class="dz-seed-btn"
-                  onClick={() => void loadStarterTemplates()}
-                  disabled={busy !== null}
-                >
-                  {busy === 'seed' ? 'Loading…' : 'Load starter templates'}
-                </button>
-              </div>
-            ) : (
-              items.map((item) => (
-                <div class={`dz-item${active?.id === item.id ? ' current' : ''}`} key={item.id}>
-                  {/* Default star: only show/enable for approved templates */}
-                  <button
-                    class={`dz-star${item.isDefault ? ' on' : ''}`}
-                    title={
-                      item.status !== 'approved'
-                        ? 'Only approved templates can be set as default'
-                        : item.isDefault
-                          ? 'Default template'
-                          : 'Set as default'
-                    }
-                    onClick={() => item.status === 'approved' && void makeDefault(item)}
-                    disabled={item.status !== 'approved'}
-                  >
-                    {item.isDefault ? '★' : '☆'}
-                  </button>
-                  <button class="dz-open" onClick={() => openDesign(item)}>
-                    <span class="dz-name">
-                      {item.name}
-                      {item.version > 1 && <span class="dz-ver">v{item.version}</span>}
-                      {item.isDefault && <span class="dz-badge default">default</span>}
-                      {active?.id === item.id && <span class="dz-badge">open</span>}
-                      <StatusBadge status={item.status ?? 'draft'} />
-                    </span>
-                    <span class="dz-date">{formatDate(item.updatedAt)}</span>
-                  </button>
-                  <div class="dz-actions">
-                    {/* Submit: draft / changes_requested */}
-                    {['draft', 'changes_requested'].includes(item.status ?? '') && (
-                      <button
-                        class="dz-action-btn dz-submit-sm"
-                        title="Submit for approval"
-                        disabled={busy !== null}
-                        onClick={() => void submitForApproval(item)}
-                      >
-                        Submit
-                      </button>
-                    )}
-                    {/* Approve / Request changes: pending_approval + user has approve perm */}
-                    {item.status === 'pending_approval' && canApprove && (
-                      reviewingId === item.id ? (
-                        <div class="dz-review-panel">
-                          <textarea
-                            class="dz-review-comment"
-                            placeholder="Reason for requesting changes (required for Request Changes)…"
-                            value={reviewComment}
-                            onInput={(e) => setReviewComment((e.target as HTMLTextAreaElement).value)}
-                            rows={2}
-                          />
-                          <div class="dz-review-btns">
-                            <button
-                              class="dz-action-btn dz-approve-btn"
-                              disabled={busy !== null}
-                              onClick={() => void approveTemplate(item)}
-                            >
-                              {busy === 'approve' ? 'Approving…' : 'Approve'}
-                            </button>
-                            <button
-                              class="dz-action-btn dz-changes-btn"
-                              disabled={busy !== null || !reviewComment.trim()}
-                              onClick={() => void requestChanges(item)}
-                            >
-                              {busy === 'request-changes' ? 'Sending…' : 'Request Changes'}
-                            </button>
-                            <button
-                              class="dz-action-btn"
-                              onClick={() => { setReviewingId(null); setReviewComment(''); }}
-                            >
-                              Cancel
-                            </button>
-                          </div>
-                        </div>
-                      ) : (
-                        <button
-                          class="dz-action-btn dz-review-btn"
-                          onClick={() => setReviewingId(item.id)}
-                        >
-                          Review
-                        </button>
-                      )
-                    )}
-                    {/* Delete: only for draft / changes_requested (not approved/pending) */}
-                    {['draft', 'changes_requested'].includes(item.status ?? '') && (
-                      <button class="dz-del" title="Delete draft" onClick={() => void remove(item)}>
-                        ✕
-                      </button>
-                    )}
-                  </div>
-                </div>
-              ))
-            )}
           </div>
         </div>
       )}
