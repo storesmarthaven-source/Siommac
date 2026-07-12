@@ -15,6 +15,7 @@
 
 import PDFDocument from 'pdfkit';
 import { sb } from '../db';
+import { buildTokenMap, resolveTokenText, type PayslipEmployerSource } from './payslipTokens';
 
 // ── Snapshot types ──────────────────────────────────────────────────────────
 
@@ -363,4 +364,367 @@ function toRoman(n: number): string {
   let out = ''; let x = n;
   for (const [v, r] of ROMAN) { while (x >= v) { out += r; x -= v; } }
   return out || String(n);
+}
+
+// ============================================================================
+// Design-driven canvas renderer (Phase 2)
+// ============================================================================
+// Renders a Payslip Studio Design JSON to a PDF using pdfkit by interpreting
+// each element at its canvas coordinates (scaled from 96-dpi screen px to
+// 72-dpi PDF points). All {{token}} placeholders in text content are replaced
+// with real values from the payslip snapshot + employer profile.
+//
+// Headless-browser options were evaluated (puppeteer-core + @sparticuz/chromium)
+// but ruled out: @sparticuz/chromium v133 is ~43 MB compressed; Netlify Functions
+// have a 50 MB compressed bundle limit and our existing bundle uses most of that
+// headroom. Option B (dedicated render microservice) adds infrastructure overhead
+// that is out-of-scope. Option C (enhanced pdfkit, this implementation) is
+// immediately deployable, serverless-safe, and faithfully honours the template's
+// layout through canvas-coordinate rendering.
+// ============================================================================
+
+// Scale factor: studio canvas uses 96-dpi pixels; PDF uses 72-dpi points.
+const PDF_SCALE = 72 / 96; // 0.75
+
+type DesignPageSize = 'a4' | 'letter' | 'legal' | 'a5' | 'half';
+type DesignOrient  = 'portrait' | 'landscape';
+
+// Portrait width × height in PDF points (from PDFKit defaults).
+const PDFKIT_PAGE_PTS: Record<DesignPageSize, [number, number]> = {
+  a4:     [595.28, 841.89],
+  letter: [612,    792],
+  legal:  [612,    1008],
+  a5:     [419.53, 595.28],
+  half:   [419.53, 595.28], // A5 == half A4 in the studio
+};
+
+// ── Minimal runtime types (mirrors src/.../PayslipStudio/types/index.ts) ────
+// Defined here so the backend never imports from the frontend source tree.
+
+interface DesignPage  { size: DesignPageSize; orient: DesignOrient; bg: string; }
+interface BaseEl      { id: string; type: string; x: number; y: number; w: number; h: number; z: number; }
+interface StyleEl extends BaseEl {
+  color: string; bg: string; fontSize: number; fontFamily: string;
+  bold: boolean; italic: boolean; borderW: number; borderColor: string;
+  borderStyle: 'solid' | 'dashed' | 'dotted'; padding: number; lineHeight: number;
+  align: 'left' | 'center' | 'right';
+}
+interface TextEl    extends StyleEl { type: 'heading' | 'text'; text: string; }
+interface FieldEl   extends StyleEl { type: 'field';   label: string; token: string; labelWidth: number; }
+interface BoxEl     extends StyleEl { type: 'box'; }
+interface SummaryEl extends StyleEl {
+  type: 'summary'; label: string; token: string; sub: string; accent: string; value: string;
+}
+interface TableRow  { label: string; amount: string; bg?: string; color?: string; }
+interface TableEl   extends StyleEl {
+  type: 'table'; title: string; titleFontSize?: number; accent: string;
+  rows: TableRow[]; showHead: boolean; showTotal: boolean; totalLabel: string;
+  headColor: string; totalColor: string; headHeight?: number; headFontSize?: number;
+  headBold?: boolean; stripeBg?: string;
+}
+interface DividerEl extends BaseEl { type: 'divider'; color: string; thickness: number; style: 'solid' | 'dashed' | 'dotted'; }
+interface ImageEl   extends BaseEl { type: 'image'; src: string; }
+type AnyEl = TextEl | FieldEl | BoxEl | SummaryEl | TableEl | DividerEl | ImageEl;
+interface DesignJSON { page: DesignPage; elements: AnyEl[]; }
+
+// ── Runtime guard ─────────────────────────────────────────────────────────────
+
+function parseDesignJSON(raw: unknown): DesignJSON | null {
+  if (!raw || typeof raw !== 'object' || Array.isArray(raw)) return null;
+  const obj = raw as Record<string, unknown>;
+  if (!obj['page'] || !Array.isArray(obj['elements'])) return null;
+  return obj as unknown as DesignJSON;
+}
+
+// ── Font mapper ───────────────────────────────────────────────────────────────
+
+/** Map a CSS font-family string to a pdfkit built-in font name. */
+function mapFont(fontFamily: string, bold: boolean, italic: boolean): string {
+  const f = (fontFamily ?? '').toLowerCase();
+  const isMono  = f.includes('mono') || f.includes('courier');
+  const isSerif = !isMono && (
+    f.includes('times') || f.includes('georgia') || f.includes('fraunces') ||
+    (f.includes('serif') && !f.includes('sans'))
+  );
+  if (isMono)  return bold ? 'Courier-Bold'      : italic ? 'Courier-Oblique'    : 'Courier';
+  if (isSerif) return bold ? 'Times-Bold'        : italic ? 'Times-Italic'       : 'Times-Roman';
+  return         bold ? 'Helvetica-Bold'    : italic ? 'Helvetica-Oblique'  : 'Helvetica';
+}
+
+// ── Color normaliser ──────────────────────────────────────────────────────────
+
+/**
+ * Return a 6-digit hex color pdfkit can use.
+ * - 'transparent' / '' → return null (caller skips drawing)
+ * - '#rrggbbaa' (8-char with alpha) → strip alpha → '#rrggbb'
+ */
+function hexColor(c: string | undefined | null): string | null {
+  if (!c || c === 'transparent') return null;
+  if (c.startsWith('#') && c.length === 9) return c.slice(0, 7); // strip alpha
+  return c;
+}
+
+// ── Draw helpers ─────────────────────────────────────────────────────────────
+
+type Doc = PDFKit.PDFDocument;
+
+function drawBg(doc: Doc, bg: string | undefined | null, x: number, y: number, w: number, h: number): void {
+  const col = hexColor(bg);
+  if (col) doc.save().rect(x, y, w, h).fill(col).restore();
+}
+
+function drawBorder(doc: Doc, el: StyleEl, x: number, y: number, w: number, h: number): void {
+  if ((el.borderW ?? 0) <= 0) return;
+  const lw  = el.borderW * PDF_SCALE;
+  const col = hexColor(el.borderColor) ?? '#000000';
+  if (el.borderStyle === 'dashed')       doc.dash(6 * PDF_SCALE, { space: 3 * PDF_SCALE });
+  else if (el.borderStyle === 'dotted')  doc.dash(2 * PDF_SCALE, { space: 2 * PDF_SCALE });
+  doc.rect(x, y, w, h).strokeColor(col).lineWidth(lw).stroke();
+  if (el.borderStyle !== 'solid') doc.undash();
+}
+
+// ── Main canvas renderer ──────────────────────────────────────────────────────
+
+/**
+ * Render a payslip PDF using the Payslip Studio Design JSON (canvas-style).
+ *
+ * Each design element is drawn at its Studio pixel position, scaled by
+ * PDF_SCALE (0.75) to convert from 96-dpi screen px to 72-dpi PDF points.
+ * `{{token}}` placeholders are resolved from the payslip snapshot + employer.
+ *
+ * Falls back to the standard `renderPayslipPdf` when:
+ *   - `designRaw` is null / not a Design object
+ *   - the design has no elements (blank template)
+ */
+export function renderPayslipPdfWithDesign(
+  s: PayslipSnapshot,
+  designRaw: unknown,
+  employer: PayslipEmployerSource,
+  opts: RenderOptions = {},
+): Promise<Buffer> {
+  const design = parseDesignJSON(designRaw);
+  if (!design || design.elements.length === 0) return renderPayslipPdf(s, opts);
+
+  return new Promise((resolve, reject) => {
+    try {
+      const { page } = design;
+      const size   = page.size ?? 'a4';
+      const [pw, ph] = (() => {
+        const [w, h] = PDFKIT_PAGE_PTS[size] ?? PDFKIT_PAGE_PTS.a4;
+        return (page.orient ?? 'portrait') === 'landscape' ? [h, w] : [w, h];
+      })();
+
+      const doc = new PDFDocument({
+        size: [pw, ph],
+        margin: 0,
+        info: { Title: `Payslip ${s.payslipNo}`, Author: s.employer.name },
+        ...(opts.password ? {
+          userPassword: opts.password, ownerPassword: opts.password,
+          permissions: { printing: 'highResolution', copying: false, modifying: false },
+        } : {}),
+      });
+      const chunks: Buffer[] = [];
+      doc.on('data', (c: Buffer) => chunks.push(c));
+      doc.on('end',  () => resolve(Buffer.concat(chunks)));
+      doc.on('error', reject);
+
+      // Page background (skip white — pdfkit default is already white)
+      const pageBg = hexColor(page.bg);
+      if (pageBg && pageBg !== '#ffffff' && pageBg !== '#FFFFFF') {
+        doc.rect(0, 0, pw, ph).fill(pageBg);
+      }
+
+      // Build the token map once for the whole payslip
+      const tokenMap = buildTokenMap(s, employer);
+
+      // Render elements in z-order (low z first = background layers)
+      const sorted = [...design.elements].sort((a, b) => (a.z ?? 0) - (b.z ?? 0));
+
+      for (const el of sorted) {
+        const x = el.x * PDF_SCALE;
+        const y = el.y * PDF_SCALE;
+        const w = el.w * PDF_SCALE;
+        const h = el.h * PDF_SCALE;
+        if (w <= 0 || h <= 0) continue;
+
+        doc.save();
+
+        switch (el.type) {
+          // ── Box ──────────────────────────────────────────────────────────────
+          case 'box': {
+            const b = el as BoxEl;
+            drawBg(doc, b.bg, x, y, w, h);
+            drawBorder(doc, b, x, y, w, h);
+            break;
+          }
+
+          // ── Heading / Text ────────────────────────────────────────────────────
+          case 'heading':
+          case 'text': {
+            const t  = el as TextEl;
+            drawBg(doc, t.bg, x, y, w, h);
+            drawBorder(doc, t, x, y, w, h);
+            const resolved = resolveTokenText(t.text ?? '', tokenMap);
+            const p  = (t.padding ?? 0) * PDF_SCALE;
+            const fs = t.fontSize * PDF_SCALE;
+            const col = hexColor(t.color) ?? '#000000';
+            doc.font(mapFont(t.fontFamily, t.bold, t.italic))
+              .fontSize(fs)
+              .fillColor(col)
+              .text(resolved, x + p, y + p, {
+                width:   Math.max(1, w - p * 2),
+                align:   t.align === 'center' ? 'center' : t.align === 'right' ? 'right' : 'left',
+                lineGap: Math.max(0, (t.lineHeight - 1) * fs),
+              });
+            break;
+          }
+
+          // ── Field (label + token value) ───────────────────────────────────────
+          case 'field': {
+            const f = el as FieldEl;
+            drawBg(doc, f.bg, x, y, w, h);
+            drawBorder(doc, f, x, y, w, h);
+            const p       = (f.padding ?? 4) * PDF_SCALE;
+            const labelW  = (f.labelWidth ?? 120) * PDF_SCALE;
+            const valueX  = x + labelW;
+            const resolvedLabel = resolveTokenText(f.label ?? '', tokenMap);
+            const resolvedValue = tokenMap[f.token] ?? '';
+            const col = hexColor(f.color) ?? '#000000';
+            // Label — slightly smaller, muted
+            doc.font(mapFont(f.fontFamily, false, f.italic))
+              .fontSize(f.fontSize * 0.82 * PDF_SCALE)
+              .fillColor('#64748b')
+              .text(resolvedLabel, x + p, y + p, { width: Math.max(1, labelW - p * 2), lineBreak: false });
+            // Value — full styled
+            doc.font(mapFont(f.fontFamily, f.bold, f.italic))
+              .fontSize(f.fontSize * PDF_SCALE)
+              .fillColor(col)
+              .text(resolvedValue, valueX, y + p, { width: Math.max(1, w - labelW - p), lineBreak: false });
+            break;
+          }
+
+          // ── Summary (prominent token total + sub-label) ───────────────────────
+          case 'summary': {
+            const sm = el as SummaryEl;
+            const bgCol = hexColor(sm.accent && sm.accent !== 'transparent' ? sm.accent : sm.bg);
+            if (bgCol) doc.rect(x, y, w, h).fill(bgCol);
+            drawBorder(doc, sm, x, y, w, h);
+            const p   = (sm.padding ?? 8) * PDF_SCALE;
+            const col = hexColor(sm.color) ?? '#000000';
+            const resolvedValue = sm.value
+              ? resolveTokenText(sm.value, tokenMap)
+              : tokenMap[sm.token] ?? '';
+            const resolvedSub = resolveTokenText(sm.sub ?? '', tokenMap);
+            // Main value — large, right-aligned
+            const vFs = sm.fontSize * 1.3 * PDF_SCALE;
+            doc.font(mapFont(sm.fontFamily, true, false))
+              .fontSize(vFs)
+              .fillColor(col)
+              .text(resolvedValue, x + p, y + p, { width: Math.max(1, w - p * 2), align: 'right', lineBreak: false });
+            // Sub label — small
+            if (resolvedSub) {
+              doc.font(mapFont(sm.fontFamily, false, false))
+                .fontSize(sm.fontSize * 0.8 * PDF_SCALE)
+                .fillColor(col)
+                .text(resolvedSub, x + p, y + p + vFs + 3 * PDF_SCALE, { width: Math.max(1, w - p * 2), lineBreak: false });
+            }
+            break;
+          }
+
+          // ── Table (header + rows + optional total) ───────────────────────────
+          case 'table': {
+            const tbl    = el as TableEl;
+            const headH  = (tbl.headHeight ?? 22) * PDF_SCALE;
+            const rowH   = 18 * PDF_SCALE;
+            const p      = 6 * PDF_SCALE;
+            const labelFr = 0.60;
+            const labelW  = w * labelFr;
+            const headFs  = (tbl.headFontSize ?? 10) * PDF_SCALE;
+            const bodyFs  = tbl.fontSize * PDF_SCALE;
+            let ry = y;
+
+            // Header row
+            if (tbl.showHead) {
+              const hBg = hexColor(tbl.accent);
+              if (hBg) doc.rect(x, ry, w, headH).fill(hBg);
+              const hCol = hexColor(tbl.headColor) ?? '#ffffff';
+              doc.font(mapFont(tbl.fontFamily, tbl.headBold ?? true, false))
+                .fontSize(headFs)
+                .fillColor(hCol)
+                .text(
+                  resolveTokenText(tbl.title ?? '', tokenMap),
+                  x + p, ry + (headH - headFs) / 2,
+                  { width: Math.max(1, w - p * 2), lineBreak: false },
+                );
+              ry += headH;
+            }
+
+            // Data rows
+            const stripeBg = tbl.stripeBg ?? '#f8fafc';
+            let numericTotal = 0;
+
+            for (let ri = 0; ri < tbl.rows.length; ri++) {
+              const row = tbl.rows[ri];
+              if (!row) continue;
+              const rowBg = hexColor(row.bg ?? (ri % 2 === 1 ? stripeBg : null));
+              if (rowBg) doc.rect(x, ry, w, rowH).fill(rowBg);
+              const rowCol = hexColor(row.color ?? tbl.color) ?? '#334155';
+              const resolvedLbl = resolveTokenText(row.label  ?? '', tokenMap);
+              const resolvedAmt = resolveTokenText(row.amount ?? '', tokenMap);
+              doc.font(mapFont(tbl.fontFamily, false, false))
+                .fontSize(bodyFs)
+                .fillColor(rowCol)
+                .text(resolvedLbl, x + p, ry + 3 * PDF_SCALE, { width: Math.max(1, labelW - p * 2), lineBreak: false })
+                .text(resolvedAmt, x + labelW, ry + 3 * PDF_SCALE, { width: Math.max(1, w - labelW - p), align: 'right', lineBreak: false });
+              // Accumulate numeric total (strip currency symbols / commas)
+              const numAmt = parseFloat(resolvedAmt.replace(/[^\d.-]/g, ''));
+              if (!isNaN(numAmt)) numericTotal += numAmt;
+              ry += rowH;
+            }
+
+            // Total row
+            if (tbl.showTotal) {
+              const tBg = hexColor(tbl.accent) ?? '#f1f5f9';
+              doc.rect(x, ry, w, rowH).fill(tBg);
+              const tCol = hexColor(tbl.totalColor ?? tbl.color) ?? '#1b2d54';
+              const totalStr = '$' + numericTotal.toLocaleString('en-TT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              doc.font(mapFont(tbl.fontFamily, true, false))
+                .fontSize(bodyFs)
+                .fillColor(tCol)
+                .text(tbl.totalLabel ?? 'Total', x + p, ry + 3 * PDF_SCALE, { width: Math.max(1, labelW - p * 2), lineBreak: false })
+                .text(totalStr, x + labelW, ry + 3 * PDF_SCALE, { width: Math.max(1, w - labelW - p), align: 'right', lineBreak: false });
+            }
+            break;
+          }
+
+          // ── Divider ───────────────────────────────────────────────────────────
+          case 'divider': {
+            const dv  = el as DividerEl;
+            const mid = y + h / 2;
+            const lw  = (dv.thickness ?? 1) * PDF_SCALE;
+            const col = hexColor(dv.color) ?? '#cbd5e1';
+            if (dv.style === 'dashed')      doc.dash(6 * PDF_SCALE, { space: 3 * PDF_SCALE });
+            else if (dv.style === 'dotted') doc.dash(2 * PDF_SCALE, { space: 2 * PDF_SCALE });
+            doc.moveTo(x, mid).lineTo(x + w, mid).strokeColor(col).lineWidth(lw).stroke();
+            if (dv.style !== 'solid') doc.undash();
+            break;
+          }
+
+          // ── Image ─────────────────────────────────────────────────────────────
+          // Image src is typically a data-URI or a browser-resolved URL — not
+          // accessible server-side. We skip image elements silently; the rest of
+          // the layout is unaffected. A follow-up could embed logo data-URIs.
+          case 'image':
+            break;
+
+          default:
+            break;
+        }
+
+        doc.restore();
+      }
+
+      doc.end();
+    } catch (e) { reject(e as Error); }
+  });
 }

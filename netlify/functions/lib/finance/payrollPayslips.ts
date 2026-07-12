@@ -23,7 +23,9 @@ import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { notifyMany } from '../notify';
-import { buildPayslipSnapshot, renderPayslipPdf } from './payslipPdf';
+import { buildPayslipSnapshot, renderPayslipPdf, renderPayslipPdfWithDesign } from './payslipPdf';
+import { getEmployerProfile } from './employerProfile';
+import { listTemplates, getTemplate } from './payslipTemplates';
 
 // -- DTO -----------------------------------------------------------------------
 
@@ -174,16 +176,56 @@ export async function generatePayslips(runId: string, actorId: string, opts: { n
   return listPayslipsForRun(runId);
 }
 
+// -- Template resolver for render ----------------------------------------------
+
+/**
+ * Resolve which payslip template to render with for a given run.
+ * Returns the template's design JSON, or null if none is configured and no
+ * active default template exists (falls back to the built-in pdfkit layout).
+ */
+export async function loadRenderTemplate(runId: string): Promise<unknown | null> {
+  // Check if the run has an explicit template set
+  const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
+    .select('template_id').eq('id', runId).maybeSingle<{ template_id: string | null }>();
+  if (runErr) throw Object.assign(new Error('loadRenderTemplate/run: ' + runErr.message), { status: 500 });
+
+  const templateId = run?.template_id ?? null;
+
+  if (templateId) {
+    // Explicit override: load the specified template
+    const tmpl = await getTemplate(templateId);
+    if (tmpl) return tmpl.design;
+    // Template was archived since the run was created — fall through to default
+  }
+
+  // No explicit override: use the active default template (the first in the list
+  // since listTemplates orders is_default DESC, created_at DESC)
+  const templates = await listTemplates();
+  const defaultTmpl = templates.find(t => t.isDefault) ?? templates[0] ?? null;
+  return defaultTmpl?.design ?? null;
+}
+
 // -- Render a single payslip PDF -> storage ------------------------------------
 
 /**
  * Render one payslip to a PDF, upload it to the private `payslips` bucket, and stamp
  * file_path + pdf_rendered_at + checksum on the row. Idempotent (upsert overwrites).
+ * Uses the Payslip Studio template (run's explicit choice or active default) when
+ * available; falls back to the built-in pdfkit layout when no template exists.
  * Side-effects: hr_audit_log + app_event. Throws on failure (caller isolates per-row).
  */
-export async function renderPayslip(payslipId: string, actorId: string): Promise<PayslipDto> {
+export async function renderPayslip(payslipId: string, actorId: string, opts: { password?: string } = {}): Promise<PayslipDto> {
   const snapshot = await buildPayslipSnapshot(payslipId);
-  const pdf = await renderPayslipPdf(snapshot);
+
+  // Load template + employer profile in parallel
+  const [design, employer] = await Promise.all([
+    loadRenderTemplate(snapshot.runId),
+    getEmployerProfile(),
+  ]);
+
+  const pdf = design
+    ? await renderPayslipPdfWithDesign(snapshot, design, employer, opts)
+    : await renderPayslipPdf(snapshot, opts);
   const checksum = createHash('sha256').update(pdf).digest('hex');
   const filePath = `${snapshot.runId}/${snapshot.payslipNo}.pdf`;
 

@@ -20,7 +20,9 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
-import { buildPayslipSnapshot, renderPayslipPdf } from './payslipPdf';
+import { buildPayslipSnapshot, renderPayslipPdf, renderPayslipPdfWithDesign } from './payslipPdf';
+import { getEmployerProfile } from './employerProfile';
+import { loadRenderTemplate } from './payrollPayslips';
 
 export interface PayslipDeliveryDto {
   id: string;
@@ -143,7 +145,13 @@ export async function deliverPayslip(payslipId: string, actorId: string): Promis
 
   if (!skipReason) {
     try {
-      const pdf = await renderPayslipPdf(snapshot, { password: password! });
+      const [design, employer] = await Promise.all([
+        loadRenderTemplate(snapshot.runId),
+        getEmployerProfile(),
+      ]);
+      const pdf = design
+        ? await renderPayslipPdfWithDesign(snapshot, design, employer, { password: password! })
+        : await renderPayslipPdf(snapshot, { password: password! });
       const { Resend } = await import('resend');
       const resend = new Resend(apiKey!);
       const from = process.env.RESEND_FROM_EMAIL ?? 'Siomac <no-reply@siomac.app>';

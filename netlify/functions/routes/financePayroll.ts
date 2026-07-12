@@ -30,6 +30,7 @@ import {
   getEmployeePopulationPreview,
   downloadRunExport,
   notifyPayslipEmployees,
+  setRunTemplate,
 } from '../lib/finance/payrollRuns';
 import {
   generatePayslips,
@@ -307,6 +308,23 @@ router.post('/payroll/runs/reopen', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await reopenRun(v.data.id, actor.id, v.data.reason);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/set-template
+// Assign (or clear) the Payslip Studio template a run will use for rendering.
+// templateId null clears the override and reverts to the active default template.
+// Permission: finance.payroll.run.manage.
+router.post('/payroll/runs/set-template', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.run.manage');
+  const v = zv(c, z.object({
+    runId:      z.string().uuid(),
+    templateId: z.string().uuid().nullable().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await setRunTemplate(v.data.runId, v.data.templateId ?? null, actor.id);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

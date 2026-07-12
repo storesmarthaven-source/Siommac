@@ -68,6 +68,7 @@ export interface PayrollRunDto {
   reopenedAt: string | null;
   reopenReason: string | null;
   exportedAt: string | null;
+  templateId: string | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -141,6 +142,7 @@ interface DbRunRow {
   locked_by: string | null; locked_at: string | null;
   reopened_by: string | null; reopened_at: string | null;
   reopen_reason: string | null; exported_at: string | null;
+  template_id: string | null;
   created_at: string; updated_at: string;
 }
 
@@ -187,6 +189,7 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     lockedBy: r.locked_by, lockedAt: r.locked_at,
     reopenedBy: r.reopened_by, reopenedAt: r.reopened_at,
     reopenReason: r.reopen_reason, exportedAt: r.exported_at,
+    templateId: r.template_id ?? null,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -287,6 +290,59 @@ export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
     .select('*').eq('id', id).maybeSingle<DbRunRow>();
   if (error) throw Object.assign(new Error('getPayrollRun: ' + error.message), { status: 500 });
   return data ? toRunDto(data) : null;
+}
+
+/**
+ * Set (or clear) the Payslip Studio template for a run.
+ * templateId = null → use the active default template at render time.
+ * The run must exist; the template (if given) must be an active payroll template.
+ * Emits app_event + audit_log; no workflow approval needed (cosmetic setting).
+ */
+export async function setRunTemplate(
+  runId: string,
+  templateId: string | null,
+  actorId: string,
+): Promise<PayrollRunDto> {
+  // Guard: run must exist
+  const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
+    .select('*').eq('id', runId).maybeSingle<DbRunRow>();
+  if (runErr) throw Object.assign(new Error('setRunTemplate/run: ' + runErr.message), { status: 500 });
+  if (!run)   throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+
+  // Guard: template must be active (if provided)
+  if (templateId) {
+    const { data: tmpl, error: tmplErr } = await sb.from('payroll_payslip_templates')
+      .select('id, name').eq('id', templateId).eq('status', 'active').maybeSingle<{ id: string; name: string }>();
+    if (tmplErr) throw Object.assign(new Error('setRunTemplate/template: ' + tmplErr.message), { status: 500 });
+    if (!tmpl)   throw Object.assign(new Error('Payslip template not found or archived.'), { status: 404 });
+  }
+
+  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
+    .update({ template_id: templateId ?? null })
+    .eq('id', runId)
+    .select('*')
+    .single<DbRunRow>();
+  if (updErr) throw Object.assign(new Error('setRunTemplate/update: ' + updErr.message), { status: 500 });
+
+  const dto = toRunDto(updated);
+
+  await writeHrAudit({
+    submoduleKey: 'finance_payroll', recordId: runId, actorId,
+    action: 'payroll_run.template_changed',
+    previousState: { templateId: run.template_id ?? null },
+    newState:      { templateId: dto.templateId },
+  });
+  void emitAppEvent({
+    eventType:        'finance.payroll.run.template_changed',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   runId,
+    actorUserId:      actorId,
+    severity:         'info',
+    payload:          { runNo: run.run_no, templateId: dto.templateId },
+  });
+
+  return dto;
 }
 
 export async function listRunInputs(runId: string): Promise<PayrollRunInputDto[]> {

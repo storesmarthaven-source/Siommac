@@ -41,6 +41,7 @@ export interface PayrollRun {
   exportedAt: string | null;
   createdAt: string;
   updatedAt: string;
+  templateId: string | null;
 }
 
 export interface PayrollRunInput {
@@ -171,6 +172,14 @@ export interface PayrollReportResult {
   report: string;
   generatedAt: string;
   rows: Array<Record<string, unknown>>;
+}
+
+/** Lightweight template descriptor for pickers — no design payload. */
+export interface PayslipTemplateSummary {
+  id: string;
+  name: string;
+  isDefault: boolean;
+  updatedAt: number; // epoch ms
 }
 
 export interface NisProfileRow { [k: string]: unknown }
@@ -413,6 +422,14 @@ export const financePayrollApi = {
   getNisProfile:    (a: { id: string })                => call<NisProfileRow>('finance/payroll/nis/get', a),
   verifyNisProfile: (a: { id: string; verificationNote?: string | null }) => call<NisProfileRow>('finance/payroll/nis/verify', a),
   rejectNisProfile: (a: { id: string; reason?: string })=> call<NisProfileRow>('finance/payroll/nis/reject', a),
+
+  // Payslip Studio template selector (Phase 2)
+  /** List available templates for the run template picker (id/name/isDefault only). */
+  listPayslipTemplates: (a: object = {}) =>
+    call<PayslipTemplateSummary[]>('finance/payroll/payslip-templates/list', a),
+  /** Set (or clear) the Payslip Studio template for a pay run. */
+  setRunTemplate: (a: { runId: string; templateId: string | null }) =>
+    call<PayrollRun>('finance/payroll/runs/set-template', a),
 };
 
 // ── Query keys ────────────────────────────────────────────────────────────────
@@ -512,5 +529,31 @@ export function useResolveWarning() {
 export function useExportDownload() {
   return useMutation({
     mutationFn: (a: { exportId: string }) => financePayrollApi.exportDownload(a),
+  });
+}
+
+// ── Payslip Studio template picker (Phase 2) ────────────────────────────────────
+
+export const payslipTemplateKeys = {
+  list: () => ['finance', 'payroll', 'payslip-templates'] as const,
+};
+
+/** Fetches all active Payslip Studio templates for the run template picker. */
+export function usePayslipTemplates() {
+  return useQuery({
+    queryKey: payslipTemplateKeys.list(),
+    queryFn:  () => financePayrollApi.listPayslipTemplates(),
+  });
+}
+
+/** Assign (or clear) the Payslip Studio template on a pay run. */
+export function useSetRunTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (a: { runId: string; templateId: string | null }) =>
+      financePayrollApi.setRunTemplate(a),
+    onSuccess: () => {
+      void qc.invalidateQueries({ queryKey: ['finance', 'payroll'] });
+    },
   });
 }

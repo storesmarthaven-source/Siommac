@@ -35,6 +35,8 @@ import {
   useRunOverrides,
   useExportDownload,
   useRunAuditLog,
+  usePayslipTemplates,
+  useSetRunTemplate,
   type PayrollRun,
   type PayrollRunLine,
   type PayrollRunInput,
@@ -454,7 +456,8 @@ function WarningsTab({
 
 // ── Tab: Payslips ─────────────────────────────────────────────────────────────
 
-function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }): VNode {
+function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }): VNode {
+  const runId = run.id;
   const { data: payslips, isLoading, refetch } = useRunPayslips(runId);
   const allIds = (payslips ?? []).map(p => p.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
@@ -463,6 +466,10 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
   const renderMut = usePayrollMutation(financePayrollApi.renderRunPayslips);
   const emailMut = usePayrollMutation(financePayrollApi.deliverRunPayslips);
   const canDistribute = can('finance.payroll.payslips.distribute');
+
+  // Template picker
+  const { data: templates } = usePayslipTemplates();
+  const setTemplateMut = useSetRunTemplate();
 
   async function downloadPayslip(payslip: Payslip): Promise<void> {
     try {
@@ -557,8 +564,46 @@ function PayslipsTab({ runId, canManage }: { runId: string; canManage: boolean }
     </div>
   );
 
+  async function handleTemplateChange(e: Event): Promise<void> {
+    const val = (e.target as HTMLSelectElement).value;
+    const templateId = val === '' ? null : val;
+    try {
+      await setTemplateMut.mutateAsync({ runId, templateId });
+      toast(templateId ? 'Template updated.' : 'Reverted to active default template.');
+    } catch (err) {
+      toast((err as Error).message ?? 'Failed to update template.');
+    }
+  }
+
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+      {/* Template picker — which Payslip Studio layout to render with */}
+      {canManage && (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10,
+                      padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
+          <label style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>
+            Payslip template:
+          </label>
+          <select
+            class="hrfin-input"
+            style={{ fontSize: 12, padding: '4px 8px', flex: 1, maxWidth: 280 }}
+            value={run.templateId ?? ''}
+            onChange={e => void handleTemplateChange(e)}
+            disabled={setTemplateMut.isPending}
+          >
+            <option value="">Active default</option>
+            {(templates ?? []).map(t => (
+              <option key={t.id} value={t.id}>
+                {t.name}{t.isDefault ? ' (default)' : ''}
+              </option>
+            ))}
+          </select>
+          {setTemplateMut.isPending && (
+            <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Saving…</span>
+          )}
+        </div>
+      )}
+
       {/* Bulk toolbar */}
       <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
                     padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
@@ -1522,7 +1567,7 @@ export function PayRunDrawer({
             {tab === 'inputs'    && <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />}
             {tab === 'worksheet' && <WorksheetTab runId={run.id} runStatus={run.status} />}
             {tab === 'warnings'  && <WarningsTab runId={run.id} canManage={canManage} />}
-            {tab === 'payslips'  && <PayslipsTab runId={run.id} canManage={canManage} />}
+            {tab === 'payslips'  && <PayslipsTab run={run} canManage={canManage} />}
             {tab === 'exports'   && <ExportsTab runId={run.id} canExport={canApprove || canManage} />}
             {tab === 'gl'        && <GlTab runId={run.id} runStatus={run.status} />}
             {tab === 'approvals' && <ApprovalsTab run={run} />}
