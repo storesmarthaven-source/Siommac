@@ -65,6 +65,12 @@ alter table public.payroll_payslip_templates
     'archived'
   ));
 
+-- New templates start as 'draft'. The old column default was 'active', which is no
+-- longer a valid status -- any insert relying on the default would now violate the
+-- check. createTemplate sets status explicitly, but fix the default for correctness.
+alter table public.payroll_payslip_templates
+  alter column status set default 'draft';
+
 -- ── Step 4: Update the partial unique index for is_default ───────────────────
 -- The old index guarded is_default on status='active'; now guard on 'approved'.
 
