@@ -7,7 +7,6 @@ import { reseedIds } from '@payslip/lib/id';
 import type { SavedRef } from '@payslip/state/reducer';
 import { templateStore } from '@payslip/lib/store';
 import { saveOpenRef } from '@payslip/lib/store/autosave';
-import { seedBuiltInTemplates } from '@payslip/templates/seed';
 import { Toolbar } from './Toolbar';
 import { Canvas } from './canvas/Canvas';
 import { Inspector } from './inspector/Inspector';
@@ -42,13 +41,16 @@ export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: W
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.design.page.size, state.design.page.orient]);
 
-  // Boot: seed built-ins, then link the canvas to a saved design so "Update this
-  // design" is available. If the last session was editing a saved design, restore
-  // that link; otherwise open the default saved design.
+  // Boot: link the canvas to a saved design so "Update this design" is available.
+  // If the last session was editing a saved design, restore that link; otherwise
+  // open the default saved design. Built-in templates are NO LONGER seeded here
+  // automatically — auto-seeding a production is_default at boot can make the
+  // renderer print demo/seeded figures on real payslips. Seeding is now explicit:
+  // use the "Load starter templates" button inside the Designs menu when the list
+  // is empty.
   useEffect(() => {
     // The draft + open-ref were loaded from the DB before mount and passed in.
     void (async () => {
-      await seedBuiltInTemplates();
       const list = await templateStore.list();
       if (list.length === 0) return;
 

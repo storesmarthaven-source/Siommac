@@ -4,6 +4,7 @@ import { templateStore, type StoredTemplate } from '@payslip/lib/store';
 import { fitToView } from '@payslip/lib/fit';
 import { reseedIds } from '@payslip/lib/id';
 import { showToast } from '@payslip/lib/toast';
+import { seedBuiltInTemplates } from '@payslip/templates/seed';
 
 function formatDate(ms: number): string {
   try {
@@ -19,7 +20,7 @@ export function DesignsMenu() {
   const [open, setOpen] = useState(false);
   const [name, setName] = useState('');
   const [items, setItems] = useState<StoredTemplate[]>([]);
-  const [busy, setBusy] = useState<'update' | 'save' | null>(null);
+  const [busy, setBusy] = useState<'update' | 'save' | 'seed' | null>(null);
   const wrap = useRef<HTMLDivElement>(null);
 
   const refresh = () => {
@@ -100,9 +101,29 @@ export function DesignsMenu() {
     try {
       await templateStore.setDefault(item.id);
       refresh();
-      showToast(`“${item.name}” is now the default`);
+      showToast(`”${item.name}” is now the default`);
     } catch (e) {
       showToast((e as Error)?.message || 'Could not set the default.', 'error');
+    }
+  };
+
+  /**
+   * Explicitly load the built-in starter templates into the Designs store.
+   * Called only when the list is empty and the user clicks the prompt — not
+   * auto-triggered at boot (doing so at boot can auto-set a demo is_default
+   * that the renderer uses on real payslips when no explicit template is set).
+   */
+  const loadStarterTemplates = async () => {
+    if (busy) return;
+    setBusy('seed');
+    try {
+      await seedBuiltInTemplates();
+      refresh();
+      showToast('Starter templates loaded');
+    } catch (e) {
+      showToast((e as Error)?.message || 'Could not load starter templates.', 'error');
+    } finally {
+      setBusy(null);
     }
   };
 
@@ -147,7 +168,16 @@ export function DesignsMenu() {
           <div class="dz-head">My designs</div>
           <div class="dz-list">
             {items.length === 0 ? (
-              <div class="dz-empty">No saved designs yet.</div>
+              <div class="dz-empty">
+                <span>No saved designs yet.</span>
+                <button
+                  class="dz-seed-btn"
+                  onClick={() => void loadStarterTemplates()}
+                  disabled={busy !== null}
+                >
+                  {busy === 'seed' ? 'Loading…' : 'Load starter templates'}
+                </button>
+              </div>
             ) : (
               items.map((item) => (
                 <div class={`dz-item${active?.id === item.id ? ' current' : ''}`} key={item.id}>

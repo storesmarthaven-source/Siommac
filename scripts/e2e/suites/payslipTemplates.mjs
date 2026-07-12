@@ -48,21 +48,59 @@ export default async function run(h) {
   const plainId  = 'PT-EE-'   + TAG;
   const viewerId = 'PT-VIEW-' + TAG;
 
-  const ctx = { aId: null, bId: null };
+  const ctx = {
+    aId: null,
+    bId: null,
+    /** IDs of pre-existing active templates archived at setup — restored in cleanup. */
+    archivedBySetup: /** @type {string[]} */ ([]),
+  };
   let fmgrToken, plainToken, viewerToken;
 
   h.onCleanup(async () => {
+    // Remove our test-created templates and their side-effects first.
     try { await sb.from('payroll_payslip_templates').delete().in('created_by', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('payroll_payslip_editor_state').delete().in('user_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll').in('actor_user_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgrId, viewerId, plainId]); } catch {}
     try { await sb.from('user_permissions').delete().eq('user_id', viewerId); } catch {}
     try { await sb.from('app_users').delete().in('id', [fmgrId, plainId, viewerId]); } catch {}
+    // Restore pre-existing templates that were temporarily archived at setup.
+    if (ctx.archivedBySetup.length > 0) {
+      try {
+        await sb.from('payroll_payslip_templates')
+          .update({ status: 'active' })
+          .in('id', ctx.archivedBySetup);
+      } catch {}
+    }
   });
 
   // ===========================================================================
   h.section('Payslip templates - Setup');
   // ===========================================================================
+
+  await test('P5: archive pre-existing active templates to ensure first-is-default is deterministic', async () => {
+    // The "first template auto-defaults" behaviour only fires when activeCount() === 0.
+    // Any active template left over from a prior run (or from the auto-seed that was
+    // removed in P5) would make our first template NOT the default, failing the test.
+    // We archive them here via service-role access and restore them in onCleanup.
+    const { data: existing } = await sb
+      .from('payroll_payslip_templates')
+      .select('id')
+      .eq('status', 'active');
+    const preExistingIds = (existing ?? []).map(t => t.id);
+    if (preExistingIds.length > 0) {
+      await sb.from('payroll_payslip_templates')
+        .update({ status: 'archived' })
+        .in('id', preExistingIds);
+      ctx.archivedBySetup = preExistingIds;
+    }
+    // Confirm the slate is clean before proceeding.
+    const { data: check } = await sb
+      .from('payroll_payslip_templates')
+      .select('id', { count: 'exact', head: false })
+      .eq('status', 'active');
+    expect((check ?? []).length === 0, 'expected 0 active templates after setup archive');
+  });
 
   await test('provision finance_manager, plain employee, and a view-only user', async () => {
     const users = [

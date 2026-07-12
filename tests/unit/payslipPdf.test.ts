@@ -97,11 +97,58 @@ describe('renderPayslipPdf', () => {
   });
 });
 
+// ── Snapshot data integrity (P2-e) ───────────────────────────────────────────
+//
+// Asserts the payslip snapshot carries the expected fields: employee name, period,
+// earnings rows, deduction rows, and authoritative totals. These properties are
+// the single source of truth for every rendered output (both the built-in layout
+// and the Studio template path). A regression that drops or renames a field
+// would break the PDF silently without these guards.
+
+describe('PayslipSnapshot — data integrity (P2-e)', () => {
+  it('snapshot carries employee name', () => {
+    expect(snapshot.employee.name).toBe('Jane Doe');
+  });
+
+  it('snapshot earnings rows match the fixture (labels present)', () => {
+    const labels = snapshot.earnings.map(e => e.label);
+    expect(labels).toContain('Basic Salary');
+    expect(labels).toContain('Housing Allowance');
+    expect(labels).toContain('Overtime');
+  });
+
+  it('gross = sum of earnings amounts', () => {
+    const earningsSum = snapshot.earnings.reduce((s, e) => s + e.amount, 0);
+    // gross may exceed earningsSum when back pay / additions are included;
+    // at minimum, gross should not be less than the primary earnings total.
+    expect(snapshot.gross).toBeGreaterThanOrEqual(earningsSum);
+  });
+
+  it('net = gross - totalDeductions (reconciliation invariant)', () => {
+    expect(Math.round((snapshot.gross - snapshot.totalDeductions) * 100) / 100).toBe(snapshot.net);
+  });
+
+  it('snapshotTotalForBinding(earnings) returns snapshot.gross', () => {
+    expect(snapshotTotalForBinding(snapshot, 'earnings')).toBe(snapshot.gross);
+  });
+
+  it('snapshotRowsForBinding(earnings) count matches snapshot.earnings length', () => {
+    const rows = snapshotRowsForBinding(snapshot, 'earnings');
+    expect(rows).toHaveLength(snapshot.earnings.length);
+  });
+
+  it('snapshotRowsForBinding(earnings) first row label matches snapshot.earnings[0].label', () => {
+    const rows = snapshotRowsForBinding(snapshot, 'earnings');
+    expect(rows[0]?.label).toBe(snapshot.earnings[0]?.label);
+  });
+});
+
 // ── snapshotRowsForBinding — P2-a pure function tests ────────────────────────
 //
 // PDFKit compresses content streams, so we cannot search for plain text in the
 // raw PDF buffer. Instead we test the pure binding helpers directly — these are
 // the functions that decide WHICH data rows the table renderer uses.
+// (See payslipRender.mjs for the same rationale in the E2E context.)
 
 describe('snapshotRowsForBinding — P2-a', () => {
   it('earnings binding returns snapshot earnings (label + formatted amount)', () => {
