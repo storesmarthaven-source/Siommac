@@ -358,7 +358,7 @@ function StatutoryTab({ d, onEdit }: { d: HrEmployeeDetail; onEdit: () => void }
     </InfoCard>;
   }
   const readyLabel = readiness ? humanize(readiness.status) : '—';
-  const readySub = readiness && readiness.blockers.length ? readiness.blockers.join(', ') : 'Ready for Finance / Payroll handoff';
+  const readySub = readiness?.blockers.length ? readiness.blockers.join(', ') : 'Ready for Finance / Payroll handoff';
   return (
     <>
       <InfoCard title="Trinidad & Tobago Statutory Profile"

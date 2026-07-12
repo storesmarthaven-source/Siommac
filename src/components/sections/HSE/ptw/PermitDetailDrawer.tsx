@@ -543,10 +543,10 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
   // Full permit detail (includes hazards, controls, timeline)
   const { data: detailRes, refetch: refetchDetail } = usePermit(permit.id);
   const detail    = detailRes?.data;
-  const permitRec = (detail?.permit!) ?? {};
-  const hazards   = (detail?.hazards!) ?? [];
-  const controls  = (detail?.controls!) ?? [];
-  const timeline  = (detail?.timeline!) ?? [];
+  const permitRec = (detail?.permit) ?? {};
+  const hazards   = (detail?.hazards) ?? [];
+  const controls  = (detail?.controls) ?? [];
+  const timeline  = (detail?.timeline) ?? [];
 
   // Sub-register live data
   const { data: isoRes,       refetch: refetchIso  } = usePermitIsolations(permit.id);

@@ -333,7 +333,7 @@ export function StartOnboardingWizard(
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
       void qc.invalidateQueries({ queryKey: ['hr', 'onboarding'] });
       toast.success(`Onboarding started — ${r.caseNo} (${r.taskCount} tasks)`);
-    }).catch(e => toast.error(e instanceof Error ? e.message : 'Request failed.')).finally(() => setBusy(false));
+    }).catch((e: unknown) => toast.error(e instanceof Error ? e.message : 'Request failed.')).finally(() => setBusy(false));
   }
 
   const stepIndex = STEPS.findIndex(s => s.key === step);

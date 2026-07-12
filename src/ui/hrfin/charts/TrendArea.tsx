@@ -70,7 +70,7 @@ export function TrendArea({
   const fIdx = forecastFromIndex ?? seriesA.length; // all actual if not set
 
   // Build the actual segment path (up to fIdx)
-  const actualSegA = seriesA.slice(0, fIdx).filter((_, i) => !Number.isNaN(seriesA[i]!));
+  const _actualSegA = seriesA.slice(0, fIdx).filter((_, i) => !Number.isNaN(seriesA[i]!));
   const actualIndices = seriesA.slice(0, fIdx).map((_, i) => i).filter(i => !Number.isNaN(seriesA[i]!));
 
   const pathA = actualIndices.length

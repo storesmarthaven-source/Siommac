@@ -85,6 +85,14 @@ export default [
       // Allow void operator for intentional fire-and-forget (logger, analytics)
       '@typescript-eslint/no-confusing-void-expression': 'off',
 
+      // Allow ternary-as-statement (e.g. `n.has(k) ? n.delete(k) : n.add(k)`)
+      // and short-circuit as statement (e.g. `flag && doSomething()`).
+      // These are idiomatic JS patterns for side-effect dispatch.
+      '@typescript-eslint/no-unused-expressions': ['error', {
+        allowShortCircuit: true,
+        allowTernary:      true,
+      }],
+
       // Allow non-null assertions sparingly in component code (use judiciously)
       '@typescript-eslint/no-non-null-assertion': 'warn',
 

@@ -294,7 +294,7 @@ function renderGroupItems(items: SectionItem[], expandedParents: Set<string>, gr
     .join('');
 }
 
-const groupTitle = (label: string) =>
+const _groupTitle = (label: string) =>
   `<li class="sidebar-menu-title" aria-hidden="true">${esc(label)}</li>`;
 
 // ── Accordion sidebar (Meridian-style IA, H) ──────────────────────────────────
@@ -753,7 +753,7 @@ export function setHdrBadge(badge: Element | null, count: number, dot?: boolean)
   (badge as HTMLElement).style.display = count > 0 ? '' : 'none';
   if (count > 0 && (prev === undefined || prev === 0)) {
     (badge as HTMLElement).style.animation = 'none';
-    (badge as HTMLElement).offsetWidth; // reflow
+    void (badge as HTMLElement).offsetWidth; // reflow — forces browser to flush styles
     (badge as HTMLElement).style.animation = '';
   }
 }
@@ -775,7 +775,7 @@ function _setSbBadge(btn: HTMLButtonElement, count: number) {
       b.className = 'sb-nav-badge';
       b.style.animation = 'none';
       btn.appendChild(b);
-      b.offsetWidth; // reflow
+      void b.offsetWidth; // reflow
     }
     b.textContent = label;
     b.style.animation = 'none'; b.offsetWidth; b.style.animation = '';

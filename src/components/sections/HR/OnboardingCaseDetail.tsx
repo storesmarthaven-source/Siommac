@@ -43,7 +43,7 @@ import { OnboardingAddTaskModal } from './OnboardingAddTaskModal';
 import './onboardingCase.css';
 
 // ── helpers ──────────────────────────────────────────────────────────────────────
-const initials = (n: string | null | undefined): string =>
+const _initials = (n: string | null | undefined): string =>
   (n ?? '').split(/\s+/).filter(Boolean).slice(0, 2).map(s => (s[0] ?? '').toUpperCase()).join('') || '?';
 
 function tone(s: string): string {

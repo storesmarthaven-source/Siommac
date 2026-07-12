@@ -165,7 +165,7 @@ function RosterDetail({ rosterId, canManage, canPublish, onBack }: {
 }): VNode {
   const rosterQ   = useRoster(rosterId);
   const gapsQ     = useCoverageGaps(rosterId);
-  const hoursQ    = useRoster(rosterId); // reuse for employee list
+  const _hoursQ    = useRoster(rosterId); // reuse for employee list
   const publishMut = useRosterMutation(hrRosterApi.publish);
   const reopenMut  = useRosterMutation(hrRosterApi.reopen);
   const syncLeaveMut = useRosterMutation(hrRosterApi.syncLeave);
@@ -390,7 +390,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
   const coverageQ   = useCoverageRequirements();
 
   const [newShiftOpen, setNewShiftOpen] = useState(false);
-  const upsertShift = useRosterMutation(hrRosterApi.upsertTemplate);
+  const _upsertShift = useRosterMutation(hrRosterApi.upsertTemplate);
   const removeShift = useRosterMutation(hrRosterApi.removeTemplate);
 
   return (

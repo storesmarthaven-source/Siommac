@@ -165,7 +165,7 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
   const [generateOpen,    setGenerateOpen]    = useState(false);
   const [jsaPrefill,      setJsaPrefill]      = useState<JsaPrefill | null>(null);
 
-  const { data: summaryRes, isLoading: summaryLoading } = useRiskJsaSummary();
+  const { data: summaryRes, isLoading: _summaryLoading } = useRiskJsaSummary();
   const summary = summaryRes?.data;
 
   const totalHazards       = summary?.totalHazards           ?? 0;

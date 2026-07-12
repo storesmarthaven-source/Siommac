@@ -75,10 +75,13 @@ function skelOnce(sectionId: string, fn: () => void): void {
 }
 
 function setSkel(id: string, html: string): void {
-  w().setSkel?.(id, html) ?? (() => {
+  const bridge = w();
+  if (bridge.setSkel != null) {
+    bridge.setSkel(id, html);
+  } else {
     const el = document.getElementById(id);
     if (el) el.innerHTML = html;
-  })();
+  }
 }
 
 function skelList(n: number): string {
@@ -252,7 +255,7 @@ function initializeMap(): void {
 
       // Rebuild markers from any already-fetched live data
       const ld2 = AppState.get('liveData') as any[];
-      if (ld2 && ld2.length) plotLiveEmployees(ld2);
+      if (ld2?.length) plotLiveEmployees(ld2);
 
       _populateSiteSelect();
       _initCustomSelect();
@@ -733,7 +736,7 @@ function _buildEmpOverlayHtml(row: any): string {
   const initial     = (row.fullName || '?').charAt(0).toUpperCase();
   const profile     = row.profileImage || '';
   const selfie      = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
-  const statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
+  const _statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
   const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
   const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
   const statusColor = row.isCheckedOut ? '#546E7A' : (row.status === 'late' ? '#E65100' : '#2E7D32');
@@ -877,7 +880,7 @@ function markProjectAttendance(): void {
       }
       w().updateRealTimeStats?.();
     })
-    .catch((err: any) => { showNotification(err.message || 'Network error', 'error'); });
+    .catch((err: unknown) => { showNotification((err instanceof Error ? err.message : null) || 'Network error', 'error'); });
 }
 
 // ── Public API object ─────────────────────────────────────────────────────────

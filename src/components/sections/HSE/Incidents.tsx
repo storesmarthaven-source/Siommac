@@ -178,7 +178,7 @@ function dbToCapa(c: HseCapa): CapaItem {
 
 // ── Constants ─────────────────────────────────────────────────────────────────
 
-const TABS: AreaTab[] = [
+const _TABS: AreaTab[] = [
   { key: 'register',       label: 'Register',        sublabel: 'All incidents',   icon: 'fa-list-ul' },
   { key: 'investigations', label: 'Investigations',  sublabel: 'Root cause',      icon: 'fa-magnifying-glass-chart' },
   { key: 'capa',           label: 'CAPA / Actions',  sublabel: 'Corrective plans', icon: 'fa-list-check' },
@@ -422,7 +422,7 @@ export function OWQPanel({ incidents, capa, onOpenIncident, onOpenCapa }: {
 
 // ── Investigation Pipeline ────────────────────────────────────────────────────
 
-function InvestigationPipeline({ incidents, investigations }: {
+function _InvestigationPipeline({ incidents, investigations }: {
   incidents: IncidentRecord[];
   investigations: Investigation[];
 }): VNode {
@@ -501,14 +501,14 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct: _cl
   const mtdIncidents  = incidents.filter(i => i.date && new Date(i.date) >= startOfMonth);
 
   const activeInvest = incidents.filter(i => /investigation/i.test(i.status)).length;
-  const needsTriage  = incidents.filter(i => /open/i.test(i.status)).length;
-  const linkedCapas  = capa.filter(c => !/closed|verified/i.test(c.status)).length;
-  const pendingEv    = capa.filter(c => /pending|evidence/i.test(c.status)).length;
+  const _needsTriage  = incidents.filter(i => /open/i.test(i.status)).length;
+  const _linkedCapas  = capa.filter(c => !/closed|verified/i.test(c.status)).length;
+  const _pendingEv    = capa.filter(c => /pending|evidence/i.test(c.status)).length;
   const emaNotifs    = incidents.filter(i => i.type === 'Environmental' && !/closed/i.test(i.status));
   const oshRequired  = incidents.filter(i => i.oshNotificationDue && !i.oshNotifiedAt && !/closed/i.test(i.status));
-  const ltiCount     = incidents.filter(i => i.lostTime === true).length;
-  const overdueActs  = capa.filter(c => /overdue/i.test(c.status)).length;
-  const priority     = emaNotifs[0] ?? oshRequired[0] ?? null;
+  const _ltiCount     = incidents.filter(i => i.lostTime === true).length;
+  const _overdueActs  = capa.filter(c => /overdue/i.test(c.status)).length;
+  const _priority     = emaNotifs[0] ?? oshRequired[0] ?? null;
 
   const sevCounts = {
     danger:  mtdIncidents.filter(i => i.severity === 'danger').length,
@@ -519,9 +519,9 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct: _cl
   const total = mtdIncidents.length || 1;
   const SEV_COLORS  = { danger: '#ef4444', warning: '#f59e0b', info: '#60a5fa', success: '#4ade80' };
   const SEV_FADED   = { danger: 'rgba(239,68,68,.15)', warning: 'rgba(245,158,11,.15)', info: 'rgba(96,165,250,.15)', success: 'rgba(74,222,128,.15)' };
-  const cx = 44, cy = 44, r = 34, circ = 2 * Math.PI * r;
+  const _cx = 44, _cy = 44, r = 34, circ = 2 * Math.PI * r;
   let offset = 0;
-  const slices = (['danger','warning','info','success'] as const).map(k => {
+  const _slices = (['danger','warning','info','success'] as const).map(k => {
     const pct = sevCounts[k] / total;
     const len = pct * circ;
     const rot = offset;
@@ -551,7 +551,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct: _cl
     const pendingEvActs= capa.filter(c => /pending|evidence/i.test(c.status));
     const critActs     = capa.filter(c => c.priority === 'danger');
     const firstOverdue = overdueActs2[0];
-    const firstPendEv  = pendingEvActs[0];
+    const _firstPendEv  = pendingEvActs[0];
     return (
       <ReorderStrip pageKey={`hse.incidents.${pageTab}`} keys={['open', 'overdue', 'verification', 'ownership']}>
 
@@ -897,7 +897,7 @@ function IncidentControlStrip({ incidents, investigations, capa, closurePct: _cl
 
 // ── CAPA Health Card ──────────────────────────────────────────────────────────
 
-function CapaHealthCard({ capa, onViewAll: _onViewAll, closurePct, overdueCapa, avgDaysToClose, avgTarget }: {
+function _CapaHealthCard({ capa, onViewAll: _onViewAll, closurePct, overdueCapa, avgDaysToClose, avgTarget }: {
   capa: CapaItem[];
   onViewAll: () => void;
   closurePct: number;
@@ -908,7 +908,7 @@ function CapaHealthCard({ capa, onViewAll: _onViewAll, closurePct, overdueCapa, 
   const openCount   = capa.filter(c => !/closed|verified/i.test(c.status)).length;
   const pendingEv   = capa.filter(c => /pending|evidence/i.test(c.status)).length;
   const closedMonth = capa.filter(c => /closed|verified/i.test(c.status)).length;
-  const highestRisk = capa.filter(c => c.priority === 'danger' && !/closed/i.test(c.status))[0];
+  const highestRisk = capa.find(c => c.priority === 'danger' && !/closed/i.test(c.status));
   const oldestOpen  = capa.filter(c => !/closed|verified/i.test(c.status))
     .sort((a, b) => new Date(a.due).getTime() - new Date(b.due).getTime())[0];
 
@@ -977,24 +977,24 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
   const investigations = investigationsQ.data?.map(dbToInvestigation) ?? [];
   const capa           = capaQ.data?.map(dbToCapa)                    ?? [];
 
-  const ltiFreeDays = kpisQ.data?.ltiFreeDays ?? 47;
+  const _ltiFreeDays = kpisQ.data?.ltiFreeDays ?? 47;
 
 
-  const openCount = incidents.filter(i => !/closed/i.test(i.status)).length;
-  const critCount = incidents.filter(i => i.severity === 'danger').length;
+  const _openCount = incidents.filter(i => !/closed/i.test(i.status)).length;
+  const _critCount = incidents.filter(i => i.severity === 'danger').length;
   const openCapa  = capa.filter(c => !/closed/i.test(c.status)).length;
 
   const closedCount = incidents.filter(i => /closed/i.test(i.status)).length;
   const closurePct  = incidents.length ? Math.round((closedCount / incidents.length) * 100) : 0;
 
-  const overdueCapa = capa.filter(c => /overdue/i.test(c.status)).length;
+  const _overdueCapa = capa.filter(c => /overdue/i.test(c.status)).length;
 
   // Avg days to close — only closed incidents with a parseable date
   const closedWithDate = incidents.filter(i => /closed/i.test(i.status) && i.date);
   const avgDaysToClose = closedWithDate.length
     ? Math.round(closedWithDate.reduce((sum, i) => sum + Math.max(1, Math.round((Date.now() - new Date(i.date).getTime()) / 86400e3)), 0) / closedWithDate.length)
     : 0;
-  const avgTarget = 14; // target: close within 14 days
+  const _avgTarget = 14; // target: close within 14 days
 
   async function handleReportSubmit(payload: {
     type: IncidentType; severity: string; site: string;
@@ -1190,7 +1190,7 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
 
 // ── Register tab ──────────────────────────────────────────────────────────────
 
-function nextStep(i: IncidentRecord): string {
+function _nextStep(i: IncidentRecord): string {
   if (/closed/i.test(i.status))      return 'Closed';
   if (/capa/i.test(i.status))        return 'Verify CAPA';
   if (/investigation/i.test(i.status)) return 'Root cause';
@@ -1448,20 +1448,20 @@ function buildAuditTrail(incidents: IncidentRecord[], capa: CapaItem[]): AuditEn
   return entries.sort((a, b) => b.ts - a.ts);
 }
 
-function matchSev(uiSeverity: string, filter: string): boolean {
+function _matchSev(uiSeverity: string, filter: string): boolean {
   if (filter === 'Critical / High') return uiSeverity === 'danger' || uiSeverity === 'warning';
   if (filter === 'Moderate')        return uiSeverity === 'info';
   if (filter === 'Minor')           return uiSeverity === 'success';
   return true;
 }
 
-function priorityClass(sev: string): string {
+function _priorityClass(sev: string): string {
   if (sev === 'danger')  return 'high';
   if (sev === 'warning') return 'high';
   if (sev === 'info')    return 'medium';
   return 'low';
 }
-function priorityLabel(sev: string): string {
+function _priorityLabel(sev: string): string {
   if (sev === 'danger' || sev === 'warning') return 'High';
   if (sev === 'info')  return 'Medium';
   return 'Low';
@@ -2102,7 +2102,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
       'Low':      { icon: 'fa-circle-check',          color: '#60a5fa' },
     };
     const sevMeta  = SEV_BY_LABEL[severity] ?? { icon: 'fa-circle', color: '#94a3b8' };
-    const typeIcon = TYPE_ICONS[type] ?? 'fa-triangle-exclamation';
+    const _typeIcon = TYPE_ICONS[type] ?? 'fa-triangle-exclamation';
 
     // Shared: state summary — clean 2×2 grid, no watermarks
     const stateCards = (
@@ -2834,7 +2834,7 @@ function CapaTab({ capa, closurePct: _closurePct, avgDaysToClose: _avgDaysToClos
   const createCapa = useCreateCapa();
   const updateCapa = useUpdateCapa();
 
-  const overdue = capa.filter(c => /overdue/i.test(c.status));
+  const _overdue = capa.filter(c => /overdue/i.test(c.status));
 
   const filtered = useMemo(() => {
     const q = search.toLowerCase();
@@ -3499,7 +3499,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
     );
   }
 
-  function renderPeople(): VNode {
+  function _renderPeople(): VNode {
     const people = detail?.people ?? [];
     if (detailQ.isLoading) return <div class="hse-idrawer-empty"><i class="fas fa-spinner fa-spin" /> Loading…</div>;
     if (people.length === 0) return (
@@ -3868,7 +3868,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
 
 // ── Form section wrapper ──────────────────────────────────────────────────────
 
-function FormSection({ icon, title, children }: {
+function _FormSection({ icon, title, children }: {
   icon: string; title: string; children: ComponentChildren;
 }): VNode {
   return (

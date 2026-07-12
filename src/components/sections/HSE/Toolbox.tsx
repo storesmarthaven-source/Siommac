@@ -38,7 +38,7 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
   const [newPres, setPres]    = useState('');
 
   const completed  = talks.filter(t => /complete/i.test(t.status)).length;
-  const scheduled  = talks.filter(t => /scheduled/i.test(t.status)).length;
+  const _scheduled  = talks.filter(t => /scheduled/i.test(t.status)).length;
   const totalAtt   = talks.filter(t => /complete/i.test(t.status)).reduce((s, t) => s + t.attendees, 0);
   const avgAtt     = completed > 0 ? Math.round(totalAtt / completed) : 0;
 

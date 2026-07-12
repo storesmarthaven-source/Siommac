@@ -321,7 +321,7 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
       }
       const newToken = await _refreshToken();
       if (newToken) {
-        return apiFetch<T>(path, { ...opts, _skipRefreshCheck: true }, 0);
+        return await apiFetch<T>(path, { ...opts, _skipRefreshCheck: true }, 0);
       }
       _onAuthExpired();
       return { success: false, message: 'Session expired. Please log in again.' } as T;

@@ -758,7 +758,7 @@ function initials(name: string | null | undefined): string {
   return (((p[0]?.[0] ?? '') + (p[1]?.[0] ?? '')).toUpperCase()) || '?';
 }
 
-function Avatar({ name, img, size = 34 }: { name: string; img?: string | null; size?: number }): VNode {
+function _Avatar({ name, img, size = 34 }: { name: string; img?: string | null; size?: number }): VNode {
   return img
     ? <img src={img} alt={name} style={{ width: `${size}px`, height: `${size}px`, borderRadius: '50%', objectFit: 'cover', flexShrink: 0 }} />
     : (
@@ -769,7 +769,7 @@ function Avatar({ name, img, size = 34 }: { name: string; img?: string | null; s
     );
 }
 
-function SectionHead({ children }: { children: ComponentChildren }): VNode {
+function _SectionHead({ children }: { children: ComponentChildren }): VNode {
   return (
     <div style={{ fontSize: '0.7rem', fontWeight: 'var(--font-weight-bold)', textTransform: 'uppercase', letterSpacing: '.05em',
       color: 'var(--text-muted)', marginBottom: '10px' }}>{children}</div>

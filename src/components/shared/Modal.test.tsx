@@ -12,7 +12,7 @@ import { useState }                  from 'preact/hooks';
 import { Modal }                     from './Modal';
 
 // Wrapper that manages open state
-function Controlled({ closeOnBackdrop = true, closeOnEscape = true } = {}): VNode {
+function _Controlled({ closeOnBackdrop = true, closeOnEscape = true } = {}): VNode {
   const [open, setOpen] = useState(true);
   return (
     <Modal

@@ -153,7 +153,7 @@ export function PayablesOverview(): VNode {
   const vendorCols: HrfinColumn<Record<string, unknown>>[] = [
     { key: 'name', label: 'Vendor', render: r => String(r.name) },
     { key: 'vendorNo', label: 'Vendor no.', render: r => String(r.vendorNo) },
-    { key: 'terms', label: 'Terms', render: r => `Net ${r.paymentTermsDays}` },
+    { key: 'terms', label: 'Terms', render: r => `Net ${String(r.paymentTermsDays)}` },
     { key: 'status', label: 'Status', render: r => <HrfinPill tone={r.status === 'active' ? 'ok' : 'dr'}>{r.status === 'active' ? 'Active' : 'Inactive'}</HrfinPill> },
   ];
   const paymentCols: HrfinColumn<Record<string, unknown>>[] = [

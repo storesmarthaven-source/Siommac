@@ -788,7 +788,7 @@ function RemFilingsTab({ remittances, loading, tabs, activeTab, onTab }: {
     { key: 'method',  label: 'Method',       render: r => <span class="hrfin-muted">{r.filingMethod ? humanize(r.filingMethod) : '—'}</span> },
     { key: 'ref2',    label: 'Receipt Ref',  render: r => <span class="hrfin-muted">{r.receiptReference ?? '—'}</span> },
     { key: 'total',   label: 'Total Filed',  render: r => <strong>{money(r.totalDue)}</strong> },
-    { key: 'status',  label: 'Status',       render: r => <HrfinPill tone="ok">Filed</HrfinPill> },
+    { key: 'status',  label: 'Status',       render: _r => <HrfinPill tone="ok">Filed</HrfinPill> },
   ];
 
   const csvCols: CsvColumn<Remittance>[] = [
@@ -1458,7 +1458,7 @@ function RemComputeWizard({ onClose }: { onClose: () => void }): VNode {
     }
   }
 
-  const primaryLabel =
+  const _primaryLabel =
     step === 4 ? 'Create Draft' :
     step === 3 ? 'Review' :
     'Next';

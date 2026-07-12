@@ -327,7 +327,7 @@ function LogoutModal({ open, onClose }: { open: boolean; onClose: () => void }):
 
   const handleLogout = useCallback(async () => {
     setBusy(true);
-    try { await logout(); }
+    try {  logout(); }
     finally { setBusy(false); }
   }, [logout]);
 

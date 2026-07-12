@@ -21,7 +21,7 @@ import {
   TICKET_STATUSES,
   isClosed,
 } from '@api/schemas/ticket';
-import type { TicketRow, TicketReply, TicketStatus } from '@api/schemas/ticket';
+import type {  TicketReply, TicketStatus } from '@api/schemas/ticket';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 

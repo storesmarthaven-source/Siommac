@@ -291,7 +291,7 @@ describe('initNotificationsRealtime / teardownNotificationsRealtime', () => {
   });
 
   it('teardown removes the channel and nullifies the handle', async () => {
-    const { supabase } = await import('@lib/supabase');
+    const { supabase: _supabase } = await import('@lib/supabase');
     const { teardownNotificationsRealtime } = await import('@lib/notifications');
 
     await teardownNotificationsRealtime();

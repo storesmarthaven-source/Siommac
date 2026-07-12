@@ -19,7 +19,7 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import { useState, useEffect, useRef, useMemo, useCallback } from 'preact/hooks';
+import { useState, useEffect, useRef, useMemo } from 'preact/hooks';
 import { useQuery }          from '@tanstack/preact-query';
 import { toast }             from '@store';
 import { useSessionStore }   from '@store/session';

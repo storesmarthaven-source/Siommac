@@ -939,7 +939,7 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
     },
   ];
 
-  const handleTabAction = () => {
+  const _handleTabAction = () => {
     if (active === 'wizard') return; // wizard tab is self-contained
     setActive('wizard');
   };

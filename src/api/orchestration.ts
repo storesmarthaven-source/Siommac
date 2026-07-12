@@ -33,7 +33,7 @@ export interface TimelineRef {
 export function useRecordTimeline(ref: TimelineRef | null) {
   return useQuery({
     queryKey: ['orchestration', 'timeline', ref],
-    enabled:  !!(ref && ref.module && ref.recordType && ref.recordId),
+    enabled:  !!(ref?.module && ref.recordType && ref.recordId),
     queryFn:  async ({ signal }) => {
       const res = await apiPost<{ success: boolean; data: TimelineItem[] }>(
         'orchestration/timeline/get',

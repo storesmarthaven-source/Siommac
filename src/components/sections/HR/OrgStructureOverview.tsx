@@ -240,7 +240,7 @@ function UnitModal({ open, editing, defaultParentId, units, siteOpts, ccOpts, pe
 }
 
 // ── Move modal ───────────────────────────────────────────────────────────────────
-function MoveModal({ open, unit, units, unitOpts, onClose }: { open: boolean; unit: OrgUnit; units: OrgUnit[]; unitOpts: Opt[]; onClose: () => void }): VNode {
+function MoveModal({ open: _open, unit, units, unitOpts, onClose }: { open: boolean; unit: OrgUnit; units: OrgUnit[]; unitOpts: Opt[]; onClose: () => void }): VNode {
   const move = useMoveOrgUnit();
   const [parentId, setParentId] = useState<string>(unit.parentId ?? '');
   async function submit(): Promise<void> {
@@ -280,7 +280,7 @@ function MoveModal({ open, unit, units, unitOpts, onClose }: { open: boolean; un
 }
 
 // ── Position create/edit modal ───────────────────────────────────────────────────
-function PositionModal({ open, editing, positions, unitOpts, siteOpts, peopleOpts, positionOpts, onClose }: {
+function PositionModal({ open: _open, editing, positions, unitOpts, siteOpts, peopleOpts, positionOpts, onClose }: {
   open: boolean; editing: Position | null; positions: Position[]; unitOpts: Opt[]; siteOpts: Opt[]; peopleOpts: Opt[]; positionOpts: Opt[]; onClose: () => void;
 }): VNode {
   const create = useCreatePosition();
@@ -362,7 +362,7 @@ function PositionModal({ open, editing, positions, unitOpts, siteOpts, peopleOpt
 }
 
 // ── Cost-centre create/edit modal ────────────────────────────────────────────────
-function CostCenterModal({ open, editing, costCenters, units, positions, unitOpts, peopleOpts, onClose }: {
+function CostCenterModal({ open: _open, editing, costCenters, units, positions, unitOpts, peopleOpts, onClose }: {
   open: boolean; editing: CostCenter | null; costCenters: CostCenter[]; units: OrgUnit[]; positions: Position[];
   unitOpts: Opt[]; peopleOpts: Opt[]; onClose: () => void;
 }): VNode {

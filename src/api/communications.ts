@@ -485,7 +485,7 @@ export function useMarkThreadRead() {
       apiPost<{ success: boolean }>(
         'communications/messages/markRead', { threadId }, { retryable: false },
       ),
-    onSuccess: (_r: unknown, threadId: string) => {
+    onSuccess: (_r: unknown, _threadId: string) => {
       void qc.invalidateQueries({ queryKey: messageKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },

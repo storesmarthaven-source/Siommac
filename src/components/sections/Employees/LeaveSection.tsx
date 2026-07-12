@@ -58,7 +58,7 @@ const LV_STATUS_CLASS: Record<string, string> = {
   rejected: 'lv-status-rejected',
 };
 
-const LV_STAT_ICON_CLASS: Record<string, string> = {
+const _LV_STAT_ICON_CLASS: Record<string, string> = {
   total:    'navy',
   pending:  'medical',
   approved: 'green',

@@ -277,7 +277,7 @@ function RequestDetail({
     title: `${r.changeNo} · ${r.employeeName ?? '—'}`, subtitle: r.effectiveDate ? `Effective ${r.effectiveDate}` : undefined, icon: 'fa-right-left',
     badges: [statusBadge(r.status)],
     fields: [
-      { label: 'Change', value: `${r.previousValue ?? '—'} → ${r.requestedValue ?? '—'}` },
+      { label: 'Change', value: `${String(r.previousValue ?? '—')} → ${String(r.requestedValue ?? '—')}` },
       r.requestedByName ? { label: 'Requested by', value: r.requestedByName } : null,
     ],
   });

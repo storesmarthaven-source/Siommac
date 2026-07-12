@@ -219,7 +219,7 @@ export const SwCacheManager = {
         });
         return reg;
       })
-      .catch(err => { console.warn('[SW] Registration failed:', err); return null; });
+      .catch((err: unknown) => { console.warn('[SW] Registration failed:', err); return null; });
   },
 
   /** Tell the SW to evict a specific photo URL (call after profile image update). */

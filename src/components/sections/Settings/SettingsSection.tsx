@@ -447,7 +447,7 @@ export function TotpSetupModal({ onClose, onEnabled }: TotpSetupModalProps): VNo
   const [step,        setStep]        = useState<SetupStep>('qr');
   const [qrDataUrl,   setQrDataUrl]   = useState('');
   const [secret,      setSecret]      = useState('');
-  const [otpauthUrl,  setOtpauthUrl]  = useState('');
+  const [_otpauthUrl,  setOtpauthUrl]  = useState('');
   const [code,        setCode]        = useState('');
   const [backupCodes, setBackupCodes] = useState<string[]>([]);
   const [copied,      setCopied]      = useState(false);

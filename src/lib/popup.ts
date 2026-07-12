@@ -143,7 +143,7 @@ function _ensureDOM(): void {
 function _installMdCapture(): void {
   if (_mdCapture) return;
   _mdCapture = (e: MouseEvent) => {
-    if (_modal && _modal.contains(e.target as Node)) return;
+    if (_modal?.contains(e.target as Node)) return;
     const bsModal = (e.target as Element)?.closest?.('.modal.show');
     if (bsModal) e.stopImmediatePropagation();
   };

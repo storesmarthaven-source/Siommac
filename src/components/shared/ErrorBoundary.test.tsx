@@ -6,7 +6,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent }             from '@testing-library/preact';
+import { render, screen }             from '@testing-library/preact';
 import { ErrorBoundary }                          from './ErrorBoundary';
 
 // Component that throws on demand

@@ -17,14 +17,11 @@ import { useMyWorkflowTasks, useDecideWorkflowTask, type WorkflowTask } from '@a
 import { AreaHero } from '@ui';
 import { OWQPanel } from './Incidents';
 import {
-  mockHseKpis, mockTrend, mockQueue,
-  mockHseIncidents, mockSiteRisk, mockPermits, mockReadiness,
+  mockHseKpis, mockTrend,
   mockIncidents, mockCapa, mockPermitRows, mockInspections, mockFindings,
   mockCertifications, mockToolboxTalks, mockHseDocs, mockSds, mockPpeItems,
   HSE_HEALTH_SCORE,
-  hseStatusClass, splitSiteDetail, riskRating,
   HSE_SITE_OPTIONS, HSE_PERIOD_OPTIONS, HSE_RISK_OPTIONS, HSE_OWNER_OPTIONS,
-  type Permit, type QueueItem, type SiteRisk, type ReadinessRow,
 } from './types';
 
 // ── colour tokens ──────────────────────────────────────────────────────────────
@@ -701,13 +698,13 @@ function ModuleHealthLayer(): VNode {
 // ── Layer 4: Analytics ─────────────────────────────────────────────────────────
 
 const SW = 110, SH = 30;
-function sparkPath(vals: number[], close = false): string {
+function _sparkPath(vals: number[], close = false): string {
   const max = Math.max(...vals, 1);
   const pts = vals.map((v, i) => `${(i / (vals.length - 1)) * SW},${SH - 3 - (v / max) * (SH - 6)}`);
   if (close) return `M0,${SH} L${pts.join(' L')} L${SW},${SH} Z`;
   return `M${pts.join(' L')}`;
 }
-function SparkDot({ vals, color }: { vals: number[]; color: string }): VNode {
+function _SparkDot({ vals, color }: { vals: number[]; color: string }): VNode {
   const max = Math.max(...vals, 1);
   const cy  = SH - 3 - (vals[vals.length - 1]! / max) * (SH - 6);
   return <circle cx={SW} cy={cy} r="3.5" fill={color} stroke="var(--bg-card)" stroke-width="1.5" />;

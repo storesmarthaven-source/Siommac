@@ -226,7 +226,7 @@ export async function signOut(): Promise<void> {
 
   // Fire-and-forget — don't block logout on backend response
   if (username && userId) {
-    void logoutApi({ username, userId }).catch((err) => {
+    void logoutApi({ username, userId }).catch((err: unknown) => {
       logger.warn('[auth] Logout API call failed (non-fatal)', { err });
     });
   }

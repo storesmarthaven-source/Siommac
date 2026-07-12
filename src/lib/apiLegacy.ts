@@ -83,7 +83,7 @@ export function _rawApi(action: string, args: Record<string, unknown> = {}): Pro
         return { success: false, message: 'Server returned non-JSON: ' + text.slice(0, 140) };
       }
     })
-    .catch(err => {
+    .catch((err: unknown) => {
       console.error('[api] fetch fail', action, err);
       return { success: false, message: 'Network error: ' + (err instanceof Error ? err.message : String(err)) };
     });
@@ -157,7 +157,7 @@ function _swrFetch(key: string, fetcher: () => Promise<unknown>, opts: SwrFetchO
     if (opts.onData) { try { opts.onData(data, false, false); } catch { /* swallow */ } }
     _swrFire(key, data);
     return data;
-  }).catch(err => {
+  }).catch((err: unknown) => {
     _inflight.delete(key);
     if (opts.onError) { try { opts.onError(err); } catch { /* swallow */ } }
     throw err;

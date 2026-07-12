@@ -54,7 +54,7 @@ export function FinanceOverview(): VNode {
   const trendLabels   = trendData?.labels   ?? d?.spendTrend.labels   ?? [];
   const trendSpend    = trendData?.spend    ?? d?.spendTrend.spend    ?? [];
   const trendBudget   = trendData?.budget   ?? d?.spendTrend.budget   ?? [];
-  const trendForecast = trendData?.forecast ?? [];
+  const _trendForecast = trendData?.forecast ?? [];
   const trendForecastFrom = trendData?.forecastFromIndex ?? trendLabels.length;
 
   const actions: QuickAction[] = [

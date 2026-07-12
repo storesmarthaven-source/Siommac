@@ -282,10 +282,10 @@ export function PayrollOverview(): VNode {
 
   // Permissions
   const canManage = can('finance.payroll.run.manage');
-  const canLock   = can('finance.payroll.lock');
+  const _canLock   = can('finance.payroll.lock');
   const canApprove = can('finance.payroll.approve') || can('finance.payroll.lock');
   const canExport = can('finance.payroll.export');
-  const canView   = can('finance.payroll.view_all') || canManage;
+  const _canView   = can('finance.payroll.view_all') || canManage;
 
   // Data
   const runsQ = usePayrollRuns({ limit: 500 });

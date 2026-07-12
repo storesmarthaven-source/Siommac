@@ -89,7 +89,7 @@ export function PayCreateDisbursementDialog({
 
 // ── Create Remittance ──────────────────────────────────────────────────────────
 
-const AUTHORITIES = [
+const _AUTHORITIES = [
   { value: 'paye_bir',         label: 'PAYE / BIR' },
   { value: 'nis_nibtt',        label: 'NIS / NIBTT' },
   { value: 'health_surcharge', label: 'Health Surcharge' },

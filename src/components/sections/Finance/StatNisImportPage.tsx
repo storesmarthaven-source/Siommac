@@ -82,7 +82,7 @@ function validateCsv(text: string): { rows: ValRow[]; headerError: string | null
     let severity: Severity = 'ok';
     let issue = '', message = '', fix = '';
     const flagErr = (is: string, m: string, fx: string) => { if (severity !== 'error') { severity = 'error'; issue = is; message = m; fix = fx; } };
-    const flagWarn = (is: string, m: string, fx: string) => { if (severity === 'ok') { severity = 'warning'; issue = is; message = m; fix = fx; } };
+    const _flagWarn = (is: string, m: string, fx: string) => { if (severity === 'ok') { severity = 'warning'; issue = is; message = m; fix = fx; } };
 
     if (!Number.isInteger(classNo) || classNo < 1) flagErr('Invalid Class No', `Class number '${classNoRaw}' is not a whole number ≥ 1.`, 'Use a whole number ≥ 1.');
     if (isNaN(weeklyMin) || weeklyMin < 0) flagErr('Missing Min', 'Weekly minimum is missing or negative.', 'Provide a weekly minimum ≥ 0.');

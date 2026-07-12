@@ -43,7 +43,7 @@ interface Props {
 }
 
 export function ApPaymentRunBuilder({ open, onClose, onComplete }: Props): VNode {
-  const canManage  = can('finance.ap.payment.run.manage');
+  const _canManage  = can('finance.ap.payment.run.manage');
   const canProcess = can('finance.ap.payment.run.process');
 
   const today = new Date().toISOString().slice(0, 10);

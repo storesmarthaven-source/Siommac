@@ -1506,7 +1506,7 @@ export function PayRunDrawer({
   const runQ = usePayrollRun(runId);
   const run  = runQ.data;
 
-  const blockerCount = 0;  // Computed in WarningsTab when rendered
+  const _blockerCount = 0;  // Computed in WarningsTab when rendered
 
   return (
     <>
