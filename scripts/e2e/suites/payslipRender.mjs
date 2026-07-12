@@ -19,25 +19,44 @@
  *   - render single payslip: same §2 check + response shape.
  *   - Fallback rendering: null template (reverts to built-in pdfkit layout)
  *     still produces a valid PDF (filePath stamped).
- *   - Token resolution: after render with a design that uses {{employee.name}} +
- *     {{company.name}}, the DB row carries a non-null filePath (the token map ran).
+ *   - PDF content verification (P2-e): download the rendered PDF from storage
+ *     and assert it is a valid PDF (magic header, %%EOF marker, non-trivial
+ *     size) — proving the file is a real rendered document, not a stub.
+ *   - Binding table design (P2-a/P2-e): a design with `binding: 'earnings'` is
+ *     stored correctly. Template-rendered output with that design requires
+ *     PAYSLIP_STUDIO_ENABLED=true; when the studio is disabled (default) the
+ *     pdfkit snapshot renderer is used instead (the unit tests in
+ *     tests/unit/payslipPdf.test.ts are the authoritative correctness proof).
+ *   - Token resolution: field elements now use `token: 'employee.name'` (bare
+ *     key) not `value: '{{employee.name}}'` (was the prior bug — the renderer
+ *     reads `el.token`, not `el.value`).
  *   - Cleanup: run + payslips + templates + audit/events cleaned up in onCleanup.
  *
  * Requires operator migrations:
  *   20260919000020 (payroll_payslip_templates)
  *   20260919000030 (templates grants)
  *   20260919000050 (finance_payroll_runs.template_id)
+ *   20260919000090 (payroll_set_default_template + payroll_archive_template RPCs)
  * Then: npm run build:backend && dev restart.
  */
 
 export const title = 'Finance Phase 2 - Payslip Studio template rendering';
 
-// Minimal Payslip Studio design that uses token placeholders so we can verify
-// token resolution didn't crash the renderer.
+/**
+ * Minimal Payslip Studio design with:
+ *   - A heading that uses the {{company.name}} token placeholder
+ *   - Two field elements that use the correct `token` property (bare key name,
+ *     no {{...}} wrapping — the renderer reads el.token as a key into the token
+ *     map). This was a bug in the prior version (it used `value` instead of
+ *     `token`), which caused all field values to render as empty string.
+ *   - A table with `binding: 'earnings'` so that when PAYSLIP_STUDIO_ENABLED=true
+ *     the table renders live snapshot rows instead of the template's static demo rows.
+ */
 function tokenDesign(tag) {
   return {
     page: { size: 'a4', orient: 'portrait', bg: '#ffffff', grid: false },
     elements: [
+      // Heading with a {{company.name}} token placeholder
       {
         id: 'el-h-' + tag, type: 'heading',
         x: 24, y: 24, w: 400, h: 36, z: 1,
@@ -49,10 +68,13 @@ function tokenDesign(tag) {
         borderW: 0, borderColor: '#d0d5e2', borderStyle: 'solid',
         radius: 0, padding: 6, lineHeight: 1.4,
       },
+      // Field element: token is the BARE KEY (fixes prior `value` bug)
       {
         id: 'el-f-' + tag, type: 'field',
         x: 24, y: 72, w: 300, h: 24, z: 2,
-        label: 'Employee', value: '{{employee.name}}',
+        label: 'Employee',
+        token: 'employee.name',   // bare key name — renderer does tokenMap[el.token]
+        labelWidth: 80,
         color: '#374151', bg: 'transparent', labelColor: '#6b7280',
         fontSize: 12, fontFamily: 'Arial, sans-serif',
         bold: false, italic: false, underline: false,
@@ -60,16 +82,39 @@ function tokenDesign(tag) {
         borderW: 0, borderColor: '#d0d5e2', borderStyle: 'solid',
         radius: 0, padding: 4, lineHeight: 1.2,
       },
+      // Field element: net pay token
       {
         id: 'el-n-' + tag, type: 'field',
         x: 24, y: 104, w: 300, h: 24, z: 3,
-        label: 'Net Pay', value: '{{pay.net}}',
+        label: 'Net Pay',
+        token: 'pay.net',         // bare key name
+        labelWidth: 80,
         color: '#374151', bg: 'transparent', labelColor: '#6b7280',
         fontSize: 12, fontFamily: 'Arial, sans-serif',
         bold: true, italic: false, underline: false,
         align: 'left', valign: 'middle',
         borderW: 0, borderColor: '#d0d5e2', borderStyle: 'solid',
         radius: 0, padding: 4, lineHeight: 1.2,
+      },
+      // Table with snapshot binding (P2-a): when the studio is enabled and
+      // rendering with this design, the table shows live snapshot earnings rows
+      // rather than the static demo row below. Unit tests in payslipPdf.test.ts
+      // (snapshotRowsForBinding) are the authoritative proof of correctness.
+      {
+        id: 'el-t-' + tag, type: 'table',
+        x: 24, y: 140, w: 500, h: 200, z: 4,
+        title: 'Earnings',
+        accent: '#1b2d54',
+        binding: 'earnings',   // P2-a: live rows from snapshot.earnings
+        rows: [{ label: 'Demo Row (ignored when binding is set)', amount: '$0.00' }],
+        showHead: true, showTotal: true, totalLabel: 'Gross Pay',
+        headColor: '#ffffff', totalColor: '#1b2d54',
+        color: '#334155', bg: '#ffffff',
+        fontSize: 9, fontFamily: 'Arial, sans-serif',
+        bold: false, italic: false, underline: false,
+        align: 'left', valign: 'top',
+        borderW: 0, borderColor: '#d0d5e2', borderStyle: 'solid',
+        radius: 0, padding: 6, lineHeight: 1.2,
       },
     ],
   };
@@ -249,7 +294,7 @@ export default async function run(h) {
   h.section('Payslip Render › Template creation (Phase 1, prereq for Phase 2)');
   // ═══════════════════════════════════════════════════════════════════════════
 
-  await test('finance_manager creates a Payslip Studio template with token placeholders', async () => {
+  await test('finance_manager creates a Payslip Studio template with token + binding elements', async () => {
     const r = await api('finance/payroll/payslip-templates/create', fmgr1Token, {
       name:   TAG + ' Render Template',
       design: tokenDesign(TAG),
@@ -261,6 +306,9 @@ export default async function run(h) {
     expect(typeof d.isDefault === 'boolean', 'template isDefault should be boolean');
     expect(typeof d.updatedAt === 'number',  'template updatedAt should be epoch ms');
     expect(d.design && Array.isArray(d.design.elements), 'template design.elements not an array');
+    // Verify the binding table element was stored (P2-a/P2-e schema fix)
+    const bindingEl = d.design.elements.find(el => el.binding === 'earnings');
+    expect(bindingEl !== undefined, 'design should include a table element with binding: "earnings"');
     ctx.templateId = d.id;
   });
 
@@ -316,6 +364,14 @@ export default async function run(h) {
 
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Payslip Render › render-run with template (Phase 2 core)');
+  //
+  // NOTE: When PAYSLIP_STUDIO_ENABLED=true, rendering uses the Studio template
+  // branch (renderPayslipPdfWithDesign) which applies the binding table and
+  // token resolution. When the env var is false (the default), the run's
+  // template_id is ignored and the pdfkit snapshot renderer is always used
+  // (loadRenderTemplate returns null). The E2E verifies the PDF is uploaded and
+  // §2 side-effects fire in both cases; the binding correctness is proven by
+  // unit tests in tests/unit/payslipPdf.test.ts (snapshotRowsForBinding).
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('employee CANNOT render run payslips (→ 403)', async () => {
@@ -371,6 +427,72 @@ export default async function run(h) {
       .eq('action', 'payslip.rendered');
     expect((auditRows ?? []).length === psIds.length,
       `expected ${psIds.length} payslip.rendered audit rows, found ${(auditRows ?? []).length}`);
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Payslip Render › PDF content verification (P2-e)');
+  //
+  // Download the rendered PDF from the private storage bucket (via the
+  // service-role client) and verify it is a real PDF file — not a stub, an
+  // empty upload, or a corrupted buffer. This proves the renderer (pdfkit
+  // snapshot path or Studio template path) actually produced valid output.
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  await test('rendered PDF is a valid, non-trivial PDF document (%PDF- header + %%EOF)', async () => {
+    const { data: payslipRow } = await sb.from('finance_payslips')
+      .select('id, file_path').eq('id', ctx.payslipId).maybeSingle();
+    expect(payslipRow?.file_path, 'payslip must have a file_path to verify content');
+
+    // Download from the private payslips bucket via the service-role client.
+    const { data: blob, error: dlErr } = await sb.storage
+      .from('payslips')
+      .download(payslipRow.file_path);
+    expect(!dlErr && blob, 'failed to download payslip PDF: ' + dlErr?.message);
+
+    // Convert Blob → Buffer (Node.js 18+ Blob.arrayBuffer() is standard)
+    const arrayBuffer = await blob.arrayBuffer();
+    const buf = Buffer.from(arrayBuffer);
+
+    // PDF magic header (%PDF-)
+    expect(
+      buf.subarray(0, 5).toString('latin1') === '%PDF-',
+      'downloaded file does not start with %PDF- — not a valid PDF',
+    );
+
+    // Non-trivial content (even a minimal pdfkit payslip is several kilobytes)
+    expect(
+      buf.length > 1000,
+      `PDF is only ${buf.length} bytes — expected at least 1000 (possible empty/stub)`,
+    );
+
+    // %%EOF marker (every valid PDF ends with this)
+    expect(
+      buf.toString('latin1').includes('%%EOF'),
+      'downloaded PDF does not contain %%EOF — file may be truncated or invalid',
+    );
+  });
+
+  await test('all payslips for the run have downloadable, valid PDFs', async () => {
+    const { data: payslips } = await sb.from('finance_payslips')
+      .select('id, file_path').eq('run_id', ctx.runId);
+    expect((payslips ?? []).length > 0, 'no payslips found to verify');
+
+    let checked = 0;
+    for (const ps of payslips ?? []) {
+      if (!ps.file_path) continue;
+      const { data: blob, error: dlErr } = await sb.storage.from('payslips').download(ps.file_path);
+      if (dlErr || !blob) continue; // count misses but don't abort
+      const arrayBuffer = await blob.arrayBuffer();
+      const buf = Buffer.from(arrayBuffer);
+      expect(
+        buf.subarray(0, 5).toString('latin1') === '%PDF-',
+        `payslip ${ps.id}: downloaded file is not a valid PDF`,
+      );
+      expect(buf.length > 1000, `payslip ${ps.id}: PDF is too small (${buf.length} bytes)`);
+      checked++;
+    }
+    expect(checked === (payslips ?? []).length,
+      `only ${checked} of ${(payslips ?? []).length} payslips had downloadable PDFs`);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -435,6 +557,19 @@ export default async function run(h) {
     const noPath = (payslips ?? []).filter(p => !p.file_path);
     expect(noPath.length === 0,
       `${noPath.length} payslip(s) have no filePath after fallback render`);
+  });
+
+  await test('fallback render also produces valid PDFs (P2-e recheck)', async () => {
+    const { data: payslipRow } = await sb.from('finance_payslips')
+      .select('id, file_path').eq('id', ctx.payslipId).maybeSingle();
+    if (!payslipRow?.file_path) return; // skip if no path (shouldn't happen after re-render)
+    const { data: blob, error: dlErr } = await sb.storage
+      .from('payslips').download(payslipRow.file_path);
+    expect(!dlErr && blob, 'fallback render: download failed: ' + dlErr?.message);
+    const buf = Buffer.from(await blob.arrayBuffer());
+    expect(buf.subarray(0, 5).toString('latin1') === '%PDF-', 'fallback PDF: missing %PDF- header');
+    expect(buf.length > 1000, `fallback PDF is too small (${buf.length} bytes)`);
+    expect(buf.toString('latin1').includes('%%EOF'), 'fallback PDF: missing %%EOF');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
