@@ -63,36 +63,60 @@ describe('backPayIdemKey', () => {
 // `getPayrollRun` helper. This keeps the tests fast and removes the need for
 // a live DB while still exercising every filter branch.
 
-import { vi, describe, it, expect, beforeEach, afterEach } from 'vitest';
-
 // Mock the Supabase client used inside backPay.ts
-vi.mock('../../netlify/functions/lib/db', () => ({
-  sb: {
-    from: vi.fn(),
-  },
+jest.mock('../../netlify/functions/lib/db', () => ({
+  sb: { from: jest.fn() },
 }));
 
-// Mock getPayrollRun
-vi.mock('../../netlify/functions/lib/finance/payrollRuns', () => ({
-  getPayrollRun: vi.fn(),
+// Mock getPayrollRun and the other imports to avoid pulling in the full chain
+jest.mock('../../netlify/functions/lib/finance/payrollRuns', () => ({
+  getPayrollRun: jest.fn(),
+}));
+
+// These are imported by backPay.ts at module level; mock them to avoid heavy deps
+jest.mock('../../netlify/functions/lib/appEvents', () => ({
+  emitAppEvent: jest.fn(),
+  buildEventRow: jest.fn(),
+  deliverEventNotifications: jest.fn(),
+}));
+jest.mock('../../netlify/functions/lib/hr/employeeCore', () => ({
+  writeHrAudit: jest.fn(),
+  buildHrAuditRow: jest.fn(),
 }));
 
 import { computeBackPay } from '../../netlify/functions/lib/finance/backPay';
 import { sb } from '../../netlify/functions/lib/db';
 import { getPayrollRun } from '../../netlify/functions/lib/finance/payrollRuns';
 
-const mockGetPayrollRun = vi.mocked(getPayrollRun);
-const mockSb = vi.mocked(sb);
+const mockGetPayrollRun = getPayrollRun as jest.MockedFunction<typeof getPayrollRun>;
+const mockSbFrom        = sb.from as jest.MockedFunction<typeof sb.from>;
 
-/** Build a chainable mock that resolves to the given data/error. */
+type RunDto = Awaited<ReturnType<typeof getPayrollRun>>;
+
+/**
+ * Build a chainable mock that resolves to the given data/error when awaited.
+ *
+ * The chain is a thenable object (has `.then()`), so `await chain` correctly
+ * resolves to `{ data, error }`. Using a plain function (without `.then()`)
+ * would cause `await fn` to resolve to the function itself — not the result.
+ */
 function buildChain(result: { data?: unknown; error?: null | { message: string } }) {
+  const resolved = { data: result.data ?? null, error: result.error ?? null };
+  // A thenable: when awaited, resolves to `resolved`.
+  const terminal = {
+    then<T, R>(
+      resolve: (v: typeof resolved) => T,
+      _reject?: (e: unknown) => R,
+    ): Promise<T> {
+      return Promise.resolve(resolved).then(resolve);
+    },
+  };
   const chain: Record<string, unknown> = {};
-  const methods = ['select', 'in', 'eq', 'gte', 'lt', 'order'];
-  const terminal = () => Promise.resolve({ data: result.data ?? null, error: result.error ?? null });
-  for (const m of methods) {
-    chain[m] = () => Object.assign(terminal, chain);
+  const METHODS = ['select', 'in', 'eq', 'gte', 'lt', 'order', 'single', 'maybeSingle'] as const;
+  for (const m of METHODS) {
+    chain[m] = () => Object.assign({}, terminal, chain);
   }
-  return Object.assign(terminal, chain) as unknown;
+  return Object.assign({}, terminal, chain) as unknown as ReturnType<typeof sb.from>;
 }
 
 describe('computeBackPay — frequency filter', () => {
@@ -100,15 +124,14 @@ describe('computeBackPay — frequency filter', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-      // satisfy the full DTO shape (omit remaining optional fields):
-    } as Parameters<typeof mockGetPayrollRun>[0] extends undefined ? never : Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
   });
 
-  afterEach(() => { vi.clearAllMocks(); });
+  afterEach(() => { jest.clearAllMocks(); });
 
   it('excludes prior runs that do not match the current run pay_frequency', async () => {
     // Simulate DB returning 0 prior runs (the frequency filter excluded them)
-    (mockSb.from as ReturnType<typeof vi.fn>).mockReturnValue(buildChain({ data: [] }));
+    mockSbFrom.mockReturnValue(buildChain({ data: [] }));
 
     const result = await computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
@@ -125,13 +148,13 @@ describe('computeBackPay — effective-date defaults', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
   });
 
-  afterEach(() => { vi.clearAllMocks(); });
+  afterEach(() => { jest.clearAllMocks(); });
 
   it('defaults effectiveDate to fromPeriodMonth when omitted', async () => {
-    (mockSb.from as ReturnType<typeof vi.fn>).mockReturnValue(buildChain({ data: [] }));
+    mockSbFrom.mockReturnValue(buildChain({ data: [] }));
 
     const result = await computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
@@ -142,7 +165,7 @@ describe('computeBackPay — effective-date defaults', () => {
   });
 
   it('uses the provided effectiveDate when given', async () => {
-    (mockSb.from as ReturnType<typeof vi.fn>).mockReturnValue(buildChain({ data: [] }));
+    mockSbFrom.mockReturnValue(buildChain({ data: [] }));
 
     const result = await computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
@@ -155,14 +178,14 @@ describe('computeBackPay — effective-date defaults', () => {
 });
 
 describe('computeBackPay — scope metadata', () => {
-  afterEach(() => { vi.clearAllMocks(); });
+  afterEach(() => { jest.clearAllMocks(); });
 
   it('includes pay_group_id and pay_frequency in the scope', async () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'weekly', payGroupId: 'grp-1', status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
-    (mockSb.from as ReturnType<typeof vi.fn>).mockReturnValue(buildChain({ data: [] }));
+    } as unknown as Exclude<RunDto, null>);
+    mockSbFrom.mockReturnValue(buildChain({ data: [] }));
 
     const result = await computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
@@ -175,19 +198,16 @@ describe('computeBackPay — scope metadata', () => {
 });
 
 describe('computeBackPay — delta computation', () => {
-  afterEach(() => { vi.clearAllMocks(); });
+  afterEach(() => { jest.clearAllMocks(); });
 
   it('computes correct deltas for multiple periods', async () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
 
-    let callCount = 0;
-    (mockSb.from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
-      callCount++;
+    mockSbFrom.mockImplementation((table: string) => {
       if (table === 'finance_payroll_runs') {
-        // Simulate 2 prior locked runs
         return buildChain({
           data: [
             { id: 'run-1', period_month: '2026-01-01' },
@@ -229,9 +249,9 @@ describe('computeBackPay — delta computation', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
 
-    (mockSb.from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+    mockSbFrom.mockImplementation((table: string) => {
       if (table === 'finance_payroll_runs') {
         return buildChain({
           data: [
@@ -261,9 +281,9 @@ describe('computeBackPay — delta computation', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
 
-    (mockSb.from as ReturnType<typeof vi.fn>).mockImplementation((table: string) => {
+    mockSbFrom.mockImplementation((table: string) => {
       if (table === 'finance_payroll_runs') {
         return buildChain({ data: [{ id: 'run-1', period_month: '2026-01-01' }] });
       }
@@ -283,7 +303,7 @@ describe('computeBackPay — delta computation', () => {
 });
 
 describe('computeBackPay — validation errors', () => {
-  afterEach(() => { vi.clearAllMocks(); });
+  afterEach(() => { jest.clearAllMocks(); });
 
   it('throws 404 when the current run does not exist', async () => {
     mockGetPayrollRun.mockResolvedValue(null);
@@ -297,7 +317,7 @@ describe('computeBackPay — validation errors', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-03-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
 
     await expect(computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
@@ -309,7 +329,7 @@ describe('computeBackPay — validation errors', () => {
     mockGetPayrollRun.mockResolvedValue({
       id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-01-01',
       payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
-    } as Awaited<ReturnType<typeof mockGetPayrollRun>>);
+    } as unknown as Exclude<RunDto, null>);
 
     await expect(computeBackPay({
       currentRunId: 'run-cur', employeeId: 'emp-1',
