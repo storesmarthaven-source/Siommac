@@ -11,6 +11,9 @@
  * Covers:
  *   - Full lifecycle setup: create run → lock-inputs → calculate → submit →
  *     approve (SoD) → lock → generate payslips.
+ *   - Pay-group scoping (P2-b): the run is created with a pay group that contains
+ *     ONLY the test employee. This keeps lock-inputs from scanning the whole roster
+ *     (which times out when there are many users) and keeps the run to 1 payslip.
  *   - set-template: AC (employee denied, finance_manager allowed), sets templateId
  *     on run, clears with null, response shape includes templateId field.
  *   - render-run with template set: verifies the PDF is actually uploaded
@@ -30,7 +33,8 @@
  *   - Token resolution: field elements now use `token: 'employee.name'` (bare
  *     key) not `value: '{{employee.name}}'` (was the prior bug — the renderer
  *     reads `el.token`, not `el.value`).
- *   - Cleanup: run + payslips + templates + audit/events cleaned up in onCleanup.
+ *   - Cleanup: run + payslips + templates + pay group + audit/events cleaned up
+ *     in onCleanup.
  *
  * Requires operator migrations:
  *   20260919000020 (payroll_payslip_templates)
@@ -137,6 +141,7 @@ export default async function run(h) {
 
   const ctx = {
     runId:       null,
+    payGroupId:  null,   // P2-b: scoped pay group (only the test employee)
     templateId:  null,
     payslipId:   null,   // first payslip for the run
     createdUserIds: [],
@@ -179,6 +184,11 @@ export default async function run(h) {
         await sb.from('app_events').delete().eq('source_entity_id', ctx.templateId);
       } catch {}
     }
+    // P2-b: clean up the scoped pay group (delete assignments first, then group)
+    if (ctx.payGroupId) {
+      try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.payGroupId); } catch {}
+      try { await sb.from('finance_pay_groups').delete().eq('id', ctx.payGroupId); } catch {}
+    }
     if (ctx.createdUserIds.length) {
       try { await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
     }
@@ -210,15 +220,38 @@ export default async function run(h) {
 
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Payslip Render › Run lifecycle (create → lock)');
+  //
+  // P2-b: Create a pay group scoped to just the test employee before creating
+  // the run. Passing payGroupId to runs/create limits lock-inputs to the group
+  // (1 employee) so the suite doesn't time out on large rosters.
   // ═══════════════════════════════════════════════════════════════════════════
 
   const testPeriod = seedDateFromTag(TAG, 71);
 
-  await test('finance_manager creates a payroll run', async () => {
+  await test('P2-b: create a pay group and assign the test employee to it', async () => {
+    const pgR = await api('finance/payroll/pay-groups/create', fmgr1Token, {
+      code:      'PR-' + TAG.slice(-8),
+      name:      'Payslip Render E2E ' + TAG,
+      frequency: 'monthly',
+    });
+    ok(pgR, 'create pay group failed: ' + pgR.body.message);
+    ctx.payGroupId = pgR.body.data.id;
+    expect(ctx.payGroupId, 'pay group has no id');
+
+    const assignR = await api('finance/payroll/pay-groups/assign', fmgr1Token, {
+      payGroupId:    ctx.payGroupId,
+      employeeId:    empId,
+      effectiveFrom: testPeriod,
+    });
+    ok(assignR, 'assign employee to pay group failed: ' + assignR.body.message);
+  });
+
+  await test('finance_manager creates a payroll run scoped to the pay group', async () => {
     const r = await api('finance/payroll/runs/create', fmgr1Token, {
       periodMonth:   testPeriod,
       payFrequency:  'monthly',
       weeksInPeriod: 4.333,
+      payGroupId:    ctx.payGroupId,   // P2-b: scope to 1 employee; prevents roster-wide timeout
     });
     ok(r, 'create run failed: ' + r.body.message);
     expect(r.body.data.status === 'draft', 'expected draft status');
