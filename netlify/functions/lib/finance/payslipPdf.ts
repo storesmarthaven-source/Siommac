@@ -421,6 +421,15 @@ interface TableEl   extends StyleEl {
   rows: TableRow[]; showHead: boolean; showTotal: boolean; totalLabel: string;
   headColor: string; totalColor: string; headHeight?: number; headFontSize?: number;
   headBold?: boolean; stripeBg?: string;
+  /**
+   * When set, rows are sourced live from the payslip snapshot instead of the
+   * template's static demo rows. The template's baked-in figures are NEVER
+   * used — only the snapshot figures computed for this specific payroll run.
+   *   'earnings'              -> snapshot.earnings  (total = snapshot.gross)
+   *   'deductions'            -> snapshot.deductions (total = snapshot.totalDeductions)
+   *   'employer_contributions'-> snapshot.employerContributions
+   */
+  binding?: 'earnings' | 'deductions' | 'employer_contributions';
 }
 interface DividerEl extends BaseEl { type: 'divider'; color: string; thickness: number; style: 'solid' | 'dashed' | 'dotted'; }
 interface ImageEl   extends BaseEl { type: 'image'; src: string; }
@@ -434,6 +443,85 @@ function parseDesignJSON(raw: unknown): DesignJSON | null {
   const obj = raw as Record<string, unknown>;
   if (!obj['page'] || !Array.isArray(obj['elements'])) return null;
   return obj as unknown as DesignJSON;
+}
+
+// ── Snapshot-binding helpers (P2-a) ───────────────────────────────────────────
+
+/** Format a number as TTD money string (matches the pdfkit renderer convention). */
+function fmtMoneyDesign(n: number): string {
+  return '$' + n.toLocaleString('en-TT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+}
+
+/**
+ * Build data rows from the payslip snapshot for a table element whose
+ * `binding` property is set. The template's baked-in static rows are ignored;
+ * only the snapshot figures (computed for this specific payroll run) are used.
+ *
+ * Exported for direct unit-testing of the pure transformation logic
+ * (PDF content streams are compressed and not directly text-searchable).
+ */
+export function snapshotRowsForBinding(s: PayslipSnapshot, binding: string): TableRow[] {
+  if (binding === 'earnings')
+    return s.earnings.map(e => ({ label: e.label, amount: fmtMoneyDesign(e.amount) }));
+  if (binding === 'deductions')
+    return s.deductions.map(d => ({ label: d.label, amount: fmtMoneyDesign(d.amount) }));
+  if (binding === 'employer_contributions')
+    return s.employerContributions.map(ec => ({ label: ec.label, amount: fmtMoneyDesign(ec.amount) }));
+  return [];
+}
+
+/**
+ * Return the authoritative total figure for a bound table column.
+ * Uses the run-line values computed by SIOMAC — never the template's accumulated
+ * row amounts, which could drift from the authoritative figures.
+ * Returns null when the binding key is unrecognised (caller falls back to
+ * accumulating from the rendered row amounts).
+ *
+ * Exported for direct unit-testing.
+ */
+export function snapshotTotalForBinding(s: PayslipSnapshot, binding: string): number | null {
+  if (binding === 'earnings')   return s.gross;
+  if (binding === 'deductions') return s.totalDeductions;
+  if (binding === 'employer_contributions')
+    return s.employerContributions.reduce((sum, ec) => sum + ec.amount, 0);
+  return null;
+}
+
+// ── Image data-URI decoder (P2-c) ─────────────────────────────────────────────
+
+/** Maximum allowed decoded image size (2 MB). */
+const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+/**
+ * Supported MIME types for PDF image embedding via pdfkit.
+ * pdfkit natively handles JPEG and PNG; other formats are skipped to avoid
+ * silent crashes (pdfkit does not support SVG, WebP, or GIF as embedded images).
+ */
+const SUPPORTED_PDF_IMAGE_MIMES = new Set(['image/png', 'image/jpeg']);
+
+/**
+ * Decode and validate a base64 data-URI image for embedding in a PDF.
+ *
+ * Returns `{ mimeType, data }` for a valid, supported, within-size-bound image,
+ * or `null` for anything invalid (wrong scheme, unsupported format, empty data,
+ * oversized buffer). Never throws. Unknown / browser-resolved `http://` or
+ * relative URLs → null (server can't fetch them; caller skips the element).
+ */
+export function decodeDataUri(src: string): { mimeType: string; data: Buffer } | null {
+  if (!src || !src.startsWith('data:')) return null;
+  const commaIdx = src.indexOf(',');
+  if (commaIdx < 0) return null;
+  const header = src.slice(5, commaIdx); // strip leading 'data:'
+  if (!header.endsWith(';base64')) return null; // only base64 data URIs supported
+  const mimeType = header.slice(0, -7); // strip trailing ';base64'
+  if (!SUPPORTED_PDF_IMAGE_MIMES.has(mimeType)) return null;
+  try {
+    const data = Buffer.from(src.slice(commaIdx + 1), 'base64');
+    if (data.length === 0 || data.length > MAX_IMAGE_BYTES) return null;
+    return { mimeType, data };
+  } catch {
+    return null;
+  }
 }
 
 // ── Font mapper ───────────────────────────────────────────────────────────────
@@ -643,6 +731,12 @@ export function renderPayslipPdfWithDesign(
             const bodyFs  = tbl.fontSize * PDF_SCALE;
             let ry = y;
 
+            // When `binding` is set, rows come from the snapshot (authoritative);
+            // the template's static demo rows are ignored entirely.
+            const effectiveRows: TableRow[] = tbl.binding
+              ? snapshotRowsForBinding(s, tbl.binding)
+              : tbl.rows;
+
             // Header row
             if (tbl.showHead) {
               const hBg = hexColor(tbl.accent);
@@ -659,16 +753,18 @@ export function renderPayslipPdfWithDesign(
               ry += headH;
             }
 
-            // Data rows
+            // Data rows — iterate effectiveRows (snapshot-sourced or static)
             const stripeBg = tbl.stripeBg ?? '#f8fafc';
-            let numericTotal = 0;
+            let accumulatedTotal = 0; // fallback: sum parsed amounts
 
-            for (let ri = 0; ri < tbl.rows.length; ri++) {
-              const row = tbl.rows[ri];
+            for (let ri = 0; ri < effectiveRows.length; ri++) {
+              const row = effectiveRows[ri];
               if (!row) continue;
               const rowBg = hexColor(row.bg ?? (ri % 2 === 1 ? stripeBg : null));
               if (rowBg) doc.rect(x, ry, w, rowH).fill(rowBg);
               const rowCol = hexColor(row.color ?? tbl.color) ?? '#334155';
+              // Snapshot rows already have formatted amounts; static rows may have
+              // {{token}} placeholders — resolve both through resolveTokenText.
               const resolvedLbl = resolveTokenText(row.label  ?? '', tokenMap);
               const resolvedAmt = resolveTokenText(row.amount ?? '', tokenMap);
               doc.font(mapFont(tbl.fontFamily, false, false))
@@ -676,18 +772,23 @@ export function renderPayslipPdfWithDesign(
                 .fillColor(rowCol)
                 .text(resolvedLbl, x + p, ry + 3 * PDF_SCALE, { width: Math.max(1, labelW - p * 2), lineBreak: false })
                 .text(resolvedAmt, x + labelW, ry + 3 * PDF_SCALE, { width: Math.max(1, w - labelW - p), align: 'right', lineBreak: false });
-              // Accumulate numeric total (strip currency symbols / commas)
+              // Accumulate for the fallback total (only used when binding is absent)
               const numAmt = parseFloat(resolvedAmt.replace(/[^\d.-]/g, ''));
-              if (!isNaN(numAmt)) numericTotal += numAmt;
+              if (!isNaN(numAmt)) accumulatedTotal += numAmt;
               ry += rowH;
             }
 
-            // Total row
+            // Total row — when binding is set, use the authoritative snapshot
+            // figure (gross / totalDeductions / employer sum) so the footer
+            // always reconciles even if the rendered row list is empty.
             if (tbl.showTotal) {
+              const authoritative = tbl.binding
+                ? (snapshotTotalForBinding(s, tbl.binding) ?? accumulatedTotal)
+                : accumulatedTotal;
               const tBg = hexColor(tbl.accent) ?? '#f1f5f9';
               doc.rect(x, ry, w, rowH).fill(tBg);
               const tCol = hexColor(tbl.totalColor ?? tbl.color) ?? '#1b2d54';
-              const totalStr = '$' + numericTotal.toLocaleString('en-TT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              const totalStr = fmtMoneyDesign(authoritative);
               doc.font(mapFont(tbl.fontFamily, true, false))
                 .fontSize(bodyFs)
                 .fillColor(tCol)
@@ -710,12 +811,25 @@ export function renderPayslipPdfWithDesign(
             break;
           }
 
-          // ── Image ─────────────────────────────────────────────────────────────
-          // Image src is typically a data-URI or a browser-resolved URL — not
-          // accessible server-side. We skip image elements silently; the rest of
-          // the layout is unaffected. A follow-up could embed logo data-URIs.
-          case 'image':
+          // ── Image (P2-c) ─────────────────────────────────────────────────────
+          // Supports base64 data-URIs (PNG and JPEG only — pdfkit's native
+          // supported formats). Browser-resolved http:// URLs are not accessible
+          // server-side and are skipped silently so the rest of the layout is
+          // unaffected. Invalid / unsupported / oversized data-URIs are also
+          // skipped silently (never crash the render).
+          case 'image': {
+            const img = el as ImageEl;
+            if (!img.src) break;
+            const decoded = decodeDataUri(img.src);
+            if (!decoded) break; // not a supported base64 data-URI — skip silently
+            try {
+              doc.image(decoded.data, x, y, { width: w, height: h });
+            } catch {
+              // pdfkit could not embed the image (corrupted bytes, wrong
+              // format despite MIME claim). Skip silently — layout is intact.
+            }
             break;
+          }
 
           default:
             break;

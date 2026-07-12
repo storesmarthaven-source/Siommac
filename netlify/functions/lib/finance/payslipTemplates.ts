@@ -15,6 +15,7 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
+import { validateDesign } from './payslipDesignSchema';
 
 const SUBMODULE = 'finance_payroll';
 const ENTITY = 'payslip_template';
@@ -54,11 +55,16 @@ function err(message: string, status: number): Error & { status: number } {
   return Object.assign(new Error(message), { status });
 }
 
-/** A payslip design must be a non-null JSON object (jsonb). */
+/**
+ * Assert that a payslip design passes full schema validation.
+ * Rejects malformed designs with 422 rather than silently accepting them and
+ * letting broken JSON reach the PDF renderer later.
+ * Uses the shared validateDesign() from payslipDesignSchema.ts so create and
+ * update enforce exactly the same rules (no duplication).
+ */
 function assertDesign(design: unknown): asserts design is Record<string, unknown> {
-  if (design === null || typeof design !== 'object' || Array.isArray(design)) {
-    throw err('A payslip design (object) is required.', 422);
-  }
+  const validationError = validateDesign(design);
+  if (validationError) throw err(validationError, 422);
 }
 
 function cleanName(name: unknown): string {
