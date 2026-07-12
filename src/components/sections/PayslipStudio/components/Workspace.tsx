@@ -1,4 +1,4 @@
-import { useEffect, useLayoutEffect, useRef } from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
 import { useDesigner } from '@payslip/state/DesignerContext';
 import { useKeyboardShortcuts } from '@payslip/hooks/useKeyboardShortcuts';
 import { useAutosave } from '@payslip/hooks/useAutosave';
@@ -32,11 +32,26 @@ export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: W
   useKeyboardShortcuts(state, dispatch);
   useAutosave(state.design);
 
-  // Fit the page to the viewport once, after first layout.
-  useLayoutEffect(() => {
-    dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(state.design.page) } });
+  // Fit the page to the canvas once the canvas-wrap actually has dimensions, and
+  // re-fit when the page size/orientation changes (a design loads, or page setup
+  // changes). Waiting for a real size avoids measuring the container before the
+  // full-page overlay + wrapped toolbar have laid out — which was clamping the
+  // opening zoom to the 25% minimum ("opens zoomed out small").
+  useEffect(() => {
+    let raf = 0;
+    let tries = 0;
+    const fit = () => {
+      const r = document.querySelector('.canvas-wrap')?.getBoundingClientRect();
+      if ((!r || r.width < 80 || r.height < 80) && tries++ < 60) {
+        raf = requestAnimationFrame(fit);
+        return;
+      }
+      dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(state.design.page) } });
+    };
+    raf = requestAnimationFrame(fit);
+    return () => cancelAnimationFrame(raf);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [state.design.page.size, state.design.page.orient]);
 
   // Boot: seed built-ins, then link the canvas to a saved design so "Update this
   // design" is available. If the last session was editing a saved design, restore
