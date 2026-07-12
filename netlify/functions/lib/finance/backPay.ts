@@ -126,7 +126,30 @@ export async function addBackPay(input: AddBackPayInput, actorId: string): Promi
     component_code: 'back_pay', label: 'Back Pay',
     amount: breakdown.totalDelta, quantity: null, rate: null, metadata,
   }).select('id').single<{ id: string }>();
-  if (error) throw Object.assign(new Error('addBackPay: ' + error.message), { status: 500 });
+  if (error) {
+    // Idempotency guard (finance_run_inputs_backpay_once): one back-pay per run+employee.
+    if (error.code === '23505') {
+      const { data: existing } = await sb.from('finance_payroll_run_inputs')
+        .select('id, amount, metadata')
+        .eq('run_id', input.currentRunId).eq('employee_id', input.employeeId)
+        .eq('component_code', 'back_pay')
+        .maybeSingle<{ id: string; amount: number; metadata: Record<string, unknown> }>();
+      const em = (existing?.metadata ?? {}) as { from_period?: string; corrected_period_base?: number };
+      // Same request replayed → idempotent: return the existing row, emit nothing new.
+      if (existing
+        && round2(existing.amount) === breakdown.totalDelta
+        && em.from_period === input.fromPeriodMonth
+        && round2(em.corrected_period_base ?? NaN) === breakdown.correctedPeriodBase) {
+        return { inputId: existing.id, breakdown };
+      }
+      // A DIFFERENT adjustment already exists for this employee on this run.
+      throw Object.assign(
+        new Error('This employee already has a back-pay adjustment on this run. Remove it before adding a different one.'),
+        { status: 409 },
+      );
+    }
+    throw Object.assign(new Error('addBackPay: ' + error.message), { status: 500 });
+  }
 
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: input.currentRunId, actorId,

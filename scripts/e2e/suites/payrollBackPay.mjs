@@ -104,6 +104,26 @@ export default async function run(h) {
     expect((audit ?? []).length > 0, 'back_pay_added audit not found');
   });
 
+  await test('2d: re-adding the SAME back pay is idempotent (no duplicate row)', async () => {
+    const r = await api('finance/payroll/back-pay/add', fmgrT, { currentRunId: ctx.currentRunId, employeeId: empId, fromPeriodMonth: P1, correctedPeriodBase: 6000, reason: 'Retro raise effective Jan' });
+    ok(r, `idempotent re-add failed: ${r.body.message}`);
+    expect(Math.abs(r.body.data.breakdown.totalDelta - 2000) < 0.01, `idempotent re-add delta ${r.body.data.breakdown.totalDelta}`);
+    const { count } = await sb.from('finance_payroll_run_inputs')
+      .select('id', { count: 'exact', head: true })
+      .eq('run_id', ctx.currentRunId).eq('employee_id', empId).eq('component_code', 'back_pay');
+    expect((count ?? 0) === 1, `expected exactly 1 back_pay input after idempotent re-add, got ${count}`);
+  });
+
+  await test('2d: a DIFFERENT back-pay for the same employee/run is refused (409)', async () => {
+    const r = await api('finance/payroll/back-pay/add', fmgrT, { currentRunId: ctx.currentRunId, employeeId: empId, fromPeriodMonth: P1, correctedPeriodBase: 8000, reason: 'bigger raise' });
+    fails(r, 'a conflicting second back-pay should be refused');
+    expect(r.status === 409, `expected 409 for a conflicting back-pay, got ${r.status}`);
+    const { count } = await sb.from('finance_payroll_run_inputs')
+      .select('id', { count: 'exact', head: true })
+      .eq('run_id', ctx.currentRunId).eq('employee_id', empId).eq('component_code', 'back_pay');
+    expect((count ?? 0) === 1, `expected still exactly 1 back_pay input after the refused conflict, got ${count}`);
+  });
+
   await test('recalculate folds the back pay into taxable gross (6000 base + 2000 back pay = 8000)', async () => {
     const r = await api('finance/payroll/runs/calculate', fmgrT, { id: ctx.currentRunId });
     ok(r, `calculate failed: ${r.body.message}`);
