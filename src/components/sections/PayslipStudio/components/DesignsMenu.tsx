@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
 import { useDesigner } from '@payslip/state/DesignerContext';
 import { templateStore, type StoredTemplate } from '@payslip/lib/store';
-import { computeFitZoom } from '@payslip/lib/fit';
+import { fitToView } from '@payslip/lib/fit';
 import { reseedIds } from '@payslip/lib/id';
 import { showToast } from '@payslip/lib/toast';
 
@@ -80,7 +80,7 @@ export function DesignsMenu() {
   const openDesign = (item: StoredTemplate) => {
     reseedIds(item.design.elements.map((e) => e.id));
     dispatch({ kind: 'loadDesign', design: item.design, savedRef: { id: item.id, name: item.name } });
-    window.setTimeout(() => dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(item.design.page) } }), 10);
+    fitToView((zoom) => dispatch({ kind: 'setView', patch: { zoom } }), item.design.page);
     setOpen(false);
     showToast(`Opened “${item.name}”`);
   };

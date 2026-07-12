@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'preact/hooks';
 import { useDesigner } from '@payslip/state/DesignerContext';
 import { useKeyboardShortcuts } from '@payslip/hooks/useKeyboardShortcuts';
 import { useAutosave } from '@payslip/hooks/useAutosave';
-import { computeFitZoom } from '@payslip/lib/fit';
+import { fitToView } from '@payslip/lib/fit';
 import { reseedIds } from '@payslip/lib/id';
 import type { SavedRef } from '@payslip/state/reducer';
 import { templateStore } from '@payslip/lib/store';
@@ -38,18 +38,7 @@ export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: W
   // full-page overlay + wrapped toolbar have laid out — which was clamping the
   // opening zoom to the 25% minimum ("opens zoomed out small").
   useEffect(() => {
-    let raf = 0;
-    let tries = 0;
-    const fit = () => {
-      const r = document.querySelector('.canvas-wrap')?.getBoundingClientRect();
-      if ((!r || r.width < 80 || r.height < 80) && tries++ < 60) {
-        raf = requestAnimationFrame(fit);
-        return;
-      }
-      dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(state.design.page) } });
-    };
-    raf = requestAnimationFrame(fit);
-    return () => cancelAnimationFrame(raf);
+    return fitToView((zoom) => dispatch({ kind: 'setView', patch: { zoom } }), state.design.page);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [state.design.page.size, state.design.page.orient]);
 
@@ -72,7 +61,7 @@ export function Workspace({ onBack, initialOpenRef = null, hadDraft = false }: W
         if (def) {
           reseedIds(def.design.elements.map((e) => e.id));
           dispatch({ kind: 'loadDesign', design: def.design, savedRef: { id: def.id, name: def.name } });
-          window.setTimeout(() => dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(def.design.page) } }), 10);
+          fitToView((zoom) => dispatch({ kind: 'setView', patch: { zoom } }), def.design.page);
         }
       }
     })();

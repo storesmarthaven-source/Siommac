@@ -3,7 +3,7 @@ import type { Design } from '@payslip/types';
 import { useDesigner } from '@payslip/state/DesignerContext';
 import { canRedo, canUndo, isGrouped } from '@payslip/state/reducer';
 import { TEMPLATES, buildTemplate } from '@payslip/templates';
-import { computeFitZoom } from '@payslip/lib/fit';
+import { fitToView } from '@payslip/lib/fit';
 import { clamp } from '@payslip/lib/geometry';
 import { reseedIds } from '@payslip/lib/id';
 import { downloadJSON, downloadText, pickFile, readJSONFile } from '@payslip/lib/download';
@@ -40,7 +40,8 @@ export function Toolbar({ onBack }: { onBack?: () => void }) {
   const hasSel = selCount > 0;
   const grouped = isGrouped(state);
 
-  const fit = () => window.setTimeout(() => dispatch({ kind: 'setView', patch: { zoom: computeFitZoom(design.page) } }), 10);
+  const applyZoom = (zoom: number) => dispatch({ kind: 'setView', patch: { zoom } });
+  const fit = () => { fitToView(applyZoom, design.page); };
   const setZoom = (z: number) => dispatch({ kind: 'setView', patch: { zoom: clamp(z, 0.25, 2.5) } });
 
   const load = (d: Design, msg: string) => {
