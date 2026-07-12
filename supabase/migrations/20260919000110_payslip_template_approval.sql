@@ -46,6 +46,15 @@ begin
 exception when undefined_object then null;
 end $tmpl_status_check$;
 
+-- ── Step 3: Backfill existing 'active' rows to 'approved' BEFORE the new check ─
+-- Existing templates were never drafted or reviewed -- they are live already.
+-- This MUST run before ADD CONSTRAINT: 'active' is not in the new allowed set, so
+-- adding the constraint while any row is still 'active' fails with a 23514.
+
+update public.payroll_payslip_templates
+  set status = 'approved'
+  where status = 'active';
+
 alter table public.payroll_payslip_templates
   add constraint payroll_payslip_templates_status_check
   check (status in (
@@ -55,13 +64,6 @@ alter table public.payroll_payslip_templates
     'approved',
     'archived'
   ));
-
--- ── Step 3: Backfill existing 'active' rows to 'approved' ────────────────────
--- Existing templates were never drafted or reviewed -- they are live already.
-
-update public.payroll_payslip_templates
-  set status = 'approved'
-  where status = 'active';
 
 -- ── Step 4: Update the partial unique index for is_default ───────────────────
 -- The old index guarded is_default on status='active'; now guard on 'approved'.
