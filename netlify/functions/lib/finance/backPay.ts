@@ -57,9 +57,9 @@ export interface ComputeBackPayInput {
   correctedPeriodBase: number;
   /**
    * When the salary correction became effective (YYYY-MM-DD).
-   * Stored in the adjustment's metadata and idempotency key.
-   * Defaults to fromPeriodMonth when omitted.
-   * Does NOT additionally narrow the period range — fromPeriodMonth controls that.
+   * GATES which prior periods are corrected: only periods on/after this date are
+   * included (a raise effective in Feb must not back-pay January). It tightens
+   * fromPeriodMonth's lower bound; it never widens it. Defaults to fromPeriodMonth.
    */
   effectiveDate?: string;
 }
@@ -80,7 +80,7 @@ export function backPayIdemKey(
 
 /**
  * Recompute the retro delta from every finalised prior run in the range
- * [fromPeriodMonth, currentRun.periodMonth) that:
+ * [max(fromPeriodMonth, effectiveDate), currentRun.periodMonth) that:
  *   - Match the current run's pay_frequency (avoids mixing weekly/monthly).
  *   - Match the current run's pay_group_id when the run is grouped (avoids
  *     including runs outside the pay-group's scope).
@@ -98,6 +98,10 @@ export async function computeBackPay(input: ComputeBackPayInput): Promise<BackPa
   }
 
   const effectiveDate = input.effectiveDate ?? input.fromPeriodMonth;
+  // effectiveDate gates the corrected periods: the range starts at the LATER of
+  // fromPeriodMonth and effectiveDate, so a correction effective mid-range never
+  // back-pays periods before it took effect.
+  const rangeStart = effectiveDate > input.fromPeriodMonth ? effectiveDate : input.fromPeriodMonth;
 
   // ── Query: prior finalised runs in range, scoped to pay-group + frequency ───
   // pay_group_id filter: if the current run belongs to a pay group, only include
@@ -108,7 +112,7 @@ export async function computeBackPay(input: ComputeBackPayInput): Promise<BackPa
   let q = sb.from('finance_payroll_runs')
     .select('id, period_month')
     .in('status', ['locked', 'exported'])
-    .gte('period_month', input.fromPeriodMonth)
+    .gte('period_month', rangeStart)
     .lt('period_month', run.periodMonth)
     .eq('pay_frequency', run.payFrequency)       // must match the current run's frequency
     .order('period_month');

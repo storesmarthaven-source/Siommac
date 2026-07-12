@@ -337,3 +337,47 @@ describe('computeBackPay — validation errors', () => {
     })).rejects.toMatchObject({ status: 422 });
   });
 });
+
+// ── computeBackPay — effectiveDate gates the corrected period range ────────────
+
+describe('computeBackPay — effectiveDate gates the range', () => {
+  beforeEach(() => {
+    mockGetPayrollRun.mockResolvedValue({
+      id: 'run-cur', runNo: 'PAY-3', periodMonth: '2026-04-01',
+      payFrequency: 'monthly', payGroupId: null, status: 'input_locked',
+    } as unknown as Exclude<RunDto, null>);
+  });
+  afterEach(() => { jest.clearAllMocks(); });
+
+  /** Chain whose .gte(col,val) records the lower bound passed by computeBackPay. */
+  function capturingChain(gte: jest.Mock) {
+    const resolved = { data: [] as unknown, error: null };
+    const terminal = { then<T>(r: (v: typeof resolved) => T) { return Promise.resolve(resolved).then(r); } };
+    const chain: Record<string, unknown> = {};
+    for (const m of ['select', 'in', 'eq', 'lt', 'order', 'single', 'maybeSingle']) {
+      chain[m] = () => Object.assign({}, terminal, chain);
+    }
+    chain['gte'] = (col: string, val: string) => { gte(col, val); return Object.assign({}, terminal, chain); };
+    return Object.assign({}, terminal, chain) as unknown as ReturnType<typeof sb.from>;
+  }
+
+  it('starts the range at effectiveDate when it is LATER than fromPeriodMonth', async () => {
+    const gte = jest.fn();
+    mockSbFrom.mockReturnValue(capturingChain(gte));
+    await computeBackPay({
+      currentRunId: 'run-cur', employeeId: 'e1',
+      fromPeriodMonth: '2026-01-01', correctedPeriodBase: 6000, effectiveDate: '2026-02-15',
+    });
+    expect(gte).toHaveBeenCalledWith('period_month', '2026-02-15');
+  });
+
+  it('keeps fromPeriodMonth as the lower bound when effectiveDate is EARLIER', async () => {
+    const gte = jest.fn();
+    mockSbFrom.mockReturnValue(capturingChain(gte));
+    await computeBackPay({
+      currentRunId: 'run-cur', employeeId: 'e1',
+      fromPeriodMonth: '2026-01-01', correctedPeriodBase: 6000, effectiveDate: '2025-11-01',
+    });
+    expect(gte).toHaveBeenCalledWith('period_month', '2026-01-01');
+  });
+});
