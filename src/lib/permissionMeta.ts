@@ -1424,6 +1424,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create, edit, set-as-default and archive payslip layout templates in Payslip Studio. Controls payslip presentation (employer block, logo, sections, footer) — never the underlying pay figures.',
     risk: 'medium',
   },
+  'finance.payroll.templates.approve': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Approve Payslip Templates',
+    description: 'Approve or request changes on submitted Payslip Studio layout templates. Required to complete the maker-checker workflow before a template can be set as default or assigned to a payroll run. Segregation of duties: approver cannot be the template creator.',
+    risk: 'high',
+  },
 
   // ── Finance Expenses (F4) ────────────────────────────────────────────────────
   'finance.expenses.view': {

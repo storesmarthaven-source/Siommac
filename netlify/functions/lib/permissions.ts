@@ -373,8 +373,9 @@ export const PERMISSION_KEYS = [
   'finance.payroll.loans.manage',     // finance: create/submit/settle employee loans & salary advances
   'finance.payroll.statutory_forms.generate', // finance: generate TD4/NI184/NI187 statutory forms + set the employer profile
   'finance.payroll.statutory_forms.view',     // finance: view/download generated statutory forms + read the employer profile
-  'finance.payroll.templates.view',   // finance: list/open saved payslip layout templates (Payslip Studio)
-  'finance.payroll.templates.manage', // finance: create/update/set-default/archive payslip layout templates
+  'finance.payroll.templates.view',    // finance: list/open saved payslip layout templates (Payslip Studio)
+  'finance.payroll.templates.manage',  // finance: create/update/set-default/archive payslip layout templates
+  'finance.payroll.templates.approve', // finance manager: approve submitted templates (SoD: creator cannot approve)
   // ── Finance Statutory Remittances & Filing (F1) ──────────────────────────────────────
   'finance.remittances.view',         // view remittances and per-employee lines
   'finance.remittances.manage',       // create, submit and cancel remittances
@@ -645,6 +646,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.statutory_forms.view',
     'finance.payroll.templates.view',
     'finance.payroll.templates.manage',
+    'finance.payroll.templates.approve',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
@@ -864,6 +866,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.statutory_forms.view',
     'finance.payroll.templates.view',
     'finance.payroll.templates.manage',
+    'finance.payroll.templates.approve',
     'finance.payroll.reports.view',
     'finance.payroll.reports.export',
     'finance.payroll.approve',
