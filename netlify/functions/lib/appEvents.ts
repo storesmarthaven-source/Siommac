@@ -74,6 +74,74 @@ export interface EmitAppEventResult {
   recipientCount?: number;
 }
 
+/**
+ * Build the DB row object for an app_events INSERT without executing it.
+ * Pass the result as `p_event` to an RPC that embeds the INSERT inside its
+ * own transaction so the event row is committed atomically with the business row.
+ * After the RPC returns, call deliverEventNotifications() for the best-effort
+ * notification / Realtime delivery pass.
+ */
+export function buildEventRow(input: EmitAppEventInput): Record<string, unknown> {
+  return {
+    event_type:         input.eventType,
+    source_module:      input.sourceModule,
+    source_entity_type: input.sourceEntityType,
+    source_entity_id:   input.sourceEntityId,
+    actor_user_id:      input.actorUserId ?? null,
+    site_id:            input.siteId ?? null,
+    department_id:      input.departmentId ?? null,
+    severity:           input.severity ?? 'info',
+    payload:            input.payload ?? {},
+    dedupe_key:         input.dedupeKey ?? null,
+  };
+}
+
+/**
+ * Best-effort notification delivery AFTER the transaction commits.
+ * Resolves recipients for the event, persists notification rows, and
+ * emits the Realtime badge-refresh signal. Never throws — a failure here
+ * must not affect the already-committed business transaction.
+ *
+ * @param input  The same EmitAppEventInput used to build the event row.
+ * @param eventId  The uuid returned by the RPC (from the app_events.id of the
+ *                 in-txn insert); used to link notification rows to the event.
+ *                 Pass null when the event_id is unavailable (notifications
+ *                 are still delivered, just without the link).
+ */
+export async function deliverEventNotifications(
+  input: EmitAppEventInput,
+  eventId: string | null,
+): Promise<void> {
+  try {
+    if (!input.notification) return; // no notification configured → nothing to send
+    const recipients = await resolveRecipients(input);
+    if (recipients.size === 0) return;
+    const n = input.notification;
+    await Promise.all([...recipients.keys()].map(userId =>
+      notify({
+        userId,
+        type:           n.type ?? input.eventType,
+        title:          n.title,
+        body:           n.body,
+        link:           n.actionRoute,
+        eventId:        eventId ?? undefined,
+        module:         input.sourceModule,
+        severity:       input.severity ?? 'info',
+        sourceType:     input.sourceEntityType,
+        sourceId:       input.sourceEntityId,
+        actionRoute:    n.actionRoute,
+        metadata:       input.payload,
+        dedupeKey:      input.dedupeKey ?? null,
+        actionRequired: n.actionRequired,
+        dueAt:          n.dueAt,
+      }).catch(err => console.warn('[appEvents] deliverEventNotifications notify failed for', userId, err)),
+    ));
+    await emitSignal([...recipients.keys()], 'notifications').catch(() => void 0);
+  } catch (e) {
+    console.warn('[appEvents] deliverEventNotifications failed:', e);
+  }
+}
+
 export async function emitAppEvent(input: EmitAppEventInput): Promise<EmitAppEventResult> {
   try {
     // 1. Dedupe check

@@ -14,6 +14,27 @@ export const todayISO = (): string => new Date().toISOString().slice(0, 10);
 export const EMPLOYMENT_TYPES = ['employee', 'contractor', 'intern', 'temporary', 'consultant', 'seconded'] as const;
 export const NIS_STATUSES     = ['pending', 'registered', 'exempt', 'not_applicable'] as const;
 
+/**
+ * Build the DB row object for an hr_audit_log INSERT without executing it.
+ * Pass the result as `p_audit` to an RPC that embeds the INSERT inside its
+ * own transaction so the audit row is committed atomically with the business row.
+ */
+export function buildHrAuditRow(a: {
+  employeeId?: string | null; submoduleKey: string; recordId?: string | null;
+  actorId?: string | null; action: string; previousState?: unknown; newState?: unknown; reason?: string | null;
+}): Record<string, unknown> {
+  return {
+    employee_id:    a.employeeId ?? null,
+    submodule_key:  a.submoduleKey,
+    record_id:      a.recordId ?? null,
+    actor_id:       a.actorId ?? null,
+    action:         a.action,
+    previous_state: a.previousState ?? null,
+    new_state:      a.newState ?? null,
+    reason:         a.reason ?? null,
+  };
+}
+
 /** Fire-and-forget HR audit (async helper so the supabase builder actually executes). */
 export async function writeHrAudit(a: {
   employeeId?: string | null; submoduleKey: string; recordId?: string | null;

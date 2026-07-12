@@ -9,8 +9,8 @@
 
 import { createHash } from 'crypto';
 import { sb } from '../db';
-import { emitAppEvent } from '../appEvents';
-import { writeHrAudit } from '../hr/employeeCore';
+import { emitAppEvent, buildEventRow, deliverEventNotifications } from '../appEvents';
+import { writeHrAudit, buildHrAuditRow } from '../hr/employeeCore';
 
 export const STATUTORY_FORMS_BUCKET = 'statutory-forms';
 
@@ -95,6 +95,24 @@ export interface RecordStatutoryFormInput {
  * the DB txn, so an orphaned artifact on a failed commit is harmless / overwritten.)
  */
 export async function recordStatutoryForm(input: RecordStatutoryFormInput): Promise<StatutoryFormDto> {
+  // P3: build the event + audit row objects BEFORE the RPC so they can be inserted
+  // atomically inside the same transaction. The form's uuid (unknown to JS at this
+  // point) is used as source_entity_id inside the RPC (the p_event.source_entity_id
+  // value passed here is a placeholder overridden by the function with v_row.id).
+  const sfEventInput = {
+    eventType:        'finance.payroll.statutory_form.generated',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'statutory_form',
+    sourceEntityId:   '', // placeholder — overridden inside the RPC with v_row.id
+    actorUserId:      input.actorId ?? null,
+    severity:         'info' as const,
+    payload:          {
+      formType:   input.formType,
+      taxYear:    input.taxYear,
+      employeeId: input.employeeId,
+    },
+  };
+
   const { data, error } = await sb.rpc('finance_record_statutory_form_commit', {
     p_form: {
       form_type: input.formType, tax_year: input.taxYear ?? null,
@@ -105,21 +123,21 @@ export async function recordStatutoryForm(input: RecordStatutoryFormInput): Prom
       totals: input.totals ?? {}, checksum: input.checksum ?? null, generated_by: input.actorId,
       metadata: input.metadata ?? {},
     },
+    p_event: buildEventRow(sfEventInput),
+    p_audit: buildHrAuditRow({
+      submoduleKey: 'finance_payroll', recordId: null, // form id not yet known; will be set as source_entity_id in event
+      actorId: input.actorId ?? null, action: 'statutory_form.generated',
+      previousState: null, newState: { formType: input.formType, taxYear: input.taxYear, employeeId: input.employeeId },
+    }),
   });
   if (error) throw Object.assign(new Error('recordStatutoryForm: ' + error.message), { status: 500 });
   const dto = toDto(data as DbRow);
 
-  void emitAppEvent({
-    eventType: 'finance.payroll.statutory_form.generated',
-    sourceModule: 'finance_payroll', sourceEntityType: 'statutory_form', sourceEntityId: dto.id,
-    actorUserId: input.actorId, severity: 'info',
-    payload: { formType: dto.formType, taxYear: dto.taxYear, employeeId: dto.employeeId, totals: dto.totals },
-  });
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: dto.id, actorId: input.actorId,
-    action: 'statutory_form.generated',
-    previousState: null, newState: { formType: dto.formType, taxYear: dto.taxYear, employeeId: dto.employeeId },
-  });
+  // Best-effort notification delivery after commit. No notification block configured
+  // for statutory_form.generated (silent audit event), so this is a no-op today.
+  // When notifications are added here, pass the event's id; for now null is fine.
+  void deliverEventNotifications({ ...sfEventInput, sourceEntityId: dto.id }, null);
+
   return dto;
 }
 

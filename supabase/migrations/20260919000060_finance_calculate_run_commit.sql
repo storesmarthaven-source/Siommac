@@ -13,21 +13,38 @@
 -- the already-computed rows. Typed jsonb_to_recordset (explicit column lists) so
 -- table DEFAULTS (id, created_at, updated_at) apply -- never NULL'd out.
 --
--- ASCII only + idempotent (create or replace); service_role execute only.
+-- P3 audit addition: accepts optional p_event (app_events row) and p_audit
+-- (hr_audit_log row) as JSONB objects, inserting them inside the same
+-- transaction. This makes the audit trail atomic with the business commit:
+-- either the lines/warnings/totals + event + audit all land together, or none
+-- do. Notification delivery (Realtime/push) happens outside this function via
+-- deliverEventNotifications() after the RPC returns.
+--
+-- Returns: the app_events.id of the inserted event row (null if p_event is null).
+--
+-- ASCII only + idempotent (drop old 4-arg signature + create-or-replace 6-arg);
+-- service_role execute only.
 -- ============================================================================
+
+-- Drop the prior 4-arg signature so the new 6-arg version is the sole overload.
+-- (Postgres treats a new parameter list as a DIFFERENT function, not a replacement.)
+drop function if exists public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb);
 
 create or replace function public.finance_calculate_run_commit(
   p_run_id   uuid,
   p_lines    jsonb,
   p_warnings jsonb,
-  p_totals   jsonb
-) returns void
+  p_totals   jsonb,
+  p_event    jsonb DEFAULT NULL,
+  p_audit    jsonb DEFAULT NULL
+) returns uuid
 language plpgsql
 security definer
 set search_path = public
 as $fn$
 declare
-  v_status text;
+  v_status   text;
+  v_event_id uuid;
 begin
   -- Lock the run and RE-VALIDATE its status inside this transaction. The JS status
   -- check happens before the compute, so a concurrent submit/approve could move the
@@ -93,12 +110,52 @@ begin
     raise exception 'finance_calculate_run_commit: run % not found', p_run_id
       using errcode = 'no_data_found';
   end if;
+
+  -- P3: atomic audit trail -- insert hr_audit_log row inside this transaction.
+  -- The audit row is non-nullable for compliance; a missing submodule_key or action
+  -- would raise a NOT NULL violation and roll back the whole commit (correct behavior).
+  if p_audit is not null then
+    insert into public.hr_audit_log (
+      employee_id, submodule_key, record_id, actor_id, action,
+      previous_state, new_state, reason)
+    values (
+      nullif(p_audit->>'employee_id', ''),
+      p_audit->>'submodule_key',
+      nullif(p_audit->>'record_id', ''),
+      nullif(p_audit->>'actor_id', ''),
+      p_audit->>'action',
+      p_audit->'previous_state',
+      p_audit->'new_state',
+      nullif(p_audit->>'reason', ''));
+  end if;
+
+  -- P3: atomic event row -- insert app_events inside this transaction.
+  -- Returns the generated uuid so JS can use it when delivering notifications.
+  if p_event is not null then
+    insert into public.app_events (
+      event_type, source_module, source_entity_type, source_entity_id,
+      actor_user_id, site_id, department_id, severity, payload, dedupe_key)
+    values (
+      p_event->>'event_type',
+      p_event->>'source_module',
+      p_event->>'source_entity_type',
+      p_event->>'source_entity_id',
+      nullif(p_event->>'actor_user_id', ''),
+      nullif(p_event->>'site_id', ''),
+      nullif(p_event->>'department_id', ''),
+      coalesce(nullif(p_event->>'severity', ''), 'info'),
+      coalesce(p_event->'payload', '{}'::jsonb),
+      nullif(p_event->>'dedupe_key', ''))
+    returning id into v_event_id;
+  end if;
+
+  return v_event_id;
 end
 $fn$;
 
-revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb) from public;
-revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb) from anon;
-revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb) from authenticated;
-grant execute on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb) to service_role;
+revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb, jsonb, jsonb) from public;
+revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb, jsonb, jsonb) from anon;
+revoke all    on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb, jsonb, jsonb) from authenticated;
+grant execute on function public.finance_calculate_run_commit(uuid, jsonb, jsonb, jsonb, jsonb, jsonb) to service_role;
 
 -- After applying, run: NOTIFY pgrst, 'reload schema';

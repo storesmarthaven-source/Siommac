@@ -17,8 +17,8 @@
 // ============================================================================
 
 import { sb } from '../db';
-import { emitAppEvent } from '../appEvents';
-import { writeHrAudit } from '../hr/employeeCore';
+import { emitAppEvent, buildEventRow, deliverEventNotifications } from '../appEvents';
+import { writeHrAudit, buildHrAuditRow } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
 import { getActiveStatutoryVersion, getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
@@ -1051,59 +1051,63 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     totalNisEmployer += result.nisEmployer;
   }
 
-  // ── Atomic commit ────────────────────────────────────────────────────────
+  // ── Atomic commit (P3: includes event + audit in the same transaction) ───
   // ONE transaction (finance_calculate_run_commit): clear prior lines/warnings,
-  // insert the freshly-computed rows, roll up totals + set status. supabase-js
-  // cannot wrap these as a transaction from the app layer, so this RPC is the
-  // single commit path — any failure rolls back the whole recompute and the run
-  // keeps its prior committed state (no partial lines with stale totals).
+  // insert the freshly-computed rows, roll up totals + set status, and also
+  // insert the app_events + hr_audit_log rows so audit trail is atomic with the
+  // business commit. supabase-js cannot wrap these as a transaction from the app
+  // layer, so this RPC is the single commit path.
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const { error: commitErr } = await sb.rpc('finance_calculate_run_commit', {
+  const calcTotals = {
+    grossTotal:       round2(totalGross),
+    deductionTotal:   round2(totalDeductions),
+    netTotal:         round2(totalNet),
+    nisEmployerTotal: round2(totalNisEmployer),
+    employeeCount:    empIds.length,
+  };
+  const calcEventInput = {
+    eventType: 'finance.payroll.run.calculated',
+    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
+    actorUserId: actorId, severity: (warningRows.length > 0 ? 'warning' : 'success') as 'warning' | 'success',
+    payload: {
+      runNo:         run.runNo,
+      employeeCount: empIds.length,
+      grossTotal:    calcTotals.grossTotal,
+      netTotal:      calcTotals.netTotal,
+      warningCount:  warningRows.length,
+    },
+  } as const;
+
+  const { data: commitEventId, error: commitErr } = await sb.rpc('finance_calculate_run_commit', {
     p_run_id:   runId,
     p_lines:    lineRows,
     p_warnings: warningRows,
-    p_totals: {
-      grossTotal:       round2(totalGross),
-      deductionTotal:   round2(totalDeductions),
-      netTotal:         round2(totalNet),
-      nisEmployerTotal: round2(totalNisEmployer),
-      employeeCount:    empIds.length,
-    },
+    p_totals:   calcTotals,
+    p_event:    buildEventRow(calcEventInput),
+    p_audit:    buildHrAuditRow({
+      submoduleKey: 'finance_payroll', recordId: runId, actorId,
+      action: 'payroll_run.calculated',
+      previousState: { status: 'input_locked' },
+      newState: {
+        status: 'calculated',
+        employeeCount: empIds.length,
+        grossTotal:    calcTotals.grossTotal,
+        netTotal:      calcTotals.netTotal,
+        warningCount:  warningRows.length,
+      },
+    }),
   });
   if (commitErr) throw Object.assign(new Error('calculateRun/commit: ' + commitErr.message), { status: 500 });
 
-  // The RPC returns void — re-read the committed run for the DTO.
+  // Re-read the committed run for the DTO.
   const { data: updated, error: reErr } = await sb.from('finance_payroll_runs')
     .select().eq('id', runId).single<DbRunRow>();
   if (reErr) throw Object.assign(new Error('calculateRun/reread: ' + reErr.message), { status: 500 });
 
   const updatedRun = toRunDto(updated);
 
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.calculated',
-    previousState: { status: 'input_locked' },
-    newState: {
-      status: 'calculated',
-      employeeCount: empIds.length,
-      grossTotal: round2(totalGross),
-      netTotal: round2(totalNet),
-      warningCount: warningRows.length,
-    },
-  });
-
-  void emitAppEvent({
-    eventType: 'finance.payroll.run.calculated',
-    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
-    actorUserId: actorId, severity: warningRows.length > 0 ? 'warning' : 'success',
-    payload: {
-      runNo: updatedRun.runNo,
-      employeeCount: empIds.length,
-      grossTotal: round2(totalGross),
-      netTotal: round2(totalNet),
-      warningCount: warningRows.length,
-    },
-  });
+  // Best-effort notification delivery AFTER the commit (event is in the DB).
+  void deliverEventNotifications(calcEventInput, (commitEventId as string | null) ?? null);
 
   return updatedRun;
 }
