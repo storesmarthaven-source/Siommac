@@ -202,27 +202,28 @@ export async function updateTemplate(input: UpdateTemplateInput, actorId: string
 }
 
 export async function setDefaultTemplate(id: string, actorId: string): Promise<PayslipTemplateDto> {
-  // Guard BEFORE clearing so a bad id can never leave zero defaults.
-  await requireActive(id);
+  // Atomic RPC: clears the old default and sets the new one in ONE transaction
+  // (migration 20260919000090). The prior two-step clear-then-set was non-atomic:
+  // a crash between the two calls left zero active defaults.
+  const { error: rpcErr } = await sb.rpc('payroll_set_default_template', {
+    p_id: id, p_actor_id: actorId,
+  });
+  if (rpcErr) {
+    // Postgres raises P0002 (no_data_found) when the template doesn't exist or
+    // is already archived. Map to 404 so the caller gets a meaningful status.
+    if (rpcErr.message.includes('not found or not active'))
+      throw err('Payslip template not found.', 404);
+    throw err('setDefaultTemplate: ' + rpcErr.message, 500);
+  }
 
-  // The partial unique index enforces "at most one active default". supabase-js
-  // cannot express the single-statement CASE, so clear-then-set in sequence:
-  // the transient zero-default window is harmless and self-healing.
-  const { error: clearErr } = await sb
+  // Fetch the freshly-updated row to build the DTO.
+  const { data, error: selErr } = await sb
     .from('payroll_payslip_templates')
-    .update({ is_default: false, updated_by: actorId })
-    .eq('status', 'active')
-    .eq('is_default', true);
-  if (clearErr) throw err('setDefaultTemplate/clear: ' + clearErr.message, 500);
-
-  const { data, error } = await sb
-    .from('payroll_payslip_templates')
-    .update({ is_default: true, updated_by: actorId })
-    .eq('id', id)
-    .eq('status', 'active')
     .select(SELECT)
-    .single<DbRow>();
-  if (error) throw err('setDefaultTemplate/set: ' + error.message, 500);
+    .eq('id', id)
+    .maybeSingle<DbRow>();
+  if (selErr) throw err('setDefaultTemplate/fetch: ' + selErr.message, 500);
+  if (!data) throw err('Payslip template not found after update.', 404);
 
   const dto = toDto(data);
   await writeHrAudit({
@@ -240,33 +241,20 @@ export async function setDefaultTemplate(id: string, actorId: string): Promise<P
 }
 
 export async function archiveTemplate(id: string, actorId: string): Promise<{ ok: true }> {
+  // Load the row before archiving so we can write a meaningful audit previousState.
+  // requireActive throws 404 if the template doesn't exist/is already archived.
   const prev = await requireActive(id);
 
-  const { error } = await sb
-    .from('payroll_payslip_templates')
-    .update({ status: 'archived', is_default: false, updated_by: actorId })
-    .eq('id', id)
-    .eq('status', 'active');
-  if (error) throw err('archiveTemplate: ' + error.message, 500);
-
-  // Mirror the local store: keep a usable default. If the archived template was
-  // the default, promote the most-recent remaining active template.
-  if (prev.is_default) {
-    const { data: next } = await sb
-      .from('payroll_payslip_templates')
-      .select('id')
-      .eq('status', 'active')
-      .order('created_at', { ascending: false })
-      .limit(1)
-      .maybeSingle<{ id: string }>();
-    if (next?.id) {
-      const { error: promoteErr } = await sb
-        .from('payroll_payslip_templates')
-        .update({ is_default: true, updated_by: actorId })
-        .eq('id', next.id)
-        .eq('status', 'active');
-      if (promoteErr) throw err('archiveTemplate/promote: ' + promoteErr.message, 500);
-    }
+  // Atomic RPC: archives the row AND promotes the next-default in ONE transaction
+  // (migration 20260919000090). The prior archive-then-promote was non-atomic:
+  // a crash between the two calls left zero active defaults.
+  const { error: rpcErr } = await sb.rpc('payroll_archive_template', {
+    p_id: id, p_actor_id: actorId,
+  });
+  if (rpcErr) {
+    if (rpcErr.message.includes('not found or not active'))
+      throw err('Payslip template not found.', 404);
+    throw err('archiveTemplate: ' + rpcErr.message, 500);
   }
 
   await writeHrAudit({
