@@ -56,13 +56,14 @@
 .payslip-studio-root .psd-load-badge {
   display: inline-flex; align-items: center; justify-content: center;
   width: 52px; height: 52px; border-radius: 14px; flex: none;
-  background: linear-gradient(150deg, var(--toolbar) 0%, var(--brand) 135%);
-  color: #fff; box-shadow: var(--shadow);
+  /* SIOMAC yellow-gold gradient; dark mark on top for contrast. */
+  background: linear-gradient(150deg, #ffd23f 0%, #f5a623 135%);
+  color: #1e2540; box-shadow: 0 12px 26px -10px rgba(245, 166, 35, .55);
   animation: psd-badge-pulse 1.8s ease-in-out infinite;
 }
 .payslip-studio-root .psd-load-mark { width: 30px; height: 30px; }
-.payslip-studio-root .psd-load-title { font-size: 22px; font-weight: 700; color: var(--ink); letter-spacing: .2px; }
-.payslip-studio-root .psd-load-title b { color: var(--brand); font-weight: 800; }
+.payslip-studio-root .psd-load-title { font-size: 22px; font-weight: 600; color: var(--ink); letter-spacing: .1px; }
+.payslip-studio-root .psd-load-title b { color: var(--brand); font-weight: 700; }
 .payslip-studio-root .psd-load-bar { height: 7px; border-radius: 999px; background: var(--line); overflow: hidden; }
 .payslip-studio-root .psd-load-fill {
   height: 100%; border-radius: 999px;
@@ -82,8 +83,8 @@
 }
 .payslip-studio-root .psd-load-brand b { color: var(--ink-soft); font-weight: 800; }
 @keyframes psd-badge-pulse {
-  0%, 100% { transform: translateY(0); box-shadow: var(--shadow); }
-  50%      { transform: translateY(-3px); box-shadow: 0 16px 34px -12px rgba(88, 99, 125, .55); }
+  0%, 100% { transform: translateY(0); box-shadow: 0 12px 26px -10px rgba(245, 166, 35, .55); }
+  50%      { transform: translateY(-3px); box-shadow: 0 18px 34px -12px rgba(245, 166, 35, .6); }
 }
 
 .payslip-studio-root {

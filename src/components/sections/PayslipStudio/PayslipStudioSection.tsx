@@ -19,15 +19,17 @@ import './styles/app.css';
 
 // The loading screen is shown for at least this long so the boot sequence is
 // actually seen (the chunk usually resolves faster). Progress + resource lines
-// are paced to the same window.
+// are paced to the same window. The min-time gate lives in the component (below)
+// so every open — first AND re-open — shows the same smooth 0→100 sequence
+// instead of the lazy delay only firing once (which caused a stuck-100 / double
+// loading flash on re-open).
 const MIN_LOAD_MS = 2400;
-const delay = (ms: number): Promise<void> => new Promise(r => setTimeout(r, ms));
+const importApp = (): Promise<typeof import('@payslip/App')> => import('@payslip/App');
 
 // Code-split the studio (large) so opening the designer shows the loading page
-// while its chunk + fonts load, and the Finance/AC bundles stay lean. The MIN
-// delay keeps the boot sequence on screen even when the import is instant.
+// while its chunk + fonts load, and the Finance/AC bundles stay lean.
 const PayslipStudioApp = lazy(() =>
-  Promise.all([import('@payslip/App'), delay(MIN_LOAD_MS)]).then(([m]) => ({ default: m.App })),
+  importApp().then((m) => ({ default: m.App })),
 );
 
 // Technical-sounding resources, revealed in step with the progress bar.
@@ -99,19 +101,29 @@ function ensureStudioFonts(): void {
 
 /** `onBack` exits the full-page studio (parent navigates back to its module). */
 export function PayslipStudioSection({ onBack }: { onBack?: () => void }): VNode {
-  // Fetch the per-user draft + open-ref from the DB before mounting the studio.
-  // The loading page covers both this fetch and the code-split chunk load.
+  // Hold the loading page until ALL of: the per-user draft is fetched, the studio
+  // chunk is loaded (preloaded here so the App renders instantly, no second
+  // fallback flash), and a minimum time has passed (the boot-sequence illusion).
+  // Gating all three in one `ready` flag makes every open — first and re-open —
+  // play the same smooth 0→100, with no stuck-100 or double loading.
   const [editor, setEditor] = useState<EditorState | null>(null);
+  const [appReady, setAppReady] = useState(false);
+  const [minElapsed, setMinElapsed] = useState(false);
+
   useEffect(() => {
     ensureStudioFonts();
     let alive = true;
     void loadEditorState().then(s => { if (alive) setEditor(s); });
-    return () => { alive = false; };
+    void importApp().then(() => { if (alive) setAppReady(true); });
+    const t = window.setTimeout(() => { if (alive) setMinElapsed(true); }, MIN_LOAD_MS);
+    return () => { alive = false; window.clearTimeout(t); };
   }, []);
+
+  const ready = editor !== null && appReady && minElapsed;
 
   return (
     <div class="payslip-studio-root">
-      {editor === null
+      {!ready
         ? <StudioLoading />
         : (
           <Suspense fallback={<StudioLoading />}>
