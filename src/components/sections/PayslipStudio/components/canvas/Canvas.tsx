@@ -77,11 +77,17 @@ export function Canvas() {
         if (e.target === e.currentTarget) dispatch({ kind: 'select', id: null });
       }}
     >
-      <div class={`stage${view.preview ? ' preview' : ''}`} style={{ transform: `scale(${view.zoom})` }}>
+      {/* The stage takes the SCALED footprint so the scroll container measures the
+          visible size — otherwise transform:scale leaves a full-size layout box and
+          the canvas shows a spurious horizontal scrollbar at fit zoom. */}
+      <div
+        class={`stage${view.preview ? ' preview' : ''}`}
+        style={{ width: `${w * view.zoom}px`, height: `${h * view.zoom}px` }}
+      >
         <div
           ref={pageRef}
           class={`page${design.page.grid && !view.preview ? ' grid' : ''}`}
-          style={{ width: `${w}px`, height: `${h}px`, background: design.page.bg }}
+          style={{ width: `${w}px`, height: `${h}px`, background: design.page.bg, transform: `scale(${view.zoom})`, transformOrigin: 'top left' }}
           onPointerDown={onPageDown}
           onPointerMove={onPageMove}
           onPointerUp={finish}
