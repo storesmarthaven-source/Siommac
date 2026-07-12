@@ -21,7 +21,7 @@ import { humanize } from './shared';
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—';
   const d = new Date(s);
-  if (isNaN(d.getTime())) return String(s);
+  if (isNaN(d.getTime())) return s;
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function relativeTime(s: string | null | undefined): string {

@@ -107,7 +107,7 @@ function escapeHtml(s: unknown): string {
 }
 
 function cssEscape(s: string): string {
-  return (window.CSS && CSS.escape) ? CSS.escape(s) : String(s).replace(/(["\\])/g, '\\$1');
+  return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/(["\\])/g, '\\$1');
 }
 
 // ── Photo cache ───────────────────────────────────────────────────────────────
@@ -437,7 +437,7 @@ interface SessionData {
  *  session has no `idleExpiresAt` yet. NEVER read `expiresAt` for this — that field
  *  is the access-token expiry (refreshed silently), not the logout deadline. */
 function _idleDeadline(s: SessionData): number {
-  return Number(s.idleExpiresAt) || (Date.now() + (Number(s.idleTimeoutMs) || SESSION_DEFAULT_IDLE));
+  return Number(s.idleExpiresAt) || (Date.now() + (s.idleTimeoutMs || SESSION_DEFAULT_IDLE));
 }
 
 function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
@@ -451,7 +451,7 @@ function saveSession(payload: Partial<SessionData>, rememberMe: boolean): void {
     const data = Object.assign({}, payload, {
       idleTimeoutMs,
       idleExpiresAt: Date.now() + idleTimeoutMs,
-      rememberMe: !!rememberMe,
+      rememberMe: rememberMe,
     });
     localStorage.setItem(SESSION_KEY, JSON.stringify(data));
   } catch (_) { /* empty */ }
@@ -473,7 +473,7 @@ function loadSession(): SessionData | null {
     if (!s?.token) return null;
     // Only the IDLE deadline ends a session. An expired access token must NOT —
     // it would destroy the refresh token and make silent refresh impossible.
-    if (s.idleExpiresAt && Number(s.idleExpiresAt) < Date.now()) {
+    if (s.idleExpiresAt && s.idleExpiresAt < Date.now()) {
       localStorage.removeItem(SESSION_KEY);
       return null;
     }
@@ -517,7 +517,7 @@ function _resetIdleDeadline(): void {
   const s = loadSession();
   if (!s) return;
   _lastActivityReset = now;
-  const idle = Number(s.idleTimeoutMs) || SESSION_DEFAULT_IDLE;
+  const idle = s.idleTimeoutMs || SESSION_DEFAULT_IDLE;
   updateStoredSession({ idleExpiresAt: now + idle });
   _sessWarned = false;            // fresh activity clears a prior warning
   _armSessionTimers();
@@ -1006,7 +1006,7 @@ function setupEventListeners(): void {
     // Rate input live dirty + stats
     const inp = tgt.closest<HTMLInputElement>('.rate-input');
     if (inp) {
-      inp.classList.toggle('dirty', String(inp.value) !== String(inp.dataset.original));
+      inp.classList.toggle('dirty', inp.value !== String(inp.dataset.original));
       const ratesData  = w()._ratesData as Record<string, unknown>[] | undefined;
       const hrUpdateStats = w()._hrUpdateStats as ((d: unknown[]) => void) | undefined;
       if (ratesData && hrUpdateStats) {
@@ -1075,7 +1075,7 @@ function setupEventListeners(): void {
     // Attendance export
     if (tgt.closest?.('#exportAttendanceBtn')) {
       const btn = document.querySelector<HTMLElement>('.dt-button.buttons-csv, .dt-button.buttons-excel');
-      if (btn) btn.click(); else showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
+      if (btn) btn.click(); else void showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
     }
 
     // Attendance mode toggle
@@ -1099,7 +1099,7 @@ function setupEventListeners(): void {
     // Date range apply
     if (tgt.closest?.('#attApplyRange')) {
       const from = _attFpFrom?.selectedDates[0] ? _attFpFrom.formatDate(_attFpFrom.selectedDates[0], 'Y-m-d') : '';
-      if (!from) { showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
+      if (!from) { void showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
       _swr()?.clearByPrefix('listDailyLog:');
       _swrLastHash()?.forEach((_, k) => { if (k.startsWith('listDailyLog:')) _swrLastHash()?.delete(k); });
       attView?.loadAttendanceData?.();
@@ -1151,7 +1151,7 @@ function setupEventListeners(): void {
       }
     }
     const liveCard = tgt.closest<HTMLElement>('.lm-emp-item, .live-emp-card');
-    if (liveCard && tgt.closest('#s-projectMap')) liveMap?.focusLiveEmployee?.(String(liveCard.dataset.id ?? liveCard.dataset.userid ?? ''));
+    if (liveCard && tgt.closest('#s-projectMap')) liveMap?.focusLiveEmployee?.((liveCard.dataset.id ?? liveCard.dataset.userid ?? ''));
 
     // Hourly rates
     if (tgt.closest?.('#refreshRatesBtn'))   payroll?.loadHourlyRates?.();

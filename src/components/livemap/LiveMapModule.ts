@@ -185,7 +185,7 @@ function initializeMap(): void {
     }).addTo(lmap);
 
     // Fetch project sites, draw zones and pins, then fit view
-    api('listProjectSites', {}).then(res => {
+    void api('listProjectSites', {}).then(res => {
       const sites = (res?.success && res.data) || [];
       const attendanceZones = AppState.get('attendanceZones') as any[];
       attendanceZones.forEach(z => { try { lmap.removeLayer(z); } catch (_) { /* empty */ } });
@@ -348,7 +348,7 @@ function _updateSiteMarkerZIndex(): void {
   const slm = AppState.get('_siteLayerMap') as Record<string, any>;
   Object.entries(slm).forEach(([id, { marker }]: [string, any]) => {
     if (!marker) return;
-    marker.setZIndexOffset(String(id) === selected ? 500 : 0);
+    marker.setZIndexOffset(id === selected ? 500 : 0);
   });
 }
 
@@ -414,8 +414,8 @@ function _syncCustomSelectTrigger(val: string, sites?: any[]): void {
 
   const liveData = AppState.get('liveData') as any[];
   const allSites = sites ?? Object.values(AppState.get('_siteLayerMap') as Record<string, any>).map((e: any) => e.site);
-  const site     = allSites.find((s: any) => String(s.id) === String(val));
-  const isActive = (liveData || []).some((r: any) => !r.isCheckedOut && String(r.siteId) === String(val));
+  const site     = allSites.find((s: any) => String(s.id) === val);
+  const isActive = (liveData || []).some((r: any) => !r.isCheckedOut && String(r.siteId) === val);
 
   label.textContent = site ? site.name : val;
   if (dot) dot.className = `lm-cs-dot ${isActive ? 'lm-cs-dot-green' : 'lm-cs-dot-gray'}`;

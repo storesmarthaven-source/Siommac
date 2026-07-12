@@ -21,7 +21,7 @@ export function fmtLeaveDate(d: string | null | undefined): string {
 
 export function capStr(s: string | null | undefined): string {
   if (!s) return '';
-  return String(s).charAt(0).toUpperCase() + String(s).slice(1);
+  return s.charAt(0).toUpperCase() + s.slice(1);
 }
 
 export function leaveTypeBg(type: string): string {
@@ -85,7 +85,7 @@ export function buildLeaveDocHtml(d: {
   };
 }): string {
   const esc = (s: string | null | undefined): string =>
-    String(s ?? '')
+    (s ?? '')
       .replace(/&/g, '&amp;')
       .replace(/</g, '&lt;')
       .replace(/>/g, '&gt;')
@@ -93,13 +93,13 @@ export function buildLeaveDocHtml(d: {
       .replace(/'/g, '&#39;');
 
   const today        = new Date().toISOString().slice(0, 10);
-  const status       = String(d.status ?? 'pending').toLowerCase();
+  const status       = (d.status ?? 'pending').toLowerCase();
   const statusBadge  = ({
     approved: '<span style="color:#1a8a3a;font-weight:700;">APPROVED</span>',
     rejected: '<span style="color:#c1272d;font-weight:700;">REJECTED</span>',
     pending:  '<span style="color:#b8860b;font-weight:700;">PENDING</span>',
   } as Record<string, string>)[status] ?? '—';
-  const reviewedDate = d.reviewedAt ? String(d.reviewedAt).slice(0, 10) : '____________';
+  const reviewedDate = d.reviewedAt ? d.reviewedAt.slice(0, 10) : '____________';
 
   return (
     '<div class="leave-doc">'
@@ -110,7 +110,7 @@ export function buildLeaveDocHtml(d: {
     + '</div>'
 
     + '<div class="leave-doc-meta">'
-    + `<div><strong>Date:</strong> ${esc(String(d.appliedAt ?? today).slice(0, 10))}</div>`
+    + `<div><strong>Date:</strong> ${esc((d.appliedAt ?? today).slice(0, 10))}</div>`
     + `<div><strong>Application No.:</strong> ${esc(d.id)}</div>`
     + '</div>'
 

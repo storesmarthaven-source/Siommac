@@ -49,7 +49,7 @@ import { DEFAULT_CONSTANTS } from './types';
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 const fmtMoney = (n: number) =>
-  '$' + Number(n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  '$' + (n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 
 const fmtTTD = (n: number) =>
   'TTD ' + Math.max(0, n).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
@@ -149,7 +149,7 @@ function PayslipModal({ row, dateFrom, dateTo, onClose }: PayslipModalProps) {
               <tr><td style="padding:4px 0;color:#888">Pay Cycle</td><td style="padding:4px 0">{CYCLE_LABEL[row.payCycle]}</td></tr>
               <tr><td style="padding:4px 0;color:#888">Pay Basis</td><td style="padding:4px 0">{row.payBasis === 'hourly' ? 'Hourly' : 'Salary'}</td></tr>
               {row.payBasis === 'hourly' && <tr><td style="padding:4px 0;color:#888">Hourly Rate</td><td style="padding:4px 0">{fmtMoney(row.hourlyRate)}/hr</td></tr>}
-              <tr><td style="padding:4px 0;color:#888">Hours Worked</td><td style="padding:4px 0">{Number(row.hoursWorked || 0).toFixed(1)}{row.overridden ? ' (overridden)' : ''}</td></tr>
+              <tr><td style="padding:4px 0;color:#888">Hours Worked</td><td style="padding:4px 0">{(row.hoursWorked || 0).toFixed(1)}{row.overridden ? ' (overridden)' : ''}</td></tr>
             </tbody>
           </table>
 
@@ -669,7 +669,7 @@ export function PayrollSection() {
       const source = runData?.rows ?? [];
       return source
         .filter(r => {
-          if (deptFilter !== 'all' && String(r.departmentId) !== String(deptFilter)) return false;
+          if (deptFilter !== 'all' && r.departmentId !== deptFilter) return false;
           if (cycleFilter !== 'all' && r.payCycle !== cycleFilter) return false;
           if (empSearch && !`${r.name} ${r.department}`.toLowerCase().includes(empSearch.toLowerCase())) return false;
           return true;
@@ -681,7 +681,7 @@ export function PayrollSection() {
         }));
     }
     return allEmployees.filter(e => {
-      if (deptFilter  !== 'all' && String(e.departmentId) !== String(deptFilter)) return false;
+      if (deptFilter  !== 'all' && e.departmentId !== deptFilter) return false;
       if (cycleFilter !== 'all' && e.payCycle !== cycleFilter) return false;
       const q = empSearch.toLowerCase();
       if (q && !`${e.fullName || ''} ${e.firstName || ''} ${e.lastName || ''} ${e.departmentName || e.department || ''}`.toLowerCase().includes(q)) return false;
@@ -694,9 +694,9 @@ export function PayrollSection() {
     if (!runData) return;
     let base = runData.rows;
     if (cycleFilter !== 'all') base = base.filter(r => r.payCycle === cycleFilter);
-    if (deptFilter  !== 'all') base = base.filter(r => String(r.departmentId) === String(deptFilter));
+    if (deptFilter  !== 'all') base = base.filter(r => r.departmentId === deptFilter);
     if (!reportsMode && empSelected.size > 0) {
-      base = base.filter(r => empSelected.has(String(r.userId)));
+      base = base.filter(r => empSelected.has(r.userId));
     }
     setDisplayRows(base);
     setDisplayTotals(sumTotals(base));
@@ -745,7 +745,7 @@ export function PayrollSection() {
         overrides: {},
       });
       let rows = data.rows;
-      if (empIds) rows = rows.filter(r => empIds.includes(String(r.userId)));
+      if (empIds) rows = rows.filter(r => empIds.includes(r.userId));
       setRunData(data);
       setDisplayRows(rows);
       setDisplayTotals(sumTotals(rows));
@@ -854,7 +854,7 @@ export function PayrollSection() {
                   <span class="pr-emp-count">{empCount > 0 ? `${empCount} selected` : 'All employees'}</span>
                   <button class="pr-emp-action-btn" onClick={(e) => {
                     e.stopPropagation();
-                    setEmpSelected(new Set(filteredEmps.map(e2 => String(e2.id))));
+                    setEmpSelected(new Set(filteredEmps.map(e2 => e2.id)));
                   }}>Select all</button>
                   <button class="pr-emp-action-btn" onClick={(e) => {
                     e.stopPropagation();
@@ -867,7 +867,7 @@ export function PayrollSection() {
                     : filteredEmps.map(emp => {
                         const name = emp.fullName || emp.username || '—';
                         const meta = [emp.departmentName || emp.department, emp.payCycle && CYCLE_LABEL[emp.payCycle]].filter(Boolean).join(' · ');
-                        const checked = empSelected.has(String(emp.id));
+                        const checked = empSelected.has(emp.id);
                         const initials = name.split(' ').map((w: string) => w[0]).join('').slice(0, 2).toUpperCase();
                         return (
                           <li
@@ -877,7 +877,7 @@ export function PayrollSection() {
                               e.stopPropagation();
                               setEmpSelected(prev => {
                                 const next = new Set(prev);
-                                checked ? next.delete(String(emp.id)) : next.add(String(emp.id));
+                                checked ? next.delete(emp.id) : next.add(emp.id);
                                 return next;
                               });
                             }}
@@ -1032,7 +1032,7 @@ export function PayrollSection() {
                 <td>{r.department}</td>
                 <td><span class={`pr-cycle-badge pr-cycle-${r.payCycle}`}>{CYCLE_LABEL[r.payCycle] || r.payCycle}</span></td>
                 <td>{r.payBasis === 'hourly' ? 'Hourly' : 'Salary'}</td>
-                <td>{Number(r.hoursWorked || 0).toFixed(1)}</td>
+                <td>{(r.hoursWorked || 0).toFixed(1)}</td>
                 <td>{fmtMoney(r.grossPay)}</td>
                 <td>{r.nisApplicable ? fmtMoney(r.nis) : '—'}</td>
                 <td>{r.hsApplicable  ? fmtMoney(r.healthSurcharge) : '—'}</td>

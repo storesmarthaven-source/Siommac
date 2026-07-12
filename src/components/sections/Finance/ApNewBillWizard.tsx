@@ -65,7 +65,7 @@ export function ApNewBillWizard({ open, onClose, onCreated }: { open: boolean; o
   const dupCheck = useCheckBillDuplicate();
 
   const subtotal = Math.round(lines.reduce((s, l) => s + lineTotal(l), 0) * 100) / 100;
-  const total = Math.round((subtotal + (Number(tax.taxAmount) || 0)) * 100) / 100;
+  const total = Math.round((subtotal + (tax.taxAmount || 0)) * 100) / 100;
 
   const H = (patch: Partial<typeof header>): void => setHeader(h => ({ ...h, ...patch }));
   function reset(): void { setStep(0); setHeader({ vendorId: '', vendorInvoiceNo: '', billDate: today, dueDate: '', reference: '', description: '', currency: 'TTD', paymentTermsDays: undefined, glAccountCode: '' }); setLines([emptyLine()]); setTax({ taxIncluded: false, taxAmount: 0, withholdingTaxCode: '' }); setDupOverride(''); setSubmitForApproval(false); setDupes([]); }
@@ -93,7 +93,7 @@ export function ApNewBillWizard({ open, onClose, onCreated }: { open: boolean; o
         reference: header.reference || undefined, currency: header.currency || undefined, paymentTermsDays: header.paymentTermsDays,
         glAccountCode: header.glAccountCode || undefined,
         lines: lines.map(l => ({ description: l.description.trim(), quantity: l.quantity, unitPrice: l.unitPrice, glAccountCode: l.glAccountCode || undefined, costCenterId: l.costCenterId || null, taxCode: l.taxCode || undefined })),
-        taxIncluded: tax.taxIncluded, taxAmount: Number(tax.taxAmount) || 0, withholdingTaxCode: tax.withholdingTaxCode || undefined,
+        taxIncluded: tax.taxIncluded, taxAmount: tax.taxAmount || 0, withholdingTaxCode: tax.withholdingTaxCode || undefined,
         submitForApproval, duplicateOverrideReason: dupOverride.trim() || undefined,
       });
       toast(submitForApproval ? 'Bill created and submitted for approval' : 'Bill created as draft');
@@ -140,7 +140,7 @@ export function ApNewBillWizard({ open, onClose, onCreated }: { open: boolean; o
           <div class="hrfin-field"><label>Withholding tax code (optional)</label><input class="hrfin-input" value={tax.withholdingTaxCode} onInput={e => setTax(t => ({ ...t, withholdingTaxCode: (e.target as HTMLInputElement).value }))} /></div>
           <div class="hrfin-metric-list" style={{ marginTop: 10 }}>
             <div class="hrfin-metric-row"><span>Subtotal</span><b>{money(subtotal)}</b></div>
-            <div class="hrfin-metric-row"><span>Tax</span><b>{money(Number(tax.taxAmount) || 0)}</b></div>
+            <div class="hrfin-metric-row"><span>Tax</span><b>{money(tax.taxAmount || 0)}</b></div>
             <div class="hrfin-metric-row"><span>Total</span><b>{money(total)}</b></div>
           </div>
         </>
@@ -163,7 +163,7 @@ export function ApNewBillWizard({ open, onClose, onCreated }: { open: boolean; o
             <div class="hrfin-metric-row"><span>Invoice no.</span><b>{header.vendorInvoiceNo || '—'}</b></div>
             <div class="hrfin-metric-row"><span>Lines</span><b>{lines.length}</b></div>
             <div class="hrfin-metric-row"><span>Subtotal</span><b>{money(subtotal)}</b></div>
-            <div class="hrfin-metric-row"><span>Tax</span><b>{money(Number(tax.taxAmount) || 0)}</b></div>
+            <div class="hrfin-metric-row"><span>Tax</span><b>{money(tax.taxAmount || 0)}</b></div>
             <div class="hrfin-metric-row"><span>Total</span><b>{money(total)}</b></div>
           </div>
           <label class="hrfin-field" style={{ display: 'flex', gap: 8, alignItems: 'center', marginTop: 10 }}><input type="checkbox" checked={submitForApproval} onChange={e => setSubmitForApproval((e.target as HTMLInputElement).checked)} /> <span>Submit for approval on create</span></label>

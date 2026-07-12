@@ -82,7 +82,7 @@ export function EditDetailsDialog({ open, onClose, entityType, entityId, entityR
   }
 
   function reload() {
-    qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all });
+    void qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all });
     onClose();
   }
 

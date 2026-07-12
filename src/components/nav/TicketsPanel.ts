@@ -532,7 +532,7 @@ export function mountTicketsPanel(): () => void {
     const cpop = (window as unknown as { cpop?: { fire: (o: object) => Promise<{ isConfirmed: boolean }> } }).cpop;
     if (!closedCount) { win.showPopup?.('info', 'Nothing to Clear', 'There are no closed, resolved or deleted tickets to clear.'); return; }
     if (!cpop) return;
-    cpop.fire({
+    void cpop.fire({
       icon: 'warning', title: 'Clear Closed Tickets?',
       text: `This will permanently delete ${closedCount} closed, resolved or deleted ticket${closedCount !== 1 ? 's' : ''}. This cannot be undone.`,
       showCancelButton: true, confirmButtonText: 'Clear All', confirmButtonColor: '#e40c0c',
@@ -556,7 +556,7 @@ export function mountTicketsPanel(): () => void {
     const t        = _tickets.find(x => String(x.id) === String(ticketId));
     const cpop = (window as unknown as { cpop?: { fire: (o: object) => Promise<{ isConfirmed: boolean }> } }).cpop;
     if (!cpop) return;
-    cpop.fire({
+    void cpop.fire({
       icon: 'warning', title: 'Delete Ticket?',
       text: t ? `Delete ticket #${t.ticketNumber} — "${t.subject}"? This cannot be undone.` : 'Are you sure you want to delete this ticket?',
       showCancelButton: true, confirmButtonText: 'Delete', confirmButtonColor: '#e40c0c',

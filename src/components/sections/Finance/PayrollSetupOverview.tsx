@@ -175,7 +175,7 @@ function LoansPanel(): VNode {
   const pendingCount = loans.filter(l => l.status === 'pending_approval').length;
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
-    try { await p; toast(ok); } catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+    try { await p; toast(ok); } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
   const quickActions = [
@@ -290,7 +290,7 @@ function NewLoanModal({ onClose, onCreated }: { onClose: () => void; onCreated: 
       });
       toast('Loan created as draft — submit it for approval.');
       onCreated();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create loan.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to create loan.'); }
   };
 
   const context: DialogContextPanelConfig = {
@@ -473,7 +473,7 @@ function NewPayGroupModal({ onClose, onCreated }: { onClose: () => void; onCreat
       });
       toast('Pay group created.');
       onCreated();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create pay group.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to create pay group.'); }
   };
 
   const context: DialogContextPanelConfig = {
@@ -563,7 +563,7 @@ function PayGroupMembersModal({ group, canManage, onClose }: { group: PayGroup; 
       toast('Employee assigned to pay group.');
       setEmpId(null);
       void membersQ.refetch();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to assign employee.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to assign employee.'); }
   };
 
   const context: DialogContextPanelConfig = {
@@ -781,7 +781,7 @@ function NewOvertimeRuleModal({ onClose, onCreated }: { onClose: () => void; onC
       });
       toast('Overtime rule created.');
       onCreated();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create overtime rule.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to create overtime rule.'); }
   };
 
   const typical = OT_EVENT_TYPES.find(o => o.value === f.eventType)?.typical;

@@ -43,7 +43,7 @@ export function PayslipsSection(): VNode {
   const { data: payslips = [], isLoading, error, refetch } = useMyPayslips();
   const [viewing, setViewing] = useState<Payslip | null>(null);
 
-  const ytd = payslips.reduce((s, p) => s + Number(p.net_pay ?? p.netPay ?? 0), 0);
+  const ytd = payslips.reduce((s, p) => s + (p.net_pay ?? p.netPay ?? 0), 0);
 
   if (error) {
     return (
@@ -70,7 +70,7 @@ export function PayslipsSection(): VNode {
         <div class="emp-ps-stats">
           <YtdItem label="Total Payslips"  value={String(payslips.length)} />
           <div class="emp-ps-stat-divider" />
-          <YtdItem label="Latest Net Pay"  value={fmtTTD(Number(payslips[0]?.net_pay ?? payslips[0]?.netPay ?? 0))} />
+          <YtdItem label="Latest Net Pay"  value={fmtTTD((payslips[0]?.net_pay ?? payslips[0]?.netPay ?? 0))} />
           <div class="emp-ps-stat-divider" />
           <YtdItem label="YTD Net Pay"     value={fmtTTD(ytd)} green />
         </div>
@@ -123,9 +123,9 @@ function PayslipCard({ payslip: p, isLatest, onView }: { payslip: Payslip; isLat
   const approvedDate = p.approved_at
     ? new Date(p.approved_at).toLocaleDateString('en-TT', { day: '2-digit', month: 'short', year: 'numeric' })
     : '—';
-  const net  = Number(p.net_pay ?? p.netPay ?? 0);
-  const gross = Number(p.gross_pay ?? p.grossPay ?? 0);
-  const ded   = Number(p.total_deductions ?? p.totalDeductions ?? 0);
+  const net  = (p.net_pay ?? p.netPay ?? 0);
+  const gross = (p.gross_pay ?? p.grossPay ?? 0);
+  const ded   = (p.total_deductions ?? p.totalDeductions ?? 0);
 
   return (
     <div class={`emp-payslip-card${isLatest ? ' emp-payslip-card--latest' : ''}`}>
@@ -186,13 +186,13 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
   const rates  = getStatutoryRates();
   const cycleLabel = PAY_CYCLE_LABEL[p.pay_cycle] ?? p.pay_cycle;
 
-  const gross = Number(p.gross_pay ?? p.grossPay ?? 0);
-  const net   = Number(p.net_pay   ?? p.netPay   ?? 0);
-  const ded   = Number(p.total_deductions ?? p.totalDeductions ?? 0);
-  const paye  = Number(p.paye ?? 0);
-  const nis   = Number(p.nis  ?? 0);
-  const hs    = Number(p.health_surcharge ?? p.healthSurcharge ?? 0);
-  const hrs   = Number(p.hours_worked ?? p.hoursWorked ?? 0);
+  const gross = (p.gross_pay ?? p.grossPay ?? 0);
+  const net   = (p.net_pay   ?? p.netPay   ?? 0);
+  const ded   = (p.total_deductions ?? p.totalDeductions ?? 0);
+  const paye  = (p.paye ?? 0);
+  const nis   = (p.nis  ?? 0);
+  const hs    = (p.health_surcharge ?? p.healthSurcharge ?? 0);
+  const hrs   = (p.hours_worked ?? p.hoursWorked ?? 0);
 
   const handlePrint = useCallback(() => {
     const printCss = `
@@ -238,7 +238,7 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
           <div class="row"><span>Pay Date</span><strong>${p.pay_date ?? '—'}</strong></div>
         </div>
         <div class="meta-col">
-          <div class="row"><span>Rate</span><strong>${p.pay_basis === 'hourly' ? `TTD ${fmtAmount(Number(p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount(Number(p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`}</strong></div>
+          <div class="row"><span>Rate</span><strong>${p.pay_basis === 'hourly' ? `TTD ${fmtAmount((p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount((p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`}</strong></div>
           <div class="row"><span>Hours</span><strong>${hrs}h</strong></div>
           <div class="row"><span>Allowance</span><strong>TTD ${fmtAmount(rates.allowanceAnnual)} / yr</strong></div>
         </div>
@@ -317,7 +317,7 @@ function PayslipViewModal({ payslip: p, onClose }: { payslip: Payslip; onClose: 
             <MetaRow label="Pay Date"     value={p.pay_date ?? '—'} />
           </MetaCol>
           <MetaCol>
-            <MetaRow label="Rate"         value={p.pay_basis === 'hourly' ? `TTD ${fmtAmount(Number(p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount(Number(p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`} />
+            <MetaRow label="Rate"         value={p.pay_basis === 'hourly' ? `TTD ${fmtAmount((p.hourly_rate ?? p.hourlyRate ?? 0))} / hr` : `TTD ${fmtAmount((p.monthly_salary ?? p.monthlySalary ?? 0))} / mo`} />
             <MetaRow label="Hours Worked" value={`${hrs}h`} />
             <MetaRow label="Allowance"    value={`TTD ${fmtAmount(rates.allowanceAnnual)} / yr`} />
           </MetaCol>

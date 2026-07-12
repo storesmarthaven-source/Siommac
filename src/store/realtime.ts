@@ -99,7 +99,7 @@ function _teardown(): void {
       _channel = null;
     }
     if (_client) {
-      _client.removeAllChannels();
+      void _client.removeAllChannels();
       _client = null;
     }
   } catch (err) {

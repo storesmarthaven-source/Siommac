@@ -56,7 +56,7 @@ export function OvertimeOverview(): VNode {
   const [showForm, setShowForm] = useState(false);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
-    try { await p; dialog.success(ok); } catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+    try { await p; void dialog.success(ok); } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
   const otRecord = (e: OvertimeEntry) => toActionRecord({
@@ -161,8 +161,8 @@ function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
   const dateInFuture = !!f.workDate && f.workDate > today;
 
   const submit = async (): Promise<void> => {
-    if (!f.workDate || !(hoursNum > 0)) { dialog.error('Work date and a positive number of hours are required.'); return; }
-    if (dateInFuture) { dialog.error('Overtime cannot be logged for a future date.'); return; }
+    if (!f.workDate || !(hoursNum > 0)) { void dialog.error('Work date and a positive number of hours are required.'); return; }
+    if (dateInFuture) { void dialog.error('Overtime cannot be logged for a future date.'); return; }
     try {
       // The stored multiplier is the type's indicative fallback; the payroll overtime rule
       // for this type is authoritative and re-resolves at lock-inputs time.
@@ -170,9 +170,9 @@ function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
         workDate: f.workDate, hours: hoursNum, otType: f.otType,
         multiplier: otDef.indicative, reason: f.reason.trim() || null,
       });
-      dialog.success('Overtime submitted for approval.');
+      void dialog.success('Overtime submitted for approval.');
       onDone();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to submit overtime.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to submit overtime.'); }
   };
 
   const payable = hoursNum > 0 ? hoursNum * otDef.indicative : 0;

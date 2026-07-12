@@ -192,7 +192,7 @@ function SiteCard({
   const mapRef = useRef<HTMLDivElement>(null);
   const lat = Number(site.latitude)  || 0;
   const lng = Number(site.longitude) || 0;
-  const rad = Number(site.radius)    || 200;
+  const rad = site.radius    || 200;
   const [popupOpen, setPopupOpen] = useState(false);
 
   useMiniMap(mapRef, lat, lng, rad, !!site.isActive, () => setPopupOpen(true));

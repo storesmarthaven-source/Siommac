@@ -187,8 +187,8 @@ export function useCreateWorkflow() {
         'workflows/create', args, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: workflowKeys.all });
-      qc.invalidateQueries({ queryKey: workflowKeys.tasks() });
+      void qc.invalidateQueries({ queryKey: workflowKeys.all });
+      void qc.invalidateQueries({ queryKey: workflowKeys.tasks() });
     },
   });
 }
@@ -207,9 +207,9 @@ export function useDecideWorkflowTask() {
         'workflows/decision', args, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: workflowKeys.tasks() });
-      qc.invalidateQueries({ queryKey: workflowKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: workflowKeys.tasks() });
+      void qc.invalidateQueries({ queryKey: workflowKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -222,7 +222,7 @@ export function useRetryHandoff() {
         'handoffs/retry', { handoffId }, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: handoffKeys.all });
+      void qc.invalidateQueries({ queryKey: handoffKeys.all });
     },
   });
 }

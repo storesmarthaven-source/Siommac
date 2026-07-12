@@ -36,7 +36,7 @@ export function AcAuditPage(): VNode {
   const reset = () => { setSearch(''); setAction(''); setEntity(''); setFrom(''); setTo(''); setPage(0); };
   const exportCsv = () => {
     const head = ['Time', 'User', 'Action', 'Entity', 'Entity ID', 'Details', 'IP'].join(',');
-    const rows = logs.map(l => [l.created_at, l.username, l.action, l.entity, l.entity_id, JSON.stringify(l.details ?? ''), l.ip_address ?? ''].map(v => `"${String(v ?? '').replace(/"/g, '""')}"`).join(','));
+    const rows = logs.map(l => [l.created_at, l.username, l.action, l.entity, l.entity_id, JSON.stringify(l.details ?? ''), l.ip_address ?? ''].map(v => `"${(v ?? '').replace(/"/g, '""')}"`).join(','));
     const blob = new Blob([[head, ...rows].join('\n')], { type: 'text/csv' });
     const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'audit-log.csv'; a.click(); URL.revokeObjectURL(a.href);
   };

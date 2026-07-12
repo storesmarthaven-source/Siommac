@@ -37,7 +37,7 @@ const COLUMNS = [
   { title: 'Day',       data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => dayOfWeek(row.date) },
   { title: 'Check In',  data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkIn  ? fmtLocalTime(row.checkIn)  : '—' },
   { title: 'Check Out', data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.checkOut ? fmtLocalTime(row.checkOut) : '—' },
-  { title: 'Hours',     data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.hours != null ? `${Number(row.hours).toFixed(1)}h` : '—' },
+  { title: 'Hours',     data: null, render: (_v: unknown, _t: string, row: HistoryRecord) => row.hours != null ? `${row.hours.toFixed(1)}h` : '—' },
   {
     title: 'Status',
     data:  null,
@@ -94,7 +94,7 @@ export function HistorySection(): VNode {
   const stats = useMemo(() => {
     const present = history.filter(r => r.status === 'present').length;
     const late    = history.filter(r => r.status === 'late').length;
-    const withHours = history.filter(r => r.hours != null && Number(r.hours) > 0);
+    const withHours = history.filter(r => r.hours != null && r.hours > 0);
     const avgHours = withHours.length
       ? (withHours.reduce((s, r) => s + Number(r.hours), 0) / withHours.length).toFixed(1)
       : '0';

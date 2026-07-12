@@ -31,7 +31,7 @@ import type { LeaveDetail, LeaveRecord, LeaveTabFilter, LeaveType } from './type
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function esc(s: string | null | undefined): string {
-  return String(s ?? '')
+  return (s ?? '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')

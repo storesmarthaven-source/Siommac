@@ -125,7 +125,7 @@ export function displayTrendChart(records: { date: string; hours: number | strin
   _trendChart = new Chart(canvas.getContext('2d'), {
     type: 'bar',
     data: {
-      labels: sorted.map(r => String(r.date).slice(5)),
+      labels: sorted.map(r => r.date.slice(5)),
       datasets: [{
         label:           'Hours',
         data:            sorted.map(r => Number(r.hours) || 0),
@@ -163,7 +163,7 @@ function _renderTrendLine(data: { date: string; present: number; late: number }[
   _dashCharts.trend = new Chart(canvas.getContext('2d'), {
     type: 'line',
     data: {
-      labels: data.map(d => String(d.date).slice(5)),
+      labels: data.map(d => d.date.slice(5)),
       datasets: [
         {
           label:                    'Present',
@@ -394,7 +394,7 @@ export function renderDashboardCharts(data: DashboardChartData): void {
 export function updateDashboardCharts(data: Partial<DashboardChartData>): void {
   if (_dashCharts.trend && data.dailyTrend) {
     const t = _dashCharts.trend;
-    t.data.labels              = data.dailyTrend.map(d => String(d.date).slice(5));
+    t.data.labels              = data.dailyTrend.map(d => d.date.slice(5));
     t.data.datasets[0].data    = data.dailyTrend.map(d => d.present);
     t.data.datasets[1].data    = data.dailyTrend.map(d => d.late);
     t.update('none');

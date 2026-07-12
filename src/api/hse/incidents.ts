@@ -276,8 +276,8 @@ export function useUpdateIncident() {
     mutationFn: (args: UpdateIncidentArgs) =>
       apiPost<{ success: boolean }>('hse/incidents/update', args, { retryable: false }),
     onSuccess: (_r: unknown, vars: UpdateIncidentArgs) => {
-      qc.invalidateQueries({ queryKey: hseIncidentKeys.all });
-      qc.invalidateQueries({ queryKey: hseIncidentKeys.detail(vars.incidentId) });
+      void qc.invalidateQueries({ queryKey: hseIncidentKeys.all });
+      void qc.invalidateQueries({ queryKey: hseIncidentKeys.detail(vars.incidentId) });
     },
   });
 }

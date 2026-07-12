@@ -44,7 +44,7 @@ export function ApAdvancedFilterPanel({ open, value, onApply, onClear, onClose }
       foot={
         <div style={{ display: 'flex', gap: 9, width: '100%' }}>
           <button type="button" class="hrfin-action" onClick={() => { setDraft({}); onClear(); }}>Clear all</button>
-          <button type="button" class="hrfin-action is-primary" style={{ marginLeft: 'auto' }} disabled={!!rangeInvalid || !!amountInvalid} onClick={() => onApply(draft)}>Apply filters</button>
+          <button type="button" class="hrfin-action is-primary" style={{ marginLeft: 'auto' }} disabled={!!rangeInvalid || amountInvalid} onClick={() => onApply(draft)}>Apply filters</button>
         </div>
       }
     >

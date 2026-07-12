@@ -58,6 +58,19 @@ export default [
       // thousands of false positives on JSX, .d.ts globals, type imports, etc.
       'no-undef': 'off',
 
+      // Template literals with numbers, booleans, and nullish-coalesced values
+      // are standard JS/TS practice — `${count}` is perfectly valid. The rule's
+      // default bans all non-string types which produces hundreds of false
+      // positives. Allowing number/boolean/nullish keeps the protection against
+      // accidentally stringifying objects (no allowAny, no allowObject).
+      '@typescript-eslint/restrict-template-expressions': ['error', {
+        allowNumber:  true,
+        allowBoolean: true,
+        allowNullish: true,
+        allowRegExp:  false,
+        allowNever:   false,
+      }],
+
       // Recognise the _ prefix convention for intentionally-unused params/vars.
       // TypeScript already enforces unused locals in strict mode; this rule adds
       // the cross-check but must not fire on deliberate placeholders.

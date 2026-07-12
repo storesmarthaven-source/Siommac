@@ -242,8 +242,8 @@ export function useMarkNotificationRead() {
         { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: notificationKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -258,8 +258,8 @@ export function useMarkAllNotificationsRead() {
         { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: notificationKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -274,8 +274,8 @@ export function useArchiveNotification() {
         { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: notificationKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: notificationKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -329,9 +329,9 @@ export function usePostMessage() {
         'communications/messages/post', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: PostMessageArgs) => {
-      qc.invalidateQueries({ queryKey: messageKeys.thread(vars.threadId) });
-      qc.invalidateQueries({ queryKey: messageKeys.posts(vars.threadId) });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.thread(vars.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.posts(vars.threadId) });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -398,8 +398,8 @@ export function useCreateMessageThread() {
       return res;
     },
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messageKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -486,8 +486,8 @@ export function useMarkThreadRead() {
         'communications/messages/markRead', { threadId }, { retryable: false },
       ),
     onSuccess: (_r: unknown, threadId: string) => {
-      qc.invalidateQueries({ queryKey: messageKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -528,8 +528,8 @@ export function usePinMessage() {
       apiPost<{ success: boolean; message?: string }>('communications/messages/pins/pin', input, { retryable: false })
         .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed to pin'); return r; }),
     onSuccess: (_r, v) => {
-      qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
-      qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
     },
   });
 }
@@ -541,8 +541,8 @@ export function useUnpinMessage() {
       apiPost<{ success: boolean; message?: string }>('communications/messages/pins/unpin', { pinId }, { retryable: false })
         .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed to unpin'); return r; }),
     onSuccess: (_r, v) => {
-      qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
-      qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.pins(v.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.pinnedSummary() });
     },
   });
 }
@@ -577,7 +577,7 @@ export function useSaveDraft() {
   return useMutation({
     mutationFn: (input: { threadId: string; body: string | null; replyToPostId?: string | null }) =>
       apiPost<{ success: boolean }>('communications/messages/draft/save', input, { retryable: false }),
-    onSuccess: (_r, v) => { qc.invalidateQueries({ queryKey: messageKeys.draft(v.threadId) }); },
+    onSuccess: (_r, v) => { void qc.invalidateQueries({ queryKey: messageKeys.draft(v.threadId) }); },
   });
 }
 
@@ -599,8 +599,8 @@ export function useArchiveThread() {
         'communications/messages/archive', { threadId, archived }, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messageKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -612,8 +612,8 @@ export function useMuteThread() {
     mutationFn: ({ threadId, muted }: { threadId: string; muted: boolean }) =>
       apiPost<{ success: boolean }>('communications/messages/mute', { threadId, muted }, { retryable: false }),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messageKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -627,7 +627,7 @@ export function useAddThreadParticipants() {
         'communications/messages/participants/add', { threadId, userIds }, { retryable: false },
       ),
     onSuccess: (_r: unknown, { threadId }: { threadId: string; userIds: string[] }) => {
-      qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
     },
   });
 }
@@ -641,7 +641,7 @@ export function useRemoveThreadParticipant() {
         'communications/messages/participants/remove', { threadId, userId }, { retryable: false },
       ),
     onSuccess: (_r: unknown, { threadId }: { threadId: string; userId: string }) => {
-      qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.thread(threadId) });
     },
   });
 }
@@ -680,8 +680,8 @@ export function useRequestThreadAccess() {
         'communications/messages/requestThreadAccess', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, args: RequestThreadAccessArgs) => {
-      qc.invalidateQueries({ queryKey: messageKeys.posts(args.threadId) });
-      qc.invalidateQueries({ queryKey: messageKeys.thread(args.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.posts(args.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.thread(args.threadId) });
     },
   });
 }
@@ -720,8 +720,8 @@ export function useResolveRecordThread() {
         'communications/messages/recordThread', args, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: messageKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: messageKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -817,8 +817,8 @@ export function useCreateTicket() {
         'communications/tickets/create', args, { retryable: false },
       ),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ticketKeys.all });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: ticketKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -837,8 +837,8 @@ export function useCommentTicket() {
         'communications/tickets/comment', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: CommentTicketArgs) => {
-      qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
-      qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+      void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });
 }
@@ -858,8 +858,8 @@ export function useUpdateTicket() {
         'communications/tickets/update', args, { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: UpdateTicketArgs) => {
-      qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
-      qc.invalidateQueries({ queryKey: ticketKeys.all });
+      void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
+      void qc.invalidateQueries({ queryKey: ticketKeys.all });
     },
   });
 }

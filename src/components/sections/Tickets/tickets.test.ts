@@ -158,7 +158,7 @@ describe('useSeenReplies', () => {
   it('markAllSeen adds IDs and persists to localStorage', () => {
     const { result } = renderHook(() => useSeenReplies());
 
-    act(() => { result.current.markAllSeen(['reply-1', 'reply-2']); });
+    void act(() => { result.current.markAllSeen(['reply-1', 'reply-2']); });
 
     expect(result.current.seenIds.has('reply-1')).toBe(true);
     expect(result.current.seenIds.has('reply-2')).toBe(true);
@@ -171,8 +171,8 @@ describe('useSeenReplies', () => {
   it('markAllSeen is additive — does not clear existing IDs', () => {
     const { result } = renderHook(() => useSeenReplies());
 
-    act(() => { result.current.markAllSeen(['reply-1']); });
-    act(() => { result.current.markAllSeen(['reply-2']); });
+    void act(() => { result.current.markAllSeen(['reply-1']); });
+    void act(() => { result.current.markAllSeen(['reply-2']); });
 
     expect(result.current.seenIds.has('reply-1')).toBe(true);
     expect(result.current.seenIds.has('reply-2')).toBe(true);
@@ -181,9 +181,9 @@ describe('useSeenReplies', () => {
   it('markAllSeen is idempotent — adding duplicate IDs does not grow the set', () => {
     const { result } = renderHook(() => useSeenReplies());
 
-    act(() => { result.current.markAllSeen(['reply-1']); });
+    void act(() => { result.current.markAllSeen(['reply-1']); });
     const sizeBefore = result.current.seenIds.size;
-    act(() => { result.current.markAllSeen(['reply-1']); });
+    void act(() => { result.current.markAllSeen(['reply-1']); });
 
     expect(result.current.seenIds.size).toBe(sizeBefore);
   });
@@ -247,7 +247,7 @@ describe('useCreateTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => {
+    void act(() => {
       result.current.mutate({
         subject:  'Broken clock',
         body:     'The clock is wrong.',
@@ -269,7 +269,7 @@ describe('useCreateTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => {
+    void act(() => {
       result.current.mutate({ subject: 'x', body: 'y', category: 'general' });
     });
 
@@ -288,7 +288,7 @@ describe('useCreateTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => {
+    void act(() => {
       result.current.mutate({ subject: 'test', body: 'test', category: 'general' });
     });
 
@@ -319,7 +319,7 @@ describe('useSendReply — optimistic update', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('Hello'); });
+    void act(() => { result.current.mutate('Hello'); });
 
     // Optimistic update should be in cache immediately
     await waitFor(() => {
@@ -331,7 +331,7 @@ describe('useSendReply — optimistic update', () => {
     });
 
     // Let the server respond and settle
-    act(() => { resolveReply(); });
+    void act(() => { resolveReply(); });
   });
 
   it('rolls back optimistic update on error', async () => {
@@ -347,7 +347,7 @@ describe('useSendReply — optimistic update', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('Oops'); });
+    void act(() => { result.current.mutate('Oops'); });
 
     await waitFor(() => {
       const cached = client.getQueryData<TicketRow[]>(ticketKeys.mine());
@@ -371,14 +371,14 @@ describe('useSendReply — optimistic update', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('Hey'); });
+    void act(() => { result.current.mutate('Hey'); });
 
     await waitFor(() => {
       const cached = client.getQueryData<TicketRow[]>(ticketKeys.mine());
       expect(cached?.[0]?.replies[0]?.fromUsername).toBe('jdoe');
     });
 
-    act(() => { resolveReply(); });
+    void act(() => { resolveReply(); });
   });
 });
 
@@ -395,7 +395,7 @@ describe('useUpdateStatus', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('closed'); });
+    void act(() => { result.current.mutate('closed'); });
 
     await waitFor(() =>
       expect(updateTicketStatus).toHaveBeenCalledWith('ticket-1', 'closed'),
@@ -413,7 +413,7 @@ describe('useUpdateStatus', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('in-progress'); });
+    void act(() => { result.current.mutate('in-progress'); });
 
     await waitFor(() => expect(toast.success).toHaveBeenCalledWith('Ticket status updated.'));
   });
@@ -429,7 +429,7 @@ describe('useUpdateStatus', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('closed'); });
+    void act(() => { result.current.mutate('closed'); });
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Permission denied'));
   });
@@ -448,7 +448,7 @@ describe('useDeleteTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('ticket-1'); });
+    void act(() => { result.current.mutate('ticket-1'); });
 
     await waitFor(() => expect(deleteTicket).toHaveBeenCalledWith('ticket-1'));
   });
@@ -465,7 +465,7 @@ describe('useDeleteTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('ticket-1'); });
+    void act(() => { result.current.mutate('ticket-1'); });
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith(
@@ -485,7 +485,7 @@ describe('useDeleteTicket', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate('ticket-x'); });
+    void act(() => { result.current.mutate('ticket-x'); });
 
     await waitFor(() => expect(toast.error).toHaveBeenCalledWith('Not found'));
   });
@@ -505,7 +505,7 @@ describe('useClearClosed', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate(); });
+    void act(() => { result.current.mutate(); });
 
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith('3 tickets cleared.'),
@@ -523,7 +523,7 @@ describe('useClearClosed', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate(); });
+    void act(() => { result.current.mutate(); });
 
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith('1 ticket cleared.'),
@@ -541,7 +541,7 @@ describe('useClearClosed', () => {
       { wrapper: wrap(client) },
     );
 
-    act(() => { result.current.mutate(); });
+    void act(() => { result.current.mutate(); });
 
     await waitFor(() =>
       expect(toast.success).toHaveBeenCalledWith('0 tickets cleared.'),
@@ -576,7 +576,7 @@ describe('useTicketRealtime', () => {
 
     await waitFor(() => expect((realtimeSubs.support_tickets ?? []).length).toBeGreaterThan(0));
 
-    act(() => { realtimeSubs.support_tickets?.forEach(cb => cb()); });
+    void act(() => { realtimeSubs.support_tickets?.forEach(cb => cb()); });
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith(
@@ -593,7 +593,7 @@ describe('useTicketRealtime', () => {
 
     await waitFor(() => expect((realtimeSubs.ticket_replies ?? []).length).toBeGreaterThan(0));
 
-    act(() => { realtimeSubs.ticket_replies?.forEach(cb => cb()); });
+    void act(() => { realtimeSubs.ticket_replies?.forEach(cb => cb()); });
 
     await waitFor(() =>
       expect(invalidateSpy).toHaveBeenCalledWith(
@@ -613,7 +613,7 @@ describe('useTicketRealtime', () => {
       (realtimeSubs.support_tickets?.length ?? 0) +
       (realtimeSubs.ticket_replies?.length ?? 0);
 
-    act(() => { unmount(); });
+    void act(() => { unmount(); });
 
     const after =
       (realtimeSubs.support_tickets?.length ?? 0) +

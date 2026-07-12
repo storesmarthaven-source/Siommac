@@ -82,8 +82,8 @@ export function AttendanceOverview(): VNode {
   const [importing, setImporting]   = useState(false);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
-    try { await p; dialog.success(ok); }
-    catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+    try { await p; void dialog.success(ok); }
+    catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
   const excRecord = (x: ExcRow) => toActionRecord({
@@ -281,9 +281,9 @@ function CorrectRecordModal({ record, onClose }: { record: AttendanceRecord; onC
     if (!reason.trim()) return;
     try {
       await correctMut.mutateAsync({ recordId: record.id, fieldName: field, newValue, reason: reason.trim() });
-      dialog.success('Correction applied and logged.');
+      void dialog.success('Correction applied and logged.');
       onClose();
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to apply correction.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to apply correction.'); }
   };
 
   const context: DialogContextPanelConfig = {
@@ -412,8 +412,8 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
     try {
       const res = await importMut.mutateAsync({ rows: validRows, overwriteExisting: overwrite });
       setResult(res);
-      dialog.success(`Imported ${res.imported + res.updated} of ${res.total} rows.`);
-    } catch (err) { dialog.error(err instanceof Error ? err.message : 'Import failed.'); }
+      void dialog.success(`Imported ${res.imported + res.updated} of ${res.total} rows.`);
+    } catch (err) { void dialog.error(err instanceof Error ? err.message : 'Import failed.'); }
   };
 
   const context: DialogContextPanelConfig = {

@@ -109,7 +109,7 @@ function PayslipRow({ payslip }: { payslip: Payslip }): VNode {
       // Open the signed URL in a new tab — browser handles the file download.
       window.open(result.url, '_blank', 'noopener,noreferrer');
     } catch (e) {
-      dialog.error(e instanceof Error ? e.message : 'Failed to generate download link.');
+      void dialog.error(e instanceof Error ? e.message : 'Failed to generate download link.');
     } finally {
       setDownloading(false);
     }

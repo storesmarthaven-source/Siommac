@@ -104,7 +104,7 @@ export function buildDetailedPayslip(o: DetailedPayslipOptions): Design {
 
   /* ---- totals bar (values computed from the rows) ---- */
   const sum = (rows: TableRow[]): number =>
-    rows.reduce((t, r) => t + (parseFloat(String(r.amount).replace(/[^0-9.-]/g, '')) || 0), 0);
+    rows.reduce((t, r) => t + (parseFloat(r.amount.replace(/[^0-9.-]/g, '')) || 0), 0);
   const fmt = (n: number): string => n.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   const gross = sum(o.earnings);
   const deductions = sum(o.deductions);

@@ -73,7 +73,7 @@ export function FindingDetailDrawer({ findingId, onClose }: { findingId: string 
               { icon: 'fa-calendar',       label: 'Due',         value: fmt(f.due_at) },
               { icon: 'fa-flag-checkered', label: 'Closed',      value: fmt(f.closed_at) },
             ]} hideEmpty />
-            {f.description ? <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{String(f.description)}</p> : null}
+            {f.description ? <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{f.description}</p> : null}
           </div>
         )}
 

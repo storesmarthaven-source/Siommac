@@ -164,7 +164,7 @@ function LocationDisplay({ location, site }: {
   const accuracy    = location.fallback ? 'Approximate location' : `Accuracy: ${Math.round(location.accuracy)}m`;
   const siteLat     = site ? Number(site.latitude)  : NaN;
   const siteLng     = site ? Number(site.longitude) : NaN;
-  const siteRad     = site ? (Number(site.radius) || 200) : 200;
+  const siteRad     = site ? (site.radius || 200) : 200;
   const gpsAcc      = Math.round(location.accuracy || 0);
 
   if (!location.fallback && site && !isNaN(siteLat) && !isNaN(siteLng)) {
@@ -203,7 +203,7 @@ function SiteSelector({ sites, selectedSiteId, onSelect }: {
   // For employees: only show sites they are assigned to
   const filtered = sites.filter((s) => {
     if (!s.assignedEmployees?.length) return true;
-    return s.assignedEmployees.some((e) => String(e.id) === String(userId));
+    return s.assignedEmployees.some((e) => String(e.id) === userId);
   });
 
   function handleChange(e: Event) {
@@ -286,7 +286,7 @@ function CameraModal({ action, sites, onSuccess, onClose }: CameraModalProps) {
 
   // Get GPS on mount
   useEffect(() => {
-    getCurrentLocation().then(setLocation);
+    void getCurrentLocation().then(setLocation);
   }, []);
 
   // Trap focus + close on Escape

@@ -329,9 +329,9 @@ export function StatutoryDialog({ employeeId, onClose, onToast }: DialogProps): 
     if (s) setF(p => ({
       ...p,
       nisNumber: s.nis_number ?? '', nisStatus: s.nis_status || 'pending', nisEffectiveDate: s.nis_effective_date ?? '',
-      birFileNumber: s.bir_file_number ?? '', payeApplicable: !!s.paye_applicable, td1Received: !!s.td1_received,
+      birFileNumber: s.bir_file_number ?? '', payeApplicable: s.paye_applicable, td1Received: s.td1_received,
       td1EffectiveYear: s.td1_effective_year != null ? String(s.td1_effective_year) : '',
-      hsApplicable: !!s.hs_applicable, hsExemptionReason: s.hs_exemption_reason ?? '',
+      hsApplicable: s.hs_applicable, hsExemptionReason: s.hs_exemption_reason ?? '',
     }));
   }, [detailQ.data]);
   function submit() {

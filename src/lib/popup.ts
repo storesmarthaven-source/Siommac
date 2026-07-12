@@ -197,7 +197,7 @@ function _close(confirmed: boolean): void {
     _closeTimer = null;
     _modal.classList.add('cpop-hidden');
     _modal.classList.remove('cpop-closing');
-    if (r) r({ isConfirmed: !!confirmed, isDismissed: !confirmed, isDenied: false, value: !!confirmed, inputValue: iv });
+    if (r) r({ isConfirmed: confirmed, isDismissed: !confirmed, isDenied: false, value: confirmed, inputValue: iv });
   }, 180);
 }
 
@@ -210,7 +210,7 @@ function _showToast(opts: CpopOptions): Promise<CpopResult> {
   t.className = 'cpop-toast cpop-toast-' + icon;
   _toastsEl.setAttribute('data-pos', opts.position || 'top-end');
   t.innerHTML =
-    '<div class="cpop-toast-icon">' + _svg(String(icon)) + '</div>' +
+    '<div class="cpop-toast-icon">' + _svg(icon) + '</div>' +
     '<div class="cpop-toast-body">' +
       (opts.title ? '<div class="cpop-toast-title"></div>' : '') +
       (opts.text  ? '<div class="cpop-toast-text"></div>'  : '') +

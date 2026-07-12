@@ -61,7 +61,7 @@ describe("toastStore", () => {
     toast.dismiss(id);
     // Still present during animation
     expect(getToasts()).toHaveLength(2);
-    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
+    void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     const remaining = getToasts();
     expect(remaining).toHaveLength(1);
     expect(remaining[0]?.title).toBe("Stay");
@@ -186,52 +186,52 @@ describe("Toaster component", () => {
 
   it("renders a toast added via toast.success()", () => {
     renderToaster();
-    act(() => { toast.success("Employee saved"); });
+    void act(() => { toast.success("Employee saved"); });
     expect(screen.getByText("Employee saved")).toBeTruthy();
   });
 
   it("container uses .siomac-toaster class", () => {
     renderToaster();
-    act(() => { toast.info("Hello"); });
+    void act(() => { toast.info("Hello"); });
     expect(document.querySelector(".siomac-toaster")).toBeTruthy();
   });
 
   it("card element uses the siomac-toast class", () => {
     renderToaster();
-    act(() => { toast.info("Hello"); });
+    void act(() => { toast.info("Hello"); });
     const card = document.querySelector(".siomac-toast");
     expect(card).toBeTruthy();
   });
 
   it("card has the variant class (siomac-toast--success for success)", () => {
     renderToaster();
-    act(() => { toast.success("Good"); });
+    void act(() => { toast.success("Good"); });
     expect(document.querySelector(".siomac-toast--success")).toBeTruthy();
   });
 
   it("card has tier class (siomac-toast--normal for normal toasts)", () => {
     renderToaster();
-    act(() => { toast.success("Simple"); });
+    void act(() => { toast.success("Simple"); });
     expect(document.querySelector(".siomac-toast--normal")).toBeTruthy();
   });
 
   it("error variant has role=alert", () => {
     renderToaster();
-    act(() => { toast.error("Something broke"); });
+    void act(() => { toast.error("Something broke"); });
     const alerts = screen.getAllByRole("alert");
     expect(alerts.length).toBeGreaterThan(0);
   });
 
   it("error variant uses assertive aria-live", () => {
     renderToaster();
-    act(() => { toast.error("Critical failure"); });
+    void act(() => { toast.error("Critical failure"); });
     const card = document.querySelector(".siomac-toast--error");
     expect(card?.getAttribute("aria-live")).toBe("assertive");
   });
 
   it("non-error variant has role=status", () => {
     renderToaster();
-    act(() => { toast.success("Saved"); });
+    void act(() => { toast.success("Saved"); });
     const statuses = screen.getAllByRole("status");
     expect(statuses.length).toBeGreaterThan(0);
   });
@@ -240,7 +240,7 @@ describe("Toaster component", () => {
 
   it("normal toast shows 'This message will close...' footer when duration > 0", () => {
     renderToaster();
-    act(() => { toast.success("With countdown", { duration: 5000 }); });
+    void act(() => { toast.success("With countdown", { duration: 5000 }); });
     const footer = document.querySelector(".siomac-toast__timer");
     expect(footer).toBeTruthy();
     expect(footer?.textContent).toMatch(/This message will close in \d+ seconds\./);
@@ -249,7 +249,7 @@ describe("Toaster component", () => {
 
   it("normal footer countdown shows initial seconds > 0", () => {
     renderToaster();
-    act(() => { toast.success("Counting", { duration: 5000 }); });
+    void act(() => { toast.success("Counting", { duration: 5000 }); });
 
     const footer = document.querySelector(".siomac-toast__timer");
     expect(footer).toBeTruthy();
@@ -261,7 +261,7 @@ describe("Toaster component", () => {
 
   it("normal footer click-to-stop pauses timer", () => {
     renderToaster();
-    act(() => { toast.success("Pauseable", { duration: 5000 }); });
+    void act(() => { toast.success("Pauseable", { duration: 5000 }); });
     const footer = document.querySelector(".siomac-toast__timer");
     const stopBtn = footer?.querySelector("button");
     expect(stopBtn?.textContent).toBe("Click to stop.");
@@ -271,7 +271,7 @@ describe("Toaster component", () => {
 
   it("sticky normal toast (duration 0) does NOT show footer", () => {
     renderToaster();
-    act(() => { toast.rich({ title: "Sticky", duration: 0 }); });
+    void act(() => { toast.rich({ title: "Sticky", duration: 0 }); });
     expect(document.querySelector(".siomac-toast__timer")).toBeNull();
   });
 
@@ -279,7 +279,7 @@ describe("Toaster component", () => {
 
   it("action toast does NOT show timer footer", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "NIS pending",
         description: "Verify before payroll close.",
@@ -291,7 +291,7 @@ describe("Toaster component", () => {
 
   it("action toast renders chips when moduleLabel/statusLabel set", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "NIS pending",
         moduleLabel: "Finance Payroll",
@@ -307,7 +307,7 @@ describe("Toaster component", () => {
 
   it("action toast renders summary rows in .siomac-toast__summary-row", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "Approval",
         details: [
@@ -329,7 +329,7 @@ describe("Toaster component", () => {
 
   it("action toast renders note in .siomac-toast__note", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "Note toast",
         note: "This is the note line.",
@@ -342,7 +342,7 @@ describe("Toaster component", () => {
 
   it("action toast renders buttons in tinted .siomac-toast__actions strip", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "NIS pending",
         actions: [{ label: "Later", dismissOnClick: true }, { label: "Verify", dismissOnClick: true }]
@@ -360,7 +360,7 @@ describe("Toaster component", () => {
 
   it("rich toast renders file preview with .siomac-toast__file", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.rich({
         title: "Payroll report generated",
         file: {
@@ -380,7 +380,7 @@ describe("Toaster component", () => {
 
   it("rich toast renders file meta values", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.rich({
         title: "Report ready",
         file: {
@@ -403,14 +403,14 @@ describe("Toaster component", () => {
 
   it("rich toast renders title in .siomac-toast__title", () => {
     renderToaster();
-    act(() => { toast.rich({ title: "My Report Title" }); });
+    void act(() => { toast.rich({ title: "My Report Title" }); });
     const titleEl = document.querySelector(".siomac-toast__title");
     expect(titleEl?.textContent).toBe("My Report Title");
   });
 
   it("rich toast renders description in .siomac-toast__description", () => {
     renderToaster();
-    act(() => { toast.rich({ title: "Title", description: "Description text" }); });
+    void act(() => { toast.rich({ title: "Title", description: "Description text" }); });
     const descEl = document.querySelector(".siomac-toast__description");
     expect(descEl?.textContent).toBe("Description text");
   });
@@ -419,17 +419,17 @@ describe("Toaster component", () => {
 
   it("close button dismisses toast (after exit animation)", () => {
     renderToaster();
-    act(() => { toast.info("Hello", { duration: 0 }); });
+    void act(() => { toast.info("Hello", { duration: 0 }); });
     expect(screen.getByText("Hello")).toBeTruthy();
     const dismissBtn = screen.getByLabelText("Dismiss notification");
     fireEvent.click(dismissBtn);
-    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
+    void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText("Hello")).toBeNull();
   });
 
   it("close button has aria-label='Dismiss notification'", () => {
     renderToaster();
-    act(() => { toast.warning("Warn me", { duration: 0 }); });
+    void act(() => { toast.warning("Warn me", { duration: 0 }); });
     const btn = screen.getByLabelText("Dismiss notification");
     expect(btn).toBeTruthy();
     expect(btn.tagName.toLowerCase()).toBe("button");
@@ -437,11 +437,11 @@ describe("Toaster component", () => {
 
   it("Esc key dismisses the focused toast", () => {
     renderToaster();
-    act(() => { toast.info("Press Esc", { duration: 0 }); });
+    void act(() => { toast.info("Press Esc", { duration: 0 }); });
     const card = document.querySelector<HTMLElement>(".siomac-toast");
     expect(card).toBeTruthy();
     if (card) fireEvent.keyDown(card, { key: "Escape" });
-    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
+    void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText("Press Esc")).toBeNull();
   });
 
@@ -450,7 +450,7 @@ describe("Toaster component", () => {
   it("action onClick fires and dismisses by default", async () => {
     renderToaster();
     const onClickMock = vi.fn();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "Something happened",
         actions: [{ label: "Undo", onClick: onClickMock }]
@@ -459,13 +459,13 @@ describe("Toaster component", () => {
     const undoBtn = screen.getByText("Undo");
     await act(async () => { fireEvent.click(undoBtn); });
     expect(onClickMock).toHaveBeenCalledOnce();
-    act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
+    void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText("Something happened")).toBeNull();
   });
 
   it("action with dismissOnClick:false keeps toast open", async () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.action({
         title: "Pending",
         duration: 0,
@@ -488,7 +488,7 @@ describe("Toaster component", () => {
       value: { ...origLocation, assign: assignMock }
     });
 
-    act(() => {
+    void act(() => {
       toast.action({
         title: "Navigate",
         actions: [{ label: "Open", href: "/finance/payroll", dismissOnClick: true }]
@@ -504,7 +504,7 @@ describe("Toaster component", () => {
 
   it("hover pauses timer via is-paused class toggle", () => {
     renderToaster();
-    act(() => { toast.success("Hover me", { duration: 5000 }); });
+    void act(() => { toast.success("Hover me", { duration: 5000 }); });
     const card = document.querySelector<HTMLElement>(".siomac-toast");
     expect(card).toBeTruthy();
     fireEvent.mouseEnter(card!);
@@ -518,7 +518,7 @@ describe("Toaster component", () => {
     // portalled cards. Test the CSS rule exists by verifying the card supports
     // focus (tabIndex=-1) and that a click-to-stop toggles paused state.
     renderToaster();
-    act(() => { toast.success("Focus me", { duration: 5000 }); });
+    void act(() => { toast.success("Focus me", { duration: 5000 }); });
     const card = document.querySelector<HTMLElement>(".siomac-toast");
     expect(card).toBeTruthy();
     // Card is focusable
@@ -526,9 +526,9 @@ describe("Toaster component", () => {
     // click-to-stop in the footer sets is-paused (same underlying mechanism)
     const footer = document.querySelector(".siomac-toast__timer");
     const stopBtn = footer?.querySelector("button");
-    act(() => { fireEvent.click(stopBtn!); });
+    void act(() => { fireEvent.click(stopBtn!); });
     expect(card?.classList.contains("is-paused")).toBe(true);
-    act(() => { fireEvent.click(stopBtn!); });
+    void act(() => { fireEvent.click(stopBtn!); });
     expect(card?.classList.contains("is-paused")).toBe(false);
   });
 
@@ -536,7 +536,7 @@ describe("Toaster component", () => {
 
   it("newest toast is last in the DOM (oldest-first order = newest = visual front)", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.info("First",  { duration: 0 });
       toast.info("Second", { duration: 0 });
     });
@@ -547,7 +547,7 @@ describe("Toaster component", () => {
 
   it("card gets .entering class on mount", () => {
     renderToaster();
-    act(() => { toast.info("Enter test", { duration: 0 }); });
+    void act(() => { toast.info("Enter test", { duration: 0 }); });
     // entering is added synchronously on mount before the 420ms removal
     const card = document.querySelector(".siomac-toast.entering");
     expect(card).toBeTruthy();
@@ -555,10 +555,10 @@ describe("Toaster component", () => {
 
   it("exiting toast gets .exiting class", () => {
     renderToaster();
-    act(() => { toast.info("Exiting toast", { duration: 0 }); });
+    void act(() => { toast.info("Exiting toast", { duration: 0 }); });
     const id = getToasts()[0]?.id;
     expect(id).toBeTruthy();
-    if (id) act(() => { toast.dismiss(id); });
+    if (id) void act(() => { toast.dismiss(id); });
     const exiting = document.querySelector(".siomac-toast.exiting");
     expect(exiting).toBeTruthy();
   });
@@ -568,7 +568,7 @@ describe("Toaster component", () => {
     globalThis.requestAnimationFrame = (cb: FrameRequestCallback) => { cb(0); return 0; };
 
     renderToaster();
-    act(() => {
+    void act(() => {
       for (let i = 0; i < 7; i++) toast.info(`Toast ${i}`, { duration: 0 });
     });
 
@@ -583,7 +583,7 @@ describe("Toaster component", () => {
 
   it("hover adds .expanded-stack to container", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       toast.info("A", { duration: 0 });
       toast.info("B", { duration: 0 });
     });
@@ -593,18 +593,18 @@ describe("Toaster component", () => {
 
     // mouseenter → after 200ms debounce → expanded-stack added
     fireEvent.mouseEnter(container);
-    act(() => { vi.advanceTimersByTime(200); });
+    void act(() => { vi.advanceTimersByTime(200); });
     expect(container.classList.contains("expanded-stack")).toBe(true);
 
     // mouseleave → after 200ms debounce → expanded-stack removed
     fireEvent.mouseLeave(container);
-    act(() => { vi.advanceTimersByTime(200); });
+    void act(() => { vi.advanceTimersByTime(200); });
     expect(container.classList.contains("expanded-stack")).toBe(false);
   });
 
   it("all toast cards remain in DOM (stacking hides via inline style, not removal)", () => {
     renderToaster();
-    act(() => {
+    void act(() => {
       for (let i = 0; i < 6; i++) toast.info(`Toast ${i}`, { duration: 0 });
     });
     const cards = document.querySelectorAll(".siomac-toast");
@@ -615,7 +615,7 @@ describe("Toaster component", () => {
 
   it("renders without crashing under prefers-reduced-motion", () => {
     renderToaster();
-    act(() => { toast.success("Motion safe"); });
+    void act(() => { toast.success("Motion safe"); });
     expect(screen.getByText("Motion safe")).toBeTruthy();
   });
 });

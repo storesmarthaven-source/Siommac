@@ -363,8 +363,8 @@ export function useUpdateHrContact() {
     mutationFn: (args: ContactUpdateArgs) =>
       apiPost<{ success: boolean; data: { mode: string; employee?: HrEmployeeRow; requestId?: string; changeNo?: string } }>('hr/employees/contact/update', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
     },
   });
 }
@@ -377,8 +377,8 @@ export function useDecideHrEmployeePhoto() {
     mutationFn: (args: PhotoDecideArgs) =>
       apiPost<{ success: boolean; message?: string }>('hr/employees/photo/decide', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
     },
   });
 }
@@ -397,8 +397,8 @@ export function useUpdateHrStatutory() {
     mutationFn: (args: StatutoryUpdateArgs) =>
       apiPost<{ success: boolean; data: { payroll_readiness: PayrollReadinessStatus; blockers: string[]; financeHandoffEligible: boolean } }>('hr/employees/statutory/update', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.statutory(vars.employeeId) });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.statutory(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
     },
   });
 }
@@ -411,9 +411,9 @@ export function useChangeHrStatus() {
     mutationFn: (args: StatusChangeArgs) =>
       apiPost<{ success: boolean; data: { employeeId: string; status: string } }>('hr/employees/status-change', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.audit(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.audit(vars.employeeId) });
     },
   });
 }

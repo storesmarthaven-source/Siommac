@@ -330,8 +330,8 @@ export function StartOnboardingWizard(
       workerTypeDetails: buildWorkerTypeDetails(),
     }).then(r => {
       setDone({ caseNo: r.caseNo, taskCount: r.taskCount });
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
-      qc.invalidateQueries({ queryKey: ['hr', 'onboarding'] });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
+      void qc.invalidateQueries({ queryKey: ['hr', 'onboarding'] });
       toast.success(`Onboarding started — ${r.caseNo} (${r.taskCount} tasks)`);
     }).catch(e => toast.error(e instanceof Error ? e.message : 'Request failed.')).finally(() => setBusy(false));
   }

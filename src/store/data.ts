@@ -115,7 +115,7 @@ export function registerQueryClient(qc: QueryClient): void {
 }
 
 function _invalidate(...queryKey: string[]): void {
-  _queryClient?.invalidateQueries({ queryKey });
+  void _queryClient?.invalidateQueries({ queryKey });
 }
 
 // ── Initial (empty) state ─────────────────────────────────────────────────────

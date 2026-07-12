@@ -5,7 +5,7 @@ import { alignFor, boxCss, fontCss, justifyFor } from './elementStyles';
 import { columnFractions } from '@payslip/lib/tableCols';
 
 function parseAmount(v: string): number {
-  return parseFloat(String(v).replace(/[^0-9.-]/g, '')) || 0;
+  return parseFloat(v.replace(/[^0-9.-]/g, '')) || 0;
 }
 
 /** Presentational render of a single element's inner content. */

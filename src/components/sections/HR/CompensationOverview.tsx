@@ -82,7 +82,7 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
   const [showForm, setShowForm] = useState(false);
 
   const run = async (p: Promise<unknown>, ok: string): Promise<void> => {
-    try { await p; dialog.success(ok); } catch (e) { dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+    try { await p; void dialog.success(ok); } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
   return (
@@ -144,7 +144,7 @@ function NewPayItemForm({ emps, components, onDone }: {
     { employeeId: '', componentId: '', mode: 'amount', value: '', effectiveFrom: today, effectiveTo: '', note: '' });
 
   const submit = async (): Promise<void> => {
-    if (!f.employeeId || !f.componentId) { dialog.error('Employee and component are required.'); return; }
+    if (!f.employeeId || !f.componentId) { void dialog.error('Employee and component are required.'); return; }
     const args: CreatePayItemArgs = {
       employeeId: f.employeeId, componentId: f.componentId,
       amount: f.mode === 'amount' ? Number(f.value) || 0 : null,
@@ -153,8 +153,8 @@ function NewPayItemForm({ emps, components, onDone }: {
       effectiveTo: f.effectiveTo || null,
       note: f.note.trim() || null,
     };
-    try { await createMut.mutateAsync(args); dialog.success('Pay item created as draft.'); onDone(); }
-    catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to create pay item.'); }
+    try { await createMut.mutateAsync(args); void dialog.success('Pay item created as draft.'); onDone(); }
+    catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to create pay item.'); }
   };
 
   const selectedEmp = emps.find(e => e.id === f.employeeId);
@@ -247,7 +247,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
   }
 
   const capture = async (): Promise<void> => {
-    if (!employeeId) { dialog.error('Select an employee first.'); return; }
+    if (!employeeId) { void dialog.error('Select an employee first.'); return; }
     try {
       await captureMut.mutateAsync({
         employeeId, nisNumber: f.nisNumber?.trim() || null, nisApplicable: f.nisApplicable,
@@ -257,14 +257,14 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
         openingYtdNisEmployer: Number(f.openingYtdNisEmployer) || 0,
         openingBalanceAsOf: f.openingBalanceAsOf || null,
       });
-      dialog.success('Statutory profile saved.');
+      void dialog.success('Statutory profile saved.');
       setEditOpen(false);
-    } catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to save profile.'); }
+    } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to save profile.'); }
   };
   const submit = async (): Promise<void> => {
-    if (!profile?.id) { dialog.error('Save the profile before submitting.'); return; }
-    try { await submitMut.mutateAsync({ id: profile.id }); dialog.success('Submitted to Finance for verification.'); }
-    catch (e) { dialog.error(e instanceof Error ? e.message : 'Failed to submit.'); }
+    if (!profile?.id) { void dialog.error('Save the profile before submitting.'); return; }
+    try { await submitMut.mutateAsync({ id: profile.id }); void dialog.success('Submitted to Finance for verification.'); }
+    catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to submit.'); }
   };
 
   const context: DialogContextPanelConfig = {

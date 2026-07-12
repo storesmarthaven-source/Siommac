@@ -54,13 +54,13 @@ function openOnboardingCase(caseId: string): void {
 function fmtDate(s: string | null | undefined): string {
   if (!s) return '—';
   const d = new Date(s);
-  if (isNaN(d.getTime())) return String(s);
+  if (isNaN(d.getTime())) return s;
   return d.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 }
 function fmtDateTime(s: string | null | undefined): string {
   if (!s) return '—';
   const d = new Date(s);
-  if (isNaN(d.getTime())) return String(s);
+  if (isNaN(d.getTime())) return s;
   return d.toLocaleString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' });
 }
 const yn = (b: unknown): string => (b ? 'Yes' : 'No');
@@ -68,7 +68,7 @@ const yn = (b: unknown): string => (b ? 'Yes' : 'No');
 function relativeTime(s: string | null | undefined): string {
   if (!s) return '—';
   const d = new Date(s);
-  if (isNaN(d.getTime())) return String(s);
+  if (isNaN(d.getTime())) return s;
   const secs = Math.round((Date.now() - d.getTime()) / 1000);
   const day = 86400;
   if (secs < 60) return 'just now';

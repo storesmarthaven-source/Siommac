@@ -77,6 +77,6 @@ export function parseRatesCsv(text: string): { username: string; rate: number }[
   if (userIdx < 0 || rateIdx < 0) throw new Error('CSV must have "username" and "rate" columns');
   return rows.slice(1).map(r => ({
     username: (r[userIdx] ?? '').trim(),
-    rate:     Number(String(r[rateIdx] ?? '').replace(/[^\d.-]/g, '')),
+    rate:     Number((r[rateIdx] ?? '').replace(/[^\d.-]/g, '')),
   })).filter(r => r.username);
 }

@@ -151,7 +151,7 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
       const r = await hrImportApi.commit({ batchId: batch!.batchId });
       setDone({ created: r.created, updated: r.updated, failed: r.failed });
       await loadReport();
-      qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
+      void qc.invalidateQueries({ queryKey: hrEmployeeKeys.all });
       onToast(`Import committed — ${r.created} created, ${r.updated} updated, ${r.failed} failed`);
     });
   }

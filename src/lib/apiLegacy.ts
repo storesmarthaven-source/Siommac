@@ -146,7 +146,7 @@ function _swrFetch(key: string, fetcher: () => Promise<unknown>, opts: SwrFetchO
   // 2) Dedupe in-flight
   if (_inflight.has(key)) {
     const p = _inflight.get(key)!;
-    if (opts.onData) p.then(d => { try { opts.onData!(d, false, false); } catch { /* swallow */ } });
+    if (opts.onData) void p.then(d => { try { opts.onData!(d, false, false); } catch { /* swallow */ } });
     return p;
   }
 

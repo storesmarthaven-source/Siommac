@@ -13,7 +13,7 @@
  */
 
 export function applyCompanyNameToDom(name: string): void {
-  const safe = name && String(name).trim() ? String(name).trim() : 'My Company';
+  const safe = name && name.trim() ? name.trim() : 'My Company';
   const sb = document.getElementById('companyName');
   const ab = document.getElementById('aboutCompanyName');
   if (sb) sb.textContent = safe;

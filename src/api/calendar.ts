@@ -72,7 +72,7 @@ export function useCreateTask() {
     mutationFn: (req: CreateTaskRequest) => apiPost<{ success: boolean; id?: string; message?: string }>('calendar/task/create', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to create task.'); return; }
-      toast.success('Task created.'); invalidate();
+      toast.success('Task created.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -84,7 +84,7 @@ export function useCreateActivity() {
     mutationFn: (req: CreateActivityRequest) => apiPost<{ success: boolean; id?: string; message?: string }>('calendar/activity/create', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to create activity.'); return; }
-      toast.success('Activity created.'); invalidate();
+      toast.success('Activity created.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -96,7 +96,7 @@ export function useUpdateEntry() {
     mutationFn: (req: UpdateEntryRequest) => apiPost<{ success: boolean; message?: string }>('calendar/update', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to update.'); return; }
-      toast.success('Saved.'); invalidate();
+      toast.success('Saved.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -109,7 +109,7 @@ export function useTaskStatus() {
       apiPost<{ success: boolean; message?: string }>('calendar/task/status', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to update task.'); return; }
-      invalidate();
+      void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -122,7 +122,7 @@ export function useCancelEntry() {
       apiPost<{ success: boolean; message?: string }>('calendar/cancel', req as unknown as Record<string, unknown>),
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to cancel.'); return; }
-      toast.success('Cancelled.'); invalidate();
+      toast.success('Cancelled.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });

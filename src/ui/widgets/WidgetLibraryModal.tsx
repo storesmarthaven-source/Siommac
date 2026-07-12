@@ -216,7 +216,7 @@ export function WidgetLibraryModal({
 
   const q = query.trim().toLowerCase();
   const filtered = widgets.filter(w => {
-    const qOk = !q || [w.title, w.description, w.dataSource.label, ...w.tags].some(s => String(s).toLowerCase().includes(q));
+    const qOk = !q || [w.title, w.description, w.dataSource.label, ...w.tags].some(s => s.toLowerCase().includes(q));
     return qOk && (!moduleF || w.module === moduleF) && (!categoryF || w.category === categoryF);
   });
   const categories = Array.from(new Set(widgets.map(w => w.category)));
