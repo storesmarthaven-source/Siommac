@@ -20,7 +20,7 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
-import { getActiveStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
+import { getActiveStatutoryVersion, getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
 import { getPayGroup, listGroupMemberIds } from './payGroups';
 import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
@@ -814,10 +814,18 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     );
   }
 
-  // Load statutory version (must exist — was checked at create time)
-  const version = await getActiveStatutoryVersion('TT');
+  // Load the run's SNAPSHOTTED statutory version (fixed at create time) — NOT the
+  // currently-active one. Rates AND NIS classes must both resolve from the version the
+  // run was created against, so activating a new version mid-cycle can never retro-change
+  // an existing run's figures or split its rate sources (PAYE/HS from one version, NIS
+  // classes from another). listNisClasses(run.statutoryVersionId) already uses the
+  // snapshot; this aligns the PAYE/HS rate block to the same version.
+  const version = await getStatutoryVersion(run.statutoryVersionId);
   if (!version) {
-    throw Object.assign(new Error('Active statutory version not found.'), { status: 422 });
+    throw Object.assign(
+      new Error(`Payroll run's statutory version (${run.statutoryVersionId}) not found — it may have been deleted.`),
+      { status: 422 },
+    );
   }
 
   const nisClasses: NisClassRow[] = await listNisClasses(run.statutoryVersionId);
