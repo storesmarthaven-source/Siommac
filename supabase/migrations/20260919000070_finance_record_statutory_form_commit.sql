@@ -37,6 +37,15 @@ begin
     raise exception 'finance_record_statutory_form_commit: file_path is required';
   end if;
 
+  -- Serialize concurrent generations of the SAME identity. Without this, two requests
+  -- can both run the supersede then both insert, leaving duplicate 'generated' rows
+  -- for one identity. The advisory lock is transaction-scoped (auto-released on
+  -- commit/rollback); the loser waits, then supersedes the winner's row before its own
+  -- insert -> exactly one current form.
+  perform pg_advisory_xact_lock(hashtextextended(
+    v_form_type || '|' || coalesce(v_tax_year::text, '') || '|' ||
+    coalesce(v_employee_id, '') || '|' || coalesce(v_period_start::text, ''), 0));
+
   -- Supersede prior generations of the same identity (all-or-nothing with the insert).
   update public.finance_statutory_forms set status = 'superseded'
   where status = 'generated'

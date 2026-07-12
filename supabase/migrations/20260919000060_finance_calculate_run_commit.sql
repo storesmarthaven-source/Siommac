@@ -26,7 +26,27 @@ language plpgsql
 security definer
 set search_path = public
 as $fn$
+declare
+  v_status text;
 begin
+  -- Lock the run and RE-VALIDATE its status inside this transaction. The JS status
+  -- check happens before the compute, so a concurrent submit/approve could move the
+  -- run to pending_approval/approved between the check and this commit; without the
+  -- lock the commit would silently overwrite it back to 'calculated'. FOR UPDATE
+  -- serializes concurrent calculates/transitions on the same run.
+  select status into v_status
+  from public.finance_payroll_runs
+  where id = p_run_id
+  for update;
+  if not found then
+    raise exception 'finance_calculate_run_commit: run % not found', p_run_id
+      using errcode = 'no_data_found';
+  end if;
+  if v_status not in ('input_locked', 'calculated', 'returned') then
+    raise exception 'finance_calculate_run_commit: run % is in status % and cannot be (re)calculated', p_run_id, v_status
+      using errcode = 'check_violation';
+  end if;
+
   -- Clear the prior recompute (idempotent: a re-calculate rebuilds from scratch).
   delete from public.finance_payroll_run_lines    where run_id = p_run_id;
   delete from public.finance_payroll_run_warnings where run_id = p_run_id;
@@ -37,7 +57,7 @@ begin
     department_id, cost_center_id, nis_number_masked, nis_status, nis_class_no,
     opening_ytd_nis_employee, opening_ytd_nis_employer)
   select
-    x.run_id, x.employee_id, x.base, x.taxable_gross, x.gross, x.nis_employee, x.nis_employer,
+    p_run_id, x.employee_id, x.base, x.taxable_gross, x.gross, x.nis_employee, x.nis_employer,
     x.health_surcharge, x.chargeable_income, x.paye, x.voluntary_deductions, x.net,
     coalesce(x.breakdown, '{}'::jsonb),
     x.department_id, x.cost_center_id, x.nis_number_masked, x.nis_status, x.nis_class_no,
@@ -53,7 +73,7 @@ begin
   insert into public.finance_payroll_run_warnings (
     run_id, employee_id, warning_type, severity, message, metadata)
   select
-    w.run_id, w.employee_id, w.warning_type, coalesce(w.severity, 'warning'),
+    p_run_id, w.employee_id, w.warning_type, coalesce(w.severity, 'warning'),
     w.message, coalesce(w.metadata, '{}'::jsonb)
   from jsonb_to_recordset(coalesce(p_warnings, '[]'::jsonb)) as w(
     run_id uuid, employee_id text, warning_type text, severity text, message text,
