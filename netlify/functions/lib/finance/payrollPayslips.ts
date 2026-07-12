@@ -25,7 +25,7 @@ import { nextRef } from '../refGenerator';
 import { notifyMany } from '../notify';
 import { buildPayslipSnapshot, renderPayslipPdf, renderPayslipPdfWithDesign } from './payslipPdf';
 import { getEmployerProfile } from './employerProfile';
-import { listTemplates, getTemplate } from './payslipTemplates';
+import { getTemplate } from './payslipTemplates';
 
 // -- DTO -----------------------------------------------------------------------
 
@@ -179,30 +179,42 @@ export async function generatePayslips(runId: string, actorId: string, opts: { n
 // -- Template resolver for render ----------------------------------------------
 
 /**
+ * Master gate for template-driven payslip rendering (Payslip Studio).
+ * Default OFF: production payroll ALWAYS uses the snapshot-binding pdfkit renderer.
+ * A payslip design is presentation-only (buildTokenMap substitutes TOTAL tokens but
+ * the earnings/deductions table is NOT yet snapshot-bound — see the Phase-2 completion
+ * work), so a design could otherwise print static template figures on a real payslip.
+ * Only flip PAYSLIP_STUDIO_ENABLED=true once the table/summary bind to the snapshot.
+ */
+export const payslipStudioEnabled: boolean =
+  process.env.PAYSLIP_STUDIO_ENABLED === 'true';
+
+/**
  * Resolve which payslip template to render with for a given run.
- * Returns the template's design JSON, or null if none is configured and no
- * active default template exists (falls back to the built-in pdfkit layout).
+ * Returns the template's design JSON, or null to use the built-in pdfkit layout.
+ *
+ * Boundary guarantees (financial-correctness P0):
+ *   - While the studio is disabled, ALWAYS returns null → the snapshot-binding
+ *     pdfkit renderer is the only production path.
+ *   - Even when enabled, a template renders ONLY when the run has an EXPLICIT,
+ *     still-active template_id. There is deliberately NO fall-through to the
+ *     active default template: a default's static figures must never print on a
+ *     real payslip whose run never chose it.
  */
 export async function loadRenderTemplate(runId: string): Promise<unknown | null> {
-  // Check if the run has an explicit template set
+  if (!payslipStudioEnabled) return null;
+
   const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
     .select('template_id').eq('id', runId).maybeSingle<{ template_id: string | null }>();
   if (runErr) throw Object.assign(new Error('loadRenderTemplate/run: ' + runErr.message), { status: 500 });
 
   const templateId = run?.template_id ?? null;
+  if (!templateId) return null;
 
-  if (templateId) {
-    // Explicit override: load the specified template
-    const tmpl = await getTemplate(templateId);
-    if (tmpl) return tmpl.design;
-    // Template was archived since the run was created — fall through to default
-  }
-
-  // No explicit override: use the active default template (the first in the list
-  // since listTemplates orders is_default DESC, created_at DESC)
-  const templates = await listTemplates();
-  const defaultTmpl = templates.find(t => t.isDefault) ?? templates[0] ?? null;
-  return defaultTmpl?.design ?? null;
+  // getTemplate returns only active templates; an archived/deleted one yields
+  // null → the snapshot renderer, never a silent substitute template.
+  const tmpl = await getTemplate(templateId);
+  return tmpl?.design ?? null;
 }
 
 // -- Render a single payslip PDF -> storage ------------------------------------
@@ -210,8 +222,8 @@ export async function loadRenderTemplate(runId: string): Promise<unknown | null>
 /**
  * Render one payslip to a PDF, upload it to the private `payslips` bucket, and stamp
  * file_path + pdf_rendered_at + checksum on the row. Idempotent (upsert overwrites).
- * Uses the Payslip Studio template (run's explicit choice or active default) when
- * available; falls back to the built-in pdfkit layout when no template exists.
+ * Uses the run's explicit Payslip Studio template only when the studio is enabled
+ * (PAYSLIP_STUDIO_ENABLED); otherwise falls back to the built-in pdfkit layout.
  * Side-effects: hr_audit_log + app_event. Throws on failure (caller isolates per-row).
  */
 export async function renderPayslip(payslipId: string, actorId: string, opts: { password?: string } = {}): Promise<PayslipDto> {
