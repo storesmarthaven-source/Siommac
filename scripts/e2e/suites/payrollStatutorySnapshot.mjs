@@ -199,4 +199,44 @@ export default async function run(h) {
     expect(nisV2 === nisV1,
       `NIS should be unchanged (V1=${nisV1}, V2=${nisV2}) — only the PAYE rate differed between versions`);
   });
+
+  // ── Atomic commit rollback (2b) ─────────────────────────────────────────────
+  h.section('Statutory Snapshot › calculate-run commit is atomic');
+
+  await test('finance_calculate_run_commit rolls back on a bad line — prior lines + status survive', async () => {
+    // Baseline: the run currently has committed lines and status 'calculated'.
+    const before = await sb.from('finance_payroll_run_lines')
+      .select('id', { count: 'exact', head: true }).eq('run_id', ctx.runId);
+    const beforeCount = before.count ?? 0;
+    expect(beforeCount > 0, 'expected the run to have committed lines before the rollback test');
+
+    // Call the commit RPC directly with a line whose employee_id violates the FK to
+    // app_users. The RPC deletes prior lines FIRST, then inserts — if the failed
+    // insert did NOT roll back the delete, the run would be left with ZERO lines.
+    const { error: rpcErr } = await sb.rpc('finance_calculate_run_commit', {
+      p_run_id: ctx.runId,
+      p_lines: [{
+        run_id: ctx.runId, employee_id: `ghost-${TAG}`, base: 0, taxable_gross: 0,
+        gross: 0, nis_employee: 0, nis_employer: 0, health_surcharge: 0,
+        chargeable_income: 0, paye: 0, voluntary_deductions: 0, net: 0, breakdown: {},
+        nis_class_no: null, opening_ytd_nis_employee: 0, opening_ytd_nis_employer: 0,
+      }],
+      p_warnings: [],
+      p_totals: { grossTotal: 0, deductionTotal: 0, netTotal: 0, nisEmployerTotal: 0, employeeCount: 0 },
+    });
+    expect(rpcErr, 'the bad-FK line should have made the commit RPC fail');
+
+    // Rollback proof: line count unchanged, status still calculated, totals not zeroed.
+    const after = await sb.from('finance_payroll_run_lines')
+      .select('id', { count: 'exact', head: true }).eq('run_id', ctx.runId);
+    expect((after.count ?? 0) === beforeCount,
+      `lines must survive the rolled-back commit (before=${beforeCount}, after=${after.count})`);
+
+    const { data: runRow } = await sb.from('finance_payroll_runs')
+      .select('status, employee_count').eq('id', ctx.runId).single();
+    expect(runRow.status === 'calculated',
+      `run status must stay calculated after rollback, got ${runRow.status}`);
+    expect(runRow.employee_count > 0,
+      `employee_count must not be zeroed by the rolled-back commit, got ${runRow.employee_count}`);
+  });
 }

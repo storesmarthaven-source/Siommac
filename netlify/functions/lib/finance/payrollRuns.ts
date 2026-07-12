@@ -845,10 +845,9 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
   // Batch-load every statutory profile once (was an N+1: one query per employee).
   const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
-  // Clear any prior lines and warnings (allows re-calculate after a fix)
-  await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
-  await sb.from('finance_payroll_run_warnings').delete().eq('run_id', runId);
-
+  // Prior lines/warnings are cleared inside the atomic commit RPC below (delete +
+  // insert + totals update in ONE transaction), so a re-calculate rebuilds cleanly
+  // without a non-transactional delete window.
   const lineRows: Record<string, unknown>[] = [];
   const warningRows: Record<string, unknown>[] = [];
 
@@ -1052,25 +1051,31 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     totalNisEmployer += result.nisEmployer;
   }
 
-  // ── Insert warnings + lines (chunked — a large run exceeds one payload) ───
-  if (warningRows.length > 0) await chunkedInsert('finance_payroll_run_warnings', warningRows);
-  if (lineRows.length > 0)    await chunkedInsert('finance_payroll_run_lines', lineRows);
-
-  // ── Roll up totals and set status ────────────────────────────────────────
+  // ── Atomic commit ────────────────────────────────────────────────────────
+  // ONE transaction (finance_calculate_run_commit): clear prior lines/warnings,
+  // insert the freshly-computed rows, roll up totals + set status. supabase-js
+  // cannot wrap these as a transaction from the app layer, so this RPC is the
+  // single commit path — any failure rolls back the whole recompute and the run
+  // keeps its prior committed state (no partial lines with stale totals).
   const round2 = (n: number) => Math.round(n * 100) / 100;
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({
-      status:            'calculated',
-      gross_total:       round2(totalGross),
-      deduction_total:   round2(totalDeductions),
-      net_total:         round2(totalNet),
-      nis_employer_total: round2(totalNisEmployer),
-      employee_count:    empIds.length,
-    })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('calculateRun/update: ' + updErr.message), { status: 500 });
+  const { error: commitErr } = await sb.rpc('finance_calculate_run_commit', {
+    p_run_id:   runId,
+    p_lines:    lineRows,
+    p_warnings: warningRows,
+    p_totals: {
+      grossTotal:       round2(totalGross),
+      deductionTotal:   round2(totalDeductions),
+      netTotal:         round2(totalNet),
+      nisEmployerTotal: round2(totalNisEmployer),
+      employeeCount:    empIds.length,
+    },
+  });
+  if (commitErr) throw Object.assign(new Error('calculateRun/commit: ' + commitErr.message), { status: 500 });
+
+  // The RPC returns void — re-read the committed run for the DTO.
+  const { data: updated, error: reErr } = await sb.from('finance_payroll_runs')
+    .select().eq('id', runId).single<DbRunRow>();
+  if (reErr) throw Object.assign(new Error('calculateRun/reread: ' + reErr.message), { status: 500 });
 
   const updatedRun = toRunDto(updated);
 
