@@ -252,9 +252,9 @@ export async function renderPayslip(payslipId: string, actorId: string, opts: { 
   if (error) throw Object.assign(new Error('renderPayslip/update: ' + error.message), { status: 500 });
 
   await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: snapshot.runId, actorId,
+    submoduleKey: 'finance_payroll', recordId: payslipId, actorId,
     action: 'payslip.rendered',
-    newState: { payslipId, payslipNo: snapshot.payslipNo, checksum, employeeId: snapshot.employee.id },
+    newState: { runId: snapshot.runId, payslipNo: snapshot.payslipNo, checksum, employeeId: snapshot.employee.id },
   });
   void emitAppEvent({
     eventType: 'finance.payroll.payslip.rendered',
