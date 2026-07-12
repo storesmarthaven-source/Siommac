@@ -38,4 +38,17 @@ export class ApiTemplateStore implements TemplateStore {
   setDefault(id: string): Promise<void> {
     return call<unknown>('set-default', { id }).then(() => undefined);
   }
+  // ── Maker-checker lifecycle ────────────────────────────────────────────────
+  submit(id: string): Promise<StoredTemplate> {
+    return call<StoredTemplate>('submit', { id });
+  }
+  approve(id: string, comment?: string): Promise<StoredTemplate> {
+    return call<StoredTemplate>('approve', { id, comment });
+  }
+  requestChanges(id: string, comment: string): Promise<StoredTemplate> {
+    return call<StoredTemplate>('request-changes', { id, comment });
+  }
+  createVersion(id: string): Promise<StoredTemplate> {
+    return call<StoredTemplate>('create-version', { id });
+  }
 }

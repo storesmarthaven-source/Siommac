@@ -176,10 +176,11 @@ export interface PayrollReportResult {
 
 /** Lightweight template descriptor for pickers — no design payload. */
 export interface PayslipTemplateSummary {
-  id: string;
-  name: string;
+  id:        string;
+  name:      string;
   isDefault: boolean;
   updatedAt: number; // epoch ms
+  status:    string; // 'draft' | 'pending_approval' | 'changes_requested' | 'approved' | 'archived'
 }
 
 export type NisProfileRow = Record<string, unknown>;
@@ -541,11 +542,19 @@ export const payslipTemplateKeys = {
   list: () => ['finance', 'payroll', 'payslip-templates'] as const,
 };
 
-/** Fetches all active Payslip Studio templates for the run template picker. */
+/**
+ * Fetches approved Payslip Studio templates for the run template picker.
+ * The backend returns all non-archived templates; we filter for status='approved'
+ * so a draft or pending template can never be assigned to a payroll run from the UI.
+ * (The backend setRunTemplate also enforces this on the server side.)
+ */
 export function usePayslipTemplates() {
   return useQuery({
     queryKey: payslipTemplateKeys.list(),
-    queryFn:  () => financePayrollApi.listPayslipTemplates(),
+    queryFn:  async () => {
+      const all = await financePayrollApi.listPayslipTemplates();
+      return all.filter(t => t.status === 'approved');
+    },
   });
 }
 
