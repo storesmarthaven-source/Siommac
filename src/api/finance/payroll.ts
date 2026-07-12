@@ -282,9 +282,12 @@ export interface BackPayBreakdown {
   employeeId: string;
   currentRunId: string;
   fromPeriodMonth: string;
+  /** When the correction became effective. */
+  effectiveDate: string;
   correctedPeriodBase: number;
   periods: BackPayPeriod[];
   totalDelta: number;
+  scope: { payGroupId: string | null; payFrequency: string };
 }
 
 export interface PopulationPreview {
@@ -361,9 +364,9 @@ export const financePayrollApi = {
   listOverrides:  (a: { runId: string })               => call<PayrollOverride[]>('finance/payroll/overrides/list', a),
 
   // Back pay (retro adjustment)
-  backPayPreview: (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number }) =>
+  backPayPreview: (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number; effectiveDate?: string }) =>
                     call<BackPayBreakdown>('finance/payroll/back-pay/preview', a),
-  backPayAdd:     (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number; reason: string }) =>
+  backPayAdd:     (a: { currentRunId: string; employeeId: string; fromPeriodMonth: string; correctedPeriodBase: number; reason: string; effectiveDate?: string }) =>
                     call<{ inputId: string; breakdown: BackPayBreakdown }>('finance/payroll/back-pay/add', a),
 
   // Pay groups

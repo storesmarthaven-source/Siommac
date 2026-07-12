@@ -605,6 +605,9 @@ router.post('/payroll/back-pay/preview', async c => {
     employeeId: z.string().min(1),
     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     correctedPeriodBase: z.number().positive(),
+    // When the salary correction became effective (YYYY-MM-DD).
+    // Defaults to fromPeriodMonth when omitted (backward-compatible).
+    effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -623,6 +626,9 @@ router.post('/payroll/back-pay/add', async c => {
     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     correctedPeriodBase: z.number().positive(),
     reason: z.string().min(1).max(500),
+    // When the salary correction became effective (YYYY-MM-DD).
+    // Defaults to fromPeriodMonth when omitted (backward-compatible).
+    effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {

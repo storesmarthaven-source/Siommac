@@ -1,12 +1,22 @@
 // ============================================================================
-// Finance Payroll -- Back pay (retro adjustment) (Wave 7c)
+// Finance Payroll -- Back pay (retro adjustment) (Wave 7c, rebuilt P2-a)
 // ============================================================================
 // A retro adjustment recomputes an employee's base for PRIOR finalised periods
-// against a corrected per-period base and pays the DELTA on the CURRENT run,
-// taxed at the current period's rates. It is stored as a taxable `pay_item`
-// earning input tagged metadata.back_pay=true — so calculateRun folds it into
-// gross/PAYE exactly like any earning (no calc-path fork). The prior runs are
-// never mutated; only the delta is paid now.
+// and pays the DELTA on the CURRENT run, taxed at current-period rates. It is
+// stored as a taxable `pay_item` earning (metadata.back_pay=true) so
+// calculateRun folds it into gross/PAYE exactly like any other earning.
+// Prior runs are never mutated; only the delta is paid now.
+//
+// P2-a rebuild adds:
+//   - pay-group scoping: only include prior runs that match the current run's
+//     pay_group_id (if the current run is grouped) and pay_frequency.
+//   - effective-date parameter: stored in the adjustment metadata and used to
+//     derive the content-keyed idempotency key; the period range is controlled
+//     by fromPeriodMonth (backward-compatible).
+//   - Content-keyed idempotency: the idem key is derived from
+//     (fromPeriodMonth|effectiveDate|correctedPeriodBase) so distinct
+//     adjustments (e.g. two different effective dates) are allowed to coexist
+//     on the same run, while an identical retry dedupes cleanly.
 // ============================================================================
 
 import { sb } from '../db';
@@ -29,21 +39,53 @@ export interface BackPayBreakdown {
   employeeId: string;
   currentRunId: string;
   fromPeriodMonth: string;
+  /** When the correction became effective. Defaults to fromPeriodMonth if not provided. */
+  effectiveDate: string;
   correctedPeriodBase: number;
   periods: BackPayPeriod[];
   totalDelta: number;
+  /** Descriptor of the pay-group + frequency scope applied when filtering prior runs. */
+  scope: { payGroupId: string | null; payFrequency: string };
 }
 
 export interface ComputeBackPayInput {
   currentRunId: string;
   employeeId: string;
-  fromPeriodMonth: string;      // recompute affected prior runs from this period (inclusive)
-  correctedPeriodBase: number;  // what base SHOULD have been per period
+  /** Recompute affected prior runs from this period (inclusive, YYYY-MM-DD). */
+  fromPeriodMonth: string;
+  /** What base SHOULD have been per period. */
+  correctedPeriodBase: number;
+  /**
+   * When the salary correction became effective (YYYY-MM-DD).
+   * Stored in the adjustment's metadata and idempotency key.
+   * Defaults to fromPeriodMonth when omitted.
+   * Does NOT additionally narrow the period range — fromPeriodMonth controls that.
+   */
+  effectiveDate?: string;
+}
+
+/**
+ * Derive the content-keyed idempotency key for a back-pay adjustment.
+ * Two calls with identical inputs produce the same key; a different
+ * fromPeriodMonth, effectiveDate, or correctedPeriodBase yields a different key,
+ * allowing them to coexist as distinct adjustments on the same run.
+ */
+export function backPayIdemKey(
+  fromPeriodMonth: string,
+  effectiveDate: string,
+  correctedPeriodBase: number,
+): string {
+  return `${fromPeriodMonth}|${effectiveDate}|${round2(correctedPeriodBase)}`;
 }
 
 /**
  * Recompute the retro delta from every finalised prior run in the range
- * [fromPeriodMonth, currentRun.periodMonth). Read-only — mutates nothing.
+ * [fromPeriodMonth, currentRun.periodMonth) that:
+ *   - Match the current run's pay_frequency (avoids mixing weekly/monthly).
+ *   - Match the current run's pay_group_id when the run is grouped (avoids
+ *     including runs outside the pay-group's scope).
+ *   - Have an actual run_line for this employee (proves they were paid that period).
+ * Read-only — mutates nothing.
  */
 export async function computeBackPay(input: ComputeBackPayInput): Promise<BackPayBreakdown> {
   const run = await getPayrollRun(input.currentRunId);
@@ -55,15 +97,37 @@ export async function computeBackPay(input: ComputeBackPayInput): Promise<BackPa
     throw Object.assign(new Error('The back-pay start period must be BEFORE the current run period.'), { status: 422 });
   }
 
-  const { data: priorRuns, error: prErr } = await sb.from('finance_payroll_runs')
+  const effectiveDate = input.effectiveDate ?? input.fromPeriodMonth;
+
+  // ── Query: prior finalised runs in range, scoped to pay-group + frequency ───
+  // pay_group_id filter: if the current run belongs to a pay group, only include
+  // prior runs from the SAME group (prevents mixing cross-group figures).
+  // If the current run is ungrouped (pay_group_id IS NULL), we include all prior
+  // runs matching the frequency — preserving the legacy ungrouped behaviour.
+  type PriorRunRow = { id: string; period_month: string };
+  let q = sb.from('finance_payroll_runs')
     .select('id, period_month')
     .in('status', ['locked', 'exported'])
-    .gte('period_month', input.fromPeriodMonth).lt('period_month', run.periodMonth)
+    .gte('period_month', input.fromPeriodMonth)
+    .lt('period_month', run.periodMonth)
+    .eq('pay_frequency', run.payFrequency)       // must match the current run's frequency
     .order('period_month');
+
+  if (run.payGroupId) {
+    q = q.eq('pay_group_id', run.payGroupId);    // same pay group (grouped run)
+  }
+
+  const { data: priorRuns, error: prErr } = await q;
   if (prErr) throw Object.assign(new Error('computeBackPay/runs: ' + prErr.message), { status: 500 });
-  const runById = new Map<string, string>((priorRuns ?? []).map((r: { id: string; period_month: string }) => [r.id, r.period_month]));
+
+  const runById = new Map<string, string>(
+    (priorRuns ?? []).map((r: PriorRunRow) => [r.id, r.period_month]),
+  );
   const runIds = [...runById.keys()];
 
+  // ── Query: only periods where the employee actually has a run_line ───────────
+  // A run_line proves the employee was paid in that period; an absent line means
+  // they weren't on that payroll (e.g. they joined mid-year) and we must exclude it.
   const periods: BackPayPeriod[] = [];
   if (runIds.length > 0) {
     const { data: lines, error: lErr } = await sb.from('finance_payroll_run_lines')
@@ -73,13 +137,28 @@ export async function computeBackPay(input: ComputeBackPayInput): Promise<BackPa
     for (const l of (lines ?? []) as Array<{ run_id: string; base: number }>) {
       const oldBase = round2(l.base);
       const delta = round2(input.correctedPeriodBase - oldBase);
-      periods.push({ runId: l.run_id, periodMonth: runById.get(l.run_id) ?? '', oldBase, correctedBase: round2(input.correctedPeriodBase), delta });
+      periods.push({
+        runId:         l.run_id,
+        periodMonth:   runById.get(l.run_id) ?? '',
+        oldBase,
+        correctedBase: round2(input.correctedPeriodBase),
+        delta,
+      });
     }
     periods.sort((a, b) => a.periodMonth.localeCompare(b.periodMonth));
   }
 
   const totalDelta = round2(periods.reduce((s, p) => s + p.delta, 0));
-  return { employeeId: input.employeeId, currentRunId: input.currentRunId, fromPeriodMonth: input.fromPeriodMonth, correctedPeriodBase: round2(input.correctedPeriodBase), periods, totalDelta };
+  return {
+    employeeId:          input.employeeId,
+    currentRunId:        input.currentRunId,
+    fromPeriodMonth:     input.fromPeriodMonth,
+    effectiveDate,
+    correctedPeriodBase: round2(input.correctedPeriodBase),
+    periods,
+    totalDelta,
+    scope: { payGroupId: run.payGroupId, payFrequency: run.payFrequency },
+  };
 }
 
 export interface AddBackPayInput extends ComputeBackPayInput { reason: string; }
@@ -90,12 +169,23 @@ export interface AddBackPayResult { inputId: string; breakdown: BackPayBreakdown
  * Add the computed retro delta as a taxable back-pay earning on the current run.
  * The run must be input_locked/calculated and the employee must be a member.
  * Requires a positive delta and a reason. A recalculate applies it (gross+PAYE).
+ *
+ * Idempotency (content-keyed):
+ *   - Same (run, employee, fromPeriodMonth, effectiveDate, correctedBase) → returns
+ *     the existing row without creating a duplicate.
+ *   - A DIFFERENT adjustment (different key) for the same run+employee → allowed,
+ *     both rows coexist and their deltas are summed on recalculate.
+ *   - A row with the SAME idem key but different amount (data race / corruption) →
+ *     rejected with 409.
  */
 export async function addBackPay(input: AddBackPayInput, actorId: string): Promise<AddBackPayResult> {
   const run = await getPayrollRun(input.currentRunId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   if (!EDITABLE_STATUSES.includes(run.status)) {
-    throw Object.assign(new Error(`Back pay can only be added while a run is input-locked or calculated (run is '${run.status}').`), { status: 422 });
+    throw Object.assign(
+      new Error(`Back pay can only be added while a run is input-locked or calculated (run is '${run.status}').`),
+      { status: 422 },
+    );
   }
   if (!input.reason || !input.reason.trim()) {
     throw Object.assign(new Error('A reason is required for a back-pay adjustment.'), { status: 422 });
@@ -110,41 +200,68 @@ export async function addBackPay(input: AddBackPayInput, actorId: string): Promi
 
   const breakdown = await computeBackPay(input);
   if (breakdown.totalDelta <= 0) {
-    throw Object.assign(new Error('No positive back-pay delta for the selected periods (corrected base is not higher than what was paid).'), { status: 422 });
+    throw Object.assign(
+      new Error('No positive back-pay delta for the selected periods (corrected base is not higher than what was paid).'),
+      { status: 422 },
+    );
   }
+
+  const idemKey = backPayIdemKey(input.fromPeriodMonth, breakdown.effectiveDate, breakdown.correctedPeriodBase);
 
   const metadata = {
     kind: 'earning', is_taxable: true, reduces_chargeable: false,
     back_pay: true, reason: input.reason.trim(), created_by: actorId,
-    from_period: input.fromPeriodMonth, corrected_period_base: breakdown.correctedPeriodBase,
-    source_periods: breakdown.periods.map(p => ({ runId: p.runId, periodMonth: p.periodMonth, delta: p.delta })),
+    from_period:            input.fromPeriodMonth,
+    effective_date:         breakdown.effectiveDate,
+    corrected_period_base:  breakdown.correctedPeriodBase,
+    back_pay_idem_key:      idemKey,
+    scope_pay_group_id:     breakdown.scope.payGroupId,
+    scope_pay_frequency:    breakdown.scope.payFrequency,
+    source_periods: breakdown.periods.map(p => ({
+      runId: p.runId, periodMonth: p.periodMonth, delta: p.delta,
+    })),
   };
 
   const { data, error } = await sb.from('finance_payroll_run_inputs').insert({
-    run_id: input.currentRunId, employee_id: input.employeeId,
-    source_type: 'pay_item', source_id: null,
-    component_code: 'back_pay', label: 'Back Pay',
-    amount: breakdown.totalDelta, quantity: null, rate: null, metadata,
+    run_id:         input.currentRunId,
+    employee_id:    input.employeeId,
+    source_type:    'pay_item',
+    source_id:      null,
+    component_code: 'back_pay',
+    label:          'Back Pay',
+    amount:         breakdown.totalDelta,
+    quantity:       null,
+    rate:           null,
+    metadata,
   }).select('id').single<{ id: string }>();
+
   if (error) {
-    // Idempotency guard (finance_run_inputs_backpay_once): one back-pay per run+employee.
+    // 23505 = unique violation — check whether it is the idem index or a conflict
     if (error.code === '23505') {
       const { data: existing } = await sb.from('finance_payroll_run_inputs')
         .select('id, amount, metadata')
-        .eq('run_id', input.currentRunId).eq('employee_id', input.employeeId)
+        .eq('run_id', input.currentRunId)
+        .eq('employee_id', input.employeeId)
         .eq('component_code', 'back_pay')
+        .eq('metadata->>back_pay_idem_key' as string, idemKey)
         .maybeSingle<{ id: string; amount: number; metadata: Record<string, unknown> }>();
-      const em = (existing?.metadata ?? {}) as { from_period?: string; corrected_period_base?: number };
-      // Same request replayed → idempotent: return the existing row, emit nothing new.
-      if (existing
-        && round2(existing.amount) === breakdown.totalDelta
-        && em.from_period === input.fromPeriodMonth
-        && round2(em.corrected_period_base ?? NaN) === breakdown.correctedPeriodBase) {
-        return { inputId: existing.id, breakdown };
+
+      if (existing) {
+        // Identical retry → idempotent: return the existing row without a new event.
+        if (Math.abs(round2(existing.amount) - breakdown.totalDelta) < 0.001) {
+          return { inputId: existing.id, breakdown };
+        }
+        // Same idem key but different amount — data race / inconsistency.
+        throw Object.assign(
+          new Error('A back-pay adjustment with identical parameters already exists but with a different amount. Investigate before retrying.'),
+          { status: 409 },
+        );
       }
-      // A DIFFERENT adjustment already exists for this employee on this run.
+
+      // No row with our idem key — the violation came from a DIFFERENT unique index
+      // (shouldn't happen with the new partial index, but guard defensively).
       throw Object.assign(
-        new Error('This employee already has a back-pay adjustment on this run. Remove it before adding a different one.'),
+        new Error('Back-pay insertion failed due to a uniqueness conflict. Check for duplicate adjustments on this run.'),
         { status: 409 },
       );
     }
@@ -154,13 +271,30 @@ export async function addBackPay(input: AddBackPayInput, actorId: string): Promi
   await writeHrAudit({
     submoduleKey: 'finance_payroll', recordId: input.currentRunId, actorId,
     action: 'payroll_run.back_pay_added',
-    newState: { employeeId: input.employeeId, totalDelta: breakdown.totalDelta, periods: breakdown.periods.length, fromPeriod: input.fromPeriodMonth },
+    newState: {
+      employeeId:          input.employeeId,
+      totalDelta:          breakdown.totalDelta,
+      periods:             breakdown.periods.length,
+      fromPeriod:          input.fromPeriodMonth,
+      effectiveDate:       breakdown.effectiveDate,
+      correctedPeriodBase: breakdown.correctedPeriodBase,
+      idemKey,
+    },
     reason: input.reason.trim(),
   });
   void emitAppEvent({
-    eventType: 'finance.payroll.back_pay.added', sourceModule: 'finance_payroll',
-    sourceEntityType: 'payroll_run', sourceEntityId: input.currentRunId, actorUserId: actorId, severity: 'info',
-    payload: { employeeId: input.employeeId, totalDelta: breakdown.totalDelta, periods: breakdown.periods.length },
+    eventType:        'finance.payroll.back_pay.added',
+    sourceModule:     'finance_payroll',
+    sourceEntityType: 'payroll_run',
+    sourceEntityId:   input.currentRunId,
+    actorUserId:      actorId,
+    severity:         'info',
+    payload: {
+      employeeId:  input.employeeId,
+      totalDelta:  breakdown.totalDelta,
+      periods:     breakdown.periods.length,
+      idemKey,
+    },
   });
 
   return { inputId: data.id, breakdown };

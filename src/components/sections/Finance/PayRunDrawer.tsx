@@ -895,26 +895,29 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
   const previewMut = usePayrollMutation(financePayrollApi.backPayPreview);
   const addMut     = usePayrollMutation(financePayrollApi.backPayAdd);
   const [empId, setEmpId]   = useState('');
-  const [fromMonth, setFrom] = useState('');   // yyyy-mm from <input type=month>
+  const [fromMonth, setFrom] = useState('');          // yyyy-mm from <input type=month>
+  const [effectiveDate, setEffDate] = useState('');   // YYYY-MM-DD (when correction took effect)
   const [base, setBase]     = useState('');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<import('@api/finance/payroll').BackPayBreakdown | null>(null);
 
   const fromPeriodMonth = fromMonth ? `${fromMonth}-01` : '';
   const correctedPeriodBase = parseFloat(base);
+  // effectiveDate is optional — falls back to fromPeriodMonth in the backend.
+  const effDate = effectiveDate || undefined;
   const canPreview = !!empId && !!fromPeriodMonth && correctedPeriodBase > 0;
   const canAdd = canPreview && !!reason.trim() && !!preview && preview.totalDelta > 0;
   const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)', width: '100%' };
 
   async function runPreview(): Promise<void> {
     if (!canPreview) return;
-    try { const r = await previewMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase }); setPreview(r); }
+    try { const r = await previewMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, effectiveDate: effDate }); setPreview(r); }
     catch (e) { toast((e as Error).message ?? 'Preview failed.'); setPreview(null); }
   }
   async function apply(): Promise<void> {
     if (!canAdd) return;
     try {
-      await addMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, reason: reason.trim() });
+      await addMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, reason: reason.trim(), effectiveDate: effDate });
       toast('Back pay added — recalculate to apply it to the run.');
       onApplied();
     } catch (e) { toast((e as Error).message ?? 'Back pay failed.'); }
@@ -943,6 +946,11 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
               <input type="number" min="0.01" step="0.01" value={base} onInput={e => { setBase((e.currentTarget).value); setPreview(null); }} style={fieldStyle} />
             </label>
           </div>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>
+            EFFECTIVE DATE (optional — when the correction became effective)
+            <input type="date" value={effectiveDate} onInput={e => { setEffDate((e.currentTarget).value); setPreview(null); }} style={fieldStyle} />
+            <span style={{ fontSize: 9, color: 'var(--hrfin-text-secondary)' }}>Leave blank to use the FROM PERIOD as the effective date. Stored in the audit trail.</span>
+          </label>
           <button type="button" class="hrfin-action" style={{ fontSize: 11, alignSelf: 'flex-start' }} disabled={!canPreview || previewMut.isPending} onClick={() => void runPreview()}>
             {previewMut.isPending ? 'Computing…' : 'Preview delta'}
           </button>
