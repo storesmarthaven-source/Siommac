@@ -339,9 +339,14 @@ export default async function run(h) {
   });
 
   await test('request-changes wrote §2 side-effects: app_event + audit_log', async () => {
-    const ev = await sb.from('app_events').select('event_type').eq('source_entity_id', ctx.templateId2);
-    expect((ev.data ?? []).some(e => e.event_type === 'finance.payroll.payslip_template.changes_requested'),
-      'request-changes emits the changes_requested event');
+    // The adapter emits the app_event fire-and-forget (void emitAppEvent), so poll.
+    let gotEvent = false;
+    for (let i = 0; i < 20 && !gotEvent; i++) {
+      const ev = await sb.from('app_events').select('event_type').eq('source_entity_id', ctx.templateId2);
+      gotEvent = (ev.data ?? []).some(e => e.event_type === 'finance.payroll.payslip_template.changes_requested');
+      if (!gotEvent) await new Promise(r => setTimeout(r, 250));
+    }
+    expect(gotEvent, 'request-changes emits the changes_requested event');
     const au = await sb.from('hr_audit_log').select('action').eq('record_id', ctx.templateId2);
     expect((au.data ?? []).some(a => a.action === 'payslip_template.changes_requested'),
       'request-changes writes an audit row');
@@ -373,14 +378,17 @@ export default async function run(h) {
   await test('set-template rejects a draft template (P3 gate)', async () => {
     // Need a payroll run for this test — create one via service-role
     // (we just need a row, not a calculated run)
-    const { data: payGroup } = await sb.from('payroll_pay_groups').select('id').limit(1).maybeSingle();
+    const { data: payGroup } = await sb.from('finance_pay_groups').select('id').limit(1).maybeSingle();
+    const { data: ver } = await sb.from('finance_statutory_versions').select('id').eq('is_active', true).limit(1).maybeSingle();
+    // period_month is table-unique — use a far-future, TAG-derived month to avoid collisions.
+    const y = 2200 + (TAG.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 300);
     const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert({
       run_no:       TAG + '-PTA-RUN',
-      period_month: '2026-01-01',
+      period_month: `${y}-06-01`,
       status:       'draft',
       pay_frequency: 'monthly',
       created_by:   makerId,
-      updated_by:   makerId,
+      ...(ver ? { statutory_version_id: ver.id } : {}),
       ...(payGroup ? { pay_group_id: payGroup.id } : {}),
     }).select('id').single();
     if (runErr) {

@@ -343,6 +343,13 @@ export default async function run(h) {
     const bindingEl = d.design.elements.find(el => el.binding === 'earnings');
     expect(bindingEl !== undefined, 'design should include a table element with binding: "earnings"');
     ctx.templateId = d.id;
+
+    // The render gate (P3) only allows APPROVED templates to be set on a run. This
+    // suite exercises rendering, not the approval workflow, so approve the template
+    // directly (service-role) as setup.
+    const { error: apErr } = await sb.from('payroll_payslip_templates')
+      .update({ status: 'approved' }).eq('id', ctx.templateId);
+    expect(!apErr, 'approve template (setup) failed: ' + apErr?.message);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
