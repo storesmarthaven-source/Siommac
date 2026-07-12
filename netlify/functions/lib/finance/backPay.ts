@@ -65,17 +65,19 @@ export interface ComputeBackPayInput {
 }
 
 /**
- * Derive the content-keyed idempotency key for a back-pay adjustment.
- * Two calls with identical inputs produce the same key; a different
- * fromPeriodMonth, effectiveDate, or correctedPeriodBase yields a different key,
- * allowing them to coexist as distinct adjustments on the same run.
+ * Derive the idempotency key for a back-pay adjustment. An adjustment's IDENTITY
+ * is what+when — the period range (fromPeriodMonth) and when it took effect
+ * (effectiveDate) — NOT its value. So the corrected base is deliberately excluded:
+ *   - same fromPeriodMonth + effectiveDate + SAME base  -> identical retry (dedupe)
+ *   - same fromPeriodMonth + effectiveDate + DIFFERENT base -> CONFLICT (409): two
+ *     contradictory corrections for the same periods can't coexist.
+ *   - different fromPeriodMonth or effectiveDate -> a distinct adjustment (allowed).
  */
 export function backPayIdemKey(
   fromPeriodMonth: string,
   effectiveDate: string,
-  correctedPeriodBase: number,
 ): string {
-  return `${fromPeriodMonth}|${effectiveDate}|${round2(correctedPeriodBase)}`;
+  return `${fromPeriodMonth}|${effectiveDate}`;
 }
 
 /**
@@ -210,7 +212,7 @@ export async function addBackPay(input: AddBackPayInput, actorId: string): Promi
     );
   }
 
-  const idemKey = backPayIdemKey(input.fromPeriodMonth, breakdown.effectiveDate, breakdown.correctedPeriodBase);
+  const idemKey = backPayIdemKey(input.fromPeriodMonth, breakdown.effectiveDate);
 
   const metadata = {
     kind: 'earning', is_taxable: true, reduces_chargeable: false,

@@ -24,36 +24,23 @@ import { backPayIdemKey } from '../../netlify/functions/lib/finance/backPay';
 // ── backPayIdemKey ─────────────────────────────────────────────────────────────
 
 describe('backPayIdemKey', () => {
-  it('returns identical keys for identical inputs', () => {
-    const k1 = backPayIdemKey('2026-01-01', '2026-03-15', 6000);
-    const k2 = backPayIdemKey('2026-01-01', '2026-03-15', 6000);
-    expect(k1).toBe(k2);
+  it('returns identical keys for identical what+when', () => {
+    expect(backPayIdemKey('2026-01-01', '2026-03-15'))
+      .toBe(backPayIdemKey('2026-01-01', '2026-03-15'));
   });
 
   it('returns different keys when fromPeriodMonth differs', () => {
-    expect(backPayIdemKey('2026-01-01', '2026-03-15', 6000))
-      .not.toBe(backPayIdemKey('2026-02-01', '2026-03-15', 6000));
+    expect(backPayIdemKey('2026-01-01', '2026-03-15'))
+      .not.toBe(backPayIdemKey('2026-02-01', '2026-03-15'));
   });
 
   it('returns different keys when effectiveDate differs', () => {
-    expect(backPayIdemKey('2026-01-01', '2026-03-15', 6000))
-      .not.toBe(backPayIdemKey('2026-01-01', '2026-04-01', 6000));
+    expect(backPayIdemKey('2026-01-01', '2026-03-15'))
+      .not.toBe(backPayIdemKey('2026-01-01', '2026-04-01'));
   });
 
-  it('returns different keys when correctedPeriodBase differs', () => {
-    expect(backPayIdemKey('2026-01-01', '2026-03-15', 6000))
-      .not.toBe(backPayIdemKey('2026-01-01', '2026-03-15', 7000));
-  });
-
-  it('rounds correctedPeriodBase to 2 decimal places for the key', () => {
-    // 6000.001 and 6000.00 should produce the same key (round2)
-    expect(backPayIdemKey('2026-01-01', '2026-01-01', 6000.001))
-      .toBe(backPayIdemKey('2026-01-01', '2026-01-01', 6000.00));
-  });
-
-  it('key format is pipe-delimited: fromPeriod|effectiveDate|correctedBase', () => {
-    const k = backPayIdemKey('2026-01-01', '2026-03-15', 6000);
-    expect(k).toBe('2026-01-01|2026-03-15|6000');
+  it('key format is pipe-delimited: fromPeriod|effectiveDate (base excluded)', () => {
+    expect(backPayIdemKey('2026-01-01', '2026-03-15')).toBe('2026-01-01|2026-03-15');
   });
 });
 
