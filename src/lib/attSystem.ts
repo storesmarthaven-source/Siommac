@@ -332,13 +332,11 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
   const rateStr = d.pay_basis === 'hourly'
     ? `TTD ${fmt(d.hourly_rate)} / hr`
     : `TTD ${fmt(d.monthly_salary)} / month`;
-  // d fields come from Record<string,unknown> but are number|string from the payroll API at runtime
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  const _hoursWorkedMeta = String(d.hours_worked ?? d.hoursWorked ?? 0);
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  const _daysWorked = String(d.days_worked ?? d.daysWorked ?? '—');
-  // eslint-disable-next-line @typescript-eslint/no-base-to-string
-  const _hoursWorkedTable = String(d.hours_worked ?? d.hoursWorked ?? '—');
+  // d fields come from Record<string,unknown> but are number|string from the payroll API at
+  // runtime — cast the access to that type so String() is safe (no base-to-string on unknown).
+  const _hoursWorkedMeta = String((d.hours_worked ?? d.hoursWorked ?? 0) as string | number);
+  const _daysWorked = String((d.days_worked ?? d.daysWorked ?? '—') as string | number);
+  const _hoursWorkedTable = String((d.hours_worked ?? d.hoursWorked ?? '—') as string | number);
   return `
     <div class="pr-payslip">
       <div class="pr-payslip-header">
