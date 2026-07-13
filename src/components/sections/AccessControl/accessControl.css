@@ -377,7 +377,7 @@
 
 /* ── Users page (users.html) ─────────────────────────────────────────────────── */
 .acx .u-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
-.acx .u-left { display: flex; flex-direction: column; gap: 16px; position: sticky; top: 16px; align-self: start; }
+.acx .u-left { display: flex; flex-direction: column; gap: 16px; align-self: start; }
 .acx .u-rail { max-height: 56vh; display: flex; flex-direction: column; overflow: hidden; }
 .acx .u-rail-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 10px; border-bottom: 1px solid var(--line); flex: none; }
 .acx .u-icon-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: #fff; color: var(--muted); display: grid; place-items: center; cursor: pointer; flex: none; }
@@ -419,11 +419,11 @@
 /* Save Changes → siomac navy when enabled */
 .acx .btn.primary.u-save:not(:disabled) { background: var(--siomac-navy, #1b2d54); border-color: var(--siomac-navy, #1b2d54); }
 .acx .btn.primary.u-save:not(:disabled):hover { background: #16243f; }
-.acx .btn.primary.u-save:disabled { background: #eef1f6; border-color: #e2e6ec; color: #94a3b8; opacity: 1; }
+.acx .btn.primary.u-save:disabled { background: #fff; border-color: var(--line); color: var(--ink-2); opacity: .5; }
 /* Sub-capability rows fade/slide in on expand + light accent surface */
 @keyframes u-sub-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .acx .tbl tbody tr.u-sub { animation: u-sub-in .2s ease both; }
-.acx .tbl tbody tr.u-sub > td { background: #f5f8ff; }
+.acx .tbl tbody tr.u-sub > td { background: #f7f8fa; }
 /* Capability table (per-user override editor) — mockup restyle. */
 .acx .cap-allow { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #157a3a; padding: 3px 10px; border-radius: 999px; background: var(--green-bg); }
 .acx .cap-deny { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #b91c1c; padding: 3px 10px; border-radius: 999px; background: var(--red-bg); }
@@ -460,7 +460,7 @@
 .acx .u-ab-chip-t { display: flex; flex-direction: column; justify-content: center; line-height: 1.25; padding: 7px 14px; }
 .acx .u-ab-chip-lbl { font-size: 12.5px; font-weight: 500; color: #64748b; }
 .acx .u-ab-chip-val { font-size: 12.5px; font-weight: 600; color: var(--ink); }
-.acx .u-ab-chip.green .u-ab-num { background: #b3ebc7; color: #15803d; }
+.acx .u-ab-chip.green .u-ab-num { background: #cdefd9; color: #15803d; }
 .acx .u-ab-chip.green .u-ab-chip-t { background: #edf9f1; }
 .acx .u-ab-chip.green .u-ab-chip-val { color: #16a34a; }
 .acx .u-ab-chip.red .u-ab-num { background: #f8ccd0; color: #b91c1c; }
