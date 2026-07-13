@@ -10,6 +10,7 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useWorkflow, useDecideWorkflowTask } from '@api/workflows';
 import { statusPill, statusLabel, priorityPill } from '@lib/workflow';
+import type { WorkflowStatus, Priority } from '@lib/workflow/types';
 
 export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | null; onClose: () => void }): VNode {
   const detailQ = useWorkflow(workflowId ?? '');
@@ -47,8 +48,8 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
           {instance && (
             <>
               <div class="hse-drawer-grid">
-                <div class="hse-drawer-card"><span>Status</span><strong><span class={statusPill(instance.status as any)}>{statusLabel(instance.status as any)}</span></strong></div>
-                <div class="hse-drawer-card"><span>Priority</span><strong><span class={priorityPill(instance.priority as any)}>{instance.priority}</span></strong></div>
+                <div class="hse-drawer-card"><span>Status</span><strong><span class={statusPill(instance.status as WorkflowStatus)}>{statusLabel(instance.status as WorkflowStatus)}</span></strong></div>
+                <div class="hse-drawer-card"><span>Priority</span><strong><span class={priorityPill(instance.priority as Priority)}>{instance.priority}</span></strong></div>
                 <div class="hse-drawer-card"><span>Due</span><strong>{instance.due_at ? new Date(instance.due_at).toLocaleDateString('en-GB') : '—'}</strong></div>
                 <div class="hse-drawer-card"><span>Step</span><strong>{instance.current_step}</strong></div>
               </div>
@@ -64,7 +65,7 @@ export function WorkflowDrawer({ workflowId, onClose }: { workflowId: string | n
                           {t.assigned_role ?? 'Unassigned'}
                           {t.decision ? ` · ${t.decision}` : ''}
                         </span>
-                        <span class={statusPill(t.status as any)}>{statusLabel(t.status as any)}</span>
+                        <span class={statusPill(t.status as WorkflowStatus)}>{statusLabel(t.status as WorkflowStatus)}</span>
                       </div>
                     ))}
                   </div>

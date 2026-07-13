@@ -74,10 +74,11 @@ export function initNotificationsRealtime(userId: string): void {
       },
     )
     .subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
+      const s = String(status);
+      if (s === 'SUBSCRIBED') {
         logger.info('[notifications] Realtime channel subscribed', { userId });
-      } else if (status === 'CHANNEL_ERROR' || status === 'TIMED_OUT') {
-        logger.warn('[notifications] Realtime channel error', { status, userId });
+      } else if (s === 'CHANNEL_ERROR' || s === 'TIMED_OUT') {
+        logger.warn('[notifications] Realtime channel error', { status: s, userId });
       }
     });
 }

@@ -413,6 +413,7 @@ function LeaveRequestModal({
     setErrors({});
   });
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- K constrains the computed property spread to satisfy LeaveFormState
   const set = <K extends keyof LeaveFormState>(key: K, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
     setErrors(e => ({ ...e, [key]: undefined }));

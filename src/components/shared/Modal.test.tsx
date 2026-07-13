@@ -11,8 +11,10 @@ import { type VNode }                from 'preact';
 import { useState }                  from 'preact/hooks';
 import { Modal }                     from './Modal';
 
-// Wrapper that manages open state
+// Wrapper that manages open state — prefixed _ to suppress unused-var; the
+// ESLint hook rule doesn't recognise _-prefixed functions as components.
 function _Controlled({ closeOnBackdrop = true, closeOnEscape = true } = {}): VNode {
+  // eslint-disable-next-line react-hooks/rules-of-hooks -- _-prefixed helper is a real component rendered in tests; hooks are valid here
   const [open, setOpen] = useState(true);
   return (
     <Modal

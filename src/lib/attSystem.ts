@@ -68,7 +68,7 @@ let _lastActivityReset = 0;
 let _activityHandler: (() => void) | null = null;
 
 const _sectionLoaded: Record<string, boolean> = {};
-function _resetLoadedState(): void { Object.keys(_sectionLoaded).forEach(k => delete _sectionLoaded[k]); }
+function _resetLoadedState(): void { Object.keys(_sectionLoaded).forEach(k => Reflect.deleteProperty(_sectionLoaded, k)); }
 
 const _photoCache: Record<string, string> = {};
 
@@ -121,7 +121,7 @@ function _patchPhotoCache(username: string | null | undefined, photoUrl: string)
 }
 
 function _clearPhotoCache(): void {
-  Object.keys(_photoCache).forEach(k => delete _photoCache[k]);
+  Object.keys(_photoCache).forEach(k => Reflect.deleteProperty(_photoCache, k));
   const as = _AppState();
   if (as) as._photoCache = _photoCache;
 }

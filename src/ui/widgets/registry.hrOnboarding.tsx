@@ -98,6 +98,157 @@ const pctChange = (pts: number[]): number => {
   return Math.round(((last - first) / first) * 1000) / 10;
 };
 
+// ── Widget render components (proper named functions so hooks rules are satisfied) ──
+function OnbActiveCasesWidget() {
+  const q = useOnboardingDashboard();
+  const a = q.data?.activeCases;
+  const trend = (a?.weeklyTrend ?? []).map(t => t.count);
+  const chg = pctChange(trend);
+  return (
+    <div class="obw">
+      <div class="obw-kpi">
+        <div class="obw-kpi-main">
+          <div class="obw-cap"><span class="obw-kpi-icon"><i class="fas fa-folder-open" /></span>Active Cases</div>
+          <h2 class="obw-num">{a?.total ?? 0}</h2>
+          <div class={`obw-delta${chg < 0 ? ' red' : ''}`}>{chg >= 0 ? '↑' : '↓'} {Math.abs(chg)}% <span class="vs">over recent weeks</span></div>
+        </div>
+        <Spark points={trend} color="#0b63f6" />
+      </div>
+      <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
+        <span class="vs">{a?.newHires ?? 0} new · {a?.transfers ?? 0} transfers · {a?.contractors ?? 0} contractors</span>
+      </div>
+    </div>
+  );
+}
+function OnbDueThisWeekWidget() {
+  const q = useOnboardingDashboard();
+  const d = q.data?.dueThisWeek;
+  const overdue = d?.overdue ?? 0;
+  return (
+    <div class="obw">
+      <div class="obw-kpi">
+        <div class="obw-kpi-main">
+          <div class="obw-cap"><span class="obw-kpi-icon purple"><i class="fas fa-calendar-check" /></span>Due This Week</div>
+          <h2 class="obw-num">{d?.dueIn7Days ?? 0}</h2>
+          <div class={`obw-delta${overdue > 0 ? ' red' : ''}`}>{overdue} overdue <span class="vs">· {d?.dueToday ?? 0} due today</span></div>
+        </div>
+        <Growth values={[d?.dueToday ?? 0, overdue, d?.criticalOverdue ?? 0, d?.dueIn7Days ?? 0]} color="#6746f2" />
+      </div>
+      <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
+        <span class="vs">{d?.dueToday ?? 0} today · {overdue} overdue · {d?.criticalOverdue ?? 0} critical</span>
+      </div>
+    </div>
+  );
+}
+function OnbBlockedCasesWidget() {
+  const q = useOnboardingDashboard();
+  const b = q.data?.blockingTasks;
+  return (
+    <div class="obw">
+      <div class="obw-kpi">
+        <div class="obw-kpi-main">
+          <div class="obw-cap"><span class="obw-kpi-icon red"><i class="fas fa-triangle-exclamation" /></span>Blocked Cases</div>
+          <h2 class="obw-num">{b?.blockedCases ?? 0}</h2>
+          <div class="obw-delta red">{(b?.documents ?? 0) + (b?.training ?? 0) + (b?.hse ?? 0) + (b?.payroll ?? 0)} open dependencies</div>
+        </div>
+        <Growth values={[b?.documents ?? 0, b?.training ?? 0, b?.hse ?? 0, b?.payroll ?? 0]} color="#fb4e14" />
+      </div>
+      <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
+        <span class="vs">{b?.documents ?? 0} docs · {b?.training ?? 0} training · {b?.hse ?? 0} HSE · {b?.payroll ?? 0} payroll</span>
+      </div>
+    </div>
+  );
+}
+function OnbActivationReadinessWidget() {
+  const q = useOnboardingDashboard();
+  const r = q.data?.activationReadiness;
+  return (
+    <div class="obw">
+      <div class="obw-kpi">
+        <div class="obw-kpi-main">
+          <div class="obw-cap"><span class="obw-kpi-icon green"><i class="fas fa-shield-halved" /></span>Activation Readiness</div>
+          <h2 class="obw-num">{r?.readyPercent ?? 0}%</h2>
+          <div class="obw-delta">{r?.documentsReadyPercent ?? 0}% docs ready</div>
+        </div>
+        <Ring percent={r?.readyPercent ?? 0} />
+      </div>
+      <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
+        <span class="vs">{r?.profileReadyPercent ?? 0}% profile · {r?.trainingReadyPercent ?? 0}% training · {r?.accessReadyPercent ?? 0}% access</span>
+      </div>
+    </div>
+  );
+}
+function OnbHealthWidget() {
+  const q = useOnboardingDashboard();
+  const ready = q.data?.activationReadiness?.readyPercent ?? 0;
+  const blocked = q.data?.blockingTasks?.blockedCases ?? 0;
+  const total = q.data?.activeCases?.total ?? 0;
+  const blockedShare = total ? blocked / total : 0;
+  const trend = (q.data?.activeCases?.weeklyTrend ?? []).map(t => t.count);
+  const health = ready >= 75 && blockedShare <= 0.1 ? { label: 'Good', color: '#0aa36c' }
+    : ready >= 50 && blockedShare <= 0.25 ? { label: 'Watch', color: '#d97706' }
+      : { label: 'At Risk', color: '#f04444' };
+  return (
+    <div class="obw">
+      <div class="obw-kpi">
+        <div class="obw-kpi-main">
+          <div class="obw-cap"><span class="obw-kpi-icon green"><i class="fas fa-heart-pulse" /></span>Onboarding Health</div>
+          <h2 class="obw-num word" style={{ color: health.color }}>{q.isLoading && !q.data ? '—' : health.label}</h2>
+          <div class="obw-delta"><span class="vs">{ready}% ready · {blocked} blocked of {total}</span></div>
+        </div>
+        <Growth values={trend.length ? trend : [0]} color={health.color} />
+      </div>
+    </div>
+  );
+}
+function OnbPackageReadinessWidget() {
+  const q = useOnboardingDashboard();
+  const rows = q.data?.packageReadiness ?? [];
+  return (
+    <div class="obw">
+      <div class="obw-pt"><h3><i class="fas fa-chart-bar" style={{ color: '#0b63f6' }} />Package Readiness</h3><span class="obw-count">{rows.length}</span></div>
+      <div class="obw-pb">
+        {rows.length ? (
+          <div class="obw-rl">
+            {rows.map(r => (
+              <div class="obw-ready" key={r.packageKey}>
+                <span>{r.packageLabel} <span style={{ color: '#94a3b8' }}>({r.activeCount})</span></span>
+                <div class={`obw-bar${r.readyPercent >= 75 ? '' : r.readyPercent >= 40 ? ' orange' : ' red'}`}><span style={{ width: `${r.readyPercent}%` }} /></div>
+                <span>{r.readyPercent}%</span>
+              </div>
+            ))}
+          </div>
+        ) : <div class="obw-empty">No active packages.</div>}
+      </div>
+    </div>
+  );
+}
+function OnbRecentActivityWidget() {
+  const q = useOnboardingRecentActivity(8);
+  const rows = q.data ?? [];
+  return (
+    <div class="obw">
+      <div class="obw-pt"><h3><i class="fas fa-timeline" style={{ color: '#6746f2' }} />Recent Activity</h3></div>
+      <div class="obw-pb">
+        {rows.length ? (
+          <div class="obw-acts">
+            {rows.map(r => (
+              <div class="obw-act" key={r.id}>
+                <span class="obw-act-icon"><i class="fas fa-circle-check" /></span>
+                <div>
+                  <div class="obw-act-title">{humanizeAction(r.action)}</div>
+                  <div class="obw-act-meta">{r.actorName ?? 'System'}</div>
+                </div>
+                <span class="obw-act-time">{timeAgo(r.createdAt)}</span>
+              </div>
+            ))}
+          </div>
+        ) : <div class="obw-empty">No recent activity.</div>}
+      </div>
+    </div>
+  );
+}
+
 export const widgets: WidgetDef[] = [
   // ── Active Cases ──────────────────────────────────────────────────────────────
   {
@@ -108,27 +259,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'metric', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'compact', allowedSizes: KPI_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const a = q.data?.activeCases;
-      const trend = (a?.weeklyTrend ?? []).map(t => t.count);
-      const chg = pctChange(trend);
-      return (
-        <div class="obw">
-          <div class="obw-kpi">
-            <div class="obw-kpi-main">
-              <div class="obw-cap"><span class="obw-kpi-icon"><i class="fas fa-folder-open" /></span>Active Cases</div>
-              <h2 class="obw-num">{a?.total ?? 0}</h2>
-              <div class={`obw-delta${chg < 0 ? ' red' : ''}`}>{chg >= 0 ? '↑' : '↓'} {Math.abs(chg)}% <span class="vs">over recent weeks</span></div>
-            </div>
-            <Spark points={trend} color="#0b63f6" />
-          </div>
-          <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
-            <span class="vs">{a?.newHires ?? 0} new · {a?.transfers ?? 0} transfers · {a?.contractors ?? 0} contractors</span>
-          </div>
-        </div>
-      );
-    },
+    render: OnbActiveCasesWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-kpi">
@@ -152,26 +283,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'metric', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'compact', allowedSizes: KPI_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const d = q.data?.dueThisWeek;
-      const overdue = d?.overdue ?? 0;
-      return (
-        <div class="obw">
-          <div class="obw-kpi">
-            <div class="obw-kpi-main">
-              <div class="obw-cap"><span class="obw-kpi-icon purple"><i class="fas fa-calendar-check" /></span>Due This Week</div>
-              <h2 class="obw-num">{d?.dueIn7Days ?? 0}</h2>
-              <div class={`obw-delta${overdue > 0 ? ' red' : ''}`}>{overdue} overdue <span class="vs">· {d?.dueToday ?? 0} due today</span></div>
-            </div>
-            <Growth values={[d?.dueToday ?? 0, overdue, d?.criticalOverdue ?? 0, d?.dueIn7Days ?? 0]} color="#6746f2" />
-          </div>
-          <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
-            <span class="vs">{d?.dueToday ?? 0} today · {overdue} overdue · {d?.criticalOverdue ?? 0} critical</span>
-          </div>
-        </div>
-      );
-    },
+    render: OnbDueThisWeekWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-kpi">
@@ -195,25 +307,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'status-stack', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'compact', allowedSizes: KPI_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const b = q.data?.blockingTasks;
-      return (
-        <div class="obw">
-          <div class="obw-kpi">
-            <div class="obw-kpi-main">
-              <div class="obw-cap"><span class="obw-kpi-icon red"><i class="fas fa-triangle-exclamation" /></span>Blocked Cases</div>
-              <h2 class="obw-num">{b?.blockedCases ?? 0}</h2>
-              <div class="obw-delta red">{(b?.documents ?? 0) + (b?.training ?? 0) + (b?.hse ?? 0) + (b?.payroll ?? 0)} open dependencies</div>
-            </div>
-            <Growth values={[b?.documents ?? 0, b?.training ?? 0, b?.hse ?? 0, b?.payroll ?? 0]} color="#fb4e14" />
-          </div>
-          <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
-            <span class="vs">{b?.documents ?? 0} docs · {b?.training ?? 0} training · {b?.hse ?? 0} HSE · {b?.payroll ?? 0} payroll</span>
-          </div>
-        </div>
-      );
-    },
+    render: OnbBlockedCasesWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-kpi">
@@ -237,25 +331,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'donut', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'compact', allowedSizes: KPI_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const r = q.data?.activationReadiness;
-      return (
-        <div class="obw">
-          <div class="obw-kpi">
-            <div class="obw-kpi-main">
-              <div class="obw-cap"><span class="obw-kpi-icon green"><i class="fas fa-shield-halved" /></span>Activation Readiness</div>
-              <h2 class="obw-num">{r?.readyPercent ?? 0}%</h2>
-              <div class="obw-delta">{r?.documentsReadyPercent ?? 0}% docs ready</div>
-            </div>
-            <Ring percent={r?.readyPercent ?? 0} />
-          </div>
-          <div class="obw-delta" style={{ padding: '0 16px 12px', marginTop: 0 }}>
-            <span class="vs">{r?.profileReadyPercent ?? 0}% profile · {r?.trainingReadyPercent ?? 0}% training · {r?.accessReadyPercent ?? 0}% access</span>
-          </div>
-        </div>
-      );
-    },
+    render: OnbActivationReadinessWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-kpi">
@@ -279,29 +355,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'metric', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'compact', allowedSizes: KPI_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const ready = q.data?.activationReadiness?.readyPercent ?? 0;
-      const blocked = q.data?.blockingTasks?.blockedCases ?? 0;
-      const total = q.data?.activeCases?.total ?? 0;
-      const blockedShare = total ? blocked / total : 0;
-      const trend = (q.data?.activeCases?.weeklyTrend ?? []).map(t => t.count);
-      const health = ready >= 75 && blockedShare <= 0.1 ? { label: 'Good', color: '#0aa36c' }
-        : ready >= 50 && blockedShare <= 0.25 ? { label: 'Watch', color: '#d97706' }
-          : { label: 'At Risk', color: '#f04444' };
-      return (
-        <div class="obw">
-          <div class="obw-kpi">
-            <div class="obw-kpi-main">
-              <div class="obw-cap"><span class="obw-kpi-icon green"><i class="fas fa-heart-pulse" /></span>Onboarding Health</div>
-              <h2 class="obw-num word" style={{ color: health.color }}>{q.isLoading && !q.data ? '—' : health.label}</h2>
-              <div class="obw-delta"><span class="vs">{ready}% ready · {blocked} blocked of {total}</span></div>
-            </div>
-            <Growth values={trend.length ? trend : [0]} color={health.color} />
-          </div>
-        </div>
-      );
-    },
+    render: OnbHealthWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-kpi">
@@ -324,28 +378,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'status-stack', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'wide', allowedSizes: LIST_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingDashboard();
-      const rows = q.data?.packageReadiness ?? [];
-      return (
-        <div class="obw">
-          <div class="obw-pt"><h3><i class="fas fa-chart-bar" style={{ color: '#0b63f6' }} />Package Readiness</h3><span class="obw-count">{rows.length}</span></div>
-          <div class="obw-pb">
-            {rows.length ? (
-              <div class="obw-rl">
-                {rows.map(r => (
-                  <div class="obw-ready" key={r.packageKey}>
-                    <span>{r.packageLabel} <span style={{ color: '#94a3b8' }}>({r.activeCount})</span></span>
-                    <div class={`obw-bar${r.readyPercent >= 75 ? '' : r.readyPercent >= 40 ? ' orange' : ' red'}`}><span style={{ width: `${r.readyPercent}%` }} /></div>
-                    <span>{r.readyPercent}%</span>
-                  </div>
-                ))}
-              </div>
-            ) : <div class="obw-empty">No active packages.</div>}
-          </div>
-        </div>
-      );
-    },
+    render: OnbPackageReadinessWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-pt"><h3><i class="fas fa-chart-bar" style={{ color: '#0b63f6' }} />Package Readiness</h3><span class="obw-count">4</span></div>
@@ -372,31 +405,7 @@ export const widgets: WidgetDef[] = [
     previewVariant: 'status-stack', chrome: 'none', supportedPages: ONB_PAGES, supportedZones: ONB_ZONES,
     defaultSize: 'wide', allowedSizes: LIST_SIZES,
     defaultConfig: {}, configSchema: [], dataSource: ONB_SOURCE, recommendedFor: ONB_PAGES,
-    render: () => {
-      const q = useOnboardingRecentActivity(8);
-      const rows = q.data ?? [];
-      return (
-        <div class="obw">
-          <div class="obw-pt"><h3><i class="fas fa-timeline" style={{ color: '#6746f2' }} />Recent Activity</h3></div>
-          <div class="obw-pb">
-            {rows.length ? (
-              <div class="obw-acts">
-                {rows.map(r => (
-                  <div class="obw-act" key={r.id}>
-                    <span class="obw-act-icon"><i class="fas fa-circle-check" /></span>
-                    <div>
-                      <div class="obw-act-title">{humanizeAction(r.action)}</div>
-                      <div class="obw-act-meta">{r.actorName ?? 'System'}</div>
-                    </div>
-                    <span class="obw-act-time">{timeAgo(r.createdAt)}</span>
-                  </div>
-                ))}
-              </div>
-            ) : <div class="obw-empty">No recent activity.</div>}
-          </div>
-        </div>
-      );
-    },
+    render: OnbRecentActivityWidget,
     renderPreview: () => (
       <div class="obw">
         <div class="obw-pt"><h3><i class="fas fa-timeline" style={{ color: '#6746f2' }} />Recent Activity</h3></div>

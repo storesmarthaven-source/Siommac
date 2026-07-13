@@ -55,7 +55,7 @@ export function ThemeEditor(): VNode {
 
   function revertToken(name: string): void {
     clearThemeOverride(name);
-    setOverrides(prev => { const next = { ...prev }; delete next[name]; return next; });
+    setOverrides(prev => { const next = { ...prev }; Reflect.deleteProperty(next, name); return next; });
     setStatus(null);
   }
 

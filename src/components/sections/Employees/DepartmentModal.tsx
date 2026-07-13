@@ -46,6 +46,7 @@ export function DepartmentModal({ open, department, onClose }: DepartmentModalPr
     }
   }, [open, department]);
 
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- K constrains the computed property spread to satisfy FormState
   const set = useCallback(<K extends keyof FormState>(key: K, value: string) => {
     setForm(f => ({ ...f, [key]: value }));
     setErrors(e => ({ ...e, [key]: undefined }));

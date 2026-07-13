@@ -19,6 +19,7 @@ export function isStyled(el: DesignElement): el is StyledElement {
   return STYLED_TYPES.has(el.type);
 }
 
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- K constrains callers to valid StyleProps keys at the call site
 export function hasStyleProp<K extends keyof StyleProps>(
   el: DesignElement,
   _key: K,

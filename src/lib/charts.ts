@@ -31,7 +31,7 @@ let _trendChart:      any = null;
 const _dashCharts: Record<string, any> = {};
 
 function _destroyDash(key: string): void {
-  if (_dashCharts[key]) { _dashCharts[key].destroy(); delete _dashCharts[key]; }
+  if (_dashCharts[key]) { _dashCharts[key].destroy(); Reflect.deleteProperty(_dashCharts, key); }
 }
 
 // ── Palette (matches design spec) ─────────────────────────────────────────────

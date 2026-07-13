@@ -211,7 +211,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
     setLineErrors(e => {
       if (!e.lines?.[i]) return e;
       const newLines = { ...e.lines };
-      delete newLines[i];
+      Reflect.deleteProperty(newLines, i);
       return { ...e, lines: Object.keys(newLines).length ? newLines : undefined, sum: e.sum };
     });
   }

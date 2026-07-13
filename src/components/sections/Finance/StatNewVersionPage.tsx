@@ -70,6 +70,7 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
     payePersonalAllowance: '90000', payeBand1Ceiling: '1000000', payeBand1RatePct: '25', payeBand2RatePct: '30',
     hsMonthlyThreshold: '469.99', hsWeeklyHigh: '8.25', hsWeeklyLow: '4.80', nisMonthlyCeiling: '13600',
   });
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-parameters -- K constrains computed spread to the form shape
   const set = <K extends keyof typeof f>(k: K) => (v: string) => setF(p => ({ ...p, [k]: v }));
   const [bands, setBands] = useState<BandRow[]>([emptyBand(1)]);
   const [submitAttempted, setSubmitAttempted] = useState(false);

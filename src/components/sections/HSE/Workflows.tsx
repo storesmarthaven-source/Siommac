@@ -124,7 +124,7 @@ function ApprovalsTab(): VNode {
       return;
     }
     decide.mutate({ taskId: task.id, decision, note: c.trim() || undefined }, {
-      onSuccess: () => setComment(prev => { const n = { ...prev }; delete n[task.id]; return n; }),
+      onSuccess: () => setComment(prev => { const n = { ...prev }; Reflect.deleteProperty(n, task.id); return n; }),
     });
   }
 

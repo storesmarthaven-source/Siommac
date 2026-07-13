@@ -50,6 +50,21 @@ export function TrendArea({
   const [tooltipX, setTooltipX] = useState(0);
   const [tooltipY, setTooltipY] = useState(0);
 
+  // Callbacks must be declared before any early return to satisfy rules-of-hooks.
+  const seriesALen = seriesA.length;
+  const handleMouseMove = useCallback((e: MouseEvent): void => {
+    const svg = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
+    const chartW = 720, chartPad = 36;
+    const rawX = ((e.clientX - svg.left) / svg.width) * chartW;
+    const step = (chartW - chartPad * 2) / Math.max(seriesALen - 1, 1);
+    const idx = Math.min(seriesALen - 1, Math.max(0, Math.round((rawX - chartPad) / step)));
+    setHoverIdx(idx);
+    setTooltipX(e.clientX - svg.left);
+    setTooltipY(e.clientY - svg.top);
+  }, [seriesALen]);
+
+  const handleMouseLeave = useCallback((): void => { setHoverIdx(null); }, []);
+
   if (!seriesA.length) return null;
 
   const w = 720, h = 260, pad = 36;
@@ -97,18 +112,7 @@ export function TrendArea({
     ? seriesB.map((v, i) => Number.isNaN(v) ? null : `${i ? 'L' : 'M'}${px(i, seriesB).toFixed(1)},${py(v).toFixed(1)}`).filter(Boolean).join(' ')
     : '';
 
-  // Hover hit areas: vertical slabs for each data point
-  const handleMouseMove = useCallback((e: MouseEvent): void => {
-    const svg = (e.currentTarget as SVGSVGElement).getBoundingClientRect();
-    const rawX = ((e.clientX - svg.left) / svg.width) * w;
-    const step = (w - pad * 2) / Math.max(seriesA.length - 1, 1);
-    const idx = Math.min(seriesA.length - 1, Math.max(0, Math.round((rawX - pad) / step)));
-    setHoverIdx(idx);
-    setTooltipX(e.clientX - svg.left);
-    setTooltipY(e.clientY - svg.top);
-  }, [seriesA.length]);
-
-  const handleMouseLeave = useCallback((): void => { setHoverIdx(null); }, []);
+  // Hover hit areas: vertical slabs for each data point — handlers declared before early return above
 
   const fmt = (v: number | undefined): string => {
     if (v === undefined || Number.isNaN(v ?? NaN)) return '—';

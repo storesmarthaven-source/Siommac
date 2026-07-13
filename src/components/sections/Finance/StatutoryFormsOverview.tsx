@@ -86,7 +86,7 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
               placeholder={f.placeholder ?? ''}
               disabled={!canManage}
               value={String((model as Record<string, unknown>)?.[f.key] ?? '')}
-              onInput={e => { set(f.key, (e.currentTarget).value); setErrs(x => { const n = { ...x }; delete n[f.key]; return n; }); }}
+              onInput={e => { set(f.key, (e.currentTarget).value); setErrs(x => { const n = { ...x }; Reflect.deleteProperty(n, f.key); return n; }); }}
             />
             {errs[f.key] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errs[f.key]}</span>}
           </label>

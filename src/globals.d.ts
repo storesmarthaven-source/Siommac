@@ -66,6 +66,7 @@ declare global {
 // NavController writes them via an `as unknown as Win` cast; declaring them here
 // gives the boot-invariant tests (src/lib/boot.test.ts) real types instead of
 // `any`. Retire a shim's entry here when its module is fully ported to Preact.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- legacy shim functions have varied signatures; unknown[] is too strict for existing callers
 type LegacyViewShim = Record<string, (...args: any[]) => unknown>;
 
 declare global {
