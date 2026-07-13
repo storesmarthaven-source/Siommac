@@ -210,7 +210,7 @@
 .acx .rc2-time { font-size: 11.5px; color: var(--faint); white-space: nowrap; flex: none; }
 
 /* ── Module Groups filter card (left of the coverage matrix) ──────────────────── */
-.acx .ov-grid { display: grid; grid-template-columns: 268px minmax(0, 1fr); gap: 18px; align-items: start; }
+.acx .ov-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
 .acx .ov-left { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .acx .ov-main { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
 .acx .mg-card { display: flex; flex-direction: column; background: #fff; border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
@@ -255,14 +255,14 @@
 .acx .amx-legend { display: flex; align-items: center; gap: 14px; font-size: 11.5px; color: var(--muted); white-space: nowrap; }
 .acx .amx-legend > span { display: inline-flex; align-items: center; gap: 6px; }
 .acx .amx-tbl { width: 100%; border-collapse: collapse; }
-.acx .amx-tbl th { font-size: 11.5px; font-weight: 600; color: var(--muted); padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
+.acx .amx-tbl th { font-size: 12.5px; font-weight: 600; color: var(--muted); padding: 9px 8px; border-bottom: 1px solid var(--line); text-align: center; white-space: nowrap; }
 .acx .amx-tbl th.amx-mod-h { text-align: left; padding-left: 18px; }
 .acx .amx-rh { display: inline-flex; align-items: center; gap: 6px; }
 .acx .amx-rh svg { color: var(--faint); }
 .acx .amx-tbl td { padding: 6px 8px; border-bottom: 1px solid var(--line-2); text-align: center; }
 .acx .amx-tbl tbody tr:last-child td { border-bottom: 0; }
 .acx .amx-tbl tbody tr:hover td { background: #fafbfd; }
-.acx .amx-mod { display: inline-flex; align-items: center; gap: 10px; width: 100%; padding-left: 10px; text-align: left; font-size: 13px; font-weight: 600; color: var(--ink); }
+.acx .amx-mod { display: inline-flex; align-items: center; gap: 10px; width: 100%; padding-left: 10px; text-align: left; font-size: 14px; font-weight: 600; color: var(--ink); }
 .acx .amx-mod svg { color: var(--muted); flex: none; }
 .acx .amx-tbl .acc-dot { width: 22px; height: 22px; font-size: 11px; }
 .acx .amx-tbl .acc-half { width: 19px; height: 19px; }
