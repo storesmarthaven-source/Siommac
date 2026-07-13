@@ -30,7 +30,7 @@ interface DragState {
 export function SelectionBox({ zoom }: { zoom: number }) {
   const { state, dispatch } = useDesigner();
   const els = selectedElements(state);
-  const drag = useRef<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   if (state.view.preview || els.length < 2) return null;
 
@@ -42,7 +42,7 @@ export function SelectionBox({ zoom }: { zoom: number }) {
   const bh = maxY - minY;
 
   const begin = (dir: ResizeDir, e: PointerEvent) => {
-    drag.current = {
+    dragRef.current = {
       dir,
       sx0: e.clientX,
       sy0: e.clientY,
@@ -64,7 +64,7 @@ export function SelectionBox({ zoom }: { zoom: number }) {
   };
 
   const move = (e: PointerEvent) => {
-    const d = drag.current;
+    const d = dragRef.current;
     if (!d) return;
     if (e.buttons === 0) {
       end();
@@ -99,8 +99,8 @@ export function SelectionBox({ zoom }: { zoom: number }) {
   };
 
   const end = () => {
-    if (drag.current) {
-      drag.current = null;
+    if (dragRef.current) {
+      dragRef.current = null;
       dispatch({ kind: 'endEdit' });
     }
   };

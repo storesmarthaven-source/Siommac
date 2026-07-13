@@ -32,7 +32,7 @@ export function ElementView({ el, zoom }: { el: DesignElement; zoom: number }) {
   const preview = state.view.preview;
   const selected = state.selectedIds.includes(el.id) && !preview;
   const soleSelected = selected && state.selectedIds.length === 1;
-  const drag = useRef<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
   const [editingText, setEditingText] = useState(false);
 
   const beginMove = (e: PointerEvent) => {
@@ -50,18 +50,18 @@ export function ElementView({ el, zoom }: { el: DesignElement; zoom: number }) {
     const ids = state.selectedIds.includes(el.id) && !additive ? state.selectedIds : [el.id];
     const moveSet = state.design.elements.filter((x) => ids.includes(x.id)).map((x) => ({ id: x.id, x: x.x, y: x.y }));
     if (moveSet.length === 0) moveSet.push({ id: el.id, x: el.x, y: el.y });
-    drag.current = { mode: 'move', startX: e.clientX, startY: e.clientY, origin: el, moveSet, active: false };
+    dragRef.current = { mode: 'move', startX: e.clientX, startY: e.clientY, origin: el, moveSet, active: false };
     (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
   };
 
   const beginResize = (dir: ResizeDir, e: PointerEvent) => {
     if (preview) return;
-    drag.current = { mode: 'resize', dir, startX: e.clientX, startY: e.clientY, origin: el, moveSet: [], active: true };
+    dragRef.current = { mode: 'resize', dir, startX: e.clientX, startY: e.clientY, origin: el, moveSet: [], active: true };
     (e.target as HTMLElement).setPointerCapture?.(e.pointerId);
   };
 
   const onMove = (e: PointerEvent) => {
-    const d = drag.current;
+    const d = dragRef.current;
     if (!d) return;
     if (e.buttons === 0) {
       endDrag();
@@ -113,8 +113,8 @@ export function ElementView({ el, zoom }: { el: DesignElement; zoom: number }) {
   };
 
   const endDrag = () => {
-    if (drag.current) {
-      drag.current = null;
+    if (dragRef.current) {
+      dragRef.current = null;
       dispatch({ kind: 'endEdit' });
       dispatch({ kind: 'setGuides', guides: { x: [], y: [] } });
     }

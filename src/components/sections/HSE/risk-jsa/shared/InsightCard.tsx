@@ -38,17 +38,21 @@ const TONE_VALUE: Record<InsightTone, string> = {
 function Donut({ segments, navy }: { segments: { value: number; color: string }[]; navy?: boolean }): VNode {
   const total = segments.reduce((s, x) => s + x.value, 0) || 1;
   const R = 30, C = 2 * Math.PI * R;
-  let offset = 0;
+  const activeSegments = segments.filter(s => s.value > 0);
+  const { arcs } = activeSegments.reduce<{ offset: number; arcs: VNode[] }>(
+    (acc, s, i) => {
+      const len = (s.value / total) * C;
+      const dash = `${len} ${C - len}`;
+      const rot = (acc.offset / total) * 360 - 90;
+      const arc = <circle key={i} cx="36" cy="36" r={R} fill="none" stroke={s.color} stroke-width="10" stroke-dasharray={dash} transform={`rotate(${rot} 36 36)`} />;
+      return { offset: acc.offset + s.value, arcs: [...acc.arcs, arc] };
+    },
+    { offset: 0, arcs: [] },
+  );
   return (
     <svg width="72" height="72" viewBox="0 0 72 72">
       <circle cx="36" cy="36" r={R} fill="none" stroke={navy ? 'rgba(255,255,255,.12)' : '#eef0f5'} stroke-width="10" />
-      {segments.filter(s => s.value > 0).map((s, i) => {
-        const len = (s.value / total) * C;
-        const dash = `${len} ${C - len}`;
-        const rot = (offset / total) * 360 - 90;
-        offset += s.value;
-        return <circle key={i} cx="36" cy="36" r={R} fill="none" stroke={s.color} stroke-width="10" stroke-dasharray={dash} transform={`rotate(${rot} 36 36)`} />;
-      })}
+      {arcs}
     </svg>
   );
 }

@@ -159,13 +159,13 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
 
   // Handlers read live state via a ref (RGL callbacks are created once per render but we want the
   // latest committed/preview/persisters without re-binding the grid).
-  const state = useRef({ committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange });
-  state.current = { committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange };
+  const stateRef = useRef({ committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange });
+  stateRef.current = { committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange };
 
   // Persist geometry on drag/resize STOP (a user gesture) — never on programmatic layout changes
   // (mount, the fit pass), which is why we don't use onLayoutChange.
   function persist(next: Layout[]): void {
-    const s = state.current;
+    const s = stateRef.current;
     const geom = new Map(next.map(n => [n.i, { x: n.x, y: n.y, w: n.w, h: n.h }]));
     const nextCommitted: WidgetInstance[] = s.committed.map(c => ({ ...c, ...(geom.get(c.instanceId) ?? {}) }));
     void s.updateZoneLayout(s.zoneId, nextCommitted);

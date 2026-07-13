@@ -32,9 +32,9 @@ export interface MountRevealOpts {
 
 /** Fade + rise the element in on mount. Attach the returned callback ref to the card root. */
 export function useMountReveal(opts: MountRevealOpts = {}) {
-  const el = useRef<HTMLElement | null>(null);
+  const elRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    const node = el.current;
+    const node = elRef.current;
     if (!node || reducedMotion()) return;
     const controls = animate(
       node,
@@ -44,29 +44,29 @@ export function useMountReveal(opts: MountRevealOpts = {}) {
     return () => stop(controls);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  return useCallback((node: HTMLElement | null) => { el.current = node; }, []);
+  return useCallback((node: HTMLElement | null) => { elRef.current = node; }, []);
 }
 
 /** Pop the element when `value` changes (e.g. a KPI number ticks). Skips the first render. */
 export function useValuePulse(value: unknown) {
-  const el = useRef<HTMLElement | null>(null);
-  const first = useRef(true);
+  const elRef = useRef<HTMLElement | null>(null);
+  const firstRef = useRef(true);
   useEffect(() => {
-    if (first.current) { first.current = false; return; }
-    const node = el.current;
+    if (firstRef.current) { firstRef.current = false; return; }
+    const node = elRef.current;
     if (!node || reducedMotion()) return;
     const controls = animate(node, { scale: [1, 1.06, 1] }, { duration: 0.4, ease: 'easeOut' });
     return () => stop(controls);
   }, [value]);
-  return useCallback((node: HTMLElement | null) => { el.current = node; }, []);
+  return useCallback((node: HTMLElement | null) => { elRef.current = node; }, []);
 }
 
 /** Cascade the container's DIRECT children in whenever `dep` changes (default: on mount).
  *  Use on a list/grid so rows fade+rise in sequence once their data resolves. */
 export function useStaggerReveal(dep?: unknown) {
-  const el = useRef<HTMLElement | null>(null);
+  const elRef = useRef<HTMLElement | null>(null);
   useEffect(() => {
-    const node = el.current;
+    const node = elRef.current;
     if (!node || reducedMotion()) return;
     const kids = Array.from(node.children) as HTMLElement[];
     if (!kids.length) return;
@@ -77,5 +77,5 @@ export function useStaggerReveal(dep?: unknown) {
     );
     return () => stop(controls);
   }, [dep]);
-  return useCallback((node: HTMLElement | null) => { el.current = node; }, []);
+  return useCallback((node: HTMLElement | null) => { elRef.current = node; }, []);
 }

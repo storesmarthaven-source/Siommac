@@ -25,7 +25,7 @@ export function Canvas() {
   const ordered = [...design.elements].sort((a, b) => a.z - b.z);
 
   const pageRef = useRef<HTMLDivElement>(null);
-  const drag = useRef<{ x0: number; y0: number; cx: number; cy: number; active: boolean } | null>(null);
+  const dragRef = useRef<{ x0: number; y0: number; cx: number; cy: number; active: boolean } | null>(null);
   const [marquee, setMarquee] = useState<Rect | null>(null);
 
   const toDesign = (clientX: number, clientY: number) => {
@@ -37,12 +37,12 @@ export function Canvas() {
     if (view.preview) return;
     if (e.target !== pageRef.current) return; // only on empty page area
     const p = toDesign(e.clientX, e.clientY);
-    drag.current = { x0: p.x, y0: p.y, cx: e.clientX, cy: e.clientY, active: false };
+    dragRef.current = { x0: p.x, y0: p.y, cx: e.clientX, cy: e.clientY, active: false };
     pageRef.current!.setPointerCapture(e.pointerId);
   };
 
   const onPageMove = (e: PointerEvent) => {
-    const d = drag.current;
+    const d = dragRef.current;
     if (!d) return;
     if (e.buttons === 0) {
       finish();
@@ -65,8 +65,8 @@ export function Canvas() {
   };
 
   const finish = () => {
-    if (drag.current && !drag.current.active) dispatch({ kind: 'select', id: null }); // plain click → deselect
-    drag.current = null;
+    if (dragRef.current && !dragRef.current.active) dispatch({ kind: 'select', id: null }); // plain click → deselect
+    dragRef.current = null;
     setMarquee(null);
   };
 

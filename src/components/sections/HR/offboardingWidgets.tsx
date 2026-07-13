@@ -76,19 +76,23 @@ function Donut({ slices, size = 128, thickness = 15 }: { slices: { label: string
   const r = (size - thickness) / 2;
   const c = 2 * Math.PI * r;
   const cx = size / 2;
-  let offset = 0;
+  // Pre-compute arc lengths and cumulative offsets without closure mutation.
+  const activeSlices = slices.filter(s => s.value > 0);
+  const { segs } = activeSlices.reduce<{ offset: number; segs: VNode[] }>(
+    (acc, s) => {
+      const len = (s.value / total) * c;
+      const seg = (
+        <circle key={s.label} cx={cx} cy={cx} r={r} fill="none" stroke={s.color} stroke-width={thickness}
+          stroke-dasharray={`${len} ${c - len}`} stroke-dashoffset={-acc.offset} transform={`rotate(-90 ${cx} ${cx})`} />
+      );
+      return { offset: acc.offset + len, segs: [...acc.segs, seg] };
+    },
+    { offset: 0, segs: [] },
+  );
   return (
     <svg class="ofw-donut-svg" viewBox={`0 0 ${size} ${size}`}>
       <circle cx={cx} cy={cx} r={r} fill="none" stroke="#eef2f7" stroke-width={thickness} />
-      {slices.filter(s => s.value > 0).map(s => {
-        const len = (s.value / total) * c;
-        const seg = (
-          <circle key={s.label} cx={cx} cy={cx} r={r} fill="none" stroke={s.color} stroke-width={thickness}
-            stroke-dasharray={`${len} ${c - len}`} stroke-dashoffset={-offset} transform={`rotate(-90 ${cx} ${cx})`} />
-        );
-        offset += len;
-        return seg;
-      })}
+      {segs}
     </svg>
   );
 }

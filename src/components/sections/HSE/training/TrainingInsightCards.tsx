@@ -64,20 +64,22 @@ function nextSixMonthLabels(): string[] {
 function StatDonut({ total, centerLabel, segments }: { total: number; centerLabel: string; segments: { label: string; value: number; color: string }[] }): VNode {
   const sum = segments.reduce((s, x) => s + x.value, 0) || 1;
   const R = 62, C = 2 * Math.PI * R;
-  let offset = 0;
+  const { arcs } = segments.reduce<{ offset: number; arcs: (VNode | null)[] }>(
+    (acc, s) => {
+      if (s.value <= 0) return { ...acc, arcs: [...acc.arcs, null] };
+      const len = (s.value / sum) * C;
+      const arc = <circle key={s.label} cx="75" cy="75" r={R} fill="none" stroke={s.color} stroke-width="15"
+        stroke-dasharray={`${Math.max(0, len - 3)} ${C}`} stroke-dashoffset={-acc.offset} transform="rotate(-90 75 75)" stroke-linecap="butt" />;
+      return { offset: acc.offset + len, arcs: [...acc.arcs, arc] };
+    },
+    { offset: 0, arcs: [] },
+  );
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: '22px' }}>
       <div style={{ position: 'relative', flexShrink: 0, width: 130, height: 130 }}>
         <svg width="130" height="130" viewBox="0 0 150 150">
           <circle cx="75" cy="75" r="62" fill="none" stroke="#eef0f5" stroke-width="15" />
-          {segments.map(s => {
-            if (s.value <= 0) return null;
-            const len = (s.value / sum) * C;
-            const node = <circle key={s.label} cx="75" cy="75" r={R} fill="none" stroke={s.color} stroke-width="15"
-              stroke-dasharray={`${Math.max(0, len - 3)} ${C}`} stroke-dashoffset={-offset} transform="rotate(-90 75 75)" stroke-linecap="butt" />;
-            offset += len;
-            return node;
-          })}
+          {arcs}
         </svg>
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
           <span style={{ fontSize: '2.1rem', fontWeight: 600, color: 'var(--siomac-navy)', lineHeight: 1, letterSpacing: '-0.03em' }}>{total}</span>

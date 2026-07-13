@@ -154,7 +154,8 @@ function CommandPalette() {
     else if (e.key === 'Enter')     { e.preventDefault(); const sel = flat[active]; if (sel) choose(sel.id); }
   }
 
-  let runningIndex = -1;
+  // Pre-compute flat index for each item to avoid mutation inside the render map.
+  const flatIdx = new Map(flat.map((item, i) => [item.id, i]));
 
   return (
     <div class="cmdk-backdrop" onMouseDown={(e) => { if (e.target === e.currentTarget) close(); }}>
@@ -179,8 +180,7 @@ function CommandPalette() {
             <div class="cmdk-group" key={group.label}>
               <div class="cmdk-group-label">{group.label}</div>
               {group.items.map(item => {
-                runningIndex += 1;
-                const i = runningIndex;
+                const i = flatIdx.get(item.id) ?? -1;
                 return (
                   <button
                     key={item.id}

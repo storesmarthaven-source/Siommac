@@ -73,7 +73,6 @@ export function LeaveDocModal({ detail, onClose }: Props): VNode {
       <div
         ref={contentRef}
         style={{ padding: '8px 0', fontFamily: '"Times New Roman", Times, serif' }}
-        // eslint-disable-next-line react/no-danger
         dangerouslySetInnerHTML={{ __html: html }}
       />
     </Modal>

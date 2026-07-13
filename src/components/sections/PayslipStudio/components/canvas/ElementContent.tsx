@@ -131,14 +131,15 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
 
     case 'table': {
       const detailed = el.showHoursRate;
-      let total = 0;
       const stripe = el.stripeBg ?? '#f6f8fd';
+      const total = el.rows.reduce((acc, r) => acc + parseAmount(r.amount), 0);
       const rows = el.rows.map((r, i) => {
-        total += parseAmount(r.amount);
-        const cellStyle: CSSProperties = {};
         const rowBg = r.bg ?? (i % 2 === 1 ? stripe : undefined);
-        if (rowBg && rowBg !== 'transparent') cellStyle.background = rowBg;
-        if (r.color) cellStyle.color = r.color;
+        const cellStyle: CSSProperties = Object.assign(
+          {},
+          rowBg && rowBg !== 'transparent' ? { background: rowBg } : null,
+          r.color ? { color: r.color } : null,
+        );
         return (
           <tr key={i} style={r.height ? { height: `${r.height}px` } : undefined}>
             <td style={cellStyle}>{r.label}</td>

@@ -559,12 +559,10 @@ function NewRosterModal({ onClose, onCreated }: { onClose: () => void; onCreated
   const createMut = useRosterMutation(hrRosterApi.createRoster);
   const rotationsQ = useRotationPatterns();
 
-  const today = new Date().toISOString().slice(0, 10);
-  const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
-
-  const [f, setF] = useState({
-    title: '', siteId: '', departmentId: '', periodStart: today, periodEnd: nextWeek,
-    rotationPatternId: '',
+  const [f, setF] = useState(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().slice(0, 10);
+    return { title: '', siteId: '', departmentId: '', periodStart: today, periodEnd: nextWeek, rotationPatternId: '' };
   });
 
   async function submit(): Promise<void> {

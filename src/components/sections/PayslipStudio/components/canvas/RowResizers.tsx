@@ -20,7 +20,7 @@ export function RowResizers({ el, zoom }: { el: TableElement; zoom: number }) {
   const anchor = useRef<HTMLDivElement>(null);
   const [tops, setTops] = useState<number[]>([]);
   const [headBottom, setHeadBottom] = useState<number | null>(null);
-  const drag = useRef<(DragKind & { startY: number; startH: number }) | null>(null);
+  const dragRef = useRef<(DragKind & { startY: number; startH: number }) | null>(null);
 
   const root = () => anchor.current?.closest('.el') as HTMLElement | null;
   const dataRows = () => root()?.querySelectorAll('table.pay-tbl tbody tr');
@@ -47,7 +47,7 @@ export function RowResizers({ el, zoom }: { el: TableElement; zoom: number }) {
     e.stopPropagation();
     const tr = dataRows()?.[i];
     const startH = tr ? tr.getBoundingClientRect().height / zoom : el.rows[i]?.height ?? 24;
-    drag.current = { kind: 'row', i, startY: e.clientY, startH };
+    dragRef.current = { kind: 'row', i, startY: e.clientY, startH };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
@@ -55,12 +55,12 @@ export function RowResizers({ el, zoom }: { el: TableElement; zoom: number }) {
     e.stopPropagation();
     const th = headRow();
     const startH = th ? th.getBoundingClientRect().height / zoom : el.headHeight ?? el.headFontSize ?? 11;
-    drag.current = { kind: 'header', startY: e.clientY, startH };
+    dragRef.current = { kind: 'header', startY: e.clientY, startH };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onMove = (e: PointerEvent) => {
-    const d = drag.current;
+    const d = dragRef.current;
     if (!d) return;
     if (e.buttons === 0) {
       end();
@@ -75,8 +75,8 @@ export function RowResizers({ el, zoom }: { el: TableElement; zoom: number }) {
   };
 
   const end = () => {
-    if (drag.current) {
-      drag.current = null;
+    if (dragRef.current) {
+      dragRef.current = null;
       dispatch({ kind: 'endEdit' });
     }
   };

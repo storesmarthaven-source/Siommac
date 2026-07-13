@@ -229,7 +229,6 @@ export default function EmployeeModals() {
                     <div
                       id="editEmpAvatarWrap"
                       style="width:72px;height:72px;border-radius:50%;background:linear-gradient(135deg,var(--siomac-red),var(--siomac-red-dark,#a00));overflow:hidden;display:flex;align-items:center;justify-content:center;font-size:26px;font-weight: var(--font-weight-bold);color:#fff;cursor:pointer;border:3px solid var(--border);"
-                      // eslint-disable-next-line react/no-danger
                       dangerouslySetInnerHTML={{ __html: '' }}
                     />
                     {/* NOTE: The avatar wrap is populated and click-wired by attSystem.ts */}

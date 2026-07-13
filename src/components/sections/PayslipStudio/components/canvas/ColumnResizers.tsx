@@ -16,7 +16,7 @@ interface DragState {
  */
 export function ColumnResizers({ el, zoom }: { el: TableElement; zoom: number }) {
   const { dispatch } = useDesigner();
-  const drag = useRef<DragState | null>(null);
+  const dragRef = useRef<DragState | null>(null);
 
   const pad = el.padding ?? 0;
   const bw = el.borderW ?? 0;
@@ -26,12 +26,12 @@ export function ColumnResizers({ el, zoom }: { el: TableElement; zoom: number })
 
   const onDown = (boundary: number) => (e: PointerEvent) => {
     e.stopPropagation();
-    drag.current = { boundary, startX: e.clientX, fr: [...fr] };
+    dragRef.current = { boundary, startX: e.clientX, fr: [...fr] };
     (e.target as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const onMove = (e: PointerEvent) => {
-    const d = drag.current;
+    const d = dragRef.current;
     if (!d) return;
     if (e.buttons === 0) {
       end();
@@ -56,8 +56,8 @@ export function ColumnResizers({ el, zoom }: { el: TableElement; zoom: number })
   };
 
   const end = () => {
-    if (drag.current) {
-      drag.current = null;
+    if (dragRef.current) {
+      dragRef.current = null;
       dispatch({ kind: 'endEdit' });
     }
   };
