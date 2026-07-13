@@ -15,6 +15,16 @@ import type {
   UpdateSitePayload,
   AssignSiteMembersPayload,
 } from './schemas/site';
+import type { ProjectSite, ProjectSiteEmployee } from '../../types/db';
+
+/** Site row joined with its assigned members (returned by getSiteWithMembers). */
+type SiteWithMembers = ProjectSite & {
+  project_site_employees: Array<
+    Pick<ProjectSiteEmployee, 'user_id' | 'assigned_at'> & {
+      users: { username: string; full_name: string; profile_image: string | null } | null;
+    }
+  >;
+};
 
 // ── Read ──────────────────────────────────────────────────────────────────────
 
@@ -34,7 +44,7 @@ export async function listSites(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as ProjectSite[];
 }
 
 /** List active sites only — used in check-in site picker and live map */
@@ -54,7 +64,7 @@ export async function listActiveSites(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as ProjectSite[];
 }
 
 /** Get a single site with its assigned employee IDs */
@@ -71,7 +81,8 @@ export async function getSiteWithMembers(siteId: string, signal?: AbortSignal) {
 
   if (signal) filterQuery = filterQuery.abortSignal(signal);
 
-  const { data, error } = await filterQuery.single();
+  const { data, error } = await filterQuery.single() as unknown as
+    { data: SiteWithMembers | null; error: { message: string } | null };
 
   if (error) {
     logger.error('[api/sites] getSiteWithMembers failed', { siteId, error });

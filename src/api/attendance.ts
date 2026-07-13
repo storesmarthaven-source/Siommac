@@ -16,6 +16,7 @@ import { supabase }                              from '@lib/supabase';
 import { logger }                                from '@lib/logger';
 import type { CheckInPayload, CheckOutPayload }   from './schemas/attendance';
 import type { AttendanceFilter }                  from './schemas/attendance';
+import type { Attendance }                        from '../../types/db';
 
 // ── Read ──────────────────────────────────────────────────────────────────────
 
@@ -53,7 +54,7 @@ export async function listMyAttendance(
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as Attendance[];
 }
 
 /**
@@ -88,7 +89,8 @@ export async function listAllAttendance(
     throw new Error(error.message);
   }
 
-  return data;
+  // users join adds full_name and department_id to each row
+  return data as unknown as Array<Attendance & { users: { full_name: string; department_id: string | null } | null }>;
 }
 
 /**
@@ -105,7 +107,8 @@ export async function getTodayAttendance(username: string, signal?: AbortSignal)
 
   if (signal) filterQuery = filterQuery.abortSignal(signal);
 
-  const { data, error } = await filterQuery.maybeSingle();
+  const { data, error } = await filterQuery.maybeSingle() as unknown as
+    { data: Attendance | null; error: { message: string } | null };
 
   if (error) {
     logger.error('[api/attendance] getTodayAttendance failed', { username, error });

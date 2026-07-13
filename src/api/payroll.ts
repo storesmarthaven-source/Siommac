@@ -14,6 +14,7 @@ import type {
   SetHourlyRatePayload,
   CreatePayrollRunPayload,
 } from './schemas/payroll';
+import type { PayrollRun, PayrollEntry, HourlyRate } from '../../types/db';
 
 // ── Payroll Runs ──────────────────────────────────────────────────────────────
 
@@ -33,7 +34,7 @@ export async function listPayrollRuns(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as PayrollRun[];
 }
 
 /** Get entries for a specific payroll run */
@@ -53,7 +54,7 @@ export async function getPayrollEntries(runId: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as PayrollEntry[];
 }
 
 /** Get the current employee's payslip history */
@@ -76,7 +77,8 @@ export async function getMyPayslips(username: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  // payroll_runs join adds period_start/period_end/status to each entry
+  return data as unknown as Array<PayrollEntry & { payroll_runs: Pick<PayrollRun, 'period_start' | 'period_end' | 'status'> | null }>;
 }
 
 export async function createPayrollRun(payload: CreatePayrollRunPayload): Promise<void> {
@@ -116,7 +118,7 @@ export async function getHourlyRateHistory(username: string, signal?: AbortSigna
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as HourlyRate[];
 }
 
 /** List all employees with their current hourly rate (admin) */
@@ -136,7 +138,7 @@ export async function listAllHourlyRates(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as HourlyRate[];
 }
 
 export async function setHourlyRate(payload: SetHourlyRatePayload): Promise<void> {

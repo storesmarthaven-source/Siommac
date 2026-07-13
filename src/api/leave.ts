@@ -11,6 +11,7 @@
 import { supabase }                from '@lib/supabase';
 import { logger }                  from '@lib/logger';
 import type { SubmitLeavePayload, ReviewLeavePayload } from './schemas/leave';
+import type { LeaveRequest }       from '../../types/db';
 
 // ── Read ──────────────────────────────────────────────────────────────────────
 
@@ -31,7 +32,7 @@ export async function getMyLeaves(username: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as LeaveRequest[];
 }
 
 /** Pending leaves for a manager's department */
@@ -55,7 +56,7 @@ export async function getPendingLeavesForManager(
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as LeaveRequest[];
 }
 
 /** All leave requests — admin view, with full details */
@@ -74,7 +75,7 @@ export async function listAllLeaves(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data;
+  return data as unknown as LeaveRequest[];
 }
 
 // ── Write ─────────────────────────────────────────────────────────────────────
