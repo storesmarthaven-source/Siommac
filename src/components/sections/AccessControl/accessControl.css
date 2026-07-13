@@ -415,11 +415,7 @@
 .acx .u-info-txt strong { color: var(--ink); font-weight: 600; }
 /* Table top strip (moved-up legend + count) */
 .acx .u-tbl-top { display: flex; align-items: center; gap: 16px; padding: 11px 18px; border-bottom: 1px solid var(--line); }
-.acx .u-legend { display: flex; align-items: center; gap: 16px; }
-.acx .u-legend-i { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; font-weight: 600; color: var(--ink-2); }
-.acx .u-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; }
-.acx .u-dot.green { background: #16a34a; } .acx .u-dot.red { background: #dc2626; } .acx .u-dot.grey { background: #94a3b8; }
-.acx .u-tbl-count { margin-left: auto; font-size: 12px; color: var(--muted); }
+.acx .u-tbl-count { font-size: 12px; color: var(--muted); }
 /* Save Changes → siomac navy when enabled */
 .acx .btn.primary.u-save:not(:disabled) { background: var(--siomac-navy, #1b2d54); border-color: var(--siomac-navy, #1b2d54); }
 .acx .btn.primary.u-save:not(:disabled):hover { background: #16243f; }
@@ -437,8 +433,8 @@
 .acx .u-mod-ico { width: 22px; color: #475569; display: grid; place-items: center; flex: none; }
 .acx .u-mod-name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .acx .u-mod-count { display: inline-flex; align-items: center; justify-content: center; min-width: 22px; height: 19px; padding: 0 6px; border-radius: 6px; background: #eef1f6; color: #64748b; font-size: 11px; font-weight: 600; }
-.acx .u-src { display: inline-flex; align-items: center; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #f1f3f7; color: #566074; }
-.acx .u-src.ovr { background: var(--accent-bg); color: var(--accent-ink); }
+.acx .u-src { display: inline-flex; align-items: center; white-space: nowrap; font-size: 11.5px; font-weight: 600; padding: 3px 10px; border-radius: 999px; background: #eef2f7; color: #475569; }
+.acx .u-src.ovr { background: #f1ecfe; color: #6d28d9; }
 .acx .u-row-override > td:first-child { border-left: 3px solid var(--accent); }
 /* User Override select — neutral when Inherit, blue-accented when a real override is set. */
 .acx .u-cap-sel { height: 34px; border: 1px solid var(--line); border-radius: 9px; padding: 0 28px 0 12px; font: inherit; font-size: 12.5px; font-weight: 500; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%236b7280' stroke-width='2'><path d='M2 3.5l3 3 3-3'/></svg>") no-repeat right 10px center; appearance: none; color: var(--ink-2); outline: none; cursor: pointer; width: 116px; }

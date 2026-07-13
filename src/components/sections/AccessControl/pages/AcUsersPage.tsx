@@ -333,11 +333,6 @@ export function AcUsersPage(): VNode {
 
               <div class="card" style={{ overflow: 'hidden' }}>
                 <div class="u-tbl-top">
-                  <span class="u-legend">
-                    <span class="u-legend-i"><span class="u-dot green" /> Allow</span>
-                    <span class="u-legend-i"><span class="u-dot red" /> Deny</span>
-                    <span class="u-legend-i"><span class="u-dot grey" /> Inherit</span>
-                  </span>
                   <span class="u-tbl-count">{groups.size} module{groups.size === 1 ? '' : 's'} · {[...groups.values()].reduce((n, a) => n + a.length, 0)} capabilities</span>
                 </div>
                 <table class="tbl" style={{ tableLayout: 'fixed' }}>
