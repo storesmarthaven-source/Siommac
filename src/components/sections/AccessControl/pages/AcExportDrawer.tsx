@@ -1,14 +1,13 @@
 /**
  * src/components/sections/AccessControl/pages/AcExportDrawer.tsx
  *
- * Export Permissions — right-side navy drawer (redesigned), matching the statutory
- * Rate Version rich drawer's palette. Self-contained: portals to <body> wrapped in
- * `.acx` so it uses the section's own styles (the shared @ui <Drawer> depends on
- * HSE.css, not loaded here).
+ * Export Permissions — right-side navy drawer, preview-first layout. A live export
+ * preview card sits up top (file icon + name + "records · columns · modules"), with
+ * Format / Records as segmented controls, Columns as a checklist with select-all, and
+ * Password protect as a toggle. Self-contained: portals to <body> wrapped in `.acx`
+ * (the shared @ui <Drawer> depends on HSE.css, not loaded here).
  *
- * Options are scoped to what makes sense for a current-state permissions snapshot —
- * Format, Records (this user vs all), Include columns, Modules filter, Password protect,
- * file name. UI-only for now (no export backend) — "Export" closes; no fake download.
+ * UI-only for now (no export backend) — "Export" closes the drawer; no fake download.
  */
 
 import { type VNode } from 'preact';
@@ -36,9 +35,16 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
   const [records, setRecords] = useState<'user' | 'all'>('user');
   const [cols, setCols] = useState<Record<string, boolean>>({ defaults: true, overrides: true, effective: true, descriptions: false });
   const [pwProtect, setPwProtect] = useState(false);
+
   const toggle = (id: string) => setCols(c => ({ ...c, [id]: !c[id] }));
+  const selectedCount = COLUMNS.filter(c => cols[c.id]).length;
+  const allOn = selectedCount === COLUMNS.length;
+  const toggleAll = () => setCols(Object.fromEntries(COLUMNS.map(c => [c.id, !allOn])));
+
   const moduleCount = useMemo(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean)).size, []);
   const rec = user ? records : 'all';
+  const recLabel = rec === 'all' ? 'All users' : (user ? user.fullName : 'Selected user');
+  const fmtDef = FORMATS.find(f => f.id === fmt)!;
   const fileName = `${rec === 'all' ? 'user-access-all' : `user-access-${user!.username}`}.${fmt}`;
 
   if (!open) return null;
@@ -59,15 +65,20 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
         </div>
 
         <div class="exp-body">
+          {/* Live preview */}
+          <div class="exp-preview">
+            <span class="exp-preview-ico" style={{ color: fmtDef.tint }}><LucideIcon name={fmtDef.icon} size={26} /></span>
+            <div class="exp-preview-main">
+              <div class="exp-preview-name" title={fileName}>{fileName}</div>
+              <div class="exp-preview-meta"><span class="exp-cap">{recLabel}</span> · {selectedCount} column{selectedCount === 1 ? '' : 's'} · {moduleCount} modules</div>
+            </div>
+          </div>
+
           <div class="exp-sec">
             <div class="exp-label">Format</div>
-            <div class="exp-formats">
+            <div class="exp-seg">
               {FORMATS.map(f => (
-                <button key={f.id} type="button" class={`exp-fmt${fmt === f.id ? ' on' : ''}`} onClick={() => setFmt(f.id)}>
-                  {fmt === f.id && <span class="exp-fmt-check"><LucideIcon name="Check" size={11} strokeWidth={3} /></span>}
-                  <span class="exp-fmt-ico" style={{ color: f.tint }}><LucideIcon name={f.icon} size={22} /></span>
-                  <span class="exp-fmt-lbl">{f.label}</span>
-                </button>
+                <button key={f.id} type="button" class={`exp-seg-btn${fmt === f.id ? ' on' : ''}`} onClick={() => setFmt(f.id)}>{f.label}</button>
               ))}
             </div>
           </div>
@@ -83,37 +94,28 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
           </div>
 
           <div class="exp-sec">
-            <div class="exp-label">Include</div>
-            <div class="exp-checks">
+            <div class="exp-sec-head">
+              <div class="exp-label">Columns</div>
+              <button type="button" class="exp-selall" onClick={toggleAll}>{allOn ? 'Clear all' : 'Select all'}</button>
+            </div>
+            <div class="exp-list">
               {COLUMNS.map(c => (
-                <label key={c.id} class="exp-check">
+                <label key={c.id} class={`exp-row${cols[c.id] ? ' on' : ''}`}>
+                  <span class="exp-row-lbl">{c.label}</span>
                   <input type="checkbox" checked={!!cols[c.id]} onChange={() => toggle(c.id)} />
-                  <span>{c.label}</span>
                 </label>
               ))}
             </div>
           </div>
 
           <div class="exp-sec">
-            <div class="exp-label">Modules</div>
-            <button type="button" class="exp-field exp-field-btn">
-              <LucideIcon name="LayoutGrid" size={15} />
-              <span class="exp-field-val">All modules ({moduleCount})</span>
-              <LucideIcon name="ChevronDown" size={15} />
+            <button type="button" class="exp-toggle-row" role="switch" aria-checked={pwProtect} onClick={() => setPwProtect(v => !v)}>
+              <span class="exp-toggle-txt">
+                <span class="exp-row-lbl">Password protect</span>
+                <span class="exp-row-sub">Require a password to open the file</span>
+              </span>
+              <span class={`exp-switch${pwProtect ? ' on' : ''}`}><span class="exp-switch-knob" /></span>
             </button>
-          </div>
-
-          <div class="exp-sec">
-            <div class="exp-label">Options</div>
-            <label class="exp-check"><input type="checkbox" checked={pwProtect} onChange={() => setPwProtect(v => !v)} /><span>Password protect export</span></label>
-          </div>
-
-          <div class="exp-sec">
-            <div class="exp-label">File name</div>
-            <div class="exp-field">
-              <LucideIcon name="FileText" size={15} />
-              <span class="exp-field-val">{fileName}</span>
-            </div>
           </div>
         </div>
 
