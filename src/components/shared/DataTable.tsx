@@ -40,6 +40,14 @@ import { Spinner } from './Spinner';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
+/** Minimal DataTables instance surface — only the API we actually call. */
+interface DataTablesInstance { destroy(): void }
+
+/** The minimal surface of a jQuery set after the DataTables CDN plugin is loaded. */
+interface JQueryWithDataTable {
+  DataTable(options: Record<string, unknown>): DataTablesInstance;
+}
+
 export interface DataTableColumn<T = Record<string, unknown>> {
   /** Column header label */
   title:      string;
@@ -113,14 +121,14 @@ export function DataTable<T = Record<string, unknown>>({
   className    = '',
 }: DataTableProps<T>): VNode {
   const tableRef  = useRef<HTMLTableElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const dtRef     = useRef<any>(null);   // DataTables instance — imperative, not typed
+  const dtRef     = useRef<DataTablesInstance | null>(null);
   const instanceId = useId();
 
   useEffect(() => {
     // Guard: DataTables requires jQuery on window
     if (typeof window === 'undefined' || !window.$) return;
     if (!tableRef.current) return;
+    const tableEl = tableRef.current; // capture narrowed value before async gaps
     if (loading) return;
 
     // Destroy previous instance before reinitialising
@@ -147,8 +155,11 @@ export function DataTable<T = Record<string, unknown>>({
     try {
       // DataTables extends jQuery — the `.DataTable()` method is added by the
       // DataTables CDN script.  We access it via the jQuery instance on window.
-      // eslint-disable-next-line @typescript-eslint/no-unsafe-call, @typescript-eslint/no-explicit-any
-      dtRef.current = (window.$(tableRef.current) as any).DataTable(options);
+      // JQueryStatic has complex overloads that ESLint cannot statically resolve;
+      // the result is immediately re-typed to JQueryWithDataTable (a concrete interface).
+      // eslint-disable-next-line @typescript-eslint/no-unsafe-call -- JQueryStatic overloads unresolvable by ESLint; result cast to JQueryWithDataTable below
+      const jqEl = window.$(tableEl) as unknown as JQueryWithDataTable;
+      dtRef.current = jqEl.DataTable(options);
     } catch (err) {
       console.error('[DataTable] Initialisation failed', err);
     }

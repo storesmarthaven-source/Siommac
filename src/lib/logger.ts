@@ -35,8 +35,15 @@ const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN as string | undefined;
 
 // ── Sentry lazy loader ────────────────────────────────────────────────────────
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-let _sentry: any = null;
+/** Typed surface of the Sentry SDK that this module actually calls. */
+type SentrySDK = {
+  init:             (opts: Record<string, unknown>) => void;
+  withScope:        (fn: (scope: { setLevel(l: string): void; setExtras(c: Context): void }) => void) => void;
+  captureException: (err: unknown) => void;
+  captureMessage:   (msg: string, level: string) => void;
+};
+
+let _sentry: SentrySDK | null = null;
 let _sentryLoading = false;
 
 async function _loadSentry(): Promise<void> {
@@ -52,12 +59,7 @@ async function _loadSentry(): Promise<void> {
     const Sentry = await (
       // Vite resolves this as an external dynamic import at runtime
       import(/* @vite-ignore */ pkg)
-    ) as {
-      init:             (opts: Record<string, unknown>) => void;
-      withScope:        (fn: (scope: { setLevel(l: string): void; setExtras(c: Context): void }) => void) => void;
-      captureException: (err: unknown) => void;
-      captureMessage:   (msg: string, level: string) => void;
-    };
+    ) as SentrySDK;
     Sentry.init({
       dsn:         SENTRY_DSN,
       environment: IS_PROD ? 'production' : 'development',
@@ -123,13 +125,14 @@ function _log(
   if (IS_PROD && (level === 'error' || level === 'critical') && SENTRY_DSN) {
     void _loadSentry().then(() => {
       if (!_sentry) return;
-      _sentry.withScope((scope: { setLevel: (l: string) => void; setExtras: (c: Context) => void }) => {
+      const sentry = _sentry; // capture narrowed ref so the callback sees a const
+      sentry.withScope((scope: { setLevel: (l: string) => void; setExtras: (c: Context) => void }) => {
         scope.setLevel(level === 'critical' ? 'fatal' : 'error');
         if (ctx) scope.setExtras(ctx);
         if (error instanceof Error) {
-          _sentry.captureException(error);
+          sentry.captureException(error);
         } else {
-          _sentry.captureMessage(message, level === 'critical' ? 'fatal' : 'error');
+          sentry.captureMessage(message, level === 'critical' ? 'fatal' : 'error');
         }
       });
     });
