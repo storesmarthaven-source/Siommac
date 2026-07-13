@@ -333,7 +333,10 @@ export async function setRunTemplate(
     previousState: { templateId: run.template_id ?? null },
     newState:      { templateId: dto.templateId },
   });
-  void emitAppEvent({
+  // Awaited (not fire-and-forget): the template_changed app_event is a §2
+  // side-effect callers/tests rely on being present once set-template returns.
+  // emitAppEvent swallows its own errors, so awaiting can't fail the mutation.
+  await emitAppEvent({
     eventType:        'finance.payroll.run.template_changed',
     sourceModule:     'finance_payroll',
     sourceEntityType: 'payroll_run',

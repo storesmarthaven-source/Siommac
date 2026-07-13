@@ -347,7 +347,10 @@ export async function submitTemplate(id: string, actorId: string): Promise<Paysl
 export async function decideTemplateApproval(opts: {
   templateId: string;
   actor:      { id: string; role?: string | null };
-  decision:   'approved' | 'rejected';
+  // 'returned' = request changes (non-terminal; maker edits + resubmits).
+  // We deliberately do NOT expose the terminal 'rejected' path: a payslip
+  // template is never outright denied, only sent back for edits.
+  decision:   'approved' | 'returned';
   comment?:   string;
 }): Promise<PayslipTemplateDto> {
   const { data: row, error: loadErr } = await sb
@@ -360,11 +363,11 @@ export async function decideTemplateApproval(opts: {
   const tmpl = row as unknown as DbRow;
   if (tmpl.status !== 'pending_approval') {
     throw err(
-      `Cannot ${opts.decision === 'approved' ? 'approve' : 'reject'}: template is in status '${tmpl.status}'. Only 'pending_approval' templates can be decided.`,
+      `Cannot ${opts.decision === 'approved' ? 'approve' : 'request changes on'}: template is in status '${tmpl.status}'. Only 'pending_approval' templates can be decided.`,
       422,
     );
   }
-  if (opts.decision === 'rejected' && !opts.comment?.trim()) {
+  if (opts.decision === 'returned' && !opts.comment?.trim()) {
     throw err('A reason is required to request changes on a template.', 422);
   }
   // SoD fast-fail (adapter re-enforces at completion)

@@ -134,7 +134,7 @@ router.post(`${P}/request-changes`, async c => {
       data: await decideTemplateApproval({
         templateId: v.data.id,
         actor:      { id: actor.id, role: actor.role },
-        decision:   'rejected',
+        decision:   'returned',
         comment:    v.data.comment,
       }),
     });
