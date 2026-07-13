@@ -139,6 +139,11 @@ export function AcUsersPage(): VNode {
     effective: PERMISSION_KEYS.filter(k => effGranted(k)).length,
   }), [target, effGranted]);
 
+  // Pending-changes tallies for the action-bar chips.
+  const pendAllow = [...pending.values()].filter(v => v === 'allow').length;
+  const pendDeny  = [...pending.values()].filter(v => v === 'deny').length;
+  const pendCaps  = new Set([...pending.keys()].map(k => PERMISSION_META[k as PermissionKey]?.module).filter(Boolean)).size;
+
   const onSelect = (key: string, value: OvState) => {
     if (value === 'allow' && CRITICAL_GRANT_KEYS.has(key) && !effGranted(key)) { setCriticalKey(key); return; }
     setPending(prev => {
@@ -387,9 +392,18 @@ export function AcUsersPage(): VNode {
                   </div>
                 </div>
                 <div class="u-ab-chips">
-                  <span class="u-ab-chip green"><b>{[...pending.values()].filter(v => v === 'allow').length}</b><span>Permissions<br />Allow</span></span>
-                  <span class="u-ab-chip red"><b>{[...pending.values()].filter(v => v === 'deny').length}</b><span>Permissions<br />Deny</span></span>
-                  <span class="u-ab-chip"><b>{pending.size}</b><span>Total<br />Changes</span></span>
+                  <span class="u-ab-chip green">
+                    <b>{pendAllow}</b>
+                    <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Permission{pendAllow === 1 ? '' : 's'}</span><span class="u-ab-chip-val">Allow</span></span>
+                  </span>
+                  <span class="u-ab-chip red">
+                    <b>{pendDeny}</b>
+                    <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Permission{pendDeny === 1 ? '' : 's'}</span><span class="u-ab-chip-val">Deny</span></span>
+                  </span>
+                  <span class="u-ab-chip neutral">
+                    <b>{pending.size}</b>
+                    <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Total Changes</span><span class="u-ab-chip-val">Affecting {pendCaps} capabilit{pendCaps === 1 ? 'y' : 'ies'}</span></span>
+                  </span>
                 </div>
                 <div class="u-ab-actions">
                   <button class="btn" disabled={!pending.size || saving} onClick={() => setPending(new Map())}>Discard Changes</button>
