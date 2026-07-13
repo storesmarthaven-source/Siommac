@@ -426,8 +426,8 @@
 /* Access Profile card — navy, modeled on My Profile (.profile-card) with tweaks. */
 .acx .u-prof-card { overflow: hidden; border-radius: 18px; color: #fff; background: #1b2d54; border: 1px solid rgba(255, 255, 255, .1); }
 .acx .u-prof-top { min-height: 52px; display: flex; align-items: center; padding: 0 18px; background: #374669; border-bottom: 1px solid rgba(255, 255, 255, .1); }
-.acx .u-prof-title { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #fff; }
-.acx .u-prof-title svg { color: rgba(255, 255, 255, .85); }
+.acx .u-prof-title { display: inline-flex; align-items: center; gap: 9px; font-size: 15px; font-weight: 700; letter-spacing: -.01em; color: #fff; }
+.acx .u-prof-title svg { color: rgba(255, 255, 255, .9); }
 .acx .u-prof-main { padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
 .acx .u-prof-entity { display: flex; align-items: center; gap: 15px; min-width: 0; }
 .acx .u-prof-photo { width: 64px; height: 64px; flex: none; border-radius: 50%; overflow: hidden; box-shadow: 0 0 0 2px #1b2d54, 0 0 0 4px #647394; display: grid; place-items: center; color: #fff; font-size: 20px; font-weight: 600; text-transform: uppercase; }
@@ -445,7 +445,7 @@
 .acx .u-prof-meta svg { color: rgba(226, 238, 252, .5); flex: none; }
 .acx .u-prof-sep { color: rgba(255, 255, 255, .25); }
 .acx .u-prof-stats { display: flex; gap: 10px; flex: none; }
-.acx .u-prof-stat { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); }
+.acx .u-prof-stat { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; background: rgb(255 255 255 / 13%); border: 1px solid rgba(255, 255, 255, .1); }
 .acx .u-prof-stat-ic { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 8px; background: rgba(96, 165, 250, .18); color: #bfdbfe; }
 .acx .u-prof-stat-ic.red { background: rgba(248, 113, 113, .18); color: #fecaca; }
 .acx .u-prof-stat-ic.green { background: rgba(34, 197, 94, .18); color: #bbf7d0; }

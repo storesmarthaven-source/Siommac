@@ -286,7 +286,7 @@ export function AcUsersPage(): VNode {
             <>
               <div class="u-prof-card">
                 <div class="u-prof-top">
-                  <span class="u-prof-title"><LucideIcon name="ShieldCheck" size={16} /> Access Profile</span>
+                  <span class="u-prof-title"><LucideIcon name="ShieldCheck" size={19} /> Access Profile</span>
                 </div>
                 <div class="u-prof-main">
                   <div class="u-prof-entity">
