@@ -151,7 +151,7 @@ export function AcCoveragePage(): VNode {
             {auditQ.isLoading ? <div class="ac-loading">Loading…</div>
              : roleChanges.length === 0 ? <div class="ac-empty" style={{ padding: '28px 16px' }}>No recent role changes.</div>
              : (roleChanges as { id: string; username: string; action: string; entity_id: string; details: string; created_at: string }[]).map((l, i) => {
-              let perm = ''; try { perm = (JSON.parse(l.details || '{}').permission as string) ?? ''; } catch { /* ignore */ }
+              let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* ignore */ }
               const grant = l.action === 'role_perm_grant';
               return (
                 <div class={`fc-tl-row${i === roleChanges.length - 1 ? ' fc-tl-last' : ''}`} key={l.id}>

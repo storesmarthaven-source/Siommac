@@ -217,7 +217,7 @@ export function AcUsersPage(): VNode {
            : (
             <div class="u-ovr-list">
               {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string }[]).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
-                let perm = ''; try { perm = (JSON.parse(l.details || '{}').permission as string) ?? ''; } catch { /* plain text */ }
+                let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* plain text */ }
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
                 const actor = usersByUsername.get(l.username.toLowerCase());
