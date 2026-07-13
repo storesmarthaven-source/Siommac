@@ -123,6 +123,8 @@ export interface AuditLogRow {
 export interface AuditLogFilters {
   search?:    string;
   action?:    string;
+  /** Exclude these actions (e.g. routine `tokenRefresh` noise). */
+  excludeActions?: string[];
   entity?:    string;
   /** Exact match on entity_id — use to fetch history for one specific record or user. */
   entity_id?: string;

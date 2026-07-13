@@ -152,7 +152,7 @@ const goTo = (id: string) => { try { window.dispatchEvent(new CustomEvent('sioma
 export function AcOverviewPage(): VNode {
   const rolesQ = useRoles(true);
   const usersQ = useConsoleUsers(true);
-  const auditQ = useAuditLogs({ limit: 6 }, true);
+  const auditQ = useAuditLogs({ limit: 6, excludeActions: ['tokenRefresh'] }, true);
 
   const [activeModule, setActiveModule] = useState<string>('all');
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);

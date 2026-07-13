@@ -339,10 +339,10 @@
 .acx .rp-link svg { color: #a9bce4; }
 /* Panel tinted to the current risk level; inner elements restyled to read on the colour. */
 .acx .asum-risk.high { background: #7f1d1d; }
-.acx .asum-risk.med  { background: #92500e; }
+.acx .asum-risk.med  { background: #e9a33a; }
 .acx .asum-risk.low  { background: #15532e; }
 .acx .asum-risk.high .rp-level { color: #fecaca; }
-.acx .asum-risk.med  .rp-level { color: #fde68a; }
+.acx .asum-risk.med  .rp-level { color: #3f2606; }
 .acx .asum-risk.low  .rp-level { color: #bbf7d0; }
 .acx .asum-risk .rp-sub, .acx .asum-risk .rp-note { color: rgba(255, 255, 255, .72); }
 .acx .asum-risk .rp-note b { color: #fff; }
@@ -350,6 +350,14 @@
 .acx .asum-risk .rp-link { background: rgba(255, 255, 255, .12); border-color: rgba(255, 255, 255, .22); color: #fff; }
 .acx .asum-risk .rp-link:hover { background: rgba(255, 255, 255, .2); }
 .acx .asum-risk .rp-link svg { color: rgba(255, 255, 255, .78); }
+/* Med is a brighter orange (#e9a33a) — its elements go dark to stay readable. */
+.acx .asum-risk.med .rp-title { color: #3f2606; }
+.acx .asum-risk.med .rp-sub, .acx .asum-risk.med .rp-note { color: rgba(63, 38, 6, .74); }
+.acx .asum-risk.med .rp-note b { color: #291803; }
+.acx .asum-risk.med .rp-ico { background: rgba(0, 0, 0, .13); color: #3f2606; }
+.acx .asum-risk.med .rp-link { background: rgba(0, 0, 0, .12); border-color: rgba(0, 0, 0, .18); color: #291803; }
+.acx .asum-risk.med .rp-link:hover { background: rgba(0, 0, 0, .2); }
+.acx .asum-risk.med .rp-link svg { color: rgba(41, 24, 3, .66); }
 @media (max-width: 920px) { .acx .asum { grid-template-columns: 1fr; } }
 
 /* ── Toolbar / search ────────────────────────────────────────────────────────── */
