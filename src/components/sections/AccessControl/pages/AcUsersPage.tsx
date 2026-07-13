@@ -179,7 +179,7 @@ export function AcUsersPage(): VNode {
         title="User Access"
         sub="Manage per-user access exceptions. Changes apply only to this user and do not modify role permissions."
         actions={<>
-          <button type="button" class="acx-hdr-btn" onClick={() => setShowExport(true)}>
+          <button type="button" class="acx-hdr-btn" disabled title="Export coming soon">
             <LucideIcon name="Download" size={15} /> Export
           </button>
           <button type="button" class="acx-hdr-btn primary" onClick={() => setCreatingRole(true)}>
@@ -313,13 +313,16 @@ export function AcUsersPage(): VNode {
                 </div>
               </div>
 
-              <div class="u-info-banner">
-                <span class="u-info-ico"><LucideIcon name="BadgeInfo" size={18} strokeWidth={2.2} /></span>
-                <div class="u-info-txt">
-                  <div class="u-info-title">You're editing user-level overrides</div>
-                  <div class="u-info-sub">Changes apply only to this user — the underlying role is unchanged.</div>
+              {/* TEMP preview — pick one colour, then this collapses back to a single banner */}
+              {['#5b6b8f', '#646f8e', '#7483ab', '#8b98bb', '#46587f'].map(c => (
+                <div key={c} class="u-info-banner" style={{ background: c, border: '1px solid rgba(255,255,255,.14)' }}>
+                  <span class="u-info-ico" style={{ background: 'rgba(255,255,255,.16)', color: '#fff' }}><LucideIcon name="Info" size={18} strokeWidth={2.2} /></span>
+                  <div class="u-info-txt">
+                    <div class="u-info-title" style={{ color: '#fff' }}>You're editing user-level overrides · {c}</div>
+                    <div class="u-info-sub" style={{ color: 'rgba(255,255,255,.65)' }}>Changes apply only to this user — the underlying role is unchanged.</div>
+                  </div>
                 </div>
-              </div>
+              ))}
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
