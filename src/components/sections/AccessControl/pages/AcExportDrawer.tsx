@@ -1,19 +1,14 @@
 /**
  * src/components/sections/AccessControl/pages/AcExportDrawer.tsx
  *
- * Export Permissions — right-side navy drawer (visual scaffold), matching the statutory
- * Rate Version rich drawer. Self-contained: portals to <body> wrapped in `.acx` so it
- * uses the section's own styles (the shared @ui <Drawer> depends on HSE.css, not loaded
- * here).
+ * Export Permissions — right-side navy drawer (redesigned), matching the statutory
+ * Rate Version rich drawer's palette. Self-contained: portals to <body> wrapped in
+ * `.acx` so it uses the section's own styles (the shared @ui <Drawer> depends on
+ * HSE.css, not loaded here).
  *
- * Options are scoped to what actually makes sense for exporting a user's access data —
- * a current-state snapshot, so no date range / time filters:
- *   • Format (CSV / PDF)
- *   • Records — this user vs all users (the meaningful "who")
- *   • Include — which columns/sections
- *   • Modules — optional filter
- *   • Password protect — sensitive permission data
- * UI-only for now (no export backend) — "Export" closes the drawer; no fake download.
+ * Options are scoped to what makes sense for a current-state permissions snapshot —
+ * Format, Records (this user vs all), Include columns, Modules filter, Password protect,
+ * file name. UI-only for now (no export backend) — "Export" closes; no fake download.
  */
 
 import { type VNode } from 'preact';
@@ -43,7 +38,7 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
   const [pwProtect, setPwProtect] = useState(false);
   const toggle = (id: string) => setCols(c => ({ ...c, [id]: !c[id] }));
   const moduleCount = useMemo(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean)).size, []);
-  const rec = user ? records : 'all';   // no selected user ⇒ only "all users" applies
+  const rec = user ? records : 'all';
   const fileName = `${rec === 'all' ? 'user-access-all' : `user-access-${user!.username}`}.${fmt}`;
 
   if (!open) return null;
@@ -53,9 +48,12 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
       <div class="exp-overlay" onClick={onClose} aria-hidden="true" />
       <aside class="exp-panel" role="dialog" aria-modal="true" aria-label="Export permissions">
         <div class="exp-head">
-          <div>
-            <div class="exp-title">Export Permissions</div>
-            <div class="exp-sub">Export access data as a file.</div>
+          <div class="exp-head-l">
+            <span class="exp-head-ico"><LucideIcon name="Download" size={18} /></span>
+            <div>
+              <div class="exp-title">Export Permissions</div>
+              <div class="exp-sub">Export access data as a file.</div>
+            </div>
           </div>
           <button type="button" class="exp-close" onClick={onClose} aria-label="Close"><LucideIcon name="X" size={18} /></button>
         </div>
@@ -66,7 +64,8 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
             <div class="exp-formats">
               {FORMATS.map(f => (
                 <button key={f.id} type="button" class={`exp-fmt${fmt === f.id ? ' on' : ''}`} onClick={() => setFmt(f.id)}>
-                  <span class="exp-fmt-ico" style={{ color: f.tint }}><LucideIcon name={f.icon} size={20} /></span>
+                  {fmt === f.id && <span class="exp-fmt-check"><LucideIcon name="Check" size={11} strokeWidth={3} /></span>}
+                  <span class="exp-fmt-ico" style={{ color: f.tint }}><LucideIcon name={f.icon} size={22} /></span>
                   <span class="exp-fmt-lbl">{f.label}</span>
                 </button>
               ))}
@@ -75,27 +74,32 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
 
           <div class="exp-sec">
             <div class="exp-label">Records</div>
-            <div class="exp-radios">
-              <label class="exp-radio"><input type="radio" name="rec" checked={rec === 'user'} disabled={!user} onChange={() => setRecords('user')} /><span class="exp-cap">{user ? user.fullName : 'Selected user'}</span></label>
-              <label class="exp-radio"><input type="radio" name="rec" checked={rec === 'all'} onChange={() => setRecords('all')} /><span>All users</span></label>
+            <div class="exp-seg">
+              <button type="button" class={`exp-seg-btn${rec === 'user' ? ' on' : ''}`} disabled={!user} onClick={() => setRecords('user')}>
+                <span class="exp-cap">{user ? user.fullName : 'Selected user'}</span>
+              </button>
+              <button type="button" class={`exp-seg-btn${rec === 'all' ? ' on' : ''}`} onClick={() => setRecords('all')}>All users</button>
             </div>
           </div>
 
           <div class="exp-sec">
             <div class="exp-label">Include</div>
-            <div class="exp-checks">
+            <div class="exp-chips">
               {COLUMNS.map(c => (
-                <label key={c.id} class="exp-check">
-                  <input type="checkbox" checked={!!cols[c.id]} onChange={() => toggle(c.id)} />
-                  <span>{c.label}</span>
-                </label>
+                <button key={c.id} type="button" class={`exp-chip${cols[c.id] ? ' on' : ''}`} onClick={() => toggle(c.id)}>
+                  <LucideIcon name={cols[c.id] ? 'Check' : 'Plus'} size={12} strokeWidth={2.6} /> {c.label}
+                </button>
               ))}
             </div>
           </div>
 
           <div class="exp-sec">
             <div class="exp-label">Modules</div>
-            <button type="button" class="exp-field exp-field-btn"><span class="exp-field-val">All modules ({moduleCount})</span><LucideIcon name="ChevronDown" size={15} /></button>
+            <button type="button" class="exp-field exp-field-btn">
+              <LucideIcon name="LayoutGrid" size={15} />
+              <span class="exp-field-val">All modules ({moduleCount})</span>
+              <LucideIcon name="ChevronDown" size={15} />
+            </button>
           </div>
 
           <div class="exp-sec">
@@ -105,7 +109,10 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
 
           <div class="exp-sec">
             <div class="exp-label">File name</div>
-            <div class="exp-field"><span class="exp-field-val">{fileName}</span></div>
+            <div class="exp-field">
+              <LucideIcon name="FileText" size={15} />
+              <span class="exp-field-val">{fileName}</span>
+            </div>
           </div>
         </div>
 
