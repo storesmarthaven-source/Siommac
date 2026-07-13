@@ -155,7 +155,7 @@ export function ExpMarkReimbursedDialog({
           <span>Total: <b>{fmtMoney(claim.totalAmount)}</b></span>
         </div>
 
-        <form onSubmit={handleSubmit} noValidate class="hrfin-dialog-body">
+        <form onSubmit={e => void handleSubmit(e)} noValidate class="hrfin-dialog-body">
 
           {/* Payment method */}
           <div class={`hrfin-field${errors.paymentMethod ? ' has-error' : ''}`}>

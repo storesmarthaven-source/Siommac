@@ -277,7 +277,7 @@ export function PayablesOverview(): VNode {
       <ApBillDrawer
         billId={drawerId} open={!!drawerId} onClose={() => setDrawerId(null)}
         canManage={canManage} canApprove={canApprove}
-        actions={{ onSubmit: doSubmit, onApprove: doApprove, onReject: doReject, onVoid: doVoid, onPay: openPay }}
+        actions={{ onSubmit: b => void doSubmit(b), onApprove: b => void doApprove(b), onReject: b => void doReject(b), onVoid: b => void doVoid(b), onPay: openPay }}
       />
 
       {/* New-bill wizard (enterprise, multi-line) */}

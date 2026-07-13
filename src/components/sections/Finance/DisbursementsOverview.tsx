@@ -787,14 +787,14 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
             key: 'deactivate', label: 'Deactivate', icon: 'close' as const, tone: 'danger' as const,
             disabled: !canManage || !a.isActive,
             disabledReason: !canManage ? 'Requires finance.bank_accounts.manage' : 'Already inactive',
-            onClick: async () => {
+            onClick: () => { void (async () => {
               try {
                 await deactivateMut.mutateAsync({ id: a.id });
                 toast('Bank account deactivated.');
               } catch (e) {
                 toast((e as Error).message ?? 'Failed.');
               }
-            },
+            })(); },
           },
         ]}
         page={page}
@@ -1163,11 +1163,11 @@ export function DisbursementsOverview(): VNode {
     onApprove:      d => void run(approveMut.mutateAsync({ id: d.id }), 'Approved.'),
     onGenerateFile: d => void run(genFileMut.mutateAsync({ id: d.id }), 'Bank file generated.'),
     onMarkPaid:     d => void run(markPaidMut.mutateAsync({ id: d.id }), 'Marked as paid.'),
-    onCancel:       async d => {
+    onCancel:       d => { void (async () => {
       const reason = await dialog.prompt({ title: 'Cancel disbursement', text: 'Reason for cancellation:', confirmText: 'Cancel', cancelText: 'Keep' });
       if (!reason) return;
       await run(cancelMut.mutateAsync({ id: d.id, reason }), 'Cancelled.');
-    },
+    })(); },
   };
 
   return (

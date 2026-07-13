@@ -231,39 +231,39 @@ export function ExpensesOverview(): VNode {
     if (c.status === 'draft' && (canManage || canSubmit)) {
       items.push({
         key: 'submit', label: 'Submit for approval', icon: 'send',
-        onClick: async () => {
+        onClick: () => { void (async () => {
           try { await submitMutation.mutateAsync(c.id); toast.success('Claim submitted.'); }
           catch (e) { toast.error((e as Error).message); }
-        },
+        })(); },
       });
     }
     if (c.status === 'submitted' && canApprove) {
       items.push({
         key: 'approve', label: 'Approve', icon: 'check',
-        onClick: async () => {
+        onClick: () => { void (async () => {
           try { await approveMutation.mutateAsync(c.id); toast.success('Claim approved.'); }
           catch (e) { toast.error((e as Error).message); }
-        },
+        })(); },
       });
       items.push({
         key: 'reject', label: 'Reject', icon: 'close', tone: 'danger' as const,
-        onClick: async () => {
+        onClick: () => { void (async () => {
           const reason = await dialog.prompt({ title: 'Rejection reason', placeholder: 'Enter reason…', confirmText: 'Reject', type: 'textarea' });
           if (!reason?.trim()) return;
           try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
           catch (e) { toast.error((e as Error).message); }
-        },
+        })(); },
       });
     }
     if (!['reimbursed', 'rejected', 'cancelled'].includes(c.status) && (canManage || canSubmit)) {
       items.push({
         key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger' as const,
-        onClick: async () => {
+        onClick: () => { void (async () => {
           const reason = await dialog.prompt({ title: 'Cancellation reason', placeholder: 'Enter reason…', confirmText: 'Cancel claim', type: 'textarea' });
           if (!reason?.trim()) return;
           try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
           catch (e) { toast.error((e as Error).message); }
-        },
+        })(); },
       });
     }
     return items;
@@ -272,26 +272,26 @@ export function ExpensesOverview(): VNode {
   // ── Drawer actions ──────────────────────────────────────────────────────────
 
   const drawerActions: ExpClaimDrawerActions = {
-    onSubmit:  async (c) => {
+    onSubmit:  (c) => { void (async () => {
       try { await submitMutation.mutateAsync(c.id); toast.success('Claim submitted.'); }
       catch (e) { toast.error((e as Error).message); }
-    },
-    onApprove: async (c) => {
+    })(); },
+    onApprove: (c) => { void (async () => {
       try { await approveMutation.mutateAsync(c.id); toast.success('Claim approved.'); }
       catch (e) { toast.error((e as Error).message); }
-    },
-    onReject:  async (c) => {
+    })(); },
+    onReject:  (c) => { void (async () => {
       const reason = await dialog.prompt({ title: 'Rejection reason', placeholder: 'Enter reason…', confirmText: 'Reject', type: 'textarea' });
       if (!reason?.trim()) return;
       try { await rejectMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim rejected.'); }
       catch (e) { toast.error((e as Error).message); }
-    },
-    onCancel:  async (c) => {
+    })(); },
+    onCancel:  (c) => { void (async () => {
       const reason = await dialog.prompt({ title: 'Cancellation reason', placeholder: 'Enter reason…', confirmText: 'Cancel claim', type: 'textarea' });
       if (!reason?.trim()) return;
       try { await cancelMutation.mutateAsync({ id: c.id, reason: reason.trim() }); toast.success('Claim cancelled.'); }
       catch (e) { toast.error((e as Error).message); }
-    },
+    })(); },
   };
 
   // ── Table columns ───────────────────────────────────────────────────────────

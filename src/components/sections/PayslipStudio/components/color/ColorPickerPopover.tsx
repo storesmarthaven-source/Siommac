@@ -156,7 +156,7 @@ export function ColorPickerPopover({ anchor, value, alpha, transparent, onChange
           onInput={(e) => chooseHex((e.target as HTMLInputElement).value)}
         />
         {CSS_EYE_DROPPER_SUPPORTED && (
-          <button class="cp-icon" title="Pick from screen" onClick={eyedrop}>
+          <button class="cp-icon" title="Pick from screen" onClick={() => void eyedrop()}>
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <path d="M18 2l4 4-9 9-4 1 1-4 8-8z" />
               <path d="M13 7l-9 9v4h4l9-9" />

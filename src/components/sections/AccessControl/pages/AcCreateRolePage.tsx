@@ -252,7 +252,7 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
         <div class="row" style={{ gap: '10px' }}>
           {step > 1 && <button class="btn" onClick={() => setStep(step - 1)}><i class="fas fa-arrow-left" /> Back</button>}
           {step < 4 ? <button class="btn primary" disabled={!canNext} onClick={() => setStep(step + 1)}>Next <i class="fas fa-arrow-right" /></button>
-                    : <button class="btn primary" disabled={publishing || !name} onClick={publish}><i class="fas fa-circle-check" /> {publishing ? 'Publishing…' : (existingRole ? 'Save Role' : 'Publish Role')}</button>}
+                    : <button class="btn primary" disabled={publishing || !name} onClick={() => void publish()}><i class="fas fa-circle-check" /> {publishing ? 'Publishing…' : (existingRole ? 'Save Role' : 'Publish Role')}</button>}
         </div>
       </div>
     </div></div></div>

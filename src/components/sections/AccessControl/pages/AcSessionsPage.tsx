@@ -61,7 +61,7 @@ export function AcSessionsPage(): VNode {
                     <td class="sub mono">{s.ipAddress || '—'}</td>
                     <td class="sub">{ago(s.lastSeenAt)}</td>
                     <td style={{ textAlign: 'right' }}>
-                      {isMe ? <span class="sub">current</span> : <button class="btn sm danger" disabled={revoke.isPending} onClick={() => doRevoke(s.userId, s.fullName)}>Revoke</button>}
+                      {isMe ? <span class="sub">current</span> : <button class="btn sm danger" disabled={revoke.isPending} onClick={() => void doRevoke(s.userId, s.fullName)}>Revoke</button>}
                     </td>
                   </tr>
                 );

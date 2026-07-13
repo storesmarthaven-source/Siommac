@@ -162,7 +162,7 @@ function MyRequestsTab(): VNode {
                     <td class="obx-meta">{r.requestedAt ? new Date(r.requestedAt).toLocaleDateString() : '—'}</td>
                     <td>
                       {!TERMINAL.has(r.status) && (
-                        <button class="obx-btn sm" onClick={() => handleCancel(r)}>Cancel</button>
+                        <button class="obx-btn sm" onClick={() => void handleCancel(r)}>Cancel</button>
                       )}
                     </td>
                   </tr>
@@ -364,7 +364,7 @@ function TriageTab(): VNode {
                         <button class="obx-btn sm primary" style={{ marginRight: 4 }} onClick={() => setFulfillReq(r)}>Fulfill</button>
                       )}
                       {!TERMINAL.has(r.status) && (
-                        <button class="obx-btn sm" onClick={() => handleCancel(r)}>Cancel</button>
+                        <button class="obx-btn sm" onClick={() => void handleCancel(r)}>Cancel</button>
                       )}
                     </td>
                   </tr>

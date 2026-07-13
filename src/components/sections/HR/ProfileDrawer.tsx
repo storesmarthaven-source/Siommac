@@ -305,7 +305,7 @@ function DocumentsTab({ docsQ, employeeId, onUpload }: { docsQ: ReturnType<typeo
                   <td>{fmtDate(doc.expiry_date)}</td>
                   <td>
                     <div class="ui-mini-btn-row">
-                      <button class="ui-mini-btn" type="button" onClick={() => download(doc.id)}>Download</button>
+                      <button class="ui-mini-btn" type="button" onClick={() => void download(doc.id)}>Download</button>
                       {pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'approve' })}>Verify</button>}
                       {pending && <button class="ui-mini-btn" type="button" disabled={verify.isPending} onClick={() => verify.mutate({ documentId: doc.id, decision: 'reject' })}>Reject</button>}
                       {doc.status !== 'archived' && <button class="ui-mini-btn" type="button" disabled={archive.isPending} onClick={() => archive.mutate(doc.id)}>Archive</button>}

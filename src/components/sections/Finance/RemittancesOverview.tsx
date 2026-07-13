@@ -566,11 +566,11 @@ export function RemittancesOverview(): VNode {
         canManage={canManage}
         canApprove={canApprove}
         canFiled={canFiled}
-        onSubmit={doSubmit}
-        onApprove={doApprove}
+        onSubmit={id => void doSubmit(id)}
+        onApprove={id => void doApprove(id)}
         onMarkPaid={openMarkPaid}
         onMarkFiled={openMarkFiled}
-        onCancel={doCancel}
+        onCancel={id => void doCancel(id)}
       />
 
       {/* Compute & Create wizard */}

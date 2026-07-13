@@ -245,7 +245,7 @@ export function AcRolesPage(): VNode {
         </div>
       </div>
 
-      {criticalKey && <CriticalGrantDialog permKey={criticalKey} targetLabel={selRole?.label ?? ''} onConfirm={submitCritical} onCancel={() => setCriticalKey(null)} />}
+      {criticalKey && <CriticalGrantDialog permKey={criticalKey} targetLabel={selRole?.label ?? ''} onConfirm={r => void submitCritical(r)} onCancel={() => setCriticalKey(null)} />}
       {editing && <AcCreateRolePage role={editing === 'new' ? undefined : editing} onDone={() => { setEditing(null); void rolesQ.refetch(); void rolePermsQ.refetch(); }} />}
     </div>
   );

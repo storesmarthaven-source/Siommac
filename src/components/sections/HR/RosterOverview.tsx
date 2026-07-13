@@ -429,7 +429,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                         <td><span class={`obx-pill ${t.isActive ? 'green' : 'gray'}`}>{t.isActive ? 'Active' : 'Inactive'}</span></td>
                         {canManage && (
                           <td>
-                            <button class="obx-btn-sm danger" onClick={async () => {
+                            <button class="obx-btn-sm danger" onClick={() => { void (async () => {
                               const res = await openActionModal({
                                 title: 'Deactivate shift template', subtitle: t.name, icon: 'fa-power-off', tone: 'danger',
                                 record: toActionRecord({
@@ -443,7 +443,7 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
                               if (!res.confirmed) return;
                               try { await removeShift.mutateAsync({ id: t.id }); toast('Template deactivated'); }
                               catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
-                            }}>Remove</button>
+                            })(); }}>Remove</button>
                           </td>
                         )}
                       </tr>

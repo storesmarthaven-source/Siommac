@@ -144,7 +144,7 @@ export function Toolbar({ onBack }: { onBack?: () => void }) {
         >
           .ts
         </Btn>
-        <Btn title="Import JSON" onClick={doImport}>Import</Btn>
+        <Btn title="Import JSON" onClick={() => void doImport()}>Import</Btn>
         <Btn title="Print / Save PDF" active onClick={() => printDesign(design.page)}>PDF</Btn>
       </div>
     </div>

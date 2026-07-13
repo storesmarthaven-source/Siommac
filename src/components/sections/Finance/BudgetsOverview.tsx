@@ -690,7 +690,7 @@ function ReportsTab({ fiscalYear, costCentreFilter }: {
     <ReportPanel
       reports={reports}
       selectedReport={selectedKey}
-      onSelectReport={runReport}
+      onSelectReport={k => void runReport(k)}
       result={reportResult}
       columns={cols}
       exportFilename={`budget-report-fy${fiscalYear}`}

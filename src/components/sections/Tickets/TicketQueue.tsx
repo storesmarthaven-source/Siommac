@@ -240,7 +240,7 @@ export function TicketQueue({ onOpenTicket, onNewTicket: _ }: TicketQueueProps) 
           username={username}
           seenIds={seenIds}
           onOpen={handleOpen}
-          onDelete={handleDelete}
+          onDelete={id => void handleDelete(id)}
         />
       ))}
     </div>

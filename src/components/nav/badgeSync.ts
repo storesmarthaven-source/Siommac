@@ -17,7 +17,7 @@ let _timer: ReturnType<typeof setTimeout> | null = null;
 
 export function scheduleHdrBadgeSync(): void {
   if (_timer !== null) clearTimeout(_timer);
-  _timer = setTimeout(doHdrBadgeSync, 80);
+  _timer = setTimeout(() => { void doHdrBadgeSync(); }, 80);
 }
 
 export async function doHdrBadgeSync(): Promise<void> {

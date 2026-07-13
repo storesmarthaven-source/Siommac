@@ -142,7 +142,7 @@ export function ElementView({ el, zoom }: { el: DesignElement; zoom: number }) {
       onPointerDown={beginMove}
       onPointerMove={onMove}
       onPointerUp={endDrag}
-      onDblClick={onDoubleClick}
+      onDblClick={() => void onDoubleClick()}
     >
       {editingText && (el.type === 'text' || el.type === 'heading') ? (
         <TextEditor

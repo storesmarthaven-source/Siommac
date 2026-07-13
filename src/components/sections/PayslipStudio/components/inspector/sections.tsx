@@ -226,7 +226,7 @@ export function ImageSection({ el, set, commit }: Props<ImageElement>) {
     <>
       <SubHead>Image</SubHead>
       <Row>
-        <button class="btn full" onClick={upload}>
+        <button class="btn full" onClick={() => void upload()}>
           {el.src ? 'Replace image…' : 'Upload image…'}
         </button>
       </Row>

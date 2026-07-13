@@ -200,19 +200,19 @@ function LoansPanel(): VNode {
       items.push({ key: 'submit', label: 'Submit for approval', icon: 'check', onClick: () => void run(submitMut.mutateAsync({ id: l.id }), 'Loan submitted for approval.') });
     }
     if (l.status === 'active') {
-      items.push({ key: 'settle', label: 'Settle (mark paid off)', icon: 'check', onClick: async () => {
+      items.push({ key: 'settle', label: 'Settle (mark paid off)', icon: 'check', onClick: () => { void (async () => {
         const ok = await dialog.confirm({ title: `Settle ${l.reference}?`, text: `This marks the loan as fully paid off (clears the remaining ${fmtMoney(l.balance)} balance) and stops payroll deductions. Use when the balance is cleared outside payroll (e.g. a lump-sum payment).`, confirmText: 'Settle', icon: 'question' });
         if (ok) void run(settleMut.mutateAsync({ id: l.id }), 'Loan settled.');
-      } });
+      })(); } });
     }
     // An ACTIVE loan cannot be cancelled (outstanding balance is real money) —
     // it is settled (paid off) or written off via approval. Mirrors the BE gate.
     if (['draft', 'pending_approval', 'rejected'].includes(l.status)) {
-      items.push({ key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger', onClick: async () => {
+      items.push({ key: 'cancel', label: 'Cancel', icon: 'close', tone: 'danger', onClick: () => { void (async () => {
         const reason = await dialog.prompt({ title: `Cancel ${l.reference}`, text: 'Cancelling withdraws this loan before it takes effect (any open approval is closed). Provide a reason (audit-logged).', placeholder: 'Reason…', confirmText: 'Cancel loan' });
         if (reason == null) return;
         void run(cancelMut.mutateAsync({ id: l.id, reason: reason.trim() || undefined }), 'Loan cancelled.');
-      } });
+      })(); } });
     }
     return items;
   };

@@ -440,7 +440,7 @@ export function PayrollOverview(): VNode {
     onLockInputs:  run => void runAction(lockInputsMut.mutateAsync({ id: run.id }), 'Inputs locked.'),
     onCalculate:   run => void runAction(calcMut.mutateAsync({ id: run.id }),        'Run calculated.'),
     onSubmit:      run => void runAction(submitMut.mutateAsync({ id: run.id }),       'Submitted for approval.'),
-    onApprove:     async run => {
+    onApprove:     run => { void (async () => {
       const confirmed = await dialog.confirm({
         title: `Approve run ${run.runNo}?`,
         text: `Approving will transition the ${run.periodMonth.slice(0, 7)} pay run to 'Approved' status. It will then be ready to lock. SoD check: you must not be the preparer.`,
@@ -449,8 +449,8 @@ export function PayrollOverview(): VNode {
       });
       if (!confirmed) return;
       void runAction(approveRunMut.mutateAsync({ id: run.id }), 'Run approved.');
-    },
-    onReject:      async run => {
+    })(); },
+    onReject:      run => { void (async () => {
       const reason = await dialog.prompt({
         title: `Reject run ${run.runNo}`,
         text: 'Provide a reason for rejection. The workflow task is decided as rejected; the preparer is notified and the run is returned to them for revision.',
@@ -462,7 +462,7 @@ export function PayrollOverview(): VNode {
         rejectRunMut.mutateAsync({ id: run.id, reason: reason.trim() || 'Rejected by approver.' }),
         'Run rejected and returned for revision.',
       );
-    },
+    })(); },
     onLockRun:     run => void runAction(lockRunMut.mutateAsync({ id: run.id }),      'Run locked.'),
     onExport:      run => void runAction(exportMut.mutateAsync({ id: run.id }),       'Export generated.'),
     onReopen:      run => void runAction(reopenMut.mutateAsync({ id: run.id }),       'Run reopened.'),

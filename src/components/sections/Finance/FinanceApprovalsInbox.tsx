@@ -104,7 +104,7 @@ export function FinanceApprovalsInbox({ initialType }: Props): VNode {
               class="hrfin-action is-primary"
               style={{ minHeight: 32 }}
               disabled={actMut.isPending}
-              onClick={() => handleApprove(r)}
+              onClick={() => void handleApprove(r)}
             >
               Approve
             </button>
@@ -115,7 +115,7 @@ export function FinanceApprovalsInbox({ initialType }: Props): VNode {
               class="hrfin-action is-danger"
               style={{ minHeight: 32 }}
               disabled={actMut.isPending}
-              onClick={() => handleReject(r)}
+              onClick={() => void handleReject(r)}
             >
               Reject
             </button>

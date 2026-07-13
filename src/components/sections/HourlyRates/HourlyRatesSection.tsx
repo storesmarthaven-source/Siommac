@@ -136,7 +136,7 @@ function RateRow({ row, onSaved }: RowProps) {
         <button
           class="hr-save-btn"
           disabled={saving || !dirty}
-          onClick={handleSave}
+          onClick={() => void handleSave()}
         >
           {saving
             ? <><i class="fas fa-spinner fa-spin"></i> Saving…</>
@@ -237,7 +237,7 @@ function ImportModal({ open, onClose, onDone }: ImportModalProps) {
         </div>
         <div class="hr-modal-footer">
           <button class="hr-btn-outline" onClick={onClose}>Cancel</button>
-          <button class="hr-btn-primary" onClick={handleConfirm} disabled={loading}>
+          <button class="hr-btn-primary" onClick={() => void handleConfirm()} disabled={loading}>
             {loading ? <i class="fas fa-spinner fa-spin"></i> : <i class="fas fa-check"></i>} Import
           </button>
         </div>

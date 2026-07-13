@@ -55,7 +55,7 @@ export function AttachmentsPanel({ entityType, entityId }: { entityType: AttachE
           <i class={`fas ${upload.isPending ? 'fa-spinner fa-spin' : 'fa-upload'}`} /> {upload.isPending ? 'Uploading…' : 'Upload'}
         </button>
         <input ref={inputRef} type="file" style={{ display: 'none' }}
-          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*" onChange={onPick} />
+          accept=".pdf,.doc,.docx,.xls,.xlsx,.csv,.txt,image/*" onChange={e => void onPick(e)} />
       </div>
 
       {error && <div style={{ color: 'var(--siomac-red)', fontSize: '0.76rem' }}>{error}</div>}

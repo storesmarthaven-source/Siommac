@@ -78,7 +78,7 @@ export function AcApprovalsPage(): VNode {
                           <button class="btn sm" disabled={cancel.isPending} onClick={() => cancel.mutate(a.id)}>Cancel</button>
                         ) : (
                           <span class="row" style={{ gap: '8px', justifyContent: 'flex-end' }}>
-                            <button class="btn sm danger" disabled={reject.isPending} onClick={() => doReject(a.id)}>Reject</button>
+                            <button class="btn sm danger" disabled={reject.isPending} onClick={() => void doReject(a.id)}>Reject</button>
                             <button class="btn sm primary" disabled={approve.isPending} onClick={() => approve.mutate(a.id)}>Approve</button>
                           </span>
                         )

@@ -116,7 +116,7 @@ export function ConfirmDialog({
 
       <button
         type="button"
-        onClick={handleConfirm}
+        onClick={() => void handleConfirm()}
         disabled={isLoading}
         style={{
           display:      'inline-flex',

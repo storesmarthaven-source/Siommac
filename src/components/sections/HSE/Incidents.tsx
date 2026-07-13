@@ -2374,7 +2374,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
               <button class="hse-btn primary" onClick={next}>Next <i class="fas fa-arrow-right" /></button>
             )}
             {isLast && (
-              <button class="hse-btn primary" onClick={submit} disabled={submitting}>
+              <button class="hse-btn primary" onClick={() => void submit()} disabled={submitting}>
                 {submitting
                   ? <><i class="fas fa-spinner fa-spin" /> Submitting…</>
                   : <><i class="fas fa-paper-plane" /> Submit Incident Report</>}
@@ -2721,7 +2721,7 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
                     </div>
                     <div style={{ display:'flex', gap:'8px', marginTop:'12px' }}>
                       <button class="hse-btn" onClick={() => setWhyDraft(d => [...d, { why:'', because:'' }])}><i class="fas fa-plus" /> Add Why</button>
-                      <button class="hse-btn primary" onClick={saveWhys} disabled={saving} style={{ marginLeft:'auto' }}>
+                      <button class="hse-btn primary" onClick={() => void saveWhys()} disabled={saving} style={{ marginLeft:'auto' }}>
                         {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-floppy-disk" /> Save</>}
                       </button>
                     </div>
@@ -2741,7 +2741,7 @@ function InvestigationsTab({ investigations, capa }: { investigations: Investiga
                     <textarea class="hse-input" rows={4} style={{ width:'100%', resize:'vertical' }}
                       placeholder="Describe the confirmed root cause…"
                       value={rootCause} onInput={e => setRootCause((e.target as HTMLTextAreaElement).value)} />
-                    <button class="hse-btn primary" style={{ marginTop:'10px' }} onClick={saveWhys} disabled={saving}>
+                    <button class="hse-btn primary" style={{ marginTop:'10px' }} onClick={() => void saveWhys()} disabled={saving}>
                       {saving ? <><i class="fas fa-spinner fa-spin" /> Saving…</> : <><i class="fas fa-circle-check" /> Confirm Root Cause</>}
                     </button>
                   </div>
@@ -3239,7 +3239,7 @@ function CreateCapaModal({ open, sourceRef, sourceType, onClose, createCapa }: {
               </button>
             )}
             {isLast ? (
-              <button class="hse-btn primary" onClick={submit} disabled={saving || !title.trim() || !due}>
+              <button class="hse-btn primary" onClick={() => void submit()} disabled={saving || !title.trim() || !due}>
                 {saving ? 'Saving…' : 'Create CAPA'}
               </button>
             ) : (
@@ -3271,7 +3271,7 @@ function CapaVerifyModal({ open, item, onClose, onVerify }: {
 
   return (
     <HseModal open={open} title="Verify CAPA Closure" sub={`${item.ref} — ${item.title}`}
-      onClose={onClose} onSubmit={submit} submitLabel={saving ? 'Verifying…' : 'Mark Verified'}>
+      onClose={onClose} onSubmit={() => void submit()} submitLabel={saving ? 'Verifying…' : 'Mark Verified'}>
       <div class="hse-form-grid">
         <div style={{ gridColumn: '1 / -1', padding: '12px 14px', borderRadius: '8px', background: 'rgba(255,255,255,.06)', marginBottom: '4px' }}>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '6px 14px', fontSize: '0.78rem' }}>
@@ -3401,7 +3401,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
               <span>Due: {new Date(oshDue).toLocaleString('en-GB')} · OSH Act 2004 s.19</span>
             </div>
             <button class="hse-btn" style={{ padding: '4px 10px', fontSize: '0.72rem', flexShrink: 0 }}
-              onClick={markOshVerbal} disabled={markingOsh}>
+              onClick={() => void markOshVerbal()} disabled={markingOsh}>
               {markingOsh ? 'Saving…' : 'Mark Notified'}
             </button>
           </div>
@@ -3578,7 +3578,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
       <div class="hse-idrawer-empty">
         <i class="fas fa-magnifying-glass-chart" style={{ fontSize: '1.8rem', opacity: .3 }} />
         <span>No investigation opened yet.</span>
-        <button class="hse-btn primary" style={{ marginTop: '12px' }} onClick={onInvestigate}>
+        <button class="hse-btn primary" style={{ marginTop: '12px' }} onClick={() => void onInvestigate()}>
           <i class="fas fa-plus" /> Open Investigation
         </button>
       </div>
@@ -3856,7 +3856,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
         <div class="hse-drawer-foot">
           <button class="hse-btn" onClick={onClose}>Close</button>
           {activeTab !== 'investigation' && (
-            <button class="hse-btn primary" onClick={onInvestigate}>
+            <button class="hse-btn primary" onClick={() => void onInvestigate()}>
               <i class="fas fa-magnifying-glass-chart" /> Open Investigation
             </button>
           )}

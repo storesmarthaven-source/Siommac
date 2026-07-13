@@ -148,7 +148,7 @@ export function TicketPanel({ onOpen }: TicketPanelProps) {
               class="hdr-foot-link"
               id="ticketClearClosedBtn"
               style={{ padding: '4px 10px', fontSize: '0.78rem', color: 'var(--text-muted)' }}
-              onClick={handleClearClosed}
+              onClick={() => void handleClearClosed()}
               disabled={clearMut.isPending}
             >
               <i class="fas fa-broom" /> Clear Closed
@@ -185,7 +185,7 @@ export function TicketPanel({ onOpen }: TicketPanelProps) {
               class="hdr-foot-link"
               id="ticketClearClosedEmpBtn"
               style={{ color: 'var(--text-muted)' }}
-              onClick={handleClearClosed}
+              onClick={() => void handleClearClosed()}
               disabled={clearMut.isPending}
             >
               <i class="fas fa-broom" /> Clear Closed

@@ -368,7 +368,7 @@ export function AcUsersPage(): VNode {
                   {pending.size > 0 && <i class="fas fa-triangle-exclamation" />}
                   <span style={{ color: 'var(--ink-2)' }}>{pending.size} unsaved change{pending.size === 1 ? '' : 's'}</span>
                 </span>
-                <button class="btn primary" disabled={!pending.size || saving} onClick={save}>{saving ? 'Saving…' : 'Save Changes'}</button>
+                <button class="btn primary" disabled={!pending.size || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Changes'}</button>
               </div>
             </>
           )}
@@ -380,7 +380,7 @@ export function AcUsersPage(): VNode {
         <CriticalGrantDialog
           permKey={criticalKey}
           targetLabel={user?.fullName ?? ''}
-          onConfirm={submitCritical}
+          onConfirm={r => void submitCritical(r)}
           onCancel={() => setCriticalKey(null)}
         />
       )}

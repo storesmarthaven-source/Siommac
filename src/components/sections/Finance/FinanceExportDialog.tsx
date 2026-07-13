@@ -97,7 +97,7 @@ export function FinanceExportDialog({ open, onClose }: Props): VNode | null {
           <button type="button" class="hrfin-btn" onClick={onClose} disabled={exportMut.isPending}>
             Cancel
           </button>
-          <button type="button" class="hrfin-btn is-primary" onClick={handleExport} disabled={exportMut.isPending}>
+          <button type="button" class="hrfin-btn is-primary" onClick={() => void handleExport()} disabled={exportMut.isPending}>
             {exportMut.isPending ? 'Exporting…' : 'Download CSV'}
           </button>
         </div>

@@ -153,12 +153,12 @@ export function ExpClaimDrawer({
   const footer = claim ? (
     <div style={{ display: 'flex', gap: 8, width: '100%', flexWrap: 'wrap' }}>
       {claim.status === 'draft' && canManage && (
-        <button class="hrfin-action is-primary" disabled={anyBusy} onClick={handleSubmit}>Submit</button>
+        <button class="hrfin-action is-primary" disabled={anyBusy} onClick={() => void handleSubmit()}>Submit</button>
       )}
       {claim.status === 'submitted' && canApprove && (
         <>
-          <button class="hrfin-action is-primary" disabled={anyBusy} onClick={handleApprove}>Approve</button>
-          <button class="hrfin-action is-danger"  disabled={anyBusy} onClick={handleReject}>Reject</button>
+          <button class="hrfin-action is-primary" disabled={anyBusy} onClick={() => void handleApprove()}>Approve</button>
+          <button class="hrfin-action is-danger"  disabled={anyBusy} onClick={() => void handleReject()}>Reject</button>
         </>
       )}
       {claim.status === 'approved' && claim.reimbursable && canApprove && (
@@ -167,7 +167,7 @@ export function ExpClaimDrawer({
         </button>
       )}
       {!isTerminal(claim.status) && canManage && (
-        <button class="hrfin-action" style={{ marginLeft: 'auto' }} disabled={anyBusy} onClick={handleCancel}>
+        <button class="hrfin-action" style={{ marginLeft: 'auto' }} disabled={anyBusy} onClick={() => void handleCancel()}>
           Cancel claim
         </button>
       )}
@@ -293,7 +293,7 @@ export function ExpClaimDrawer({
                             class="hrfin-action"
                             style={{ fontSize: 12, padding: '2px 10px', flexShrink: 0 }}
                             disabled={signedUrlMutation.isPending}
-                            onClick={async () => {
+                            onClick={() => { void (async () => {
                               if (!claimId) return;
                               try {
                                 const url = await signedUrlMutation.mutateAsync({
@@ -305,7 +305,7 @@ export function ExpClaimDrawer({
                               } catch (e) {
                                 toast.error((e as Error).message);
                               }
-                            }}
+                            })(); }}
                           >
                             View
                           </button>
@@ -363,7 +363,7 @@ export function ExpClaimDrawer({
                   class="hrfin-action is-primary"
                   style={{ marginTop: 8 }}
                   disabled={!commentBody.trim() || commentM.isPending}
-                  onClick={async () => {
+                  onClick={() => { void (async () => {
                     if (!commentBody.trim() || !claimId) return;
                     try {
                       await commentM.mutateAsync(commentBody.trim());
@@ -372,7 +372,7 @@ export function ExpClaimDrawer({
                     } catch (e) {
                       toast.error((e as Error).message);
                     }
-                  }}
+                  })(); }}
                 >
                   {commentM.isPending ? 'Posting…' : 'Post comment'}
                 </button>

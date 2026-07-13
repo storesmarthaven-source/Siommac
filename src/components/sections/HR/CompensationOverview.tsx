@@ -109,22 +109,22 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
                 <td><span class={`obx-pill ${statusTone(it.status)}`}>{humanize(it.status)}</span></td>
                 <td style={{ textAlign: 'right' }}>
                   <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
-                    {canManage && it.status === 'draft' && <button class="obx-btn obx-btn-sm" onClick={() => run(submitMut.mutateAsync({ id: it.id }), 'Submitted for approval.')}>Submit</button>}
+                    {canManage && it.status === 'draft' && <button class="obx-btn obx-btn-sm" onClick={() => void run(submitMut.mutateAsync({ id: it.id }), 'Submitted for approval.')}>Submit</button>}
                     {canApprove && it.status === 'pending_approval' && (
                       <>
-                        <button class="obx-btn obx-btn-sm" onClick={() => run(approveMut.mutateAsync({ id: it.id }), 'Approved.')}>Approve</button>
-                        <button class="obx-btn obx-btn-sm" onClick={async () => {
+                        <button class="obx-btn obx-btn-sm" onClick={() => void run(approveMut.mutateAsync({ id: it.id }), 'Approved.')}>Approve</button>
+                        <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                           const res = await openActionModal(rejectAction({ noun: 'pay item', record: payItemRecord(it), whatNext: ['Returns the pay item to draft for correction.'] }));
                           if (!res.confirmed) return;
                           await run(rejectMut.mutateAsync({ id: it.id, reason: res.reason || undefined }), 'Rejected.');
-                        }}>Reject</button>
+                        })(); }}>Reject</button>
                       </>
                     )}
-                    {canManage && (it.status === 'active' || it.status === 'approved') && <button class="obx-btn obx-btn-sm" onClick={async () => {
+                    {canManage && (it.status === 'active' || it.status === 'approved') && <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                       const res = await openActionModal(retireAction({ noun: 'pay item', record: payItemRecord(it), whatNext: ['Stops this recurring earning/deduction on future payroll runs.'] }));
                       if (!res.confirmed) return;
                       void run(retireMut.mutateAsync({ id: it.id }), 'Retired.');
-                    }}>Retire</button>}
+                    })(); }}>Retire</button>}
                   </div>
                 </td>
               </tr>
@@ -288,7 +288,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
         {profile && <span class={`obx-pill ${statusTone(profile.nisStatus)}`}>{humanize(profile.nisStatus)}</span>}
         {canCapture && employeeId && <button class="obx-btn obx-btn-sm" style={{ marginLeft: 'auto' }} onClick={() => setEditOpen(true)}><i class="fas fa-pen" /> Capture / Edit profile</button>}
         {canCapture && profile && (profile.nisStatus === 'pending_verification' || profile.nisStatus === 'not_available') && (
-          <button class="obx-btn obx-btn-sm" disabled={submitMut.isPending} onClick={submit}>Submit to Finance</button>
+          <button class="obx-btn obx-btn-sm" disabled={submitMut.isPending} onClick={() => void submit()}>Submit to Finance</button>
         )}
       </div>
 

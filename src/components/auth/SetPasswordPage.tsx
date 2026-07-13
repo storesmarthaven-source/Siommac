@@ -80,7 +80,7 @@ export function SetPasswordPage(): VNode {
             This invite link is invalid or incomplete. Please ask HR to resend your account invite.
           </p>
         ) : (
-          <form onSubmit={submit}>
+          <form onSubmit={e => void submit(e)}>
             <p style={{ color: '#52668a', fontSize: '14px', lineHeight: '1.5', margin: '0 0 6px' }}>
               Choose a password to finish setting up your work account.
             </p>

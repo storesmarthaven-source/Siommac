@@ -499,7 +499,7 @@ function NisClassesTab({ versions, versionsError, canManage, onAdd, onEdit, onIm
 
   // Delete is draft-only (server gate) — do NOT offer it on approved versions.
   const rowActions = canDraftOps
-    ? (c: NisClass): DtAction<NisClass>[] => [{ key: 'del', label: 'Delete band', icon: 'close', tone: 'danger', onClick: () => handleDelete(c.id, c.classNo) }]
+    ? (c: NisClass): DtAction<NisClass>[] => [{ key: 'del', label: 'Delete band', icon: 'close', tone: 'danger', onClick: () => void handleDelete(c.id, c.classNo) }]
     : undefined;
 
   const pageCount = Math.max(1, Math.ceil(classes.length / PAGE_SIZE));
@@ -1094,26 +1094,26 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const footer = hasFooterActions && d ? (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {canManage && d.status === 'draft' && (
-        <button class="ui-btn-primary" type="button" onClick={() => run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
+        <button class="ui-btn-primary" type="button" onClick={() => void run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
       )}
       {canApprove && d.status === 'pending_approval' && (
         <>
           {!isOwnVersion && (
-            <button class="ui-btn-primary" type="button" onClick={() => run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
+            <button class="ui-btn-primary" type="button" onClick={() => void run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
           )}
-          <button class="ui-btn-danger" type="button" onClick={async () => {
+          <button class="ui-btn-danger" type="button" onClick={() => { void (async () => {
             const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
             if (!reason?.trim()) return;
             await run(rejectMut.mutateAsync({ id: d.id, reason }), 'Version returned to draft.');
-          }}>Reject</button>
+          })(); }}>Reject</button>
         </>
       )}
       {canApprove && d.status === 'approved' && (
-        <button class="ui-btn-primary" type="button" onClick={async () => {
+        <button class="ui-btn-primary" type="button" onClick={() => { void (async () => {
           const ok = await dialog.confirm({ title: `Activate "${d.label}"?`, text: 'This becomes the active statutory configuration and retires the currently-active version. All new payroll runs will use these rates.', confirmText: 'Activate' });
           if (!ok) return;
           await run(activateMut.mutateAsync({ id: d.id }), 'Version activated.');
-        }}>Activate</button>
+        })(); }}>Activate</button>
       )}
     </div>
   ) : undefined;

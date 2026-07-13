@@ -578,7 +578,7 @@ export function PermitDetailDrawer({ permit, onClose, initialTab = 'overview' }:
 
   const footer = (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', width: '100%' }}>
-      <ActionButtons status={permit.status} onOpen={setOpenDlg} onAction={doAction} />
+      <ActionButtons status={permit.status} onOpen={setOpenDlg} onAction={a => void doAction(a)} />
       <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
         <button class="hse-btn" onClick={onClose}>Close</button>
       </div>

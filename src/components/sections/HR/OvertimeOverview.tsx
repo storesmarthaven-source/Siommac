@@ -123,20 +123,20 @@ export function OvertimeOverview(): VNode {
                     <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
                       {canApprove && e.status === 'submitted' && (
                         <>
-                          <button class="obx-btn obx-btn-sm" onClick={() => run(approveMut.mutateAsync({ id: e.id }), 'Overtime approved.')}>Approve</button>
-                          <button class="obx-btn obx-btn-sm" onClick={async () => {
+                          <button class="obx-btn obx-btn-sm" onClick={() => void run(approveMut.mutateAsync({ id: e.id }), 'Overtime approved.')}>Approve</button>
+                          <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                             const res = await openActionModal(rejectAction({ noun: 'overtime', record: otRecord(e), whatNext: ['The overtime is rejected and will not feed payroll.'] }));
                             if (!res.confirmed) return;
                             await run(rejectMut.mutateAsync({ id: e.id, reason: res.reason || undefined }), 'Rejected.');
-                          }}>Reject</button>
+                          })(); }}>Reject</button>
                         </>
                       )}
                       {canApprove && (e.status === 'submitted' || e.status === 'approved') && (
-                        <button class="obx-btn obx-btn-sm" onClick={async () => {
+                        <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                           const res = await openActionModal(cancelAction({ noun: 'overtime entry', reasonRequired: false, record: otRecord(e), whatNext: ['The overtime entry is voided.'] }));
                           if (!res.confirmed) return;
                           void run(cancelMut.mutateAsync({ id: e.id }), 'Cancelled.');
-                        }}>Cancel</button>
+                        })(); }}>Cancel</button>
                       )}
                     </div>
                   </td>

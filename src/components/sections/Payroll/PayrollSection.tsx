@@ -346,7 +346,7 @@ function PayrollSettingsModal({ row, onClose, onSaved }: PrsModalProps) {
 
         <div class="prs-footer">
           <button class="hr-btn-outline" onClick={onClose}>Cancel</button>
-          <button class="hr-btn-primary" onClick={handleSave} disabled={saving}>
+          <button class="hr-btn-primary" onClick={() => void handleSave()} disabled={saving}>
             {saving ? <><i class="fas fa-spinner fa-spin"></i> Saving…</> : <><i class="fas fa-save"></i> Save</>}
           </button>
         </div>
@@ -465,7 +465,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
               style="width:100%;box-sizing:border-box;margin-bottom:8px"
             />
             {gateErr && <p style="color:#c00;font-size:13px;margin:0 0 12px">{gateErr}</p>}
-            <button class="hr-btn-primary" style="width:100%" onClick={doVerify} disabled={verifying}>
+            <button class="hr-btn-primary" style="width:100%" onClick={() => void doVerify()} disabled={verifying}>
               {verifying ? <><i class="fas fa-spinner fa-spin"></i> Verifying…</> : 'Verify'}
             </button>
           </div>
@@ -547,7 +547,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
               </button>
               <div style="display:flex;gap:8px">
                 <button class="hr-btn-outline" onClick={onClose}>Cancel</button>
-                <button class="hr-btn-primary" onClick={doSave} disabled={saving}>
+                <button class="hr-btn-primary" onClick={() => void doSave()} disabled={saving}>
                   {saving ? <><i class="fas fa-spinner fa-spin"></i> Saving…</> : <><i class="fas fa-save"></i> Save</>}
                 </button>
               </div>
@@ -909,7 +909,7 @@ export function PayrollSection() {
             <div class="pr-apply-wrap">
               <button
                 class="pr-apply-btn"
-                onClick={reportsMode ? runReport : runPayroll}
+                onClick={reportsMode ? () => void runReport() : () => void runPayroll()}
                 disabled={running}
               >
                 {running
