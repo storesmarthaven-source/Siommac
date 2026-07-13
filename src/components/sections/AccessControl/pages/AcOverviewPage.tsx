@@ -154,7 +154,7 @@ export function AcOverviewPage(): VNode {
   const usersQ = useConsoleUsers(true);
   // Only true access changes belong in this feed — whitelist the ACTION_LABEL set (grants,
   // revokes, role changes, overrides), never routine audit noise (tokenRefresh, login, …).
-  const auditQ = useAuditLogs({ limit: 6, includeActions: Object.keys(ACTION_LABEL) }, true);
+  const auditQ = useAuditLogs({ limit: 30, includeActions: Object.keys(ACTION_LABEL) }, true);
 
   const [activeModule, setActiveModule] = useState<string>('all');
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);
@@ -391,12 +391,12 @@ export function AcOverviewPage(): VNode {
         {/* Recent Access Changes */}
         <div class="card">
           <div class="card-head"><div class="card-title">Recent Access Changes</div><span class="link" onClick={() => goTo('s-ac-audit')}>View all</span></div>
-          <div style={{ padding: '2px 16px 8px' }}>
+          <div class="rc2-scroll">
             {auditQ.isLoading ? (
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; user_id: string; username: string; action: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
+            ) : (auditQ.data!.logs as { id: string; user_id: string; username: string; action: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
               const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
               const actor = userById.get(l.user_id) ?? userByName.get(l.username);
               const rawName = l.actorName || actor?.fullName || l.username || 'System';
