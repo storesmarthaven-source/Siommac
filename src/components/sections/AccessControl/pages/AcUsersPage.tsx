@@ -204,7 +204,7 @@ export function AcUsersPage(): VNode {
                 <span class="avatar" style={{ width: '36px', height: '36px', fontSize: '12px', background: bgFor(u.fullName) }}>{u.profileImage ? <img src={u.profileImage} alt="" /> : initials(u.fullName)}</span>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div class="u-user-name">{u.fullName}</div>
-                  <div class="u-user-sub">{u.role}{u.department ? ` · ${u.department}` : ''}</div>
+                  <div class="u-user-sub">{u.role.replace(/_/g, ' ')}{u.department ? ` · ${u.department}` : ''}</div>
                 </div>
                 <div class={`u-ovr${u.overrideCount === 0 ? ' zero' : ''}`}>
                   <span class="u-ovr-num">{u.overrideCount}</span>
@@ -295,10 +295,10 @@ export function AcUsersPage(): VNode {
                   <span class="avatar" style={{ width: '56px', height: '56px', fontSize: '18px', background: bgFor(user.fullName) }}>{user.profileImage ? <img src={user.profileImage} alt="" /> : initials(user.fullName)}</span>
                   <div style={{ minWidth: 0, flex: 1 }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '19px', fontWeight: 700, lineHeight: 1 }}>{user.fullName}</span>
+                      <span style={{ fontSize: '19px', fontWeight: 700, lineHeight: 1, textTransform: 'capitalize' }}>{user.fullName}</span>
                       <span class={`badge ${user.active ? 'green' : 'grey'}`}><i class="fas fa-circle" style={{ fontSize: '6px' }} /> {user.active ? 'Active' : 'Disabled'}</span>
                     </div>
-                    <div style={{ fontSize: '13.5px', color: 'var(--ink-2)', marginBottom: '3px' }}>{user.role}{user.department ? ` · ${user.department}` : ''}</div>
+                    <div style={{ fontSize: '13.5px', color: 'var(--ink-2)', marginBottom: '3px', textTransform: 'capitalize' }}>{user.role.replace(/_/g, ' ')}{user.department ? ` · ${user.department}` : ''}</div>
                     <div style={{ fontSize: '12.5px', color: 'var(--faint)' }}>{user.email || user.username}{user.position ? ` · ${user.position}` : ''}</div>
                   </div>
                   <div style={{ display: 'flex', gap: '12px', flex: 'none' }}>
