@@ -17,8 +17,7 @@ const mockDestroy   = vi.fn();
 const mockDataTable = vi.fn(() => ({ destroy: mockDestroy }));
 
 beforeEach(() => {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  (window as any).$ = Object.assign(
+  (window as unknown as Record<string, unknown>).$ = Object.assign(
     vi.fn(() => ({ DataTable: mockDataTable })),
     { fn: {} },
   );
