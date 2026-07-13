@@ -232,7 +232,7 @@ export function AcUsersPage(): VNode {
         {/* Recent Override Changes — same design as Overview's Recent Access Changes */}
         <div class="card">
           <div class="card-head">
-            <div class="card-title">Recent Override Changes</div>
+            <div class="u-recent-title"><LucideIcon name="History" size={15} /> Recent Override Changes</div>
             <span class="link" onClick={() => { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-ac-audit' })); } catch (_) { /* ignore */ } }}>View all</span>
           </div>
           {auditQ.isLoading ? <div class="ac-loading">Loading…</div>
