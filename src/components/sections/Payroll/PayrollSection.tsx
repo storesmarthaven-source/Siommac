@@ -882,7 +882,7 @@ export function PayrollSection() {
                               });
                             }}
                           >
-                            <input type="checkbox" checked={checked} onChange={() => {}} />
+                            <input type="checkbox" checked={checked} onChange={() => { /* selection handled by parent onClick */ }} />
                             <div class="pr-emp-avatar"><span class="pr-emp-initials">{initials}</span></div>
                             <div style="flex:1;min-width:0">
                               <div class="pr-emp-name">{name}</div>

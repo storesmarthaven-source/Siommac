@@ -169,7 +169,7 @@ describe('resolvePermission — edge cases', () => {
 
   it('unknown key returns false', () => {
     // Suppress the dev warning for the test
-    const spy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const spy = vi.spyOn(console, 'warn').mockImplementation(() => { /* suppress dev warning in test */ });
     const result = resolvePermission('nonexistent.key', ctx('admin'));
     expect(result).toBe(false);
     spy.mockRestore();

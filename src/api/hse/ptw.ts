@@ -60,7 +60,7 @@ export interface PermitDetail {
   simops:      unknown[];
   extensions:  unknown[];
   suspensions: unknown[];
-  closeout:    unknown | null;
+  closeout:    unknown;
   attachments: unknown[];
   timeline:    unknown[];
   permitRef:   string;

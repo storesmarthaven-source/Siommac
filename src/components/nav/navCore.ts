@@ -778,7 +778,7 @@ function _setSbBadge(btn: HTMLButtonElement, count: number) {
       void b.offsetWidth; // reflow
     }
     b.textContent = label;
-    b.style.animation = 'none'; b.offsetWidth; b.style.animation = '';
+    b.style.animation = 'none'; void b.offsetWidth; b.style.animation = '';
     b.classList.remove('sb-badge-bounce'); void b.offsetWidth; b.classList.add('sb-badge-bounce');
   } else {
     if (b) b.remove();

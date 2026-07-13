@@ -17,6 +17,7 @@ import { validateWidgetDef } from './validation';
 // Eager glob → { './registry.hr.tsx': { widgets }, './registry.hrEmployees.tsx': { widgets }, … }.
 // Each package file exports `widgets: WidgetDef[]` (multiple widgets in one file).
 // Single-segment names (no interior dots) keep the `*` match unambiguous.
+// eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- Vite's glob returns Record<string,unknown>; cast to concrete shape
 const packages = import.meta.glob('./registry.*.tsx', { eager: true }) as Record<string, { widgets?: WidgetDef[] }>;
 
 function collectWidgets(): WidgetDef[] {

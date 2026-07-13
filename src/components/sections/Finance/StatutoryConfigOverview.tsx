@@ -1046,8 +1046,6 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const STAGE_RANK: Record<string, number> = { draft: 0, pending_approval: 1, approved: 2, active: 3, retired: 4 };
   const rank = d ? (STAGE_RANK[d.status] ?? 0) : 0;
   const tlEvent = (needle: string) => d?.approvalTimeline.find(e => e.action.toLowerCase().includes(needle));
-  const stageSub = (done: boolean, date: string | null | undefined, actor: string | null | undefined, reason?: string | null): string =>
-    done ? `${fmtDate(date)} · ${actorName(actor)}${reason ? ` · ${reason}` : ''}` : 'Pending';
   const todayIso = new Date().toISOString();
   // Split date + actor onto their own lines so the horizontal stepper stacks them cleanly instead
   // of wrap-jumbling one "date · name" string. When a completed stage has no stored timestamp

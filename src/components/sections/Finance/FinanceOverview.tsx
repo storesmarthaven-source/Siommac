@@ -243,7 +243,7 @@ export function FinanceOverview(): VNode {
             tabs={[{ key: 'approvals', label: 'Approvals needing action' }]} activeTab="approvals"
             searchPlaceholder="Search approvals..." columns={approvalCols}
             rows={d?.approvalsQueue ?? []} rowKey={r => r.id} onRowClick={r => go(TYPE_ROUTE[r.type])}
-            page={0} pageCount={1} total={d?.approvalsQueue.length ?? 0} pageSize={100} onPage={() => {}}
+            page={0} pageCount={1} total={d?.approvalsQueue.length ?? 0} pageSize={100} onPage={() => { /* single-page stub — no pagination needed */ }}
             noun="approvals" loading={loading} emptyMessage="Nothing awaiting approval — you're clear."
           />
         </div>

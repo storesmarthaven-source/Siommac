@@ -13,7 +13,7 @@ function makeModule(id: string, overrides: Partial<ModuleDefinition> = {}): Modu
     id,
     navItems: [{ id: `s-${id}`, label: id.toUpperCase(), icon: 'fa-box' }],
     roles: ['admin', 'superadmin'],
-    mount: { sectionId: `s-${id}`, rootId: `preact-${id}-root`, mount: () => {} },
+    mount: { sectionId: `s-${id}`, rootId: `preact-${id}-root`, mount: () => { /* test stub: no real mount */ } },
     ...overrides,
   };
 }

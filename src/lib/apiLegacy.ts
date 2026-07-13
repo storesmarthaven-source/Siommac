@@ -166,7 +166,7 @@ function _swrFetch(key: string, fetcher: () => Promise<unknown>, opts: SwrFetchO
   return p;
 }
 
-function _swrMutate(key: string, dataOrFetcher: unknown, revalidate?: boolean): Promise<unknown> | void {
+function _swrMutate(key: string, dataOrFetcher: unknown, revalidate?: boolean): Promise<unknown> | undefined {
   if (typeof dataOrFetcher === 'function') {
     return _swrFetch(key, dataOrFetcher as () => Promise<unknown>, { force: true });
   }
@@ -174,6 +174,7 @@ function _swrMutate(key: string, dataOrFetcher: unknown, revalidate?: boolean): 
   _cache.set(key, { data: dataOrFetcher, ts: Date.now() });
   _swrFire(key, dataOrFetcher);
   if (revalidate) _swrClear(key);
+  return undefined;
 }
 
 function _swrFocusRevalidate(enable: boolean): void {

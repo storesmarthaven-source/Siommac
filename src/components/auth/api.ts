@@ -66,11 +66,9 @@ export interface WebAuthnOptionsResult {
   options?: Record<string, unknown>;
 }
 
-export interface WebAuthnVerifyResult extends LoginResult {
-  // WebAuthn verify for passwordless/second_factor returns the same full
-  // session shape as a successful /login (buildSessionPayload output).
-  // Fields are already declared in LoginResult above.
-}
+// WebAuthn verify for passwordless/second_factor returns the same full
+// session shape as a successful /login (buildSessionPayload output).
+export type WebAuthnVerifyResult = LoginResult;
 
 // ── Fetchers ──────────────────────────────────────────────────────────────────
 

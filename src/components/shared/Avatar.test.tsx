@@ -12,6 +12,7 @@ import { Avatar }                    from './Avatar';
 describe('Avatar', () => {
   it('renders an img when src is provided', () => {
     render(<Avatar name="Jane Doe" src="https://example.com/photo.jpg" />);
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- getByRole returns HTMLElement; cast needed for .src
     const img = screen.getByRole('img', { name: 'Jane Doe' }) as HTMLImageElement;
     expect(img.tagName).toBe('IMG');
     expect(img.src).toContain('photo.jpg');

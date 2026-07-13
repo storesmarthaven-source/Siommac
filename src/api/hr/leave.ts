@@ -23,19 +23,19 @@ export const hrLeaveApi = {
   getType:             (id: string)                     => call<LeaveType>('hr/leave/types/get', { id }),
   createType:          (a: Partial<LeaveType> & { code: string; label: string }) => call<LeaveType>('hr/leave/types/create', a),
   updateType:          (id: string, a: Partial<LeaveType>) => call<LeaveType>('hr/leave/types/update', { id, ...a }),
-  retireType:          (id: string)                     => call<void>('hr/leave/types/retire', { id }),
+  retireType:          (id: string)                     => call<undefined>('hr/leave/types/retire', { id }),
 
   submitRequest:       (a: SubmitLeaveRequestArgs)      => call<SubmitLeaveResult>('hr/leave/request/submit', a),
   listMyRequests:      (a?: LeaveListArgs)              => call<LeaveListResult>('hr/leave/request/list', a ?? {}),
   listAllRequests:     (a?: LeaveListArgs)              => call<LeaveListResult>('hr/leave/request/list-all', a ?? {}),
   getRequest:          (requestId: string)              => call<LeaveRequest>('hr/leave/request/get', { requestId }),
-  updateRequest:       (a: UpdateLeaveRequestArgs)      => call<void>('hr/leave/request/update', a),
-  cancelRequest:       (a: CancelLeaveRequestArgs)      => call<void>('hr/leave/request/cancel', a),
-  approveRequest:      (a: ApproveLeaveArgs)            => call<void>('hr/leave/request/approve', a),
-  rejectRequest:       (a: RejectLeaveArgs)             => call<void>('hr/leave/request/reject', a),
+  updateRequest:       (a: UpdateLeaveRequestArgs)      => call<undefined>('hr/leave/request/update', a),
+  cancelRequest:       (a: CancelLeaveRequestArgs)      => call<undefined>('hr/leave/request/cancel', a),
+  approveRequest:      (a: ApproveLeaveArgs)            => call<undefined>('hr/leave/request/approve', a),
+  rejectRequest:       (a: RejectLeaveArgs)             => call<undefined>('hr/leave/request/reject', a),
 
   getBalances:         (employeeId?: string, year?: number) => call<LeaveBalance[]>('hr/leave/balances/get', { employeeId, year }),
-  adjustBalance:       (a: AdjustBalanceArgs)           => call<void>('hr/leave/balances/adjust', a),
+  adjustBalance:       (a: AdjustBalanceArgs)           => call<undefined>('hr/leave/balances/adjust', a),
 
   runAccruals:         (a: RunAccrualsArgs)             => call<{ processed: number; skipped: number }>('hr/leave/accruals/run', a),
 

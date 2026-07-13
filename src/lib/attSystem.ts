@@ -960,7 +960,9 @@ function initializeDateSelectors(): void {
   const monthStart = new Date(currentYear, currentMonth, 1).toISOString().slice(0, 10);
 
   if (typeof flatpickr !== 'undefined') {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- augment HTMLElement with flatpickr's internal _flatpickr property
     const fromEl = document.getElementById('attDateFrom') as (HTMLElement & { _flatpickr?: { destroy: () => void } }) | null;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- augment HTMLElement with flatpickr's internal _flatpickr property
     const toEl   = document.getElementById('attDateTo')   as (HTMLElement & { _flatpickr?: { destroy: () => void } }) | null;
     fromEl?._flatpickr?.destroy();
     toEl?._flatpickr?.destroy();

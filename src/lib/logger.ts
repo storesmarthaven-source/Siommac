@@ -94,7 +94,7 @@ const LEVEL_STYLE: Record<LogLevel, string> = {
 function _log(
   level:   LogLevel,
   message: string,
-  error?:  Error | unknown,
+  error?:  unknown,
   ctx?:    Context,
 ): void {
   const timestamp = new Date().toISOString();
@@ -148,11 +148,11 @@ export const logger = {
   warn(message: string, ctx?: Context): void {
     _log('warn', message, undefined, ctx);
   },
-  error(message: string, error?: Error | unknown, ctx?: Context): void {
+  error(message: string, error?: unknown, ctx?: Context): void {
     _log('error', message, error, ctx);
   },
   /** Use for unrecoverable failures that require immediate attention */
-  critical(message: string, error?: Error | unknown, ctx?: Context): void {
+  critical(message: string, error?: unknown, ctx?: Context): void {
     _log('critical', message, error, ctx);
   },
 };

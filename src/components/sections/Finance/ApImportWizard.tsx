@@ -28,8 +28,7 @@ function parseCsv(text: string): string[][] {
   return text.trim().split('\n').map(line => {
     const cols: string[] = [];
     let inq = false, cur = '';
-    for (let i = 0; i < line.length; i++) {
-      const ch = line[i]!;
+    for (const ch of line) {
       if (ch === '"' && !inq) { inq = true; continue; }
       if (ch === '"' && inq) { inq = false; continue; }
       if (ch === ',' && !inq) { cols.push(cur.trim()); cur = ''; continue; }

@@ -760,7 +760,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
 
   function handleBack(): void { setStep(s => Math.max(0, s - 1)); }
 
-  async function handleNext(): Promise<void> {
+  function handleNext(): void {
     if (step < 2)      { tryNext(); return; }
     if (step === 2)    { void advanceFromReceipt(); return; }
     if (step === 3)    { setStep(4); return; }

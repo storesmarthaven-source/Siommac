@@ -993,8 +993,8 @@ export function HSEDashboard(): VNode {
       <OWQPanel
         incidents={mockIncidents}
         capa={mockCapa}
-        onOpenIncident={() => {}}
-        onOpenCapa={() => {}}
+        onOpenIncident={() => { /* OWQ panel: navigation handled by parent */ }}
+        onOpenCapa={() => { /* OWQ panel: navigation handled by parent */ }}
       />
 
       {/* Layer 3 — Module Health */}

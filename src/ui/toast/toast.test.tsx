@@ -461,7 +461,7 @@ describe("Toaster component", () => {
       });
     });
     const undoBtn = screen.getByText("Undo");
-    await act(async () => { fireEvent.click(undoBtn); });
+    await act(() => { fireEvent.click(undoBtn); });
     expect(onClickMock).toHaveBeenCalledOnce();
     void act(() => { vi.advanceTimersByTime(TOAST_EXIT_MS); });
     expect(screen.queryByText("Something happened")).toBeNull();
@@ -477,7 +477,7 @@ describe("Toaster component", () => {
       });
     });
     const btn = screen.getByText("Keep open");
-    await act(async () => { fireEvent.click(btn); });
+    await act(() => { fireEvent.click(btn); });
     expect(screen.getByText("Pending")).toBeTruthy();
   });
 

@@ -17,7 +17,7 @@ function Bomb({ shouldThrow }: { shouldThrow: boolean }): null {
 
 // Preact calls console.error when a boundary catches — suppress it
 beforeEach(() => {
-  vi.spyOn(console, 'error').mockImplementation(() => {});
+  vi.spyOn(console, 'error').mockImplementation(() => { /* suppress boundary error output in tests */ });
 });
 
 describe('ErrorBoundary', () => {

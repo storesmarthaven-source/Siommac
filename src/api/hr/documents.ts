@@ -107,7 +107,7 @@ export function useRetireRequirement() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (requirementId: string) =>
-      call<void>('hr/documents/requirements/retire', { requirementId }),
+      call<undefined>('hr/documents/requirements/retire', { requirementId }),
     onSuccess: () => { void qc.invalidateQueries({ queryKey: docsKeys.all }); },
   });
 }

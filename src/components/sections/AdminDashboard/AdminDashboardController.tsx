@@ -27,7 +27,7 @@ function fmtTime(iso: string | null | undefined): string {
   } catch (_) { return '—'; }
 }
 
-type StatusKey = 'present' | 'late' | 'absent' | 'checked out' | string;
+type StatusKey = string;
 
 const STATUS_COLOR: Record<string, string> = {
   'present':     '#2E7D32',
