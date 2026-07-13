@@ -304,10 +304,9 @@ export function AcUsersPage(): VNode {
               </div>
 
               <div class="u-info-banner">
-                <span class="u-info-ico"><LucideIcon name="Info" size={20} strokeWidth={2.2} /></span>
+                <span class="u-info-ico"><LucideIcon name="BadgeInfo" size={18} strokeWidth={2.2} /></span>
                 <div class="u-info-txt">
-                  <div class="u-info-eyebrow">User-Level Overrides</div>
-                  <div class="u-info-title">You're editing exceptions for this user</div>
+                  <div class="u-info-title">You're editing user-level overrides</div>
                   <div class="u-info-sub">Changes apply only to this user — the underlying role is unchanged.</div>
                 </div>
               </div>

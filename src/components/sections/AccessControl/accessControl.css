@@ -426,13 +426,12 @@
 .acx .u-mini-ico.green { background: var(--green-bg); color: var(--green); }
 .acx .u-mini-val { font-size: 22px; font-weight: 700; line-height: 1; color: var(--ink); }
 .acx .u-mini-lbl { font-size: 11px; color: var(--muted); white-space: nowrap; }
-/* Callout banner (canonical kit .banner.info anatomy). */
-.acx .u-info-banner { display: flex; align-items: center; gap: 18px; padding: 19px 22px; background: #f0f6fe; border: 1px solid #c9dcf8; border-radius: var(--radius, 14px); }
-.acx .u-info-ico { width: 46px; height: 46px; border-radius: 11px; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
+/* Callout banner — slim variant, circular info icon. */
+.acx .u-info-banner { display: flex; align-items: center; gap: 13px; padding: 12px 15px; background: #f0f6fe; border: 1px solid #c9dcf8; border-radius: 12px; }
+.acx .u-info-ico { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
 .acx .u-info-txt { min-width: 0; }
-.acx .u-info-eyebrow { font-size: 10.5px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-ink, #1d4ed8); margin-bottom: 3px; }
-.acx .u-info-title { font-size: 15.5px; font-weight: 800; color: var(--ink); }
-.acx .u-info-sub { font-size: 12.5px; color: #5b6f95; margin-top: 3px; line-height: 1.45; }
+.acx .u-info-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
+.acx .u-info-sub { font-size: 12px; color: #5b6f95; margin-top: 2px; line-height: 1.4; }
 /* Table top strip (moved-up legend + count) */
 .acx .u-tbl-top { display: flex; align-items: center; gap: 16px; padding: 11px 18px; border-bottom: 1px solid var(--line); }
 .acx .u-tbl-count { font-size: 12px; color: var(--muted); }
