@@ -162,8 +162,8 @@ function ReportsSurface({ runs }: { runs: PayrollRun[] }): VNode {
       });
       setResult(res);
     } catch (e) {
-      setError((e as Error).message ?? 'Failed to run report.');
-      toast((e as Error).message ?? 'Failed to run report.');
+      setError(e instanceof Error ? e.message : 'Failed to run report.');
+      toast(e instanceof Error ? e.message : 'Failed to run report.');
     } finally {
       setLoading(false);
     }
@@ -305,7 +305,7 @@ export function PayrollOverview(): VNode {
 
   async function runAction(p: Promise<unknown>, ok: string): Promise<void> {
     try { await p; toast(ok); }
-    catch (e) { toast((e as Error).message ?? 'Action failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   }
 
   // KPIs

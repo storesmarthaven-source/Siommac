@@ -213,7 +213,7 @@ export function ApVendorDialog({ open, onClose, vendor, onSaved }: ApVendorDialo
       onSaved?.(saved);
       onClose();
     } catch (err) {
-      const msg = (err as Error).message ?? 'Save failed';
+      const msg = err instanceof Error ? err.message : 'Save failed';
       toast(msg);
     }
   }

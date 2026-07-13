@@ -226,7 +226,7 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
       await apiPost('finance/payroll/inputs/edit', { inputId: inp.id, amount: val });
       toast('Input updated.');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to update input.');
+      toast(e instanceof Error ? e.message : 'Failed to update input.');
     }
   }
 
@@ -243,7 +243,7 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
       await apiPost('finance/payroll/inputs/exclude', { inputId: inp.id });
       toast('Input excluded from run.');
     } catch (e) {
-      toast((e as Error).message ?? 'Exclude failed.');
+      toast(e instanceof Error ? e.message : 'Exclude failed.');
     }
   }
 
@@ -341,7 +341,7 @@ function WarningsTab({
       void refetch();
       toast('Warning acknowledged.');
     } catch (e) {
-      toast((e as Error).message ?? 'Acknowledge failed.');
+      toast(e instanceof Error ? e.message : 'Acknowledge failed.');
     } finally {
       setAcknowledging(null);
     }
@@ -360,7 +360,7 @@ function WarningsTab({
       });
       toast('Ticket created.');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to create ticket.');
+      toast(e instanceof Error ? e.message : 'Failed to create ticket.');
     }
   }
 
@@ -476,7 +476,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       const url = await financePayrollApi.payslipSignedUrl({ id: payslip.id });
       window.open(url.url, '_blank', 'noopener');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to get payslip URL.');
+      toast(e instanceof Error ? e.message : 'Failed to get payslip URL.');
     }
   }
 
@@ -499,7 +499,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
         ? `Rendered ${r.rendered}/${r.total} payslips — ${r.failed} failed (retry individually).`
         : `Generated ${r.rendered} payslip PDF${r.rendered === 1 ? '' : 's'}.`);
     } catch (e) {
-      toast((e as Error).message ?? 'Payslip generation failed.');
+      toast(e instanceof Error ? e.message : 'Payslip generation failed.');
     }
   }
 
@@ -511,7 +511,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       if (r.failed > 0) parts.push(`${r.failed} failed`);
       toast(`Payslip emails: ${parts.join(', ')} of ${r.total}.`);
     } catch (e) {
-      toast((e as Error).message ?? 'Emailing payslips failed.');
+      toast(e instanceof Error ? e.message : 'Emailing payslips failed.');
     }
   }
 
@@ -519,7 +519,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
     try {
       const d = await financePayrollApi.deliverPayslip({ payslipId });
       toast(d.status === 'sent' ? 'Payslip emailed.' : d.status === 'skipped' ? `Skipped: ${d.error ?? 'no email/disabled'}` : `Failed: ${d.error ?? 'send error'}`);
-    } catch (e) { toast((e as Error).message ?? 'Email failed.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'Email failed.'); }
   }
 
   async function notifyEmployees(): Promise<void> {
@@ -533,7 +533,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       if (!res.success) throw new Error(res.message ?? 'Notify failed.');
       toast(`${res.data?.notified ?? 0} employee(s) notified.`);
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to send notifications.');
+      toast(e instanceof Error ? e.message : 'Failed to send notifications.');
     } finally {
       setNotifying(false);
     }
@@ -571,7 +571,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       await setTemplateMut.mutateAsync({ runId, templateId });
       toast(templateId ? 'Template updated.' : 'Reverted to active default template.');
     } catch (err) {
-      toast((err as Error).message ?? 'Failed to update template.');
+      toast(err instanceof Error ? err.message : 'Failed to update template.');
     }
   }
 
@@ -724,6 +724,7 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       employeeId: l.employeeId,
       name:       nameMap?.get(l.employeeId)?.fullName ?? l.employeeId,
       gross:      l.gross,
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- DB numeric columns typed non-null but may be null in legacy rows
       deductions: (l.paye ?? 0) + (l.nisEmployee ?? 0) + (l.healthSurcharge ?? 0) + (l.voluntaryDeductions ?? 0),
       net:        l.net,
       ovr:        overrideCount.get(l.employeeId) ?? 0,
@@ -750,15 +751,15 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       await addMut.mutateAsync({ runId, employeeId: empId, label: label.trim(), amount: amt, kind, reason: reason.trim() });
       setLabel(''); setAmount(''); setReason('');
       toast('Override added — recalculate to apply it to the run.');
-    } catch (e) { toast((e as Error).message ?? 'Failed to add override.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'Failed to add override.'); }
   }
   async function remove(id: string): Promise<void> {
     try { await removeMut.mutateAsync({ overrideId: id }); toast('Override removed — recalculate to apply.'); }
-    catch (e) { toast((e as Error).message ?? 'Failed to remove override.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Failed to remove override.'); }
   }
   async function recalc(): Promise<void> {
     try { await calcMut.mutateAsync({ id: runId }); toast('Run recalculated with overrides.'); }
-    catch (e) { toast((e as Error).message ?? 'Recalculate failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Recalculate failed.'); }
   }
 
   const fieldStyle = { fontSize: 12, padding: '6px 8px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 6, color: 'var(--hrfin-text-primary)' };
@@ -912,7 +913,7 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
   async function runPreview(): Promise<void> {
     if (!canPreview) return;
     try { const r = await previewMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, effectiveDate: effDate }); setPreview(r); }
-    catch (e) { toast((e as Error).message ?? 'Preview failed.'); setPreview(null); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Preview failed.'); setPreview(null); }
   }
   async function apply(): Promise<void> {
     if (!canAdd) return;
@@ -920,7 +921,7 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
       await addMut.mutateAsync({ currentRunId: runId, employeeId: empId, fromPeriodMonth, correctedPeriodBase, reason: reason.trim(), effectiveDate: effDate });
       toast('Back pay added — recalculate to apply it to the run.');
       onApplied();
-    } catch (e) { toast((e as Error).message ?? 'Back pay failed.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'Back pay failed.'); }
   }
 
   return (
@@ -1046,7 +1047,7 @@ function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
       const res = await bulkMut.mutateAsync({ runId, employeeIds, label: label.trim(), amount: amt, kind, reason: reason.trim() });
       toast(`Adjustment applied to ${res.applied} employee(s)${res.skipped ? `, ${res.skipped} skipped` : ''} — recalculate to apply.`);
       onApplied();
-    } catch (e) { toast((e as Error).message ?? 'Mass-edit failed.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'Mass-edit failed.'); }
   }
 
   return (
@@ -1099,7 +1100,7 @@ function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNod
     try {
       const r = await postMut.mutateAsync({ runId });
       toast(`GL posted: ${r.journalNo} — ${fmtMoney(r.totalDebit)} (balanced).`);
-    } catch (e) { toast((e as Error).message ?? 'GL posting failed.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'GL posting failed.'); }
   }
   async function reverse(): Promise<void> {
     const reason = await dialog.prompt({
@@ -1111,7 +1112,7 @@ function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNod
     try {
       const r = await reverseMut.mutateAsync({ runId, reason });
       toast(`GL reversed — ${r.reversingJournalNo}.`);
-    } catch (e) { toast((e as Error).message ?? 'GL reversal failed.'); }
+    } catch (e) { toast(e instanceof Error ? e.message : 'GL reversal failed.'); }
   }
 
   if (isLoading) return <div class="hrfin-empty">Loading GL…</div>;
@@ -1190,7 +1191,7 @@ function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean })
       URL.revokeObjectURL(url);
       toast(`Downloaded ${res.filename}`);
     } catch (e) {
-      toast((e as Error).message ?? 'Download failed.');
+      toast(e instanceof Error ? e.message : 'Download failed.');
     }
   }
 
@@ -1200,7 +1201,7 @@ function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean })
       void refetch();
       toast(`Re-export (${exp.format.toUpperCase()}) generated.`);
     } catch (e) {
-      toast((e as Error).message ?? 'Regenerate failed.');
+      toast(e instanceof Error ? e.message : 'Regenerate failed.');
     }
   }
 

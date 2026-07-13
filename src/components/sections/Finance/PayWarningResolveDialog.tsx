@@ -36,7 +36,7 @@ export function PayWarningResolveDialog({
       toast('Warning resolved.');
       onResolved();
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to resolve warning.');
+      toast(e instanceof Error ? e.message : 'Failed to resolve warning.');
     }
   }
 

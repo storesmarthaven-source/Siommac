@@ -42,7 +42,7 @@ export function PayCreateDisbursementDialog({
       }
       onCreated(res.reusedExisting);
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to create disbursement.');
+      toast(e instanceof Error ? e.message : 'Failed to create disbursement.');
     }
   }
 
@@ -126,7 +126,7 @@ export function PayCreateRemittanceDialog({
       }
       onCreated(res.reusedExisting);
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to create remittance.');
+      toast(e instanceof Error ? e.message : 'Failed to create remittance.');
     }
   }
 

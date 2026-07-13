@@ -310,7 +310,7 @@ export function DisbComputeWizard({ open, onClose, onCreated }: DisbComputeWizar
       onCreated();
       handleClose();
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to create disbursement.');
+      toast(e instanceof Error ? e.message : 'Failed to create disbursement.');
     }
   };
 

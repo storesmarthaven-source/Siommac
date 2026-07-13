@@ -176,7 +176,7 @@ function DisbursementsTab({
 
   async function run(p: Promise<unknown>, ok: string): Promise<void> {
     try { await p; toast(ok); }
-    catch (e) { toast((e as Error).message ?? 'Action failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   }
 
   const sortArrow = (key: SortKey) => sortKey === key ? (sortDir === 'asc' ? ' ↑' : ' ↓') : '';
@@ -552,7 +552,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
       setForm(emptyBankForm());
       setErrors({});
     } catch (e) {
-      toast((e as Error).message ?? 'Failed.');
+      toast(e instanceof Error ? e.message : 'Failed.');
     }
   };
 
@@ -792,7 +792,7 @@ function BankAccountsTab({ canManage }: { canManage: boolean }): VNode {
                 await deactivateMut.mutateAsync({ id: a.id });
                 toast('Bank account deactivated.');
               } catch (e) {
-                toast((e as Error).message ?? 'Failed.');
+                toast(e instanceof Error ? e.message : 'Failed.');
               }
             })(); },
           },
@@ -837,7 +837,7 @@ function BankFilesTab({ canApprove, onOpenDrawer }: { canApprove: boolean; onOpe
       const res = await getUrlMut.mutateAsync({ disbursementId: d.id });
       window.open(res.signedUrl, '_blank');
     } catch (e) {
-      toast((e as Error).message ?? 'Download failed.');
+      toast(e instanceof Error ? e.message : 'Download failed.');
     }
   }
 
@@ -1155,7 +1155,7 @@ export function DisbursementsOverview(): VNode {
 
   async function run(p: Promise<unknown>, ok: string): Promise<void> {
     try { await p; toast(ok); }
-    catch (e) { toast((e as Error).message ?? 'Action failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   }
 
   const drawerActions: DisbDrawerActions = {

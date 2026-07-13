@@ -114,7 +114,7 @@ export function ApRecordPaymentDialog({ open, bill, onClose, onPaid }: ApRecordP
       onPaid?.(updated);
       onClose();
     } catch (err) {
-      toast((err as Error).message ?? 'Payment failed');
+      toast(err instanceof Error ? err.message : 'Payment failed');
     }
   }
 

@@ -67,7 +67,7 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
     setErrs(e);
     if (Object.keys(e).length) return;
     try { await saveMut.mutateAsync(model ?? {}); toast('Employer profile saved.'); setForm(null); }
-    catch (err) { toast((err as Error).message ?? 'Failed.'); }
+    catch (err) { toast(err instanceof Error ? err.message : 'Failed.'); }
   }
 
   if (q.isLoading) return <div class="hrfin-empty">Loading employer profile…</div>;
@@ -118,16 +118,16 @@ function GenerateTab({ canGenerate, profileReady, onGenerated }: { canGenerate: 
 
   async function genYear(): Promise<void> {
     try { const r = await yearMut.mutateAsync({ taxYear: year }); toast(`Generated ${r.employeeForms} TD4 + summary for ${year}.`); onGenerated(); }
-    catch (e) { toast((e as Error).message ?? 'Failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Failed.'); }
   }
   async function genEmp(): Promise<void> {
     if (!empId) return;
     try { await empMut.mutateAsync({ employeeId: empId, taxYear: year }); toast(`Generated TD4 for ${year}.`); onGenerated(); }
-    catch (e) { toast((e as Error).message ?? 'Failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Failed.'); }
   }
   async function genNi(): Promise<void> {
     try { await niMut.mutateAsync({ year: niYear, month: niMonth }); toast(`Generated NI184 + NI187 for ${MONTHS[niMonth - 1]} ${niYear}.`); onGenerated(); }
-    catch (e) { toast((e as Error).message ?? 'Failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Failed.'); }
   }
 
   return (
@@ -209,7 +209,7 @@ function FormsTab({ canView }: { canView: boolean }): VNode {
 
   async function download(id: string, which: 'pdf' | 'data'): Promise<void> {
     try { const r = await dlMut.mutateAsync({ id, which }); window.open(r.signedUrl, '_blank'); }
-    catch (e) { toast((e as Error).message ?? 'Download failed.'); }
+    catch (e) { toast(e instanceof Error ? e.message : 'Download failed.'); }
   }
 
   const COLS: HrfinColumn<StatutoryForm>[] = [

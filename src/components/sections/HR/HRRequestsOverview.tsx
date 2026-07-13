@@ -68,7 +68,7 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
       onSubmitted();
       onClose();
     } catch (e) {
-      toast((e as Error).message ?? 'Submit failed.');
+      toast(e instanceof Error ? e.message : 'Submit failed.');
     } finally {
       setBusy(false);
     }
@@ -134,7 +134,7 @@ function MyRequestsTab(): VNode {
       await cancelMut.mutateAsync({ requestId: req.id, reason: res.reason ?? undefined });
       toast('Request cancelled.');
     } catch (e) {
-      toast((e as Error).message ?? 'Cancel failed.');
+      toast(e instanceof Error ? e.message : 'Cancel failed.');
     }
   }
 
@@ -207,7 +207,7 @@ function DecideModal({ req, onClose, onDone }: DecideModalProps): VNode {
       onDone();
       onClose();
     } catch (e) {
-      toast((e as Error).message ?? 'Decision failed.');
+      toast(e instanceof Error ? e.message : 'Decision failed.');
     } finally {
       setBusy(false);
     }
@@ -268,7 +268,7 @@ function FulfillModal({ req, onClose, onDone }: FulfillModalProps): VNode {
       onDone();
       onClose();
     } catch (e) {
-      toast((e as Error).message ?? 'Fulfill failed.');
+      toast(e instanceof Error ? e.message : 'Fulfill failed.');
     } finally {
       setBusy(false);
     }
@@ -321,7 +321,7 @@ function TriageTab(): VNode {
       toast('Request cancelled.');
       void requestsQ.refetch();
     } catch (e) {
-      toast((e as Error).message ?? 'Cancel failed.');
+      toast(e instanceof Error ? e.message : 'Cancel failed.');
     }
   }
 

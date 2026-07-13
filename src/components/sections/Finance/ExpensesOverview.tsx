@@ -364,7 +364,7 @@ export function ExpensesOverview(): VNode {
       });
       setReportResult(result);
     } catch (e) {
-      setReportError((e as Error).message ?? 'Report failed.');
+      setReportError(e instanceof Error ? e.message : 'Report failed.');
     } finally {
       setReportLoading(false);
     }

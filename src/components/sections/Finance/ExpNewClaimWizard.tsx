@@ -294,7 +294,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
       setCreatedId(result.id);
       return result.id;
     } catch (e) {
-      toast.error((e as Error).message ?? 'Failed to create claim.');
+      toast.error(e instanceof Error ? e.message : 'Failed to create claim.');
       return null;
     }
   }
@@ -331,7 +331,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
     if (!id) return;
     if (submitOnCreate) {
       try { await submitClaim.mutateAsync(id); } catch (e) {
-        toast.error((e as Error).message ?? 'Claim created but submit failed.');
+        toast.error(e instanceof Error ? e.message : 'Claim created but submit failed.');
       }
     }
     toast.success(submitOnCreate ? 'Claim created and submitted.' : 'Claim saved as draft.');

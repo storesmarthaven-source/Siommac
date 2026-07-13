@@ -129,7 +129,7 @@ export function ExpMarkReimbursedDialog({
       onSuccess();
       onClose();
     } catch (err) {
-      toast.error((err as Error).message ?? 'Failed to mark reimbursed.');
+      toast.error(err instanceof Error ? err.message : 'Failed to mark reimbursed.');
     }
   }
 

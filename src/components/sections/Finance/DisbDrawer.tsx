@@ -172,7 +172,7 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
       const res = await getUrl.mutateAsync({ disbursementId: d.id });
       window.open(res.signedUrl, '_blank');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to generate download link.');
+      toast(e instanceof Error ? e.message : 'Failed to generate download link.');
     }
   }
 
@@ -181,7 +181,7 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
       const res = await getFileUrl.mutateAsync({ bankFileId });
       window.open(res.signedUrl, '_blank');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to generate download link.');
+      toast(e instanceof Error ? e.message : 'Failed to generate download link.');
     }
   }
 
@@ -204,7 +204,7 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
       });
       toast('Support document attached.');
     } catch (e) {
-      toast((e as Error).message ?? 'Upload failed.');
+      toast(e instanceof Error ? e.message : 'Upload failed.');
     }
   }
 
@@ -213,7 +213,7 @@ function BankFileTab({ d }: { d: Disbursement }): VNode {
       const url = await signedUrlMut.mutateAsync({ entityType: 'disbursement', entityId: d.id, storagePath });
       window.open(url, '_blank');
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to generate link.');
+      toast(e instanceof Error ? e.message : 'Failed to generate link.');
     }
   }
 

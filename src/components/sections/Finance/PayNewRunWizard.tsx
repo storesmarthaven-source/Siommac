@@ -548,7 +548,7 @@ export function PayNewRunWizard({
       toast(`Payroll run ${run.runNo} created as draft.`);
       onCreated(run);
     } catch (e) {
-      toast((e as Error).message ?? 'Failed to create payroll run.');
+      toast(e instanceof Error ? e.message : 'Failed to create payroll run.');
     }
   }
 
