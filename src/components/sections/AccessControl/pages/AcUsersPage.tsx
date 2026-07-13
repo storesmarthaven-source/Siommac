@@ -345,7 +345,7 @@ export function AcUsersPage(): VNode {
                                 <span style={{ color: 'var(--faint)', width: '14px', display: 'inline-flex', flex: 'none' }}><LucideIcon name={open ? 'Minus' : 'Plus'} size={14} strokeWidth={2.5} /></span>
                                 <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
                                 <span class="u-mod-name">{mod}</span>
-                                <span class="badge grey" style={{ fontSize: '10.5px', padding: '2px 8px', borderRadius: '6px' }}>{keys.length}</span>
+                                <span class="u-mod-count">{keys.length}</span>
                               </span>
                             </td>
                           </tr>
