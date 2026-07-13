@@ -413,6 +413,9 @@
 .acx .cap-eff-you { display: inline-flex; color: #94a3b8; }
 .acx .u-cap-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .acx .u-cap-desc { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
+/* Module header row: single neutral icon chip + larger, lighter title. */
+.acx .u-mod-ico { width: 26px; height: 26px; border-radius: 7px; background: #eef2f7; color: #475569; display: grid; place-items: center; flex: none; }
+.acx .u-mod-name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .acx .u-src { font-size: 12px; color: var(--muted); }
 .acx .u-src.ovr { color: var(--accent); font-weight: 500; }
 .acx .u-row-override > td:first-child { border-left: 3px solid var(--accent); }

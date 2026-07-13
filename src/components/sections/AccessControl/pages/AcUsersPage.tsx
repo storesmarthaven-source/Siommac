@@ -19,7 +19,17 @@ import { CriticalGrantDialog } from '@sections/SuperadminConsole/CriticalGrantDi
 import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
+import { LucideIcon, type LucideName } from '@ui/LucideIcon';
 import { toast } from '@store/ui';
+
+// Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
+const MODULE_LUCIDE: Record<string, LucideName> = {
+  HR: 'Users', Employees: 'Contact', 'Attendance & Leave': 'CalendarCheck', Payroll: 'Banknote',
+  Finance: 'Landmark', HSE: 'HardHat', 'Sites & Map': 'Map', Calendar: 'CalendarDays',
+  Workflow: 'Workflow', Tickets: 'Ticket', Communications: 'MessageSquare', Auth: 'KeyRound',
+  Settings: 'Settings', System: 'Server', 'User Management': 'UserCog', Dashboard: 'LayoutDashboard',
+};
+const moduleLucide = (m: string): LucideName => MODULE_LUCIDE[m] ?? 'Box';
 
 type OvState = 'inherit' | 'allow' | 'deny';
 const PAGE = 8;
@@ -68,7 +78,8 @@ export function AcUsersPage(): VNode {
   const [filter, setFilter]     = useState({ module: '', risk: '', search: '' });
   const [pending, setPending]   = useState<Map<string, OvState>>(new Map());
   const [localPending, setLocal] = useState<Set<string>>(new Set());
-  const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  // Start with every module collapsed.
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean) as string[]));
   const [criticalKey, setCriticalKey] = useState<string | null>(null);
   const [saving, setSaving]     = useState(false);
   const [recentPage, setRecentPage] = useState(0);
@@ -312,15 +323,15 @@ export function AcUsersPage(): VNode {
                   <thead><tr><th>Capability</th><th>Role Default</th><th>User Override</th><th>Effective Result</th><th>Source</th><th style={{ textAlign: 'center' }}>Reset</th></tr></thead>
                   <tbody>
                     {[...groups.entries()].map(([mod, keys]) => {
-                      const st = modStyle(mod); const open = !collapsed.has(mod);
+                      const open = !collapsed.has(mod);
                       return (
                         <>
                           <tr class="grp" key={`g-${mod}`}>
                             <td colSpan={6} style={{ padding: '12px 18px', background: '#f9fafb', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                                 <i class={`fas fa-chevron-${open ? 'down' : 'right'}`} style={{ color: 'var(--faint)', fontSize: '11px', width: '12px', textAlign: 'center', flex: 'none' }} />
-                                <span style={{ width: '26px', height: '26px', borderRadius: '7px', background: st.bg, color: st.fg, display: 'inline-grid', placeItems: 'center', fontSize: '12px', flex: 'none' }}><i class={`fas ${st.icon}`} /></span>
-                                <span style={{ fontSize: '13.5px', fontWeight: 700 }}>{mod}</span>
+                                <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
+                                <span class="u-mod-name">{mod}</span>
                                 <span class="badge grey" style={{ fontSize: '10.5px', padding: '1px 8px' }}>{keys.length}</span>
                               </span>
                             </td>
