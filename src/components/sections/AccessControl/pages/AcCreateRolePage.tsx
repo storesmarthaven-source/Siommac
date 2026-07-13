@@ -88,11 +88,11 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
         ...normal.map(k => setRolePermissionApi(roleName, k, true)),
         ...toRevoke.map(k => setRolePermissionApi(roleName, k, false)),
       ]);
-      const failed = results.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+      const failed = results.filter(r => r.status === 'rejected' || !r.value.success).length;
 
       const crit = await Promise.allSettled(critical.map(k => setRolePermissionWithReasonApi(roleName, k, true, reason.trim())));
       const pendingN = crit.filter(r => r.status === 'fulfilled' && r.value.success && r.value.pending).length;
-      const critFailed = crit.filter(r => r.status === 'rejected' || (r.status === 'fulfilled' && !r.value.success)).length;
+      const critFailed = crit.filter(r => r.status === 'rejected' || !r.value.success).length;
 
       const bits: string[] = [];
       if (normal.length + toRevoke.length - failed > 0) bits.push(`${normal.length + toRevoke.length - failed} applied`);

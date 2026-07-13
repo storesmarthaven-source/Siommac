@@ -935,6 +935,7 @@ export function HSEDashboard(): VNode {
           { icon: 'fa-inbox',                label: 'Pending approvals',     value: pendingCount, sub: 'awaiting action', color: (pendingCount > 0 ? 'gold' : 'green') },
         ]}
         footerItems={[
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- HSE_HEALTH_SCORE is a stub constant (82); condition is intentional and will be live once wired to real KPI data
           { icon: 'fa-heart-pulse',  label: 'HSE Health Score', value: `${HSE_HEALTH_SCORE}%`, pill: HSE_HEALTH_SCORE >= 80 ? '● Healthy' : '● At Risk', pillVariant: HSE_HEALTH_SCORE >= 80 ? 'green' : 'amber' },
           { icon: 'fa-calendar-check', label: 'LTI-free Days', value: kpis?.ltiFreeDays?.toString() ?? '…', sub: 'days', trend: 'improving', trendUp: true },
           { icon: 'fa-calculator',   label: 'LTIFR (per 200k hrs)', value: '0.48', pill: '● On Target', pillVariant: 'green' },

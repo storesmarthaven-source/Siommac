@@ -156,7 +156,7 @@ export function buildConsistencyFromRows(
     for (const row of userRows) {
       if (row.status === 'Present') presentDays++;
       else if (row.status === 'Late') lateDays++;
-      else if (row.status === 'Absent') absentDays++;
+      else absentDays++;
 
       totalHours += row.hours;
     }

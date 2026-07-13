@@ -169,7 +169,7 @@ function DistributionChart({ rows, loading }: { rows: AttendanceRow[]; loading: 
     for (const row of rows) {
       if (row.status === 'Present') present++;
       else if (row.status === 'Late') late++;
-      else if (row.status === 'Absent') absent++;
+      else absent++;
     }
 
     const total = present + late + absent;

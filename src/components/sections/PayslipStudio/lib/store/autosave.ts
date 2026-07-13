@@ -52,6 +52,7 @@ async function flushDraft(): Promise<void> {
   pending = null;
   try { await call('save', { draftDesign: design }); } catch { /* scratch state — ignore */ }
   inFlight = false;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- pending can be reassigned by saveDraft() during the await; TypeScript doesn't track cross-function mutation across await
   if (pending !== null) void flushDraft();
 }
 
