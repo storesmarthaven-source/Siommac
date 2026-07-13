@@ -68,7 +68,7 @@ function StudioLoading(): VNode {
           <span class="psd-load-badge"><StudioMark class="psd-load-mark" /></span>
           <span class="psd-load-title">Payslip <b>Studio</b></span>
         </div>
-        <div class="psd-load-bar"><div class="psd-load-fill" style={{ width: pct + '%' }} /></div>
+        <div class="psd-load-bar"><div class="psd-load-fill" style={{ width: `${pct}%` }} /></div>
         <div class="psd-load-meta">
           <span class="psd-load-res">{resource}</span>
           <span class="psd-load-pct">{pct}%</span>

@@ -183,7 +183,24 @@ export interface PayslipTemplateSummary {
   status:    string; // 'draft' | 'pending_approval' | 'changes_requested' | 'approved' | 'archived'
 }
 
-export type NisProfileRow = Record<string, unknown>;
+export interface NisProfileRow {
+  id:                    string;
+  employeeId?:           string;
+  employee_id?:          string;
+  nisStatus?:            string;
+  nis_status?:           string;
+  nisNumber?:            string;
+  nis_number?:           string;
+  previousEmployerName?: string;
+  previous_employer_name?: string;
+  verifiedAt?:           string;
+  verified_at?:          string;
+  isActive?:             boolean;
+  isStatutory?:          boolean;
+  isTaxable?:            boolean;
+  reducesChargeable?:    boolean;
+  [key: string]:         unknown;
+}
 
 export interface RunAuditLogEntry {
   id:            string;

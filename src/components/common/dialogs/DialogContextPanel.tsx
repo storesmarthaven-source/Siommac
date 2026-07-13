@@ -21,7 +21,7 @@ function toneClass(tone?: DialogTone): string {
 function formatValue(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return String(value);
+  return String(value as string | number);
 }
 
 export function DialogContextPanel({

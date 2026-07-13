@@ -19,7 +19,7 @@ function toneClass(tone?: ActionTone): string {
 function fmt(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return String(value);
+  return String(value as string | number);
 }
 
 interface Props {

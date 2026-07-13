@@ -74,6 +74,7 @@ export function initNotificationsRealtime(userId: string): void {
       },
     )
     .subscribe((status) => {
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-conversion -- status is a Supabase REALTIME_SUBSCRIBE_STATES enum; String() avoids no-unsafe-enum-comparison
       const s = String(status);
       if (s === 'SUBSCRIBED') {
         logger.info('[notifications] Realtime channel subscribed', { userId });

@@ -144,7 +144,7 @@ export function InspectionDetailDrawer({ inspectionId, onClose }: { inspectionId
               { icon: 'fa-play',           label: 'Started',   value: fmt(insp.started_at) },
               { icon: 'fa-flag-checkered', label: 'Completed', value: fmt(insp.completed_at) },
             ]} hideEmpty />
-            {insp.description ? <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{String(insp.description)}</p> : null}
+            {insp.description ? <p style={{ marginTop: '12px', fontSize: '0.82rem', color: 'var(--text-muted)' }}>{insp.description as string}</p> : null}
           </div>
         )}
 

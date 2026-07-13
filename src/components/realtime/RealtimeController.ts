@@ -155,7 +155,7 @@ export function initRealtime(): void {
         status === 'CLOSED'
       ) {
         console.warn(
-          `[Realtime] ${status}${err ? ': ' + String(err) : ''} — retrying in ${_retryDelay / 1000}s. Poll fallback active.`,
+          `[Realtime] ${status}${err ? ': ' + (err instanceof Error ? err.message : String(err as string)) : ''} — retrying in ${_retryDelay / 1000}s. Poll fallback active.`,
         );
         scheduleRetry();
       }

@@ -63,7 +63,7 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
 
   async function save(): Promise<void> {
     const e: Record<string, string> = {};
-    for (const f of PROFILE_FIELDS) if (f.required && !String((model as Record<string, unknown>)?.[f.key] ?? '').trim()) e[f.key] = 'Required.';
+    for (const f of PROFILE_FIELDS) if (f.required && !(model?.[f.key] ?? '').trim()) e[f.key] = 'Required.';
     setErrs(e);
     if (Object.keys(e).length) return;
     try { await saveMut.mutateAsync(model ?? {}); toast('Employer profile saved.'); setForm(null); }
@@ -85,7 +85,7 @@ function EmployerProfileTab({ canManage }: { canManage: boolean }): VNode {
               class="hrfin-input"
               placeholder={f.placeholder ?? ''}
               disabled={!canManage}
-              value={String((model as Record<string, unknown>)?.[f.key] ?? '')}
+              value={model?.[f.key] ?? ''}
               onInput={e => { set(f.key, (e.currentTarget).value); setErrs(x => { const n = { ...x }; Reflect.deleteProperty(n, f.key); return n; }); }}
             />
             {errs[f.key] && <span style={{ color: 'var(--danger, #d33)', fontSize: 11 }}>{errs[f.key]}</span>}

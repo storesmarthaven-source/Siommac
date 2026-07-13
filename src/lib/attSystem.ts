@@ -103,6 +103,7 @@ function fmtLocalTime(iso: string | null | undefined): string {
 }
 
 function escapeHtml(s: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c] ?? c));
 }
 
@@ -360,8 +361,8 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
         </div>
         <div class="pr-payslip-meta-col">
           <div class="pr-payslip-meta-row"><span>Rate</span><strong>${rateStr}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${String(d.hours_worked ?? d.hoursWorked ?? 0)}h</strong></div>
-          <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${String(d.days_worked ?? d.daysWorked ?? '—')}</strong></div>
+          <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${String((d.hours_worked ?? d.hoursWorked ?? 0) as number | string)}h</strong></div>
+          <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${String((d.days_worked ?? d.daysWorked ?? '—') as number | string)}</strong></div>
           <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD ${fmt(sr.allowanceAnnual)} / yr</strong></div>
           <div class="pr-payslip-meta-row pr-payslip-meta-row--sep"><span>NIS Reg</span><strong>${escapeHtml(ci.nis ?? '1234567')}</strong></div>
           <div class="pr-payslip-meta-row"><span>BIR File</span><strong>${escapeHtml(ci.bir ?? '100123456')}</strong></div>
@@ -376,7 +377,7 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
               <tr>
                 <td>${d.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td>
                 <td>${d.pay_basis === 'hourly' ? fmt(d.hourly_rate ?? d.hourlyRate) : '—'}</td>
-                <td>${String(d.hours_worked ?? d.hoursWorked ?? '—')}</td>
+                <td>${String((d.hours_worked ?? d.hoursWorked ?? '—') as number | string)}</td>
                 <td>TTD ${fmt(d.gross_pay ?? d.grossPay)}</td>
               </tr>
             </tbody>
@@ -581,9 +582,9 @@ function updateSessionWidget(): void {
     const h = Math.floor(totalMins / 60); const m = totalMins % 60;
     txt = m > 0 ? `${h}h ${m}m` : `${h}h`;
   } else if (totalMins >= 1) {
-    txt = totalMins + 'm';
+    txt = `${totalMins}m`;
   } else {
-    txt = secs + 's';
+    txt = `${secs}s`;
   }
   const danger = msLeft <= SESSION_WARN_AT;
   const txtEl = document.getElementById('sessionTimerText');
@@ -1268,7 +1269,7 @@ function setupEventListeners(): void {
       document.querySelectorAll('.ep-tab-btn').forEach(b => b.classList.remove('active'));
       document.querySelectorAll('.ep-tab-pane').forEach(p => p.classList.remove('active'));
       epTab.classList.add('active');
-      const pane = document.getElementById('ep-tab-' + epTab.dataset.epTab);
+      const pane = document.getElementById(`ep-tab-${epTab.dataset.epTab ?? ''}`);
       pane?.classList.add('active');
     }
 

@@ -92,7 +92,7 @@ export function exportReportCsv(
       : (row: ReportRow) => {
           const k = c.key ?? c.header.toLowerCase().replace(/\s+/g, '_');
           const v = row[k];
-          return v == null ? '' : String(v);
+          return v == null ? '' : String(v as string | number | boolean);
         },
   }));
   exportCsv<ReportRow>(result.rows, csvCols, filenameBase);
@@ -127,7 +127,7 @@ export function ReportDataTable({ columns, rows, maxVisible = 200 }: ReportDataT
     if (v == null) return '';
     if (col.format === 'currency') return Number(v).toLocaleString('en-TT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (col.format === 'date' && typeof v === 'string') return v.slice(0, 10);
-    return String(v);
+    return String(v as string | number | boolean);
   }
 
   const isNumeric = (col: ReportColumn) => col.format === 'number' || col.format === 'currency';
@@ -155,7 +155,7 @@ export function ReportDataTable({ columns, rows, maxVisible = 200 }: ReportDataT
         </thead>
         <tbody>
           {displayRows.map((row, i) => (
-            <tr key={String(row.id ?? i)} class="rpt-row">
+            <tr key={String((row.id ?? i) as string | number)} class="rpt-row">
               {visibleCols.map(col => (
                 <td
                   key={col.key ?? col.header}

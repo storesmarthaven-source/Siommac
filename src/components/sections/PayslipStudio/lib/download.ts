@@ -17,7 +17,7 @@ export function readJSONFile<T>(file: File): Promise<T> {
     const reader = new FileReader();
     reader.onload = () => {
       try {
-        resolve(JSON.parse(String(reader.result)) as T);
+        resolve(JSON.parse(reader.result as string) as T);
       } catch (err) {
         reject(err instanceof Error ? err : new Error('Invalid JSON'));
       }
@@ -30,7 +30,7 @@ export function readJSONFile<T>(file: File): Promise<T> {
 export function readImageFile(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => resolve(reader.result as string);
     reader.onerror = () => reject(reader.error ?? new Error('Read failed'));
     reader.readAsDataURL(file);
   });

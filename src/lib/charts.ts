@@ -143,7 +143,7 @@ export function displayTrendChart(records: { date: string; hours: number | strin
       animation:           { duration: 800, easing: 'easeOutQuart' },
       plugins: {
         legend:  { display: false },
-        tooltip: { callbacks: { label: (c: any) => ' ' + c.parsed.y + ' hrs' } },
+        tooltip: { callbacks: { label: (c: any) => ` ${String(c.parsed.y)} hrs` } },
       },
       scales: {
         y: { beginAtZero: true, suggestedMax: 10, ticks: { stepSize: 2, font: { size: 10 } }, grid: { color: '#E9EEF3' } },
@@ -274,7 +274,7 @@ function _renderStatusBars(
       animation:           { duration: 800, easing: 'easeOutQuart' },
       plugins: {
         legend:  { display: false },
-        tooltip: { callbacks: { label: (c: any) => ' ' + c.parsed.y + ' employees' } },
+        tooltip: { callbacks: { label: (c: any) => ` ${String(c.parsed.y)} employees` } },
       },
       scales: {
         y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { stepSize: 1, font: { size: 10 } } },
@@ -320,7 +320,7 @@ function _renderLeaveTypes(
 // ── Stat panel population helpers ─────────────────────────────────────────────
 
 function _pct(n: number, total: number): string {
-  return total > 0 ? Math.round((n / total) * 100) + '%' : '—';
+  return total > 0 ? `${Math.round((n / total) * 100)}%` : '—';
 }
 
 function _setText(id: string, v: number | string | null | undefined): void {

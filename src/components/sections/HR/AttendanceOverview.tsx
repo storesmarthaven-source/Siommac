@@ -403,7 +403,7 @@ function ImportAttendanceModal({ onClose }: { onClose: () => void }): VNode {
     const file = (e.currentTarget as HTMLInputElement).files?.[0];
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => setText(String(reader.result ?? ''));
+    reader.onload = () => setText((reader.result as string | null) ?? '');
     reader.readAsText(file);
   };
 

@@ -68,7 +68,7 @@ function messageTone(post: MessagePostRow, myId: string | null): BubbleTone {
 /** Centered timeline label for a system-event post (from its payload). */
 function systemEventLabel(post: MessagePostRow): string {
   const p = (post.systemEventPayload ?? {});
-  const s = (k: string) => String(p[k] ?? '');
+  const s = (k: string) => (p[k] as string | undefined) ?? '';
   switch (post.systemEventType) {
     case 'participant_added':   return `${s('addedUserName')} was added to the conversation by ${s('actorName')}`;
     case 'participant_removed': return `${s('removedUserName')} was removed by ${s('actorName')}`;

@@ -18,12 +18,12 @@ function valStr(s: EffectiveSetting): string {
   if (s.dataType === 'boolean') return s.effectiveValue ? 'on' : 'off';
   if (s.effectiveValue === null || s.effectiveValue === undefined) return '—';
   if (typeof s.effectiveValue === 'object') return JSON.stringify(s.effectiveValue);
-  return String(s.effectiveValue);
+  return String(s.effectiveValue as string | number | bigint);
 }
 function toInput(v: unknown): string {
   if (v === null || v === undefined) return '';
   if (typeof v === 'object') return JSON.stringify(v, null, 2);
-  return String(v);
+  return String(v as string | number | bigint);
 }
 function classPill(cls: string): string {
   if (cls.includes('safety')) return 'class-safety';

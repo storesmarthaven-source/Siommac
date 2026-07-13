@@ -168,9 +168,9 @@ export function SwzCatalogPage({ pageMeta }: { pageMeta: SwzPage }): VNode {
                 <div key={r.id} class="audit-item">
                   <b>{r.setting_key}</b>
                   <div class="audit-change">
-                    <span class="old">{r.previous_value === null || r.previous_value === undefined ? '—' : String(r.previous_value)}</span>
+                    <span class="old">{r.previous_value === null || r.previous_value === undefined ? '—' : String(r.previous_value as string | number | boolean)}</span>
                     <span>→</span>
-                    <span class="new">{r.new_value === null || r.new_value === undefined ? '—' : String(r.new_value)}</span>
+                    <span class="new">{r.new_value === null || r.new_value === undefined ? '—' : String(r.new_value as string | number | boolean)}</span>
                   </div>
                   <div class="audit-meta">{new Date(r.changed_at).toLocaleString()}{r.scope_type ? ` · ${r.scope_type}` : ''}{r.reason ? ` · ${r.reason}` : ''}</div>
                 </div>

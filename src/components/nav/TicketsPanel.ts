@@ -37,9 +37,9 @@ function timeAgoShort(iso: string): string {
   const d = new Date(iso); if (isNaN(d.getTime())) return '';
   const diff = Math.floor((Date.now() - d.getTime()) / 1000);
   if (diff < 60)    return 'Just now';
-  if (diff < 3600)  return Math.floor(diff / 60) + 'm ago';
-  if (diff < 86400) return Math.floor(diff / 3600) + 'h ago';
-  return Math.floor(diff / 86400) + 'd ago';
+  if (diff < 3600)  return `${Math.floor(diff / 60)}m ago`;
+  if (diff < 86400) return `${Math.floor(diff / 3600)}h ago`;
+  return `${Math.floor(diff / 86400)}d ago`;
 }
 
 function isAdminView(): boolean {
@@ -157,7 +157,7 @@ export function mountTicketsPanel(): () => void {
   function ticketRowKey(t: TicketItem): string {
     const lastReply = t.replies.length ? t.replies[t.replies.length - 1]! : null;
     const unseenCount = t.replies.filter(r => !_seenReplyIds.has(String(r.id))).length;
-    return (t.status || '') + '|' + t.replies.length + '|' + (lastReply ? lastReply.createdAt : t.createdAt) + '|' + unseenCount;
+    return `${t.status ?? ''}|${t.replies.length}|${lastReply ? lastReply.createdAt : t.createdAt}|${unseenCount}`;
   }
 
   function ticketRowHtml(t: TicketItem): string {
@@ -484,7 +484,7 @@ export function mountTicketsPanel(): () => void {
     if (btn) { btn.disabled = true; btn.style.opacity = '0.4'; }
     if (replyEl) replyEl.value = '';
     const optimisticReply: TicketReply = {
-      id:           'tmp_' + Date.now(),
+      id:           `tmp_${Date.now()}`,
       fromUsername: currentUser,
       fromName:     currentFullName || currentUser,
       fromPhoto:    getProfileImage() || '',

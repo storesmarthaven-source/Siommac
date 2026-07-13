@@ -161,7 +161,7 @@ export function PayablesOverview(): VNode {
     { key: 'method', label: 'Method', render: r => String(r.method).toUpperCase() },
     { key: 'paidAt', label: 'Date', render: r => new Date(String(r.paidAt)).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }) },
     { key: 'amount', label: 'Amount', render: r => money(Number(r.amount)) },
-    { key: 'reference', label: 'Reference', render: r => (r.reference ? String(r.reference) : '—') },
+    { key: 'reference', label: 'Reference', render: r => (r.reference ? (r.reference as string) : '—') },
   ];
   const agingTotal = (aging.data ?? []).reduce((s, x) => s + x.amount, 0);
 

@@ -127,7 +127,7 @@ function dynamicColumns(rows: Record<string, unknown>[]): ReportColumn[] {
     header: humanize(k),
     value:  (row: Record<string, unknown>) => {
       const v = row[k];
-      return v == null ? '' : String(v);
+      return v == null ? '' : String(v as string | number | boolean);
     },
   }));
 }

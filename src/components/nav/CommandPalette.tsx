@@ -40,7 +40,7 @@ function appState(): { get: (k: string) => unknown } | undefined {
 function buildEntries(): PaletteEntry[] {
   const c = cfg();
   if (!c) return [];
-  const role = String(appState()?.get('currentRole') ?? '');
+  const role = (appState()?.get('currentRole') as string | undefined) ?? '';
   const isEmployee = appState()?.get('currentIsEmployee') !== false;
 
   const groupLabels = new Map<string, string>(

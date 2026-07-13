@@ -83,7 +83,7 @@ export function StatsCard({
   const barColor = percentColor ?? (percent != null && percent >= 80 ? '#22c55e' : '#f59e0b');
 
   return (
-    <div class={`ui-stat-card${navy ? ' ui-stat-card--navy' : ''}${className ? ` ${String(className)}` : ''}`} {...rest}>
+    <div class={`ui-stat-card${navy ? ' ui-stat-card--navy' : ''}${className ? ` ${className as string}` : ''}`} {...rest}>
       <div class="ui-stat-card-header" style={headerStyle}>
         {icon && <i class={`fas ${icon}`} />}
         <span>{title}</span>

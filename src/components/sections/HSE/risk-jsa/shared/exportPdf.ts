@@ -10,10 +10,11 @@ import { dialog } from '@lib/dialog';
 type Dict = Record<string, unknown>;
 
 const esc = (v: unknown): string =>
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
   String(v ?? '').replace(/[&<>"]/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]!));
 
 const fmtDate = (iso: unknown): string =>
-  iso ? new Date(String(iso)).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
+  iso ? new Date(iso as string).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' }) : '—';
 
 function band(score: unknown): string {
   const n = Number(score);

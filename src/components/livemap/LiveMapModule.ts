@@ -45,6 +45,7 @@ function apiSwr(
 // ── Local utility helpers (no external dep) ───────────────────────────────────
 
 function escapeHtml(s: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
   return String(s == null ? '' : s).replace(
     /[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
@@ -347,7 +348,7 @@ function _clearLiveSite(): void {
 }
 
 function _updateSiteMarkerZIndex(): void {
-  const selected = String(AppState.get('_selectedSiteId') || '');
+  const selected = (AppState.get('_selectedSiteId') as string | undefined) ?? '';
   const slm = AppState.get('_siteLayerMap') as Record<string, any>;
   Object.entries(slm).forEach(([id, { marker }]: [string, any]) => {
     if (!marker) return;
@@ -362,7 +363,7 @@ function _populateSiteSelect(): void {
   const hiddenSel = document.getElementById('lmSiteSelect') as HTMLSelectElement | null;
   if (!dropdown) return;
 
-  const current  = String(AppState.get('_selectedSiteId') || '');
+  const current  = (AppState.get('_selectedSiteId') as string | undefined) ?? '';
   const liveData = AppState.get('liveData') as any[];
   const slm      = AppState.get('_siteLayerMap') as Record<string, any>;
 
@@ -437,9 +438,9 @@ function _initCustomSelect(): void {
       const dropdown = document.getElementById('lmCustomSelectDropdown');
       if (trigger && dropdown) {
         const rect = trigger.getBoundingClientRect();
-        dropdown.style.top   = (rect.bottom + 4) + 'px';
-        dropdown.style.left  = rect.left + 'px';
-        dropdown.style.width = rect.width + 'px';
+        dropdown.style.top   = `${rect.bottom + 4}px`;
+        dropdown.style.left  = `${rect.left}px`;
+        dropdown.style.width = `${rect.width}px`;
       }
     }
   });
@@ -638,7 +639,7 @@ function renderLivePanel(rows: any[]): void {
     return;
   }
 
-  const siteRows  = rows.filter((r: any) => String(r.siteId) === String(AppState.get('_selectedSiteId')));
+  const siteRows  = rows.filter((r: any) => String(r.siteId) === ((AppState.get('_selectedSiteId') as string | undefined) ?? ''));
   const checkedIn = siteRows.filter((r: any) => !r.isCheckedOut).length;
   const late      = siteRows.filter((r: any) => r.status === 'late' && !r.isCheckedOut).length;
   const onSite    = siteRows.filter((r: any) => !r.isCheckedOut && r.checkInLat != null).length;
@@ -670,7 +671,7 @@ function renderLivePanel(rows: any[]): void {
     </div>`;
   }
   function liveEmpRowKey(r: any): string {
-    return (r.isCheckedOut ? 'out' : r.status) + '|' + (r.lastSeen || '');
+    return `${String(r.isCheckedOut ? 'out' : r.status)}|${String(r.lastSeen ?? '')}`;
   }
 
   // In-place DOM diff — only update changed rows to avoid CSS animation replay
@@ -802,8 +803,8 @@ function _showLiveEmpOverlay(marker: any): void {
 
   const overlay = document.createElement('div');
   overlay.className        = 'lm-emp-overlay';
-  overlay.style.top        = markerPx.y + 'px';
-  overlay.style.right      = (mapContainer.offsetWidth - markerPx.x + 26) + 'px';
+  overlay.style.top        = `${markerPx.y}px`;
+  overlay.style.right      = `${mapContainer.offsetWidth - markerPx.x + 26}px`;
   overlay.style.transform  = 'translateY(-50%)';
   overlay.style.flexDirection = 'row-reverse';
 
@@ -857,8 +858,8 @@ function _repositionLiveEmpOverlay(): void {
   const activeEmpMarker = AppState.get('_activeEmpMarker') as any;
   const mapContainer    = lmap.getContainer() as HTMLElement;
   const markerPx        = lmap.latLngToContainerPoint(activeEmpMarker.getLatLng());
-  _empOverlayEl.style.top   = markerPx.y + 'px';
-  _empOverlayEl.style.right = (mapContainer.offsetWidth - markerPx.x + 26) + 'px';
+  _empOverlayEl.style.top   = `${markerPx.y}px`;
+  _empOverlayEl.style.right = `${mapContainer.offsetWidth - markerPx.x + 26}px`;
 }
 
 // ── Mark project attendance ───────────────────────────────────────────────────

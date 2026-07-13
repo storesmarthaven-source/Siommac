@@ -361,7 +361,7 @@ function LogoutModal({ open, onClose }: { open: boolean; onClose: () => void }):
 
       <div class="mp76-modal-footer">
         <button type="button" class="mp76-modal-btn" onClick={onClose} disabled={busy}>Cancel</button>
-        <button type="button" class="mp76-modal-btn danger" onClick={() => void handleLogout()} disabled={busy}>
+        <button type="button" class="mp76-modal-btn danger" onClick={handleLogout} disabled={busy}>
           {busy ? <><Spin /> Signing out…</> : <><IcoLogOut /> Sign Out</>}
         </button>
       </div>

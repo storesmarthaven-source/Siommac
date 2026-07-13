@@ -260,8 +260,8 @@ function AssignmentsTab({ d }: { d: HrEmployeeDetail }): VNode {
           {hist.map(r => (
             <tr>
               <td>{fmtDate((r.effective_date ?? r.changed_at) as string)}</td>
-              <td>{humanize(String(r.previous_status ?? '—'))}</td>
-              <td>{humanize(String(r.new_status ?? '—'))}</td>
+              <td>{humanize((r.previous_status as string | undefined) ?? '—')}</td>
+              <td>{humanize((r.new_status as string | undefined) ?? '—')}</td>
               <td>{(r.reason as string) ?? '—'}</td>
             </tr>
           ))}

@@ -10,7 +10,7 @@ export function WidgetConfigFieldRenderer({ field, value, onChange }: {
   if (field.type === 'select') {
     return (
       <Field label={field.label}>
-        <SelectInput value={String(value ?? field.defaultValue ?? '')} options={field.options ?? []} onInput={v => onChange(v)} />
+        <SelectInput value={(value as string | undefined) ?? (field.defaultValue as string | undefined) ?? ''} options={field.options ?? []} onInput={v => onChange(v)} />
       </Field>
     );
   }
@@ -18,7 +18,7 @@ export function WidgetConfigFieldRenderer({ field, value, onChange }: {
     return (
       <Field label={field.label}>
         <SelectInput
-          value={String(value ?? field.defaultValue ?? false)}
+          value={((value as boolean | undefined) ?? (field.defaultValue as boolean | undefined) ?? false) ? 'true' : 'false'}
           options={[{ value: 'true', label: 'Enabled' }, { value: 'false', label: 'Disabled' }]}
           onInput={v => onChange(v === 'true')}
         />
@@ -28,13 +28,13 @@ export function WidgetConfigFieldRenderer({ field, value, onChange }: {
   if (field.type === 'number') {
     return (
       <Field label={field.label}>
-        <TextInput type="number" value={String(value ?? field.defaultValue ?? '')} onInput={v => onChange(Number(v))} />
+        <TextInput type="number" value={String((value as number | string | undefined) ?? (field.defaultValue as number | string | undefined) ?? '')} onInput={v => onChange(Number(v))} />
       </Field>
     );
   }
   return (
     <Field label={field.label}>
-      <TextInput value={String(value ?? field.defaultValue ?? '')} onInput={v => onChange(v)} />
+      <TextInput value={(value as string | undefined) ?? (field.defaultValue as string | undefined) ?? ''} onInput={v => onChange(v)} />
     </Field>
   );
 }

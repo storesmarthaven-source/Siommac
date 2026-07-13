@@ -85,7 +85,7 @@ afterEach(() => {
 beforeAll(() => {
   // Preact logs "Consider adding an error boundary" — suppress in tests
   vi.spyOn(console, 'error').mockImplementation((...args: unknown[]) => {
-    const msg = String(args[0] ?? '');
+    const msg = (args[0] as string | undefined) ?? '';
     if (
       msg.includes('Consider adding an error boundary') ||
       msg.includes('The above error occurred')

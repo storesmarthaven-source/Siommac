@@ -56,7 +56,8 @@ export function parseRatesCsv(text: string): { username: string; rate: number }[
   const push = () => { row.push(field); field = ''; };
   const eol  = () => { push(); rows.push(row); row = []; };
   while (i < text.length) {
-    const c = text[i];
+    // noUncheckedIndexedAccess: loop guard ensures c is always defined
+    const c = text[i]!;
     if (inQuote) {
       if (c === '"' && text[i + 1] === '"') { field += '"'; i += 2; continue; }
       if (c === '"') { inQuote = false; i++; continue; }

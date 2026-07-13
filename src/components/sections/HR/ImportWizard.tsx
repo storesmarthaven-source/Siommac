@@ -73,7 +73,7 @@ const NOTIFY_TARGETS = ['HR + Payroll', 'HR only', 'HR + Finance', 'None'];
 function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const r = new FileReader();
-    r.onload = () => resolve(String(r.result).split(',')[1] ?? '');
+    r.onload = () => resolve((r.result as string).split(',')[1] ?? '');
     r.onerror = () => reject(new Error('Could not read the file.'));
     r.readAsDataURL(file);
   });

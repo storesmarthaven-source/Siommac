@@ -647,7 +647,7 @@ const BUDGET_VARIANCE_COLS: ReportColumn[] = [
 
 const BUDGET_ACTUALS_COLS: ReportColumn[] = [
   { header: 'Ref',          key: 'ref' },
-  { header: 'Module',       value: r => humanModule(String(r.sourceModule ?? '')) },
+  { header: 'Module',       value: r => humanModule((r.sourceModule as string | undefined) ?? '') },
   { header: 'Amount',       key: 'amount', format: 'currency' },
   { header: 'Status',       key: 'status' },
   { header: 'Date',         key: 'createdAt', format: 'date' },

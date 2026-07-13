@@ -277,7 +277,7 @@ function RequestDetail({
     title: `${r.changeNo} · ${r.employeeName ?? '—'}`, subtitle: r.effectiveDate ? `Effective ${r.effectiveDate}` : undefined, icon: 'fa-right-left',
     badges: [statusBadge(r.status)],
     fields: [
-      { label: 'Change', value: `${String(r.previousValue ?? '—')} → ${String(r.requestedValue ?? '—')}` },
+      { label: 'Change', value: summarizeChanges(r) },
       r.requestedByName ? { label: 'Requested by', value: r.requestedByName } : null,
     ],
   });
@@ -363,8 +363,8 @@ function RequestDetail({
               {FIELD_LABELS.filter(([key]) => key in rv).map(([key, label]) => (
                 <tr key={key}>
                   <td class="obx-meta">{label}</td>
-                  <td class="obx-meta">{String(pv[key] ?? '—')}</td>
-                  <td>{String(rv[key] ?? '—')}</td>
+                  <td class="obx-meta">{String((pv[key] ?? '—') as string | number | boolean)}</td>
+                  <td>{String((rv[key] ?? '—') as string | number | boolean)}</td>
                 </tr>
               ))}
               <tr>

@@ -24,9 +24,9 @@ const BAR_COLORS = ['#2563eb', '#11a86b', '#f2a321', '#e11d48', '#6746f2', '#0ea
 
 function fmtCell(v: unknown, type?: OnboardingReportColumn['type']): string {
   if (v === null || v === undefined || v === '') return '—';
-  if (type === 'percent') return `${String(v)}%`;
-  if (type === 'status') return humanize(String(v));
-  return String(v);
+  if (type === 'percent') return `${String(v as string | number)}%`;
+  if (type === 'status') return humanize(String(v as string | number));
+  return String(v as string | number);
 }
 
 function ChartView({ chart }: { chart: OnboardingReportChart }): VNode {

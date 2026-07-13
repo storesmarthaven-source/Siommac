@@ -101,7 +101,7 @@ export function useSendReply(ticketId: string) {
       const previous = qc.getQueryData<TicketRow[]>(listKey);
 
       const optimistic: TicketRow['replies'][number] = {
-        id:           'tmp_' + Date.now(),
+        id:           `tmp_${Date.now()}`,
         fromUsername: username,
         fromName:     fullName || username,
         fromPhoto:    photo,

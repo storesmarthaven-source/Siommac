@@ -161,7 +161,7 @@ export function StatNisImportPage({ versionId, onClose }: { versionId: string; o
   const onFile = (file: File | undefined): void => {
     if (!file) return;
     const reader = new FileReader();
-    reader.onload = () => { setFileName(file.name); setFileSize(file.size); loadText(String(reader.result)); };
+    reader.onload = () => { setFileName(file.name); setFileSize(file.size); loadText(reader.result as string); };
     reader.readAsText(file);
   };
 

@@ -34,7 +34,7 @@ function listToText(arr: unknown[]): string {
   return arr
     .map(item => {
       if (typeof item === 'string') return item;
-      if (item && typeof item === 'object' && 'text' in item) return String((item as Record<string, unknown>).text ?? '');
+      if (item && typeof item === 'object' && 'text' in item) return ((item as Record<string, unknown>).text as string | undefined) ?? '';
       return '';
     })
     .filter(Boolean)

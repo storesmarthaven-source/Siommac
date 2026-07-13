@@ -158,8 +158,8 @@ export function NavController(): h.JSX.Element {
         const gap = 12, pad = 10;
         let left = bRect.left + bRect.width / 2 - mWidth / 2;
         left = Math.max(pad, Math.min(left, window.innerWidth - mWidth - pad));
-        modalBox.style.top   = (bRect.bottom + gap) + 'px';
-        modalBox.style.left  = left + 'px';
+        modalBox.style.top   = `${bRect.bottom + gap}px`;
+        modalBox.style.left  = `${left}px`;
         modalBox.style.right = 'auto';
       }
       m.classList.add('open');

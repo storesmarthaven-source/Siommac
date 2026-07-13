@@ -231,6 +231,7 @@ export function getLayout():       string { return appState().get('currentLayout
 // ── escapeHtml ────────────────────────────────────────────────────────────────
 
 export function esc(s: unknown): string {
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
   return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c] ?? c,
   );

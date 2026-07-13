@@ -716,6 +716,7 @@ function PayComponentsTab({ components, loading, error, canManage, canApproveCom
                   const isOwnCR = !!currentUserId && cr.createdBy === currentUserId;
                   const relatedComponent = components.find(c => c.id === cr.componentId);
                   const label = cr.changeType === 'create'
+                    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- cr.payload is an untyped API payload; fields are string primitives at runtime
                     ? `New: ${String(cr.payload.code ?? cr.payload.name ?? '—')}`
                     : relatedComponent ? `${relatedComponent.name} (${relatedComponent.code})` : cr.componentId ?? '—';
                   return (
@@ -798,7 +799,9 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
 
   const val = (r: NisProfileRow, k: string): string => {
     const v = r[k];
-    return v == null || v === '' ? '—' : String(v);
+    if (v == null || v === '') return '—';
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- r[k] is unknown; runtime values are primitives (string | number | boolean)
+    return String(v);
   };
 
   // Dual-key accessor (backend may return camelCase or snake_case).
@@ -888,7 +891,7 @@ const REPORT_COLUMNS: Record<StatutoryReportKey, ReportColumn[]> = {
     { header: 'Effective',   key: 'effectiveFrom', format: 'date' },
     { header: 'Jurisdiction',key: 'jurisdiction' },
     { header: 'Status',      key: 'status' },
-    { header: 'Active',      value: r => String(r.isActive ?? '—') },
+    { header: 'Active',      value: r => r.isActive !== undefined ? (r.isActive ? 'true' : 'false') : '—' },
     { header: 'Approved By', key: 'approvedBy' },
     { header: 'Activated By',key: 'activatedBy' },
     { header: 'Created At',  key: 'createdAt', format: 'date' },
@@ -905,10 +908,10 @@ const REPORT_COLUMNS: Record<StatutoryReportKey, ReportColumn[]> = {
     { header: 'Code',             key: 'code' },
     { header: 'Name',             key: 'name' },
     { header: 'Kind',             key: 'kind' },
-    { header: 'Statutory',        value: r => String(r.isStatutory ?? '—') },
-    { header: 'Taxable',          value: r => String(r.isTaxable ?? '—') },
-    { header: 'Reduces Charge.',  value: r => String(r.reducesChargeable ?? '—') },
-    { header: 'Active',           value: r => String(r.isActive ?? '—') },
+    { header: 'Statutory',        value: r => r.isStatutory !== undefined ? (r.isStatutory ? 'true' : 'false') : '—' },
+    { header: 'Taxable',          value: r => r.isTaxable !== undefined ? (r.isTaxable ? 'true' : 'false') : '—' },
+    { header: 'Reduces Charge.',  value: r => r.reducesChargeable !== undefined ? (r.reducesChargeable ? 'true' : 'false') : '—' },
+    { header: 'Active',           value: r => r.isActive !== undefined ? (r.isActive ? 'true' : 'false') : '—' },
   ],
   statutory_approval_history: [
     { header: 'Action',     key: 'action' },
