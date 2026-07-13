@@ -310,7 +310,8 @@ export function AcUsersPage(): VNode {
               </div>
 
               <div class="u-info-banner">
-                <div style={{ flex: 1, fontSize: '13.5px', color: 'var(--ink-2)' }}><strong>You are editing user-level overrides.</strong> Changes you make here create exceptions for this user only and do not affect the underlying role.</div>
+                <span class="u-info-ico"><LucideIcon name="Info" size={16} strokeWidth={2.2} /></span>
+                <div class="u-info-txt"><strong>You're editing user-level overrides.</strong> Changes create exceptions for this user only — the underlying role is unchanged.</div>
               </div>
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
@@ -331,6 +332,14 @@ export function AcUsersPage(): VNode {
               </div>
 
               <div class="card" style={{ overflow: 'hidden' }}>
+                <div class="u-tbl-top">
+                  <span class="u-legend">
+                    <span class="u-legend-i"><span class="u-dot green" /> Allow</span>
+                    <span class="u-legend-i"><span class="u-dot red" /> Deny</span>
+                    <span class="u-legend-i"><span class="u-dot grey" /> Inherit</span>
+                  </span>
+                  <span class="u-tbl-count">{groups.size} module{groups.size === 1 ? '' : 's'} · {[...groups.values()].reduce((n, a) => n + a.length, 0)} capabilities</span>
+                </div>
                 <table class="tbl" style={{ tableLayout: 'fixed' }}>
                   <colgroup><col style={{ width: '30%' }} /><col style={{ width: '14%' }} /><col style={{ width: '15%' }} /><col style={{ width: '15%' }} /><col style={{ width: '14%' }} /><col style={{ width: '52px' }} /></colgroup>
                   <thead><tr><th>Capability</th><th>Role Default</th><th>User Override</th><th>Effective Result</th><th>Source</th><th style={{ textAlign: 'center' }}>Reset</th></tr></thead>
@@ -352,7 +361,7 @@ export function AcUsersPage(): VNode {
                           {open && keys.map((k, i) => {
                             const t = target(k); const ov = t !== 'inherit'; const submitted = localPending.has(k);
                             return (
-                              <tr key={k} class={ov ? 'u-row-override' : undefined}>
+                              <tr key={k} class={`u-sub${ov ? ' u-row-override' : ''}`}>
                                 <td class={`u-cap-cell${i === keys.length - 1 ? ' is-last' : ''}`}>
                                   <div class="u-cap-name">{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</div>
                                   <div class="u-cap-desc">{PERMISSION_META[k].description}</div>
@@ -379,14 +388,6 @@ export function AcUsersPage(): VNode {
                     {groups.size === 0 && <tr><td colSpan={6}><div class="ac-empty">No capabilities match the filters.</div></td></tr>}
                   </tbody>
                 </table>
-                <div class="u-tbl-foot">
-                  <span style={{ display: 'flex', alignItems: 'center', gap: '14px', fontSize: '12px' }}>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--green)', fontWeight: 600 }}><i class="fas fa-circle" style={{ fontSize: '7px' }} /> Allow</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--red)', fontWeight: 600 }}><i class="fas fa-circle" style={{ fontSize: '7px' }} /> Deny</span>
-                    <span style={{ display: 'flex', alignItems: 'center', gap: '5px', color: 'var(--faint)', fontWeight: 600 }}><i class="fas fa-circle" style={{ fontSize: '7px' }} /> Inherit</span>
-                  </span>
-                  <span class="muted" style={{ fontSize: '12px', marginLeft: 'auto' }}>{groups.size} module{groups.size === 1 ? '' : 's'} · {[...groups.values()].reduce((n, a) => n + a.length, 0)} capabilities</span>
-                </div>
               </div>
 
               <div class="u-action-bar">
@@ -413,7 +414,7 @@ export function AcUsersPage(): VNode {
                 </div>
                 <div class="u-ab-actions">
                   <button class="btn" disabled={!pending.size || saving} onClick={() => setPending(new Map())}>Discard Changes</button>
-                  <button class="btn primary" disabled={!pending.size || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Changes'}</button>
+                  <button class="btn primary u-save" disabled={!pending.size || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Changes'}</button>
                 </div>
               </div>
             </>
