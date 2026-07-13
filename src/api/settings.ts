@@ -37,7 +37,7 @@ export async function getSettingsMap(signal?: AbortSignal): Promise<SettingsMap>
   }
 
   const map: SettingsMap = {};
-  for (const row of (data ?? []) as { key: string; value: string }[]) {
+  for (const row of data as { key: string; value: string }[]) {
     map[row.key] = row.value;
   }
   return map;

@@ -51,7 +51,7 @@ export async function loadPermissionOverrides(
 
   // Validate each row through Zod; skip malformed rows
   const overrides: PermissionOverride[] = [];
-  for (const row of data ?? []) {
+  for (const row of data) {
     const parsed = PermissionOverrideSchema.safeParse(row);
     if (parsed.success) {
       overrides.push(parsed.data);
@@ -129,7 +129,7 @@ export async function listAllPermissionOverrides(
     throw new Error(error.message);
   }
 
-  return (data ?? []).flatMap((row) => {
+  return data.flatMap((row) => {
     const parsed = PermissionOverrideSchema.safeParse(row);
     return parsed.success ? [parsed.data] : [];
   });

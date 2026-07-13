@@ -108,6 +108,7 @@ function escapeHtml(s: unknown): string {
 }
 
 function cssEscape(s: string): string {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive browser compat: CSS.escape absent in old Safari
   return (window.CSS && CSS.escape) ? CSS.escape(s) : s.replace(/(["\\])/g, '\\$1');
 }
 
@@ -115,7 +116,7 @@ function cssEscape(s: string): string {
 
 function _patchPhotoCache(username: string | null | undefined, photoUrl: string): void {
   if (username) {
-    _photoCache[username] = photoUrl ?? '';
+    _photoCache[username] = photoUrl;
     const as = _AppState();
     if (as) as._photoCache = _photoCache;
   }
@@ -141,6 +142,7 @@ const showPopup = (type: string, title: string, text: string): Promise<{ isConfi
 interface GeoResult { fallback?: boolean; latitude: number; longitude: number; accuracy: number; timestamp: string }
 
 const getCurrentLocation = (): Promise<GeoResult> => new Promise(resolve => {
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: geolocation absent in some embedded/non-browser contexts
   if (!navigator.geolocation) {
     resolve({ fallback: true, latitude: 10.6549, longitude: -61.5019, accuracy: 1000, timestamp: new Date().toISOString() });
     return;
@@ -173,7 +175,7 @@ function _swapAvatarImg(el: HTMLElement | ProfileAvEl, url: string, initial: str
   function applyImg(): void {
     if (variant === 'hdr' || variant === 'attendance') {
       (el as HTMLElement).innerHTML = `<img src="${url}" style="width:100%;height:100%;object-fit:cover;border-radius:50%;">`;
-    } else if (variant === 'profile') {
+    } else {
       const p = el as ProfileAvEl;
       p.imgEl.src = url; p.imgEl.style.display = 'block';
       p.emptyEl.style.display = 'none';
@@ -362,7 +364,10 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
       <div class="pr-payslip-meta">
         <div class="pr-payslip-meta-col">
           <div class="pr-payslip-meta-row"><span>Pay Period</span><strong>${escapeHtml(d.date_from)} — ${escapeHtml(d.date_to)}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Pay Cycle</span><strong>${cycleLabel[d.pay_cycle as string] ?? (d.pay_cycle as string) ?? '—'}</strong></div>
+          <div class="pr-payslip-meta-row"><span>Pay Cycle</span><strong>${
+            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: cycleLabel may not contain this pay_cycle value at runtime
+            cycleLabel[d.pay_cycle as string] ?? (d.pay_cycle as string) ?? '—'
+          }</strong></div>
           <div class="pr-payslip-meta-row"><span>Pay Date</span><strong>${escapeHtml(d.pay_date ?? '—')}</strong></div>
           <div class="pr-payslip-meta-row"><span>Payroll Type</span><strong>Normal</strong></div>
         </div>
@@ -478,6 +483,7 @@ function loadSession(): SessionData | null {
     const raw = localStorage.getItem(SESSION_KEY);
     if (!raw) return null;
     const s = JSON.parse(raw) as SessionData;
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: JSON.parse('null') yields null, cast doesn't guard it
     if (!s?.token) return null;
     // Only the IDLE deadline ends a session. An expired access token must NOT —
     // it would destroy the refresh token and make silent refresh impossible.
@@ -622,21 +628,21 @@ export function _completeLogin(result: Record<string, unknown>): void {
   else            { localStorage.removeItem('rememberedUser'); }
 
   saveSession({
-    userId:         result.userId          as string ?? '',
-    username:       result.username        as string ?? '',
-    fullName:       result.fullName        as string ?? '',
-    role:           result.role            as string ?? '',
-    departmentId:   result.departmentId    as string ?? '',
-    position:       result.position        as string ?? '',
-    colorScheme:    result.colorScheme     as string ?? 'navy',
-    layoutMode:     result.layoutMode      as string ?? 'sidebar',
-    token:          result.token           as string ?? '',
-    companyName:    result.companyName     as string ?? '',
-    companyLogoUrl: result.companyLogoUrl  as string ?? '',
-    profileImage:   result.profileImage    as string ?? '',
+    userId:         (result.userId         ?? '') as string,
+    username:       (result.username       ?? '') as string,
+    fullName:       (result.fullName       ?? '') as string,
+    role:           (result.role           ?? '') as string,
+    departmentId:   (result.departmentId   ?? '') as string,
+    position:       (result.position       ?? '') as string,
+    colorScheme:    (result.colorScheme    ?? 'navy') as string,
+    layoutMode:     (result.layoutMode     ?? 'sidebar') as string,
+    token:          (result.token          ?? '') as string,
+    companyName:    (result.companyName    ?? '') as string,
+    companyLogoUrl: (result.companyLogoUrl ?? '') as string,
+    profileImage:   (result.profileImage   ?? '') as string,
     idleTimeoutMs:  Number(result.sessionIdleTimeoutMs) || 0,
     isEmployee:     result.isEmployee !== false,
-    roleScope:      (result.roleScope) ?? 'own',
+    roleScope:      result.roleScope ?? 'own',
   }, rememberMe);
 
   // Sync the Zustand session store so Preact components see isAuthenticated=true
@@ -770,6 +776,7 @@ function handleLogout(): void {
   clearSession();
 
   const locationWatchId = as?.get('locationWatchId') as number | undefined;
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: geolocation absent in some embedded/non-browser contexts
   if (locationWatchId != null && navigator.geolocation) navigator.geolocation.clearWatch(locationWatchId);
 
   as?.set('currentUser',     null);
@@ -848,6 +855,7 @@ function stopCamera(): void {
 
 function startLocationTracking(): void {
   const as = _AppState();
+  // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: geolocation absent in some embedded/non-browser contexts
   if (navigator.geolocation) {
     const opts: PositionOptions = { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 };
     const watchId = navigator.geolocation.watchPosition(updateLocationInfo, handleLocationError, opts);
@@ -878,6 +886,7 @@ function updateLocationInfo(position: GeolocationPosition): void {
   const map        = as?.get('map')        as Record<string, unknown> | undefined;
   const userMarker = as?.get('userMarker') as Record<string, unknown> | undefined;
   if (map && userMarker) {
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
     (userMarker.setLatLng as (ll: number[]) => void)?.([latitude, longitude]);
   } else if (map && !userMarker) {
     _LiveMap()?.updateUserLocationOnMap?.();
@@ -997,7 +1006,7 @@ function setupEventListeners(): void {
 
   // Mark attendance
   document.addEventListener('click', (e) => {
-    if ((e.target as Element).closest?.('#markAttendanceBtn')) liveMap?.markProjectAttendance?.();
+    if ((e.target as Element).closest('#markAttendanceBtn')) liveMap?.markProjectAttendance?.();
   });
 
   // Input filters
@@ -1021,7 +1030,7 @@ function setupEventListeners(): void {
       const hrUpdateStats = w()._hrUpdateStats as ((d: unknown[]) => void) | undefined;
       if (ratesData && hrUpdateStats) {
         const snapshot = ratesData.map(r => {
-          const liveInp = document.querySelector<HTMLInputElement>(`.rate-input[data-username="${cssEscape((r.username as string) ?? '')}"]`);
+          const liveInp = document.querySelector<HTMLInputElement>(`.rate-input[data-username="${cssEscape((r.username ?? '') as string)}"]`);
           const liveVal = liveInp ? parseFloat(liveInp.value) : NaN;
           return Object.assign({}, r, { hourlyRate: isNaN(liveVal) ? (r.hourlyRate ?? 0) : liveVal });
         });
@@ -1047,7 +1056,9 @@ function setupEventListeners(): void {
             const lat = Number(entry.site.latitude), lng = Number(entry.site.longitude), rad = Number(entry.site.radius) || 200;
             if (lat && lng) {
               const bounds = L.latLng(lat, lng).toBounds(rad * 4);
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
               (map.fitBounds as (b: unknown, o: unknown) => void)?.(bounds, { padding: [40, 40], animate: false });
+              // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
               if (entry.marker) (entry.marker.openPopup as () => void)?.();
             }
           }
@@ -1059,7 +1070,7 @@ function setupEventListeners(): void {
 
     if (tgt.matches('#attendanceMonth') || tgt.matches('#attendanceYear')) {
       const as = _AppState();
-      if ((as?.get('attFilterMode') as string ?? 'month') === 'month') attView?.loadAttendanceData?.();
+      if (((as?.get('attFilterMode') ?? 'month') as string) === 'month') attView?.loadAttendanceData?.();
     }
     if (tgt.matches('#attDeptFilter')) {
       const rt = w()._renderAttTable       as (() => void) | undefined;
@@ -1083,7 +1094,7 @@ function setupEventListeners(): void {
     const tgt = e.target as Element;
 
     // Attendance export
-    if (tgt.closest?.('#exportAttendanceBtn')) {
+    if (tgt.closest('#exportAttendanceBtn')) {
       const btn = document.querySelector<HTMLElement>('.dt-button.buttons-csv, .dt-button.buttons-excel');
       if (btn) btn.click(); else void showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
     }
@@ -1107,7 +1118,7 @@ function setupEventListeners(): void {
     }
 
     // Date range apply
-    if (tgt.closest?.('#attApplyRange')) {
+    if (tgt.closest('#attApplyRange')) {
       const from = _attFpFrom?.selectedDates[0] ? _attFpFrom.formatDate(_attFpFrom.selectedDates[0], 'Y-m-d') : '';
       if (!from) { void showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
       _swr()?.clearByPrefix('listDailyLog:');
@@ -1143,8 +1154,8 @@ function setupEventListeners(): void {
     if (tabBtn) nav?.showSection?.(tabBtn.dataset.section);
 
     // Live map controls
-    if (tgt.closest?.('#refreshLiveMapBtn')) { _spinBtn('refreshLiveMapBtn'); liveMap?.loadLiveAttendance?.(); }
-    if (tgt.closest?.('#centerMapBtn')) {
+    if (tgt.closest('#refreshLiveMapBtn')) { _spinBtn('refreshLiveMapBtn'); liveMap?.loadLiveAttendance?.(); }
+    if (tgt.closest('#centerMapBtn')) {
       const as = _AppState();
       const map             = as?.get('map')             as Record<string, unknown> | undefined;
       const activeEmpMarker = as?.get('activeEmpMarker') as Record<string, unknown> | undefined;
@@ -1152,10 +1163,13 @@ function setupEventListeners(): void {
       if (map) {
         if (activeEmpMarker) {
           const getLatLng = activeEmpMarker.getLatLng as (() => unknown) | undefined;
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
           (map.setView as (ll: unknown, z: number, o: unknown) => void)?.(getLatLng?.(), 16, { animate: true });
         } else if (attendanceZones.length) {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
           try { (map.fitBounds as (b: unknown) => void)?.(L.featureGroup(attendanceZones).getBounds().pad(0.25)); } catch (_) { /* empty */ }
         } else {
+          // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- optional call guards against cast mismatch at runtime
           (map.setView as (ll: number[], z: number) => void)?.([10.6549, -61.5019], 12);
         }
       }
@@ -1164,14 +1178,14 @@ function setupEventListeners(): void {
     if (liveCard && tgt.closest('#s-projectMap')) liveMap?.focusLiveEmployee?.((liveCard.dataset.id ?? liveCard.dataset.userid ?? ''));
 
     // Hourly rates
-    if (tgt.closest?.('#refreshRatesBtn'))   payroll?.loadHourlyRates?.();
-    if (tgt.closest?.('#saveAllRatesBtn'))   payroll?._hrSaveAll?.();
-    if (tgt.closest?.('#exportRatesCsvBtn')) payroll?._hrExportCsv?.();
-    if (tgt.closest?.('#importRatesCsvBtn')) payroll?._hrOpenModal?.();
-    if (tgt.closest?.('#hrCloseModalBtn') || tgt.closest?.('#hrCancelModalBtn')) payroll?._hrCloseModal?.();
-    if (tgt.closest?.('#hrConfirmImportBtn')) payroll?._hrConfirmImport?.();
-    if (tgt.closest?.('#hrFileDrop') || tgt.closest?.('#hrFileDrop label')) document.getElementById('hrFileInput')?.click();
-    if (tgt.closest?.('#hrResetFiltersBtn')) {
+    if (tgt.closest('#refreshRatesBtn'))   payroll?.loadHourlyRates?.();
+    if (tgt.closest('#saveAllRatesBtn'))   payroll?._hrSaveAll?.();
+    if (tgt.closest('#exportRatesCsvBtn')) payroll?._hrExportCsv?.();
+    if (tgt.closest('#importRatesCsvBtn')) payroll?._hrOpenModal?.();
+    if (tgt.closest('#hrCloseModalBtn') || tgt.closest('#hrCancelModalBtn')) payroll?._hrCloseModal?.();
+    if (tgt.closest('#hrConfirmImportBtn')) payroll?._hrConfirmImport?.();
+    if (tgt.closest('#hrFileDrop') || tgt.closest('#hrFileDrop label')) document.getElementById('hrFileInput')?.click();
+    if (tgt.closest('#hrResetFiltersBtn')) {
       payroll?._hrSearch?.(''); payroll?._hrDept?.('all'); payroll?._hrRole?.('all');
       const si = document.getElementById('hrSearchInput')  as HTMLInputElement | null;
       const df = document.getElementById('hrDeptFilter')   as HTMLSelectElement | null;
@@ -1183,16 +1197,16 @@ function setupEventListeners(): void {
     if (saveBtn) payroll?.saveHourlyRate?.(saveBtn.dataset.username, saveBtn);
 
     // Payroll settings modal
-    if (tgt.closest?.('#prsCloseBtn') || tgt.closest?.('#prsCancelBtn')) payroll?._prsClose?.();
-    if (tgt.closest?.('#prsSaveBtn'))  payroll?._prsSave?.();
+    if (tgt.closest('#prsCloseBtn') || tgt.closest('#prsCancelBtn')) payroll?._prsClose?.();
+    if (tgt.closest('#prsSaveBtn'))  payroll?._prsSave?.();
     if ((tgt as HTMLElement).id === 'prSettingsModal') payroll?._prsClose?.();
 
     // Payroll constants modal
-    if (tgt.closest?.('#prSettingsBtn'))    payroll?._prcOpen?.();
-    if (tgt.closest?.('#prcCloseBtn') || tgt.closest?.('#prcCancelBtn')) payroll?._prcClose?.();
-    if (tgt.closest?.('#prcVerifyBtn'))     payroll?._prcVerify?.();
-    if (tgt.closest?.('#prcSaveBtn'))       payroll?._prcSave?.();
-    if (tgt.closest?.('#prcRestoreBtn'))    payroll?._prcRestoreDefaults?.();
+    if (tgt.closest('#prSettingsBtn'))    payroll?._prcOpen?.();
+    if (tgt.closest('#prcCloseBtn') || tgt.closest('#prcCancelBtn')) payroll?._prcClose?.();
+    if (tgt.closest('#prcVerifyBtn'))     payroll?._prcVerify?.();
+    if (tgt.closest('#prcSaveBtn'))       payroll?._prcSave?.();
+    if (tgt.closest('#prcRestoreBtn'))    payroll?._prcRestoreDefaults?.();
     if ((tgt as HTMLElement).id === 'prConstantsModal') payroll?._prcClose?.();
     const prcTab = tgt.closest<HTMLElement>('.prc-tab');
     if (prcTab?.dataset.prcTab) {
@@ -1223,33 +1237,34 @@ function setupEventListeners(): void {
     }
 
     // Payroll filter panel toggle
-    if (tgt.closest?.('#prFilterToggle')) {
+    if (tgt.closest('#prFilterToggle')) {
       const toggle = document.getElementById('prFilterToggle');
       const expand = document.getElementById('prFilterExpand');
       if (toggle && expand) { const open = expand.classList.toggle('open'); toggle.classList.toggle('active', open); }
     }
 
     // Payroll mode + actions
-    if (tgt.closest?.('#prReportBtn'))        payroll?._prToggleReportsMode?.();
-    if (tgt.closest?.('#prApplyBtn'))         (payroll?._prReportsMode ? payroll?._prRunReportsSearch : payroll?._prRunPayroll)?.();
-    if (tgt.closest?.('#prSendApprovalBtn'))  payroll?._prSendForApproval?.();
+    if (tgt.closest('#prReportBtn'))        payroll?._prToggleReportsMode?.();
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- ternary result is narrowed by TS but remains fn|undefined at runtime
+    if (tgt.closest('#prApplyBtn'))         (payroll?._prReportsMode ? payroll?._prRunReportsSearch : payroll?._prRunPayroll)?.();
+    if (tgt.closest('#prSendApprovalBtn'))  payroll?._prSendForApproval?.();
     const prPayslipBtn = tgt.closest<HTMLElement>('.pr-payslip-btn');
     if (prPayslipBtn) payroll?._prOpenPayslip?.(prPayslipBtn.dataset.uid);
     const prEditBtn = tgt.closest<HTMLElement>('.pr-edit-btn');
     if (prEditBtn) payroll?._prOpenEditPayroll?.(prEditBtn.dataset.uid);
 
     // Profile actions
-    if (tgt.closest?.('#pickProfileImageBtn') || tgt.closest?.('#editAvatarBtn'))  { const fn = w().pickProfileImage    as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#removeProfileImageBtn'))  { const fn = w().removeProfileImage  as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#saveProfileBtn'))          { const fn = w().saveMyProfile       as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#updateSecurityBtn'))        { const fn = w()._updateSecurityOnly as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#uploadDocBtn'))             _profileToast('Document upload coming soon.', false);
+    if (tgt.closest('#pickProfileImageBtn') || tgt.closest('#editAvatarBtn'))  { const fn = w().pickProfileImage    as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#removeProfileImageBtn'))  { const fn = w().removeProfileImage  as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#saveProfileBtn'))          { const fn = w().saveMyProfile       as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#updateSecurityBtn'))        { const fn = w()._updateSecurityOnly as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#uploadDocBtn'))             _profileToast('Document upload coming soon.', false);
 
     // Admin branding + payroll rules
-    if (tgt.closest?.('#pickLogoBtn'))             { const fn = w().pickLogo            as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#saveLogoBtn'))             { const fn = w().saveLogo            as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#savePayrollSettingsBtn'))  { const fn = w().savePayrollSettings as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#saveWorkHoursBtn'))        { const fn = w().saveWorkHours       as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#pickLogoBtn'))             { const fn = w().pickLogo            as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#saveLogoBtn'))             { const fn = w().saveLogo            as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#savePayrollSettingsBtn'))  { const fn = w().savePayrollSettings as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#saveWorkHoursBtn'))        { const fn = w().saveWorkHours       as (() => void) | undefined; fn?.(); }
 
     // Leave tabs
     const lvTab = tgt.closest<HTMLElement>('.lv-tab-btn');
@@ -1281,9 +1296,9 @@ function setupEventListeners(): void {
     }
 
     // Settings save all / reset / clear cache
-    if (tgt.closest?.('#saveAllSettingsBtn')) { const fn = w().savePayrollSettings as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#resetDefaultsBtn'))   { const fn = w()._stgResetDefaults   as (() => void) | undefined; fn?.(); }
-    if (tgt.closest?.('#clearCacheBtn')) {
+    if (tgt.closest('#saveAllSettingsBtn')) { const fn = w().savePayrollSettings as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#resetDefaultsBtn'))   { const fn = w()._stgResetDefaults   as (() => void) | undefined; fn?.(); }
+    if (tgt.closest('#clearCacheBtn')) {
       _SwCacheMgr()?.clearAll?.();
       localStorage.clear();
       void _cpop()?.fire({ icon: 'success', title: 'Cache cleared', text: 'Page will reload.', showConfirmButton: true }).then(() => location.reload());
@@ -1367,7 +1382,7 @@ export function init(): void {
       const currentRole = _AppState()?.get('currentRole') as string | undefined;
       if (currentRole === 'admin' || currentRole === 'manager') {
         rawApi('getPayrollConstants', {}).then(cr => {
-          if (cr?.success && cr.data) {
+          if (cr.success && cr.data) {
             const d = cr.data as Record<string, number>;
             sv?.setStatutoryRates?.({ allowanceAnnual: d.PERSONAL_ALLOWANCE_ANNUAL ?? 90000, nisRate: Math.round((d.NIS_RATE ?? 0.06) * 100), payeRateLow: Math.round((d.PAYE_RATE_LOW ?? 0.25) * 100), payeRateHigh: Math.round((d.PAYE_RATE_HIGH ?? 0.30) * 100) });
           }

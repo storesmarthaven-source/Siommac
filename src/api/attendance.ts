@@ -53,7 +53,7 @@ export async function listMyAttendance(
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /**
@@ -88,7 +88,7 @@ export async function listAllAttendance(
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /**
@@ -143,7 +143,7 @@ export async function getLiveAttendance(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 // ── Write (delegated to backend) ──────────────────────────────────────────────

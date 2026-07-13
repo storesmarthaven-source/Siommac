@@ -33,7 +33,7 @@ export async function listPayrollRuns(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** Get entries for a specific payroll run */
@@ -53,7 +53,7 @@ export async function getPayrollEntries(runId: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** Get the current employee's payslip history */
@@ -76,7 +76,7 @@ export async function getMyPayslips(username: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 export async function createPayrollRun(payload: CreatePayrollRunPayload): Promise<void> {
@@ -116,7 +116,7 @@ export async function getHourlyRateHistory(username: string, signal?: AbortSigna
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** List all employees with their current hourly rate (admin) */
@@ -136,7 +136,7 @@ export async function listAllHourlyRates(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 export async function setHourlyRate(payload: SetHourlyRatePayload): Promise<void> {

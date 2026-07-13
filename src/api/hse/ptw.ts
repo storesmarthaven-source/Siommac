@@ -636,7 +636,7 @@ export function useApprovedJsaSearch(query: string) {
       const lower = q.toLowerCase();
       return {
         ...res,
-        data: (res.data ?? []).filter(
+        data: res.data.filter(
           r => r.ref.toLowerCase().includes(lower) || r.title.toLowerCase().includes(lower),
         ),
       };
@@ -661,7 +661,7 @@ export function useApprovedRaSearch(query: string) {
       const lower = q.toLowerCase();
       return {
         ...res,
-        data: (res.data ?? []).filter(
+        data: res.data.filter(
           r => r.ref.toLowerCase().includes(lower) || r.title.toLowerCase().includes(lower),
         ),
       };

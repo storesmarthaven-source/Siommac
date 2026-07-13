@@ -119,7 +119,7 @@ export function useHrEmployees(filter: HrEmployeeListFilter = {}) {
     queryKey: hrEmployeeKeys.list(f),
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: HrEmployeeRow[] }>('hr/employees/list', f, { signal });
-      return res.data ?? [];
+      return res.data;
     },
   });
 }
@@ -141,7 +141,6 @@ export interface HrEmployeePageMeta {
 
 export interface HrEmployeePage { rows: HrEmployeeRow[]; meta: HrEmployeePageMeta; }
 
-const EMPTY_PAGE_META: HrEmployeePageMeta = { total: 0, page: 1, pageSize: 0, departments: [], statuses: [], employmentTypes: [], trainingStatuses: [] };
 
 /** Server-backed register query — filters, sort, and pagination are all applied
  *  in Postgres (not client-side over a fetched-everything payload). Returns the
@@ -153,7 +152,7 @@ export function useHrEmployeesPage(filter: HrEmployeePageFilter) {
     placeholderData: prev => prev,
     queryFn: async ({ signal }: QueryFunctionContext): Promise<HrEmployeePage> => {
       const res = await apiPost<{ success: boolean; data: HrEmployeeRow[]; meta: HrEmployeePageMeta }>('hr/employees/list', f, { signal });
-      return { rows: res.data ?? [], meta: res.meta ?? EMPTY_PAGE_META };
+      return { rows: res.data, meta: res.meta };
     },
   });
 }

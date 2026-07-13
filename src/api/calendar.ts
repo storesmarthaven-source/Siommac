@@ -54,7 +54,7 @@ export function useCalendarItem(id: string | null) {
       const res = await apiPost<{ success: boolean; item: CalendarItemDTO; attendees: { user_id: string; response_status: string }[]; message?: string }>(
         'calendar/get', { id }, { signal });
       if (!res.success) throw new Error(res.message ?? 'Failed to load item');
-      return { item: res.item, attendees: res.attendees ?? [] };
+      return { item: res.item, attendees: res.attendees };
     },
   });
 }

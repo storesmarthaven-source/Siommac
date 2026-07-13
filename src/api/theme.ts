@@ -12,7 +12,7 @@ import type { ThemeOverrides } from '@ui/theme/applyTheme';
 /** Read the saved global token overrides (empty/absent → base.css defaults). */
 export async function loadThemeTokens(): Promise<ThemeOverrides | null> {
   const res = await authPost<{ success: boolean; data?: { tokens: ThemeOverrides } }>('theme/get', {});
-  return res.success && res.data ? (res.data.tokens ?? {}) : null;
+  return res.success && res.data ? res.data.tokens : null;
 }
 
 /** Persist the global token overrides (enforced admin-only server-side). */

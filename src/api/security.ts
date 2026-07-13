@@ -207,7 +207,7 @@ export function usePasskeys(enabled = true) {
     queryFn:  () => apiPost<PasskeyListResponse>('webauthn/credentials/list', {}),
     enabled,
     staleTime: 30_000,
-    select: (data) => data.credentials ?? [],
+    select: (data) => data.credentials,
   });
 }
 
@@ -225,6 +225,7 @@ export function useRegisterPasskey() {
         'webauthn/register/options',
         {},
       );
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: server may omit options on unexpected error despite the type
       if (!optionsRes.success || !optionsRes.options) {
         throw new Error('Failed to get registration options');
       }
@@ -292,7 +293,7 @@ export function useTrustedDevices(enabled = true) {
     queryFn:  () => apiPost<TrustedDevicesListResponse>('auth/trusted-devices/list', {}),
     enabled,
     staleTime: 30_000,
-    select: (data) => data.devices ?? [],
+    select: (data) => data.devices,
   });
 }
 

@@ -31,7 +31,7 @@ export async function getMyLeaves(username: string, signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** Pending leaves for a manager's department */
@@ -55,7 +55,7 @@ export async function getPendingLeavesForManager(
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** All leave requests — admin view, with full details */
@@ -74,7 +74,7 @@ export async function listAllLeaves(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 // ── Write ─────────────────────────────────────────────────────────────────────

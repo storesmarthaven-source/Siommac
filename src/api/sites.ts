@@ -34,7 +34,7 @@ export async function listSites(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** List active sites only — used in check-in site picker and live map */
@@ -54,7 +54,7 @@ export async function listActiveSites(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 /** Get a single site with its assigned employee IDs */
@@ -113,7 +113,7 @@ export async function getLiveSiteMap(signal?: AbortSignal) {
     throw new Error(error.message);
   }
 
-  return data ?? [];
+  return data;
 }
 
 // ── Write ─────────────────────────────────────────────────────────────────────
