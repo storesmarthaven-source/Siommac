@@ -302,7 +302,7 @@ export function AcOverviewPage(): VNode {
               <div class="kpi-sub">Configurable-Role Users</div>
             </div>
           </div>
-          <button class="kpi-link lk-green" onClick={() => goTo('s-ac-users')}>View Users <LucideIcon name="ArrowRight" size={14} /></button>
+          <button class="kpi-link lk-green" onClick={() => goTo('s-ac-users')}>User Access <LucideIcon name="ArrowRight" size={14} /></button>
         </div>
 
         <div class="kpi">

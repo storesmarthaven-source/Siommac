@@ -20,7 +20,7 @@ import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
-import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns } from '@ui';
+import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns, PageHeader } from '@ui';
 import { toast } from '@store/ui';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
@@ -182,10 +182,12 @@ export function AcUsersPage(): VNode {
 
   return (
     <div class="acx">
-      <div class="page-head">
-        <h1 class="page-title">Users <span class="tag">User Access Overrides</span></h1>
-        <p class="page-sub">Manage per-user access exceptions. Changes here apply only to this user and do not modify role permissions.</p>
-      </div>
+      <PageHeader
+        icon={<LucideIcon name="UserRoundCog" size={22} />}
+        module="Access Control"
+        title="User Access"
+        sub="Manage per-user access exceptions. Changes apply only to this user and do not modify role permissions."
+      />
 
       <div class="u-layout">
         {/* LEFT COLUMN — user rail + Recent Override Changes stacked below it */}
@@ -193,9 +195,9 @@ export function AcUsersPage(): VNode {
         {/* LEFT RAIL */}
         <div class="card u-rail">
           <div class="u-rail-head">
-            <span style={{ fontSize: '14px', fontWeight: 700 }}>Users <span class="muted" style={{ fontWeight: 500 }}>({users.length})</span></span>
+            <span style={{ fontSize: '14px', fontWeight: 700 }}>Directory <span class="muted" style={{ fontWeight: 500 }}>({users.length})</span></span>
           </div>
-          <div class="u-rail-search"><i class="fas fa-magnifying-glass" /><input class="input" placeholder="Search users…" value={railSearch} onInput={e => { setRail((e.target as HTMLInputElement).value); setPage(1); }} /></div>
+          <div class="u-rail-search"><i class="fas fa-magnifying-glass" /><input class="input" placeholder="Search directory…" value={railSearch} onInput={e => { setRail((e.target as HTMLInputElement).value); setPage(1); }} /></div>
           <div class="u-user-list">
             {usersQ.isLoading ? <div class="ac-loading">Loading users…</div>
              : pageUsers.length === 0 ? <div class="ac-empty">No users match.</div>

@@ -16,7 +16,7 @@ const AC_ROOT_ID = 'preact-access-control-root';
 // group). Each item routes to the one AC panel; the section renders the matching page.
 const ITEMS: ModuleNavItem[] = [
   { id: 's-ac-overview',   label: 'Overview',        icon: 'fa-table-columns',   sub: 'Roles, users and module-by-role coverage at a glance' },
-  { id: 's-ac-users',      label: 'Users',           icon: 'fa-user-lock',       sub: 'Per-user capability overrides (role default / allow / deny)' },
+  { id: 's-ac-users',      label: 'User Access',     icon: 'fa-user-lock',       sub: 'Per-user capability overrides (role default / allow / deny)' },
   { id: 's-ac-roles',      label: 'Roles',           icon: 'fa-user-shield',     sub: 'Create and manage roles and their default permission sets' },
   { id: 's-ac-coverage',   label: 'Module Coverage', icon: 'fa-layer-group',     sub: 'Capability breakdown by module group × role' },
   { id: 's-ac-approvals',  label: 'Approvals',       icon: 'fa-clipboard-check', sub: 'Maker-checker queue for critical permission grants' },
