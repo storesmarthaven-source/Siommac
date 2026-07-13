@@ -20,7 +20,7 @@ import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
-import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns, PageHeader } from '@ui';
+import { TableSearch, FilterDropdown, useFilterDropdowns, PageHeader } from '@ui';
 import { toast } from '@store/ui';
 import { AcExportDrawer } from './AcExportDrawer';
 import { AcCreateRolePage } from './AcCreateRolePage';
@@ -66,7 +66,7 @@ export function AcUsersPage(): VNode {
   const [selId, setSelId]       = useState<string | null>(null);
   const [railSearch, setRail]   = useState('');
   const [page, setPage]         = useState(1);
-  const [filter, setFilter]     = useState<{ modules: string[]; risks: string[]; effective: string[]; overridden: string[]; search: string }>({ modules: [], risks: [], effective: [], overridden: [], search: '' });
+  const [filter, setFilter]     = useState<{ modules: string[]; risks: string[]; search: string }>({ modules: [], risks: [], search: '' });
   const { openId, setOpenId }   = useFilterDropdowns();
   const [pending, setPending]   = useState<Map<string, OvState>>(new Map());
   const [localPending, setLocal] = useState<Set<string>>(new Set());
@@ -117,8 +117,6 @@ export function AcUsersPage(): VNode {
       const m = PERMISSION_META[k]; if (!m) continue;
       if (filter.modules.length && !filter.modules.includes(m.module)) continue;
       if (filter.risks.length && !filter.risks.includes(m.risk)) continue;
-      if (filter.effective.length && !filter.effective.includes(effGranted(k) ? 'allow' : 'deny')) continue;
-      if (filter.overridden.length && !filter.overridden.includes(target(k) !== 'inherit' ? 'overridden' : 'default')) continue;
       if (filter.search && !m.label.toLowerCase().includes(filter.search.toLowerCase())) continue;
       (byMod.get(m.module) ?? byMod.set(m.module, []).get(m.module)!).push(k);
     }
@@ -330,12 +328,6 @@ export function AcUsersPage(): VNode {
                 <FilterDropdown id="u-risk" label="Risk" openId={openId} setOpenId={setOpenId}
                   options={['low', 'medium', 'high', 'critical']} selected={filter.risks} onChange={v => setFilter(f => ({ ...f, risks: v }))}
                   labelFn={r => r[0]!.toUpperCase() + r.slice(1)} />
-                <AdvancedFilter openId={openId} setOpenId={setOpenId}
-                  onReset={() => setFilter(f => ({ ...f, effective: [], overridden: [] }))}
-                  tabs={[{ name: 'Access', blurb: 'Filter by effective result and override status.', sections: [
-                    { type: 'checklist', title: 'Effective result', options: ['allow', 'deny'], selected: filter.effective, onChange: v => setFilter(f => ({ ...f, effective: v })), labelFn: v => v[0]!.toUpperCase() + v.slice(1) },
-                    { type: 'checklist', title: 'Override status', options: ['overridden', 'default'], selected: filter.overridden, onChange: v => setFilter(f => ({ ...f, overridden: v })), labelFn: v => v === 'overridden' ? 'User override' : 'Role default' },
-                  ] }]} />
               </div>
 
               <div class="card" style={{ overflow: 'hidden' }}>
