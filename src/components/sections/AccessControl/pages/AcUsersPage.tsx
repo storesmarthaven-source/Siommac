@@ -51,18 +51,6 @@ const timeAgo = (iso: string): string => {
   return new Date(iso).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 };
 
-const MOD_STYLE: Record<string, { icon: string; bg: string; fg: string }> = {
-  Finance: { icon: 'fa-dollar-sign', bg: 'var(--green-bg)', fg: 'var(--green)' },
-  Payroll: { icon: 'fa-money-check-dollar', bg: 'var(--green-bg)', fg: 'var(--green)' },
-  HR: { icon: 'fa-user-group', bg: 'var(--accent-bg)', fg: 'var(--accent)' },
-  HSE: { icon: 'fa-helmet-safety', bg: 'var(--amber-bg)', fg: 'var(--amber)' },
-  Operations: { icon: 'fa-gear', bg: 'var(--accent-bg)', fg: 'var(--accent)' },
-  Communications: { icon: 'fa-comments', bg: 'var(--purple-bg)', fg: 'var(--purple)' },
-  Messages: { icon: 'fa-comments', bg: 'var(--purple-bg)', fg: 'var(--purple)' },
-  Workflow: { icon: 'fa-diagram-project', bg: 'var(--purple-bg)', fg: 'var(--purple)' },
-  Calendar: { icon: 'fa-calendar-days', bg: 'var(--accent-bg)', fg: 'var(--accent)' },
-};
-const modStyle = (m: string) => MOD_STYLE[m] ?? { icon: 'fa-cube', bg: '#eef1f7', fg: '#64748b' };
 
 const CapCell = ({ allow }: { allow: boolean }): VNode =>
   allow ? <span class="cap-allow"><i class="fas fa-check" /> Allow</span>
@@ -239,35 +227,31 @@ export function AcUsersPage(): VNode {
           {auditQ.isLoading ? <div class="ac-loading">Loading…</div>
            : (auditQ.data?.logs ?? []).length === 0 ? <div class="ac-empty">No recent override changes.</div>
            : (
-            <div class="u-ovr-list">
-              {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string }[]).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
+            <div class="rc2-scroll" style={{ maxHeight: 'none' }}>
+              {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
                 let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* plain text */ }
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
                 const actor = usersByUsername.get(l.username.toLowerCase());
-                const name = actor?.fullName ?? l.username;
-                const kind = l.action === 'permission_grant' ? { t: 'Allow', cls: 'allow', ico: 'fa-check' }
-                           : l.action === 'permission_deny'  ? { t: 'Deny',  cls: 'deny',  ico: 'fa-xmark' }
-                           : { t: 'Reset', cls: 'reset', ico: 'fa-rotate-left' };
-                const ms = meta ? modStyle(meta.module) : null;
+                const name = l.actorName || actor?.fullName || l.username;
+                const photo = l.actorPhoto || actor?.profileImage || '';
+                const subtitle = l.actorTitle || actor?.position || (actor ? actor.role.replace(/_/g, ' ') : '');
+                const k = l.action === 'permission_grant' ? { tone: 'green', icon: 'Check' as LucideName, verb: 'Allowed' }
+                        : l.action === 'permission_deny'  ? { tone: 'red',   icon: 'X' as LucideName, verb: 'Denied' }
+                        : { tone: 'slate', icon: 'RotateCcw' as LucideName, verb: 'Reset' };
                 return (
-                  <div class="u-ovr-card" key={l.id}>
-                    <div class="u-ovr-top">
-                      <span class="avatar" style={{ width: '30px', height: '30px', fontSize: '10.5px', background: actor?.profileImage ? undefined : bgFor(name) }}>
-                        {actor?.profileImage ? <img src={actor.profileImage} alt="" /> : initials(name)}
-                      </span>
-                      <span class="u-ovr-name" title={name}>{name}</span>
-                      <span class="u-ovr-when">{timeAgo(l.created_at)}</span>
+                  <div class="rc2-item" key={l.id}>
+                    <span class="rc2-avwrap">
+                      {photo
+                        ? <img class="rc2-photo" src={photo} alt="" loading="lazy" />
+                        : <span class="rc2-photo rc2-photo--init">{initials(name)}</span>}
+                      <span class={`rc2-badge tone-${k.tone}`}><LucideIcon name={k.icon} size={10} strokeWidth={2.6} /></span>
+                    </span>
+                    <div class="rc2-body">
+                      <div class="rc2-top"><span class="rc2-nm" title={name}>{name}</span><span class="rc2-time">{timeAgo(l.created_at)}</span></div>
+                      {subtitle && <div class="rc2-role">{subtitle}</div>}
+                      <div class={`rc2-act tone-${k.tone}`} title={label}>{k.verb}{label ? ` · ${label}` : ''}</div>
                     </div>
-                    <div class="u-ovr-tags">
-                      <span class={`u-ovr-tag ${kind.cls}`}><i class={`fas ${kind.ico}`} /> {kind.t}</span>
-                      {meta && ms && (
-                        <span class="u-ovr-mod" style={{ background: ms.bg, color: ms.fg }}>
-                          <i class={`fas ${ms.icon}`} /> {meta.module}
-                        </span>
-                      )}
-                    </div>
-                    {label && <div class="u-ovr-perm" title={label}>{label}</div>}
                   </div>
                 );
               })}
