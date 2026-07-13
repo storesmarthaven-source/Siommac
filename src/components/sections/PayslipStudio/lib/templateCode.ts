@@ -23,5 +23,5 @@ export function toFnName(name: string): string {
   const camel = cleaned
     .map((w, i) => (i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()))
     .join('');
-  return /^[a-z]/.test(camel) ? camel : `t${camel}` || 'customTemplate';
+  return /^[a-z]/.test(camel) ? camel : `t${camel}`;
 }

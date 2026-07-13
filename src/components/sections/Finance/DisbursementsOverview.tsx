@@ -155,12 +155,12 @@ function DisbursementsTab({
     }
     // Client-side sort
     rows = [...rows].sort((a, b) => {
-      let cmp = 0;
-      if (sortKey === 'disbursementNo') cmp = a.disbursementNo.localeCompare(b.disbursementNo);
-      else if (sortKey === 'totalAmount') cmp = a.totalAmount - b.totalAmount;
-      else if (sortKey === 'employeeCount') cmp = a.employeeCount - b.employeeCount;
-      else if (sortKey === 'status') cmp = a.status.localeCompare(b.status);
-      else cmp = a.createdAt.localeCompare(b.createdAt);
+      const cmp =
+        sortKey === 'disbursementNo' ? a.disbursementNo.localeCompare(b.disbursementNo)
+        : sortKey === 'totalAmount'  ? a.totalAmount - b.totalAmount
+        : sortKey === 'employeeCount' ? a.employeeCount - b.employeeCount
+        : sortKey === 'status'       ? a.status.localeCompare(b.status)
+        : a.createdAt.localeCompare(b.createdAt);
       return sortDir === 'asc' ? cmp : -cmp;
     });
     return rows;

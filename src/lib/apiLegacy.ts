@@ -244,7 +244,7 @@ export function api(action: string, args: Record<string, unknown> = {}): Promise
 // ── Dev helper ────────────────────────────────────────────────────────────────
 
 export function pingApi(): Promise<ApiResult> {
-  return _rawApi('ping', {}).then(out => { console.log('pingApi →', out); return out; });
+  return _rawApi('ping', {}).then(out => { console.warn('pingApi →', out); return out; });
 }
 
 // ── Enable focus-revalidation ─────────────────────────────────────────────────

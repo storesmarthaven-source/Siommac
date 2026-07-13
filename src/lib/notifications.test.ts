@@ -273,6 +273,7 @@ describe('initNotificationsRealtime / teardownNotificationsRealtime', () => {
 
     initNotificationsRealtime('user-123');
 
+    // eslint-disable-next-line @typescript-eslint/unbound-method -- standard vitest mock assertion on the spy function
     expect(supabase.channel).toHaveBeenCalledWith('notifications:user-123');
   });
 

@@ -765,13 +765,13 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
 
   // Bulk-resolve employee IDs so table rows use EmployeeCellResolved (one API call).
   const employeeIds = useMemo(
-    () => profiles.map(r => String(r.employeeId ?? r.employee_id ?? '')).filter(Boolean),
+    () => profiles.map(r => r.employeeId ?? r.employee_id ?? '').filter(Boolean),
     [profiles],
   );
   const { data: nameMap } = useEmployeeNames(employeeIds);
 
   const verify = async (r: NisProfileRow): Promise<void> => {
-    const id = String(r.id ?? '');
+    const id = r.id ?? '';
     if (!id || !canVerify) return;
     // Compliance sign-off: confirm, and capture an optional verification note for the audit trail.
     const note = await dialog.prompt({
@@ -787,7 +787,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   };
 
   const reject = async (r: NisProfileRow): Promise<void> => {
-    const id = String(r.id ?? '');
+    const id = r.id ?? '';
     if (!id || !canVerify) return;
     const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Finance cannot verify this profile. HR must correct and re-submit.', placeholder: 'Rejection reason (required)', confirmText: 'Return to HR' });
     if (!reason?.trim()) return;
@@ -840,7 +840,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       key: 'prevEmployer', label: 'Previous Employer', sortAccessor: r => dv(r, 'previousEmployerName', 'previous_employer_name'),
       renderCell: r => { const v = dv(r, 'previousEmployerName', 'previous_employer_name'); return v === '—' ? <span class="sdb-muted-txt">—</span> : v; },
     },
-    { key: 'nisStatus', label: 'Status', sortAccessor: r => String(r.nisStatus ?? r.nis_status ?? ''), renderCell: r => <StatBadge tone="wn">{humanize(String(r.nisStatus ?? r.nis_status ?? 'pending_verification'))}</StatBadge> },
+    { key: 'nisStatus', label: 'Status', sortAccessor: r => r.nisStatus ?? r.nis_status ?? '', renderCell: r => <StatBadge tone="wn">{humanize(r.nisStatus ?? r.nis_status ?? 'pending_verification')}</StatBadge> },
     {
       key: 'lastVerified', label: 'Last Verified',
       renderCell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
@@ -850,7 +850,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
   // Row actions live in the ⋮ overflow menu (verify / reject the pending NIS profile).
   const rowActions = canVerify
     ? (r: NisProfileRow): DtAction<NisProfileRow>[] => {
-        if (!String(r.id ?? '')) return [];
+        if (!r.id) return [];
         return [
           { key: 'verify', label: 'Verify', icon: 'check', onClick: () => void verify(r) },
           { key: 'reject', label: 'Reject', icon: 'close', tone: 'danger', onClick: () => void reject(r) },
@@ -864,7 +864,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
     <DataTable<NisProfileRow>
       columns={columns}
       rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
-      rowKey={r => String(r.id ?? '')}
+      rowKey={r => r.id}
       rowActions={rowActions}
       loading={profilesQ.isLoading}
       emptyState={{ icon: 'fa-user-check', title: 'Queue clear', text: profilesQ.error ? String(profilesQ.error) : 'No NIS profiles are awaiting verification.' }}

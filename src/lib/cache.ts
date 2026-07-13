@@ -199,19 +199,19 @@ function _sendSW(msg: object): void {
 export const SwCacheManager = {
   register(): Promise<ServiceWorkerRegistration | null> {
     if (!('serviceWorker' in navigator)) {
-      console.log('[SW] Not supported in this browser');
+      console.warn('[SW] Not supported in this browser');
       return Promise.resolve(null);
     }
     return navigator.serviceWorker.register('/sw.js', { scope: '/' })
       .then(reg => {
-        console.log('[SW] Registered, scope:', reg.scope);
+        console.warn('[SW] Registered, scope:', reg.scope);
         if (reg.waiting) reg.waiting.postMessage({ type: 'SKIP_WAITING' });
         reg.addEventListener('updatefound', () => {
           const newSw = reg.installing;
           if (newSw) {
             newSw.addEventListener('statechange', () => {
               if (newSw.state === 'installed' && navigator.serviceWorker.controller) {
-                console.log('[SW] New version available — will activate on next navigation');
+                console.warn('[SW] New version available — will activate on next navigation');
                 newSw.postMessage({ type: 'SKIP_WAITING' });
               }
             });

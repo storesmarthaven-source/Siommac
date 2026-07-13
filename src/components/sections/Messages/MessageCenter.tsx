@@ -294,7 +294,7 @@ function ThreadList({ threads, selectedId, onSelect, isLoading }: {
           const failed     = (t.failedSendCount ?? 0) > 0;
           const preview    = t.hasDraft ? `Draft: ${t.draftPreview ?? ''}` : failed ? 'Message failed to send' : (t.lastPostPreview ?? '');
           const previewColor = t.hasDraft ? '#b45309' : failed ? 'var(--danger)' : 'var(--text-muted)';
-          const hasTags    = !!t.actionRequired || !!t.sourceModule || t.threadType === 'group' || !!t.hasAttachments || !!failed;
+          const hasTags    = !!t.actionRequired || !!t.sourceModule || t.threadType === 'group' || !!t.hasAttachments || failed;
           return (
             <div key={t.id} onClick={() => onSelect(t)}
               style={{ padding: '12px 14px', borderBottom: '1px solid var(--border)', cursor: 'pointer',

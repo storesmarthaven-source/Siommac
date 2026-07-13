@@ -339,7 +339,7 @@ export function ExpClaimDrawer({
                         <>
                           {r.paymentMethod && <div class="hrfin-metric-row"><span>Method</span><b>{humanize(r.paymentMethod)}</b></div>}
                           {r.reference     && <div class="hrfin-metric-row"><span>Reference</span><b>{r.reference}</b></div>}
-                          {r.paidAmount != null && <div class="hrfin-metric-row"><span>Amount paid</span><b>{fmtMoney(Number(r.paidAmount))}</b></div>}
+                          {r.paidAmount != null && <div class="hrfin-metric-row"><span>Amount paid</span><b>{fmtMoney(r.paidAmount)}</b></div>}
                           {r.sourceDisbursement && <div class="hrfin-metric-row"><span>Disbursement</span><b>{r.sourceDisbursement}</b></div>}
                           {r.notes         && <div class="hrfin-metric-row"><span>Notes</span><b>{r.notes}</b></div>}
                         </>

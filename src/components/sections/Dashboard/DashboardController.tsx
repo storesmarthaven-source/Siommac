@@ -146,7 +146,7 @@ export function DashboardController() {
     select:    (data) => {
       // Delegate to SiomacCharts — it owns the canvas rendering
       const SC = (window as unknown as Record<string, unknown>).SiomacCharts as
-        Record<string, Function> | undefined;
+        Record<string, ((...args: unknown[]) => unknown)> | undefined;
       if (SC) {
         if (typeof SC.renderDashboardCharts === 'function') SC.renderDashboardCharts(data);
         else if (typeof SC.updateDashboardCharts === 'function') SC.updateDashboardCharts(data);
@@ -162,7 +162,7 @@ export function DashboardController() {
     enabled:   isAuthenticated && !!username,
     select:    (data) => {
       const SC = (window as unknown as Record<string, unknown>).SiomacCharts as
-        Record<string, Function> | undefined;
+        Record<string, ((...args: unknown[]) => unknown)> | undefined;
       if (SC && typeof SC.displayAttendanceChart === 'function') SC.displayAttendanceChart(data);
       // Update stat display elements
       const set = (id: string, val: number | undefined) => {

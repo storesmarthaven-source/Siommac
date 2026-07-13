@@ -885,7 +885,7 @@ function updateLocationInfo(position: GeolocationPosition): void {
 }
 
 function handleLocationError(error: GeolocationPositionError): void {
-  let message = '';
+  let message: string;
   switch (error.code) {
     case error.PERMISSION_DENIED:    message = 'Location access denied. Please enable location permissions.'; break;
     case error.POSITION_UNAVAILABLE: message = 'Location information unavailable.'; break;

@@ -9,7 +9,7 @@
  * @see docs/PHASE_PLAN.md
  */
 
-import { authPost, apiAction, apiPost } from '@lib/api';
+import { authPost, apiPost } from '@lib/api';
 
 // ── Response shapes ───────────────────────────────────────────────────────────
 
@@ -106,7 +106,7 @@ export async function logoutApi(payload: {
   username: string;
 }): Promise<void> {
   try {
-    await apiAction('logout', payload as unknown as Record<string, unknown>);
+    await apiPost('logout', payload as Record<string, unknown>);
   } catch { /* fire-and-forget */ }
 }
 

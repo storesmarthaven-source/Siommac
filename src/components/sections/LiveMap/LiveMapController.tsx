@@ -82,7 +82,7 @@ export function LiveMapController() {
 
       // Update AppState so sites.js can read liveData directly
       const appState = (window as unknown as Record<string, unknown>).AppState as
-        Record<string, Function> | undefined;
+        Record<string, ((...args: unknown[]) => unknown)> | undefined;
       if (appState?.set) appState.set('liveData', rows);
 
       // Delegate map rendering to the Leaflet module

@@ -104,7 +104,7 @@ function _log(
   if (IS_DEV) {
     const style = LEVEL_STYLE[level];
     if (level === 'debug' || level === 'info') {
-      console.log(`%c[${level.toUpperCase()}]`, style, message, ctx ?? '');
+      console.warn(`%c[${level.toUpperCase()}]`, style, message, ctx ?? '');
     } else if (level === 'warn') {
       console.warn(`%c[WARN]`, style, message, ctx ?? '', error ?? '');
     } else {

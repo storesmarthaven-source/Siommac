@@ -36,7 +36,7 @@ function statusTone(s: LeaveStatus): 'green' | 'orange' | 'red' | 'gray' {
 }
 
 function humanize(str: string): string {
-  return str.replace(/_/g, ' ').replace(/\w/g, c => c.toUpperCase());
+  return str.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
 }
 
 

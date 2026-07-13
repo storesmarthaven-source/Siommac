@@ -147,7 +147,7 @@ export function initRealtime(): void {
 
     .subscribe((status: string, err?: unknown) => {
       if (status === 'SUBSCRIBED') {
-        console.log('[Realtime] Connected — instant updates active.');
+        console.warn('[Realtime] Connected — instant updates active.');
         _retryDelay = 5_000; // reset back-off on success
       } else if (
         status === 'CHANNEL_ERROR' ||
