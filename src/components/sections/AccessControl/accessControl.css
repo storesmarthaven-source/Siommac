@@ -426,8 +426,37 @@
 .acx .u-mini-ico.green { background: var(--green-bg); color: var(--green); }
 .acx .u-mini-val { font-size: 22px; font-weight: 700; line-height: 1; color: var(--ink); }
 .acx .u-mini-lbl { font-size: 11px; color: var(--muted); white-space: nowrap; }
+/* Access Profile card — navy, modeled on My Profile (.profile-card) with tweaks. */
+.acx .u-prof-card { overflow: hidden; border-radius: 18px; color: #fff; background: #1b2d54; border: 1px solid rgba(255, 255, 255, .1); }
+.acx .u-prof-top { min-height: 52px; display: flex; align-items: center; padding: 0 18px; background: #374669; border-bottom: 1px solid rgba(255, 255, 255, .1); }
+.acx .u-prof-title { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: #fff; }
+.acx .u-prof-title svg { color: rgba(255, 255, 255, .85); }
+.acx .u-prof-main { padding: 18px; display: flex; align-items: center; justify-content: space-between; gap: 18px; flex-wrap: wrap; }
+.acx .u-prof-entity { display: flex; align-items: center; gap: 15px; min-width: 0; }
+.acx .u-prof-photo { width: 64px; height: 64px; flex: none; border-radius: 50%; overflow: hidden; border: 2px solid rgba(255, 255, 255, .18); box-shadow: 0 0 0 4px rgba(255, 255, 255, .05); display: grid; place-items: center; color: #fff; font-size: 20px; font-weight: 600; text-transform: uppercase; }
+.acx .u-prof-photo img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.acx .u-prof-id { min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+.acx .u-prof-name-line { display: flex; align-items: center; gap: 9px; min-width: 0; }
+.acx .u-prof-name { margin: 0; font-size: 18px; font-weight: 600; line-height: 1.15; letter-spacing: -.015em; color: #fff; text-transform: capitalize; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acx .u-prof-badge { display: inline-flex; align-items: center; gap: 6px; height: 23px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 600; color: #bbf7d0; background: rgba(34, 197, 94, .18); border: 1px solid rgba(34, 197, 94, .26); white-space: nowrap; flex: none; }
+.acx .u-prof-badge i { font-size: 6px; color: #22c55e; }
+.acx .u-prof-badge.off { color: #fecaca; background: rgba(248, 113, 113, .16); border-color: rgba(248, 113, 113, .28); }
+.acx .u-prof-badge.off i { color: #f87171; }
+.acx .u-prof-ref { font-size: 12.5px; font-weight: 500; color: rgba(226, 238, 252, .74); text-transform: capitalize; }
+.acx .u-prof-meta { display: flex; align-items: center; gap: 9px; flex-wrap: wrap; font-size: 12px; color: rgba(226, 238, 252, .6); }
+.acx .u-prof-meta > span { display: inline-flex; align-items: center; gap: 6px; min-width: 0; }
+.acx .u-prof-meta svg { color: rgba(226, 238, 252, .5); flex: none; }
+.acx .u-prof-sep { color: rgba(255, 255, 255, .25); }
+.acx .u-prof-stats { display: flex; gap: 10px; flex: none; }
+.acx .u-prof-stat { display: flex; align-items: center; gap: 10px; padding: 10px 13px; border-radius: 11px; background: rgba(255, 255, 255, .06); border: 1px solid rgba(255, 255, 255, .1); }
+.acx .u-prof-stat-ic { width: 30px; height: 30px; flex: none; display: grid; place-items: center; border-radius: 8px; background: rgba(96, 165, 250, .18); color: #bfdbfe; }
+.acx .u-prof-stat-ic.red { background: rgba(248, 113, 113, .18); color: #fecaca; }
+.acx .u-prof-stat-ic.green { background: rgba(34, 197, 94, .18); color: #bbf7d0; }
+.acx .u-prof-stat-n { font-size: 17px; font-weight: 700; line-height: 1; color: #fff; }
+.acx .u-prof-stat-l { font-size: 10.5px; color: rgba(226, 238, 252, .6); margin-top: 3px; white-space: nowrap; }
+
 /* Callout banner — slim variant, circular info icon. */
-.acx .u-info-banner { display: flex; align-items: center; gap: 13px; padding: 12px 15px; background: #f0f6fe; border: 1px solid #c9dcf8; border-radius: 12px; }
+.acx .u-info-banner { display: flex; align-items: center; gap: 13px; margin: 6px 0; padding: 12px 15px; background: #f0f6fe; border: 1px solid #c9dcf8; border-radius: 12px; }
 .acx .u-info-ico { width: 34px; height: 34px; border-radius: 50%; background: var(--accent); color: #fff; display: grid; place-items: center; flex: none; }
 .acx .u-info-txt { min-width: 0; }
 .acx .u-info-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }

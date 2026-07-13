@@ -284,21 +284,33 @@ export function AcUsersPage(): VNode {
         <div class="u-center">
           {!user ? <div class="card"><div class="ac-empty">Select a user to edit their access.</div></div> : (
             <>
-              <div class="card">
-                <div style={{ padding: '18px 20px', display: 'flex', alignItems: 'center', gap: '18px', flexWrap: 'wrap' }}>
-                  <span class="avatar" style={{ width: '56px', height: '56px', fontSize: '18px', background: bgFor(user.fullName) }}>{user.profileImage ? <img src={user.profileImage} alt="" /> : initials(user.fullName)}</span>
-                  <div style={{ minWidth: 0, flex: 1 }}>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '5px' }}>
-                      <span style={{ fontSize: '19px', fontWeight: 700, lineHeight: 1, textTransform: 'capitalize' }}>{user.fullName}</span>
-                      <span class={`badge ${user.active ? 'green' : 'grey'}`}><i class="fas fa-circle" style={{ fontSize: '6px' }} /> {user.active ? 'Active' : 'Disabled'}</span>
+              <div class="u-prof-card">
+                <div class="u-prof-top">
+                  <span class="u-prof-title"><LucideIcon name="ShieldCheck" size={16} /> Access Profile</span>
+                </div>
+                <div class="u-prof-main">
+                  <div class="u-prof-entity">
+                    <span class="u-prof-photo" style={user.profileImage ? undefined : { background: bgFor(user.fullName) }}>
+                      {user.profileImage ? <img src={user.profileImage} alt="" /> : initials(user.fullName)}
+                    </span>
+                    <div class="u-prof-id">
+                      <div class="u-prof-name-line">
+                        <h2 class="u-prof-name">{user.fullName}</h2>
+                        <span class={`u-prof-badge${user.active ? '' : ' off'}`}><i class="fas fa-circle" /> {user.active ? 'Active' : 'Disabled'}</span>
+                      </div>
+                      <div class="u-prof-ref">{user.role.replace(/_/g, ' ')}</div>
+                      <div class="u-prof-meta">
+                        {user.position && <span><LucideIcon name="Briefcase" size={14} /> {user.position}</span>}
+                        {user.position && user.department && <span class="u-prof-sep">·</span>}
+                        {user.department && <span><LucideIcon name="Building2" size={14} /> {user.department}</span>}
+                        {(user.email || user.username) && <span><LucideIcon name="Mail" size={14} /> {user.email || user.username}</span>}
+                      </div>
                     </div>
-                    <div style={{ fontSize: '13.5px', color: 'var(--ink-2)', marginBottom: '3px', textTransform: 'capitalize' }}>{user.role.replace(/_/g, ' ')}{user.department ? ` · ${user.department}` : ''}</div>
-                    <div style={{ fontSize: '12.5px', color: 'var(--faint)' }}>{user.email || user.username}{user.position ? ` · ${user.position}` : ''}</div>
                   </div>
-                  <div style={{ display: 'flex', gap: '12px', flex: 'none' }}>
-                    <div class="u-mini-stat"><div class="u-mini-ico blue"><i class="fas fa-table-cells-large" /></div><div class="u-mini-val">{stats.overrides}</div><div class="u-mini-lbl">Overrides</div></div>
-                    <div class="u-mini-stat"><div class="u-mini-ico red"><i class="fas fa-shield-halved" /></div><div class="u-mini-val" style={{ color: 'var(--red)' }}>{stats.highRisk}</div><div class="u-mini-lbl">High-Risk Access</div></div>
-                    <div class="u-mini-stat"><div class="u-mini-ico green"><i class="fas fa-circle-check" /></div><div class="u-mini-val" style={{ color: 'var(--green)' }}>{stats.effective}</div><div class="u-mini-lbl">Effective Capabilities</div></div>
+                  <div class="u-prof-stats">
+                    <div class="u-prof-stat"><span class="u-prof-stat-ic"><LucideIcon name="TableProperties" size={15} /></span><div><div class="u-prof-stat-n">{stats.overrides}</div><div class="u-prof-stat-l">Overrides</div></div></div>
+                    <div class="u-prof-stat"><span class="u-prof-stat-ic red"><LucideIcon name="ShieldAlert" size={15} /></span><div><div class="u-prof-stat-n">{stats.highRisk}</div><div class="u-prof-stat-l">High-Risk</div></div></div>
+                    <div class="u-prof-stat"><span class="u-prof-stat-ic green"><LucideIcon name="CircleCheck" size={15} /></span><div><div class="u-prof-stat-n">{stats.effective}</div><div class="u-prof-stat-l">Effective</div></div></div>
                   </div>
                 </div>
               </div>
