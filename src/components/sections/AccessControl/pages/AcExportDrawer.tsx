@@ -84,11 +84,12 @@ export function AcExportDrawer({ open, onClose, user }: { open: boolean; onClose
 
           <div class="exp-sec">
             <div class="exp-label">Include</div>
-            <div class="exp-chips">
+            <div class="exp-checks">
               {COLUMNS.map(c => (
-                <button key={c.id} type="button" class={`exp-chip${cols[c.id] ? ' on' : ''}`} onClick={() => toggle(c.id)}>
-                  <LucideIcon name={cols[c.id] ? 'Check' : 'Plus'} size={12} strokeWidth={2.6} /> {c.label}
-                </button>
+                <label key={c.id} class="exp-check">
+                  <input type="checkbox" checked={!!cols[c.id]} onChange={() => toggle(c.id)} />
+                  <span>{c.label}</span>
+                </label>
               ))}
             </div>
           </div>
