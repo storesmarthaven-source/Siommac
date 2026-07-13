@@ -22,6 +22,7 @@ import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
 import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns, PageHeader } from '@ui';
 import { toast } from '@store/ui';
+import { AcCompareRolesModal } from './AcCompareRolesModal';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
 const MODULE_LUCIDE: Record<string, LucideName> = {
@@ -73,6 +74,7 @@ export function AcUsersPage(): VNode {
   const [criticalKey, setCriticalKey] = useState<string | null>(null);
   const [saving, setSaving]     = useState(false);
   const [recentPage, setRecentPage] = useState(0);
+  const [showCompare, setShowCompare] = useState(false);
 
   useEffect(() => { if (!selId && users.length) setSelId(users[0]!.id); }, [users, selId]);
   useEffect(() => { setPending(new Map()); setLocal(new Set()); setRecentPage(0); }, [selId]);
@@ -157,6 +159,33 @@ export function AcUsersPage(): VNode {
     } finally { setSaving(false); }
   };
 
+  // Export the selected user's full access sheet as CSV (interim until the rich PDF).
+  const exportCsv = () => {
+    if (!user) { toast.error('Select a user first.'); return; }
+    const esc = (v: string) => `"${v.replace(/"/g, '""')}"`;
+    const head = ['Capability', 'Module', 'Risk', 'Role Default', 'User Override', 'Effective', 'Source'];
+    const rows = PERMISSION_KEYS.map(k => {
+      const m = PERMISSION_META[k]; if (!m) return null;
+      const t = target(k);
+      return [
+        m.label, m.module, m.risk,
+        roleDefault(k) ? 'Allow' : 'Deny',
+        t === 'inherit' ? 'Inherit' : t === 'allow' ? 'Allow' : 'Deny',
+        effGranted(k) ? 'Allow' : 'Deny',
+        t !== 'inherit' ? 'User Override' : 'Role Default',
+      ].map(esc).join(',');
+    }).filter(Boolean) as string[];
+    const csv = [head.map(esc).join(','), ...rows].join('\r\n');
+    const blob = new Blob([`﻿${csv}`], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `user-access-${user.username}.csv`;
+    document.body.appendChild(a); a.click(); a.remove();
+    URL.revokeObjectURL(url);
+    toast.success('Access sheet exported.');
+  };
+
   const submitCritical = async (reason: string) => {
     const key = criticalKey; setCriticalKey(null);
     if (!key || !selId) return;
@@ -175,6 +204,14 @@ export function AcUsersPage(): VNode {
         module="Access Control"
         title="User Access"
         sub="Manage per-user access exceptions. Changes apply only to this user and do not modify role permissions."
+        actions={<>
+          <button type="button" class="acx-hdr-btn" onClick={exportCsv} disabled={!user}>
+            <LucideIcon name="Download" size={15} /> Export
+          </button>
+          <button type="button" class="acx-hdr-btn" onClick={() => setShowCompare(true)}>
+            <LucideIcon name="GitCompareArrows" size={15} /> Compare Roles
+          </button>
+        </>}
       />
 
       <div class="u-layout">
@@ -415,6 +452,8 @@ export function AcUsersPage(): VNode {
           onCancel={() => setCriticalKey(null)}
         />
       )}
+
+      {showCompare && <AcCompareRolesModal onClose={() => setShowCompare(false)} />}
     </div>
   );
 }
