@@ -20,6 +20,7 @@ import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
+import { TableSearch, AdvancedFilter, useFilterDropdowns } from '@ui';
 import { toast } from '@store/ui';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
@@ -75,7 +76,8 @@ export function AcUsersPage(): VNode {
   const [selId, setSelId]       = useState<string | null>(null);
   const [railSearch, setRail]   = useState('');
   const [page, setPage]         = useState(1);
-  const [filter, setFilter]     = useState({ module: '', risk: '', search: '' });
+  const [filter, setFilter]     = useState<{ modules: string[]; risks: string[]; search: string }>({ modules: [], risks: [], search: '' });
+  const { openId, setOpenId }   = useFilterDropdowns();
   const [pending, setPending]   = useState<Map<string, OvState>>(new Map());
   const [localPending, setLocal] = useState<Set<string>>(new Set());
   // Start with every module collapsed.
@@ -122,8 +124,8 @@ export function AcUsersPage(): VNode {
     const byMod = new Map<string, PermissionKey[]>();
     for (const k of PERMISSION_KEYS) {
       const m = PERMISSION_META[k]; if (!m) continue;
-      if (filter.module && m.module !== filter.module) continue;
-      if (filter.risk && m.risk !== filter.risk) continue;
+      if (filter.modules.length && !filter.modules.includes(m.module)) continue;
+      if (filter.risks.length && !filter.risks.includes(m.risk)) continue;
       if (filter.search && !m.label.toLowerCase().includes(filter.search.toLowerCase())) continue;
       (byMod.get(m.module) ?? byMod.set(m.module, []).get(m.module)!).push(k);
     }
@@ -306,15 +308,15 @@ export function AcUsersPage(): VNode {
               </div>
 
               <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-                <select class="select" style={{ width: '158px', height: '38px', fontSize: '13px' }} value={filter.module} onChange={e => setFilter(f => ({ ...f, module: (e.target as HTMLSelectElement).value }))}>
-                  <option value="">All Modules</option>
-                  {allModules.map(m => <option key={m} value={m}>{m}</option>)}
-                </select>
-                <select class="select" style={{ width: '158px', height: '38px', fontSize: '13px' }} value={filter.risk} onChange={e => setFilter(f => ({ ...f, risk: (e.target as HTMLSelectElement).value }))}>
-                  <option value="">All Risk Levels</option>
-                  {(['low', 'medium', 'high', 'critical'] as PermissionRisk[]).map(r => <option key={r} value={r}>{r[0]!.toUpperCase() + r.slice(1)}</option>)}
-                </select>
-                <input class="input" placeholder="Search capabilities…" style={{ flex: 1, height: '38px', fontSize: '13px' }} value={filter.search} onInput={e => setFilter(f => ({ ...f, search: (e.target as HTMLInputElement).value }))} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <TableSearch value={filter.search} onChange={v => setFilter(f => ({ ...f, search: v }))} placeholder="Search capabilities…" />
+                </div>
+                <AdvancedFilter openId={openId} setOpenId={setOpenId}
+                  onReset={() => setFilter(f => ({ ...f, modules: [], risks: [] }))}
+                  tabs={[{ name: 'Filters', blurb: 'Filter capabilities by module and risk.', sections: [
+                    { type: 'checklist', title: 'Module', options: allModules, selected: filter.modules, onChange: v => setFilter(f => ({ ...f, modules: v })) },
+                    { type: 'checklist', title: 'Risk Level', options: ['low', 'medium', 'high', 'critical'], selected: filter.risks, onChange: v => setFilter(f => ({ ...f, risks: v })), labelFn: r => r[0]!.toUpperCase() + r.slice(1) },
+                  ] }]} />
               </div>
 
               <div class="card" style={{ overflow: 'hidden' }}>
