@@ -74,12 +74,11 @@ export function AcUsersPage(): VNode {
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean) as string[]));
   const [criticalKey, setCriticalKey] = useState<string | null>(null);
   const [saving, setSaving]     = useState(false);
-  const [recentPage, setRecentPage] = useState(0);
   const [showExport, setShowExport] = useState(false);
   const [creatingRole, setCreatingRole] = useState(false);
 
   useEffect(() => { if (!selId && users.length) setSelId(users[0]!.id); }, [users, selId]);
-  useEffect(() => { setPending(new Map()); setLocal(new Set()); setRecentPage(0); }, [selId]);
+  useEffect(() => { setPending(new Map()); setLocal(new Set()); }, [selId]);
 
   // Resolve an audit actor (by username) → their profile photo / display name for the feed.
   const usersByUsername = useMemo(() => {
@@ -230,17 +229,17 @@ export function AcUsersPage(): VNode {
           )}
         </div>
 
-        {/* Recent Override Changes — under the users card, 5 per page */}
-        <div class="card u-recent">
-          <div class="card-head" style={{ padding: '13px 16px' }}>
-            <div style={{ fontSize: '14px', fontWeight: 700 }}>Recent Override Changes</div>
-            <span class="link" style={{ fontSize: '12px' }} onClick={() => { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-ac-audit' })); } catch (_) { /* ignore */ } }}>Audit log →</span>
+        {/* Recent Override Changes — same design as Overview's Recent Access Changes */}
+        <div class="card">
+          <div class="card-head">
+            <div class="card-title">Recent Override Changes</div>
+            <span class="link" onClick={() => { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-ac-audit' })); } catch (_) { /* ignore */ } }}>View all</span>
           </div>
           {auditQ.isLoading ? <div class="ac-loading">Loading…</div>
            : (auditQ.data?.logs ?? []).length === 0 ? <div class="ac-empty">No recent override changes.</div>
            : (
-            <div class="rc2-scroll" style={{ maxHeight: 'none' }}>
-              {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).slice(recentPage * 5, recentPage * 5 + 5).map(l => {
+            <div class="rc2-scroll">
+              {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
                 let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* plain text */ }
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
@@ -269,21 +268,6 @@ export function AcUsersPage(): VNode {
               })}
             </div>
           )}
-          {(() => {
-            const totalRecent = auditQ.data?.logs?.length ?? 0;
-            const recentPages = Math.max(1, Math.ceil(totalRecent / 5));
-            if (recentPages <= 1) return null;
-            return (
-              <div class="u-tbl-foot">
-                <span class="muted" style={{ fontSize: '12px' }}>{totalRecent} change{totalRecent === 1 ? '' : 's'}</span>
-                <span class="row" style={{ gap: '4px', marginLeft: 'auto' }}>
-                  <button class="u-pager-btn" disabled={recentPage === 0} onClick={() => setRecentPage(p => Math.max(0, p - 1))}>‹</button>
-                  <span class="sub" style={{ padding: '0 8px' }}>Page {recentPage + 1} of {recentPages}</span>
-                  <button class="u-pager-btn" disabled={recentPage + 1 >= recentPages} onClick={() => setRecentPage(p => p + 1)}>›</button>
-                </span>
-              </div>
-            );
-          })()}
         </div>
         </div>{/* end u-left */}
 

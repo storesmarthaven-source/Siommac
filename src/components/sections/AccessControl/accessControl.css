@@ -645,7 +645,7 @@
       wrapped in .acx (the shared @ui Drawer needs HSE.css, which isn't loaded here). */
 .acx.exp-portal { position: fixed; inset: 0; z-index: 1200; }
 .acx.exp-portal .exp-overlay { position: fixed; inset: 0; background: rgba(15, 23, 42, .38); animation: exp-fade .15s ease; }
-.acx.exp-portal .exp-panel { position: fixed; top: 0; right: 0; height: 100%; width: min(440px, 96vw); background: #fff; box-shadow: -10px 0 34px rgba(15, 23, 42, .2); display: flex; flex-direction: column; animation: exp-slide .2s cubic-bezier(.2,.7,.3,1); }
+.acx.exp-portal .exp-panel { position: fixed; top: 0; right: 0; height: 100%; width: min(460px, 96vw); background: #fff; box-shadow: -10px 0 34px rgba(15, 23, 42, .2); display: flex; flex-direction: column; animation: exp-slide .2s cubic-bezier(.2,.7,.3,1); }
 @keyframes exp-fade { from { opacity: 0; } to { opacity: 1; } }
 @keyframes exp-slide { from { transform: translateX(100%); } to { transform: translateX(0); } }
 .acx .exp-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; padding: 18px 20px; border-bottom: 1px solid #eef1f5; flex: none; }
@@ -661,9 +661,19 @@
 .acx .exp-fmt:hover { border-color: #cbd5e1; }
 .acx .exp-fmt.on { border-color: #2563eb; background: #eff5ff; }
 .acx .exp-fmt-lbl { font-size: 12.5px; font-weight: 600; color: #374151; }
-.acx .exp-checks { display: flex; flex-direction: column; gap: 12px; }
+.acx .exp-radios { display: flex; gap: 22px; }
+.acx .exp-radio { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #374151; cursor: pointer; }
+.acx .exp-radio input { accent-color: #2563eb; width: 16px; height: 16px; flex: none; cursor: pointer; }
+.acx .exp-scope { display: flex; flex-direction: column; gap: 7px; }
+.acx .exp-scope-row { display: flex; align-items: center; justify-content: space-between; }
+.acx .exp-scope-row > span { font-size: 12.5px; color: #6b7280; }
+.acx .exp-view { font-size: 12.5px; font-weight: 600; color: #2563eb; cursor: pointer; }
+.acx .exp-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
 .acx .exp-check { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: #374151; cursor: pointer; }
 .acx .exp-check input { accent-color: #2563eb; width: 16px; height: 16px; flex: none; cursor: pointer; }
-.acx .exp-field { display: flex; align-items: center; height: 42px; padding: 0 12px; border: 1px solid #e5e7eb; border-radius: 9px; background: #f9fafb; }
-.acx .exp-field-val { font-size: 13px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.acx .exp-field { display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 12px; border: 1px solid #e5e7eb; border-radius: 9px; background: #f9fafb; }
+.acx .exp-field-btn { background: #fff; cursor: pointer; text-align: left; }
+.acx .exp-field-btn:hover { border-color: #cbd5e1; }
+.acx .exp-field-btn svg { color: #9ca3af; flex: none; }
+.acx .exp-field-val { flex: 1; font-size: 13px; color: #1f2937; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .acx .exp-footbar { display: flex; align-items: center; justify-content: flex-end; gap: 10px; padding: 14px 20px; border-top: 1px solid #eef1f5; flex: none; }
