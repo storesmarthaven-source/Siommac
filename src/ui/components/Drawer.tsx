@@ -51,7 +51,7 @@ export interface DrawerProps {
   panelClass?: string;
 }
 
-export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass }: DrawerProps): VNode {
+export function Drawer({ open, title, sub, subtitle, details, children, onClose, foot, footer, noFooter, headActions, rich, panelClass }: DrawerProps): VNode<any> {
   const subText = sub ?? subtitle;
   const panelRef = useOverlayA11y(open, onClose);
 

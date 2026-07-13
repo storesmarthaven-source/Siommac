@@ -91,7 +91,7 @@ const ACT_ICON: Record<string, LucideName> = {
  *  never clips it. Esc / outside click / scrim click close it. */
 function DtActionMenu<T>({ row, actions, x, y, onClose }: {
   row: T; actions: DtAction<T>[]; x: number; y: number; onClose: () => void;
-}): VNode {
+}): VNode<any> {
   const ref = useOverlayA11y<HTMLDivElement>(true, onClose);
   const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
   const left = Math.max(8, x - 196);                                  // right-align to the trigger
