@@ -39,12 +39,18 @@ recovery anchor:
 ```bash
 node scripts/e2e/sweep-orphans.mjs            # dry run — reports what it would delete
 node scripts/e2e/sweep-orphans.mjs --apply    # actually deletes it
+npm run test:e2e:sweep                        # === --apply
 ```
 
-Run the dry run periodically (or whenever the app looks like it has leftover test
-data) and `--apply` once you've reviewed the count. This is a recovery tool for
-orphans, not a substitute for a suite's own `h.onCleanup()` — keep writing real
-cleanup in every new suite per the standard below.
+**`run.mjs` now runs this automatically** — `sweepOrphans()` fires before every run (so
+a suite never borrows a leaked account), on Ctrl-C / SIGTERM, and after the run.
+`KEEP_DATA=1` disables all three. Because of the pre-run sweep, leaks from a killed run
+are cleared at the start of the next one, so they can no longer accumulate. The
+standalone CLI stays for on-demand recovery. It anchors on the `test-e2e` username
+marker **and** an `(E2E …)` full_name (a few suites mint custom usernames), deletes the
+rows that reference those users (the workflow chain included), sweeps TAG-stamped text
+columns, then deletes the users. It is a recovery net, not a substitute for a suite's own
+`h.onCleanup()` — keep writing real cleanup in every new suite per the standard below.
 
 ## How it works
 - **`harness.mjs`** loads `.env`, mints HS256 JWTs at runtime (no passwords), exposes

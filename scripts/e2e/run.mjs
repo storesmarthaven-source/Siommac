@@ -17,11 +17,36 @@
 
 import { readdirSync } from 'node:fs';
 import { Harness } from './harness.mjs';
+import { sweepOrphans } from './sweep-orphans.mjs';
 
 const only = process.argv.slice(2).map(s => s.toLowerCase());
+const SWEEP = !process.env.KEEP_DATA;   // KEEP_DATA disables every sweep (debug runs)
+const sweep = () => sweepOrphans(h.sb, { apply: true, log: (s) => console.log(`[sweep] ${s}`) });
 
 const h = new Harness();
 await h.ping();
+
+// Clear any test data leaked by a previously-killed run BEFORE we borrow users —
+// otherwise pickUsers() could hand a stale synthetic account to a suite, and the
+// leaks would keep piling up (this is what put 34 dead users on the AC Users page).
+if (SWEEP) {
+  try { await sweep(); }
+  catch (e) { console.warn(`[sweep] pre-run sweep skipped: ${e.message}`); }
+}
+
+// Ctrl-C / kill: run the LIFO cleanup + a full sweep so an aborted run leaves
+// nothing behind (SIGKILL can't be caught — the pre-run sweep covers that case).
+let _aborting = false;
+for (const sig of ['SIGINT', 'SIGTERM']) {
+  process.on(sig, async () => {
+    if (_aborting) return; _aborting = true;
+    console.log(`\n${sig} received — cleaning up E2E test data…`);
+    try { await h.runCleanup(); } catch { /* best-effort */ }
+    if (SWEEP) { try { await sweep(); } catch { /* best-effort */ } }
+    process.exit(130);
+  });
+}
+
 await h.pickUsers();
 console.log(`Server:  ${h.base}`);
 console.log(`Users:   admin=${h.users.admin.username}  B=${h.users.b.username}  C=${h.users.c.username}`);
@@ -68,5 +93,11 @@ for (const f of selected) {
 }
 
 await h.runCleanup();
+// Belt-and-suspenders: purge anything the per-suite closures missed (e.g. a suite
+// that crashed before it could register its cleanup).
+if (SWEEP) {
+  try { await sweep(); }
+  catch (e) { console.warn(`[sweep] post-run sweep skipped: ${e.message}`); }
+}
 const fail = h.report();
 process.exit(fail > 0 ? 1 : 0);
