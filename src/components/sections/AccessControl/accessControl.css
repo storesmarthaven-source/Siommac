@@ -400,13 +400,9 @@
 .acx .u-user-list { flex: 1; overflow-y: auto; max-height: 472px; }
 .acx .u-user-item { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border-bottom: 1px solid var(--line-2); cursor: pointer; border-left: 3px solid transparent; }
 .acx .u-user-item:last-child { border-bottom: 0; }
-.acx .u-user-item:hover:not(.selected) { background: #e9edf6; }
-.acx .u-user-item.selected { background: #364263; }
-.acx .u-user-item.selected .u-user-name { color: #fff; }
-.acx .u-user-item.selected .u-user-sub { color: rgba(255, 255, 255, .72); }
-.acx .u-user-item.selected .u-ovr-num { color: #fff; }
-.acx .u-user-item.selected .u-ovr.zero .u-ovr-num { color: #fff; }
-.acx .u-user-item.selected .u-ovr-lbl { color: rgb(255 255 255); }
+.acx .u-user-item:hover:not(.selected) { background: #f3f5fa; }
+.acx .u-user-item.selected { background: #e9edf6; border-left-color: var(--siomac-navy, #1b2d54); }
+.acx .u-user-item.selected .u-user-name { color: var(--siomac-navy, #1b2d54); }
 .acx .u-user-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
 .acx .u-user-sub { font-size: 11.5px; color: var(--muted); text-transform: capitalize; }
 .acx .u-ovr { text-align: right; flex: none; }
