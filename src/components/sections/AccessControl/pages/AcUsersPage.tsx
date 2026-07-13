@@ -23,6 +23,7 @@ import { LucideIcon, type LucideName } from '@ui/LucideIcon';
 import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns, PageHeader } from '@ui';
 import { toast } from '@store/ui';
 import { AcExportDrawer } from './AcExportDrawer';
+import { AcCreateRolePage } from './AcCreateRolePage';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
 const MODULE_LUCIDE: Record<string, LucideName> = {
@@ -75,6 +76,7 @@ export function AcUsersPage(): VNode {
   const [saving, setSaving]     = useState(false);
   const [recentPage, setRecentPage] = useState(0);
   const [showExport, setShowExport] = useState(false);
+  const [creatingRole, setCreatingRole] = useState(false);
 
   useEffect(() => { if (!selId && users.length) setSelId(users[0]!.id); }, [users, selId]);
   useEffect(() => { setPending(new Map()); setLocal(new Set()); setRecentPage(0); }, [selId]);
@@ -177,11 +179,14 @@ export function AcUsersPage(): VNode {
         module="Access Control"
         title="User Access"
         sub="Manage per-user access exceptions. Changes apply only to this user and do not modify role permissions."
-        actions={
+        actions={<>
           <button type="button" class="acx-hdr-btn" onClick={() => setShowExport(true)}>
             <LucideIcon name="Download" size={15} /> Export
           </button>
-        }
+          <button type="button" class="acx-hdr-btn primary" onClick={() => setCreatingRole(true)}>
+            <LucideIcon name="Plus" size={16} /> New Role
+          </button>
+        </>}
       />
 
       <div class="u-layout">
@@ -424,6 +429,8 @@ export function AcUsersPage(): VNode {
       )}
 
       <AcExportDrawer open={showExport} onClose={() => setShowExport(false)} />
+
+      {creatingRole && <AcCreateRolePage onDone={() => setCreatingRole(false)} />}
     </div>
   );
 }
