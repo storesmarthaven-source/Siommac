@@ -342,6 +342,29 @@ router.post('/getAuditLogs', async c => {
     return c.json({ success: false, message: 'Failed to load audit log.' }, 500);
   }
 
+  // Enrich each row with the actor's display name / photo / title from app_users. The audit
+  // row only carries a raw user_id + a possibly-code username, and superadmins aren't in the
+  // console-user list — the server resolves them here (with a signed avatar URL).
+  const logs = (data ?? []) as { id: string; user_id: string; username: string }[];
+  const actorIds = [...new Set(logs.map(l => l.user_id).filter(Boolean))];
+  const actorMap = new Map<string, { name: string; title: string; photo: string }>();
+  if (actorIds.length) {
+    const { data: actors } = await sb.from('app_users')
+      .select('id, full_name, username, position, role, profile_image')
+      .in('id', actorIds);
+    await Promise.all(((actors ?? []) as { id: string; full_name: string | null; username: string | null; position: string | null; role: string | null; profile_image: string | null }[]).map(async a => {
+      actorMap.set(a.id, {
+        name:  a.full_name || a.username || '',
+        title: a.position || a.role || '',
+        photo: await getProfileSignedUrl(a.id, a.profile_image),
+      });
+    }));
+  }
+  const enrichedLogs = logs.map(l => {
+    const a = actorMap.get(l.user_id);
+    return { ...l, actorName: a?.name ?? '', actorTitle: a?.title ?? '', actorPhoto: a?.photo ?? '' };
+  });
+
   // Filter option lists (distinct actions/entities) — only on the first page.
   let actions: string[] = [];
   let entities: string[] = [];
@@ -351,7 +374,7 @@ router.post('/getAuditLogs', async c => {
     entities = [...new Set((distinct ?? []).map(r => r.entity).filter(Boolean))].sort();
   }
 
-  return c.json({ success: true, logs: data ?? [], total: count ?? 0, actions, entities });
+  return c.json({ success: true, logs: enrichedLogs, total: count ?? 0, actions, entities });
 });
 
 // ── Roles (roles-as-data) ─────────────────────────────────────────────────────

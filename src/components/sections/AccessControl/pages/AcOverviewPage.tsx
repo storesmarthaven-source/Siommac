@@ -172,22 +172,12 @@ export function AcOverviewPage(): VNode {
   const overrideTotal = useMemo(() => (usersQ.data ?? []).reduce((n, u) => n + (u.overrideCount ?? 0), 0), [usersQ.data]);
   const usersWithOverrides = useMemo(() => (usersQ.data ?? []).filter(u => (u.overrideCount ?? 0) > 0).length, [usersQ.data]);
 
-  // Resolve an audit row's target to a readable label (no raw UUIDs): roles → label,
-  // users → name, everything else (permission keys) is already human-readable.
+  // Actor resolution for the Recent Access Changes feed. The server enriches each row with
+  // actorName/actorPhoto/actorTitle; these console-user maps are a fallback (by id or by
+  // username) for rows the server couldn't enrich.
   const roleLabelByName = useMemo(() => new Map((rolesQ.data ?? []).map(r => [r.name, r.label])), [rolesQ.data]);
-  const userNameById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u.fullName || u.username])), [usersQ.data]);
-  // Full actor record (photo + role) by id AND by username, for the Recent Access Changes
-  // feed — user_id and username can each be the reliable key depending on the log source.
   const userById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u])), [usersQ.data]);
   const userByName = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.username, u])), [usersQ.data]);
-  const resolveTarget = (entity: string, entityId: string): string => {
-    if (!entityId) return '';
-    const e = (entity || '').toLowerCase();
-    if (e.includes('role')) return roleLabelByName.get(entityId) ?? (isRawId(entityId) ? 'Unknown role' : entityId);
-    if (e.includes('user')) return userNameById.get(entityId) ?? 'Unknown user';
-    // Permission keys and the like are already human-readable; never surface a raw id.
-    return isRawId(entityId) ? '' : entityId;
-  };
 
   // ── module × role coverage matrix (from the catalogue) ────────────────────────
   const { modules, keysByModule } = useMemo(() => {
@@ -406,26 +396,26 @@ export function AcOverviewPage(): VNode {
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; user_id: string; username: string; action: string; entity: string; entity_id: string; created_at: string }[]).map(l => {
+            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; user_id: string; username: string; action: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
               const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
               const actor = userById.get(l.user_id) ?? userByName.get(l.username);
-              const rawName = actor?.fullName || l.username || 'System';
+              const rawName = l.actorName || actor?.fullName || l.username || 'System';
               const name = isRawId(rawName) ? 'Unknown user' : rawName;
-              const role = actor ? (roleLabelByName.get(actor.role) ?? actor.role) : '';
-              const target = resolveTarget(l.entity, l.entity_id);
+              // Small subtext under the name: the actor's job title, else their role.
+              const subtitle = l.actorTitle || actor?.position || (actor ? (roleLabelByName.get(actor.role) ?? actor.role) : '');
+              const photo = l.actorPhoto || actor?.profileImage || '';
               return (
                 <div class="rc2-item" key={l.id}>
                   <span class="rc2-avwrap">
-                    {actor?.profileImage
-                      ? <img class="rc2-photo" src={actor.profileImage} alt="" loading="lazy" />
+                    {photo
+                      ? <img class="rc2-photo" src={photo} alt="" loading="lazy" />
                       : <span class="rc2-photo rc2-photo--init">{initials(name)}</span>}
                     <span class={`rc2-badge tone-${meta.tone}`}><LucideIcon name={meta.icon} size={10} strokeWidth={2.6} /></span>
                   </span>
                   <div class="rc2-body">
                     <div class="rc2-top"><span class="rc2-nm">{name}</span><span class="rc2-time">{ago(l.created_at)}</span></div>
-                    {role && <div class="rc2-role">{role}</div>}
+                    {subtitle && <div class="rc2-role">{subtitle}</div>}
                     <div class={`rc2-act tone-${meta.tone}`}>{ACTION_LABEL[l.action] ?? l.action}</div>
-                    {target && <span class="rc2-tgt" title={target}>{target}</span>}
                   </div>
                 </div>
               );

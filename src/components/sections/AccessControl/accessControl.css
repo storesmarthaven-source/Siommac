@@ -100,7 +100,7 @@
 /* ── Cards ───────────────────────────────────────────────────────────────────── */
 .acx .card { background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); box-shadow: var(--shadow); }
 .acx .card-pad { padding: 18px 20px; }
-.acx .card-head { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--line); }
+.acx .card-head { display: flex; align-items: center; justify-content: space-between; padding: 11px 16px; border-bottom: 1px solid var(--line); }
 .acx .card-title { font-size: 16px; font-weight: 700; color: var(--siomac-navy, #1b2d54); }
 .acx .card-sub { font-size: 13px; color: var(--muted); margin-top: 2px; }
 .acx .link { color: var(--accent); font-size: 13px; font-weight: 600; cursor: pointer; }
@@ -212,7 +212,6 @@
 .acx .rc2-act.tone-green { color: #157a3a; } .acx .rc2-act.tone-red { color: #b91c1c; }
 .acx .rc2-act.tone-amber { color: #b45309; } .acx .rc2-act.tone-blue { color: #1d4ed8; }
 .acx .rc2-act.tone-slate { color: #64748b; }
-.acx .rc2-tgt { display: inline-block; max-width: 100%; margin-top: 4px; padding: 1px 7px; border-radius: 6px; background: #f1f5f9; color: #334155; font-family: var(--font-mono, ui-monospace, monospace); font-size: 10.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; vertical-align: top; }
 
 /* ── Module Groups filter card (left of the coverage matrix) ──────────────────── */
 .acx .ov-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }

@@ -118,6 +118,10 @@ export interface AuditLogRow {
   details:    string;
   ip_address: string | null;
   user_agent: string | null;
+  /** Actor display fields resolved server-side from app_users (all users, incl. superadmins). */
+  actorName?:  string;
+  actorTitle?: string;
+  actorPhoto?: string;
 }
 
 export interface AuditLogFilters {
