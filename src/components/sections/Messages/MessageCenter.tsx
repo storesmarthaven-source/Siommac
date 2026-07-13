@@ -1054,9 +1054,6 @@ export function MessageCenter(): VNode {
         module="Messages"
         title="Messages"
         sub="Threaded conversations across your team and linked ERP records."
-        meta={[
-          { icon: 'fa-envelope', label: `${unread} unread` },
-        ]}
       />
 
       {/* Compact tab row + New Message button */}

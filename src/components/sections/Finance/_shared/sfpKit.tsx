@@ -98,8 +98,6 @@ export function StatFormShell({ icon, title, sub, statusLabel, backLabel = 'Stat
           module="Finance · Statutory Configuration"
           title={title}
           sub={sub}
-          meta={statusLabel ? [{ icon: 'fa-circle-dot', label: statusLabel }] : []}
-          hidePill
           actions={actions}
         />
         <button type="button" class="sfp-back" onClick={onBack}>

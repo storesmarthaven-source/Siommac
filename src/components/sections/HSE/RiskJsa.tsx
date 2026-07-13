@@ -194,12 +194,6 @@ export function RiskJsaArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Risk & JSA"
         sub="Hazard register, risk assessments, and job safety analyses — identify, rate, and control workplace risk."
-        meta={[
-          { icon: 'fa-radiation', label: `${totalHazards} hazards` },
-          { icon: 'fa-triangle-exclamation', label: `${highCritical} high / critical` },
-          { icon: 'fa-table-cells-large', label: '5×5 matrix' },
-          ...(overdueAssessments > 0 ? [{ icon: 'fa-clock', label: `${overdueAssessments} overdue` }] : []),
-        ]}
       />
 
       {/* ── Tab-aware summary cards (standard StatsCard row) — entity tabs only ── */}

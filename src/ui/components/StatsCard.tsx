@@ -24,8 +24,7 @@
  *      renders near the bottom (the "Overall Compliance" pattern).
  */
 
-import { type VNode, type ComponentChildren } from 'preact';
-import { type JSX } from 'preact';
+import { type VNode, type ComponentChildren, type HTMLAttributes, type CSSProperties } from 'preact';
 import { Skeleton } from './Skeleton';
 
 export interface StatStatus {
@@ -35,7 +34,7 @@ export interface StatStatus {
   color: string;
 }
 
-export interface StatsCardProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, 'icon' | 'title'> {
+export interface StatsCardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'icon' | 'title'> {
   icon?: string;
   title: string;
   /** Dark navy preset (white text) — the standard "two dark cards per row". */
@@ -75,7 +74,7 @@ export function StatsCard({
   class: className, ...rest
 }: StatsCardProps): VNode {
   const navy = variant === 'navy';
-  const headerStyle: JSX.CSSProperties = {};
+  const headerStyle: CSSProperties = {};
   if (headerBg)    headerStyle.background = headerBg;
   if (headerColor) headerStyle.color = headerColor;
 

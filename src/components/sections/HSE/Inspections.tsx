@@ -145,12 +145,6 @@ export function InspectionsArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Inspections & Audits"
         sub="Schedule inspections, execute checklists, and track findings to closure across all sites."
-        meta={[
-          { icon: 'fa-calendar-check', label: `${inspections.length} inspections` },
-          { icon: 'fa-triangle-exclamation', label: `${overdue} overdue` },
-          { icon: 'fa-circle-exclamation', label: `${criticalFindings} critical findings` },
-          { icon: 'fa-chart-pie', label: `${completionRate}% completion` },
-        ]}
       />
 
       <InspectionInsightCards active={active} />

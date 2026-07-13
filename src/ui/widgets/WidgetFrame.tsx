@@ -4,14 +4,14 @@
 //                       top-right (the float bar is the drag handle).
 // A PREVIEW widget is draggable from its WHOLE frame (so you can grab anywhere to move it);
 // its Add/Discard buttons stopPropagation on mousedown so clicking them never starts a drag.
-import type { JSX, VNode } from 'preact';
+import type { VNode, TargetedMouseEvent } from 'preact';
 import { resolveBoardWidget } from './resolveBoardWidget';
 import { WidgetRenderer } from './WidgetRenderer';
 import { useMountReveal } from './motion';
 import type { BoardWidgetInstance, LocalWidgetMap } from './types';
 
 // Pressing an action button must not start a drag.
-const noDrag = (e: JSX.TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
+const noDrag = (e: TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
 
 export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove }: {
   item: BoardWidgetInstance;

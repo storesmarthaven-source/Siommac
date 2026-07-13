@@ -22,6 +22,7 @@
  */
 
 import { h }                           from 'preact';
+import type { CSSProperties }          from 'preact';
 import {
   useMyNotificationPreferences,
   useUpdateNotificationPreference,
@@ -50,12 +51,12 @@ const DEFAULT_PREF: Omit<NotificationPreferenceRow, 'user_id' | 'type'> = {
 const styles = {
   container: {
     maxWidth: '700px',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   table: {
     width:          '100%',
     borderCollapse: 'collapse' as const,
     fontSize:       '14px',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   th: {
     padding:       '8px 12px',
     textAlign:     'left' as const,
@@ -65,35 +66,35 @@ const styles = {
     fontSize:      '12px',
     textTransform: 'uppercase' as const,
     letterSpacing: '0.05em',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   thCenter: {
     textAlign: 'center' as const,
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   td: {
     padding:      '10px 12px',
     borderBottom: '1px solid #f3f4f6',
     verticalAlign: 'middle' as const,
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   tdCenter: {
     textAlign: 'center' as const,
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   label: {
     color:      '#374151',
     fontWeight: 500,
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   toggle: {
     position:      'relative' as const,
     display:       'inline-block',
     width:         '40px',
     height:        '22px',
     verticalAlign: 'middle',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   toggleInput: {
     opacity: 0,
     width:   0,
     height:  0,
     position: 'absolute' as const,
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   soon: {
     display:    'inline-block',
     fontSize:   '11px',
@@ -101,13 +102,13 @@ const styles = {
     background: '#f3f4f6',
     borderRadius: '4px',
     padding:    '2px 6px',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   error: {
     padding: '16px',
     color:   '#b91c1c',
     background: '#fee2e2',
     borderRadius: '8px',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
   skeleton: {
     height:     '16px',
     background: 'linear-gradient(90deg,#f3f4f6 25%,#e5e7eb 50%,#f3f4f6 75%)',
@@ -116,7 +117,7 @@ const styles = {
     borderRadius: '4px',
     display:    'inline-block',
     width:      '70%',
-  } as h.JSX.CSSProperties,
+  } as CSSProperties,
 } as const;
 
 // ── Toggle component ──────────────────────────────────────────────────────────

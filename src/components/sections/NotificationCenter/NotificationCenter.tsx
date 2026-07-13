@@ -138,11 +138,6 @@ export function NotificationCenter(): VNode {
         module="Notifications"
         title="Notification Center"
         sub="Everything across the ERP that needs your attention — alerts, approvals, assignments and reminders."
-        meta={[
-          { icon: 'fa-envelope',            label: `${unread} unread` },
-          { icon: 'fa-clipboard-check',     label: `${summary?.notificationsActionRequired ?? 0} action required` },
-          { icon: 'fa-triangle-exclamation',label: `${summary?.notificationsCritical ?? 0} critical` },
-        ]}
       />
 
       {/* Tabs row — status on the left, list/utility actions on the right. */}

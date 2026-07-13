@@ -40,6 +40,7 @@ export function LeaveDocModal({ detail, onClose }: Props): VNode {
       void dialog.warning('Pop-ups blocked', 'Allow pop-ups for this site to print.');
       return;
     }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
     win.document.write(
       `<!DOCTYPE html><html><head><meta charset="utf-8">` +
       `<title>Leave Application — ${esc(detail.employee.fullName)}</title>` +

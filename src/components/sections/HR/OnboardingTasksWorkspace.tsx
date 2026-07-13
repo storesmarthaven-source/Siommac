@@ -258,12 +258,6 @@ export function OnboardingTasksWorkspace({
         module="HR · Onboarding"
         title="Tasks"
         sub="Cross-case execution queue — every onboarding task, one workspace."
-        meta={[
-          { icon: 'fa-list-check', label: `${kpi.open} open` },
-          { icon: 'fa-clock', label: `${kpi.overdue} overdue` },
-          { icon: 'fa-triangle-exclamation', label: `${kpi.blocking} blocking` },
-          { icon: 'fa-circle-check', label: `${kpi.doneWeek} done this week` },
-        ]}
         actions={<button class="obx-btn primary" onClick={() => { setAddForm({ caseNo: '', taskTitle: '', assignedTo: '', dueAt: '', priority: 'normal', isBlocking: false }); setAddOpen(true); }}>+ Add Task</button>}
       />
 

@@ -65,11 +65,6 @@ export function RosterOverview(): VNode {
       <PageHeader
         icon="fa-calendar-days" module="HR · Roster" title="Shift Roster"
         sub="Schedule shifts, manage rotation patterns, and publish rosters to employees."
-        meta={[
-          { icon: 'fa-clipboard-list', label: `${statsQ.data?.totalRosters ?? 0} rosters` },
-          { icon: 'fa-circle-check', label: `${statsQ.data?.publishedRosters ?? 0} published` },
-          { icon: 'fa-triangle-exclamation', label: `${statsQ.data?.openShifts ?? 0} open shifts` },
-        ]}
       />
 
       {/* Tab bar */}

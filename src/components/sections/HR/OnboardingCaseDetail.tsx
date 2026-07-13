@@ -348,11 +348,6 @@ export function OnboardingCaseDetail({
         module="HR · Onboarding"
         title={caseRow.employeeName ?? caseRow.caseNo}
         sub={`${caseRow.caseNo} · ${caseRow.packageLabel}`}
-        meta={[
-          { icon: 'fa-circle-dot', label: humanize(caseRow.status) },
-          { icon: 'fa-percent', label: `${caseRow.progressPercent}% complete` },
-          { icon: 'fa-calendar', label: `Due ${fmtDate(caseRow.dueAt)}` },
-        ]}
         actions={headerActions}
       />
 

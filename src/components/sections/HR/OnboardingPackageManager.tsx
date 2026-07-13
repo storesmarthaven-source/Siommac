@@ -81,7 +81,6 @@ export function OnboardingPackageManager({
         module="HR · Onboarding"
         title="Packages"
         sub="Configure onboarding packages, task &amp; handoff templates, and custom actions."
-        meta={[{ icon: 'fa-list-check', label: `${rows.length} packages` }]}
         actions={<button class="obx-btn primary" onClick={openNew}>+ New Package</button>}
       />
 

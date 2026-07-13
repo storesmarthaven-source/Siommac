@@ -17,9 +17,9 @@
  * Exported as both `Card` (canonical) and `MetricCard` (back-compat).
  */
 
-import { type VNode, type ComponentChildren, type JSX } from 'preact';
+import { type VNode, type ComponentChildren, type HTMLAttributes, type CSSProperties } from 'preact';
 
-export interface CardProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, 'icon' | 'title'> {
+export interface CardProps extends Omit<HTMLAttributes<HTMLDivElement>, 'icon' | 'title'> {
   /** FontAwesome icon class, e.g. "fa-list-check". */
   icon?: string;
   title?: ComponentChildren;
@@ -32,7 +32,7 @@ export interface CardProps extends Omit<JSX.HTMLAttributes<HTMLDivElement>, 'ico
   /** Inline colour override for the header icon (e.g. a status token). */
   iconColor?: string;
   /** Style/class for the inner body wrapper. */
-  bodyStyle?: JSX.CSSProperties;
+  bodyStyle?: CSSProperties;
   bodyClass?: string;
   children?: ComponentChildren;
 }

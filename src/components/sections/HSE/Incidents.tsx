@@ -1094,11 +1094,6 @@ export function IncidentsArea({ tab: _tab }: { tab: string }): VNode {
         module="HSE"
         title="Incidents"
         sub="Report, triage and investigate workplace incidents and near-misses, and track corrective actions."
-        meta={[
-          { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-          { icon: 'fa-location-dot', label: 'All sites' },
-          { icon: 'fa-hashtag', label: `${incidents.length} records` },
-        ]}
       />
 
       {/* ── Tab-aware summary cards ── */}

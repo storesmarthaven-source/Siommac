@@ -381,12 +381,6 @@ export function ContractorsArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Contractor Management"
         sub="STOW induction, HSE file register, and site access gate control for all contracted companies."
-        meta={[
-          { icon: 'fa-id-card-clip', label: `${mockContractors.length} contractors` },
-          { icon: 'fa-circle-check', label: `${activeCount} active` },
-          { icon: 'fa-triangle-exclamation', label: `${fileIssues} file issues` },
-          { icon: 'fa-door-closed', label: `${blocked} blocked` },
-        ]}
       />
 
       <MetricRow pageKey="hse.contractors" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

@@ -1145,7 +1145,7 @@ export function MyProfileSection(): VNode {
 
   return (
     <div class="mp76">
-      <PageHeader icon="fa-user" title="My Profile" sub="Manage your personal information and account security." hidePill />
+      <PageHeader icon="fa-user" title="My Profile" sub="Manage your personal information and account security." />
 
       <div class="mp76-grid-top">
 

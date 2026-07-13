@@ -398,12 +398,6 @@ export function LegalComplianceArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Legal & Compliance"
         sub="OSH Act 2004 obligations tracker, EMA permit register, breach log, and regulatory calendar for T&T operations."
-        meta={[
-          { icon: 'fa-list-check', label: `${mockObligations.length} obligations` },
-          { icon: 'fa-circle-check', label: `${compliantCount} compliant` },
-          { icon: 'fa-file-contract', label: `${mockEmaPermits.length} EMA permits` },
-          ...(overdue > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${overdue} overdue / expired` }] : []),
-        ]}
       />
 
       <MetricRow pageKey="hse.legal" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

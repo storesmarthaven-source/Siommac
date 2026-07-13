@@ -169,11 +169,6 @@ export function OnboardingPackageDetail({
         module="HR · Onboarding"
         title={pkg.label}
         sub={`${pkg.key} · v${pkg.versionNo}`}
-        meta={[
-          { icon: 'fa-circle-dot', label: humanize(pkg.status) },
-          { icon: 'fa-clock', label: `${pkg.defaultSlaDays} day SLA` },
-          { icon: 'fa-user', label: pkg.defaultOwnerRole ? humanize(pkg.defaultOwnerRole) : 'No default owner' },
-        ]}
         actions={
           <div class="obx-actions">
             <button class="obx-btn" onClick={openEdit}>Edit details</button>

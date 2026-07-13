@@ -5,7 +5,7 @@
 // used directly in JSX (the sidebar renders them to DOM strings instead — see navIcons.ts).
 // Colour follows `currentColor` (set via CSS `color`); size and stroke width are overridable.
 import { h } from 'preact';
-import type { VNode, JSX } from 'preact';
+import type { VNode, CSSProperties } from 'preact';
 import * as lucide from 'lucide';
 
 type IconNode = [string, Record<string, string | number>][];
@@ -17,7 +17,7 @@ export function LucideIcon(
     size?: number;
     strokeWidth?: number;
     class?: string;
-    style?: JSX.CSSProperties;
+    style?: CSSProperties;
     /** Accessible label — omit for decorative icons (they get aria-hidden). */
     title?: string;
   },

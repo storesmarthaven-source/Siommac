@@ -409,12 +409,6 @@ export function EmergencyResponseArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Emergency Response"
         sub="Emergency plans, muster points, drill log, and ERT register across all T&T sites."
-        meta={[
-          { icon: 'fa-map-location-dot', label: `${mockPlans.length} plans` },
-          { icon: 'fa-stopwatch', label: `${drillsDone} drills YTD` },
-          { icon: 'fa-people-group', label: `${ertActive} ERT active` },
-          ...(reviewDue > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${reviewDue} review due` }] : []),
-        ]}
       />
 
       <MetricRow pageKey="hse.emergency" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

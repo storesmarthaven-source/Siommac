@@ -25,7 +25,7 @@
  * loading state is announced by the region's own aria-busy/status, not each block.
  */
 
-import { type VNode, type JSX } from 'preact';
+import { type VNode, type CSSProperties } from 'preact';
 
 type SizeValue = number | string;
 
@@ -39,11 +39,11 @@ export interface SkeletonProps {
   /** Render a circle (avatar). Uses `width` (or `height`, default 38px) as the diameter. */
   circle?: boolean;
   class?:  string;
-  style?:  JSX.CSSProperties;
+  style?:  CSSProperties;
 }
 
 export function Skeleton({ width = '100%', height = 12, radius, circle, class: cls, style }: SkeletonProps): VNode {
-  const s: JSX.CSSProperties = { ...style };
+  const s: CSSProperties = { ...style };
   if (circle) {
     const d = dim(width ?? height ?? 38);
     s.width = d; s.height = d;

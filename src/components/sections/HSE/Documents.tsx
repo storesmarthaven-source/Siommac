@@ -308,12 +308,6 @@ export function DocumentsArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Documents & SDS"
         sub="Controlled document library and Safety Data Sheet register for all chemicals on-site."
-        meta={[
-          { icon: 'fa-folder-open', label: `${docs.length} documents` },
-          { icon: 'fa-circle-check', label: `${published} published` },
-          { icon: 'fa-flask', label: `${sds.length} chemicals` },
-          ...(expiredSds > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${expiredSds} expired SDS` }] : []),
-        ]}
       />
 
       <MetricRow pageKey="hse.documents" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

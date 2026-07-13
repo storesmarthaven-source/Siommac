@@ -123,12 +123,6 @@ export function OnboardingHandoffsWorkspace({
         module="HR · Onboarding"
         title="Handoffs"
         sub="Cross-case module handoff queue — retry, accept, complete, or cancel."
-        meta={[
-          { icon: 'fa-hourglass-half', label: `${kpi.pending} pending` },
-          { icon: 'fa-circle-xmark', label: `${kpi.failed} failed` },
-          { icon: 'fa-ban', label: `${kpi.blocked} blocked` },
-          { icon: 'fa-circle-check', label: `${kpi.doneWeek} done this week` },
-        ]}
         actions={<button class="obx-btn" onClick={() => void retryAllFailed()}>Retry Failed</button>}
       />
 

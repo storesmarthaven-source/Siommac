@@ -514,7 +514,6 @@ export function OrgStructureOverview(): VNode {
       <PageHeader
         icon="fa-sitemap" module="HR · Organization" title="Organization Structure"
         sub="Org units, positions, cost centres &amp; reporting lines."
-        meta={[{ icon: 'fa-diagram-project', label: `${units.length} units` }]}
         actions={tab === 'structure' && canOrg ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'unit', editing: null, parentId: null })}>+ New Unit</button>
           : tab === 'positions' && canPos ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'position', editing: null })}>+ New Position</button>
           : tab === 'costcenters' && canCc ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'costcenter', editing: null })}>+ New Cost Centre</button>

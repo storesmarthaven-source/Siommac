@@ -115,7 +115,6 @@ export function OnboardingReportsWorkspace({ onBack, onToast }: { onBack: () => 
         module="HR · Onboarding"
         title="Reports"
         sub="Operational analytics and compliance reporting."
-        meta={result ? [{ icon: 'fa-table-list', label: `${result.totalRows} rows` }] : []}
         actions={canExport ? <button class="obx-btn" disabled={!result || exporting} onClick={() => void handleExport()}>{exporting ? 'Exporting…' : 'Export CSV'}</button> : undefined}
       />
 

@@ -48,7 +48,6 @@ export function OffboardingOverview(): VNode {
       <PageHeader
         icon="fa-door-open" module="HR · Offboarding" title="Offboarding"
         sub="Employee exits — clearance, asset return, access removal & final pay."
-        meta={[{ icon: 'fa-list-check', label: `${(allCasesQ.data ?? rows).length} cases` }]}
         actions={canStart ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Case</button> : undefined}
       />
 

@@ -210,11 +210,6 @@ export function UIKitPage(): VNode {
           <PageHeader
             icon="fa-triangle-exclamation" module="HSE" title="Incidents"
             sub="Report, triage and investigate workplace incidents and near-misses."
-            meta={[
-              { icon: 'fa-calendar', label: 'Jan – Jun 2026' },
-              { icon: 'fa-location-dot', label: 'All sites' },
-              { icon: 'fa-hashtag', label: '6 records' },
-            ]}
           />
         </Demo>
         <div style={{ height: 'var(--space-3)' }} />

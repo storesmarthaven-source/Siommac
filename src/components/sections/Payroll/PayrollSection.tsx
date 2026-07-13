@@ -191,6 +191,7 @@ function PayslipModal({ row, dateFrom, dateTo, onClose }: PayslipModalProps) {
             <button
               onClick={() => {
                 const w = window.open('', '_blank')!;
+                // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
                 w.document.write(`<html><head><title>Payslip</title></head><body style="font-family:sans-serif;padding:24px">${document.querySelector('.cpop-box--payslip')?.innerHTML ?? ''}</body></html>`);
                 w.document.close();
                 setTimeout(() => { w.print(); }, 300);

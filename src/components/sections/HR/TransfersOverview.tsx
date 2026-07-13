@@ -53,10 +53,6 @@ export function TransfersOverview(): VNode {
         module="HR · Transfers"
         title="Transfers &amp; Promotions"
         sub="Bundled dept / site / position / role / pay changes — submitted, approved &amp; applied via workflow."
-        meta={[
-          { icon: 'fa-clock',  label: `${pending} pending` },
-          { icon: 'fa-check',  label: `${applied} applied` },
-        ]}
         actions={canRequest
           ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Request</button>
           : undefined}

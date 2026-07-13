@@ -477,12 +477,6 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Permit to Work"
         sub="Evidence-gated work authorisation for high-risk tasks — confined space, hot work, electrical, lifting, and more."
-        meta={[
-          { icon: 'fa-file-shield',           label: `${totalActive} active` },
-          { icon: 'fa-clock',                 label: `${expiringSoon} expiring soon` },
-          ...(bottlenecks > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${bottlenecks} bottlenecks` }] : []),
-          { icon: 'fa-clipboard-check',       label: `${approvalsCount} awaiting approval` },
-        ]}
       />
 
       {/* ── Standard 4 StatsCards (donut · bars · % · trend), rearrangeable ── */}

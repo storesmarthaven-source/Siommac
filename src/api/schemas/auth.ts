@@ -103,11 +103,11 @@ export const PermissionKeySchema = z.string().regex(
 export type PermissionKey = z.infer<typeof PermissionKeySchema>;
 
 export const PermissionOverrideSchema = z.object({
-  user_id:    z.string().uuid(),
+  user_id:    z.uuid(),
   permission: PermissionKeySchema,
   granted:    z.boolean(),   // true = explicitly granted, false = explicitly denied
   set_by:     z.string(),    // username of superadmin who set this
-  set_at:     z.string().datetime({ offset: true }),
+  set_at:     z.iso.datetime({ offset: true }),
 });
 
 export type PermissionOverride = z.infer<typeof PermissionOverrideSchema>;

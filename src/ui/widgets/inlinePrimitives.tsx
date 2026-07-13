@@ -6,9 +6,9 @@
  * in the library catalogue/detail previews (which load different stylesheets and are
  * not under any feature scope like `.hr-emp-master`). Keep these dependency-free.
  */
-import type { JSX, VNode } from 'preact';
+import type { VNode, CSSProperties } from 'preact';
 
-export const ellip: JSX.CSSProperties = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
+export const ellip: CSSProperties = { whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' };
 
 /** snake/kebab → Title Case (—  for empty). */
 export const humanize = (s: string | null | undefined): string =>
@@ -35,7 +35,7 @@ export function ListRow({ primary, secondary, right, tone = 'muted' }: { primary
 }
 
 export function WidgetList({ loading, rows, empty }: { loading: boolean; rows: VNode[]; empty: string }): VNode {
-  const muted: JSX.CSSProperties = { fontSize: 12.5, color: '#667085', padding: '10px 4px' };
+  const muted: CSSProperties = { fontSize: 12.5, color: '#667085', padding: '10px 4px' };
   if (loading) return <div style={muted}>Loading…</div>;
   if (rows.length === 0) return <div style={muted}>{empty}</div>;
   return <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{rows}</div>;

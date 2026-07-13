@@ -209,7 +209,6 @@ export function LeaveOverview(): VNode {
       <PageHeader
         icon='fa-calendar-minus' module='HR · Leave' title='Leave & Absence'
         sub='Submit, track and approve employee leave requests.'
-        meta={[{ icon: 'fa-list', label: `${rows.length} requests` }]}
         actions={canSubmit ? (
           <button class='obx-btn primary' onClick={() => setSubmitOpen(true)}>
             + Request Leave

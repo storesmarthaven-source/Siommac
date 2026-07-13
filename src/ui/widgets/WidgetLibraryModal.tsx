@@ -5,7 +5,7 @@
 // can position it on the live page board.
 import './widgetLibrary.css';
 import { useRef, useState } from 'preact/hooks';
-import type { JSX, VNode } from 'preact';
+import type { VNode, TargetedEvent } from 'preact';
 import type { PreviewWidgetInstance, WidgetDef, WidgetInstance, WidgetSizeKey } from './types';
 import { allWidgets } from './registry';
 import { useRuntimeWidgetsVersion, useInstalledWidgetPackages, useRefreshInstalledPackages } from './runtimeRegistry';
@@ -163,7 +163,7 @@ export function WidgetLibraryModal({
   const packagesQuery = useInstalledWidgetPackages();
   const refreshPackages = useRefreshInstalledPackages();
 
-  async function onPackageFile(e: JSX.TargetedEvent<HTMLInputElement>): Promise<void> {
+  async function onPackageFile(e: TargetedEvent<HTMLInputElement>): Promise<void> {
     const file = (e.currentTarget.files ?? [])[0];
     e.currentTarget.value = ''; // allow re-picking the same file
     if (!file) return;

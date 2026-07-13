@@ -52,6 +52,7 @@ function shell(title: string, sub: string, bodyHtml: string): string {
 function launch(html: string): void {
   const w = window.open('', '_blank');
   if (!w) { void dialog.error('Pop-up blocked', 'Allow pop-ups to export the PDF.'); return; }
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
   w.document.write(html);
   w.document.close();
   w.focus();

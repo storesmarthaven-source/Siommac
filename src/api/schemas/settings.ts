@@ -28,11 +28,11 @@ export const SaveCompanySettingsSchema = z.object({
   company_name:    z.string().min(1).max(200).optional(),
   company_address: z.string().max(500).optional(),
   company_phone:   z.string().max(30).optional(),
-  company_email:   z.string().email().optional(),
+  company_email:   z.email().optional(),
   company_nis:     z.string().max(50).optional(),
   company_bir:     z.string().max(50).optional(),
   currency:        z.string().length(3).optional(),   // ISO 4217 e.g. 'TTD'
-  logo_url:        z.string().url().optional(),
+  logo_url:        z.url().optional(),
 });
 
 export type SaveCompanySettingsPayload = z.infer<typeof SaveCompanySettingsSchema>;

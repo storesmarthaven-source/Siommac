@@ -75,12 +75,6 @@ export function ToolboxArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Toolbox Talks"
         sub="Daily pre-task safety briefings across all sites and crews — log, track, and report on toolbox talk delivery."
-        meta={[
-          { icon: 'fa-comments', label: `${talks.length} total talks` },
-          { icon: 'fa-circle-check', label: `${completed} completed` },
-          { icon: 'fa-users', label: `${totalAtt} attendees` },
-          { icon: 'fa-chart-pie', label: `${completionRate}% completion` },
-        ]}
       />
 
       <MetricRow pageKey="hse.toolbox" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

@@ -117,12 +117,6 @@ export function OnboardingBlockedBoard({
         module="HR · Onboarding"
         title="Blocked"
         sub="Active onboarding blockers grouped by the module that owns them."
-        meta={[
-          { icon: 'fa-triangle-exclamation', label: `${kpi.active} active` },
-          { icon: 'fa-fire', label: `${kpi.critical} critical` },
-          { icon: 'fa-arrow-up-right-dots', label: `${kpi.escalated} escalated` },
-          { icon: 'fa-hourglass-half', label: `avg ${kpi.avgAge}d old` },
-        ]}
       />
 
       <div class="obx-toolbar">

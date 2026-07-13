@@ -11,22 +11,22 @@
  */
 
 import { useState } from 'preact/hooks';
-import type { JSX, VNode } from 'preact';
+import type { VNode, CSSProperties } from 'preact';
 
-const wrap: JSX.CSSProperties = {
+const wrap: CSSProperties = {
   minHeight: '100vh', display: 'grid', placeItems: 'center', background: '#0e2f5d',
   fontFamily: 'Inter, ui-sans-serif, system-ui, -apple-system, "Segoe UI", Arial, sans-serif', padding: '24px',
 };
-const card: JSX.CSSProperties = {
+const card: CSSProperties = {
   width: '100%', maxWidth: '420px', background: '#fff', borderRadius: '16px',
   boxShadow: '0 18px 40px rgba(8,24,50,.35)', padding: '32px 28px',
 };
-const label: JSX.CSSProperties = { display: 'block', fontSize: '13px', fontWeight: '600', color: '#33425f', margin: '14px 0 6px' };
-const input: JSX.CSSProperties = {
+const label: CSSProperties = { display: 'block', fontSize: '13px', fontWeight: '600', color: '#33425f', margin: '14px 0 6px' };
+const input: CSSProperties = {
   width: '100%', height: '44px', border: '1px solid #d9e2ee', borderRadius: '10px',
   padding: '0 13px', fontSize: '14px', color: '#11203b', boxSizing: 'border-box',
 };
-const btn: JSX.CSSProperties = {
+const btn: CSSProperties = {
   width: '100%', height: '46px', marginTop: '20px', border: '0', borderRadius: '11px',
   background: '#075fe8', color: '#fff', fontSize: '15px', fontWeight: 500, cursor: 'pointer',
 };

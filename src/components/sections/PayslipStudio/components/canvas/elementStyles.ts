@@ -1,8 +1,8 @@
-import type { JSX } from 'preact';
+import type { CSSProperties } from 'preact';
 import type { Align, VAlign } from '@payslip/types';
 import type { StyledElement } from '@payslip/model/guards';
 
-export function fontCss(el: StyledElement): JSX.CSSProperties {
+export function fontCss(el: StyledElement): CSSProperties {
   return {
     fontSize: `${el.fontSize}px`,
     fontFamily: el.fontFamily,
@@ -16,8 +16,8 @@ export function fontCss(el: StyledElement): JSX.CSSProperties {
 }
 
 /** Fill / border / radius / padding applied to an element's content wrapper. */
-export function boxCss(el: StyledElement, withPadding: boolean): JSX.CSSProperties {
-  const css: JSX.CSSProperties = {};
+export function boxCss(el: StyledElement, withPadding: boolean): CSSProperties {
+  const css: CSSProperties = {};
   if (el.bg && el.bg !== 'transparent') css.background = el.bg;
   if (el.borderW) css.border = `${el.borderW}px ${el.borderStyle} ${el.borderColor}`;
   if (el.radius) css.borderRadius = `${el.radius}px`;

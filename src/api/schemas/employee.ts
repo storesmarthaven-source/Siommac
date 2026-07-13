@@ -23,8 +23,8 @@ import { UserRoleSchema } from './auth';
 
 // ── Shared primitives ─────────────────────────────────────────────────────────
 
-const uuid         = z.string().uuid();
-const isoTimestamp = z.string().datetime({ offset: true }).nullable();
+const uuid         = z.uuid();
+const isoTimestamp = z.iso.datetime({ offset: true }).nullable();
 const isoDate      = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Expected YYYY-MM-DD').nullable();
 
 // ── Employee ──────────────────────────────────────────────────────────────────
@@ -45,10 +45,10 @@ export const EmployeeRowSchema = z.object({
   status:                      UserStatusSchema,
   department_id:               uuid.nullable(),
   position:                    z.string().nullable(),
-  email:                       z.string().email().nullable(),
+  email:                       z.email().nullable(),
   phone:                       z.string().nullable(),
   employee_number:             z.string().nullable(),
-  profile_image:               z.string().url().nullable(),
+  profile_image:               z.url().nullable(),
   signed_url:                  z.string().nullable(),
   signed_url_expires_at:       isoTimestamp,
   color_scheme:                z.string().nullable(),
@@ -80,7 +80,7 @@ export const AddEmployeeSchema = z.object({
   status:     UserStatusSchema.default('active'),
   department_id: uuid.optional(),
   position:   z.string().max(100).optional(),
-  email:      z.string().email().optional(),
+  email:      z.email().optional(),
   phone:      z.string().max(20).optional(),
   employee_number: z.string().max(20).optional(),
   pay_cycle:  PayCycleSchema.optional(),

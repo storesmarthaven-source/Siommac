@@ -951,12 +951,6 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Workflows"
         sub="Governed approvals, evidence gates, cross-module handoffs, and immutable audit trail."
-        meta={[
-          { icon: 'fa-inbox', label: `${pending} pending` },
-          { icon: 'fa-diagram-project', label: `${open} open` },
-          { icon: 'fa-shield-halved', label: `${total} total` },
-          { icon: 'fa-route', label: `${SEEDED_TEMPLATES.length} templates` },
-        ]}
       />
 
       <MetricRow pageKey="hse.workflows" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

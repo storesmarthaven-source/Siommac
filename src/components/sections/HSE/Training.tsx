@@ -121,12 +121,6 @@ export function TrainingArea({ tab }: { tab: string }): VNode {
       <PageHeader
         icon="fa-graduation-cap" module="HSE" title="Training & Competency"
         sub="Worker competency, certificate verification, role requirements, and compliance readiness across all sites."
-        meta={[
-          { icon: 'fa-chart-pie', label: `${compliancePct}% compliant` },
-          { icon: 'fa-certificate', label: `${currentCerts} current certs` },
-          { icon: 'fa-hourglass-half', label: `${dueForRenewal} due for renewal` },
-          { icon: 'fa-triangle-exclamation', label: `${expired} expired` },
-        ]}
       />
 
       <TrainingInsightCards active={active} />

@@ -1,4 +1,4 @@
-import type { JSX } from 'preact';
+import type { CSSProperties } from 'preact';
 import type { DesignElement } from '@payslip/types';
 import { TokenText } from './TokenText';
 import { alignFor, boxCss, fontCss, justifyFor } from './elementStyles';
@@ -130,7 +130,7 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
       const stripe = el.stripeBg ?? '#f6f8fd';
       const rows = el.rows.map((r, i) => {
         total += parseAmount(r.amount);
-        const cellStyle: JSX.CSSProperties = {};
+        const cellStyle: CSSProperties = {};
         const rowBg = r.bg ?? (i % 2 === 1 ? stripe : undefined);
         if (rowBg && rowBg !== 'transparent') cellStyle.background = rowBg;
         if (r.color) cellStyle.color = r.color;
@@ -165,7 +165,7 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
               ))}
             </colgroup>
             {el.showHead && (() => {
-              const thStyle: JSX.CSSProperties = {
+              const thStyle: CSSProperties = {
                 background: el.accent,
                 color: el.headColor,
                 // Always explicit so the header row never inherits (and is never

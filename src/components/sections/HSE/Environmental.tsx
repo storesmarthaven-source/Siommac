@@ -425,12 +425,6 @@ export function EnvironmentalArea({ tab }: { tab: string }): VNode {
         module="HSE"
         title="Environmental Management"
         sub="Spill register, waste manifests, EMA notifications, and environmental monitoring for all T&T sites."
-        meta={[
-          { icon: 'fa-droplet', label: `${mockSpills.length} spills YTD` },
-          { icon: 'fa-trash-can', label: `${mockWaste.length} waste records` },
-          { icon: 'fa-file-lines', label: `${mockEmaNotifications.length} EMA notifications` },
-          ...(openSpills + pendingWaste > 0 ? [{ icon: 'fa-triangle-exclamation', label: `${openSpills + pendingWaste} open / pending` }] : []),
-        ]}
       />
 
       <MetricRow pageKey="hse.environmental" cards={sparks.map(s => ({ key: s.label, node: <SparkCard spark={s} /> }))} />

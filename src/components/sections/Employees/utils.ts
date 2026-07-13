@@ -199,6 +199,7 @@ export function printPayslipHtml(html: string, css: string, headerHtml: string):
   if (!win) return;
 
   const faUrl = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
+  // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
   win.document.write(
     `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip</title>` +
     `<link rel="stylesheet" href="${faUrl}">` +

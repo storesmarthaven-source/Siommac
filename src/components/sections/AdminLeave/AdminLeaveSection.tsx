@@ -212,6 +212,7 @@ export function AdminLeaveSection(): VNode {
         const docHtml = build(detail);
         const win = window.open('', '_blank', 'width=900,height=1000');
         if (!win) { toast.error('Allow popups for this site to print.'); return; }
+        // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
         win.document.write(
           `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Leave Application</title><style>${css}</style></head><body>${docHtml}</body></html>`,
         );
