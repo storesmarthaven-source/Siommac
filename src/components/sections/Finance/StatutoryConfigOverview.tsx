@@ -14,17 +14,20 @@
  * SoD enforced server-side (assertDifferentApprover); FE reflects the 422 message.
  */
 
-import { type VNode } from 'preact';
+import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { toast } from '@store';
 import { useSessionStore, selectUserId } from '@store/session';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
 import {
-  HrfinPill, HrfinWizardModal, Drawer, exportCsv, NewMenu,
+  HrfinWizardModal, Drawer, exportCsv, NewMenu,
   DataTable, type DtColumn, type DtAction,
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   type RowActionItem,
+  PanelTabs, MiniTable, Pill, PanelEmpty,
+  Skeleton, SkeletonText,
+  type PillTone,
 } from '@ui';
 import { StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
@@ -69,7 +72,22 @@ function statusTone(s: string): 'ok' | 'bad' | 'wn' | 'nu' | 'dr' {
   }
 }
 
+/** Same status → the @ui <Pill> tone vocabulary (rich drawer / panel primitives). */
+function statusPillTone(s: string, isActive = false): PillTone {
+  if (isActive || s === 'active') return 'green';
+  switch (s) {
+    case 'approved':         return 'blue';
+    case 'pending_approval': return 'amber';
+    case 'rejected':         return 'red';
+    default:                 return 'gray';
+  }
+}
+
 const PAGE_SIZE = 10;
+
+// Title-case a person's name for display (e.g. "JOHN SMITH" / "john smith" → "John Smith").
+const toTitleCase = (s: string): string =>
+  s.replace(/\S+/g, w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase());
 
 // ── Main tabs ─────────────────────────────────────────────────────────────────
 
@@ -310,10 +328,16 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
       renderCell: v => <StatBadge tone={statusTone(v.status)}>{v.isActive ? 'Active' : humanize(v.status)}</StatBadge>,
     },
     {
-      key: 'owner', label: 'Owner',
-      renderCell: v => v.createdBy
-        ? <EmployeeCellResolved resolved={nameMap?.get(v.createdBy)} fallbackId={v.createdBy} />
-        : <span class="sdb-muted-txt">—</span>,
+      key: 'owner', label: 'Version Owner',
+      renderCell: v => {
+        if (!v.createdBy) return <span class="sdb-muted-txt">—</span>;
+        if (!nameMap) return <EmployeeCellResolved resolved={undefined} />;   // still loading
+        const r = nameMap.get(v.createdBy);
+        if (!r) return <span class="sdb-muted-txt">—</span>;                  // not an app_users row
+        // resolveEmployees now guarantees a real name (never the raw id); show it Title-Cased,
+        // with the person's position/role beneath. Employee number is dropped (not shown here).
+        return <EmployeeCellResolved resolved={{ ...r, fullName: toTitleCase(r.fullName), employeeNo: null }} showPosition />;
+      },
     },
     {
       key: 'linkedRuns', label: 'Linked Runs', align: 'center',
@@ -397,8 +421,9 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
               { type: 'dateRange', title: 'Effective date', from: effFrom, to: effTo, onChange: (f, t) => { setEffFrom(f); setEffTo(t); setPage(0); } },
               { type: 'numberRange', title: 'NIS rate', unit: '%', step: '0.1', min: rateMin, max: rateMax, onChange: (mn, mx) => { setRateMin(mn); setRateMax(mx); setPage(0); } },
             ] },
-            { name: 'Owner', blurb: 'Filter by who created the version.', sections: [
-              { type: 'checklist', title: 'Owner', options: ownerOptions, selected: owner, onChange: v => { setOwner(v); setPage(0); }, labelFn: id => nameMap?.get(id)?.fullName ?? id },
+            { name: 'Version Owner', blurb: 'Filter by who created the version.', sections: [
+              { type: 'checklist', title: 'Version Owner', options: ownerOptions, selected: owner, onChange: v => { setOwner(v); setPage(0); },
+                labelFn: id => { const r = nameMap?.get(id); return r && r.fullName !== r.id ? toTitleCase(r.fullName) : id; } },
             ] },
           ]} />
       }
@@ -817,20 +842,18 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       key: 'lastVerified', label: 'Last Verified',
       renderCell: r => { const v = dv(r, 'verifiedAt', 'verified_at'); return v === '—' ? <span class="sdb-muted-txt">Never</span> : <span style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtDate(v)}</span>; },
     },
-    {
-      key: 'action', label: 'Action', align: 'right',
-      renderCell: r => {
-        const id = String(r.id ?? '');
-        if (!canVerify || !id) return <span class="sdb-muted-txt">—</span>;
-        return (
-          <div class="sdb-vactions">
-            <button type="button" class="sdb-vbtn ok" onClick={e => { e.stopPropagation(); void verify(r); }}>Verify</button>
-            <button type="button" class="sdb-vbtn bad" onClick={e => { e.stopPropagation(); void reject(r); }}>Reject</button>
-          </div>
-        );
-      },
-    },
   ];
+
+  // Row actions live in the ⋮ overflow menu (verify / reject the pending NIS profile).
+  const rowActions = canVerify
+    ? (r: NisProfileRow): DtAction<NisProfileRow>[] => {
+        if (!String(r.id ?? '')) return [];
+        return [
+          { key: 'verify', label: 'Verify', icon: 'check', onClick: () => void verify(r) },
+          { key: 'reject', label: 'Reject', icon: 'close', tone: 'danger', onClick: () => void reject(r) },
+        ];
+      }
+    : undefined;
 
   const pageCount = Math.max(1, Math.ceil(filteredProfiles.length / PAGE_SIZE));
 
@@ -839,6 +862,7 @@ function NisVerifyTab({ canVerify }: { canVerify: boolean }): VNode {
       columns={columns}
       rows={filteredProfiles.slice(page * PAGE_SIZE, (page + 1) * PAGE_SIZE)}
       rowKey={r => String(r.id ?? '')}
+      rowActions={rowActions}
       loading={profilesQ.isLoading}
       emptyState={{ icon: 'fa-user-check', title: 'Queue clear', text: profilesQ.error ? String(profilesQ.error) : 'No NIS profiles are awaiting verification.' }}
       globalSearch={{ value: search, onChange: v => { setSearch(v); setPage(0); }, placeholder: 'Search by NIS #, employee or employer…' }}
@@ -927,6 +951,11 @@ const DRAWER_TABS: { key: DrawerTab; label: string }[] = [
   { key: 'timeline',   label: 'Timeline' },
   { key: 'audit',      label: 'Audit' },
 ];
+// PanelTabs (the EM-profile tab strip) splits into a primary row + a "More ▾" menu.
+const DRAWER_PRIMARY_TABS = DRAWER_TABS.slice(0, 4).map(t => t.label);
+const DRAWER_MORE_TABS    = DRAWER_TABS.slice(4).map(t => t.label);
+const drawerTabLabel = (k: DrawerTab): string => DRAWER_TABS.find(t => t.key === k)?.label ?? 'Summary';
+const drawerTabKey   = (label: string): DrawerTab => DRAWER_TABS.find(t => t.label === label)?.key ?? 'summary';
 
 function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManage, canApprove, onShowNisForm }: {
   id: string | null;
@@ -971,21 +1000,96 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
     catch (e) { toast.error((e as Error).message); }
   };
 
-  const drawerTitle = d?.label ?? 'Statutory Version';
-  const drawerSub   = d ? `${d.jurisdiction} · ${humanize(d.status)} · Effective ${fmtDate(d.effectiveFrom)}` : '';
+  // Resolved actor display name (Title Case) — plain text for tiles/rail lines.
+  const actorName = (id: string | null | undefined): string => {
+    if (!id) return '—';
+    const r = nameMap?.get(id);
+    return r ? toTitleCase(r.fullName) : '—';
+  };
+
+  // "In force" ribbon — the version's single most important fact, by status.
+  const ribbon = !d ? null
+    : d.isActive ? { cls: 'blue', icon: 'fa-calendar-check', body: <>In force since <b>{fmtDate(d.activatedAt ?? d.effectiveFrom)}</b> — applied to all new payroll runs</> }
+    : d.status === 'pending_approval' ? { cls: 'amber', icon: 'fa-clock', body: <>Awaiting approval — not yet in force</> }
+    : d.status === 'approved' ? { cls: 'green', icon: 'fa-circle-check', body: <>Approved — awaiting activation · effective {fmtDate(d.effectiveFrom)}</> }
+    : d.status === 'retired' ? { cls: 'gray', icon: 'fa-box-archive', body: <>Retired{d.retiredAt ? <> <b>{fmtDate(d.retiredAt)}</b></> : null} — no longer used for new runs</> }
+    : { cls: 'gray', icon: 'fa-pen', body: <>Draft — takes effect <b>{fmtDate(d.effectiveFrom)}</b> once approved and activated</> };
+
+  // Lifecycle rail data — approval events newest-first, closed by the synthetic Created entry.
+  const LIFE_ACTIONS = ['statutory_version.submitted', 'statutory_version.approved', 'statutory_version.rejected', 'statutory_version.activated', 'statutory_version.retired'];
+  const railSub = (e: { createdAt: string; actorId: string | null; reason?: string | null }): string =>
+    `${fmtDate(e.createdAt)} · ${actorName(e.actorId)}${e.reason ? ` · ${e.reason}` : ''}`;
+  const lifeItems: SvdRailItem[] = !d ? [] : [
+    ...d.approvalTimeline
+      .filter(e => LIFE_ACTIONS.includes(e.action))
+      .slice()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map(e => ({ title: lifeLabel(e.action), sub: railSub(e), color: lifeDotColor(e.action) })),
+    { title: 'Created', sub: `${fmtDate(d.createdAt)} · ${actorName(d.createdBy)}`, color: 'rgba(255,255,255,.35)' },
+  ];
+  const timelineItems: SvdRailItem[] = !d ? [] : d.approvalTimeline
+    .slice()
+    .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+    .map(e => ({ title: lifeLabel(e.action), sub: railSub(e), color: lifeDotColor(e.action) }));
+
+  // FULL lifecycle stepper (Summary tab) — every stage of a rate version's life shown in order,
+  // completed stages filled + dated, upcoming ones hollow. Rank drives "done" for stages whose
+  // dedicated timestamp isn't stored (a version already active implies it was submitted+approved).
+  const STAGE_RANK: Record<string, number> = { draft: 0, pending_approval: 1, approved: 2, active: 3, retired: 4 };
+  const rank = d ? (STAGE_RANK[d.status] ?? 0) : 0;
+  const tlEvent = (needle: string) => d?.approvalTimeline.find(e => e.action.toLowerCase().includes(needle));
+  const stageSub = (done: boolean, date: string | null | undefined, actor: string | null | undefined, reason?: string | null): string =>
+    done ? `${fmtDate(date)} · ${actorName(actor)}${reason ? ` · ${reason}` : ''}` : 'Pending';
+  const todayIso = new Date().toISOString();
+  const fullLifecycle: SvdRailItem[] = !d ? [] : (() => {
+    const submitted = tlEvent('submitted');
+    const approved  = tlEvent('approved');
+    const subDone = !!submitted || rank >= 1;
+    const appDone = !!d.approvedBy || !!approved || rank >= 2;
+    const actDone = !!d.activatedAt || rank >= 3;
+    const retDone = !!d.retiredAt || d.status === 'retired';
+    // When a stage is complete but its own timestamp isn't stored (older seed data, or events
+    // not captured), fall back to the version's created date/creator so it never shows a bare "—".
+    // Compact sub for the horizontal stepper: date + actor only (reason lives in History/Timeline).
+    return [
+      { title: 'Created',   done: true,    color: '#94a3b8', sub: stageSub(true, d.createdAt, d.createdBy) },
+      { title: 'Submitted', done: subDone, color: '#fbbf24', sub: stageSub(subDone, submitted?.createdAt ?? d.createdAt, submitted?.actorId ?? d.createdBy) },
+      { title: 'Approved',  done: appDone, color: '#60a5fa', sub: stageSub(appDone, approved?.createdAt ?? d.createdAt, d.approvedBy ?? approved?.actorId ?? d.createdBy) },
+      { title: 'Activated', done: actDone, color: '#4ade80', sub: stageSub(actDone, d.activatedAt ?? todayIso, d.activatedBy ?? d.createdBy) },
+      { title: 'Retired',   done: retDone, color: '#94a3b8', sub: stageSub(retDone, d.retiredAt, d.retiredBy) },
+    ];
+  })();
+
+  const statutoryComponents = (componentsQ.data ?? []).filter(c => c.isStatutory && c.isActive);
 
   const isOwnVersion = !!d && !!currentUserId && d.createdBy === currentUserId;
-  const footer = d ? (
+
+  // Retire lives in the HEADER (right of the title), not the footer — it's a state action on
+  // the active version, distinct from the lifecycle-progression buttons below.
+  const showRetire = !!d && canManage && d.status === 'active';
+  const retireVersion = async (): Promise<void> => {
+    if (!d) return;
+    const ok = await dialog.confirm({ title: `Retire "${d.label}"?`, text: 'The active version will be retired and no longer used for new payroll runs. Activate another version to replace it.', danger: true, confirmText: 'Retire' });
+    if (!ok) return;
+    await run(retireMut.mutateAsync({ id: d.id }), 'Version retired.');
+  };
+
+  const hasFooterActions = !!d && (
+    (canManage && d.status === 'draft') ||
+    (canApprove && d.status === 'pending_approval') ||
+    (canApprove && d.status === 'approved')
+  );
+  const footer = hasFooterActions && d ? (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {canManage && d.status === 'draft' && (
-        <button class="hrfin-action is-primary" type="button" onClick={() => run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
+        <button class="ui-btn-primary" type="button" onClick={() => run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
       )}
       {canApprove && d.status === 'pending_approval' && (
         <>
           {!isOwnVersion && (
-            <button class="hrfin-action is-primary" type="button" onClick={() => run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
+            <button class="ui-btn-primary" type="button" onClick={() => run(approveMut.mutateAsync({ id: d.id }), 'Version approved.')}>Approve</button>
           )}
-          <button class="hrfin-action is-danger" type="button" onClick={async () => {
+          <button class="ui-btn-danger" type="button" onClick={async () => {
             const reason = await dialog.prompt({ title: 'Rejection reason', text: 'Provide a reason for returning this version to draft.', placeholder: 'Rejection reason (required)', confirmText: 'Reject' });
             if (!reason?.trim()) return;
             await run(rejectMut.mutateAsync({ id: d.id, reason }), 'Version returned to draft.');
@@ -993,221 +1097,293 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
         </>
       )}
       {canApprove && d.status === 'approved' && (
-        <button class="hrfin-action is-primary" type="button" onClick={async () => {
+        <button class="ui-btn-primary" type="button" onClick={async () => {
           const ok = await dialog.confirm({ title: `Activate "${d.label}"?`, text: 'This becomes the active statutory configuration and retires the currently-active version. All new payroll runs will use these rates.', confirmText: 'Activate' });
           if (!ok) return;
           await run(activateMut.mutateAsync({ id: d.id }), 'Version activated.');
         }}>Activate</button>
       )}
-      {canManage && d.status === 'active' && (
-        <button class="hrfin-action is-danger" type="button" style={{ marginLeft: 'auto' }} onClick={async () => {
-          const ok = await dialog.confirm({ title: `Retire "${d.label}"?`, text: 'The active version will be retired and no longer used for new payroll runs. Activate another version to replace it.', danger: true, confirmText: 'Retire' });
-          if (!ok) return;
-          await run(retireMut.mutateAsync({ id: d.id }), 'Version retired.');
-        }}>Retire</button>
-      )}
     </div>
   ) : undefined;
 
   return (
-    <Drawer open={open} onClose={onClose} title={drawerTitle} sub={drawerSub} panelClass="hrfin" foot={footer} noFooter={!footer}>
+    <Drawer rich open={open} onClose={onClose} title="Rate Version" foot={footer} noFooter={!footer}>
       {!d ? (
-        <div class="hrfin"><div class="hrfin-empty">Loading…</div></div>
+        <>
+          <Skeleton height={22} width="55%" />
+          <div style={{ marginTop: 10 }}><Skeleton height={12} width="70%" /></div>
+          <div style={{ display: 'flex', gap: 9, margin: '16px 0' }}>
+            <Skeleton height={68} width="33%" radius={10} />
+            <Skeleton height={68} width="33%" radius={10} />
+            <Skeleton height={68} width="33%" radius={10} />
+          </div>
+          <SkeletonText lines={5} />
+        </>
       ) : (
-        <div class="hrfin">
-          <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-            <HrfinPill tone={statusTone(d.status)}>{d.isActive ? 'Active' : humanize(d.status)}</HrfinPill>
-            {d.linkedPayrollRunCount > 0 && (
-              <span style={{ fontSize: 12, opacity: 0.7 }}>{d.linkedPayrollRunCount} linked payroll run{d.linkedPayrollRunCount !== 1 ? 's' : ''}</span>
+        <>
+          {/* Document header — a rate version is a document, not a person: label + status
+              pill, jurisdiction · currency · linked-runs meta line. */}
+          <div class="svd-head">
+            <div class="svd-head-main">
+              <div class="svd-title">
+                {d.label}
+                <Pill tone={statusPillTone(d.status, d.isActive)}>{d.isActive ? 'Active' : humanize(d.status)}</Pill>
+              </div>
+              <div class="svd-meta">
+                {d.jurisdiction} · {d.currency}{d.linkedPayrollRunCount > 0 ? ` · ${d.linkedPayrollRunCount} linked run${d.linkedPayrollRunCount !== 1 ? 's' : ''}` : ''}
+              </div>
+            </div>
+            {showRetire && (
+              <button type="button" class="svd-retire" onClick={() => void retireVersion()}>
+                <i class="fa-solid fa-box-archive" aria-hidden="true" /> Retire
+              </button>
             )}
           </div>
 
-          <div class="hrfin-tabs" style={{ marginBottom: 14, flexWrap: 'wrap' }}>
-            {DRAWER_TABS.map(t => (
-              <button key={t.key} type="button" class={dtab === t.key ? 'is-active' : ''} onClick={() => setDtab(t.key)}>{t.label}</button>
-            ))}
+          {ribbon && (
+            <div class={`svd-ribbon svd-ribbon--${ribbon.cls}`}>
+              <i class={`fas ${ribbon.icon}`} aria-hidden="true" />
+              <span>{ribbon.body}</span>
+            </div>
+          )}
+
+          {/* Headline rates — the figures this panel is opened for. */}
+          <div class="svd-tiles">
+            <SvdTile label="PAYE Band 1" value={fmtPercent(d.payeBand1Rate)} sub={`to ${fmtMoney(d.payeBand1Ceiling)} chargeable`} />
+            <SvdTile label="PAYE Band 2" value={fmtPercent(d.payeBand2Rate)} sub="above ceiling" />
+            <SvdTile label="NIS Classes" value={d.nisClasses.length} sub="weekly bands" />
           </div>
 
+          <PanelTabs
+            primary={DRAWER_PRIMARY_TABS} more={DRAWER_MORE_TABS}
+            active={drawerTabLabel(dtab)} onChange={label => setDtab(drawerTabKey(label))}
+          />
+
           {dtab === 'summary' && (
-            <div class="hrfin-metric-list">
-              <div class="hrfin-metric-row"><span>Label</span><b>{d.label}</b></div>
-              <div class="hrfin-metric-row"><span>Effective from</span><b>{fmtDate(d.effectiveFrom)}</b></div>
-              <div class="hrfin-metric-row"><span>Jurisdiction</span><b>{d.jurisdiction}</b></div>
-              <div class="hrfin-metric-row"><span>Currency</span><b>{d.currency}</b></div>
-              <div class="hrfin-metric-row"><span>Status</span><b>{humanize(d.status)}</b></div>
-              <div class="hrfin-metric-row"><span>Active</span><b>{d.isActive ? 'Yes' : 'No'}</b></div>
-              <div class="hrfin-metric-row"><span>Created</span><b>{fmtDate(d.createdAt)}</b></div>
-              {d.approvedBy && <div class="hrfin-metric-row"><span>Approved by</span><b><EmployeeCellResolved resolved={nameMap?.get(d.approvedBy)} fallbackId={d.approvedBy} /></b></div>}
-              {d.activatedAt && <div class="hrfin-metric-row"><span>Activated</span><b>{fmtDate(d.activatedAt)}</b></div>}
-              {d.retiredAt && <div class="hrfin-metric-row"><span>Retired</span><b>{fmtDate(d.retiredAt)}</b></div>}
-            </div>
+            <>
+              <SvdSection label="Lifecycle">
+                <SvdSteps items={fullLifecycle} />
+              </SvdSection>
+              <SvdSection label="Configuration">
+                <div class="svd-grid">
+                  <SvdTile label="Personal Allowance" value={fmtMoney(d.payePersonalAllowance)} sub="annual" />
+                  <SvdTile label="NIS Monthly Ceiling" value={d.nisMonthyCeiling != null ? fmtMoney(d.nisMonthyCeiling) : 'No ceiling'} />
+                  <SvdTile label="HS Threshold" value={fmtMoney(d.hsMonthlyThreshold)} sub="monthly" />
+                  <SvdTile label="Statutory Components" value={`${statutoryComponents.length} active`} />
+                </div>
+              </SvdSection>
+            </>
           )}
 
           {dtab === 'paye' && (
-            <div class="hrfin-metric-list">
-              <div class="hrfin-metric-row"><span>Personal Allowance (annual)</span><b>{fmtMoney(d.payePersonalAllowance)}</b></div>
-              <div class="hrfin-metric-row"><span>Band 1 Ceiling (annual)</span><b>{fmtMoney(d.payeBand1Ceiling)}</b></div>
-              <div class="hrfin-metric-row"><span>Band 1 Rate</span><b>{fmtPercent(d.payeBand1Rate)}</b></div>
-              <div class="hrfin-metric-row"><span>Band 2 Rate</span><b>{fmtPercent(d.payeBand2Rate)}</b></div>
-            </div>
+            <SvdSection label="PAYE Bands">
+              <div class="svd-grid">
+                <SvdTile label="Personal Allowance" value={fmtMoney(d.payePersonalAllowance)} sub="annual" />
+                <SvdTile label="Band 1 Ceiling" value={fmtMoney(d.payeBand1Ceiling)} sub="annual chargeable" />
+                <SvdTile label="Band 1 Rate" value={fmtPercent(d.payeBand1Rate)} sub={`to ${fmtMoney(d.payeBand1Ceiling)}`} />
+                <SvdTile label="Band 2 Rate" value={fmtPercent(d.payeBand2Rate)} sub="above ceiling" />
+              </div>
+            </SvdSection>
           )}
 
           {dtab === 'nis' && (
-            <div>
-              {d.nisClasses.length === 0 ? (
-                <div class="hrfin-empty">No NIS classes configured for this version.
-                  {canManage && d.status === 'draft' && (
-                    <button type="button" class="hrfin-action is-primary" style={{ marginTop: 12 }} onClick={() => onShowNisForm(d.id)}>+ Add Class</button>
-                  )}
-                </div>
-              ) : (
-                <table class="hrfin-detail-table" style={{ width: '100%', borderCollapse: 'collapse' }}>
-                  <thead><tr>
-                    <th style={{ textAlign: 'left', padding: '6px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>Class</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>Weekly Min</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>Weekly Max</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>EE / wk</th>
-                    <th style={{ textAlign: 'right', padding: '6px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>ER / wk</th>
-                  </tr></thead>
-                  <tbody>{d.nisClasses.map(c => (
-                    <tr key={c.id} style={{ borderBottom: '1px solid var(--hrfin-border)' }}>
-                      <td style={{ padding: '6px 8px', fontWeight: 600 }}>{c.classNo}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.weeklyMin)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{c.weeklyMax == null ? '∞' : fmtMoney(c.weeklyMax)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.employeeWeekly)}</td>
-                      <td style={{ padding: '6px 8px', textAlign: 'right', fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.employerWeekly)}</td>
-                    </tr>
-                  ))}</tbody>
-                </table>
-              )}
-            </div>
+            <SvdSection label="NIS Contribution Classes"
+              action={canManage && d.status === 'draft'
+                ? <button class="ui-mini-btn" type="button" onClick={() => onShowNisForm(d.id)}>+ Add Class</button>
+                : undefined}>
+              <MiniTable cols={['Class', 'Weekly Min', 'Weekly Max', 'EE / wk', 'ER / wk']}
+                empty={<PanelEmpty>No NIS classes configured for this version.</PanelEmpty>}>
+                {d.nisClasses.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ fontWeight: 600 }}>{c.classNo}</td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.weeklyMin)}</td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>{c.weeklyMax == null ? '∞' : fmtMoney(c.weeklyMax)}</td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.employeeWeekly)}</td>
+                    <td style={{ fontVariantNumeric: 'tabular-nums' }}>{fmtMoney(c.employerWeekly)}</td>
+                  </tr>
+                ))}
+              </MiniTable>
+            </SvdSection>
           )}
 
           {dtab === 'hs' && (
-            <div class="hrfin-metric-list">
-              <div class="hrfin-metric-row"><span>Monthly Threshold</span><b>{fmtMoney(d.hsMonthlyThreshold)}</b></div>
-              <div class="hrfin-metric-row"><span>Weekly Rate (High)</span><b>{fmtMoney(d.hsWeeklyHigh)}</b></div>
-              <div class="hrfin-metric-row"><span>Weekly Rate (Low)</span><b>{fmtMoney(d.hsWeeklyLow)}</b></div>
-            </div>
+            <SvdSection label="Health Surcharge">
+              <div class="svd-grid">
+                <SvdTile label="Monthly Threshold" value={fmtMoney(d.hsMonthlyThreshold)} />
+                <SvdTile label="Weekly Rate (High)" value={fmtMoney(d.hsWeeklyHigh)} sub="at or above threshold" />
+                <SvdTile label="Weekly Rate (Low)" value={fmtMoney(d.hsWeeklyLow)} sub="below threshold" />
+              </div>
+            </SvdSection>
           )}
 
           {dtab === 'components' && (
-            <div>
-              <p style={{ fontSize: 13, opacity: 0.7, marginBottom: 12 }}>Statutory pay components in this configuration. Manage the full catalogue in the Pay Components tab.</p>
-              {(componentsQ.data ?? []).filter(c => c.isStatutory && c.isActive).length === 0 ? (
-                <div class="hrfin-empty">No statutory pay components found.</div>
-              ) : (
-                <div class="hrfin-metric-list">
-                  {(componentsQ.data ?? []).filter(c => c.isStatutory && c.isActive).map(c => (
-                    <div key={c.id} class="hrfin-metric-row">
-                      <span><b style={{ fontFamily: 'monospace', marginRight: 6 }}>{c.code}</b>{c.name}</span>
-                      <HrfinPill tone={c.kind === 'earning' ? 'ok' : 'wn'}>{humanize(c.kind)}</HrfinPill>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
+            <SvdSection label="Statutory Pay Components">
+              <MiniTable cols={['Code', 'Component', 'Category']}
+                empty={<PanelEmpty>No statutory pay components found. Manage the catalogue in the Pay Components tab.</PanelEmpty>}
+                loading={componentsQ.isLoading && !componentsQ.data}>
+                {statutoryComponents.map(c => (
+                  <tr key={c.id}>
+                    <td style={{ fontFamily: 'monospace' }}>{c.code}</td>
+                    <td>{c.name}</td>
+                    <td><Pill tone={c.kind === 'earning' ? 'green' : 'amber'}>{humanize(c.kind)}</Pill></td>
+                  </tr>
+                ))}
+              </MiniTable>
+            </SvdSection>
           )}
 
           {dtab === 'runs' && (
-            <div>
-              <div class="hrfin-metric-list">
-                <div class="hrfin-metric-row"><span>Linked payroll runs</span><b>{d.linkedPayrollRunCount}</b></div>
-              </div>
-              {d.linkedPayrollRunCount === 0 && (
-                <div class="hrfin-empty" style={{ marginTop: 16 }}>No payroll runs are linked to this version.</div>
-              )}
-              {d.linkedPayrollRunCount > 0 && (
-                <div style={{ marginTop: 16 }}>
-                  <p style={{ fontSize: 13, opacity: 0.7, margin: '0 0 12px' }}>
-                    {d.linkedPayrollRunCount} payroll run{d.linkedPayrollRunCount !== 1 ? 's' : ''} used this statutory version. Open the Payroll module to drill into individual runs.
-                  </p>
-                  <button
-                    type="button"
-                    class="hrfin-action is-primary"
-                    onClick={() => {
-                      onClose();
-                      window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }));
-                    }}
-                  >
-                    Open Payroll module ▸
-                  </button>
+            <SvdSection label="Linked Payroll Runs"
+              action={d.linkedPayrollRunCount > 0
+                ? <button class="ui-mini-btn" type="button" onClick={() => {
+                    onClose();
+                    window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-finance-payroll' }));
+                  }}>Open Payroll Module</button>
+                : undefined}>
+              {d.linkedPayrollRunCount === 0 ? (
+                <PanelEmpty>No payroll runs are linked to this version.</PanelEmpty>
+              ) : (
+                <div class="svd-grid">
+                  <SvdTile label="Linked Runs" value={d.linkedPayrollRunCount} sub="used this version" />
+                  <SvdTile label="Drill-Through" value="Payroll module" sub="individual runs live there" />
                 </div>
               )}
-            </div>
+            </SvdSection>
           )}
 
           {dtab === 'history' && (
-            <div>
-              {d.approvalTimeline.filter(e => ['statutory_version.submitted', 'statutory_version.approved', 'statutory_version.rejected', 'statutory_version.activated', 'statutory_version.retired'].includes(e.action)).length === 0 ? (
-                <div class="hrfin-empty">No approval events recorded for this version.</div>
+            <SvdSection label="Approval History">
+              {lifeItems.length <= 1 ? (
+                <PanelEmpty>No approval events recorded for this version.</PanelEmpty>
               ) : (
-                <div class="hrfin-metric-list">
-                  {d.approvalTimeline
-                    .filter(e => ['statutory_version.submitted', 'statutory_version.approved', 'statutory_version.rejected', 'statutory_version.activated', 'statutory_version.retired'].includes(e.action))
-                    .map(e => (
-                      <div key={e.id} class="hrfin-metric-row" style={{ flexDirection: 'column', alignItems: 'flex-start', gap: 2 }}>
-                        <b>{humanize(e.action)}</b>
-                        <span style={{ fontSize: 12, opacity: 0.7 }}>
-                          {fmtDate(e.createdAt)} · by <EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} />
-                          {e.reason && <> · {e.reason}</>}
-                        </span>
-                      </div>
-                    ))
-                  }
-                </div>
+                <SvdRail items={lifeItems} />
               )}
-            </div>
+            </SvdSection>
           )}
 
           {dtab === 'timeline' && (
-            <div>
-              {d.approvalTimeline.length === 0 ? (
-                <div class="hrfin-empty">No timeline events found.</div>
+            <SvdSection label="Timeline">
+              {timelineItems.length === 0 ? (
+                <PanelEmpty>No timeline events found.</PanelEmpty>
               ) : (
-                <ul class="hrfin-activity-list">
-                  {d.approvalTimeline.map(e => (
-                    <li key={e.id}>
-                      <span><svg viewBox="0 0 24 24" width={18} height={18} fill="none" stroke="currentColor" strokeWidth={1.5}><circle cx="12" cy="12" r="4" /></svg></span>
-                      <div>
-                        <b>{humanize(e.action)}</b>
-                        <small>{fmtDate(e.createdAt)} · <EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} />{e.reason ? ` · ${e.reason}` : ''}</small>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <SvdRail items={timelineItems} />
               )}
-            </div>
+            </SvdSection>
           )}
 
           {dtab === 'audit' && (
-            <div>
-              {d.approvalTimeline.length === 0 ? (
-                <div class="hrfin-empty">No audit log entries found.</div>
-              ) : (
-                <div style={{ overflowX: 'auto' }}>
-                  <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: 12 }}>
-                    <thead><tr>
-                      {['Action', 'Actor', 'At', 'Reason'].map(h => (
-                        <th key={h} style={{ textAlign: 'left', padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)', fontWeight: 600 }}>{h}</th>
-                      ))}
-                    </tr></thead>
-                    <tbody>{d.approvalTimeline.map(e => (
-                      <tr key={e.id}>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>{e.action}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}><EmployeeCellResolved resolved={nameMap?.get(e.actorId)} fallbackId={e.actorId} /></td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)' }}>{fmtDate(e.createdAt)}</td>
-                        <td style={{ padding: '5px 8px', borderBottom: '1px solid var(--hrfin-border)', opacity: 0.7 }}>{e.reason ?? '—'}</td>
-                      </tr>
-                    ))}</tbody>
-                  </table>
-                </div>
-              )}
-            </div>
+            <SvdSection label="Audit Trail">
+              <MiniTable cols={['At', 'Actor', 'Action', 'Reason']}
+                empty={<PanelEmpty>No audit log entries found.</PanelEmpty>}>
+                {d.approvalTimeline.map(e => (
+                  <tr key={e.id}>
+                    <td>{fmtDate(e.createdAt)}</td>
+                    <td>{actorName(e.actorId)}</td>
+                    <td>{humanize(e.action)}</td>
+                    <td>{e.reason ?? '—'}</td>
+                  </tr>
+                ))}
+              </MiniTable>
+            </SvdSection>
           )}
-        </div>
+        </>
       )}
     </Drawer>
+  );
+}
+
+// ── Rate Version drawer building blocks (.svd-* — purpose-built for the navy panel) ──
+
+/** Lifecycle-rail dot colour per timeline action. */
+function lifeDotColor(action: string): string {
+  const a = action.toLowerCase();
+  if (a.includes('activated')) return '#4ade80';
+  if (a.includes('approved'))  return '#60a5fa';
+  if (a.includes('submitted')) return '#fbbf24';
+  if (a.includes('rejected'))  return '#f87171';
+  return 'rgba(255,255,255,.35)';
+}
+
+/** "statutory_version.submitted" → "Submitted". */
+function lifeLabel(action: string): string {
+  return humanize(action.split('.').pop() ?? action);
+}
+
+/** Headline / configuration figure tile — the KIT's .ui-stat-tile (small/strong/span),
+ *  so its colours come from the design system (incl. the .ui-rdrawer navy overrides)
+ *  and follow any kit re-theme; .svd-tiles/.svd-grid only adjust layout/sizing. */
+function SvdTile({ label, value, sub }: { label: string; value: ComponentChildren; sub?: string }): VNode {
+  return (
+    <div class="ui-stat-tile">
+      <small>{label}</small>
+      <strong>{value}</strong>
+      {sub && <span>{sub}</span>}
+    </div>
+  );
+}
+
+/** Uppercase section label with an optional right-aligned action. */
+function SvdSection({ label, action, children }: { label: string; action?: ComponentChildren; children: ComponentChildren }): VNode {
+  return (
+    <div class="svd-section">
+      <div class="svd-section-head"><span class="svd-label">{label}</span>{action}</div>
+      {children}
+    </div>
+  );
+}
+
+export interface SvdRailItem { title: string; sub: string; color: string; done?: boolean; }
+
+/** HORIZONTAL lifecycle stepper — dots in a row joined by connectors, title + sub beneath each.
+ *  For the fixed-length lifecycle (Summary). `done === false` renders a hollow dot + muted text. */
+function SvdSteps({ items }: { items: SvdRailItem[] }): VNode {
+  return (
+    <div class="svd-steps">
+      {items.map((it, i) => {
+        const pending = it.done === false;
+        return (
+          <div class={`svd-step${pending ? ' is-pending' : ''}`} key={i}>
+            <div class="svd-step-track">
+              <span class="svd-step-line" style={{ visibility: i === 0 ? 'hidden' : 'visible' }} />
+              <span class="svd-step-dot"
+                style={pending
+                  ? { background: 'transparent', border: `2px solid ${it.color}`, opacity: 0.55 }
+                  : { background: it.color }} />
+              <span class="svd-step-line" style={{ visibility: i === items.length - 1 ? 'hidden' : 'visible' }} />
+            </div>
+            <div class="svd-step-title">{it.title}</div>
+            <div class="svd-step-sub">{it.sub}</div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/** Vertical lifecycle rail — coloured dot + connector, event title + sub line. `done === false`
+ *  renders a hollow (outlined) dot + muted text. Used for History / Timeline (variable length). */
+function SvdRail({ items }: { items: SvdRailItem[] }): VNode {
+  return (
+    <div class="svd-rail">
+      {items.map((it, i) => {
+        const pending = it.done === false;
+        return (
+          <div class={`svd-rail-item${pending ? ' is-pending' : ''}`} key={i}>
+            <div class="svd-rail-track">
+              <span class="svd-rail-dot"
+                style={pending
+                  ? { background: 'transparent', border: `2px solid ${it.color}`, opacity: 0.55 }
+                  : { background: it.color }} />
+              {i < items.length - 1 && <span class="svd-rail-line" />}
+            </div>
+            <div class="svd-rail-body">
+              <div class="svd-rail-title">{it.title}</div>
+              <div class="svd-rail-sub">{it.sub}</div>
+            </div>
+          </div>
+        );
+      })}
+    </div>
   );
 }
 

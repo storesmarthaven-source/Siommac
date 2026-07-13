@@ -2926,12 +2926,7 @@ body[data-theme="dark"] .ppe-hero-panel .stat-card-icon.gold  { background: rgba
   display: flex; gap: 8px; flex-wrap: wrap; align-items: center;
 }
 
-.emp-filter-select {
-  padding: 6px 12px; border-radius: 40px; border: 1.5px solid var(--field-border);
-  background: var(--bg-card); font-size: 0.78rem; font-family: inherit;
-  color: var(--text-primary); outline: none; cursor: pointer; transition: border-color .2s;
-}
-.emp-filter-select:focus { border-color: var(--siomac-red); }
+/* .emp-filter-select is now KIT-owned (assets/styles/uikit.css) — matches .tf-select. */
 
 /* ── Incident register: priority dot + days-open + critical pill ── */
 .priority-dot-sm {

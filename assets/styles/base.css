@@ -1,5 +1,7 @@
 /* ─── SIOMAC Design System — Base Variables & Reset ─── */
 :root {
+  /* Standard gap between a page's KPI strip and the content below it (app-wide). */
+  --kpi-strip-gap: 18px;
   /* Brand */
   --siomac-red:        #E40C0C;
   --siomac-red-dark:   #B20808;

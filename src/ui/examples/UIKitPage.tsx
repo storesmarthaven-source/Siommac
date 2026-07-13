@@ -14,7 +14,7 @@ import { type VNode, type ComponentChildren } from 'preact';
 import { useState } from 'preact/hooks';
 import {
   PageHero, ModuleTabs, TabBar, PageHeader, MetricRow, withCounts, SectionHead,
-  Card, SparkCard, StatsCard, ChartCard, MiniCard, RecordRow, StatusPill,
+  Card, SparkCard, StatsCard, KpiTile, ChartCard, MiniCard, RecordRow, StatusPill,
   Sparkline, BarRow, ProgressBar,
   Button, NewMenu, Field, TextInput, SelectInput, TextareaInput, FormGrid,
   Toolbar, SearchInput, FilterSelect,
@@ -321,6 +321,23 @@ export function UIKitPage(): VNode {
             supporting="Hazards with verified controls"
             percent={82} percentColor="#4ade80" percentTarget="Target 85%" />
         </div>
+      </Section>
+
+      <Section id="uikit-kpitile" title="KpiTile — the standard plain KPI card" sub="The compact metric tile for the KPI strip at the top of a page: coloured icon chip + number + name, one supporting line, and an optional drill link. This is the PLAIN tile — distinct from the chart cards above (StatsCard). Use variant='text' for a label value like an active-version name.">
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, minmax(0, 1fr))', gap: '14px', marginBottom: '16px' }}>
+          <KpiTile icon="fa-pen-to-square" tone="purple" label="Draft Versions" value={3}
+            sub="2 awaiting review" link={{ label: 'View versions', onClick: () => {} }} />
+          <KpiTile icon="fa-layer-group" tone="teal" label="Pay Components" value={18}
+            sub="4 inactive" link={{ label: 'View components', onClick: () => {} }} />
+          <KpiTile icon="fa-clock" tone="amber" label="Verification Queue" value={5}
+            sub={<><span class="ui-kpi-dot ui-kpi-dot--amber" />Needs attention</>}
+            link={{ label: 'View queue', onClick: () => {} }} />
+          <KpiTile variant="text" icon="fa-file-lines" label="Active Version" value="2026 T&T Statutory v1"
+            sub={<><span class="ui-kpi-dot ui-kpi-dot--green" />Effective 05 Jan 2026</>} />
+        </div>
+        <Demo label="KpiTile loading">
+          <div style={{ width: '220px' }}><KpiTile icon="fa-users" tone="blue" label="NIS Classes" value="" loading /></div>
+        </Demo>
       </Section>
 
       <Section id="uikit-skeleton" title="Skeletons — cold-load placeholders" sub="USE ONLY when there is no data yet. Where cached/placeholder data exists, render the real data. Never a fake '0'. Gate with loading={q.isLoading && !q.data}.">

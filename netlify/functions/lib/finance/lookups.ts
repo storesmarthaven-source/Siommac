@@ -68,11 +68,26 @@ export interface BudgetCategoryOption {
 interface DbUserRow {
   id: string;
   full_name: string | null;
+  first_name?: string | null;
+  last_name?: string | null;
+  email?: string | null;
   employee_number: string | null;
   department_id: string | null;
   position: string | null;
   status: string;
   profile_image_url: string | null;
+}
+
+/** Best human-readable name for a user row — NEVER the raw id. full_name → "First Last" →
+ *  email local-part → "Unknown". Used so no table/drawer anywhere renders a UUID as a name. */
+function userDisplayName(r: DbUserRow): string {
+  const full = r.full_name?.trim();
+  if (full) return full;
+  const composed = [r.first_name, r.last_name].map(s => s?.trim()).filter(Boolean).join(' ').trim();
+  if (composed) return composed;
+  const email = r.email?.trim();
+  if (email) return email.split('@')[0] || email;
+  return 'Unknown';
 }
 
 interface DbDeptRow {
@@ -110,7 +125,7 @@ export async function resolveEmployees(ids: string[]): Promise<Map<string, Emplo
 
   const { data: users, error: usrErr } = await sb
     .from('app_users')
-    .select('id, full_name, employee_number, department_id, position, status, profile_image_url')
+    .select('id, full_name, first_name, last_name, email, employee_number, department_id, position, status, profile_image_url')
     .in('id', unique);
   if (usrErr) throw Object.assign(new Error('resolveEmployees/users: ' + usrErr.message), { status: 500 });
 
@@ -138,7 +153,7 @@ export async function resolveEmployees(ids: string[]): Promise<Map<string, Emplo
   for (const r of rows) {
     result.set(r.id, {
       id:          r.id,
-      fullName:    r.full_name ?? r.id,
+      fullName:    userDisplayName(r),
       employeeNo:  r.employee_number ?? null,
       department:  r.department_id ? (deptMap.get(r.department_id) ?? null) : null,
       position:    r.position ?? null,

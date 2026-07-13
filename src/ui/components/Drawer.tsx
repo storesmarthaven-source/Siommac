@@ -56,7 +56,10 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
   const panelRef = useOverlayA11y(open, onClose);
 
   if (rich) {
-    // v36 rich entity panel: portal to <body>, no dimming backdrop.
+    // v36 rich entity panel: portal to <body>, no dimming backdrop. An optional `foot`
+    // renders as a pinned action bar (e.g. lifecycle Submit/Approve/Activate buttons);
+    // omitted entirely when no foot is passed (rich panels default to inline actions).
+    const richFoot = noFooter ? null : (foot ?? footer ?? null);
     return createPortal(
       <aside
         ref={panelRef}
@@ -74,6 +77,7 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
           </div>
         </div>
         <div class="ui-rdrawer-scroll">{children}</div>
+        {richFoot && <div class="ui-rdrawer-foot">{richFoot}</div>}
       </aside>,
       document.body,
     );

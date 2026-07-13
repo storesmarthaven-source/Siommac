@@ -55,7 +55,7 @@ import {
 } from '@ui/widgets';
 import { LucideIcon } from '@ui/LucideIcon';
 import { InfoTip } from '@ui/InfoTip';
-import { PageHeader } from '@ui';
+import { PageHeader, KpiTile } from '@ui';
 import { can } from '@lib/permissions';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { fmtDate, humanize } from './financeShared';
@@ -66,18 +66,24 @@ Chart.register(LineController, CategoryScale, LinearScale, PointElement, LineEle
 // Re-export so the parent can reference the same literal type without a second import.
 export type MainTab = 'versions' | 'nis' | 'components' | 'verify' | 'reports';
 
-const TABS: { key: MainTab; label: string }[] = [
+const TABS: { key: MainTab; label: string; locked?: boolean }[] = [
   { key: 'versions',   label: 'Rate Versions' },
   { key: 'nis',        label: 'NIS Classes' },
   { key: 'components', label: 'Pay Components' },
   { key: 'verify',     label: 'NIS Verification' },
-  { key: 'reports',    label: 'Reports' },
+  // Locked until the reporting direction is decided — visible but not selectable.
+  { key: 'reports',    label: 'Reports', locked: true },
 ];
 
 // ── Widget zone ────────────────────────────────────────────────────────────────
-// The middle band is a movable/resizable board (per-user layout). The KPI strip,
-// the NIS contribution chart and the register table stay FIXED (never widgets).
-const PAGE_KEY = 'finance.statutory';
+// The KPI strip is a SEPARATE reorder-only row above the board (drag left/right, never
+// pushes anything down — see useCardReorder below). The movable/resizable board holds the
+// NIS contribution chart, Upcoming Deadlines, Config Completeness and the register table.
+// v2 keys — the KPI cards moved OUT of the main board into their own row, so any layout saved
+// under the old keys is stale (it positions the chart/content below the old in-board KPI row,
+// leaving a big empty band). Bumping the keys retires those and everyone gets the corrected default.
+const PAGE_KEY = 'finance.statutory.v2';
+const KPI_PAGE_KEY = 'finance.statutory.kpis.v2';
 const W_KPI_ACTIVE     = 'finance.statutory.kpi.activeVersion';
 const W_KPI_DRAFTS     = 'finance.statutory.kpi.drafts';
 const W_KPI_COMPONENTS = 'finance.statutory.kpi.components';
@@ -89,28 +95,41 @@ const W_READY     = 'finance.statutory.readiness';
 const W_DEADLINES = 'finance.statutory.deadlines';
 const W_REGISTER  = 'finance.statutory.register';
 
-function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey): WidgetInstance {
-  return { instanceId: `${widgetId}#def`, widgetId, pageKey: PAGE_KEY, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
+function defInst(widgetId: string, x: number, y: number, w: number, h: number, sizeKey: WidgetSizeKey, pageKey = PAGE_KEY): WidgetInstance {
+  return { instanceId: `${widgetId}#def`, widgetId, pageKey, zoneId: 'main', x, y, w, h, sizeKey, config: {} };
 }
-// 12-COLUMN grid. 6 compact KPI cards on the TOP row (w2 each) →
-// a row of chart (left half, w6) · Upcoming Deadlines (w3) · Config Completeness (w3) →
-// the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
-// Tile px ≈ 6·h + 12·(h−1) = 18h − 12.
+// 12-COLUMN grid. Top row: chart (left half, w6) · Upcoming Deadlines (w3) · Config
+// Completeness (w3) → then the register. rowHeight is a fine 6px; spacing a fixed 12px gap.
+// Tile px ≈ 6·h + 12·(h−1) = 18h − 12. (The KPI strip is NOT on this board.)
 function defaultStatutoryLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
     zones: {
       main: [
-        defInst(W_KPI_ACTIVE,      0,   0,  2,  6, 'compact'),   // 6 compact KPIs, top row
-        defInst(W_KPI_DRAFTS,      2,   0,  2,  6, 'compact'),
-        defInst(W_KPI_COMPONENTS,  4,   0,  2,  6, 'compact'),
-        defInst(W_KPI_NIS,         6,   0,  2,  6, 'compact'),
-        defInst(W_KPI_VERIFY,      8,   0,  2,  6, 'compact'),
-        defInst(W_KPI_APPROVALS,  10,   0,  2,  6, 'compact'),
-        defInst(W_CHART,           0,   6,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
-        defInst(W_DEADLINES,       6,   6,  3, 24, 'standard'),
-        defInst(W_READY,           9,   6,  3, 24, 'standard'),
-        defInst(W_REGISTER,        0,  30, 12, 40, 'hero'),      // register table
+        defInst(W_CHART,           0,   0,  6, 24, 'large'),     // chart (left half) · deadlines · readiness
+        defInst(W_DEADLINES,       6,   0,  3, 24, 'standard'),
+        defInst(W_READY,           9,   0,  3, 24, 'standard'),
+        defInst(W_REGISTER,        0,  24, 12, 40, 'hero'),      // register table
+      ],
+    },
+  };
+}
+
+// KPI board — a SEPARATE single-row react-grid-layout grid (its own page key). 6 uniform w2×h6
+// tiles in row 0, reorder-only (resizable=false, no locked). Vertical compaction keeps them in the
+// row, so dragging one reorders LEFT/RIGHT and never leaves row 0; being its own grid, it can never
+// push the main board's widgets down.
+function defaultKpiLayout(): BoardLayout {
+  return {
+    pageKey: KPI_PAGE_KEY,
+    zones: {
+      main: [
+        defInst(W_KPI_ACTIVE,     0, 0, 2, 6, 'compact', KPI_PAGE_KEY),
+        defInst(W_KPI_DRAFTS,     2, 0, 2, 6, 'compact', KPI_PAGE_KEY),
+        defInst(W_KPI_COMPONENTS, 4, 0, 2, 6, 'compact', KPI_PAGE_KEY),
+        defInst(W_KPI_NIS,        6, 0, 2, 6, 'compact', KPI_PAGE_KEY),
+        defInst(W_KPI_VERIFY,     8, 0, 2, 6, 'compact', KPI_PAGE_KEY),
+        defInst(W_KPI_APPROVALS, 10, 0, 2, 6, 'compact', KPI_PAGE_KEY),
       ],
     },
   };
@@ -241,7 +260,7 @@ export function StatutoryDashboard({
         { label: 'Health Surcharge', ok: hasHs },
         { label: 'Pay Components',   ok: hasComp },
       ],
-      cta: 'Open active version', onCta: () => onTabChange('nis'),
+      cta: 'Open Active Version', onCta: () => onTabChange('nis'),
     };
   }, [activeVer, activeNisClasses.length, components, onTabChange]);
 
@@ -418,7 +437,25 @@ export function StatutoryDashboard({
   const [libOpen, setLibOpen] = useState(false);
   const [demo, setDemo]       = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  const { layout, addWidget, setAsDefault, resetLayout, isDefaultDirty } = useBoardLayout(PAGE_KEY, defaultStatutoryLayout());
+  // The KPI row is its own board (separate page key) — its layout state shares the query cache
+  // with the KPI WidgetBoard below, so this instance sees reorders live. "Set as default" and
+  // "Reset layout" act on the WHOLE page: either board being dirty enables the button, and
+  // promoting/resetting applies to whichever board(s) changed.
+  const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultKpiLayout());
+  const pageDefaultDirty = isDefaultDirty || kpiBoard.isDefaultDirty;
+  // In-flight guard: the promote is a network write — disable the button and swallow
+  // re-clicks until it settles, so it can't be spammed into duplicate saves/toasts.
+  const [savingDefault, setSavingDefault] = useState(false);
+  const promotePageDefault = async (): Promise<void> => {
+    if (savingDefault) return;
+    setSavingDefault(true);
+    try {
+      if (isDefaultDirty) await setAsDefault();
+      if (kpiBoard.isDefaultDirty) await kpiBoard.setAsDefault();
+    } finally { setSavingDefault(false); }
+  };
+  const resetPageLayout = (): void => { void resetLayout(); void kpiBoard.resetLayout(); };
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T =>
@@ -432,59 +469,56 @@ export function StatutoryDashboard({
   function discardPreview(): void { setPreview(null); setLibOpen(true); }
   function commitPreview(p: PreviewWidgetInstance): void { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }
 
-  // Rich KPI tile (onboarding-sized) — colored icon chip + uppercase caption,
-  // large value, context sub-line with a status dot. `text` variant sizes the
-  // value down for label-style values (e.g. the active version name).
-  const Kpi = (p: {
-    icon: string; color: string; cap: string; value: ComponentChildren; sub: ComponentChildren;
-    text?: boolean; onClick?: () => void;
-  }): VNode => (
-    <div
-      class={`sdb-card sdb-kpi sdb-wgt-fill sdb-kpi--${p.color}${p.text ? ' sdb-kpi--text' : ''}${p.onClick ? ' sdb-kpi--clickable' : ''}`}
-      {...(p.onClick ? { role: 'button', tabIndex: 0, onClick: p.onClick,
-        onKeyDown: (e: KeyboardEvent) => { if (e.key === 'Enter' || e.key === ' ') p.onClick!(); } } : {})}>
-      <div class="sdb-kpi-top">
-        <span class={`sdb-kpi-ic sdb-kpi-ic--${p.color}`}><i class={`fa-solid ${p.icon}`} /></span>
-        <span class="sdb-kpi-cap">{p.cap}</span>
-      </div>
-      <div class="sdb-kpi-val">{p.value}</div>
-      <div class="sdb-kpi-sub">{p.sub}</div>
-    </div>
-  );
+  // KPI drill links switch the register tab AND scroll the register into view — the register
+  // lives below the chart/board, so a plain tab switch would leave it off-screen. The card is
+  // always mounted (only its inner tab content changes), so scrolling it is safe immediately.
+  const goToRegisterTab = (t: MainTab): void => {
+    onTabChange(t);
+    requestAnimationFrame(() => {
+      document.getElementById('sdb-register')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    });
+  };
 
+  // KPI strip — the app-wide standard plain KPI tile (@ui KpiTile). "Active Version"
+  // is a label rather than a count, so it uses the text variant; the rest are metric
+  // tiles with a drill link into the matching register tab.
   const renderKpiActive = (): VNode => (
-    <Kpi icon="fa-file-lines" color="blue" cap="Active Version" text
-      value={versionsLoading ? '…' : (activeVer?.label ?? '—')}
+    <KpiTile variant="text" icon="fa-file-lines" label="Active Version"
+      value={versionsLoading ? '…' : (activeVer?.label ?? 'No active version')}
       sub={activeVer
-        ? <><span class="sdb-dot sdb-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
-        : 'No active version'} />
+        ? <><span class="ui-kpi-dot ui-kpi-dot--green" />Effective {fmtDate(activeVer.effectiveFrom)}</>
+        : 'No active version configured'} />
   );
   const renderKpiDrafts = (): VNode => (
-    <Kpi icon="fa-pen-to-square" color="purple" cap="Draft Versions"
+    <KpiTile icon="fa-pen-to-square" tone="purple" label="Draft Versions"
       value={versionsLoading ? '…' : drafts}
-      sub={pending > 0 ? `${pending} awaiting review` : 'None awaiting review'} />
+      sub={pending > 0 ? `${pending} awaiting review` : 'None awaiting review'}
+      link={{ label: 'View versions', onClick: () => goToRegisterTab('versions') }} />
   );
   const renderKpiComponents = (): VNode => (
-    <Kpi icon="fa-layer-group" color="teal" cap="Pay Components"
-      value={activeComponents} sub={`${inactiveComponents} inactive`} />
+    <KpiTile icon="fa-layer-group" tone="teal" label="Pay Components"
+      value={activeComponents} sub={`${inactiveComponents} inactive`}
+      link={{ label: 'View components', onClick: () => goToRegisterTab('components') }} />
   );
   const renderKpiNis = (): VNode => (
-    <Kpi icon="fa-users" color="blue" cap="NIS Classes" onClick={() => onTabChange('nis')}
+    <KpiTile icon="fa-users" tone="blue" label="NIS Classes"
       value={activeVer ? activeNisClasses.length : '—'}
       sub={activeVer
-        ? <><span class="sdb-dot sdb-dot--green" />On {activeVer.label}</>
-        : 'No active version'} />
+        ? <><span class="ui-kpi-dot ui-kpi-dot--green" />On {activeVer.label}</>
+        : 'No active version'}
+      link={{ label: 'View NIS classes', onClick: () => goToRegisterTab('nis') }} />
   );
   const renderKpiVerify = (): VNode => (
-    <Kpi icon="fa-clock" color="amber" cap="Verification Queue"
-      onClick={verifyQueue > 0 ? () => onTabChange('verify') : undefined}
+    <KpiTile icon="fa-clock" tone="amber" label="Verification Queue"
       value={verifyQueue}
-      sub={verifyQueue > 0 ? <><span class="sdb-dot sdb-dot--amber" />Needs attention</> : 'Queue clear'} />
+      sub={verifyQueue > 0 ? <><span class="ui-kpi-dot ui-kpi-dot--amber" />Needs attention</> : 'Queue clear'}
+      link={{ label: 'View queue', onClick: () => goToRegisterTab('verify') }} />
   );
   const renderKpiApprovals = (): VNode => (
-    <Kpi icon="fa-user-check" color="coral" cap="Pending Approvals"
+    <KpiTile icon="fa-user-check" tone="coral" label="Pending Approvals"
       value={pending}
-      sub={pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'} />
+      sub={pending > 0 ? `Across ${pending} item${pending !== 1 ? 's' : ''}` : 'None pending'}
+      link={{ label: 'View approvals', onClick: () => goToRegisterTab('versions') }} />
   );
 
   // NIS contribution RATE over time — real trend across the seeded schedule history
@@ -554,14 +588,17 @@ export function StatutoryDashboard({
   };
 
   const renderRegister = (): VNode => (
-    <div class="sdb-card sdb-table-card sdb-wgt-fill">
+    <div id="sdb-register" class="sdb-card sdb-table-card sdb-wgt-fill">
       {/* Tab strip */}
       <div class="sdb-tabs">
         {TABS.map(t => (
           <button key={t.key} type="button"
-            class={`sdb-tab${tab === t.key ? ' sdb-tab--on' : ''}`}
-            onClick={() => onTabChange(t.key)}>
+            class={`sdb-tab${tab === t.key ? ' sdb-tab--on' : ''}${t.locked ? ' sdb-tab--locked' : ''}`}
+            disabled={t.locked}
+            title={t.locked ? 'Coming soon' : undefined}
+            onClick={t.locked ? undefined : () => onTabChange(t.key)}>
             {t.label}
+            {t.locked && <i class="fa-solid fa-lock sdb-tab-lock" aria-hidden="true" />}
             {t.key === 'verify' && verifyQueue > 0 && (
               <span class="sdb-tab-badge">{verifyQueue}</span>
             )}
@@ -608,7 +645,7 @@ export function StatutoryDashboard({
         ))}
       </div>
 
-      <button type="button" class="sdb-ready-cta" onClick={lens.onCta}>{lens.cta}</button>
+      <button type="button" class="sdb-ready-cta" onClick={() => goToRegisterTab('nis')}>{lens.cta}</button>
     </div>
   );
 
@@ -661,34 +698,37 @@ export function StatutoryDashboard({
     </div>
   );
 
-  // The 6 KPI tiles are `locked: true` → PINNED at the top (RGL static): compact uniform
-  // size (w2 × h6 ≈ 96px), one row, and they never move, resize, or get displaced by
-  // other tiles. The remaining widgets ARE resizable and each declares a resize FLOOR
-  // (allowedSizes → minGridFor); without one the generic floor is 2 cells on this 6px grid.
+  // Board widgets each declare a resize FLOOR (allowedSizes → minGridFor); without one the generic
+  // floor is 2 cells on this 6px grid. (The KPI cards are NOT board widgets — they live in the
+  // reorder-only strip above.)
   const floor = (key: WidgetSizeKey, w: number, h: number): WidgetSizeDef[] =>
     [{ key, label: 'Default', grid: { w, h } }];
   const localWidgets: LocalWidgetMap = {
-    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 2, 6) },
-    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 2, 6) },
-    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 2, 6) },
-    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              resizable: false, allowedSizes: floor('compact', 2, 6) },
-    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', resizable: false, allowedSizes: floor('compact', 2, 6) },
-    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        resizable: false, allowedSizes: floor('compact', 2, 6) },
     [W_CHART]:          { render: renderChart,        chrome: 'none', title: 'NIS Contribution Schedule', allowedSizes: floor('large', 6, 16) },
     [W_READY]:          { render: renderReadiness,    chrome: 'none', title: 'Statutory Readiness',      allowedSizes: floor('standard', 3, 16) },
     [W_DEADLINES]:      { render: renderDeadlines,    chrome: 'none', title: 'Upcoming Deadlines',       allowedSizes: floor('standard', 3, 12) },
     [W_REGISTER]:       { render: renderRegister,     chrome: 'none', title: 'Statutory Register',       allowedSizes: floor('hero', 6, 20) },
   };
 
+  // KPI board widgets — uniform, reorder-only (resizable:false → w2×h6 floor pins the tile size).
+  const kpiLocalWidgets: LocalWidgetMap = {
+    [W_KPI_ACTIVE]:     { render: renderKpiActive,    chrome: 'none', title: 'Active Version',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_DRAFTS]:     { render: renderKpiDrafts,    chrome: 'none', title: 'Draft Versions',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_COMPONENTS]: { render: renderKpiComponents,chrome: 'none', title: 'Pay Components',           resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_NIS]:        { render: renderKpiNis,       chrome: 'none', title: 'NIS Classes',              resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_VERIFY]:     { render: renderKpiVerify,    chrome: 'none', title: 'Verification Queue (KPI)', resizable: false, allowedSizes: floor('compact', 2, 6) },
+    [W_KPI_APPROVALS]:  { render: renderKpiApprovals, chrome: 'none', title: 'Pending Approvals',        resizable: false, allowedSizes: floor('compact', 2, 6) },
+  };
+
   // The board's Customize control now lives in the standard PageHeader actions (right of
   // Export · New ▾), so it no longer consumes a full-width row above the board.
   const boardTools = canEditBoard ? (
     <WidgetBoardToolbar
-      editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
+      editing={editing} canSetDefault={isAdmin} defaultDirty={pageDefaultDirty} finishInBanner layoutItems={boardItems}
       onToggleEdit={() => setEditing(e => !e)}
       onOpenLibrary={() => setLibOpen(true)}
-      onReset={() => void resetLayout()}
-      onSetDefault={() => void setAsDefault()}
+      onReset={resetPageLayout}
+      onSetDefault={() => void promotePageDefault()}
     />
   ) : null;
 
@@ -703,6 +743,15 @@ export function StatutoryDashboard({
       />
       <div class="sdb">
 
+      {/* KPI board — its own single-row react-grid-layout grid. Reorder-only (resizable=false);
+          drag LEFT/RIGHT while the board is in edit mode. Isolated from the main board, so it can
+          never push the widgets below. */}
+      <div class="sdb-kpi-board">
+        <WidgetBoard pageKey={KPI_PAGE_KEY} zones={['main']} editing={editing && canEditBoard}
+          localWidgets={kpiLocalWidgets} defaultLayout={defaultKpiLayout()}
+          cellHeight={6} gap={[12, 12]} resizable={false} maxRows={6} isBounded revealOnMount={false} />
+      </div>
+
       {preview && (
         <div class="wmock-preview-banner">
           <span><i class="fas fa-eye" /> Previewing a widget — drag and resize it on the board, then add it or discard.</span>
@@ -712,7 +761,10 @@ export function StatutoryDashboard({
         localWidgets={localWidgets} defaultLayout={defaultStatutoryLayout()} demo={demo}
         cellHeight={6} gap={[12, 12]} revealOnMount={false}
         preview={preview} onPreviewChange={setPreview}
-        onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
+        onCommitPreview={commitPreview} onDiscardPreview={discardPreview}
+        onFinishEditing={() => setEditing(false)}
+        onSetDefault={() => void promotePageDefault()} canSetDefault={isAdmin}
+        defaultDirty={pageDefaultDirty} defaultSaving={savingDefault} />
 
       <WidgetLibraryModal open={libOpen} pageKey={PAGE_KEY} zoneId="main"
         placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}

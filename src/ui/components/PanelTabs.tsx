@@ -30,6 +30,7 @@ export function PanelTabs({ primary, more = [], active, onChange }: PanelTabsPro
           </button>
         ))}
       </div>
+      {more.length > 0 && <span class="ui-panel-tab-sep" aria-hidden="true" />}
       {more.length > 0 && (
         <Menu
           align="right"

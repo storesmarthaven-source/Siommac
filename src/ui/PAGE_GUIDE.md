@@ -181,6 +181,11 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 5. **Overlays use the standard window.** `Modal` (one-shot), `Wizard` (multi-step), `Drawer`
    (detail). Header icon+title+sub, close top-right, footer buttons bottom-right — don't
    build your own modal CSS.
+   **Detail drawers default to the rich navy shell** — `<Drawer rich>` (`.ui-rdrawer`: dark
+   container + header + optional pinned `foot` action bar; no dim backdrop). It backs the
+   Employee Master profile, HSE panels and the Rate Version drawer; every NEW detail drawer
+   uses it. The navy shell is the DARK-mode look — a light variant + an app-wide appearance
+   switch (UserPill menu) come later; build bodies from the panel primitives so they re-theme.
 6. **Forms use the standard controls.** `FormGrid` + `Field` + `TextInput` / `SelectInput`
    / `TextareaInput`. Don't hand-roll inputs.
 7. **Tables** use `RegisterTable`; **tabs-in-a-panel** use `Tabs`; the page nav uses `TabBar`.
@@ -206,7 +211,8 @@ actions (Audit Log, bulk export); leave it empty otherwise.
 | Primary create action | `NewMenu` ("New ▾") to the right of the nav/tabs — page-specific items |
 | The 4-card row | `MetricRow` (rearrangeable) with `StatsCard` cards |
 | Make an existing card row rearrangeable | `ReorderableRow` — wrap the cards + pass a `pageKey` (no restructuring) |
-| A summary card (top of page) | `StatsCard` — fixed skeleton; `percent` → compliance bar |
+| A summary card (top of page) | `StatsCard` — fixed skeleton; `percent` → compliance bar (rich: icon-header + chart/percent) |
+| A plain KPI tile (number + drill link) | `KpiTile` — compact icon-chip + number + name + sub + optional "View" link; `variant="text"` for a label value. Use this when the card is a number, not a chart. |
 | An inside-tab / one-off card | `Card` — header + body, default/navy |
 | Charts | `SparkCard`, `Sparkline`, `BarRow`, `ProgressBar`, `ChartCard` |
 | Section header in content | `SectionHead` (this is where action buttons go) |

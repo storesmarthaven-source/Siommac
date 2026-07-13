@@ -222,9 +222,17 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
         </footer>
       ) : null}
 
-      {toast.tier !== "normal" && toast.actions?.length ? (
-        <div className="siomac-toast__actions">
-          {toast.actions.map((action) => (
+      {/* Action/rich footer — ONE band: countdown text on the left, action buttons on the
+          right, progress bar along the bottom edge. (Two stacked bands — actions + a separate
+          timer footer — read as a big empty gap.) */}
+      {toast.tier !== "normal" && (toast.actions?.length || hasTimer) ? (
+        <footer className="siomac-toast__actions">
+          {hasTimer ? (
+            <span className="siomac-toast__timer-text">
+              Closing in <span>{seconds}</span> second{seconds === 1 ? "" : "s"}.
+            </span>
+          ) : null}
+          {(toast.actions ?? []).map((action) => (
             <button
               key={action.label}
               type="button"
@@ -237,11 +245,8 @@ export function ToastCard({ toast, onPositionUpdate }: Props) {
               {action.label}
             </button>
           ))}
-        </div>
-      ) : null}
-
-      {toast.tier !== "normal" && hasTimer ? (
-        <ToastProgress duration={toast.duration} paused={paused} />
+          {hasTimer ? <ToastProgress duration={toast.duration} paused={paused} /> : null}
+        </footer>
       ) : null}
     </article>
   );

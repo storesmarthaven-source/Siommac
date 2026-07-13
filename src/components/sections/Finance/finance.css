@@ -302,30 +302,17 @@
    drag/resize behaves, and internal overflow scrolls instead of clipping. */
 .sdb-wgt-fill { height: 100%; box-sizing: border-box; overflow: auto; margin: 0; }
 
-/* Rich KPI tile (onboarding-sized) — icon chip + uppercase caption, large value
-   (scales with the tile via container queries), context sub-line + accent bar. */
-/* KPI value scales with tile WIDTH (cqw — always stable). Font sizes are FIXED so the
-   caption/sub are always legible; the resize floor (allowedSizes) guarantees the card is
-   tall enough to show all three lines. (Height-based cqh was removed — it clipped the
-   text at smaller sizes.) */
-/* KPI card — clean & compact (onboarding-style): white card, icon chip + label, big
-   bold number, muted context line. Fixed uniform size, pinned at the top (widget map). */
-.sdb-kpi { display: flex; flex-direction: column; justify-content: center; gap: 4px; padding: 11px 14px; overflow: hidden; container-type: inline-size;
-  background: #fff; border: 1px solid #e3e9f2; border-radius: 10px; }
-.sdb-kpi--clickable { cursor: pointer; transition: border-color .14s ease, box-shadow .14s ease; }
-.sdb-kpi--clickable:hover { border-color: #c9d6ec; box-shadow: 0 3px 10px rgba(16, 35, 68, .06); }
-.sdb-kpi-top { display: flex; align-items: center; gap: 8px; min-width: 0; }
-.sdb-kpi-ic { width: 26px; height: 26px; flex: none; border-radius: 7px; display: grid; place-items: center; font-size: 12px; }
-.sdb-kpi-ic--blue   { background: var(--sdb-blue-bg);   color: var(--sdb-blue); }
-.sdb-kpi-ic--purple { background: var(--sdb-purple-bg); color: var(--sdb-purple); }
-.sdb-kpi-ic--teal   { background: var(--sdb-teal-bg);   color: var(--sdb-teal); }
-.sdb-kpi-ic--amber  { background: var(--sdb-amber-bg);  color: var(--sdb-amber); }
-.sdb-kpi-ic--coral  { background: var(--sdb-coral-bg);  color: var(--sdb-coral); }
-.sdb-kpi-cap { font-size: 11px; font-weight: 600; color: #56637b; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-val { font-size: clamp(19px, 11cqw, 24px); font-weight: 800; letter-spacing: -.03em; color: #06183a; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi--text .sdb-kpi-val { font-size: clamp(13px, 6cqw, 15px); font-weight: 700; line-height: 1.15; white-space: normal; }
-.sdb-kpi-sub { font-size: 10.5px; color: #7a8698; display: flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.sdb-kpi-sub .sdb-dot { flex: none; }
+/* KPI board — a SEPARATE single-row react-grid-layout grid of standard @ui <KpiTile> cards ABOVE
+   the main board. Reorder-only (drag left/right); its own grid, so it never pushes the widgets
+   below. Small gap before the main board. */
+/* The KPI board is a separate .sdb flex child, so it already gets the .sdb `gap: 16px`. Top up to
+   the app-wide standard KPI-strip gap (--kpi-strip-gap, matches Access Control). */
+.sdb-kpi-board { margin-bottom: calc(var(--kpi-strip-gap) - 16px); }
+
+/* Board tiles paint at their measured position instantly — no RGL transform transition (that
+   width-measure re-layout on mount is what made the chart CONTAINER visibly slide in from the
+   left; it also keeps KPI reordering crisp). The chart's own line sweep is untouched. */
+.sdb .wbi-zone .react-grid-item { transition: none; }
 
 .sdb-ch { padding: 18px 20px; display: flex; flex-direction: column; min-height: 0; }
 .sdb-ch .sdb-ch-hd { flex: 0 0 auto; }
@@ -510,10 +497,10 @@
 .sdb-gate.warn .sdb-gate-v { background: #fef3e2; color: #d97706; }
 .sdb-ready-cta {
   flex: 0 0 auto; margin-top: 14px; width: 100%; height: 38px; border: 0; border-radius: 10px;
-  background: #1f3b6d; color: #fff; font: inherit; font-size: 12.5px; font-weight: 650;
+  background: #4ca154; color: #fff; font: inherit; font-size: 12.5px; font-weight: 650;
   letter-spacing: -.01em; cursor: pointer; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
 }
-.sdb-ready-cta:hover { background: #18305a; }
+.sdb-ready-cta:hover { background: #3f8c47; }
 
 /* ── Statutory deadlines calendar ────────────────────────────────────────────── */
 .sdb-cal { display: flex; flex-direction: column; overflow: hidden; }
@@ -606,7 +593,10 @@
   white-space: nowrap;
   position: relative;
 }
-.sdb-tab--on { color: var(--sdb-primary); border-bottom-color: var(--sdb-primary); }
+.sdb-tab--on { color: #677391; border-bottom-color: #677391; }
+/* Locked tab — visible (so the capability is discoverable) but not selectable. */
+.sdb-tab--locked { opacity: .45; cursor: not-allowed; }
+.sdb-tab-lock { font-size: 10px; margin-left: 5px; }
 .sdb-tab-badge {
   display: inline-flex; align-items: center; justify-content: center;
   margin-left: 5px;
@@ -764,3 +754,74 @@
   .sdb-hd    { flex-wrap: wrap; }
   .sdb-hd-actions { margin-left: 0; }
 }
+
+/* ── Rate Version drawer (.svd-*) — purpose-built body on the @ui rich navy panel ──
+   Document header + "in force" ribbon + headline rate tiles + lifecycle rail +
+   configuration grid. Keeps the panel's tabs (PanelTabs) and colour language
+   (navy shell, .ui-pill palette); everything else is rate-document specific.
+   Portalled to <body>, so these rules are global (not under .sdb). */
+.svd-head { margin: 2px 0 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+.svd-head-main { min-width: 0; }
+.svd-retire {
+  flex: none; display: inline-flex; align-items: center; gap: 6px; margin-top: 2px;
+  height: 32px; padding: 0 13px; border-radius: 8px; cursor: pointer;
+  border: 1px solid rgba(248, 113, 113, .5); background: rgba(248, 113, 113, .12); color: #fecaca;
+  font: inherit; font-size: 12.5px; font-weight: 600; white-space: nowrap; transition: background .14s ease;
+}
+.svd-retire:hover { background: rgba(248, 113, 113, .22); }
+.svd-retire i { font-size: 11px; }
+.svd-title { display: flex; align-items: center; gap: 8px; color: #fff; font-size: 20px; font-weight: 600; letter-spacing: -.02em; min-width: 0; }
+.svd-meta { color: rgba(226, 238, 252, .6); font-size: 12px; margin-top: 5px; }
+.svd-ribbon { margin-top: 12px; display: flex; align-items: center; gap: 9px; border-radius: 10px; padding: 9px 12px; font-size: 12.5px; line-height: 1.35; }
+.svd-ribbon i { font-size: 14px; flex: none; }
+.svd-ribbon b { font-weight: 600; }
+.svd-ribbon--blue  { background: rgba(96, 165, 250, .12);  border: 1px solid rgba(96, 165, 250, .25);  color: #dbeafe; }
+.svd-ribbon--blue i  { color: #bfdbfe; }
+.svd-ribbon--green { background: rgba(34, 197, 94, .12);   border: 1px solid rgba(34, 197, 94, .28);   color: #bbf7d0; }
+.svd-ribbon--green i { color: #86efac; }
+.svd-ribbon--amber { background: rgba(245, 158, 11, .12);  border: 1px solid rgba(245, 158, 11, .3);   color: #fde68a; }
+.svd-ribbon--amber i { color: #fcd34d; }
+.svd-ribbon--red   { background: rgba(248, 113, 113, .12); border: 1px solid rgba(248, 113, 113, .3);  color: #fecaca; }
+.svd-ribbon--red i   { color: #fca5a5; }
+.svd-ribbon--gray  { background: rgba(255, 255, 255, .07); border: 1px solid rgba(255, 255, 255, .14); color: rgba(226, 238, 252, .8); }
+.svd-ribbon--gray i  { color: rgba(226, 238, 252, .6); }
+/* Tiles are the KIT's .ui-stat-tile — colours come from uikit-overlay.css (incl. the
+   .ui-rdrawer navy overrides), so kit re-themes reach them. Only layout/sizing here. */
+.svd-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 9px; margin: 14px 0 16px; }
+.svd-tiles .ui-stat-tile, .svd-grid .ui-stat-tile { min-width: 0; }
+.svd-tiles .ui-stat-tile { padding: 11px 12px; border-radius: 10px; }
+.svd-tiles .ui-stat-tile small { font-size: 10px; letter-spacing: .05em; margin-bottom: 4px; }
+.svd-tiles .ui-stat-tile strong { font-size: 20px; letter-spacing: -.01em; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.svd-tiles .ui-stat-tile span { font-size: 10px; }
+.svd-section { margin-top: 14px; }
+.svd-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
+.svd-label { color: rgba(226, 238, 252, .55); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
+.svd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
+.svd-grid .ui-stat-tile { border-radius: 9px; padding: 9px 11px; }
+.svd-grid .ui-stat-tile small { font-size: 10px; letter-spacing: .05em; margin-bottom: 3px; }
+.svd-grid .ui-stat-tile strong { font-size: 13px; margin-bottom: 1px; }
+.svd-grid .ui-stat-tile span { font-size: 10.5px; }
+/* Horizontal lifecycle stepper (Summary) — dots in a row joined by connector lines, title + sub
+   centred beneath each. Upcoming stages: hollow dot (inline) + muted text. */
+.svd-steps { display: flex; align-items: flex-start; }
+.svd-step { flex: 1 1 0; min-width: 0; display: flex; flex-direction: column; align-items: center; text-align: center; }
+.svd-step-track { display: flex; align-items: center; width: 100%; }
+.svd-step-line { flex: 1; height: 2px; background: rgba(255, 255, 255, .16); }
+.svd-step-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; margin: 0 3px; }
+.svd-step-title { font-size: 11px; font-weight: 600; color: #fff; margin-top: 8px; }
+.svd-step-sub { font-size: 9.5px; color: rgba(226, 238, 252, .5); margin-top: 2px; line-height: 1.3; padding: 0 3px; }
+.svd-step.is-pending .svd-step-title { color: rgba(226, 238, 252, .55); font-weight: 500; }
+.svd-step.is-pending .svd-step-sub { color: rgba(226, 238, 252, .35); }
+
+.svd-rail { display: flex; flex-direction: column; }
+.svd-rail-item { display: flex; gap: 11px; }
+.svd-rail-track { display: flex; flex-direction: column; align-items: center; }
+.svd-rail-dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 3px; flex: none; }
+.svd-rail-line { width: 2px; flex: 1; background: rgba(255, 255, 255, .14); }
+.svd-rail-body { padding-bottom: 13px; min-width: 0; }
+.svd-rail-item:last-child .svd-rail-body { padding-bottom: 0; }
+.svd-rail-title { color: #fff; font-size: 12.5px; font-weight: 600; }
+.svd-rail-sub { color: rgba(226, 238, 252, .5); font-size: 11px; margin-top: 1px; }
+/* Upcoming (not-yet-reached) lifecycle stage — muted title + sub, dot outlined (inline). */
+.svd-rail-item.is-pending .svd-rail-title { color: rgba(226, 238, 252, .55); font-weight: 500; }
+.svd-rail-item.is-pending .svd-rail-sub { color: rgba(226, 238, 252, .35); }

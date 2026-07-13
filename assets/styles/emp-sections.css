@@ -258,14 +258,7 @@
 .emp-filter-group { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
 .emp-filters-bar .emp-search-box { flex: 1; }
 .emp-filters-bar .emp-filter-actions { margin-left: auto; }
-.emp-filter-select {
-  padding: 6px 12px; border-radius: 40px;
-  border: 1.5px solid var(--field-border);
-  background: var(--bg-card);
-  font-size: 0.78rem; font-family: inherit; color: var(--text-primary);
-  outline: none; cursor: pointer; transition: border-color .2s;
-}
-.emp-filter-select:focus { border-color: var(--siomac-red); }
+/* .emp-filter-select is now KIT-owned (assets/styles/uikit.css) — matches .tf-select. */
 .emp-search-box {
   display: flex; align-items: center; gap: 8px;
   background: var(--bg-subtle); padding: 7px 16px; border-radius: 40px;

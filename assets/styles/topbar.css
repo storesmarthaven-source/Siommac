@@ -266,6 +266,18 @@
 .pnp-menu-item svg { flex-shrink: 0; color: #667085; }
 .pnp-menu-item:hover { background: #f5f7fa; }
 .pnp-menu-item:hover svg { color: #475467; }
+/* Appearance toggle switch (Dark Mode row) — pushed to the row's right edge. */
+.pnp-switch {
+  margin-left: auto; flex: none; width: 34px; height: 19px; border-radius: 999px;
+  background: #d5dbe6; position: relative; transition: background .16s ease;
+}
+.pnp-switch::after {
+  content: ""; position: absolute; top: 2px; left: 2px; width: 15px; height: 15px;
+  border-radius: 50%; background: #fff; box-shadow: 0 1px 2px rgba(16, 24, 40, .2);
+  transition: transform .16s ease;
+}
+.pnp-switch.on { background: #1b2d54; }
+.pnp-switch.on::after { transform: translateX(15px); }
 .pnp-menu-item.pnp-menu-danger { color: #d13438; }
 .pnp-menu-item.pnp-menu-danger svg { color: #d13438; }
 .pnp-menu-item.pnp-menu-danger:hover { background: #fdf2f2; }

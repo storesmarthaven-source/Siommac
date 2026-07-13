@@ -116,6 +116,18 @@
   box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08));
 }
 
+/* Native <select>s adopt the .tf-select look (taller, rounder, soft #d8e0ec border) so every
+   select in the app reads as one control — the form select (.ui-select, SelectInput) and the
+   toolbar filter select (.emp-filter-select, FilterSelect). Mirrors .tf-select in filterBar.css.
+   `.emp-filter-select` is now KIT-owned (its old page-CSS copies were removed). */
+.ui-select { min-height: 46px; border-radius: 11px; border-color: #d8e0ec; color: #1f2937; cursor: pointer; }
+.emp-filter-select {
+  width: auto; min-height: 46px; border: 1px solid #d8e0ec; border-radius: 11px; background: #fff;
+  color: #1f2937; padding: 6px 12px; font: inherit; font-size: 0.82rem; cursor: pointer;
+  outline: none; transition: border-color .15s, box-shadow .15s;
+}
+.emp-filter-select:focus { border-color: var(--siomac-navy); box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08)); }
+
 /* ── PersonSearchSelect — searchable person combobox (avatar + name + results list) ─ */
 .ui-person-search { position: relative; }
 .ui-person-search-control {

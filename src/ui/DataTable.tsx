@@ -6,9 +6,12 @@
 // component so every register/list in the app configures it with a thin `columns[]`
 // config instead of re-implementing a table. Scoped `dt-*` classes (DataTable.css).
 import type { ComponentChildren, VNode } from 'preact';
+import { useState } from 'preact/hooks';
+import { createPortal } from 'preact/compat';
 import { TableSkeleton, EmptyState } from '@ui';
 import { LucideIcon, type LucideName } from './LucideIcon';
 import { TableSearch } from './table/FilterBar';
+import { useOverlayA11y } from './lib/useOverlayA11y';
 import './DataTable.css';
 
 export type DtAlign = 'left' | 'center' | 'right';
@@ -83,6 +86,35 @@ const ACT_ICON: Record<string, LucideName> = {
   send: 'Send', check: 'Check', close: 'X', trash: 'Trash2', reject: 'X',
 };
 
+/** Row overflow menu — the ⋮ trigger opens this portalled dropdown of the row's actions.
+ *  Portalled to <body> (fixed position at the trigger) so the table's scroll container
+ *  never clips it. Esc / outside click / scrim click close it. */
+function DtActionMenu<T>({ row, actions, x, y, onClose }: {
+  row: T; actions: DtAction<T>[]; x: number; y: number; onClose: () => void;
+}): VNode {
+  const ref = useOverlayA11y<HTMLDivElement>(true, onClose);
+  const vh = typeof window !== 'undefined' ? window.innerHeight : 800;
+  const left = Math.max(8, x - 196);                                  // right-align to the trigger
+  const top = Math.min(y + 4, vh - actions.length * 38 - 16);         // never off-screen bottom
+  return createPortal(
+    <div class="dt-menu-scrim" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+      <div ref={ref} class="dt-menu" role="menu" aria-label="Row actions" style={{ left, top }}>
+        {actions.map(a => (
+          <button
+            key={a.key} type="button" role="menuitem"
+            class={`dt-menu-item${a.tone === 'danger' ? ' dt-menu-danger' : ''}`}
+            onClick={() => { onClose(); a.onClick(row); }}
+          >
+            <LucideIcon name={(a.icon && ACT_ICON[a.icon]) || 'ChevronRight'} size={15} strokeWidth={2} />
+            <span>{a.label}</span>
+          </button>
+        ))}
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
 function pageWindow(cur: number, total: number): (number | '…')[] {
   if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
   const out: (number | '…')[] = [1];
@@ -105,6 +137,11 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
   const colStyle = (c: DtColumn<T>) => c.width ? { width: c.width } : undefined;
   const showToolbar = !!(filterChips || advancedFilter || toolbarRight || globalSearch);
   const showActiveBar = !!(activeFilters?.length);
+
+  // Row-actions overflow menu — one ⋮ per row; the open menu is keyed by rowKey and anchored
+  // at the trigger's rect (portalled, so table scroll never clips it).
+  const [actionMenu, setActionMenu] = useState<{ key: string; x: number; y: number } | null>(null);
+  const menuRow = actionMenu != null ? rows.find(r => rowKey(r) === actionMenu.key) : undefined;
 
   return (
     <div class="dt">
@@ -178,17 +215,20 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
                         ))}
                         {rowActions && (
                           <td class="dt-al-right dt-col-actions" onClick={e => e.stopPropagation()}>
-                            <div class="dt-actions">
-                              {acts.map(a => (
-                                <button
-                                  key={a.key} type="button"
-                                  class={`dt-act${a.tone === 'danger' ? ' dt-act-danger' : ''}`}
-                                  title={a.label} aria-label={a.label} onClick={() => a.onClick(row)}
-                                >
-                                  <LucideIcon name={(a.icon && ACT_ICON[a.icon]) || 'MoreHorizontal'} size={15} strokeWidth={2} />
-                                </button>
-                              ))}
-                            </div>
+                            {acts.length > 0 && (
+                              <button
+                                type="button"
+                                class={`dt-act dt-kebab${actionMenu?.key === key ? ' is-open' : ''}`}
+                                title="Actions" aria-label="Row actions"
+                                aria-haspopup="menu" aria-expanded={actionMenu?.key === key}
+                                onClick={e => {
+                                  const r = (e.currentTarget as HTMLElement).getBoundingClientRect();
+                                  setActionMenu(m => m?.key === key ? null : { key, x: r.right, y: r.bottom });
+                                }}
+                              >
+                                <LucideIcon name="MoreVertical" size={15} strokeWidth={2} />
+                              </button>
+                            )}
                           </td>
                         )}
                       </tr>
@@ -232,6 +272,14 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
             </div>
           )}
         </div>
+      )}
+
+      {actionMenu && menuRow != null && rowActions && (
+        <DtActionMenu
+          row={menuRow} actions={rowActions(menuRow)}
+          x={actionMenu.x} y={actionMenu.y}
+          onClose={() => setActionMenu(null)}
+        />
       )}
 
       {drawerSlot}

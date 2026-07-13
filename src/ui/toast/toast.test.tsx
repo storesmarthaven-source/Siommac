@@ -277,7 +277,10 @@ describe("Toaster component", () => {
 
   // ── Action toast ──────────────────────────────────────────────────────────
 
-  it("action toast does NOT show timer footer", () => {
+  it("action toast shows the countdown in its single footer band", () => {
+    // Action toasts auto-dismiss (they carry a duration), so they surface the "closing in Xs"
+    // countdown — merged INTO the actions band (one footer: countdown left, buttons right),
+    // never a second stacked .siomac-toast__timer footer.
     renderToaster();
     void act(() => {
       toast.action({
@@ -286,6 +289,7 @@ describe("Toaster component", () => {
         actions: [{ label: "Verify", dismissOnClick: true }]
       });
     });
+    expect(document.querySelector(".siomac-toast__actions .siomac-toast__timer-text")).not.toBeNull();
     expect(document.querySelector(".siomac-toast__timer")).toBeNull();
   });
 

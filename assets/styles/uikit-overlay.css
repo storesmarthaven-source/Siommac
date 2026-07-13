@@ -35,6 +35,14 @@
 }
 .ui-btn-secondary:hover { background: #f8fbff; }
 .ui-btn-secondary:disabled { opacity: .6; cursor: default; }
+/* Destructive CTA (Reject / Retire) — same footprint as .ui-btn-secondary, danger colours. */
+.ui-btn-danger {
+  height: 40px; border: 1px solid #f2b6b6; background: #fff; border-radius: 8px; color: #dc2626;
+  font: inherit; font-weight: var(--font-weight-semibold, 600); font-size: 13px; padding: 0 14px;
+  cursor: pointer; display: inline-flex; align-items: center; justify-content: center; gap: 8px; white-space: nowrap;
+}
+.ui-btn-danger:hover { background: #fdecec; }
+.ui-btn-danger:disabled { opacity: .6; cursor: default; }
 
 /* Small inline action button (card head action, mini-table row action). */
 .ui-mini-btn {
@@ -73,6 +81,13 @@
 .ui-rdrawer-sub { font-size: 12px; color: rgba(226,238,252,.68); margin-top: 2px; }
 .ui-rdrawer-icons { display: flex; gap: 6px; align-items: center; }
 .ui-rdrawer-scroll { flex: 1; overflow: auto; padding: 20px 18px 24px; background: #1b2d54; color: #fff; }
+/* Optional pinned action bar (lifecycle CTAs — Submit / Approve / Activate…). Renders only
+   when the caller passes `foot`; matches the top bar's surface so the panel stays one shell. */
+.ui-rdrawer-foot {
+  flex: none; padding: 12px 18px; background: #374669;
+  border-top: 1px solid rgba(255,255,255,.10);
+  display: flex; align-items: center; gap: 8px;
+}
 
 /* ── EntityHead — avatar + name + ref line + meta line (v36 .profile-head) ──── */
 .ui-entity-head { display: flex; align-items: center; gap: 16px; }
@@ -151,6 +166,9 @@
 /* bottom: 0 (not -1px) so the underline isn't clipped by the scroll container. */
 .ui-panel-tab.active::after { content: ""; position: absolute; left: 0; bottom: 0; width: 100%; height: 3px; border-radius: 3px 3px 0 0; background: #0757df; }
 .ui-panel-tab-caret { font-size: 12px; opacity: .65; flex: none; }
+/* Divider between the primary tab row and the "More" overflow button. */
+.ui-panel-tab-sep { flex: none; align-self: center; width: 1px; height: 18px; margin: 0 4px; background: #e5eaf2; }
+.ui-rdrawer .ui-panel-tab-sep { background: rgba(255, 255, 255, .16); }
 
 /* ── Reusable dropdown Menu (v36 .dropdown-menu / .menu-row) ────────────────── */
 .ui-menu-wrap { position: relative; display: inline-flex; }
@@ -169,9 +187,10 @@
 }
 .ui-menu-item:hover { background: #f4f8ff; }
 .ui-menu-item:disabled { opacity: .5; cursor: not-allowed; }
-.ui-menu-ico { width: 25px; height: 25px; border-radius: 7px; flex: none; display: grid; place-items: center; background: #f1f5f9; color: #334155; font-size: 12px; }
+/* Inline icon, no chip container — flat Lucide glyph in the menu accent grey. */
+.ui-menu-ico { flex: none; color: #667085; }
 .ui-menu-item.danger { color: #b91c1c; }
-.ui-menu-item.danger .ui-menu-ico { background: #fee2e2; color: #dc2626; }
+.ui-menu-item.danger .ui-menu-ico { color: #dc2626; }
 
 /* ── Panel body — uniform 14px stack for a tab's cards (InfoCard, Callout, …) ── */
 .ui-panel-body { display: grid; gap: 14px; }
@@ -416,7 +435,7 @@
 .ui-rdrawer .ui-panel-tab { color: rgba(226,238,252,.62); }
 .ui-rdrawer .ui-panel-tab:hover { color: #fff; }
 .ui-rdrawer .ui-panel-tab.active { color: #fff; }
-.ui-rdrawer .ui-panel-tab.active::after { background: #60a5fa; }
+.ui-rdrawer .ui-panel-tab.active::after { background: #808ba8; }
 
 /* Small inline action buttons */
 .ui-rdrawer .ui-mini-btn { background: rgba(255,255,255,.08); border-color: rgba(255,255,255,.14); color: #e5eefb; }
@@ -424,7 +443,7 @@
 
 /* Info cards / callouts / stat tiles */
 .ui-rdrawer .ui-info-card, .ui-rdrawer .ui-callout, .ui-rdrawer .ui-stat-tile {
-  background: rgba(255,255,255,.07); border-color: rgba(255,255,255,.10); color: #fff;
+  background: rgb(255 255 255 / 13%); border-color: rgba(255,255,255,.10); color: #fff;
 }
 .ui-rdrawer .ui-info-card-head h4 { color: #fff; }
 .ui-rdrawer .ui-callout-body strong { color: #fff; }
@@ -472,9 +491,9 @@
 .ui-rdrawer .ui-menu { background: #11294b; border-color: rgba(255,255,255,.14); color: #fff; }
 .ui-rdrawer .ui-menu-item { background: transparent; color: #e5eefb; }
 .ui-rdrawer .ui-menu-item:hover { background: rgba(255,255,255,.08); }
-.ui-rdrawer .ui-menu-ico { background: rgba(255,255,255,.10); color: #dbeafe; }
+.ui-rdrawer .ui-menu-ico { color: #dbeafe; }
 .ui-rdrawer .ui-menu-item.danger { color: #fecaca; }
-.ui-rdrawer .ui-menu-item.danger .ui-menu-ico { background: rgba(239,68,68,.20); color: #fecaca; }
+.ui-rdrawer .ui-menu-item.danger .ui-menu-ico { color: #fecaca; }
 
 /* ════════════════════════════════════════════════════════════════════════════
  * Orchestration — ActivityTimeline (cross-module record feed), design v4.

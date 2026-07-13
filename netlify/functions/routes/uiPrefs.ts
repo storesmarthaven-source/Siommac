@@ -185,7 +185,10 @@ router.post('/layout/getInstanceLayout', async c => {
   // Surface real DB errors (e.g. layout column missing = migration not applied) — never
   // mask them as an empty board.
   if (e1 || e2) return c.json({ success: false, message: (e1 ?? e2)!.message }, 500 as 200);
-  return c.json({ success: true, data: { layout: override?.layout ?? def?.layout ?? null } });
+  // `layout` = the EFFECTIVE board (this user's override, else the org default). `default` =
+  // the raw org-wide default, exposed separately so the client can tell when the current
+  // arrangement differs from it (gates "Set as default") and can restore it (Undo).
+  return c.json({ success: true, data: { layout: override?.layout ?? def?.layout ?? null, default: def?.layout ?? null } });
 });
 
 router.post('/layout/saveInstanceLayout', async c => {

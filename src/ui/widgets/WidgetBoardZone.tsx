@@ -51,6 +51,13 @@ export interface WidgetBoardZoneProps {
   compact?: 'vertical' | 'horizontal' | null;
   /** When false, tiles drag-reorder but never resize — see WidgetBoardProps.resizable. Default true. */
   resizable?: boolean;
+  /** Hard cap on grid rows (RGL `maxRows`). Set it to a single tile-height (e.g. a tile's `h`) to
+   *  lock that row to horizontal-only movement — items can't be dragged into a 2nd row. Default
+   *  unbounded. See WidgetBoardProps.maxRows. */
+  maxRows?: number;
+  /** Keep tiles inside the grid while dragging (RGL `isBounded`). Pair with `maxRows` to fully lock
+   *  a single-row grid to horizontal movement. Default false. See WidgetBoardProps.isBounded. */
+  isBounded?: boolean;
   /** When false, tiles skip the fade+rise mount reveal — see WidgetBoardProps.revealOnMount. Default true. */
   revealOnMount?: boolean;
   /** True once the installed-package list has loaded — gates pruning of orphaned (uninstalled) widgets. */
@@ -100,7 +107,7 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
   return !!(localWidgets?.[widgetId]?.sizeToContent ?? findWidgetDef(widgetId)?.sizeToContent);
 }
 
-export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
+export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
   const { layout, updateZoneLayout, removeWidget, resetLayout } = useBoardLayout(pageKey, defaultLayout);
@@ -129,7 +136,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
   // Vertical gap between tiles. Must stay well below the row height on a fine grid — otherwise the
   // gap dominates and tiles can't hug content. Horizontal gutter is a constant 12.
   const vMargin = gap ? gap[1] : (cellHeight >= 44 ? 12 : Math.max(2, Math.floor(cellHeight / 2) - 1));
-  const maxRows = Math.max(16, Math.ceil(1408 / cellHeight));
+  const itemMaxRows = Math.max(16, Math.ceil(1408 / cellHeight));
 
   const rglLayout: Layout[] = items.map(it => {
     const min = minGridFor(it.widgetId, localWidgets);
@@ -140,7 +147,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
       i: it.instanceId, x: it.x, y: it.y, w: it.w,
       h: fit ? (fitRows[it.instanceId] ?? it.h) : it.h,
       minW: Math.max(1, min.w), maxW: column,
-      minH: fit ? 1 : Math.max(1, min.h), maxH: maxRows,
+      minH: fit ? 1 : Math.max(1, min.h), maxH: itemMaxRows,
       // A sizeToContent (fit) tile auto-hugs its content; a widget can opt out of resize
       // (`resizable:false`) or be fully PINNED (`locked:true` → RGL static, so it never
       // moves, resizes, or gets displaced — e.g. the KPI row stays at the top).
@@ -234,7 +241,8 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
         className="wbi-zone"
         cols={column} rowHeight={cellHeight}
         margin={gap ?? [12, vMargin]} containerPadding={[0, 0]}
-        compactType={compact ?? null} preventCollision={compact === null} isBounded={false}
+        compactType={compact ?? null} preventCollision={compact === null} isBounded={isBounded}
+        {...(maxRows != null ? { maxRows } : {})}
         draggableHandle=".wbi-drag" resizeHandles={['se']}
         layout={rglLayout}
         onDragStop={(l: Layout[]) => persist(l)}

@@ -34,6 +34,9 @@
 /* Icon-only trigger — a 40×40 square that matches the other header buttons' height. */
 .wbi-tb-trigger { width: 40px; padding: 0; }
 .wbi-tb-trigger:hover { color: var(--siomac-navy, #1f3b6d); }
+/* Disabled menu item (e.g. "Set as default" when the layout already matches the default). */
+.ui-menu-item.is-disabled { opacity: .45; cursor: not-allowed; }
+.ui-menu-item.is-disabled:hover { background: none; }
 
 /* Customize dropdown uses the standard .ui-menu / .ui-menu-item shell (uikit-layout.css). */
 
@@ -198,3 +201,56 @@
 }
 .wmock-preview-banner i { color: var(--cds-accent, #f97316); margin-right: 6px; }
 .wmock-preview-banner strong { font-weight: 500; }
+
+/* ── edit-mode banner (Option B — "bold accent bar") — a solid green bar across the top of the
+   board while editing, so the edit state (and how to leave it) is unmistakable. White icon +
+   title/subtitle, with "Set as default" (contextual) + Done actions. Slides down + fades in.
+   The single app-wide standard for the board edit bar. ── */
+/* Always-mounted wrapper — animates the banner's SPACE via grid-template-rows (0fr ⇄ 1fr),
+   so both showing and hiding slide smoothly instead of the content jumping. While CLOSED it
+   still occupies a flex slot in .wbi-board (gap: 18px), so a negative bottom margin cancels
+   that phantom gap — the board sits flush as if the banner weren't there. */
+.wbi-edit-banner-wrap {
+  display: grid; grid-template-rows: 0fr; margin: 0 0 -18px;
+  transition: grid-template-rows .26s cubic-bezier(.2, .8, .2, 1), margin .26s cubic-bezier(.2, .8, .2, 1);
+}
+.wbi-edit-banner-wrap.is-open { grid-template-rows: 1fr; margin: 0 0 14px; }
+.wbi-edit-banner {
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  min-height: 0; overflow: hidden;                     /* lets the 0fr row actually collapse */
+  padding: 11px 12px 11px 16px; border-radius: 12px;
+  background: #61ac68; color: #fff;
+  opacity: 0; transform: translateY(-10px); visibility: hidden;
+  transition: opacity .2s ease, transform .24s cubic-bezier(.2, .8, .2, 1), visibility 0s .26s;
+}
+.wbi-edit-banner-wrap.is-open .wbi-edit-banner {
+  opacity: 1; transform: none; visibility: visible;
+  transition: opacity .2s ease .04s, transform .24s cubic-bezier(.2, .8, .2, 1) .04s, visibility 0s;
+}
+.wbi-edit-banner-txt { display: flex; align-items: center; gap: 12px; min-width: 0; }
+.wbi-edit-banner-ic { flex: none; display: flex; color: #fff; }
+.wbi-edit-banner-lines { min-width: 0; display: flex; flex-direction: column; }
+.wbi-edit-banner-title { font-size: 13px; font-weight: 600; line-height: 1.25; color: #fff; }
+.wbi-edit-banner-sub { font-size: 11px; color: rgba(255, 255, 255, .85); line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.wbi-edit-banner-actions { display: flex; align-items: center; gap: 8px; flex: none; }
+.wbi-edit-banner-secondary {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 13px; border: 1px solid rgba(255, 255, 255, .5); border-radius: 8px;
+  cursor: pointer; background: rgba(255, 255, 255, .16); color: #fff;
+  font-size: 12.5px; font-weight: 600; line-height: 1; transition: background .14s ease;
+}
+.wbi-edit-banner-secondary svg { flex: none; }
+.wbi-edit-banner-secondary:hover { background: rgba(255, 255, 255, .26); }
+.wbi-edit-banner-secondary:disabled { opacity: .5; cursor: not-allowed; }
+.wbi-edit-banner-secondary:disabled:hover { background: rgba(255, 255, 255, .16); }
+.wbi-edit-banner-done {
+  flex: none; display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 15px; border: none; border-radius: 8px; cursor: pointer;
+  background: #fff; color: #2f7d4f; font-size: 12.5px; font-weight: 600; line-height: 1;
+  transition: background .14s ease;
+}
+.wbi-edit-banner-done:hover { background: #edf6ef; }
+.wbi-edit-banner-done svg { flex: none; }
+@media (prefers-reduced-motion: reduce) {
+  .wbi-edit-banner-wrap, .wbi-edit-banner { transition: none; }
+}

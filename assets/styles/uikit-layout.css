@@ -332,6 +332,54 @@ body[data-theme="dark"] .hero-footer {
 .ui-stat-footer { font-size: 0.66rem; color: var(--text-muted); border-top: 1px solid var(--border); padding-top: 8px; text-transform: capitalize; }
 .ui-stat-card--navy .ui-stat-footer { color: rgba(255,255,255,0.5); border-top-color: rgba(255,255,255,0.08); }
 
+/* ── KPI tile — the app-wide STANDARD *plain* KPI card (src/ui/components/KpiTile.tsx) ─
+   A compact metric tile: coloured icon chip + number + name, one supporting line, and
+   an optional footer drill link. Matches the Access Control overview cards. This is the
+   PLAIN tile — distinct from the richer chart cards (.ui-stat-card / Aurora KPI cards),
+   which carry sparklines / donuts / percent bars. Fills its container's height. */
+.ui-kpi {
+  display: flex; flex-direction: column; height: 100%; margin: 0; box-sizing: border-box;
+  padding: 11px 14px 0; overflow: hidden;
+  background: var(--bg-card, #fff); border: 1px solid var(--border, #e3e9f2); border-radius: 12px;
+}
+.ui-kpi-main { display: flex; align-items: flex-start; gap: 10px; margin-bottom: 5px; }
+.ui-kpi-ic { width: 30px; height: 30px; flex: none; border-radius: 8px; display: grid; place-items: center; font-size: 13px; align-self: flex-start; }
+.ui-kpi-ic--blue    { background: #eaf1fe; color: #3b82f6; }
+.ui-kpi-ic--purple  { background: #f2effe; color: #8b5cf6; }
+.ui-kpi-ic--teal    { background: #e5f8f5; color: #12b3a6; }
+.ui-kpi-ic--amber   { background: #fdf3e0; color: #f59e0b; }
+.ui-kpi-ic--coral   { background: #fdecec; color: #f0736f; }
+.ui-kpi-ic--green   { background: #e4f8ea; color: #16a34a; }
+.ui-kpi-ic--red     { background: #fdecec; color: #dc2626; }
+.ui-kpi-ic--neutral { background: #eef1f6; color: #475569; }
+.ui-kpi-body { min-width: 0; }
+.ui-kpi-numrow { display: flex; align-items: baseline; gap: 7px; }
+.ui-kpi-num { font-size: 22px; font-weight: 600; color: #06183a; letter-spacing: -.01em; line-height: 1; flex: none; }
+.ui-kpi-name { font-size: 12px; font-weight: 600; color: #1e2a44; line-height: 1.2; }
+.ui-kpi-sub { font-size: 10.5px; color: #7a8698; margin-top: 2px; display: flex; align-items: center; gap: 5px; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.ui-kpi-dot { width: 7px; height: 7px; border-radius: 50%; flex: none; display: inline-block; }
+.ui-kpi-dot--green { background: #16a34a; }
+.ui-kpi-dot--amber { background: #f59e0b; }
+.ui-kpi-dot--red   { background: #dc2626; }
+.ui-kpi-link {
+  display: flex; align-items: center; gap: 6px; width: 100%; margin-top: auto; padding: 7px 0;
+  border: none; border-top: 1px solid #eef1f7; background: none; font: inherit; font-size: 11px;
+  font-weight: 600; text-align: left; text-transform: capitalize; cursor: pointer; transition: opacity .14s ease;
+}
+.ui-kpi-link:hover { opacity: .72; }
+.ui-kpi--blue    .ui-kpi-link { color: #3b82f6; }
+.ui-kpi--purple  .ui-kpi-link { color: #8b5cf6; }
+.ui-kpi--teal    .ui-kpi-link { color: #12b3a6; }
+.ui-kpi--amber   .ui-kpi-link { color: #f59e0b; }
+.ui-kpi--coral   .ui-kpi-link { color: #f0736f; }
+.ui-kpi--green   .ui-kpi-link { color: #16a34a; }
+.ui-kpi--red     .ui-kpi-link { color: #dc2626; }
+.ui-kpi--neutral .ui-kpi-link { color: #475569; }
+/* text variant — label + text value + neutral foot band (e.g. "Active Version"). */
+.ui-kpi-lbl { font-size: 11.5px; color: #7a8698; }
+.ui-kpi-val { font-size: 14px; font-weight: 700; color: #06183a; letter-spacing: -.01em; margin-top: 2px; line-height: 1.15; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.ui-kpi-foot { margin: auto -14px 0; padding: 7px 14px; border-top: 1px solid #e3e9f2; background: #f5f7fb; border-radius: 0 0 12px 12px; font-size: 10.5px; font-weight: 500; color: #465063; display: flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
 /* ── Skeleton loaders (cold-load placeholders) — src/ui/components/Skeleton.tsx ──
    Atomic shimmer block + table/list helpers. Real data is always preferred; this
    is only for the genuine cold path where there is nothing cached to show. */

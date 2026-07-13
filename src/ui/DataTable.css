@@ -55,6 +55,29 @@
   display: inline-flex; align-items: center; justify-content: center; cursor: pointer; transition: background .12s, color .12s, border-color .12s; }
 .dt-act:hover { background: #f2f6fc; border-color: #cdd8ea; color: var(--dt-ink2); }
 .dt-act-danger:hover { background: #fdecec; border-color: #f2b6b6; color: #dc2626; }
+.dt-kebab.is-open { background: #f2f6fc; border-color: #cdd8ea; color: var(--dt-ink2); }
+
+/* Row overflow menu — PORTALLED to <body> (outside .dt), so styles are self-contained
+   (no --dt-* vars). A fixed scrim closes on outside click; the menu anchors to the ⋮. */
+.dt-menu-scrim { position: fixed; inset: 0; z-index: 75; }
+.dt-menu {
+  position: fixed; min-width: 196px; padding: 6px;
+  background: #fff; border: 1px solid #e6e9f1; border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(16, 24, 64, .08), 0 5px 14px rgba(16, 24, 64, .10);
+  animation: dt-menu-pop .12s cubic-bezier(.22, 1, .36, 1); transform-origin: top right;
+}
+@keyframes dt-menu-pop { from { opacity: 0; transform: scale(.97) translateY(-3px); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .dt-menu { animation: none; } }
+.dt-menu-item {
+  display: flex; align-items: center; gap: 9px; width: 100%; padding: 8px 10px;
+  border: none; border-radius: 8px; background: transparent; cursor: pointer;
+  font: inherit; font-size: 13px; color: #3f4a63; text-align: left;
+}
+.dt-menu-item:hover { background: #f2f6fc; }
+.dt-menu-item svg { color: #8390a6; flex: none; }
+.dt-menu-danger { color: #dc2626; }
+.dt-menu-danger svg { color: #dc2626; }
+.dt-menu-danger:hover { background: #fdecec; }
 
 /* ── Empty ───────────────────────────────────────────────────────────────── */
 .dt-empty { padding: 30px 12px; display: flex; justify-content: center; }

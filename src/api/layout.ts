@@ -40,11 +40,20 @@ export async function resetLayoutOverride(pageKey: string): Promise<void> {
 
 // ── Widget-library board layout (instance/zone model) — ui_layout.layout jsonb ─────
 
-/** Read the widget-library board layout (effective: user override ?? org default). */
-export async function getInstanceLayout(pageKey: string): Promise<BoardLayout | null> {
-  const res = await apiPost<{ success: boolean; message?: string; data?: { layout: BoardLayout | null } }>('layout/getInstanceLayout', { pageKey });
+export interface InstanceLayoutResponse {
+  /** Effective board for this user — their override, else the org default, else null. */
+  layout: BoardLayout | null;
+  /** The raw org-wide default (admin-set), or null if none. Exposed separately so the client
+   *  can tell when the current arrangement differs from it (gates "Set as default") and restore
+   *  it on Undo. */
+  orgDefault: BoardLayout | null;
+}
+
+/** Read the widget-library board layout: the effective layout AND the raw org default. */
+export async function getInstanceLayout(pageKey: string): Promise<InstanceLayoutResponse> {
+  const res = await apiPost<{ success: boolean; message?: string; data?: { layout: BoardLayout | null; default?: BoardLayout | null } }>('layout/getInstanceLayout', { pageKey });
   if (!res.success) throw new Error(res.message ?? 'Failed to load board layout.');
-  return res.data?.layout ?? null;
+  return { layout: res.data?.layout ?? null, orgDefault: res.data?.default ?? null };
 }
 
 /** Save the calling user's widget-library board layout for this page. */

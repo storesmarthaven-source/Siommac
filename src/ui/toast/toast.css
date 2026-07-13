@@ -310,9 +310,11 @@
   flex:          0 0 auto;
 }
 
-/* ── Action strip (action / rich) ────────────────────────────────────────── */
+/* ── Action strip (action / rich) — ONE footer band: countdown text left, action
+   buttons right, progress bar pinned along the bottom edge. ─────────────────── */
 
 .siomac-toast__actions {
+  position:        relative;
   min-height:      34px;
   padding:         6px 11px;
   display:         flex;
@@ -321,6 +323,19 @@
   gap:             7px;
   border-top:      1px solid rgba(27, 45, 85, .045);
   background:      var(--toast-tint);
+}
+
+.siomac-toast__actions .siomac-toast__timer-text {
+  margin-right: auto;               /* countdown sits left; buttons stay right */
+  color:        var(--siomac-toast-muted);
+  font-size:    11.5px;
+  line-height:  1.25;
+}
+
+.siomac-toast__actions .siomac-toast__progress {
+  position: absolute;
+  left:     0;
+  bottom:   0;
 }
 
 .siomac-toast__action {
