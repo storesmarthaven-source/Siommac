@@ -428,7 +428,7 @@
 /* Sub-capability rows fade/slide in on expand + light accent surface */
 @keyframes u-sub-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .acx .tbl tbody tr.u-sub { animation: u-sub-in .2s ease both; }
-.acx .tbl tbody tr.u-sub > td { background: #f8f8f8; }
+.acx .tbl tbody tr.u-sub > td { background: #fcfcfc; }
 /* Capability table (per-user override editor) — mockup restyle. */
 .acx .cap-allow { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #157a3a; padding: 3px 10px; border-radius: 999px; background: var(--green-bg); }
 .acx .cap-deny { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #b91c1c; padding: 3px 10px; border-radius: 999px; background: var(--red-bg); }
