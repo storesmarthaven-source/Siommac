@@ -195,7 +195,10 @@ export function AcUsersPage(): VNode {
         {/* LEFT RAIL */}
         <div class="card u-rail">
           <div class="u-rail-head">
-            <span style={{ fontSize: '14px', fontWeight: 700 }}>Directory <span class="muted" style={{ fontWeight: 500 }}>({users.length})</span></span>
+            <span style={{ fontSize: '14px', fontWeight: 700, display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+              <LucideIcon name="BookUser" size={16} strokeWidth={2} />
+              Directory <span class="muted" style={{ fontWeight: 500 }}>({users.length})</span>
+            </span>
           </div>
           <div class="u-rail-search"><i class="fas fa-magnifying-glass" /><input class="input" placeholder="Search directory…" value={railSearch} onInput={e => { setRail((e.target as HTMLInputElement).value); setPage(1); }} /></div>
           <div class="u-user-list">
