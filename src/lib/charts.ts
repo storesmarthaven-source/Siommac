@@ -21,17 +21,26 @@
  */
 
 // ── Chart.js CDN-global type shim ─────────────────────────────────────────────
-/* eslint-disable @typescript-eslint/no-explicit-any */
-declare const Chart: any;
+import type { Chart as ChartClass, TooltipItem } from 'chart.js';
+// Chart.js is loaded via CDN; this declaration gives it real static + instance types.
+declare const Chart: typeof ChartClass;
 
 // ── Module-local state ────────────────────────────────────────────────────────
 
-let _attendanceChart: any = null;
-let _trendChart:      any = null;
-const _dashCharts: Record<string, any> = {};
+interface DashCharts {
+  trend?:  ChartClass<'line'>;
+  dept?:   ChartClass<'doughnut'>;
+  status?: ChartClass<'bar'>;
+  leaves?: ChartClass<'doughnut'>;
+}
 
-function _destroyDash(key: string): void {
-  if (_dashCharts[key]) { _dashCharts[key].destroy(); Reflect.deleteProperty(_dashCharts, key); }
+let _attendanceChart: ChartClass<'doughnut'> | null = null;
+let _trendChart:      ChartClass<'bar'>      | null = null;
+const _dashCharts: DashCharts = {};
+
+function _destroyDash(key: keyof DashCharts): void {
+  const chart = _dashCharts[key];
+  if (chart) { chart.destroy(); delete _dashCharts[key]; }
 }
 
 // ── Palette (matches design spec) ─────────────────────────────────────────────
@@ -92,7 +101,7 @@ export function displayAttendanceChart(stats: {
   if (!canvas) return;
   if (_attendanceChart) _attendanceChart.destroy();
   pinCanvas(canvas, 260, 260);
-  _attendanceChart = new Chart(canvas.getContext('2d'), {
+  _attendanceChart = new Chart(canvas, {
     type: 'doughnut',
     data: {
       labels: ['Present', 'Absent', 'Sundays'],
@@ -122,7 +131,7 @@ export function displayTrendChart(records: { date: string; hours: number | strin
   if (_trendChart) _trendChart.destroy();
   pinCanvas(canvas, 500, 240);
   const sorted = records.slice().reverse();
-  _trendChart = new Chart(canvas.getContext('2d'), {
+  _trendChart = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: sorted.map(r => r.date.slice(5)),
@@ -143,7 +152,7 @@ export function displayTrendChart(records: { date: string; hours: number | strin
       animation:           { duration: 800, easing: 'easeOutQuart' },
       plugins: {
         legend:  { display: false },
-        tooltip: { callbacks: { label: (c: any) => ` ${String(c.parsed.y)} hrs` } },
+        tooltip: { callbacks: { label: (c: TooltipItem<'bar'>) => ` ${String(c.parsed.y)} hrs` } },
       },
       scales: {
         y: { beginAtZero: true, suggestedMax: 10, ticks: { stepSize: 2, font: { size: 10 } }, grid: { color: '#E9EEF3' } },
@@ -160,7 +169,7 @@ function _renderTrendLine(data: { date: string; present: number; late: number }[
   const canvas = document.getElementById('trendLineChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 600, 260);
-  _dashCharts.trend = new Chart(canvas.getContext('2d'), {
+  _dashCharts.trend = new Chart(canvas, {
     type: 'line',
     data: {
       labels: data.map(d => d.date.slice(5)),
@@ -217,7 +226,7 @@ function _renderDeptDist(data: { name: string; count: number }[], rmSpinner: () 
   const canvas = document.getElementById('deptDistChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 260, 260);
-  _dashCharts.dept = new Chart(canvas.getContext('2d'), {
+  _dashCharts.dept = new Chart(canvas, {
     type: 'doughnut',
     data: {
       labels: data.map(d => d.name),
@@ -249,7 +258,7 @@ function _renderStatusBars(
   const canvas = document.getElementById('statusBarChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 320, 260);
-  _dashCharts.status = new Chart(canvas.getContext('2d'), {
+  _dashCharts.status = new Chart(canvas, {
     type: 'bar',
     data: {
       labels: ['Present', 'Late', 'Absent', 'On Leave'],
@@ -274,7 +283,7 @@ function _renderStatusBars(
       animation:           { duration: 800, easing: 'easeOutQuart' },
       plugins: {
         legend:  { display: false },
-        tooltip: { callbacks: { label: (c: any) => ` ${String(c.parsed.y)} employees` } },
+        tooltip: { callbacks: { label: (c: TooltipItem<'bar'>) => ` ${String(c.parsed.y)} employees` } },
       },
       scales: {
         y: { beginAtZero: true, grid: { color: '#E9EEF3' }, ticks: { stepSize: 1, font: { size: 10 } } },
@@ -293,7 +302,7 @@ function _renderLeaveTypes(
   const canvas = document.getElementById('leaveTypesChart') as HTMLCanvasElement | null;
   if (!canvas) return;
   pinCanvas(canvas, 260, 260);
-  _dashCharts.leaves = new Chart(canvas.getContext('2d'), {
+  _dashCharts.leaves = new Chart(canvas, {
     type: 'doughnut',
     data: {
       labels: ['Sick', 'Casual', 'Annual', 'Medical'],
@@ -382,8 +391,8 @@ export function renderDashboardCharts(data: DashboardChartData): void {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     _renderTrendLine(data.dailyTrend ?? [],       rm.trend);
     _renderDeptDist(data.deptDistribution ?? [],  rm.dept);
-    _renderStatusBars(data.statusBreakdown ?? {} as any, rm.status);
-    _renderLeaveTypes(data.leaveTypes ?? {} as any,      rm.leaves);
+    _renderStatusBars(data.statusBreakdown, rm.status);
+    _renderLeaveTypes(data.leaveTypes,      rm.leaves);
     _populateDeptStats(data.deptDistribution ?? []);
     _populateStatusStats(data.statusBreakdown ?? {});
     _populateLeaveStats(data.leaveTypes ?? {});
@@ -394,27 +403,31 @@ export function renderDashboardCharts(data: DashboardChartData): void {
 export function updateDashboardCharts(data: Partial<DashboardChartData>): void {
   if (_dashCharts.trend && data.dailyTrend) {
     const t = _dashCharts.trend;
-    t.data.labels              = data.dailyTrend.map(d => d.date.slice(5));
-    t.data.datasets[0].data    = data.dailyTrend.map(d => d.present);
-    t.data.datasets[1].data    = data.dailyTrend.map(d => d.late);
+    t.data.labels = data.dailyTrend.map(d => d.date.slice(5));
+    // datasets[0/1] always exist — chart was initialised with exactly two datasets
+    t.data.datasets[0]!.data = data.dailyTrend.map(d => d.present);
+    t.data.datasets[1]!.data = data.dailyTrend.map(d => d.late);
     t.update('none');
   }
   if (_dashCharts.dept && data.deptDistribution) {
-    _dashCharts.dept.data.labels              = data.deptDistribution.map(d => d.name);
-    _dashCharts.dept.data.datasets[0].data    = data.deptDistribution.map(d => d.count);
-    _dashCharts.dept.update('none');
+    const dept = _dashCharts.dept;
+    dept.data.labels = data.deptDistribution.map(d => d.name);
+    dept.data.datasets[0]!.data = data.deptDistribution.map(d => d.count);
+    dept.update('none');
     _populateDeptStats(data.deptDistribution);
   }
   if (_dashCharts.status && data.statusBreakdown) {
+    const status = _dashCharts.status;
     const s = data.statusBreakdown;
-    _dashCharts.status.data.datasets[0].data = [s.present, s.late, s.absent, s.onLeave];
-    _dashCharts.status.update('none');
+    status.data.datasets[0]!.data = [s.present, s.late, s.absent, s.onLeave];
+    status.update('none');
     _populateStatusStats(s);
   }
   if (_dashCharts.leaves && data.leaveTypes) {
+    const leaves = _dashCharts.leaves;
     const l = data.leaveTypes;
-    _dashCharts.leaves.data.datasets[0].data = [l.sick, l.casual, l.annual, l.medical];
-    _dashCharts.leaves.update('none');
+    leaves.data.datasets[0]!.data = [l.sick, l.casual, l.annual, l.medical];
+    leaves.update('none');
     _populateLeaveStats(l);
   }
 }
