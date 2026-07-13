@@ -212,6 +212,9 @@
 .acx .rc2-act.tone-green { color: #157a3a; } .acx .rc2-act.tone-red { color: #b91c1c; }
 .acx .rc2-act.tone-amber { color: #b45309; } .acx .rc2-act.tone-blue { color: #1d4ed8; }
 .acx .rc2-act.tone-slate { color: #64748b; }
+/* Title Case the feed's name / title-role / action (not the time). capitalize only
+   uppercases each word's first letter, so acronyms stay intact. */
+.acx .rc2-nm, .acx .rc2-role, .acx .rc2-act { text-transform: capitalize; }
 
 /* ── Module Groups filter card (left of the coverage matrix) ──────────────────── */
 .acx .ov-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
