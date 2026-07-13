@@ -143,6 +143,9 @@ function ago(iso: string): string {
   return `${Math.floor(h / 24)}d ago`;
 }
 const initials = (s: string) => (s || '?').split(/[\s._-]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
+// A raw system id (e.g. "USR-9F174AB5" or a UUID) — never show these to the user; fall back
+// to a readable label instead.
+const isRawId = (s: string): boolean => /^usr[-_]/i.test(s) || /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}/i.test(s);
 
 const goTo = (id: string) => { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: id })); } catch (_) { /* ignore */ } };
 
@@ -171,14 +174,17 @@ export function AcOverviewPage(): VNode {
   // users → name, everything else (permission keys) is already human-readable.
   const roleLabelByName = useMemo(() => new Map((rolesQ.data ?? []).map(r => [r.name, r.label])), [rolesQ.data]);
   const userNameById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u.fullName || u.username])), [usersQ.data]);
-  // Full actor record (photo + role) by id, for the Recent Access Changes feed.
+  // Full actor record (photo + role) by id AND by username, for the Recent Access Changes
+  // feed — user_id and username can each be the reliable key depending on the log source.
   const userById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u])), [usersQ.data]);
+  const userByName = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.username, u])), [usersQ.data]);
   const resolveTarget = (entity: string, entityId: string): string => {
     if (!entityId) return '';
     const e = (entity || '').toLowerCase();
-    if (e.includes('role')) return roleLabelByName.get(entityId) ?? entityId;
-    if (e.includes('user')) return userNameById.get(entityId) ?? entityId;
-    return entityId;
+    if (e.includes('role')) return roleLabelByName.get(entityId) ?? (isRawId(entityId) ? 'Unknown role' : entityId);
+    if (e.includes('user')) return userNameById.get(entityId) ?? 'Unknown user';
+    // Permission keys and the like are already human-readable; never surface a raw id.
+    return isRawId(entityId) ? '' : entityId;
   };
 
   // ── module × role coverage matrix (from the catalogue) ────────────────────────
@@ -400,8 +406,9 @@ export function AcOverviewPage(): VNode {
               <div class="ac-empty">No recent access changes.</div>
             ) : (auditQ.data!.logs.slice(0, 5) as { id: string; user_id: string; username: string; action: string; entity: string; entity_id: string; created_at: string }[]).map(l => {
               const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
-              const actor = userById.get(l.user_id);
-              const name = actor?.fullName || l.username || 'System';
+              const actor = userById.get(l.user_id) ?? userByName.get(l.username);
+              const rawName = actor?.fullName || l.username || 'System';
+              const name = isRawId(rawName) ? 'Unknown user' : rawName;
               const role = actor ? (roleLabelByName.get(actor.role) ?? actor.role) : '';
               const target = resolveTarget(l.entity, l.entity_id);
               return (
