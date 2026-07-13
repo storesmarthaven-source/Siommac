@@ -660,8 +660,8 @@
 .acx .exp-sec { display: flex; flex-direction: column; gap: 10px; }
 .acx .exp-label { font-size: 12px; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: rgba(226, 238, 252, .7); }
 .acx .exp-formats { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
-.acx .exp-fmt { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 1.5px solid rgba(255, 255, 255, .14); border-radius: 11px; background: rgba(255, 255, 255, .06); color: #fff; cursor: pointer; transition: border-color .12s, background .12s; }
-.acx .exp-fmt:hover { border-color: rgba(255, 255, 255, .28); background: rgba(255, 255, 255, .1); }
+.acx .exp-fmt { display: flex; flex-direction: column; align-items: center; gap: 8px; padding: 16px 8px; border: 1.5px solid rgba(255, 255, 255, .1); border-radius: 11px; background: rgb(255 255 255 / 13%); color: #fff; cursor: pointer; transition: border-color .12s, background .12s; }
+.acx .exp-fmt:hover { border-color: rgba(255, 255, 255, .28); background: rgb(255 255 255 / 18%); }
 .acx .exp-fmt.on { border-color: #60a5fa; background: rgba(96, 165, 250, .18); }
 .acx .exp-fmt-ico { filter: saturate(1.2) brightness(1.25); }
 .acx .exp-fmt-lbl { font-size: 12.5px; font-weight: 600; color: #fff; }
@@ -676,7 +676,7 @@
 .acx .exp-view { font-size: 12.5px; font-weight: 600; color: #93c5fd; cursor: pointer; }
 .acx .exp-checks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px 16px; }
 .acx .exp-check { display: inline-flex; align-items: center; gap: 10px; font-size: 13px; color: #e2e8f0; cursor: pointer; }
-.acx .exp-field { display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .14); border-radius: 9px; background: rgba(255, 255, 255, .06); }
+.acx .exp-field { display: flex; align-items: center; gap: 9px; height: 42px; padding: 0 12px; border: 1px solid rgba(255, 255, 255, .1); border-radius: 9px; background: rgb(255 255 255 / 13%); }
 .acx .exp-field-btn { cursor: pointer; text-align: left; }
 .acx .exp-field-btn:hover { border-color: rgba(255, 255, 255, .28); }
 .acx .exp-field-btn svg { color: rgba(255, 255, 255, .6); flex: none; }
