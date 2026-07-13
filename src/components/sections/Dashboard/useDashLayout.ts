@@ -29,7 +29,7 @@ type WidgetId = typeof WIDGET_DEFS[number]['id'];
 interface Layout { order: WidgetId[]; hidden: WidgetId[] }
 
 function loadLayout(): Layout {
-  try { return JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? 'null') ?? { order: [], hidden: [] }; }
+  try { return (JSON.parse(localStorage.getItem(LAYOUT_KEY) ?? 'null') as Layout | null) ?? { order: [], hidden: [] }; }
   catch { return { order: [], hidden: [] }; }
 }
 
@@ -114,18 +114,16 @@ export function useDashLayout() {
       section.classList.toggle('dash-edit-mode', next);
 
       if (next) {
-        // Wire Sortable
-        const Sortable = (window as unknown as Record<string, unknown>).Sortable;
-        if (Sortable && typeof Sortable === 'function') {
-          sortableRef.current = (Sortable)(grid, {
-            animation:       250,
-            ghostClass:      'dash-sortable-ghost',
-            dragClass:       'dash-sortable-drag',
-            filter:          'button, a, input, select, canvas',
-            preventOnFilter: false,
-            onEnd:           () => requestAnimationFrame(() => scheduleSave()),
-          }) as { destroy: () => void };
-        }
+        // Wire Sortable — CDN global typed in globals.d.ts as typeof SortableNS.
+        // Using new Sortable(...) instead of the old Function-typed window lookup.
+        sortableRef.current = new Sortable(grid, {
+          animation:       250,
+          ghostClass:      'dash-sortable-ghost',
+          dragClass:       'dash-sortable-drag',
+          filter:          'button, a, input, select, canvas',
+          preventOnFilter: false,
+          onEnd:           () => requestAnimationFrame(() => scheduleSave()),
+        });
       } else {
         if (sortableRef.current) { sortableRef.current.destroy(); sortableRef.current = null; }
         scheduleSave(true);
