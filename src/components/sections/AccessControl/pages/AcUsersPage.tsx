@@ -240,7 +240,9 @@ export function AcUsersPage(): VNode {
            : (
             <div class="rc2-scroll">
               {(auditQ.data!.logs as { id: string; username: string; action: string; details: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
-                let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* plain text */ }
+                let d: { permission?: string; reason?: string } = {}; try { d = JSON.parse(l.details || '{}') as typeof d; } catch { /* plain text */ }
+                const perm = d.permission ?? '';
+                const reason = d.reason ?? '';
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
                 const actor = usersByUsername.get(l.username.toLowerCase());
@@ -262,6 +264,13 @@ export function AcUsersPage(): VNode {
                       <div class="rc2-top"><span class="rc2-nm" title={name}>{name}</span><span class="rc2-time">{timeAgo(l.created_at)}</span></div>
                       {subtitle && <div class="rc2-role">{subtitle}</div>}
                       <div class={`rc2-act tone-${k.tone}`} title={label}>{k.verb}{label ? ` · ${label}` : ''}</div>
+                      {meta && (
+                        <div class="rc2-meta">
+                          <span class="rc2-mod">{meta.module}</span>
+                          <span class={`rc2-risk r-${meta.risk}`}>{meta.risk} risk</span>
+                        </div>
+                      )}
+                      {reason && <div class="rc2-reason" title={reason}>“{reason}”</div>}
                     </div>
                   </div>
                 );

@@ -220,6 +220,14 @@
 /* Title Case the feed's name / title-role / action (not the time). capitalize only
    uppercases each word's first letter, so acronyms stay intact. */
 .acx .rc2-nm, .acx .rc2-role, .acx .rc2-act { text-transform: capitalize; }
+.acx .rc2-meta { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 6px; }
+.acx .rc2-mod { display: inline-flex; align-items: center; height: 19px; padding: 0 8px; border-radius: 6px; background: #eef1f7; color: #475569; font-size: 10.5px; font-weight: 600; }
+.acx .rc2-risk { display: inline-flex; align-items: center; height: 19px; padding: 0 8px; border-radius: 6px; font-size: 10.5px; font-weight: 600; text-transform: capitalize; }
+.acx .rc2-risk.r-low { background: #edf7ee; color: #157a3a; }
+.acx .rc2-risk.r-medium { background: var(--amber-bg, #fef3e2); color: #b45309; }
+.acx .rc2-risk.r-high { background: var(--red-bg, #fdecec); color: #b91c1c; }
+.acx .rc2-risk.r-critical { background: #efe9ff; color: #5b21b6; }
+.acx .rc2-reason { margin-top: 6px; font-size: 11.5px; font-style: italic; color: var(--muted); line-height: 1.4; }
 
 /* ── Module Groups filter card (left of the coverage matrix) ──────────────────── */
 .acx .ov-grid { display: grid; grid-template-columns: 300px minmax(0, 1fr); gap: 18px; align-items: start; }
