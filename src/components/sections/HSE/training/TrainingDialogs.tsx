@@ -35,7 +35,7 @@ export function AddCertificateDialog({ open, onClose, presetWorkerId }: { open: 
 
   const reset = () => { setCompetencyId(''); setCourseId(''); setCourseName(''); setProvider(''); setCertNumber(''); setIssuedAt(''); setExpiresAt(''); setVerify(true); };
   const submit = () => {
-    const name = courseName.trim() || comps.find(c => c.id === competencyId)?.name || '';
+    const name = courseName.trim() || (comps.find(c => c.id === competencyId)?.name ?? '');
     if (!workerId || !name || !issuedAt || !expiresAt) return;
     create.mutate({
       workerId, competencyId: competencyId || null, courseId: courseId || null, courseName: name,

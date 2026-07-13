@@ -299,7 +299,7 @@ export function TableSection({ el, set, commit }: Props<TableElement>) {
         </Row>
       </div>
       <Row label="Header font">
-        <Select value={el.headFontFamily || el.fontFamily} options={FONT_OPTIONS} onChange={(v) => { set({ headFontFamily: v }); commit(); }} />
+        <Select value={el.headFontFamily ?? el.fontFamily} options={FONT_OPTIONS} onChange={(v) => { set({ headFontFamily: v }); commit(); }} />
       </Row>
       <Row label="Head bold">
         <input

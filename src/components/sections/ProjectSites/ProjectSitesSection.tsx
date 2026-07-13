@@ -251,7 +251,7 @@ function SiteCard({
         </div>
         <div class="ps-detail-row ps-detail-row--last">
           <i class="fas fa-align-left" />
-          <span>{site.description || '—'}</span>
+          <span>{site.description ?? '—'}</span>
         </div>
 
         {assigned.length > 0 ? (
@@ -535,8 +535,8 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
         latitude:     String(editingSite.latitude  || ''),
         longitude:    String(editingSite.longitude || ''),
         radius:       String(editingSite.radius    || 200),
-        description:  editingSite.description || '',
-        departmentId: editingSite.departmentId || '',
+        description:  editingSite.description ?? '',
+        departmentId: editingSite.departmentId ?? '',
       });
       setPickerSel(new Set((editingSite.assignedEmployees || []).map(e => e.id)));
     } else {
@@ -576,8 +576,8 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
     try {
       const win     = window as unknown as Record<string, unknown>;
       const AppSt   = win.AppState as { get: (k: string) => string } | undefined;
-      const actorId = AppSt?.get('currentUserId') || '';
-      const actorUsername = AppSt?.get('currentUser') || '';
+      const actorId = AppSt?.get('currentUserId') ?? '';
+      const actorUsername = AppSt?.get('currentUser') ?? '';
 
       const payload = {
         name:        form.name.trim(),
@@ -601,11 +601,11 @@ function SiteModal({ open, editingSite, allEmployees, onClose, onSaved }: SiteMo
       }
 
       if (!res.success) {
-        toast.error(res.message || 'Could not save site');
+        toast.error(res.message ?? 'Could not save site');
         return;
       }
 
-      const siteId = res.id || (editingSite ? String(editingSite.id) : null);
+      const siteId = res.id ?? (editingSite ? String(editingSite.id) : null);
       if (siteId) {
         await assignSiteEmployeesApi(siteId, Array.from(pickerSel)).catch(() => { /* noop */ });
       }
@@ -808,8 +808,8 @@ export function ProjectSitesSection(): VNode {
 
   const win   = window as unknown as Record<string, unknown>;
   const AppSt = win.AppState as { get: (k: string) => string } | undefined;
-  const role  = AppSt?.get('currentRole') || 'admin';
-  const scope = (role === 'admin' || role === 'superadmin') ? 'all' : (AppSt?.get('currentDeptId') || 'all');
+  const role  = AppSt?.get('currentRole') ?? 'admin';
+  const scope = (role === 'admin' || role === 'superadmin') ? 'all' : (AppSt?.get('currentDeptId') ?? 'all');
 
   const liveQuery = useQuery({
     queryKey: ['liveAttendance'],
@@ -819,9 +819,9 @@ export function ProjectSitesSection(): VNode {
     enabled:  isAuthenticated,
   });
 
-  const sites     = sitesQuery.data?.sites     || [];
-  const employees = sitesQuery.data?.employees || [];
-  const liveRows  = liveQuery.data             || [];
+  const sites     = sitesQuery.data?.sites     ?? [];
+  const employees = sitesQuery.data?.employees ?? [];
+  const liveRows  = liveQuery.data             ?? [];
   // Capability gate — includes superadmin and any per-user grant, not just admin.
   const isAdmin   = useCan('sites.edit');
 
@@ -895,14 +895,14 @@ export function ProjectSitesSection(): VNode {
     if (!deleteTarget) return;
     setDeleting(true);
     try {
-      const actorId       = AppSt?.get('currentUserId') || '';
-      const actorUsername = AppSt?.get('currentUser') || '';
+      const actorId       = AppSt?.get('currentUserId') ?? '';
+      const actorUsername = AppSt?.get('currentUser') ?? '';
       const res = await deleteProjectSiteApi(String(deleteTarget.id), actorId, actorUsername);
       if (res.success) {
         toast.success('Project site has been deleted.');
         void qc.invalidateQueries({ queryKey: ['projectSites'] });
       } else {
-        toast.error(res.message || 'Could not delete');
+        toast.error(res.message ?? 'Could not delete');
       }
     } catch (err) {
       toast.error(err instanceof Error ? err.message : 'Network error');
@@ -1086,7 +1086,7 @@ export function ProjectSitesSection(): VNode {
         onClose={() => setDeleteTarget(null)}
         onConfirm={() => void confirmDelete()}
         title="Delete Project Site"
-        message={`Are you sure you want to delete "${deleteTarget?.name || 'this site'}"?`}
+        message={`Are you sure you want to delete "${deleteTarget?.name ?? 'this site'}"?`}
         confirmLabel="Yes, delete it"
         loading={deleting}
       />

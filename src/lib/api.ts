@@ -111,9 +111,7 @@ async function _doRefresh(): Promise<string | null> {
 }
 
 async function _refreshToken(): Promise<string | null> {
-  if (!_refreshPromise) {
-    _refreshPromise = _doRefresh().finally(() => { _refreshPromise = null; });
-  }
+  _refreshPromise ??= _doRefresh().finally(() => { _refreshPromise = null; });
   return _refreshPromise;
 }
 

@@ -104,7 +104,7 @@ function VendorOverview({ vendor, accounts }: { vendor: ApVendor; accounts: ApVe
                 <div class="hrfin-metric-row" style={{ fontSize: 12, color: 'var(--text-2)' }}>
                   <span>{a.accountName}</span><span>{a.accountNumber}</span>
                 </div>
-                {(a.iban || a.swift) && (
+                {(a.iban ?? a.swift) && (
                   <div class="hrfin-metric-row" style={{ fontSize: 11, color: 'var(--text-3)' }}>
                     {a.iban && <span>IBAN: {a.iban}</span>}
                     {a.swift && <span>SWIFT: {a.swift}</span>}

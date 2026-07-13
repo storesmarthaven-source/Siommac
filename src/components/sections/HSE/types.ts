@@ -146,7 +146,7 @@ export const HSE_OWNER_OPTIONS  = ['HSE', 'Operations', 'Maintenance', 'Contract
 /** Split a "Site · detail" queue string into its parts. */
 export function splitSiteDetail(text: string): { site: string; detail: string } {
   const [site, detail] = text.split('·').map(x => x.trim());
-  return { site: site || 'All locations', detail: detail || text };
+  return { site: site ?? 'All locations', detail: detail ?? text };
 }
 
 // ── PPE inventory ─────────────────────────────────────────────────────────────

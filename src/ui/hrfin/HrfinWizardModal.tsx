@@ -44,7 +44,7 @@ export function HrfinWizardModal({
         <div class="hrfin-wiz-body">{children}</div>
         <div class="hrfin-wiz-foot">
           <button type="button" class="hrfin-action" onClick={onBack} style={{ visibility: onBack ? 'visible' : 'hidden' }}>Back</button>
-          <button type="button" class="hrfin-action is-primary" onClick={onPrimary} disabled={primaryDisabled || primaryLoading}>
+          <button type="button" class="hrfin-action is-primary" onClick={onPrimary} disabled={primaryDisabled ?? primaryLoading}>
             {primaryLoading ? 'Saving…' : primaryLabel}
           </button>
         </div>

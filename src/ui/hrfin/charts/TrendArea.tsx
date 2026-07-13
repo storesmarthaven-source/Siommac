@@ -169,7 +169,7 @@ export function TrendArea({
         class="hrfin-line-chart"
         viewBox={`0 0 ${w} ${h}`}
         role="img"
-        aria-label={title || 'trend chart'}
+        aria-label={title ?? 'trend chart'}
         onMouseMove={handleMouseMove}
         onMouseLeave={handleMouseLeave}
         style={{ cursor: 'crosshair' }}

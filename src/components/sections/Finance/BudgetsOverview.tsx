@@ -203,8 +203,8 @@ function LinesTab({ fiscalYear, costCentreFilter, canManage }: {
         costCenterId: f.costCenterId,
         fiscalYear:   f.fiscalYear,
         category:     f.category,
-        label:        f.label || null,
-        notes:        f.notes || null,
+        label:        f.label ?? null,
+        notes:        f.notes ?? null,
         budgeted:     f.budgeted,
         currency:     'TTD',
       });
@@ -758,8 +758,8 @@ function ImportsTab({ fiscalYear, costCentreId, canManage }: {
         costCenterId: costCentreId,
         fiscalYear,
         category: r.category ?? '',
-        label:    r.label || null,
-        notes:    r.notes || null,
+        label:    r.label ?? null,
+        notes:    r.notes ?? null,
         budgeted: parseFloat(r.budgeted ?? r.amount ?? '0') || 0,
         currency: 'TTD' as const,
       })).filter(l => l.category && l.budgeted >= 0);

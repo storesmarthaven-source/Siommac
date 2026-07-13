@@ -214,7 +214,7 @@ function RosterDetail({ rosterId, canManage, canPublish, onBack }: {
       confirmLabel: 'Reopen roster',
     });
     if (!res.confirmed) return;
-    try { await reopenMut.mutateAsync({ rosterId, reason: res.reason || undefined }); toast('Roster reopened for editing'); }
+    try { await reopenMut.mutateAsync({ rosterId, reason: res.reason ?? undefined }); toast('Roster reopened for editing'); }
     catch (e) { toast(e instanceof Error ? e.message : 'Failed to reopen'); }
   }
 

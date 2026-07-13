@@ -41,7 +41,7 @@ function derivedName(el: DesignElement): string {
 }
 
 function layerName(el: DesignElement): string {
-  return el.name?.trim() || derivedName(el);
+  return el.name?.trim() ?? derivedName(el);
 }
 
 function Section({

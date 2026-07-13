@@ -232,7 +232,7 @@ export function getLayout():       string { return appState().get('currentLayout
 
 export function esc(s: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c =>
+  return String(s ?? '').replace(/[&<>"']/g, c =>
     ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c] ?? c,
   );
 }
@@ -402,7 +402,7 @@ export function buildSidebar(role: string): void {
   // Resolve expanded GROUP state: persisted, else default open everything; the
   // active section's group is forced open so the current page is always visible.
   let expanded = loadExpandedGroups(role);
-  if (!expanded) expanded = new Set(groups.map(g => g.id));
+  expanded ??= new Set(groups.map(g => g.id));
   const activeId   = activeSectionId(role);
   const activeItem = all.find(i => i.id === activeId);
   if (activeItem?.group) expanded.add(activeItem.group);
@@ -556,7 +556,7 @@ export async function savePalette(id: string): Promise<void> {
     appState().set('currentColorScheme', prev);
     applyPalette(prev);
     renderPalettes();
-    (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('error', 'Failed to save', res.message || 'Could not persist theme');
+    (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('error', 'Failed to save', res.message ?? 'Could not persist theme');
   } else {
     (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('success', 'Theme Saved', `${cfg().PALETTES.find(p => p.id === id)?.name ?? id} applied.`);
   }
@@ -573,7 +573,7 @@ export async function saveLayout(mode: string): Promise<void> {
     appState().set('currentLayoutMode', prev);
     applyLayout(prev);
     renderLayouts();
-    (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('error', 'Failed to save', res.message || 'Could not switch layout');
+    (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('error', 'Failed to save', res.message ?? 'Could not switch layout');
   } else {
     (window as unknown as { showPopup?: (t: string, h: string, m: string) => void }).showPopup?.('success', 'Layout Saved', `${cfg().LAYOUTS.find(l => l.id === mode)?.name ?? mode} layout active.`);
   }

@@ -18,14 +18,14 @@ import type { TodayStatus, LeaveStatus, LeaveType, AttendanceStatus } from './ty
  * @example fmtTTD(1234.5) → 'TTD 1,234.50'
  */
 export function fmtTTD(n: number | null | undefined): string {
-  return 'TTD ' + (n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return 'TTD ' + (n ?? 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 /**
  * Format a number with commas and 2 decimal places (no currency prefix).
  */
 export function fmtAmount(n: number | null | undefined): string {
-  return (n || 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+  return (n ?? 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
 
 // ── Date / time formatting ────────────────────────────────────────────────────

@@ -247,7 +247,7 @@ function PayrollSettingsModal({ row, onClose, onSaved }: PrsModalProps) {
         healthSurchargeApplicable: hsOn,
         taxResident:               taxOn,
       });
-      if (!res.success) { toast.error(res.message || 'Failed to save'); return; }
+      if (!res.success) { toast.error(res.message ?? 'Failed to save'); return; }
       toast.success('Payroll settings saved');
       onSaved();
       onClose();
@@ -258,7 +258,7 @@ function PayrollSettingsModal({ row, onClose, onSaved }: PrsModalProps) {
     }
   };
 
-  const initials = (row.name || '').split(' ').slice(0, 2).map((w: string) => w[0] || '').join('').toUpperCase() || '?';
+  const initials = (row.name || '').split(' ').slice(0, 2).map((w: string) => w[0] ?? '').join('').toUpperCase() || '?';
 
   return (
     <div class="prs-overlay active" onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}>
@@ -379,7 +379,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
     setVerifying(true); setGateErr('');
     try {
       const res = await verifyPassword(pwd);
-      if (!res.success) { setGateErr(res.message || 'Incorrect password.'); return; }
+      if (!res.success) { setGateErr(res.message ?? 'Incorrect password.'); return; }
       const cres = await getPayrollConstants();
       if (Object.keys(cres).length) {
         setVals({
@@ -432,7 +432,7 @@ function ConstantsModal({ onClose }: ConstantsModalProps) {
     setSaving(true);
     try {
       const res = await savePayrollConstants(payload);
-      if (!res.success) { toast.error(res.message || 'Could not save constants'); return; }
+      if (!res.success) { toast.error(res.message ?? 'Could not save constants'); return; }
       toast.success('T&T payroll constants updated. Re-run payroll to apply.');
       onClose();
     } catch { toast.error('Unexpected error'); }
@@ -577,7 +577,7 @@ function sumTotals(rows: PayrollRow[]): PayrollTotals {
 
 export function PayrollSection() {
   const session  = useSessionStore();
-  const fullName = session.fullName || session.username || '';
+  const fullName = session.fullName ?? session.username ?? '';
 
   // ── Date range ──────────────────────────────────────────────────────────────
   const { start: initStart, end: initEnd } = monthBounds();
@@ -684,7 +684,7 @@ export function PayrollSection() {
       if (deptFilter  !== 'all' && e.departmentId !== deptFilter) return false;
       if (cycleFilter !== 'all' && e.payCycle !== cycleFilter) return false;
       const q = empSearch.toLowerCase();
-      if (q && !`${e.fullName || ''} ${e.firstName || ''} ${e.lastName || ''} ${e.departmentName || e.department || ''}`.toLowerCase().includes(q)) return false;
+      if (q && !`${e.fullName ?? ''} ${e.firstName ?? ''} ${e.lastName ?? ''} ${e.departmentName ?? e.department ?? ''}`.toLowerCase().includes(q)) return false;
       return true;
     });
   }, [reportsMode, runData, allEmployees, deptFilter, cycleFilter, empSearch]);
@@ -808,7 +808,7 @@ export function PayrollSection() {
         rows, dateFrom: runData?.dateFrom ?? dateFrom, dateTo: runData?.dateTo ?? dateTo,
         cycleFilter, approvedBy: fullName,
       });
-      if (!res.success) { toast.error(res.message || 'Could not approve payroll'); return; }
+      if (!res.success) { toast.error(res.message ?? 'Could not approve payroll'); return; }
       toast.success('Payroll submitted to Finance for approval ✅');
     } catch (err) {
       toast.error((err as Error).message || 'Error');
@@ -1030,7 +1030,7 @@ export function PayrollSection() {
                   <small class="text-muted">{r.position}</small>
                 </td>
                 <td>{r.department}</td>
-                <td><span class={`pr-cycle-badge pr-cycle-${r.payCycle}`}>{CYCLE_LABEL[r.payCycle] || r.payCycle}</span></td>
+                <td><span class={`pr-cycle-badge pr-cycle-${r.payCycle}`}>{CYCLE_LABEL[r.payCycle] ?? r.payCycle}</span></td>
                 <td>{r.payBasis === 'hourly' ? 'Hourly' : 'Salary'}</td>
                 <td>{(r.hoursWorked || 0).toFixed(1)}</td>
                 <td>{fmtMoney(r.grossPay)}</td>

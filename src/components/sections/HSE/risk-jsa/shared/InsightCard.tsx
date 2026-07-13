@@ -111,7 +111,7 @@ export function InsightCard({ title, icon, value, subtitle, footer, variant, ton
 
       {!isDonut && <Visual variant={variant} data={data} navy={navy} />}
 
-      {(footer || actionLabel) && (
+      {(footer ?? actionLabel) && (
         <div style={{ marginTop: 'auto', paddingTop: '4px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '8px', fontSize: '0.66rem', color: navy ? 'rgba(255,255,255,.5)' : 'var(--text-muted)' }}>
           <span>{footer}</span>
           {actionLabel && onAction && (

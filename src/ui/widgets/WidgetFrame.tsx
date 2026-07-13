@@ -43,7 +43,7 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
   );
 
   if (bare) {
-    const showTools = isPreview || editing;
+    const showTools = isPreview ?? editing;
     // Preview: the whole bare frame is the drag handle (grab anywhere).
     return (
       <div ref={rootRef} class={`wbi-bare${isPreview ? ' wbi-bare--preview wbi-drag' : ''}`}>

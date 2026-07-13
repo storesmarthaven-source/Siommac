@@ -263,7 +263,7 @@ export function ImportWizard({ onClose, onToast }: { onClose: () => void; onToas
               <tbody>
                 {rows.map(f => (
                   <tr>
-                    <td>{mapping[f.key] || <span style={{ color: '#94a3b8' }}>— pick —</span>}</td>
+                    <td>{mapping[f.key] ?? <span style={{ color: '#94a3b8' }}>— pick —</span>}</td>
                     <td style={{ color: '#64748b' }}>{(sample[mapping[f.key] ?? ''] ?? '').slice(0, 24) || '—'}</td>
                     <td>
                       <select value={mapping[f.key] ?? ''} onChange={e => setMap(f.key, e.currentTarget.value)} style={{ minHeight: '32px', width: '100%' }}>

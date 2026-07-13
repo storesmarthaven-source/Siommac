@@ -98,7 +98,7 @@ export function Menu({ items, align = 'right', trigger }: MenuProps): VNode {
                 class={`ui-menu-item${it.danger ? ' danger' : ''}`} disabled={it.disabled}
                 onClick={() => { setOpen(false); it.onSelect(); }}
               >
-                {(it.lucide || it.icon) && <LucideIcon name={it.lucide ?? menuLucide(it.icon!)} size={16} strokeWidth={2} class="ui-menu-ico" />}
+                {(it.lucide ?? it.icon) && <LucideIcon name={it.lucide ?? menuLucide(it.icon!)} size={16} strokeWidth={2} class="ui-menu-ico" />}
                 <span>{it.label}</span>
               </button>
             ))}

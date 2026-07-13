@@ -172,7 +172,7 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
                 // resized by) the body text size.
                 fontSize: `${el.headFontSize ?? 11}px`,
                 fontWeight: el.headBold === false ? 500 : 700,
-                fontFamily: el.headFontFamily || el.fontFamily,
+                fontFamily: el.headFontFamily ?? el.fontFamily,
               };
               if (el.headHeight) thStyle.height = `${el.headHeight}px`;
               return (

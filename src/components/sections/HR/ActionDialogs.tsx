@@ -239,7 +239,7 @@ export function ChangeRequestDialog({ employeeId, onClose, onToast }: DialogProp
   function requestedValue(): Record<string, unknown> {
     const v = val;
     switch (changeType) {
-      case 'department_transfer': return { departmentId: v.departmentId, siteId: v.siteId || undefined };
+      case 'department_transfer': return { departmentId: v.departmentId, siteId: v.siteId ?? undefined };
       case 'site_transfer': return { siteId: v.siteId };
       case 'supervisor_change': return { supervisorId: v.supervisorId };
       case 'role_change': return { role: v.role };

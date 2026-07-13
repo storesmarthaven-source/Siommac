@@ -20,7 +20,7 @@ import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { fmtDate, humanize, statusTone } from '../Finance/financeShared';
 import '../Finance/finance.css';
 
-const empName = (e: HrEmployeeRow): string => e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+const empName = (e: HrEmployeeRow): string => (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
 
 const STATUS_FILTERS = ['submitted', 'approved', 'rejected', 'paid', 'cancelled'] as const;
 
@@ -127,7 +127,7 @@ export function OvertimeOverview(): VNode {
                           <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                             const res = await openActionModal(rejectAction({ noun: 'overtime', record: otRecord(e), whatNext: ['The overtime is rejected and will not feed payroll.'] }));
                             if (!res.confirmed) return;
-                            await run(rejectMut.mutateAsync({ id: e.id, reason: res.reason || undefined }), 'Rejected.');
+                            await run(rejectMut.mutateAsync({ id: e.id, reason: res.reason ?? undefined }), 'Rejected.');
                           })(); }}>Reject</button>
                         </>
                       )}

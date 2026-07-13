@@ -66,7 +66,7 @@ function Sidebar() {
   // the default building icon before domSync swaps it in on a hard reload.
   const persisted = useSessionStore.getState();
   const brandLogo = persisted.companyLogoUrl ?? '';
-  const brandName = persisted.companyName || 'My Company';
+  const brandName = persisted.companyName ?? 'My Company';
   return (
     <aside class="sidebar" id="sidebar">
       <div class="sidebar-brand">

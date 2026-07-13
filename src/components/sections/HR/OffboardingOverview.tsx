@@ -201,7 +201,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
       whatNext: ['Open tasks and handoffs are voided.', 'Status → cancelled.'],
       confirmLabel: 'Cancel case',
     });
-    if (r.confirmed) await run(cancelMut.mutateAsync({ caseId, reason: r.reason || undefined }), 'Case cancelled');
+    if (r.confirmed) await run(cancelMut.mutateAsync({ caseId, reason: r.reason ?? undefined }), 'Case cancelled');
   };
 
   return (

@@ -44,7 +44,7 @@ export function Card({
   const isNavy = variant === 'navy' || navy;
   const cardCls = `inc-mini-card${isNavy ? ' inc-mini-card-navy' : ''}${extra ? ' ' + (extra as string) : ''}`;
   const headCls = `inc-mini-card-header${isNavy ? ' inc-mini-card-header-navy' : ''}`;
-  const hasHeader = icon || title || headerRight;
+  const hasHeader = icon ?? title ?? headerRight;
   return (
     <div class={cardCls} {...rest}>
       {hasHeader && (

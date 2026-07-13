@@ -54,7 +54,7 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
   return (
     <header class="app-topbar">
       <div class="app-topbar-main">
-        {(title || sub) && (
+        {(title ?? sub) && (
           <div class="app-topbar-title">
             {title && (
               <div class="app-topbar-title-text">
@@ -78,7 +78,7 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
         <div class="app-topbar-pill"><AccountPill iconsFirst /></div>
       </div>
 
-      {(nav || trail.length > 0 || meta.length > 0) && (
+      {(!!nav || trail.length > 0 || meta.length > 0) && (
         <div class={`app-topbar-footer${nav ? ' has-nav' : ''}`}>
           {trail.length > 0 && (
             <div class="app-topbar-crumb">

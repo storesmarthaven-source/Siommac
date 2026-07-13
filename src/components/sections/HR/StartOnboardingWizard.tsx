@@ -835,7 +835,7 @@ function Fld(
     <label class={`ob-field${error ? ' is-error' : ''}`}>
       <span class="ob-field-label">{label}{required ? <span class="ob-required">*</span> : null}</span>
       <span class="ob-control ob-control-text">
-        <input value={value} readOnly={readOnly || !onInput} type={type ?? 'text'} placeholder={placeholder}
+        <input value={value} readOnly={readOnly ?? !onInput} type={type ?? 'text'} placeholder={placeholder}
           onInput={onInput ? e => onInput((e.target as HTMLInputElement).value) : undefined} />
       </span>
       {error ? <span class="ob-field-error">This field is required</span> : null}

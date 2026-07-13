@@ -41,7 +41,7 @@ export async function listProjectSites(signal?: AbortSignal): Promise<{
   employees:  EmployeeListItem[];
 }> {
   const res = await apiPost<ListSitesResponse>('listProjectSites', {}, { signal });
-  if (!res.success) throw new Error(res.message || 'Failed to load project sites');
+  if (!res.success) throw new Error(res.message ?? 'Failed to load project sites');
   return {
     sites:     Array.isArray(res.data) ? res.data : [],
     employees: Array.isArray(res.employees) ? res.employees : [],

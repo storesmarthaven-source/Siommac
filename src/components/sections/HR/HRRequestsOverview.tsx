@@ -131,7 +131,7 @@ function MyRequestsTab(): VNode {
     const res = await openActionModal({ title: 'Cancel request', icon: 'fa-xmark', tone: 'danger', record: requestRecord(req), warning: 'This withdraws your request.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why are you cancelling?' }, whatNext: ['Status → cancelled.'], confirmLabel: 'Cancel request' });
     if (!res.confirmed) return;
     try {
-      await cancelMut.mutateAsync({ requestId: req.id, reason: res.reason || undefined });
+      await cancelMut.mutateAsync({ requestId: req.id, reason: res.reason ?? undefined });
       toast('Request cancelled.');
     } catch (e) {
       toast((e as Error).message ?? 'Cancel failed.');
@@ -317,7 +317,7 @@ function TriageTab(): VNode {
     const res = await openActionModal({ title: 'Cancel request', icon: 'fa-xmark', tone: 'danger', record: requestRecord(req), warning: 'Cancelling this request cannot be undone.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' }, whatNext: ['Status → cancelled.'], confirmLabel: 'Cancel request' });
     if (!res.confirmed) return;
     try {
-      await hrRequestsApi.cancel({ requestId: req.id, reason: res.reason || undefined });
+      await hrRequestsApi.cancel({ requestId: req.id, reason: res.reason ?? undefined });
       toast('Request cancelled.');
       void requestsQ.refetch();
     } catch (e) {

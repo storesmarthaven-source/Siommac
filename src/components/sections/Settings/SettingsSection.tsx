@@ -214,7 +214,7 @@ function TrustedDevicesCard(): VNode {
   const { ensureStepUp } = useStepUp();
 
   const handleRevoke = useCallback(async (device: TrustedDevice) => {
-    const name = device.label || `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
+    const name = device.label ?? `${device.browserName ?? 'Device'} on ${device.osName ?? 'Unknown OS'}`;
     const res = await openActionModal({
       title: 'Remove trusted device', subtitle: name, icon: 'fa-laptop-mobile', tone: 'danger',
       record: toActionRecord({
@@ -289,7 +289,7 @@ function TrustedDevicesCard(): VNode {
           {devices.map((device) => {
             const untilDate    = new Date(device.trustedUntil).toLocaleDateString();
             const lastUsed     = device.lastUsedAt ? new Date(device.lastUsedAt).toLocaleDateString() : null;
-            const displayLabel = device.label || [device.browserName, device.osName].filter(Boolean).join(' on ') || 'Unknown device';
+            const displayLabel = device.label ?? ([device.browserName, device.osName].filter(Boolean).join(' on ') || 'Unknown device');
             const subLine      = [device.browserName, device.osName].filter(Boolean).join(' · ');
             return (
               <div
@@ -1334,7 +1334,7 @@ export function SettingsSection(): VNode {
   useEffect(() => {
     const enter = () => {
       try {
-        const last = localStorage.getItem('siomac_last_section_' + (role || ''));
+        const last = localStorage.getItem('siomac_last_section_' + (role ?? ''));
         if (last && last !== 's-settings') prevSectionRef.current = last;
       } catch { /* ignore */ }
       inSettingsRef.current = true;
@@ -1345,7 +1345,7 @@ export function SettingsSection(): VNode {
     const exit = () => {
       inSettingsRef.current = false;
       document.getElementById('sidebar')?.classList.remove('settings-mode');
-      try { buildSidebar(role || ''); } catch { /* ignore */ }
+      try { buildSidebar(role ?? ''); } catch { /* ignore */ }
     };
     const onSection = (e: Event) => {
       const id = (e as CustomEvent<string>).detail;
@@ -1382,7 +1382,7 @@ export function SettingsSection(): VNode {
     return () => {
       window.removeEventListener('siomac:section', onSection);
       menu?.removeEventListener('click', onMenuClick);
-      if (inSettingsRef.current) { inSettingsRef.current = false; document.getElementById('sidebar')?.classList.remove('settings-mode'); try { buildSidebar(role || ''); } catch { /* ignore */ } }
+      if (inSettingsRef.current) { inSettingsRef.current = false; document.getElementById('sidebar')?.classList.remove('settings-mode'); try { buildSidebar(role ?? ''); } catch { /* ignore */ } }
     };
   }, [isAdmin, role]);
 

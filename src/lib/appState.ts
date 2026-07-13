@@ -127,7 +127,7 @@ function set(key: string, val: StoreValue): void {
 
 /** Subscribe to a key change. Returns an unsubscribe function. */
 function on(key: string, fn: Listener): () => void {
-  if (!_listeners[key]) _listeners[key] = new Set();
+  _listeners[key] ??= new Set();
   _listeners[key].add(fn);
   return () => { _listeners[key]?.delete(fn); };
 }

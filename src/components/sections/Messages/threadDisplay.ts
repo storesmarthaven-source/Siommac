@@ -37,6 +37,6 @@ export function threadTitle(
   thread: { subject?: string | null; participants: ParticipantLike[] },
   myId: string | null,
 ): string {
-  return (thread.subject || '')
-    || (otherParticipants(thread.participants, myId).map(p => p.displayName || p.username || '?').join(', ') || 'Thread');
+  return (thread.subject ?? '')
+    || (otherParticipants(thread.participants, myId).map(p => p.displayName ?? p.username ?? '?').join(', ') || 'Thread');
 }

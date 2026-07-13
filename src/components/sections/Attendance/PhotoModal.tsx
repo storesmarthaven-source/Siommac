@@ -95,7 +95,7 @@ export function PhotoModal({ inUrl, outUrl, name, onClose }: PhotoModalProps): V
 
   return (
     <Modal
-      open={!!(inUrl || outUrl)}
+      open={!!(inUrl ?? outUrl)}
       onClose={onClose}
       title={name}
       size="md"

@@ -53,7 +53,7 @@ export function SetPasswordPage(): VNode {
       });
       const body = await res.json().catch(() => ({}));
       if (!res.ok || !body?.success) {
-        setError(body?.message || 'Could not set your password. This link may have expired or already been used.');
+        setError(body?.message ?? 'Could not set your password. This link may have expired or already been used.');
         setBusy(false);
         return;
       }

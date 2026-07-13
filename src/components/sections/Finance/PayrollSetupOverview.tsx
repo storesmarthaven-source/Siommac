@@ -52,7 +52,7 @@ import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
 
 const empName = (e: HrEmployeeRow): string =>
-  e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+  (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
 
 const todayIso = (): string => new Date().toISOString().slice(0, 10);
 

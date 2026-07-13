@@ -104,7 +104,7 @@ function fmtLocalTime(iso: string | null | undefined): string {
 
 function escapeHtml(s: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
-  return String(s == null ? '' : s).replace(/[&<>"']/g, c => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c] ?? c));
+  return String(s ?? '').replace(/[&<>"']/g, c => (({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' } as Record<string, string>)[c] ?? c));
 }
 
 function cssEscape(s: string): string {

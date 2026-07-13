@@ -56,7 +56,7 @@ vi.mock('@api/tickets', () => ({
 const realtimeSubs: Record<string, (() => void)[]> = {};
 vi.mock('@store/realtime', () => ({
   onRealtimeEvent: vi.fn((event: string, cb: () => void) => {
-    if (!realtimeSubs[event]) realtimeSubs[event] = [];
+    realtimeSubs[event] ??= [];
     realtimeSubs[event].push(cb);
     return () => {
       realtimeSubs[event] = (realtimeSubs[event] ?? []).filter(f => f !== cb);

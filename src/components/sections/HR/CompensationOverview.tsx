@@ -26,7 +26,7 @@ import '../Finance/finance.css';
 
 type Surface = 'items' | 'statutory';
 
-const empName = (e: HrEmployeeRow): string => e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+const empName = (e: HrEmployeeRow): string => (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
 
 export function CompensationOverview(): VNode {
   const [surface, setSurface] = useState<Surface>('items');
@@ -116,7 +116,7 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
                         <button class="obx-btn obx-btn-sm" onClick={() => { void (async () => {
                           const res = await openActionModal(rejectAction({ noun: 'pay item', record: payItemRecord(it), whatNext: ['Returns the pay item to draft for correction.'] }));
                           if (!res.confirmed) return;
-                          await run(rejectMut.mutateAsync({ id: it.id, reason: res.reason || undefined }), 'Rejected.');
+                          await run(rejectMut.mutateAsync({ id: it.id, reason: res.reason ?? undefined }), 'Rejected.');
                         })(); }}>Reject</button>
                       </>
                     )}
@@ -250,12 +250,12 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
     if (!employeeId) { void dialog.error('Select an employee first.'); return; }
     try {
       await captureMut.mutateAsync({
-        employeeId, nisNumber: f.nisNumber?.trim() || null, nisApplicable: f.nisApplicable,
-        previousEmployerName: f.previousEmployerName?.trim() || null, previousEmployerEndDate: f.previousEmployerEndDate || null,
+        employeeId, nisNumber: f.nisNumber?.trim() ?? null, nisApplicable: f.nisApplicable,
+        previousEmployerName: f.previousEmployerName?.trim() ?? null, previousEmployerEndDate: f.previousEmployerEndDate ?? null,
         openingYtdInsurableEarnings: Number(f.openingYtdInsurableEarnings) || 0,
         openingYtdNisEmployee: Number(f.openingYtdNisEmployee) || 0,
         openingYtdNisEmployer: Number(f.openingYtdNisEmployer) || 0,
-        openingBalanceAsOf: f.openingBalanceAsOf || null,
+        openingBalanceAsOf: f.openingBalanceAsOf ?? null,
       });
       void dialog.success('Statutory profile saved.');
       setEditOpen(false);
@@ -270,7 +270,7 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
   const context: DialogContextPanelConfig = {
     eyebrow: 'HR · Compensation', title: 'Statutory Profile', description: 'HR captures NIS continuity; Finance verifies it.',
     preview: { icon: 'NIS', title: nameOf(employeeId), subtitle: 'NIS continuity profile', badges: profile ? [statusBadge(profile.nisStatus)] : [{ label: 'New', tone: 'muted' }] },
-    derived: { title: 'Ownership', fields: [{ label: 'NIS applicable', value: f.nisApplicable }, { label: 'Previous employer', value: f.previousEmployerName || '—' }] },
+    derived: { title: 'Ownership', fields: [{ label: 'NIS applicable', value: f.nisApplicable }, { label: 'Previous employer', value: f.previousEmployerName ?? '—' }] },
     approval: { required: false, message: 'HR cannot mark this verified — Finance staff review and a Finance manager verifies.' },
     whatNext: [
       { label: 'Save', description: 'Saves the continuity profile against the employee.' },
@@ -296,9 +296,9 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
         : (
           <table class="obx-table">
             <tbody>
-              <tr><td>NIS number</td><td class="obx-meta">{f.nisNumber || '—'}</td></tr>
+              <tr><td>NIS number</td><td class="obx-meta">{f.nisNumber ?? '—'}</td></tr>
               <tr><td>NIS applicable</td><td class="obx-meta">{f.nisApplicable ? 'Yes' : 'No'}</td></tr>
-              <tr><td>Previous employer</td><td class="obx-meta">{f.previousEmployerName || '—'}{f.previousEmployerEndDate ? ` (to ${f.previousEmployerEndDate})` : ''}</td></tr>
+              <tr><td>Previous employer</td><td class="obx-meta">{f.previousEmployerName ?? '—'}{f.previousEmployerEndDate ? ` (to ${f.previousEmployerEndDate})` : ''}</td></tr>
               <tr><td>Opening YTD (insurable / EE / ER)</td><td class="obx-meta">{f.openingYtdInsurableEarnings} / {f.openingYtdNisEmployee} / {f.openingYtdNisEmployer}</td></tr>
               {profile?.verifiedAt && <tr><td>Verified</td><td class="obx-meta">{fmtDate(profile.verifiedAt)}{profile.verificationNote ? ` · ${profile.verificationNote}` : ''}</td></tr>}
             </tbody>

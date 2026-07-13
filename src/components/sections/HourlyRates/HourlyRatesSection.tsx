@@ -100,7 +100,7 @@ function RateRow({ row, onSaved }: RowProps) {
     setSaving(true);
     try {
       const res = await updateHourlyRateApi(row.username, n);
-      if (!res.success) { toast.error(res.message || 'Could not update rate'); return; }
+      if (!res.success) { toast.error(res.message ?? 'Could not update rate'); return; }
       setDirty(false);
       onSaved(row.username, n);
       toast.success('Rate saved');
@@ -181,7 +181,7 @@ function ImportModal({ open, onClose, onDone }: ImportModalProps) {
     setLoading(true);
     try {
       const r = await bulkImportRatesApi(parsed);
-      if (!r.success) { toast.error(r.message || 'Import failed'); return; }
+      if (!r.success) { toast.error(r.message ?? 'Import failed'); return; }
       toast.success(`Imported ${r.updated} rate${r.updated !== 1 ? 's' : ''}${r.skipped ? ` · ${r.skipped} skipped` : ''}`);
       setCsvText('');
       onClose();

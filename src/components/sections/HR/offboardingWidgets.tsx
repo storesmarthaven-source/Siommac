@@ -120,7 +120,7 @@ function MetricStrip({ stats }: { stats: OffboardingDashboardStats }): VNode {
 
       <article class="ofw-metric">
         <div class="ofw-metric-head"><span class="ofw-metric-ico slate"><i class="fas fa-stopwatch" /></span><span>Avg clearance</span></div>
-        <strong class="ofw-metric-num">{stats.avgClearanceDays != null ? stats.avgClearanceDays : '—'}<em>{stats.avgClearanceDays != null ? ' days' : ''}</em></strong>
+        <strong class="ofw-metric-num">{stats.avgClearanceDays ?? '—'}<em>{stats.avgClearanceDays != null ? ' days' : ''}</em></strong>
         <p class="ofw-metric-foot">Start → ready / complete</p>
       </article>
 

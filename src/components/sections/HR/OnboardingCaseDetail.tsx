@@ -147,7 +147,7 @@ export function OnboardingCaseDetail({
   });
   async function handlePause(): Promise<void> {
     const res = await openActionModal({ title: 'Pause case', icon: 'fa-circle-pause', tone: 'warning', record: caseRecord(), reason: { required: false, label: 'Reason for pausing', type: 'text', placeholder: 'Optional' }, whatNext: ['The case is paused; it leaves the active queue until resumed.'], confirmLabel: 'Pause' });
-    if (res.confirmed) await run(() => pauseMut.mutateAsync({ caseId, reason: res.reason || null }), 'Case paused');
+    if (res.confirmed) await run(() => pauseMut.mutateAsync({ caseId, reason: res.reason ?? null }), 'Case paused');
   }
   async function handleResume(): Promise<void> {
     const res = await openActionModal({ title: 'Resume case', icon: 'fa-circle-play', tone: 'info', record: caseRecord(), whatNext: ['The case resumes and re-enters the active queue.'], confirmLabel: 'Resume' });
@@ -163,7 +163,7 @@ export function OnboardingCaseDetail({
   }
   async function handleCancel(): Promise<void> {
     const res = await openActionModal({ title: 'Cancel case', icon: 'fa-xmark', tone: 'danger', record: caseRecord(), warning: 'Cancelling this onboarding case cannot be undone.', reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why is this being cancelled?' }, whatNext: ['Open tasks and handoffs are voided.', 'Status → cancelled.'], confirmLabel: 'Cancel case' });
-    if (res.confirmed) await run(() => cancelMut.mutateAsync({ caseId, reason: res.reason || undefined }), 'Case cancelled');
+    if (res.confirmed) await run(() => cancelMut.mutateAsync({ caseId, reason: res.reason ?? undefined }), 'Case cancelled');
   }
   async function handleReassignOwner(ownerId: string): Promise<void> { await run(() => reassignMut.mutateAsync({ caseId, ownerId: ownerId || null }), 'Owner reassigned'); }
   async function handleProvision(): Promise<void> {
@@ -178,7 +178,7 @@ export function OnboardingCaseDetail({
   async function handleBlockTask(t: OnboardingTaskRow): Promise<void> {
     const res = await openActionModal({ title: 'Block task', icon: 'fa-ban', tone: 'warning', record: toActionRecord({ title: t.taskTitle, icon: 'fa-list-check' }), reason: { required: true, label: 'Why is it blocked?', type: 'textarea', placeholder: 'Blocking reason' }, whatNext: ['The task is marked blocked; it may block case activation.'], confirmLabel: 'Block' });
     if (!res.confirmed) return;
-    await run(() => blockTaskMut.mutateAsync({ taskId: t.taskId, reason: res.reason || null }), 'Task blocked');
+    await run(() => blockTaskMut.mutateAsync({ taskId: t.taskId, reason: res.reason ?? null }), 'Task blocked');
   }
   async function handleUnblockTask(t: OnboardingTaskRow): Promise<void> { await run(() => unblockTaskMut.mutateAsync({ taskId: t.taskId }), 'Task unblocked'); }
   async function handleReassignTask(t: OnboardingTaskRow, assignedTo: string): Promise<void> { await run(() => reassignTaskMut.mutateAsync({ taskId: t.taskId, assignedTo: assignedTo || null }), 'Task reassigned'); }
@@ -187,17 +187,17 @@ export function OnboardingCaseDetail({
   async function handleResolve(b: OnboardingBlockerRow): Promise<void> {
     const res = await openActionModal({ title: 'Resolve blocker', icon: 'fa-circle-check', tone: 'success', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), reason: { required: true, label: 'Resolution note', type: 'textarea', placeholder: 'How was it resolved?' }, whatNext: ['The blocker is marked resolved.'], confirmLabel: 'Resolve' });
     if (!res.confirmed) return;
-    await run(() => resolveMut.mutateAsync({ blockerId: b.blockerId, note: res.reason || null }), 'Blocker resolved');
+    await run(() => resolveMut.mutateAsync({ blockerId: b.blockerId, note: res.reason ?? null }), 'Blocker resolved');
   }
   async function handleEscalate(b: OnboardingBlockerRow): Promise<void> {
     const res = await openActionModal({ title: 'Escalate blocker', icon: 'fa-arrow-up-right-dots', tone: 'warning', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), reason: { required: true, label: 'Escalation reason', type: 'textarea', placeholder: 'Why escalate?' }, whatNext: ['The blocker is escalated and its owner notified.'], confirmLabel: 'Escalate' });
     if (!res.confirmed) return;
-    await run(() => escalateMut.mutateAsync({ blockerId: b.blockerId, note: res.reason || null }), 'Blocker escalated');
+    await run(() => escalateMut.mutateAsync({ blockerId: b.blockerId, note: res.reason ?? null }), 'Blocker escalated');
   }
   async function handleWaive(b: OnboardingBlockerRow): Promise<void> {
     const res = await openActionModal({ title: 'Waive blocker', icon: 'fa-circle-minus', tone: 'danger', record: toActionRecord({ title: b.blockerTitle, icon: 'fa-ban' }), warning: 'Waiving accepts the blocker without resolving it.', reason: { required: true, label: 'Waiver reason', type: 'textarea', placeholder: 'Why is this acceptable?' }, whatNext: ['The blocker is waived; the case can proceed.'], confirmLabel: 'Waive' });
     if (!res.confirmed) return;
-    await run(() => waiveMut.mutateAsync({ blockerId: b.blockerId, reason: res.reason || '' }), 'Blocker waived');
+    await run(() => waiveMut.mutateAsync({ blockerId: b.blockerId, reason: res.reason ?? '' }), 'Blocker waived');
   }
 
   // ── custom action handlers ──────────────────────────────────────────────────────
@@ -219,7 +219,7 @@ export function OnboardingCaseDetail({
   async function handleCancelAction(a: OnboardingCaseAction): Promise<void> {
     const res = await openActionModal({ title: 'Cancel action', icon: 'fa-xmark', tone: 'danger', record: toActionRecord({ title: a.actionName, icon: 'fa-bolt' }), reason: { required: true, label: 'Reason for cancelling', type: 'textarea', placeholder: 'Why cancel?' }, whatNext: ['The custom action is cancelled.'], confirmLabel: 'Cancel action' });
     if (!res.confirmed) return;
-    await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: res.reason || null }), 'Action cancelled');
+    await run(() => cancelActionMut.mutateAsync({ id: a.id, reason: res.reason ?? null }), 'Action cancelled');
   }
   async function handleUpdateActionStatus(a: OnboardingCaseAction, status: OnboardingCaseActionStatus): Promise<void> { await run(() => updateActionMut.mutateAsync({ id: a.id, status }), 'Action updated'); }
 

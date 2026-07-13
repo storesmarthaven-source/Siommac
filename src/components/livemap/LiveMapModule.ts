@@ -46,7 +46,7 @@ function apiSwr(
 
 function escapeHtml(s: unknown): string {
   // eslint-disable-next-line @typescript-eslint/no-base-to-string -- intentional: utility accepts any value; String() is the correct coercion
-  return String(s == null ? '' : s).replace(
+  return String(s ?? '').replace(
     /[&<>"']/g,
     c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c] ?? c,
   );
@@ -190,7 +190,7 @@ function initializeMap(): void {
 
     // Fetch project sites, draw zones and pins, then fit view
     void api('listProjectSites', {}).then(res => {
-      const sites = (res?.success && res.data) || [];
+      const sites = (res?.success && res.data) ?? [];
       const attendanceZones = AppState.get('attendanceZones') as any[];
       attendanceZones.forEach(z => { try { lmap.removeLayer(z); } catch (_) { /* empty */ } });
       AppState.set('attendanceZones', []);
@@ -213,7 +213,7 @@ function initializeMap(): void {
         // Radius circle zone
         const zone = L.circle([site.latitude, site.longitude], {
           color: '#1b2d54', fillColor: '#1b2d54',
-          fillOpacity: 0.08, radius: site.radius || 200, weight: 2,
+          fillOpacity: 0.08, radius: site.radius ?? 200, weight: 2,
           dashArray: '6 4',
         }).addTo(lmap);
         zone.bindPopup(initHtml, popupOpts);
@@ -372,7 +372,7 @@ function _populateSiteSelect(): void {
     .sort((a: any, b: any) => {
       const aActive = (liveData || []).some((r: any) => !r.isCheckedOut && String(r.siteId) === String(a.id));
       const bActive = (liveData || []).some((r: any) => !r.isCheckedOut && String(r.siteId) === String(b.id));
-      if (aActive === bActive) return (a.name || '').localeCompare(b.name || '');
+      if (aActive === bActive) return (a.name ?? '').localeCompare(b.name ?? '');
       return aActive ? -1 : 1;
     });
 
@@ -507,11 +507,11 @@ function loadLiveAttendance(): void {
   skelOnce('s-projectMap', () => setSkel('liveEmployeesList', skelList(3)));
   const currentRole  = AppState.get('currentRole')  as string | null;
   const currentDeptId = AppState.get('currentDeptId') as string | null;
-  const scope = currentRole === 'admin' ? 'all' : (currentDeptId || 'all');
+  const scope = currentRole === 'admin' ? 'all' : (currentDeptId ?? 'all');
 
   apiSwr('getLiveAttendance', { scope }, {
     onData: (res: any) => {
-      const fresh: any[] = (res?.success && res.data) || [];
+      const fresh: any[] = (res?.success && res.data) ?? [];
       const hash = fresh.length
         ? fresh.map((r: any) => `${r.id}|${r.checkInLat}|${r.checkInLng}|${r.checkOutLat}|${r.checkOutLng}|${r.status}|${r.isCheckedOut}`).join(';')
         : '__empty__';
@@ -523,7 +523,7 @@ function loadLiveAttendance(): void {
       if (markersNeedUpdate) {
         _liveDataHash = hash;
         fresh.forEach((r: any) => {
-          if (r.profileImage) { patchPhotoCache(r.userId || r.username, r.profileImage); new Image().src = r.profileImage; }
+          if (r.profileImage) { patchPhotoCache(r.userId ?? r.username, r.profileImage); new Image().src = r.profileImage; }
           if (r.checkInPhotoUrl)  { new Image().src = r.checkInPhotoUrl; }
           if (r.checkOutPhotoUrl) { new Image().src = r.checkOutPhotoUrl; }
         });
@@ -558,12 +558,12 @@ function plotLiveEmployees(rows: any[]): void {
   _clearLiveMarkers();
 
   rows.forEach((row: any) => {
-    const lat = row.checkOutLat || row.checkInLat;
-    const lng = row.checkOutLng || row.checkInLng;
+    const lat = row.checkOutLat ?? row.checkInLat;
+    const lng = row.checkOutLng ?? row.checkInLng;
     if (lat == null || lng == null) return;
 
     const color   = row.isCheckedOut ? '#6c757d' : (row.status === 'late' ? '#fbbc04' : '#34a853');
-    const initial = (row.fullName || '?').charAt(0).toUpperCase();
+    const initial = (row.fullName ?? '?').charAt(0).toUpperCase();
     const markerHtml = row.profileImage
       ? `<div style="width:52px;height:52px;border-radius:50%;border:3px solid ${color};box-shadow:0 2px 8px rgba(0,0,0,.4);overflow:hidden;"><img src="${row.profileImage}" style="width:100%;height:100%;object-fit:cover;" onerror="if(this.parentElement)this.parentElement.innerHTML='<div style=\\'width:52px;height:52px;border-radius:50%;background:${color};display:flex;align-items:center;justify-content:center;color:white;font-weight: var(--font-weight-bold);font-size:20px;\\'>${initial}</div>'"></div>`
       : `<div style="background:${color};width:52px;height:52px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;color:white;font-weight: var(--font-weight-bold);font-size:20px;">${initial}</div>`;
@@ -574,7 +574,7 @@ function plotLiveEmployees(rows: any[]): void {
     });
 
     // Preload photos
-    const selfieUrl = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+    const selfieUrl = row.checkOutPhotoUrl ?? row.checkInPhotoUrl ?? '';
     if (selfieUrl)       { const pre = new Image(); pre.src = selfieUrl; }
     if (row.profileImage){ const pr  = new Image(); pr.src  = row.profileImage; }
 
@@ -649,7 +649,7 @@ function renderLivePanel(rows: any[]): void {
   countUp(document.getElementById('liveLateCount'),      late);
   countUp(document.getElementById('liveOnSiteCount'),    onSite);
 
-  const sorted = siteRows.slice().sort((a: any, b: any) => String(b.lastSeen || '').localeCompare(String(a.lastSeen || '')));
+  const sorted = siteRows.slice().sort((a: any, b: any) => String(b.lastSeen ?? '').localeCompare(String(a.lastSeen ?? '')));
 
   if (!sorted.length) {
     listEl.innerHTML = '<div class="lm-emp-empty"><i class="fas fa-users-slash"></i>No check-ins at this site today</div>';
@@ -657,14 +657,14 @@ function renderLivePanel(rows: any[]): void {
   }
 
   function liveEmpRowHtml(r: any): string {
-    const initial   = (r.fullName || '?').charAt(0).toUpperCase();
+    const initial   = (r.fullName ?? '?').charAt(0).toUpperCase();
     const dotCls    = r.isCheckedOut ? 'lm-dot-gray' : (r.status === 'late' ? 'lm-dot-orange' : 'lm-dot-green');
     const statusTxt = r.isCheckedOut ? 'Checked Out' : (r.status === 'late' ? 'Late' : 'Checked In');
     const meta      = r.lastSeen ? `${statusTxt} · ${fmtLocalTime(r.lastSeen)}` : statusTxt;
     return `<div class="lm-emp-item" data-id="${r.userId}">
       <div class="lm-emp-avatar" data-uid="${r.userId}">${escapeHtml(initial)}</div>
       <div class="lm-emp-info">
-        <div class="lm-emp-name">${escapeHtml(r.fullName || '—')}</div>
+        <div class="lm-emp-name">${escapeHtml(r.fullName ?? '—')}</div>
         <div class="lm-emp-status"><span class="lm-dot ${dotCls}"></span> ${meta}</div>
       </div>
       <i class="fas fa-chevron-right lm-emp-chevron"></i>
@@ -709,7 +709,7 @@ function renderLivePanel(rows: any[]): void {
 
   // Preload profile photos into avatars off-screen (no layout shift)
   sorted.forEach((r: any) => {
-    const src = r.profileImage || r.checkInPhotoUrl || '';
+    const src = r.profileImage ?? r.checkInPhotoUrl ?? '';
     if (!src) return;
     const avatarEl = listEl.querySelector<HTMLElement>(`.lm-emp-avatar[data-uid="${r.userId}"]`);
     if (!avatarEl) return;
@@ -719,7 +719,7 @@ function renderLivePanel(rows: any[]): void {
       avatarEl.style.padding = '0';
       const imgEl = document.createElement('img');
       imgEl.src = src;
-      imgEl.alt = (r.fullName || '?').charAt(0).toUpperCase();
+      imgEl.alt = (r.fullName ?? '?').charAt(0).toUpperCase();
       imgEl.style.cssText = 'width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;';
       avatarEl.appendChild(imgEl);
     };
@@ -734,9 +734,9 @@ function _removeLiveEmpOverlay(): void {
 }
 
 function _buildEmpOverlayHtml(row: any): string {
-  const initial     = (row.fullName || '?').charAt(0).toUpperCase();
-  const profile     = row.profileImage || '';
-  const selfie      = row.checkOutPhotoUrl || row.checkInPhotoUrl || '';
+  const initial     = (row.fullName ?? '?').charAt(0).toUpperCase();
+  const profile     = row.profileImage ?? '';
+  const selfie      = row.checkOutPhotoUrl ?? row.checkInPhotoUrl ?? '';
   const _statusCls   = row.isCheckedOut ? 'out' : (row.status === 'late' ? 'late' : 'in');
   const statusLabel = row.isCheckedOut ? 'Checked Out' : (row.status === 'late' ? 'Late Arrival' : 'Checked In');
   const statusIcon  = row.isCheckedOut ? 'fa-sign-out-alt' : (row.status === 'late' ? 'fa-clock' : 'fa-check-circle');
@@ -745,8 +745,8 @@ function _buildEmpOverlayHtml(row: any): string {
   const avatarHtml  = profile
     ? `<img src="${profile}" alt="${initial}" style="width:42px;height:42px;border-radius:50%;object-fit:cover;border:2px solid rgba(255,255,255,0.35);flex-shrink:0;" onerror="this.outerHTML='<div style=\\'width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight: var(--font-weight-bold);color:white;flex-shrink:0;\\'>${initial}</div>'">`
     : `<div style="width:42px;height:42px;border-radius:50%;background:var(--siomac-red);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight: var(--font-weight-bold);color:white;flex-shrink:0;">${initial}</div>`;
-  const navLat = row.checkInLat || row.checkOutLat || '';
-  const navLng = row.checkInLng || row.checkOutLng || '';
+  const navLat = row.checkInLat ?? row.checkOutLat ?? '';
+  const navLng = row.checkInLng ?? row.checkOutLng ?? '';
   const navBtn = (navLat && navLng)
     ? `<a href="https://www.google.com/maps?q=${navLat},${navLng}" target="_blank" class="lm-popup-btn lm-popup-btn-outline"><i class="fas fa-directions"></i> Navigate</a>`
     : `<span class="lm-popup-btn lm-popup-btn-outline" style="opacity:.45;pointer-events:none;"><i class="fas fa-directions"></i> Navigate</span>`;
@@ -877,11 +877,11 @@ function markProjectAttendance(): void {
         showNotification('Project attendance marked successfully! ✅', 'success');
         w().checkStatus?.();
       } else {
-        showNotification(res.message || 'Failed to mark attendance', 'error');
+        showNotification(res.message ?? 'Failed to mark attendance', 'error');
       }
       w().updateRealTimeStats?.();
     })
-    .catch((err: unknown) => { showNotification((err instanceof Error ? err.message : null) || 'Network error', 'error'); });
+    .catch((err: unknown) => { showNotification((err instanceof Error ? err.message : null) ?? 'Network error', 'error'); });
 }
 
 // ── Public API object ─────────────────────────────────────────────────────────

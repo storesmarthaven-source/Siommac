@@ -135,7 +135,7 @@ export function PayablesOverview(): VNode {
   const exportBills = (): void => exportCsv(billsQ.data?.rows ?? [], [{ header: 'Bill', value: b => b.billNo }, { header: 'Vendor', value: b => b.vendorName }, { header: 'Due', value: b => b.dueDate ?? '' }, { header: 'Amount', value: b => b.totalAmount }, { header: 'Balance', value: b => b.balance }, { header: 'Status', value: b => b.status }], 'accounts-payable');
   const actions: QuickAction[] = [
     ...(canManage ? [{ key: 'new', label: 'New bill', icon: 'plus', variant: 'primary', onClick: () => setWizOpen(true) } as QuickAction] : []),
-    ...(canApprove ? [{ key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount || undefined, onClick: () => setBulkApprovalOpen(true) } as QuickAction] : []),
+    ...(canApprove ? [{ key: 'approve', label: 'Approve', icon: 'check', badge: d?.pendingApprovalCount ?? undefined, onClick: () => setBulkApprovalOpen(true) } as QuickAction] : []),
     ...(canManage ? [{ key: 'pay', label: 'Record payment', icon: 'receipt', onClick: () => { if (open[0]) openPay(open[0]); } } as QuickAction] : []),
     ...(canCreateVendor ? [{ key: 'vendor', label: 'New vendor', icon: 'bank', onClick: () => { setEditingVendor(null); setVendorDialogOpen(true); } } as QuickAction] : []),
     ...(canImport ? [{ key: 'import', label: 'Import', icon: 'file', onClick: () => setImportOpen(true) } as QuickAction] : []),

@@ -350,7 +350,7 @@ function Sel(
     <div class={`form-field ${full ? 'full' : ''}`}>
       <label>{label}</label>
       <select value={value} onChange={e => onInput(e.currentTarget.value)}>
-        {(idOptions || placeholder) && <option value="">{placeholder ?? '—'}</option>}
+        {(idOptions ?? placeholder) && <option value="">{placeholder ?? '—'}</option>}
         {options
           ? options.map(o => <option value={o}>{humanizeOpt(o)}</option>)
           : (idOptions ?? []).map(o => <option value={o.id}>{o.name}</option>)}

@@ -157,8 +157,8 @@ export function LeaveOverview(): VNode {
     });
     if (!res.confirmed) return;
     try {
-      if (action === 'approve') { await approveMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason || null }); toast('Leave request approved.'); }
-      else { await rejectMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason || '' }); toast('Leave request rejected.'); }
+      if (action === 'approve') { await approveMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason ?? null }); toast('Leave request approved.'); }
+      else { await rejectMut.mutateAsync({ requestId: row.id, reviewNotes: res.reason ?? '' }); toast('Leave request rejected.'); }
     } catch (e) { toast((e as Error).message); }
   }
 
@@ -200,7 +200,7 @@ export function LeaveOverview(): VNode {
     });
     if (!res.confirmed) return;
     try {
-      await cancelMut.mutateAsync({ requestId: row.id, reason: res.reason || null });
+      await cancelMut.mutateAsync({ requestId: row.id, reason: res.reason ?? null });
       toast('Leave request cancelled.');
     } catch (e) { toast((e as Error).message); }
   }

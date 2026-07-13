@@ -941,7 +941,7 @@ function _CapaHealthCard({ capa, onViewAll: _onViewAll, closurePct, overdueCapa,
         </div>
         <span class="capa-health-bar-pct">{closurePct}% closure</span>
       </div>
-      {(highestRisk || oldestOpen) && (
+      {(highestRisk ?? oldestOpen) && (
         <div class="capa-health-alerts">
           {highestRisk && (
             <div class="capa-alert-row capa-alert-critical">
@@ -2054,7 +2054,7 @@ function IncidentReportWizard({ open, onClose, onSubmit }: {
               ['Reporter',     repName || '—'],
               ['People involved', `${people.filter(p => p.name.trim()).length}`],
               ['Witnesses',    `${witnesses.filter(w => w.name.trim()).length}`],
-              ...(isInjury ? [['OSH class', OSH_CLASSES.find(o => o.value === classification)?.label || '—']] : []),
+              ...(isInjury ? [['OSH class', OSH_CLASSES.find(o => o.value === classification)?.label ?? '—']] : []),
               ...(isEnv    ? [['Spill type', spillType || '—']] : []),
             ].map(([k, v]) => (
               <div class="wz-review-row" key={k}>
@@ -3469,7 +3469,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
           const grouped: Record<string, typeof people> = {};
           for (const p of people) {
             const k = p.person_type ?? 'other';
-            if (!grouped[k]) grouped[k] = [];
+            grouped[k] ??= [];
             grouped[k].push(p);
           }
           return (
@@ -3511,7 +3511,7 @@ function IncidentDrawer({ incident: i, incidentId, onClose, onInvestigate }: {
     const grouped: Record<string, typeof people> = {};
     for (const p of people) {
       const k = p.person_type ?? 'other';
-      if (!grouped[k]) grouped[k] = [];
+      grouped[k] ??= [];
       grouped[k].push(p);
     }
     return (

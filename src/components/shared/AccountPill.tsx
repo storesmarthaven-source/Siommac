@@ -86,7 +86,7 @@ export function AccountPill({
   const avatarUrl = useSessionStore(s => s.profileImage);
   const username  = useSessionStore(s => s.username);
 
-  const name    = fullName || username || 'User';
+  const name    = fullName ?? username ?? 'User';
   const initial = (name.trim()[0] ?? 'U').toUpperCase();
 
   const [menuOpen, setMenuOpen] = useState(false);

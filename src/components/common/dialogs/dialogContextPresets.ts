@@ -35,7 +35,7 @@ export function orgPositionContext(args: {
     preview: {
       icon: 'POS',
       title: args.title || 'Untitled Position',
-      subtitle: args.positionKey || 'Position key not set',
+      subtitle: args.positionKey ?? 'Position key not set',
       badges: [
         { label: args.isSafetyCritical ? 'Safety Critical' : 'Standard Position', tone: args.isSafetyCritical ? 'danger' : 'info' },
       ],
@@ -95,7 +95,7 @@ export function orgCostCenterContext(args: {
     preview: {
       icon: 'CC',
       title: args.name || 'Untitled Cost Centre',
-      subtitle: args.code || 'Code not set',
+      subtitle: args.code ?? 'Code not set',
       badges: [{ label: 'Shared Finance Reference', tone: 'info' }],
       meta: [
         { label: 'Owner', value: args.ownerName ?? 'No owner selected' },
@@ -210,8 +210,8 @@ export function uploadDocumentContext(args: {
     ],
     preview: {
       icon: 'DOC',
-      title: args.documentType || 'Document Type Not Selected',
-      subtitle: args.fileName || 'No file selected',
+      title: args.documentType ?? 'Document Type Not Selected',
+      subtitle: args.fileName ?? 'No file selected',
       badges: [{ label: args.satisfiesRequirement ? 'Satisfies Requirement' : 'General Document', tone: args.satisfiesRequirement ? 'success' : 'info' }],
       meta: [
         { label: 'File Size', value: args.fileSize ?? 'No file' },
@@ -259,8 +259,8 @@ export function documentRequirementContext(args: {
     description: 'Preview who will be evaluated by this requirement.',
     preview: {
       icon: 'REQ',
-      title: args.label || args.documentType || 'Required Document',
-      subtitle: args.scopeLabel || 'Applies to all employees',
+      title: args.label ?? args.documentType ?? 'Required Document',
+      subtitle: args.scopeLabel ?? 'Applies to all employees',
       badges: [{ label: args.requiresExpiry ? 'Expiry Required' : 'No Expiry Required', tone: args.requiresExpiry ? 'warning' : 'info' }],
     },
     metrics: [

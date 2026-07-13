@@ -736,7 +736,7 @@ function ChangePhotoModal({
   }, [onSaved, onClose]);
 
   // Which image to show in the "Original" preview panel
-  const hasPhoto = !!(rawFile || rawDataUrl);
+  const hasPhoto = !!(rawFile ?? rawDataUrl);
   // Showing the account's existing photo (pre-loaded), no new upload yet
   const showingCurrentPhoto = !hasPhoto && !!currentUrl;
   const originalDisplayUrl = rawDataUrl || currentUrl;
@@ -1519,7 +1519,7 @@ export function MyProfileSection(): VNode {
                   <input
                     id="mp76-company"
                     type="text"
-                    value={session.companyName || '—'}
+                    value={session.companyName ?? '—'}
                     readonly
                     tabIndex={-1}
                   />

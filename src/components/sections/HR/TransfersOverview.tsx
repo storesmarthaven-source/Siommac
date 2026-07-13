@@ -296,7 +296,7 @@ function RequestDetail({
     });
     if (!res.confirmed) return;
     try {
-      const out = await decideMut.mutateAsync({ requestId: req.id, decision, comment: res.reason || undefined });
+      const out = await decideMut.mutateAsync({ requestId: req.id, decision, comment: res.reason ?? undefined });
       toast(`Request ${humanize(out.status)}`);
       onBack();
     } catch (e) { toast(e instanceof Error ? e.message : 'Action failed'); }

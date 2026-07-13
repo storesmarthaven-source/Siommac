@@ -105,6 +105,7 @@ function DtActionMenu<T>({ row, actions, x, y, onClose }: {
             class={`dt-menu-item${a.tone === 'danger' ? ' dt-menu-danger' : ''}`}
             onClick={() => { onClose(); a.onClick(row); }}
           >
+            {/* eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- && yields false when a.icon is falsy; || correctly falls back */}
             <LucideIcon name={(a.icon && ACT_ICON[a.icon]) || 'ChevronRight'} size={15} strokeWidth={2} />
             <span>{a.label}</span>
           </button>
@@ -135,7 +136,7 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
   const regionLabel = ariaLabel ? `${ariaLabel} table` : `${noun} table`;
 
   const colStyle = (c: DtColumn<T>) => c.width ? { width: c.width } : undefined;
-  const showToolbar = !!(filterChips || advancedFilter || toolbarRight || globalSearch);
+  const showToolbar = !!(filterChips ?? advancedFilter ?? toolbarRight ?? globalSearch);
   const showActiveBar = !!(activeFilters?.length);
 
   // Row-actions overflow menu — one ⋮ per row; the open menu is keyed by rowKey and anchored
@@ -247,7 +248,7 @@ export function DataTable<T>(props: DataTableProps<T>): VNode {
         </table>
       </div>
 
-      {(pagination || rowsPerPage) && (
+      {(pagination ?? rowsPerPage) && (
         <div class="dt-pagination">
           <div class="dt-page-info">
             {pagination?.total

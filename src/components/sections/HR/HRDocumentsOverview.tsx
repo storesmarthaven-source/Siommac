@@ -91,7 +91,7 @@ function RegisterTab(): VNode {
     ...filters,
     q: search || undefined,
     status: statusFilter || undefined,
-    expiryState: (expiryFilter as DocumentFilters['expiryState']) || undefined,
+    expiryState: (expiryFilter as DocumentFilters['expiryState']) ?? undefined,
   };
   const { data, isLoading } = useDocumentsList(activeFilters);
   const rows  = data?.rows ?? [];
@@ -298,7 +298,7 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
   }
 
   const emps = employeesQ.data ?? [];
-  const empName = (e: (typeof emps)[number]): string => e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+  const empName = (e: (typeof emps)[number]): string => (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
   const selectedEmp = emps.find(e => e.id === employeeId);
   const typeTrim = documentType.trim().toLowerCase();
   const matchedReq = typeTrim ? (requirementsQ.data ?? []).find(r => r.documentType.toLowerCase() === typeTrim) : undefined;
@@ -310,7 +310,7 @@ function UploadModal({ onClose }: { onClose: () => void }): VNode {
     documentType: documentType.trim() || undefined,
     fileName: file?.name,
     fileSize: file ? `${Math.max(1, Math.round(file.size / 1024))} KB` : undefined,
-    fileType: file?.type || undefined,
+    fileType: file?.type ?? undefined,
     expiryDate: expiryDate || undefined,
     expiryPreview: expiryDate ? 'Expiry will be tracked and reminders sent' : 'No expiry date provided',
     satisfiesRequirement: matchedReq ? (matchedReq.label ?? matchedReq.documentType) : null,

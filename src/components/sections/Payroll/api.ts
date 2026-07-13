@@ -32,7 +32,7 @@ export async function listPayrollRun(params: {
   employeeIds?: string[] | null;
 }, signal?: AbortSignal): Promise<PayrollRunData> {
   const res = await apiPost<RunPayrollResponse>('listPayrollRun', params, signal ? { signal } : undefined);
-  if (!res.success || !res.data) throw new Error(res.message || 'Payroll run failed');
+  if (!res.success || !res.data) throw new Error(res.message ?? 'Payroll run failed');
   return res.data;
 }
 

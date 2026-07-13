@@ -74,7 +74,7 @@ export function EnterpriseFormModal({
 
         <footer class="efm-footer">
           <button type="button" class="efm-btn efm-btn-ghost" onClick={onCancel} disabled={loading}>{cancelLabel}</button>
-          <button type="button" class="efm-btn efm-btn-primary" onClick={() => void onSubmit()} disabled={disabled || loading}>
+          <button type="button" class="efm-btn efm-btn-primary" onClick={() => void onSubmit()} disabled={disabled ?? loading}>
             {loading ? 'Saving…' : primaryLabel}
           </button>
         </footer>

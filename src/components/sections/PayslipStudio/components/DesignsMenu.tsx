@@ -96,7 +96,7 @@ export function DesignsMenu() {
 
   const saveAsNew = async () => {
     if (busy) return;
-    const nm = (name || active?.name || 'Untitled').trim();
+    const nm = ((name || active?.name) ?? 'Untitled').trim();
     setBusy('save');
     try {
       const entry = await templateStore.create(nm, state.design);

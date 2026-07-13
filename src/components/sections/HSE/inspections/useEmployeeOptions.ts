@@ -9,7 +9,7 @@ import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 export interface UserOption { value: string; label: string }
 
 const empLabel = (e: HrEmployeeRow): string =>
-  e.display_name || e.full_name || `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim() || e.username || e.id;
+  (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
 
 export function useEmployeeOptions(): UserOption[] {
   const { data } = useHrEmployees({ limit: 500 });

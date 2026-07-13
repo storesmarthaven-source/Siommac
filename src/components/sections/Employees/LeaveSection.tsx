@@ -121,7 +121,7 @@ export function LeaveSection({ currentRole, currentUsername }: LeaveSectionProps
       if (tab !== 'all' && r.status !== tab) return false;
       if (typeFilter && r.type !== typeFilter) return false;
       if (q && ![ r.type, r.reason, r.status, r.from, r.to, r.employee ]
-        .some(v => (v || '').toLowerCase().includes(q))) return false;
+        .some(v => (v ?? '').toLowerCase().includes(q))) return false;
       return true;
     });
   }, [leaves, tab, search, typeFilter]);

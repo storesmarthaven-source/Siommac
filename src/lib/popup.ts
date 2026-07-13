@@ -178,7 +178,7 @@ function _unfreezeBsModals(): void {
     m.removeAttribute('data-cpop-prev-keyboard');
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const inst = (window as any).bootstrap?.Modal?.getInstance?.(m);
-    if (inst) { inst._config.backdrop = prev || true; inst._config.keyboard = prevK !== 'false'; }
+    if (inst) { inst._config.backdrop = prev ?? true; inst._config.keyboard = prevK !== 'false'; }
   });
 }
 
@@ -205,10 +205,11 @@ function _close(confirmed: boolean): void {
 
 function _showToast(opts: CpopOptions): Promise<CpopResult> {
   _ensureDOM();
+  // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing -- opts.icon can be false (hide icon); || intentionally coerces false to 'info'
   const icon = opts.icon || 'info';
   const t    = document.createElement('div');
   t.className = 'cpop-toast cpop-toast-' + icon;
-  _toastsEl.setAttribute('data-pos', opts.position || 'top-end');
+  _toastsEl.setAttribute('data-pos', opts.position ?? 'top-end');
   t.innerHTML =
     '<div class="cpop-toast-icon">' + _svg(icon) + '</div>' +
     '<div class="cpop-toast-body">' +
@@ -267,7 +268,7 @@ function fire(opts: CpopOptions = {}): Promise<CpopResult> {
     _iconEl.innerHTML = '';
     _iconEl.style.display = 'none';
   } else {
-    const icon = opts.icon || 'info';
+    const icon = opts.icon ?? 'info';
     _iconEl.className = 'cpop-icon cpop-icon-' + icon;
     _iconEl.innerHTML = _svg(icon);
     _iconEl.style.display = '';

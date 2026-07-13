@@ -221,7 +221,7 @@ export function AcUsersPage(): VNode {
                 const meta = perm ? PERMISSION_META[perm as PermissionKey] : undefined;
                 const label = meta ? meta.label : perm;
                 const actor = usersByUsername.get(l.username.toLowerCase());
-                const name = actor?.fullName || l.username;
+                const name = actor?.fullName ?? l.username;
                 const kind = l.action === 'permission_grant' ? { t: 'Allow', cls: 'allow', ico: 'fa-check' }
                            : l.action === 'permission_deny'  ? { t: 'Deny',  cls: 'deny',  ico: 'fa-xmark' }
                            : { t: 'Reset', cls: 'reset', ico: 'fa-rotate-left' };

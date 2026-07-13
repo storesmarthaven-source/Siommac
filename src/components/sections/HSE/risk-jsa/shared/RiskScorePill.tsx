@@ -45,7 +45,7 @@ export interface RiskScorePillProps {
 export function RiskScorePill({ likelihood, severity, score, band, level, hideScore, compact }: RiskScorePillProps): VNode {
   const s = score ?? (likelihood != null && severity != null ? likelihood * severity : 0);
   const b = band ?? level ?? calculateRiskBand(s);
-  const hide = hideScore || compact;
+  const hide = hideScore ?? compact;
   return (
     <span class={`vt-pill ${BAND_PILL[b]}`}>
       {BAND_LABEL[b]}{!hide && s > 0 ? ` · ${s}` : ''}

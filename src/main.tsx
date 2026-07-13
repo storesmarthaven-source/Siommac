@@ -370,8 +370,8 @@ async function bootApp(): Promise<void> {
   // AppState is populated by app.js (last in SCRIPTS chain) before we reach here.
   const _win     = window as unknown as Record<string, unknown>;
   const _AppSt   = _win.AppState as { get: (k: string) => string } | undefined;
-  const _role    = (_AppSt?.get('currentRole') || 'employee') as Parameters<typeof mountEmployeesModule>[1]['currentRole'];
-  const _user    = _AppSt?.get('currentUser') || '';
+  const _role    = (_AppSt?.get('currentRole') ?? 'employee') as Parameters<typeof mountEmployeesModule>[1]['currentRole'];
+  const _user    = _AppSt?.get('currentUser') ?? '';
 
   function _mountEmp(rootId: string, sectionId: EmployeeSectionId): void {
     const root = document.getElementById(rootId);
