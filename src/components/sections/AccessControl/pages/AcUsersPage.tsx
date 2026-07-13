@@ -184,7 +184,7 @@ export function AcUsersPage(): VNode {
             <LucideIcon name="Download" size={15} /> Export
           </button>
           <button type="button" class="acx-hdr-btn primary" onClick={() => setCreatingRole(true)}>
-            <LucideIcon name="Plus" size={16} /> New Role
+            <LucideIcon name="Plus" size={15} /> New Role
           </button>
         </>}
       />
