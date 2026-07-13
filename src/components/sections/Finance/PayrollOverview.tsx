@@ -127,7 +127,8 @@ function dynamicColumns(rows: Record<string, unknown>[]): ReportColumn[] {
     header: humanize(k),
     value:  (row: Record<string, unknown>) => {
       const v = row[k];
-      return v == null ? '' : String(v as string | number | boolean);
+      // eslint-disable-next-line @typescript-eslint/no-base-to-string -- row field values are always string|number primitives from the payroll API response
+      return v == null ? '' : String(v);
     },
   }));
 }

@@ -18,12 +18,14 @@ function valStr(s: EffectiveSetting): string {
   if (s.dataType === 'boolean') return s.effectiveValue ? 'on' : 'off';
   if (s.effectiveValue === null || s.effectiveValue === undefined) return '—';
   if (typeof s.effectiveValue === 'object') return JSON.stringify(s.effectiveValue);
-  return String(s.effectiveValue as string | number | bigint);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- effectiveValue is pre-screened for boolean/null/object; remaining type is string|number|bigint
+  return String(s.effectiveValue);
 }
 function toInput(v: unknown): string {
   if (v === null || v === undefined) return '';
   if (typeof v === 'object') return JSON.stringify(v, null, 2);
-  return String(v as string | number | bigint);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- v is pre-screened for null/object; remaining type is string|number|bigint|boolean
+  return String(v);
 }
 function classPill(cls: string): string {
   if (cls.includes('safety')) return 'class-safety';

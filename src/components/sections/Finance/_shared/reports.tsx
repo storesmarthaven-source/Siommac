@@ -92,7 +92,8 @@ export function exportReportCsv(
       : (row: ReportRow) => {
           const k = c.key ?? c.header.toLowerCase().replace(/\s+/g, '_');
           const v = row[k];
-          return v == null ? '' : String(v as string | number | boolean);
+          // eslint-disable-next-line @typescript-eslint/no-base-to-string -- ReportRow field values are string|number|boolean primitives from finance API responses
+          return v == null ? '' : String(v);
         },
   }));
   exportCsv<ReportRow>(result.rows, csvCols, filenameBase);
@@ -127,7 +128,8 @@ export function ReportDataTable({ columns, rows, maxVisible = 200 }: ReportDataT
     if (v == null) return '';
     if (col.format === 'currency') return Number(v).toLocaleString('en-TT', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     if (col.format === 'date' && typeof v === 'string') return v.slice(0, 10);
-    return String(v as string | number | boolean);
+    // eslint-disable-next-line @typescript-eslint/no-base-to-string -- ReportRow field values are string|number|boolean primitives from finance API responses
+    return String(v);
   }
 
   const isNumeric = (col: ReportColumn) => col.format === 'number' || col.format === 'currency';

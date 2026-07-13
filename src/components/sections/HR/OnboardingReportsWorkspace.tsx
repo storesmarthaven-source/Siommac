@@ -24,9 +24,12 @@ const BAR_COLORS = ['#2563eb', '#11a86b', '#f2a321', '#e11d48', '#6746f2', '#0ea
 
 function fmtCell(v: unknown, type?: OnboardingReportColumn['type']): string {
   if (v === null || v === undefined || v === '') return '—';
-  if (type === 'percent') return `${String(v as string | number)}%`;
-  if (type === 'status') return humanize(String(v as string | number));
-  return String(v as string | number);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- v is pre-screened for null/undefined/''; remaining values are string|number from API report rows
+  if (type === 'percent') return `${String(v)}%`;
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- v is pre-screened for null/undefined/''; remaining values are string|number from API report rows
+  if (type === 'status') return humanize(String(v));
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- v is pre-screened for null/undefined/''; remaining values are string|number from API report rows
+  return String(v);
 }
 
 function ChartView({ chart }: { chart: OnboardingReportChart }): VNode {

@@ -330,6 +330,13 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
   const rateStr = d.pay_basis === 'hourly'
     ? `TTD ${fmt(d.hourly_rate)} / hr`
     : `TTD ${fmt(d.monthly_salary)} / month`;
+  // d fields come from Record<string,unknown> but are number|string from the payroll API at runtime
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  const _hoursWorkedMeta = String(d.hours_worked ?? d.hoursWorked ?? 0);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  const _daysWorked = String(d.days_worked ?? d.daysWorked ?? '—');
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string
+  const _hoursWorkedTable = String(d.hours_worked ?? d.hoursWorked ?? '—');
   return `
     <div class="pr-payslip">
       <div class="pr-payslip-header">
@@ -361,8 +368,8 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
         </div>
         <div class="pr-payslip-meta-col">
           <div class="pr-payslip-meta-row"><span>Rate</span><strong>${rateStr}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${String((d.hours_worked ?? d.hoursWorked ?? 0) as number | string)}h</strong></div>
-          <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${String((d.days_worked ?? d.daysWorked ?? '—') as number | string)}</strong></div>
+          <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${_hoursWorkedMeta}h</strong></div>
+          <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${_daysWorked}</strong></div>
           <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD ${fmt(sr.allowanceAnnual)} / yr</strong></div>
           <div class="pr-payslip-meta-row pr-payslip-meta-row--sep"><span>NIS Reg</span><strong>${escapeHtml(ci.nis ?? '1234567')}</strong></div>
           <div class="pr-payslip-meta-row"><span>BIR File</span><strong>${escapeHtml(ci.bir ?? '100123456')}</strong></div>
@@ -377,7 +384,7 @@ export function _buildPayslipHtml(d: Record<string, unknown>): string {
               <tr>
                 <td>${d.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td>
                 <td>${d.pay_basis === 'hourly' ? fmt(d.hourly_rate ?? d.hourlyRate) : '—'}</td>
-                <td>${String((d.hours_worked ?? d.hoursWorked ?? '—') as number | string)}</td>
+                <td>${_hoursWorkedTable}</td>
                 <td>TTD ${fmt(d.gross_pay ?? d.grossPay)}</td>
               </tr>
             </tbody>

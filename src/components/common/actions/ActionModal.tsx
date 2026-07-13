@@ -19,7 +19,8 @@ function toneClass(tone?: ActionTone): string {
 function fmt(value: unknown): string {
   if (value === null || value === undefined || value === '') return '—';
   if (typeof value === 'boolean') return value ? 'Yes' : 'No';
-  return String(value as string | number);
+  // eslint-disable-next-line @typescript-eslint/no-base-to-string -- value is pre-screened: null/undefined/''/boolean handled above; remaining type is string|number in practice
+  return String(value);
 }
 
 interface Props {
