@@ -20,7 +20,7 @@ import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
-import { TableSearch, FilterDropdown, useFilterDropdowns } from '@ui';
+import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns } from '@ui';
 import { toast } from '@store/ui';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
@@ -76,7 +76,7 @@ export function AcUsersPage(): VNode {
   const [selId, setSelId]       = useState<string | null>(null);
   const [railSearch, setRail]   = useState('');
   const [page, setPage]         = useState(1);
-  const [filter, setFilter]     = useState<{ modules: string[]; risks: string[]; search: string }>({ modules: [], risks: [], search: '' });
+  const [filter, setFilter]     = useState<{ modules: string[]; risks: string[]; effective: string[]; overridden: string[]; search: string }>({ modules: [], risks: [], effective: [], overridden: [], search: '' });
   const { openId, setOpenId }   = useFilterDropdowns();
   const [pending, setPending]   = useState<Map<string, OvState>>(new Map());
   const [localPending, setLocal] = useState<Set<string>>(new Set());
@@ -126,11 +126,13 @@ export function AcUsersPage(): VNode {
       const m = PERMISSION_META[k]; if (!m) continue;
       if (filter.modules.length && !filter.modules.includes(m.module)) continue;
       if (filter.risks.length && !filter.risks.includes(m.risk)) continue;
+      if (filter.effective.length && !filter.effective.includes(effGranted(k) ? 'allow' : 'deny')) continue;
+      if (filter.overridden.length && !filter.overridden.includes(target(k) !== 'inherit' ? 'overridden' : 'default')) continue;
       if (filter.search && !m.label.toLowerCase().includes(filter.search.toLowerCase())) continue;
       (byMod.get(m.module) ?? byMod.set(m.module, []).get(m.module)!).push(k);
     }
     return byMod;
-  }, [filter]);
+  }, [filter, effGranted, target]);
   const allModules = useMemo(() => [...new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean))] as string[], []);
 
   const stats = useMemo(() => ({
@@ -321,6 +323,12 @@ export function AcUsersPage(): VNode {
                 <FilterDropdown id="u-risk" label="Risk" openId={openId} setOpenId={setOpenId}
                   options={['low', 'medium', 'high', 'critical']} selected={filter.risks} onChange={v => setFilter(f => ({ ...f, risks: v }))}
                   labelFn={r => r[0]!.toUpperCase() + r.slice(1)} />
+                <AdvancedFilter openId={openId} setOpenId={setOpenId}
+                  onReset={() => setFilter(f => ({ ...f, effective: [], overridden: [] }))}
+                  tabs={[{ name: 'Access', blurb: 'Filter by effective result and override status.', sections: [
+                    { type: 'checklist', title: 'Effective result', options: ['allow', 'deny'], selected: filter.effective, onChange: v => setFilter(f => ({ ...f, effective: v })), labelFn: v => v[0]!.toUpperCase() + v.slice(1) },
+                    { type: 'checklist', title: 'Override status', options: ['overridden', 'default'], selected: filter.overridden, onChange: v => setFilter(f => ({ ...f, overridden: v })), labelFn: v => v === 'overridden' ? 'User override' : 'Role default' },
+                  ] }]} />
               </div>
 
               <div class="card" style={{ overflow: 'hidden' }}>
@@ -338,7 +346,7 @@ export function AcUsersPage(): VNode {
                                 <span style={{ color: 'var(--faint)', width: '14px', display: 'inline-flex', flex: 'none' }}><LucideIcon name={open ? 'Minus' : 'Plus'} size={14} strokeWidth={2.5} /></span>
                                 <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
                                 <span class="u-mod-name">{mod}</span>
-                                <span class="badge grey" style={{ fontSize: '10.5px', padding: '1px 8px' }}>{keys.length}</span>
+                                <span class="badge grey" style={{ fontSize: '10.5px', padding: '2px 8px', borderRadius: '6px' }}>{keys.length}</span>
                               </span>
                             </td>
                           </tr>
@@ -392,15 +400,15 @@ export function AcUsersPage(): VNode {
                 </div>
                 <div class="u-ab-chips">
                   <span class="u-ab-chip green">
-                    <b>{pendAllow}</b>
+                    <span class="u-ab-num">{pendAllow}</span>
                     <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Permission{pendAllow === 1 ? '' : 's'}</span><span class="u-ab-chip-val">Allow</span></span>
                   </span>
                   <span class="u-ab-chip red">
-                    <b>{pendDeny}</b>
+                    <span class="u-ab-num">{pendDeny}</span>
                     <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Permission{pendDeny === 1 ? '' : 's'}</span><span class="u-ab-chip-val">Deny</span></span>
                   </span>
                   <span class="u-ab-chip neutral">
-                    <b>{pending.size}</b>
+                    <span class="u-ab-num">{pending.size}</span>
                     <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Total Changes</span><span class="u-ab-chip-val">Affecting {pendCaps} capabilit{pendCaps === 1 ? 'y' : 'ies'}</span></span>
                   </span>
                 </div>

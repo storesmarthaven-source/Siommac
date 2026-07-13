@@ -418,7 +418,7 @@
 .acx .u-cap-name { font-size: 13.5px; font-weight: 600; color: var(--ink); }
 .acx .u-cap-desc { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
 /* Module header row: single neutral icon chip + larger, lighter title. */
-.acx .u-mod-ico { width: 26px; height: 26px; border-radius: 7px; background: #eef2f7; color: #475569; display: grid; place-items: center; flex: none; }
+.acx .u-mod-ico { width: 22px; color: #475569; display: grid; place-items: center; flex: none; }
 .acx .u-mod-name { font-size: 15px; font-weight: 600; color: var(--ink); }
 .acx .u-src { font-size: 12px; color: var(--muted); }
 .acx .u-src.ovr { color: var(--accent); font-weight: 500; }
@@ -440,17 +440,19 @@
 .acx .u-ab-title { font-size: 14px; font-weight: 700; color: #b45309; }
 .acx .u-ab-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
 .acx .u-ab-chips { display: flex; align-items: center; gap: 10px; }
-.acx .u-ab-chip { display: flex; align-items: center; gap: 11px; padding: 9px 16px 9px 13px; border-radius: 12px; border: 1px solid var(--line); background: #fff; }
-.acx .u-ab-chip b { font-size: 23px; font-weight: 700; line-height: 1; color: var(--ink); }
-.acx .u-ab-chip-t { display: flex; flex-direction: column; line-height: 1.25; }
+.acx .u-ab-chip { display: inline-flex; align-items: stretch; gap: 7px; }
+.acx .u-ab-num { display: grid; place-items: center; min-width: 40px; padding: 0 10px; border-radius: 10px; font-size: 20px; font-weight: 700; }
+.acx .u-ab-chip-t { display: flex; flex-direction: column; justify-content: center; line-height: 1.25; padding: 7px 14px; border-radius: 10px; }
 .acx .u-ab-chip-lbl { font-size: 12.5px; font-weight: 500; color: #64748b; }
 .acx .u-ab-chip-val { font-size: 12.5px; font-weight: 600; color: var(--ink); }
-.acx .u-ab-chip.green { background: #f0faf4; border-color: #cdeed9; }
-.acx .u-ab-chip.green b, .acx .u-ab-chip.green .u-ab-chip-val { color: #16a34a; }
-.acx .u-ab-chip.red { background: #fdf2f3; border-color: #f6d3d6; }
-.acx .u-ab-chip.red b, .acx .u-ab-chip.red .u-ab-chip-val { color: #dc2626; }
-.acx .u-ab-chip.neutral { background: #fafbfc; border-color: #e6e9f0; }
-.acx .u-ab-chip.neutral b { color: #1e293b; }
+.acx .u-ab-chip.green .u-ab-num { background: #b3ebc7; color: #15803d; }
+.acx .u-ab-chip.green .u-ab-chip-t { background: #edf9f1; }
+.acx .u-ab-chip.green .u-ab-chip-val { color: #16a34a; }
+.acx .u-ab-chip.red .u-ab-num { background: #f8ccd0; color: #b91c1c; }
+.acx .u-ab-chip.red .u-ab-chip-t { background: #fdf1f2; }
+.acx .u-ab-chip.red .u-ab-chip-val { color: #dc2626; }
+.acx .u-ab-chip.neutral .u-ab-num { background: #e2e6ec; color: #1e293b; }
+.acx .u-ab-chip.neutral .u-ab-chip-t { background: #f6f7f9; }
 .acx .u-ab-chip.neutral .u-ab-chip-lbl { color: #334155; font-weight: 600; }
 .acx .u-ab-chip.neutral .u-ab-chip-val { color: #94a3b8; font-weight: 500; }
 .acx .u-ab-actions { display: flex; align-items: center; gap: 10px; margin-left: auto; }
