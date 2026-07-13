@@ -258,10 +258,12 @@ export const SwCacheManager = {
         }
         const timeout = setTimeout(() => resolve({ static: 0, cdn: 0, photos: 0 }), 2000);
         const handler = (e: MessageEvent) => {
-          if (e.data?.type === 'CACHE_STATS') {
+          // MessageEvent.data is typed as `any` in the DOM lib — narrow it here.
+          const evData = e.data as { type?: string; payload?: { static: number; cdn: number; photos: number } } | null;
+          if (evData?.type === 'CACHE_STATS') {
             clearTimeout(timeout);
             navigator.serviceWorker.removeEventListener('message', handler);
-            resolve(e.data.payload as { static: number; cdn: number; photos: number });
+            resolve(evData.payload ?? { static: 0, cdn: 0, photos: 0 });
           }
         };
         navigator.serviceWorker.addEventListener('message', handler);

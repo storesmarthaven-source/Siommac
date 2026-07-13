@@ -304,7 +304,7 @@ export async function apiFetch<T extends ApiResponse = ApiResponse>(
   }
 
   try {
-    const json = await res.json();
+    const json: unknown = await res.json();
     // Legacy protocol: backend returns { success: false, message: 'Unauthorized' }
     // Same guard: only treat as session expiry if a session exists.
     if (
