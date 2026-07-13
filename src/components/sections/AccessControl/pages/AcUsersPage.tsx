@@ -144,7 +144,6 @@ export function AcUsersPage(): VNode {
   // Pending-changes tallies for the action-bar chips.
   const pendAllow = [...pending.values()].filter(v => v === 'allow').length;
   const pendDeny  = [...pending.values()].filter(v => v === 'deny').length;
-  const pendCaps  = new Set([...pending.keys()].map(k => PERMISSION_META[k as PermissionKey]?.module).filter(Boolean)).size;
 
   const onSelect = (key: string, value: OvState) => {
     if (value === 'allow' && CRITICAL_GRANT_KEYS.has(key) && !effGranted(key)) { setCriticalKey(key); return; }
@@ -409,7 +408,7 @@ export function AcUsersPage(): VNode {
                   </span>
                   <span class="u-ab-chip neutral">
                     <span class="u-ab-num">{pending.size}</span>
-                    <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Total Changes</span><span class="u-ab-chip-val">Affecting {pendCaps} capabilit{pendCaps === 1 ? 'y' : 'ies'}</span></span>
+                    <span class="u-ab-chip-t"><span class="u-ab-chip-lbl">Total</span><span class="u-ab-chip-val">Changes</span></span>
                   </span>
                 </div>
                 <div class="u-ab-actions">
