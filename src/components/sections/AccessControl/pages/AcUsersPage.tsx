@@ -316,12 +316,12 @@ export function AcUsersPage(): VNode {
                       return (
                         <>
                           <tr class="grp" key={`g-${mod}`}>
-                            <td colSpan={6} style={{ padding: '9px 16px', background: '#f9fafb', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
-                              <span style={{ display: 'flex', alignItems: 'center', gap: '9px' }}>
-                                <span style={{ width: '22px', height: '22px', borderRadius: '6px', background: st.bg, color: st.fg, display: 'inline-grid', placeItems: 'center', fontSize: '11px', flex: 'none' }}><i class={`fas ${st.icon}`} /></span>
-                                <span style={{ fontSize: '13px', fontWeight: 700 }}>{mod}</span>
+                            <td colSpan={6} style={{ padding: '12px 18px', background: '#f9fafb', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
+                                <i class={`fas fa-chevron-${open ? 'down' : 'right'}`} style={{ color: 'var(--faint)', fontSize: '11px', width: '12px', textAlign: 'center', flex: 'none' }} />
+                                <span style={{ width: '26px', height: '26px', borderRadius: '7px', background: st.bg, color: st.fg, display: 'inline-grid', placeItems: 'center', fontSize: '12px', flex: 'none' }}><i class={`fas ${st.icon}`} /></span>
+                                <span style={{ fontSize: '13.5px', fontWeight: 700 }}>{mod}</span>
                                 <span class="badge grey" style={{ fontSize: '10.5px', padding: '1px 8px' }}>{keys.length}</span>
-                                <i class={`fas fa-chevron-${open ? 'up' : 'right'}`} style={{ color: 'var(--faint)', fontSize: '10px', marginLeft: 'auto' }} />
                               </span>
                             </td>
                           </tr>
@@ -329,20 +329,23 @@ export function AcUsersPage(): VNode {
                             const t = target(k); const ov = t !== 'inherit'; const submitted = localPending.has(k);
                             return (
                               <tr key={k} class={ov ? 'u-row-override' : undefined}>
-                                <td style={{ fontWeight: 500 }}>{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</td>
+                                <td>
+                                  <div class="u-cap-name">{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</div>
+                                  <div class="u-cap-desc">{PERMISSION_META[k].description}</div>
+                                </td>
                                 <td><CapCell allow={roleDefault(k)} /></td>
                                 <td>
                                   {submitted ? <span class="badge amber" style={{ fontSize: '11px' }}>Pending approval</span> : (
-                                    <select class={`u-cap-sel${ov ? ' u-cap-sel-ovr' : ''}`} value={t} onChange={e => onSelect(k, (e.target as HTMLSelectElement).value as OvState)}>
+                                    <select class={`u-cap-sel${t === 'allow' ? ' u-cap-sel--allow' : t === 'deny' ? ' u-cap-sel--deny' : ''}`} value={t} onChange={e => onSelect(k, (e.target as HTMLSelectElement).value as OvState)}>
                                       <option value="inherit">Inherit</option>
                                       <option value="allow">Allow</option>
                                       <option value="deny">Deny</option>
                                     </select>
                                   )}
                                 </td>
-                                <td><CapCell allow={effGranted(k)} /></td>
-                                <td><span class={`badge ${ov ? 'amber' : 'grey'}`} style={{ fontSize: '11px' }}>{ov ? 'Override' : 'Role Default'}</span></td>
-                                <td style={{ textAlign: 'center' }}><button class={`u-reset-btn${ov ? ' u-reset-btn-ovr' : ''}`} disabled={!ov || submitted} onClick={() => onSelect(k, 'inherit')}><i class="fas fa-rotate-right" style={{ fontSize: '11px' }} /></button></td>
+                                <td><span class="cap-eff"><CapCell allow={effGranted(k)} />{ov && <span class="cap-eff-you" title="User override"><i class="fas fa-user" style={{ fontSize: '11px' }} /></span>}</span></td>
+                                <td><span class={`u-src${ov ? ' ovr' : ''}`}>{ov ? 'User Override (You)' : 'Role Default'}</span></td>
+                                <td style={{ textAlign: 'center' }}><button class={`u-reset-btn${ov ? ' u-reset-btn-ovr' : ''}`} disabled={!ov || submitted} onClick={() => onSelect(k, 'inherit')}><i class="fas fa-rotate-right" style={{ fontSize: '12px' }} /></button></td>
                               </tr>
                             );
                           })}
@@ -363,12 +366,22 @@ export function AcUsersPage(): VNode {
               </div>
 
               <div class="u-action-bar">
-                <button class="btn" disabled={!pending.size || saving} onClick={() => setPending(new Map())}>Discard Changes</button>
-                <span style={{ display: 'flex', alignItems: 'center', gap: '7px', fontSize: '13.5px', fontWeight: 600, color: pending.size ? 'var(--amber)' : 'var(--faint)' }}>
-                  {pending.size > 0 && <i class="fas fa-triangle-exclamation" />}
-                  <span style={{ color: 'var(--ink-2)' }}>{pending.size} unsaved change{pending.size === 1 ? '' : 's'}</span>
-                </span>
-                <button class="btn primary" disabled={!pending.size || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Changes'}</button>
+                <div class="u-ab-lead">
+                  <span class="u-ab-ico"><i class="fas fa-triangle-exclamation" /></span>
+                  <div>
+                    <div class="u-ab-title">{pending.size} Pending Change{pending.size === 1 ? '' : 's'}</div>
+                    <div class="u-ab-sub">Review and save your changes</div>
+                  </div>
+                </div>
+                <div class="u-ab-chips">
+                  <span class="u-ab-chip green"><b>{[...pending.values()].filter(v => v === 'allow').length}</b><span>Permissions<br />Allow</span></span>
+                  <span class="u-ab-chip red"><b>{[...pending.values()].filter(v => v === 'deny').length}</b><span>Permissions<br />Deny</span></span>
+                  <span class="u-ab-chip"><b>{pending.size}</b><span>Total<br />Changes</span></span>
+                </div>
+                <div class="u-ab-actions">
+                  <button class="btn" disabled={!pending.size || saving} onClick={() => setPending(new Map())}>Discard Changes</button>
+                  <button class="btn primary" disabled={!pending.size || saving} onClick={() => void save()}>{saving ? 'Saving…' : 'Save Changes'}</button>
+                </div>
               </div>
             </>
           )}
