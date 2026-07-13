@@ -171,6 +171,8 @@ export function AcOverviewPage(): VNode {
   // users → name, everything else (permission keys) is already human-readable.
   const roleLabelByName = useMemo(() => new Map((rolesQ.data ?? []).map(r => [r.name, r.label])), [rolesQ.data]);
   const userNameById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u.fullName || u.username])), [usersQ.data]);
+  // Full actor record (photo + role) by id, for the Recent Access Changes feed.
+  const userById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u])), [usersQ.data]);
   const resolveTarget = (entity: string, entityId: string): string => {
     if (!entityId) return '';
     const e = (entity || '').toLowerCase();
@@ -396,18 +398,26 @@ export function AcOverviewPage(): VNode {
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; username: string; action: string; entity: string; entity_id: string; created_at: string }[]).map(l => {
+            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; user_id: string; username: string; action: string; entity: string; entity_id: string; created_at: string }[]).map(l => {
               const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
+              const actor = userById.get(l.user_id);
+              const name = actor?.fullName || l.username || 'System';
+              const role = actor ? (roleLabelByName.get(actor.role) ?? actor.role) : '';
               const target = resolveTarget(l.entity, l.entity_id);
               return (
                 <div class="rc2-item" key={l.id}>
-                  <span class={`rc2-ico tone-${meta.tone}`}><LucideIcon name={meta.icon} size={16} /></span>
-                  <span class="avatar rc2-av">{initials(l.username)}</span>
+                  <span class="rc2-avwrap">
+                    {actor?.profileImage
+                      ? <img class="rc2-photo" src={actor.profileImage} alt="" loading="lazy" />
+                      : <span class="rc2-photo rc2-photo--init">{initials(name)}</span>}
+                    <span class={`rc2-badge tone-${meta.tone}`}><LucideIcon name={meta.icon} size={10} strokeWidth={2.6} /></span>
+                  </span>
                   <div class="rc2-body">
-                    <div class="rc2-line"><span class="rc2-nm">{l.username || 'System'}</span><span class="rc2-act"> · {ACTION_LABEL[l.action] ?? l.action}</span></div>
+                    <div class="rc2-top"><span class="rc2-nm">{name}</span><span class="rc2-time">{ago(l.created_at)}</span></div>
+                    {role && <div class="rc2-role">{role}</div>}
+                    <div class={`rc2-act tone-${meta.tone}`}>{ACTION_LABEL[l.action] ?? l.action}</div>
                     {target && <span class="rc2-tgt" title={target}>{target}</span>}
                   </div>
-                  <span class="rc2-time">{ago(l.created_at)}</span>
                 </div>
               );
             })}
@@ -442,7 +452,7 @@ export function AcOverviewPage(): VNode {
               <div class="asum-lrow"><span class="asum-dot" style={{ background: '#e2e6ee' }} /><span class="asum-lname">No Access</span><span class="asum-lval">{summary.counts.none}</span><span class="asum-lpct">({summary.pct(summary.counts.none)}%)</span></div>
             </div>
           </div>
-          <div class="asum-risk">
+          <div class={`asum-risk ${posture.cls}`}>
             <div class="rp-head">
               <span class="rp-ico"><LucideIcon name="ShieldAlert" size={18} /></span>
               <div>
