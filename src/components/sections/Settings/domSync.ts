@@ -36,7 +36,7 @@ export function applyCompanyLogoToDom(url: string): void {
 
   // About section logo
   const aboutLogo     = document.getElementById('aboutLogo') as HTMLImageElement | null;
-  const aboutFallback = document.getElementById('aboutLogoFallback') as HTMLElement | null;
+  const aboutFallback = document.getElementById('aboutLogoFallback');
   if (aboutLogo) {
     if (url) {
       aboutLogo.src            = url;
