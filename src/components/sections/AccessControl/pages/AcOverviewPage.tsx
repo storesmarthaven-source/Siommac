@@ -390,13 +390,13 @@ export function AcOverviewPage(): VNode {
 
         {/* Recent Access Changes */}
         <div class="card">
-          <div class="card-head"><div class="card-title">Recent Access Changes</div><span class="link" onClick={() => goTo('s-ac-audit')}>View all</span></div>
+          <div class="card-head"><div class="u-recent-title"><LucideIcon name="History" size={15} /> Recent Access Changes</div><span class="link" onClick={() => goTo('s-ac-audit')}>View all</span></div>
           <div class="rc2-scroll">
             {auditQ.isLoading ? (
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs as { id: string; user_id: string; username: string; action: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
+            ) : (auditQ.data!.logs as { id: string; user_id: string; username: string; action: string; details?: string; created_at: string; actorName?: string; actorPhoto?: string; actorTitle?: string }[]).map(l => {
               const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
               const actor = userById.get(l.user_id) ?? userByName.get(l.username);
               const rawName = l.actorName || actor?.fullName || l.username || 'System';
@@ -404,6 +404,9 @@ export function AcOverviewPage(): VNode {
               // Small subtext under the name: the actor's job title, else their role.
               const subtitle = l.actorTitle || actor?.position || (actor ? (roleLabelByName.get(actor.role) ?? actor.role) : '');
               const photo = l.actorPhoto || actor?.profileImage || '';
+              // Which capability the change touched — so an entry isn't just "Reset".
+              let perm = ''; try { perm = ((JSON.parse(l.details || '{}') as { permission?: string }).permission) ?? ''; } catch { /* plain text */ }
+              const permLabel = perm ? (PERMISSION_META[perm as PermissionKey]?.label ?? perm) : '';
               return (
                 <div class="rc2-item" key={l.id}>
                   <span class="rc2-avwrap">
@@ -415,7 +418,7 @@ export function AcOverviewPage(): VNode {
                   <div class="rc2-body">
                     <div class="rc2-top"><span class="rc2-nm">{name}</span><span class="rc2-time">{ago(l.created_at)}</span></div>
                     {subtitle && <div class="rc2-role">{subtitle}</div>}
-                    <div class={`rc2-act tone-${meta.tone}`}>{ACTION_LABEL[l.action] ?? l.action}</div>
+                    <div class={`rc2-act tone-${meta.tone}`} title={permLabel}>{ACTION_LABEL[l.action] ?? l.action}{permLabel ? ` · ${permLabel}` : ''}</div>
                   </div>
                 </div>
               );
