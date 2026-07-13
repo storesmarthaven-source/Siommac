@@ -37,8 +37,8 @@ export const IconChevronLeft = ({ size = 16 }: IconProps): VNode => svg(size, <p
 // Navy filled circle with a white chevron — the back-button icon badge.
 export const IconChevronLeftBadge = ({ size = 22 }: IconProps): VNode => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="none">
-    <circle cx="12" cy="12" r="11" fill="var(--siomac-navy, #1b2d54)" />
-    <path d="m13.5 8-4 4 4 4" fill="none" stroke="#fff" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
+    <circle cx="12" cy="12" r="11" fill="#fff" />
+    <path d="m13.5 8-4 4 4 4" fill="none" stroke="#3a4766" stroke-width="2.1" stroke-linecap="round" stroke-linejoin="round" />
   </svg>
 );
 export const IconCoins = ({ size = 16 }: IconProps): VNode => svg(size, <><circle cx="8" cy="8" r="6"/><path d="M18.09 10.37A6 6 0 1 1 10.34 18M7 6h1v4M16.71 13.88l.7.71-2.82 2.82"/></>);

@@ -264,22 +264,28 @@ export function StatutoryDashboard({
     };
   }, [activeVer, activeNisClasses.length, components, onTabChange]);
 
-  // Count-up for the readiness % number — animates 0→lens.pct on first mount and whenever
-  // the value genuinely changes. Guarded by [lens.pct] so unrelated re-renders (tab switch,
-  // board edit, etc.) never re-trigger it; respects prefers-reduced-motion.
+  // Count-up for the readiness % number — tweens the CURRENTLY displayed value to the new
+  // target (not always from 0). Progressive data loading moves lens.pct 0→…→final, so a
+  // from-0 restart made the gauge fill, snap back to 0, and fill again ("triggers twice").
+  // A ref holds the live value so it drives `from` without being an effect dep (which would
+  // loop). Guarded by [lens.pct]; a no-op when unchanged; respects prefers-reduced-motion.
   const [displayPct, setDisplayPct] = useState(0);
+  const displayRef = useRef(0);
+  const setPct = (v: number): void => { displayRef.current = v; setDisplayPct(v); };
   useEffect(() => {
     const target = lens.pct;
+    const from = displayRef.current;
+    if (from === target) return;
     const reduce = typeof window !== 'undefined'
       && window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
-    if (reduce) { setDisplayPct(target); return; }
+    if (reduce) { setPct(target); return; }
     const start = performance.now();
     const dur = 700; // matches the gauge arc animation
     let raf: number;
     const step = (now: number): void => {
       const t = Math.min((now - start) / dur, 1);
       const eased = 1 - (1 - t) ** 3; // ease-out cubic
-      setDisplayPct(Math.round(target * eased));
+      setPct(Math.round(from + (target - from) * eased));
       if (t < 1) raf = requestAnimationFrame(step);
     };
     raf = requestAnimationFrame(step);
@@ -490,7 +496,7 @@ export function StatutoryDashboard({
         : 'No active version configured'} />
   );
   const renderKpiDrafts = (): VNode => (
-    <KpiTile icon="fa-pen-to-square" tone="purple" label="Draft Versions"
+    <KpiTile icon="fa-pen-to-square" tone="green" label="Draft Versions"
       value={versionsLoading ? '…' : drafts}
       sub={pending > 0 ? `${pending} awaiting review` : 'None awaiting review'}
       link={{ label: 'View versions', onClick: () => goToRegisterTab('versions') }} />

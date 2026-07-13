@@ -62,6 +62,12 @@
 .ui-icon-action:hover { background: #f1f5f9; }
 
 /* ── Rich slide-in shell (v36 .drawer.open — the DARK navy employee panel) ───── */
+/* Transparent click-catcher behind the panel — a click anywhere outside closes the
+   drawer (app-wide standard). No dimming (keeps the rich panel's look); only intercepts
+   while open. Sits below the panel (--z-drawer-back 50 < --z-drawer 51) and below the
+   portalled Menu overlay (z 60), so an open More-menu's outside-click closes the MENU. */
+.ui-rdrawer-backdrop { position: fixed; inset: 0; z-index: var(--z-drawer-back, 50); background: transparent; pointer-events: none; }
+.ui-rdrawer-backdrop.open { pointer-events: auto; }
 .ui-rdrawer {
   position: fixed; top: 0; right: 0; z-index: var(--z-drawer, 51);
   width: min(500px, calc(100vw - 24px)); height: 100vh;

@@ -393,6 +393,11 @@ body[data-theme="dark"] .hero-footer {
   animation: ui-skeleton-sweep 1.3s ease-in-out infinite;
 }
 @keyframes ui-skeleton-sweep { 100% { transform: translateX(100%); } }
+/* On the navy rich drawer the default light-grey skeleton reads as solid white — use a dark
+   translucent block + softer sweep. Must live in THIS file (sections layer) to beat the base
+   `.ui-skeleton` above; an override in the components layer would lose regardless of specificity. */
+.ui-rdrawer .ui-skeleton { background: rgba(255,255,255,.12); }
+.ui-rdrawer .ui-skeleton::after { background: linear-gradient(90deg, transparent, rgba(255,255,255,.16), transparent); }
 .ui-skeleton--circle { border-radius: 999px; }
 .ui-skeleton-list { display: flex; flex-direction: column; gap: 14px; }
 .ui-skeleton-list-row { display: flex; align-items: center; gap: 12px; }
@@ -954,14 +959,17 @@ body[data-theme="dark"] .ui-page-head-rule { background: rgba(255, 255, 255, .18
   background: none; font: inherit; text-align: left; color: #53617f; cursor: pointer;
   transition: background-color 140ms ease, border-color 140ms ease;
 }
-.ui-stepper-step:hover { background: #f8fbff; }
+.ui-stepper-step:hover { background: #f5f7fa9c; }
 .ui-stepper-step.is-active { background: #f5f7fa; border-color: #eaedf3; }
 .ui-stepper-marker {
   flex: 0 0 auto; width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center;
   font-size: 13px; font-weight: 500; background: #f8fbff; color: #7c879d; border: 1px solid #dce4f1;
 }
 .ui-stepper-step.is-active .ui-stepper-marker { background: #364263; color: #fff; border-color: #e0e5fb; }
-.ui-stepper-step.is-complete .ui-stepper-marker { background: #128a3e; color: #fff; border-color: #128a3e; }
+/* When a step's required info is done it turns complete — the green check pops in. The
+   animation-name switches on with the .is-complete class, so it replays on the transition. */
+@keyframes ui-stepper-pop { 0% { transform: scale(.5); } 55% { transform: scale(1.2); } 100% { transform: scale(1); } }
+.ui-stepper-step.is-complete .ui-stepper-marker { background: #128a3e; color: #fff; border-color: #128a3e; animation: ui-stepper-pop .3s cubic-bezier(.2,.9,.3,1.3); }
 .ui-stepper-copy { display: flex; flex-direction: column; min-width: 0; }
 .ui-stepper-copy strong { color: #0d1b35; font-size: 13.5px; font-weight: 600; line-height: 1.2; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .ui-stepper-copy span { color: #7c879d; font-size: 11.5px; line-height: 1.25; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }

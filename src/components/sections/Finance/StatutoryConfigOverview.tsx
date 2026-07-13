@@ -26,8 +26,8 @@ import {
   FilterDropdown, AdvancedFilter, useFilterDropdowns,
   type RowActionItem,
   PanelTabs, MiniTable, Pill, PanelEmpty,
-  Skeleton, SkeletonText,
-  type PillTone,
+  Skeleton,
+  type PillTone, type LucideName,
 } from '@ui';
 import { StatBadge } from './StatTable';
 import { StatutoryDashboard, type MainTab as StatMainTab } from './StatutoryDashboard';
@@ -954,6 +954,14 @@ const DRAWER_TABS: { key: DrawerTab; label: string }[] = [
 // PanelTabs (the EM-profile tab strip) splits into a primary row + a "More ▾" menu.
 const DRAWER_PRIMARY_TABS = DRAWER_TABS.slice(0, 4).map(t => t.label);
 const DRAWER_MORE_TABS    = DRAWER_TABS.slice(4).map(t => t.label);
+// Respective Lucide glyph for each More-menu tab.
+const DRAWER_MORE_ICONS: Record<string, LucideName> = {
+  'Pay Components':   'Layers',
+  'Linked Runs':      'Link',
+  'Approval History': 'History',
+  'Timeline':         'Activity',
+  'Audit':            'ClipboardCheck',
+};
 const drawerTabLabel = (k: DrawerTab): string => DRAWER_TABS.find(t => t.key === k)?.label ?? 'Summary';
 const drawerTabKey   = (label: string): DrawerTab => DRAWER_TABS.find(t => t.label === label)?.key ?? 'summary';
 
@@ -1113,17 +1121,62 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   ) : undefined;
 
   return (
-    <Drawer rich open={open} onClose={onClose} title="Rate Version" foot={footer} noFooter={!footer}>
+    <Drawer rich open={open} onClose={onClose} title="Rate Version" foot={footer} noFooter={!footer} panelClass="svd-drawer">
       {!d ? (
+        // Loading placeholder — reuses the REAL layout elements (svd-head/title/meta,
+        // svd-tiles ui-stat-tile small/strong/span, svd-steps, svd-grid) so every margin,
+        // gap and padding is the live CSS — exact spacing, no jump on load. Dark-themed for
+        // the navy panel via `.ui-rdrawer .ui-skeleton`.
         <>
-          <Skeleton height={22} width="55%" />
-          <div style={{ marginTop: 10 }}><Skeleton height={12} width="70%" /></div>
-          <div style={{ display: 'flex', gap: 9, margin: '16px 0' }}>
-            <Skeleton height={68} width="33%" radius={10} />
-            <Skeleton height={68} width="33%" radius={10} />
-            <Skeleton height={68} width="33%" radius={10} />
+          <div class="svd-head">
+            <div class="svd-head-main">
+              <div class="svd-title"><Skeleton height={16} width={140} /><Skeleton height={18} width={56} radius={9} /></div>
+              <div class="svd-meta"><Skeleton height={11} width={200} /></div>
+            </div>
           </div>
-          <SkeletonText lines={5} />
+          <div class="svd-tiles">
+            {[0, 1, 2].map(k => (
+              <div class="ui-stat-tile" key={k}>
+                <small><Skeleton height={9} width="70%" /></small>
+                <strong><Skeleton height={15} width="80%" /></strong>
+                <span><Skeleton height={9} width="55%" /></span>
+              </div>
+            ))}
+          </div>
+          <div class="ui-panel-tabs">
+            <div class="ui-panel-tab-list">
+              {[56, 60, 52, 44].map((w, k) => <Skeleton key={k} height={13} width={w} />)}
+            </div>
+          </div>
+          {/* Summary: Lifecycle stepper — reuse the real .svd-steps so shape + spacing match. */}
+          <div class="svd-section">
+            <div class="svd-section-head"><span class="svd-label"><Skeleton height={9} width={68} /></span></div>
+            <div class="svd-steps">
+              {[0, 1, 2, 3, 4].map(i => (
+                <div class="svd-step" key={i}>
+                  <div class="svd-step-track">
+                    <span class="svd-step-line" style={{ visibility: i === 0 ? 'hidden' : 'visible' }} />
+                    <span class="svd-step-dot" style={{ background: 'rgba(255,255,255,.22)' }} />
+                    <span class="svd-step-line" style={{ visibility: i === 4 ? 'hidden' : 'visible' }} />
+                  </div>
+                  <div class="svd-step-title"><Skeleton height={9} width={40} /></div>
+                  <div class="svd-step-date"><Skeleton height={8} width={30} /></div>
+                </div>
+              ))}
+            </div>
+          </div>
+          {/* Configuration grid */}
+          <div class="svd-section">
+            <div class="svd-section-head"><span class="svd-label"><Skeleton height={9} width={92} /></span></div>
+            <div class="svd-grid">
+              {[0, 1, 2, 3].map(k => (
+                <div class="ui-stat-tile" key={k}>
+                  <small><Skeleton height={9} width="60%" /></small>
+                  <strong><Skeleton height={11} width="80%" /></strong>
+                </div>
+              ))}
+            </div>
+          </div>
         </>
       ) : (
         <>
@@ -1161,7 +1214,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
           </div>
 
           <PanelTabs
-            primary={DRAWER_PRIMARY_TABS} more={DRAWER_MORE_TABS}
+            primary={DRAWER_PRIMARY_TABS} more={DRAWER_MORE_TABS} moreIcons={DRAWER_MORE_ICONS}
             active={drawerTabLabel(dtab)} onChange={label => setDtab(drawerTabKey(label))}
           />
 

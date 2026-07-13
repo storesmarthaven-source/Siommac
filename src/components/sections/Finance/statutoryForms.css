@@ -53,8 +53,8 @@
    it sits up by the header without shifting the stepper/form). Onboarding-wizard ghost
    style: white, bordered, rounded, blue arrow icon. */
 .sfp-headwrap{position:relative}
-.sfp-back{position:absolute;top:28px;right:0;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 16px 0 10px;border-radius:10px;border:1px solid var(--sfp-line-input);background:#fff;color:var(--sfp-ink-strong);font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:background .15s,border-color .15s}
-.sfp-back:hover{background:#f8fafc;border-color:#cdd6e3}
+.sfp-back{position:absolute;top:28px;right:0;display:inline-flex;align-items:center;gap:9px;min-height:44px;padding:0 16px 0 10px;border-radius:10px;border:1px solid #3a4766;background:#3a4766;color:#fff;font-size:13.5px;font-weight:600;cursor:pointer;box-shadow:0 1px 2px rgba(16,24,40,.05);transition:background .15s,border-color .15s}
+.sfp-back:hover{background:#47547a;border-color:#47547a}
 /* Extra space below the header so the stepper + form card sit lower. */
 .sfp-headwrap{margin-bottom:44px}
 .sfp .ui-stepper{margin-top:4px}
@@ -80,6 +80,8 @@
 
 /* ── Body layout ────────────────────────────────────────────────────────── */
 .sfp-body{display:grid;grid-template-columns:minmax(0,1.95fr) minmax(0,1fr);gap:26px;padding:22px 26px}
+/* New Rate Version page — wider left (form) column (its rail is just the checklist). */
+.sfp-body--wide{grid-template-columns:minmax(0,2.4fr) minmax(0,1fr)}
 .sfp-form{display:grid;grid-template-columns:1fr 1fr;gap:16px 24px;align-content:start}
 .sfp-field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .sfp-field.wide{grid-column:1 / -1}
@@ -235,7 +237,8 @@
 .sfp-dropzone .cloud{color:#9aa4b2}
 .sfp-dropzone p{margin:0;font-size:12.5px;color:var(--sfp-muted-2)}
 .sfp-dz-or{font-size:11px;color:#aab3c0}
-.sfp-browse{border:1px solid var(--sfp-line-input);background:#fff;color:var(--sfp-primary-600);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer}
+.sfp-browse{display:inline-flex;align-items:center;gap:6px;border:1px solid var(--sfp-line-input);background:#fff;color:var(--siomac-navy);font-weight:600;font-size:12.5px;padding:8px 14px;border-radius:8px;cursor:pointer}
+.sfp-browse:disabled{cursor:default;background:#f4f6fa;color:#9aa4b8;border-color:var(--sfp-line-input)}
 .sfp-filecard{display:flex;align-items:center;gap:11px;border:1px solid var(--sfp-line-input);border-radius:10px;padding:12px 13px;background:#fff}
 .sfp-file-ic{width:34px;height:38px;border-radius:7px;background:#eafaf0;display:flex;align-items:center;justify-content:center;color:#22a35a;flex:0 0 auto}
 .sfp-file-meta{flex:1;min-width:0}

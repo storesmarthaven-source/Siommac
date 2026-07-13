@@ -516,13 +516,12 @@
 .sdb-cal-day > span { font-size: 8.5px; font-weight: 600; letter-spacing: .02em; text-transform: uppercase; color: var(--sdb-muted); line-height: 1; }
 .sdb-cal-day > strong { font-size: 13px; font-weight: 700; color: var(--sdb-ink); line-height: 1; }
 .sdb-cal-day.is-today > strong { color: var(--sdb-primary); }
-.sdb-cal-day.has-deadline::after {
-  content: ''; position: absolute; left: 7px; right: 7px; bottom: 4px;
-  height: 2px; border-radius: 2px; background: var(--sdb-amber);
-}
+/* Deadline = an amber accent ON the cell's bottom border (recoloured border + inset band
+   so it follows the border-radius and reads as an accent, not a floating bar). */
+.sdb-cal-day.has-deadline { border-bottom-color: var(--sdb-amber); box-shadow: inset 0 -2px 0 var(--sdb-amber); }
 .sdb-cal-day.is-on { background: var(--sdb-primary); border-color: var(--sdb-primary); }
 .sdb-cal-day.is-on > span, .sdb-cal-day.is-on > strong { color: #fff; }
-.sdb-cal-day.is-on.has-deadline::after { background: #fff; }
+.sdb-cal-day.is-on.has-deadline { border-bottom-color: #fff; box-shadow: inset 0 -2px 0 #fff; }
 .sdb-cal-list { display: flex; flex-direction: column; gap: 8px; margin-top: 14px; flex: 1 1 auto; min-height: 0; overflow: hidden; }
 /* Large empty state — centered in the list area. */
 .sdb-cal-empty { margin: auto; display: flex; flex-direction: column; align-items: center; text-align: center; gap: 8px; padding: 10px; }
@@ -760,6 +759,10 @@
    configuration grid. Keeps the panel's tabs (PanelTabs) and colour language
    (navy shell, .ui-pill palette); everything else is rate-document specific.
    Portalled to <body>, so these rules are global (not under .sdb). */
+/* All text in the Rate Version drawer reads as Title Case. `capitalize` only
+   uppercases each word's first letter (acronyms PAYE/NIS/TTD are preserved).
+   Scoped to this drawer's panel class so no other rich drawer is affected. */
+.ui-rdrawer.svd-drawer { text-transform: capitalize; }
 .svd-head { margin: 2px 0 0; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
 .svd-head-main { min-width: 0; }
 .svd-retire {

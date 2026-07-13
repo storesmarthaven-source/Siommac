@@ -38,8 +38,10 @@ const menuLucide = (fa: string): LucideName => MENU_LUCIDE[fa] ?? 'ChevronRight'
 
 export interface MenuItem {
   label: string;
-  /** FontAwesome class, e.g. 'fa-pen'. */
+  /** FontAwesome class, e.g. 'fa-pen' (mapped to the app-standard Lucide glyph). */
   icon?: string;
+  /** A Lucide icon name rendered directly — takes precedence over `icon`. */
+  lucide?: LucideName;
   danger?: boolean;
   disabled?: boolean;
   onSelect: () => void;
@@ -96,7 +98,7 @@ export function Menu({ items, align = 'right', trigger }: MenuProps): VNode {
                 class={`ui-menu-item${it.danger ? ' danger' : ''}`} disabled={it.disabled}
                 onClick={() => { setOpen(false); it.onSelect(); }}
               >
-                {it.icon && <LucideIcon name={menuLucide(it.icon)} size={16} strokeWidth={2} class="ui-menu-ico" />}
+                {(it.lucide || it.icon) && <LucideIcon name={it.lucide ?? menuLucide(it.icon!)} size={16} strokeWidth={2} class="ui-menu-ico" />}
                 <span>{it.label}</span>
               </button>
             ))}

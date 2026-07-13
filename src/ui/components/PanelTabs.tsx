@@ -9,17 +9,20 @@
 
 import { type VNode } from 'preact';
 import { Menu } from './Menu';
+import { type LucideName } from '../LucideIcon';
 
 export interface PanelTabsProps {
   /** Always-visible tabs. */
   primary: string[];
   /** Tabs tucked into the "More" overflow menu. */
   more?: string[];
+  /** Optional Lucide icon per More-tab label (falls back to a chevron). */
+  moreIcons?: Record<string, LucideName>;
   active: string;
   onChange: (tab: string) => void;
 }
 
-export function PanelTabs({ primary, more = [], active, onChange }: PanelTabsProps): VNode {
+export function PanelTabs({ primary, more = [], moreIcons, active, onChange }: PanelTabsProps): VNode {
   const activeInMore = more.includes(active);
   return (
     <div class="ui-panel-tabs">
@@ -34,7 +37,7 @@ export function PanelTabs({ primary, more = [], active, onChange }: PanelTabsPro
       {more.length > 0 && (
         <Menu
           align="right"
-          items={more.map(t => ({ label: t, icon: 'fa-angle-right', onSelect: () => onChange(t) }))}
+          items={more.map(t => ({ label: t, lucide: moreIcons?.[t], icon: moreIcons?.[t] ? undefined : 'fa-angle-right', onSelect: () => onChange(t) }))}
           trigger={({ toggle }) => (
             <button type="button" class={`ui-panel-tab${activeInMore ? ' active' : ''}`} onClick={toggle}>
               <span>{activeInMore ? active : 'More'}</span>

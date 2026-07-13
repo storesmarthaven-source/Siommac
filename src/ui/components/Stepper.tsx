@@ -27,28 +27,38 @@ export interface StepperProps {
   onStep?: (index: number) => void;
   /** Highest reachable step index; later steps are locked. Defaults to activeIndex. */
   reachableIndex?: number;
+  /** Per-step completion driven by validation. When provided, a reachable step shows
+   *  complete (green check + pop) as soon as its entry is true — no need to advance past
+   *  it. Falls back to position (i < activeIndex) when omitted. */
+  completed?: readonly boolean[];
   ariaLabel?: string;
 }
 
-export function Stepper({ steps, activeIndex, onStep, reachableIndex, ariaLabel = 'Steps' }: StepperProps): VNode {
+export function Stepper({ steps, activeIndex, onStep, reachableIndex, completed, ariaLabel = 'Steps' }: StepperProps): VNode {
   const maxReach = reachableIndex ?? activeIndex;
   return (
     <nav class="ui-stepper" aria-label={ariaLabel}>
       {steps.map((s, i) => {
-        const status = i < activeIndex ? 'complete' : i === activeIndex ? 'active' : 'todo';
         const reachable = i <= maxReach;
+        const done = completed ? (completed[i] === true && reachable) : i < activeIndex;
+        const isActive = i === activeIndex;
+        const cls = ['ui-stepper-step'];
+        if (done) cls.push('is-complete');
+        if (isActive) cls.push('is-active');
+        if (!done && !isActive) cls.push('is-todo');
+        if (!reachable) cls.push('is-locked');
         return (
           <button
             key={s.key}
             type="button"
-            class={`ui-stepper-step is-${status}${reachable ? '' : ' is-locked'}`}
+            class={cls.join(' ')}
             disabled={!reachable || !onStep}
-            aria-current={status === 'active' ? 'step' : undefined}
+            aria-current={isActive ? 'step' : undefined}
             title={reachable ? undefined : 'Complete the previous steps first'}
             onClick={() => { if (reachable && onStep) onStep(i); }}
           >
             <span class="ui-stepper-marker">
-              {status === 'complete'
+              {done
                 ? <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M20 6 9 17l-5-5" /></svg>
                 : i + 1}
             </span>

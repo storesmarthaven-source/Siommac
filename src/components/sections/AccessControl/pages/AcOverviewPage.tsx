@@ -118,6 +118,23 @@ const ACTION_LABEL: Record<string, string> = {
   session_revoke: 'Session revoked',
 };
 
+// Per-action icon + semantic tone for the Recent Access Changes feed (Option 2 design).
+const ACTION_ICON: Record<string, { icon: LucideName; tone: 'green' | 'red' | 'amber' | 'blue' | 'slate' }> = {
+  permission_grant:           { icon: 'KeyRound',    tone: 'blue' },
+  permission_deny:            { icon: 'Ban',         tone: 'red' },
+  permission_clear:           { icon: 'RotateCcw',   tone: 'slate' },
+  role_create:                { icon: 'ShieldPlus',  tone: 'green' },
+  role_update:                { icon: 'Pencil',      tone: 'amber' },
+  role_delete:                { icon: 'Trash2',      tone: 'red' },
+  role_perm_grant:            { icon: 'ShieldCheck', tone: 'green' },
+  role_perm_revoke:           { icon: 'ShieldX',     tone: 'red' },
+  permission_grant_requested: { icon: 'Clock',       tone: 'blue' },
+  permission_grant_approved:  { icon: 'CircleCheck', tone: 'green' },
+  permission_grant_rejected:  { icon: 'CircleX',     tone: 'red' },
+  permission_grant_cancelled: { icon: 'Ban',         tone: 'slate' },
+  session_revoke:             { icon: 'LogOut',      tone: 'red' },
+};
+
 function ago(iso: string): string {
   const s = Math.max(0, Math.floor((Date.now() - new Date(iso).getTime()) / 1000));
   if (s < 60) return 'just now';
@@ -149,6 +166,18 @@ export function AcOverviewPage(): VNode {
   const highRisk   = CRITICAL_GRANT_KEYS.size;
   const overrideTotal = useMemo(() => (usersQ.data ?? []).reduce((n, u) => n + (u.overrideCount ?? 0), 0), [usersQ.data]);
   const usersWithOverrides = useMemo(() => (usersQ.data ?? []).filter(u => (u.overrideCount ?? 0) > 0).length, [usersQ.data]);
+
+  // Resolve an audit row's target to a readable label (no raw UUIDs): roles → label,
+  // users → name, everything else (permission keys) is already human-readable.
+  const roleLabelByName = useMemo(() => new Map((rolesQ.data ?? []).map(r => [r.name, r.label])), [rolesQ.data]);
+  const userNameById = useMemo(() => new Map((usersQ.data ?? []).map(u => [u.id, u.fullName || u.username])), [usersQ.data]);
+  const resolveTarget = (entity: string, entityId: string): string => {
+    if (!entityId) return '';
+    const e = (entity || '').toLowerCase();
+    if (e.includes('role')) return roleLabelByName.get(entityId) ?? entityId;
+    if (e.includes('user')) return userNameById.get(entityId) ?? entityId;
+    return entityId;
+  };
 
   // ── module × role coverage matrix (from the catalogue) ────────────────────────
   const { modules, keysByModule } = useMemo(() => {
@@ -362,18 +391,26 @@ export function AcOverviewPage(): VNode {
         {/* Recent Access Changes */}
         <div class="card">
           <div class="card-head"><div class="card-title">Recent Access Changes</div><span class="link" onClick={() => goTo('s-ac-audit')}>View all</span></div>
-          <div style={{ padding: '10px' }}>
+          <div style={{ padding: '2px 16px 8px' }}>
             {auditQ.isLoading ? (
               <div class="ac-loading">Loading…</div>
             ) : (auditQ.data?.logs ?? []).length === 0 ? (
               <div class="ac-empty">No recent access changes.</div>
-            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; username: string; action: string; entity_id: string; created_at: string }[]).map(l => (
-              <div class="rc-item" key={l.id}>
-                <span class="avatar" style={{ width: '32px', height: '32px', background: '#64748b' }}>{initials(l.username)}</span>
-                <div class="grow"><div class="hr-name">{l.username || 'system'}</div><div class="sub">{ACTION_LABEL[l.action] ?? l.action}{l.entity_id ? ` · ${l.entity_id}` : ''}</div></div>
-                <span class="sub">{ago(l.created_at)}</span>
-              </div>
-            ))}
+            ) : (auditQ.data!.logs.slice(0, 5) as { id: string; username: string; action: string; entity: string; entity_id: string; created_at: string }[]).map(l => {
+              const meta = ACTION_ICON[l.action] ?? { icon: 'Activity' as LucideName, tone: 'slate' as const };
+              const target = resolveTarget(l.entity, l.entity_id);
+              return (
+                <div class="rc2-item" key={l.id}>
+                  <span class={`rc2-ico tone-${meta.tone}`}><LucideIcon name={meta.icon} size={16} /></span>
+                  <span class="avatar rc2-av">{initials(l.username)}</span>
+                  <div class="rc2-body">
+                    <div class="rc2-line"><span class="rc2-nm">{l.username || 'System'}</span><span class="rc2-act"> · {ACTION_LABEL[l.action] ?? l.action}</span></div>
+                    {target && <span class="rc2-tgt" title={target}>{target}</span>}
+                  </div>
+                  <span class="rc2-time">{ago(l.created_at)}</span>
+                </div>
+              );
+            })}
           </div>
         </div>
 

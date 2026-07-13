@@ -31,7 +31,7 @@ import {
 import { Stepper, type StepperStep } from '@ui';
 import { fmtMoney, fmtDate, fmtPercent, toRoman } from './financeShared';
 import {
-  IconOk, IconOkBadge, IconClose, IconAlert, IconArrow, IconInfo, IconFile, IconSpark,
+  IconOk, IconOkBadge, IconClose, IconAlert, IconArrow, IconInfo, IconFile,
   TextField, MoneyField, SelectField, StatFormShell, minLenError,
 } from './_shared/sfpKit';
 import './statutoryForms.css';
@@ -48,18 +48,6 @@ const n = (s: string): number => { const x = Number(s.trim()); return Number.isF
 interface BandRow { classNo: string; weeklyMin: string; weeklyMax: string; assumedAvgWeekly: string; employeeWeekly: string; employerWeekly: string; classZWeekly: string; }
 const emptyBand = (classNo: number): BandRow => ({ classNo: String(classNo), weeklyMin: '', weeklyMax: '', assumedAvgWeekly: '', employeeWeekly: '', employerWeekly: '', classZWeekly: '' });
 const bandHasData = (b: BandRow): boolean => !!(b.classNo || b.weeklyMin || b.weeklyMax || b.assumedAvgWeekly || b.employeeWeekly || b.employerWeekly || b.classZWeekly);
-
-interface Donut { percent: number; }
-function ProgressDonut({ percent }: Donut): VNode {
-  const r = 32, c = 2 * Math.PI * r, off = c * (1 - percent / 100);
-  return (
-    <svg width="86" height="86" viewBox="0 0 86 86" style={{ flex: '0 0 auto' }}>
-      <circle cx="43" cy="43" r={r} fill="none" stroke="#e6eaf1" stroke-width="9" />
-      <circle cx="43" cy="43" r={r} fill="none" stroke="var(--sfp-primary-600)" stroke-width="9" stroke-linecap="round" stroke-dasharray={c} stroke-dashoffset={off} transform="rotate(-90 43 43)" />
-      <text x="43" y="48" text-anchor="middle" font-size="17" font-weight="700" fill="var(--sfp-ink-strong)">{percent}%</text>
-    </svg>
-  );
-}
 
 export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode {
   const versionsQ = useStatutoryVersions();
@@ -85,6 +73,8 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
   const set = <K extends keyof typeof f>(k: K) => (v: string) => setF(p => ({ ...p, [k]: v }));
   const [bands, setBands] = useState<BandRow[]>([emptyBand(1)]);
   const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [copyingBands, setCopyingBands] = useState(false);
+  const [copiedFromId, setCopiedFromId] = useState(''); // source already copied — blocks repeat copies (and toasts)
 
   const versions = versionsQ.data ?? [];
 
@@ -106,7 +96,10 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
   };
 
   const copyBands = async (): Promise<void> => {
-    if (!basedOnId) return;
+    // Guard repeat presses: skip if none selected, a copy is in-flight, or this source
+    // was already copied — otherwise each click re-copies and fires another toast.
+    if (!basedOnId || copyingBands || copiedFromId === basedOnId) return;
+    setCopyingBands(true);
     try {
       const rows = await financeStatutoryApi.listNisClasses({ statutoryVersionId: basedOnId });
       if (!rows.length) { toast('That version has no NIS bands to copy.'); return; }
@@ -117,8 +110,10 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
         employeeWeekly: String(r.employeeWeekly), employerWeekly: String(r.employerWeekly),
         classZWeekly: r.classZWeekly != null ? String(r.classZWeekly) : '',
       })));
+      setCopiedFromId(basedOnId);
       toast(`Copied ${rows.length} band(s).`);
     } catch (e) { toast.error((e as Error).message); }
+    finally { setCopyingBands(false); }
   };
 
   // ── Band validation ────────────────────────────────────────────────────────
@@ -174,10 +169,17 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
     { label: 'NIS bands valid (no errors)', state: bandVal.count === 0 ? 'pend' : bandVal.errorCount > 0 ? 'pend' : 'ok' },
     { label: 'No overlapping bands', state: bandVal.count === 0 ? 'pend' : bandVal.overlaps > 0 ? 'warn' : 'ok' },
   ];
-  const okChecks = checks.filter(c => c.state === 'ok').length;
-  const percent = Math.round((okChecks / checks.length) * 100);
   const requiredOk = checks.slice(0, 6).every(c => c.state === 'ok'); // overlaps are warnings, non-blocking
   const canCreate = requiredOk && bandVal.errorCount === 0;
+  // Per-step completion (drives the stepper's green check as soon as a step's info is
+  // filled — no need to press Continue). Maps each wizard step to its validation checks.
+  const stepComplete: boolean[] = [
+    checks[0]?.state === 'ok',                                 // Metadata
+    checks[1]?.state === 'ok' && checks[2]?.state === 'ok',     // PAYE Bands
+    checks[3]?.state === 'ok',                                 // Health Surcharge
+    checks[4]?.state === 'ok' && checks[5]?.state === 'ok',     // NIS Ceiling & Bands
+    canCreate,                                                 // Review & Submit
+  ];
 
   // ── Create ───────────────────────────────────────────────────────────────────
   const submit = async (): Promise<void> => {
@@ -217,9 +219,9 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
       title="New Rate Version"
       sub="Create a new statutory rate version — PAYE, Health Surcharge, and the NIS contribution-band table."
       onBack={onClose}
-      stepper={<Stepper steps={STEPS} activeIndex={step} onStep={setStep} reachableIndex={maxStep} ariaLabel="New rate version steps" />}
+      stepper={<Stepper steps={STEPS} activeIndex={step} onStep={setStep} reachableIndex={maxStep} completed={stepComplete} ariaLabel="New rate version steps" />}
     >
-          <div class="sfp-body">
+          <div class="sfp-body sfp-body--wide">
             {/* Step content */}
             <div>
               {step === 0 && (
@@ -275,12 +277,12 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
                   <div style={{ display: 'flex', alignItems: 'center', marginBottom: 8 }}>
                     <h3 style={{ margin: 0, fontSize: 14.5, fontWeight: 500, color: 'var(--sfp-ink-strong)' }}>NIS Contribution Bands</h3>
                     <div style={{ marginLeft: 'auto', display: 'flex', gap: 8 }}>
-                      {basedOnId && <button type="button" class="sfp-browse" onClick={() => void copyBands()}>Copy bands from source</button>}
+                      {basedOnId && <button type="button" class="sfp-browse" disabled={copyingBands || copiedFromId === basedOnId} onClick={() => void copyBands()}>{copyingBands ? 'Copying…' : copiedFromId === basedOnId ? 'Bands copied' : 'Copy bands from source'}</button>}
                       <button type="button" class="sfp-browse" onClick={() => setBands(p => [...p, emptyBand(p.length + 1)])}>+ Add band</button>
                     </div>
                   </div>
                   <table class="sfp-vtable">
-                    <thead><tr><th style={{ width: 64 }}>Class</th><th>Weekly Min</th><th>Weekly Max</th><th>Assumed Avg</th><th>Employee /wk</th><th>Employer /wk</th><th>Class Z /wk</th><th style={{ width: 44 }} /></tr></thead>
+                    <thead><tr><th style={{ width: 76 }}>Class</th><th>Weekly Min</th><th>Weekly Max</th><th>Assumed Avg</th><th>Employee /wk</th><th>Employer /wk</th><th>Class Z /wk</th><th style={{ width: 44 }} /></tr></thead>
                     <tbody>
                       {bands.map((b, i) => {
                         const e = bandVal.errs.get(i);
@@ -290,7 +292,7 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
                           <tr key={i}>
                             <td><input class={`sfp-cellinp${badCls}`} type="number" title={roman ? `Class ${roman}` : undefined} value={b.classNo} onInput={e2 => setBand(i, 'classNo')((e2.currentTarget).value)} /></td>
                             <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.weeklyMin} onInput={e2 => setBand(i, 'weeklyMin')((e2.currentTarget).value)} /></td>
-                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" placeholder="∞" value={b.weeklyMax} onInput={e2 => setBand(i, 'weeklyMax')((e2.currentTarget).value)} /></td>
+                            <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" placeholder="No max" value={b.weeklyMax} onInput={e2 => setBand(i, 'weeklyMax')((e2.currentTarget).value)} /></td>
                             <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.assumedAvgWeekly} onInput={e2 => setBand(i, 'assumedAvgWeekly')((e2.currentTarget).value)} /></td>
                             <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employeeWeekly} onInput={e2 => setBand(i, 'employeeWeekly')((e2.currentTarget).value)} /></td>
                             <td><input class={`sfp-cellinp${badCls}`} type="number" step="0.01" value={b.employerWeekly} onInput={e2 => setBand(i, 'employerWeekly')((e2.currentTarget).value)} /></td>
@@ -324,15 +326,8 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
               )}
             </div>
 
-            {/* Rail: progress + validation checklist */}
+            {/* Rail: validation checklist */}
             <div class="sfp-aside">
-              <div class="sfp-panel sfp-panel-ring">
-                <div class="sfp-panel-head"><span class="ic"><IconSpark /></span>Configuration Progress</div>
-                <div class="sfp-donut-wrap" style={{ marginTop: 8 }}>
-                  <ProgressDonut percent={percent} />
-                  <div class="sfp-donut-txt"><div class="big">{okChecks} of {checks.length} checks</div><div class="sm">{percent === 100 ? 'Ready to create' : 'In progress'}</div></div>
-                </div>
-              </div>
               <div class="sfp-panel">
                 <div class="sfp-panel-head"><span class="ic"><IconOk size={16} /></span>Validation Checklist</div>
                 {checks.map(c => (
@@ -348,7 +343,6 @@ export function StatNewVersionPage({ onClose }: { onClose: () => void }): VNode 
 
           {/* Footer */}
           <div class="sfp-footer">
-            {step > 0 && <button type="button" class="sfp-btn sfp-btn-ghost" onClick={() => setStep(step - 1)} disabled={busy}>Back</button>}
             <div class="right">
               <button type="button" class="sfp-btn sfp-btn-ghost" onClick={onClose} disabled={busy}>Cancel</button>
               {step < STEPS.length - 1

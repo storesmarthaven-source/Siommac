@@ -465,6 +465,11 @@ input[type="time"] {
 }
 .form-group input[type="checkbox"],
 .form-group input[type="radio"] { width: auto !important; padding: 0 !important; margin: 0 !important; cursor: pointer; accent-color: var(--siomac-red); transform: scale(1.15); }
+/* App-wide: hide number-input spinner arrows. They crowd narrow fields (e.g. the NIS
+   Class cell) and clip the value; forms use explicit typing, not the up/down steppers. */
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; appearance: textfield; }
 .form-check-row { display: flex; align-items: center; gap: 10px; }
 .form-check-row label { margin: 0; cursor: pointer; user-select: none; }
 .invalid-feedback { color: var(--danger); font-size: 12px; margin-top: 4px; display: none; }

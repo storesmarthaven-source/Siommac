@@ -56,29 +56,33 @@ export function Drawer({ open, title, sub, subtitle, details, children, onClose,
   const panelRef = useOverlayA11y(open, onClose);
 
   if (rich) {
-    // v36 rich entity panel: portal to <body>, no dimming backdrop. An optional `foot`
-    // renders as a pinned action bar (e.g. lifecycle Submit/Approve/Activate buttons);
-    // omitted entirely when no foot is passed (rich panels default to inline actions).
+    // v36 rich entity panel: portal to <body>. A transparent backdrop (no dimming) sits
+    // behind the panel so a click anywhere outside closes it — the app-wide standard.
+    // An optional `foot` renders as a pinned action bar (e.g. lifecycle Submit/Approve/
+    // Activate); omitted entirely when no foot is passed (rich panels default to inline actions).
     const richFoot = noFooter ? null : (foot ?? footer ?? null);
     return createPortal(
-      <aside
-        ref={panelRef}
-        class={`ui-rdrawer${panelClass ? ' ' + panelClass : ''}${open ? ' open' : ''}`}
-        role="dialog" aria-modal="true" aria-hidden={!open}
-      >
-        <div class="ui-rdrawer-top">
-          <div>
-            <div class="ui-rdrawer-title">{title}</div>
-            {subText && <div class="ui-rdrawer-sub">{subText}</div>}
+      <>
+        <div class={`ui-rdrawer-backdrop${open ? ' open' : ''}`} onClick={onClose} aria-hidden="true" />
+        <aside
+          ref={panelRef}
+          class={`ui-rdrawer${panelClass ? ' ' + panelClass : ''}${open ? ' open' : ''}`}
+          role="dialog" aria-modal="true" aria-hidden={!open}
+        >
+          <div class="ui-rdrawer-top">
+            <div>
+              <div class="ui-rdrawer-title">{title}</div>
+              {subText && <div class="ui-rdrawer-sub">{subText}</div>}
+            </div>
+            <div class="ui-rdrawer-icons">
+              {headActions}
+              <button class="ui-icon-action" onClick={onClose} aria-label="Close">×</button>
+            </div>
           </div>
-          <div class="ui-rdrawer-icons">
-            {headActions}
-            <button class="ui-icon-action" onClick={onClose} aria-label="Close">×</button>
-          </div>
-        </div>
-        <div class="ui-rdrawer-scroll">{children}</div>
-        {richFoot && <div class="ui-rdrawer-foot">{richFoot}</div>}
-      </aside>,
+          <div class="ui-rdrawer-scroll">{children}</div>
+          {richFoot && <div class="ui-rdrawer-foot">{richFoot}</div>}
+        </aside>
+      </>,
       document.body,
     );
   }
