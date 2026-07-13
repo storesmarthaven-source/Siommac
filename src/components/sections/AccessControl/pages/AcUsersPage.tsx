@@ -25,7 +25,7 @@ type OvState = 'inherit' | 'allow' | 'deny';
 const PAGE = 8;
 
 const AVATAR_BG = ['#2563eb', '#7c3aed', '#0d9488', '#d97706', '#db2777', '#16a34a', '#6b7280'];
-const bgFor = (s: string) => AVATAR_BG[[...s].reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_BG.length]!;
+const bgFor = (s: string) => AVATAR_BG[Array.from(s).reduce((n, c) => n + c.charCodeAt(0), 0) % AVATAR_BG.length]!;
 const initials = (s: string) => (s || '?').split(/[\s._-]+/).map(w => w[0]).join('').slice(0, 2).toUpperCase();
 
 // Compact relative time for the override feed (e.g. "just now", "12m", "3h", "2d", else a date).

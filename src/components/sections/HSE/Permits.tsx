@@ -452,13 +452,6 @@ export function PermitsArea({ tab }: { tab: string }): VNode {
   const [templateDialog,  setTemplateDialog]  = useState(false);
   const [editingTemplate, setEditingTemplate] = useState<PermitTemplate | null>(null);
 
-  // Stats for meta chips in PageHeader
-  const { data: statsRes } = usePermitStats();
-  const stats = statsRes?.data;
-  const totalActive   = stats?.activePermits.total    ?? 0;
-  const expiringSoon  = stats?.expiringSoon.total      ?? 0;
-  const bottlenecks   = stats?.approvalBottlenecks.total ?? 0;
-
   // Counts for Permits + Approvals tab badges
   const { data: allPermitsRes }  = usePermits({});
   const { data: approvalsRes }   = usePermits({ status: 'awaiting_approval' });

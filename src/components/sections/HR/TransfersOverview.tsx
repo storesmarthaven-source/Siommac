@@ -43,8 +43,6 @@ export function TransfersOverview(): VNode {
   if (selectedId) return <RequestDetail requestId={selectedId} onBack={() => setSelectedId(null)} rows={transfersQ.data ?? []} />;
 
   const rows = transfersQ.data ?? [];
-  const pending  = rows.filter(r => r.status === 'submitted' || r.status === 'in_review' || r.status === 'returned').length;
-  const applied  = rows.filter(r => r.status === 'applied').length;
 
   return (
     <div class="hr-transfers">

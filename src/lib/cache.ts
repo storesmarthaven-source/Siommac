@@ -175,7 +175,7 @@ export const SiomacDB = {
               warmed++;
             }
           });
-          if (warmed) console.log('[SiomacDB] Warmed SWR from IndexedDB:', warmed, 'entries');
+          if (warmed) console.warn('[SiomacDB] Warmed SWR from IndexedDB:', warmed, 'entries');
           resolve();
         };
         req.onerror = () => resolve();

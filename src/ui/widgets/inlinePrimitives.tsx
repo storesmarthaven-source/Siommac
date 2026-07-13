@@ -26,8 +26,14 @@ export function ListRow({ primary, secondary, right, tone = 'muted' }: { primary
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, padding: '7px 9px', border: '1px solid var(--cds-border, #e4e7ec)', borderRadius: 8, background: 'var(--cds-surface, #fff)' }}>
       <div style={{ minWidth: 0 }}>
-        <div style={{ ...ellip, fontSize: 13, fontWeight: 600, color: 'var(--cds-text, #1f2a44)' }}>{primary}</div>
-        {secondary ? <div style={{ ...ellip, fontSize: 11.5, color: '#667085' }}>{secondary}</div> : null}
+        <div style={{
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- ellip is a plain CSSProperties object, not an Iterable
+          ...ellip, fontSize: 13, fontWeight: 600, color: 'var(--cds-text, #1f2a44)',
+        }}>{primary}</div>
+        {secondary ? <div style={{
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- ellip is a plain CSSProperties object, not an Iterable
+          ...ellip, fontSize: 11.5, color: '#667085',
+        }}>{secondary}</div> : null}
       </div>
       {right ? <span style={{ flex: 'none', fontSize: 11, fontWeight: 500, color: TONE[tone] }}>{right}</span> : null}
     </div>
@@ -83,7 +89,10 @@ export function MiniBars({ rows, palette = ['#0b5bd3'] }: { rows: { label: strin
     <div style={{ display: 'flex', flexDirection: 'column', gap: 7, width: '100%' }}>
       {items.map((r, i) => (
         <div key={r.label} style={{ display: 'grid', gridTemplateColumns: '1fr 2fr auto', alignItems: 'center', gap: 8, fontSize: 12 }}>
-          <span style={{ ...ellip, color: '#475569' }}>{humanize(r.label)}</span>
+          <span style={{
+            // eslint-disable-next-line @typescript-eslint/no-misused-spread -- ellip is a plain CSSProperties object, not an Iterable
+            ...ellip, color: '#475569',
+          }}>{humanize(r.label)}</span>
           <span style={{ height: 8, borderRadius: 6, background: '#eef2f7', overflow: 'hidden' }}>
             <span style={{ display: 'block', height: '100%', width: `${Math.round((r.count / max) * 100)}%`, background: palette[i % palette.length], borderRadius: 6 }} />
           </span>

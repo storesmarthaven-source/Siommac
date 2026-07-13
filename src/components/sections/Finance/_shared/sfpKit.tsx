@@ -76,7 +76,7 @@ export function StatusPill({ status, label }: { status: string; label: string })
 // Renders like every other Siomac sub-module page: a back link + the standard
 // PageHeader (which carries the ProfilePill / "employee-master top bar") + the form
 // content in a normal content-area panel. NOT a floating card on a grey letterbox.
-export function StatFormShell({ icon, title, sub, statusLabel, backLabel = 'Statutory Configuration', onBack, actions, stepper, children }: {
+export function StatFormShell({ icon, title, sub, statusLabel: _statusLabel, backLabel = 'Statutory Configuration', onBack, actions, stepper, children }: {
   icon: ComponentChildren;    // an icon node (Lucide SVG) for the header chip
   title: string;
   sub?: string;

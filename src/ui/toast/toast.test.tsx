@@ -489,7 +489,7 @@ describe("Toaster component", () => {
     const assignMock = vi.fn();
     Object.defineProperty(window, "location", {
       configurable: true,
-      value: { ...origLocation, assign: assignMock }
+      value: Object.assign({}, origLocation, { assign: assignMock })
     });
 
     void act(() => {

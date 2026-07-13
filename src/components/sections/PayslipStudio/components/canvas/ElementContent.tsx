@@ -16,7 +16,10 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
       return (
         <div
           class="el-content"
-          style={{ ...boxCss(el, true), overflow: 'hidden', display: 'flex' }}
+          style={
+            // eslint-disable-next-line @typescript-eslint/no-misused-spread -- merging CSSProperties from boxCss; plain object return, not an Iterable
+            { ...boxCss(el, true), overflow: 'hidden', display: 'flex' }
+          }
         >
           <div
             style={{
@@ -27,6 +30,7 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
               alignItems: alignFor(el.valign),
               whiteSpace: 'pre-wrap',
               overflow: 'hidden',
+              // eslint-disable-next-line @typescript-eslint/no-misused-spread -- merging CSSProperties from fontCss; plain object return, not an Iterable
               ...fontCss(el),
             }}
           >
@@ -45,6 +49,7 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
               justifyContent: justifyFor(el.align),
               gap: '8px',
               height: '100%',
+              // eslint-disable-next-line @typescript-eslint/no-misused-spread -- merging CSSProperties from fontCss; plain object return, not an Iterable
               ...fontCss(el),
             }}
           >
@@ -149,7 +154,10 @@ export function ElementContent({ el, preview }: { el: DesignElement; preview: bo
       const spacerRow = Math.max(18, Math.round(el.fontSize) + 11); // ruled-line spacing ≈ a data row
       const totalText = total.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 });
       return (
-        <div class="el-content" style={{ ...boxCss(el, true), display: 'flex', flexDirection: 'column' }}>
+        <div class="el-content" style={
+          // eslint-disable-next-line @typescript-eslint/no-misused-spread -- merging CSSProperties from boxCss; plain object return, not an Iterable
+          { ...boxCss(el, true), display: 'flex', flexDirection: 'column' }
+        }>
           {el.title && (
             <div style={{ fontSize: `${el.titleFontSize ?? el.fontSize + 2}px`, fontWeight: 800, marginBottom: '6px', color: el.accent, fontFamily: ff }}>
               {el.title}

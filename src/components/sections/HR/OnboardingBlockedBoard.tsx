@@ -55,7 +55,7 @@ export function OnboardingBlockedBoard({
     return q ? all.filter(b => b.caseNo.toLowerCase().includes(q) || (b.employeeName ?? '').toLowerCase().includes(q) || b.blockerTitle.toLowerCase().includes(q)) : all;
   }, [all, query]);
 
-  const kpi = useMemo(() => ({
+  const _kpi = useMemo(() => ({
     active: rows.length,
     critical: rows.filter(b => b.severity === 'critical').length,
     escalated: rows.filter(b => b.status === 'escalated').length,

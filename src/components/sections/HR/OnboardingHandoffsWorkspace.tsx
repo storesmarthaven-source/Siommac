@@ -60,7 +60,7 @@ export function OnboardingHandoffsWorkspace({
   }, [all, query]);
   const modules = useMemo(() => Array.from(new Set(all.map(h => h.targetModule))).sort(), [all]);
 
-  const kpi = useMemo(() => {
+  const _kpi = useMemo(() => {
     const weekAgo = Date.now() - 7 * 86400_000;
     return {
       pending: rows.filter(h => h.status === 'pending' || h.status === 'sent').length,

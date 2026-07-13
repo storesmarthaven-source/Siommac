@@ -95,7 +95,7 @@ export function OnboardingTasksWorkspace({
   const ownerRoles = useMemo(() => Array.from(new Set(rows.map(r => r.ownerRole).filter((x): x is string => !!x))).sort(), [rows]);
 
   // KPI strip — computed from the CURRENT filter set so the numbers match the list.
-  const kpi = useMemo(() => {
+  const _kpi = useMemo(() => {
     const weekAgo = Date.now() - 7 * 86400_000;
     return {
       open: rows.filter(r => isOpen(r.status)).length,

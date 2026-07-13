@@ -73,7 +73,10 @@ export function SetPasswordPage(): VNode {
             <p style={{ color: '#33425f', fontSize: '14px', lineHeight: '1.5' }}>
               Your password is set and your account is active. You can now sign in with your work email.
             </p>
-            <a href="/" style={{ ...btn, display: 'grid', placeItems: 'center', textDecoration: 'none' }}>Go to sign in</a>
+            <a href="/" style={
+              // eslint-disable-next-line @typescript-eslint/no-misused-spread -- btn is a plain CSSProperties constant, not an Iterable
+              { ...btn, display: 'grid', placeItems: 'center', textDecoration: 'none' }
+            }>Go to sign in</a>
           </>
         ) : !token ? (
           <p style={{ color: '#b42318', fontSize: '14px', lineHeight: '1.5' }}>
@@ -91,7 +94,10 @@ export function SetPasswordPage(): VNode {
             <input style={input} type="password" autocomplete="new-password" value={confirm}
               onInput={e => setConfirm((e.target as HTMLInputElement).value)} placeholder="Re-enter your password" />
             {error && <div style={{ color: '#b42318', fontSize: '13px', marginTop: '12px' }}>{error}</div>}
-            <button style={{ ...btn, opacity: busy ? '0.7' : '1' }} type="submit" disabled={busy}>
+            <button style={
+              // eslint-disable-next-line @typescript-eslint/no-misused-spread -- btn is a plain CSSProperties constant, not an Iterable
+              { ...btn, opacity: busy ? '0.7' : '1' }
+            } type="submit" disabled={busy}>
               {busy ? 'Setting password…' : 'Set password'}
             </button>
           </form>

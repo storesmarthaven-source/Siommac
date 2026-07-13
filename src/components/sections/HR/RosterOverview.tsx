@@ -58,7 +58,7 @@ export function RosterOverview(): VNode {
   const canPublish        = can('hr.roster.publish');
   const canTemplates      = can('hr.roster.templates.manage');
 
-  const statsQ = useRosterStats();
+  const _statsQ = useRosterStats();
 
   return (
     <div class="hr-roster">

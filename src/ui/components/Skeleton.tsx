@@ -43,7 +43,7 @@ export interface SkeletonProps {
 }
 
 export function Skeleton({ width = '100%', height = 12, radius, circle, class: cls, style }: SkeletonProps): VNode {
-  const s: CSSProperties = { ...style };
+  const s: CSSProperties = Object.assign({}, style);
   if (circle) {
     const d = dim(width ?? height ?? 38);
     s.width = d; s.height = d;

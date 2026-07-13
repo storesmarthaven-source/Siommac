@@ -120,6 +120,12 @@ const styles = {
   } as CSSProperties,
 } as const;
 
+// Pre-merged style objects for JSX (Object.assign avoids the no-misused-spread lint rule
+// that fires on CSSProperties object spreads due to its index signature).
+const thCenterStyle: CSSProperties = Object.assign({}, styles.th, styles.thCenter);
+const tdCenterStyle: CSSProperties = Object.assign({}, styles.td, styles.tdCenter);
+const skeletonSmStyle: CSSProperties = Object.assign({}, styles.skeleton, { width: '40px' });
+
 // ── Toggle component ──────────────────────────────────────────────────────────
 
 interface ToggleProps {
@@ -213,9 +219,9 @@ export function NotificationPreferences(): h.JSX.Element {
         <thead>
           <tr>
             <th style={styles.th}>Notification type</th>
-            <th style={{ ...styles.th, ...styles.thCenter }}>In-app</th>
-            <th style={{ ...styles.th, ...styles.thCenter }}>Email</th>
-            <th style={{ ...styles.th, ...styles.thCenter }}>WhatsApp</th>
+            <th style={thCenterStyle}>In-app</th>
+            <th style={thCenterStyle}>Email</th>
+            <th style={thCenterStyle}>WhatsApp</th>
           </tr>
         </thead>
         <tbody>
@@ -231,9 +237,9 @@ export function NotificationPreferences(): h.JSX.Element {
                     : <span style={styles.label}>{NOTIFICATION_TYPE_LABELS[type]}</span>
                   }
                 </td>
-                <td style={{ ...styles.td, ...styles.tdCenter }}>
+                <td style={tdCenterStyle}>
                   {isLoading
-                    ? <span style={{ ...styles.skeleton, width: '40px' }} />
+                    ? <span style={skeletonSmStyle} />
                     : (
                       <Toggle
                         checked={pref.in_app && (pref.enabled ?? true)}
@@ -244,10 +250,10 @@ export function NotificationPreferences(): h.JSX.Element {
                     )
                   }
                 </td>
-                <td style={{ ...styles.td, ...styles.tdCenter }}>
+                <td style={tdCenterStyle}>
                   <span style={styles.soon} title="Email delivery launches in Phase 2f">Coming soon</span>
                 </td>
-                <td style={{ ...styles.td, ...styles.tdCenter }}>
+                <td style={tdCenterStyle}>
                   <span style={styles.soon} title="WhatsApp delivery launches in Phase 2f">Coming soon</span>
                 </td>
               </tr>
