@@ -20,7 +20,7 @@ import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
-import { TableSearch, AdvancedFilter, useFilterDropdowns } from '@ui';
+import { TableSearch, FilterDropdown, useFilterDropdowns } from '@ui';
 import { toast } from '@store/ui';
 
 // Lucide glyph per capability module; a single neutral chip colour for all (set in CSS).
@@ -316,12 +316,11 @@ export function AcUsersPage(): VNode {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <TableSearch value={filter.search} onChange={v => setFilter(f => ({ ...f, search: v }))} placeholder="Search capabilities…" />
                 </div>
-                <AdvancedFilter openId={openId} setOpenId={setOpenId}
-                  onReset={() => setFilter(f => ({ ...f, modules: [], risks: [] }))}
-                  tabs={[{ name: 'Filters', blurb: 'Filter capabilities by module and risk.', sections: [
-                    { type: 'checklist', title: 'Module', options: allModules, selected: filter.modules, onChange: v => setFilter(f => ({ ...f, modules: v })) },
-                    { type: 'checklist', title: 'Risk Level', options: ['low', 'medium', 'high', 'critical'], selected: filter.risks, onChange: v => setFilter(f => ({ ...f, risks: v })), labelFn: r => r[0]!.toUpperCase() + r.slice(1) },
-                  ] }]} />
+                <FilterDropdown id="u-mod" label="Module" openId={openId} setOpenId={setOpenId}
+                  options={allModules} selected={filter.modules} onChange={v => setFilter(f => ({ ...f, modules: v }))} />
+                <FilterDropdown id="u-risk" label="Risk" openId={openId} setOpenId={setOpenId}
+                  options={['low', 'medium', 'high', 'critical']} selected={filter.risks} onChange={v => setFilter(f => ({ ...f, risks: v }))}
+                  labelFn={r => r[0]!.toUpperCase() + r.slice(1)} />
               </div>
 
               <div class="card" style={{ overflow: 'hidden' }}>
@@ -336,7 +335,7 @@ export function AcUsersPage(): VNode {
                           <tr class="grp" key={`g-${mod}`}>
                             <td colSpan={6} style={{ padding: '12px 18px', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
-                                <i class={`fas fa-chevron-${open ? 'down' : 'right'}`} style={{ color: 'var(--faint)', fontSize: '11px', width: '12px', textAlign: 'center', flex: 'none' }} />
+                                <span style={{ color: 'var(--faint)', width: '14px', display: 'inline-flex', flex: 'none' }}><LucideIcon name={open ? 'Minus' : 'Plus'} size={14} strokeWidth={2.5} /></span>
                                 <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
                                 <span class="u-mod-name">{mod}</span>
                                 <span class="badge grey" style={{ fontSize: '10.5px', padding: '1px 8px' }}>{keys.length}</span>
