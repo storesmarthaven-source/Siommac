@@ -794,6 +794,8 @@
 .svd-tiles .ui-stat-tile strong { font-size: 20px; letter-spacing: -.01em; margin-bottom: 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .svd-tiles .ui-stat-tile span { font-size: 10px; }
 .svd-section { margin-top: 14px; }
+/* Extra breathing room between stacked sections (e.g. Lifecycle stepper → Configuration). */
+.svd-section + .svd-section { margin-top: 24px; }
 .svd-section-head { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-bottom: 10px; }
 .svd-label { color: rgba(226, 238, 252, .55); font-size: 10.5px; letter-spacing: .06em; text-transform: uppercase; }
 .svd-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 7px; }
@@ -809,9 +811,10 @@
 .svd-step-line { flex: 1; height: 2px; background: rgba(255, 255, 255, .16); }
 .svd-step-dot { width: 12px; height: 12px; border-radius: 50%; flex: none; margin: 0 3px; }
 .svd-step-title { font-size: 11px; font-weight: 600; color: #fff; margin-top: 8px; }
-.svd-step-sub { font-size: 9.5px; color: rgba(226, 238, 252, .5); margin-top: 2px; line-height: 1.3; padding: 0 3px; }
+.svd-step-date { font-size: 10px; color: rgba(226, 238, 252, .62); margin-top: 3px; white-space: nowrap; }
+.svd-step-by { max-width: 100%; font-size: 9.5px; color: rgba(226, 238, 252, .42); margin-top: 1px; padding: 0 2px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .svd-step.is-pending .svd-step-title { color: rgba(226, 238, 252, .55); font-weight: 500; }
-.svd-step.is-pending .svd-step-sub { color: rgba(226, 238, 252, .35); }
+.svd-step.is-pending .svd-step-date { color: rgba(226, 238, 252, .38); }
 
 .svd-rail { display: flex; flex-direction: column; }
 .svd-rail-item { display: flex; gap: 11px; }

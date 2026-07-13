@@ -1041,6 +1041,15 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const stageSub = (done: boolean, date: string | null | undefined, actor: string | null | undefined, reason?: string | null): string =>
     done ? `${fmtDate(date)} · ${actorName(actor)}${reason ? ` · ${reason}` : ''}` : 'Pending';
   const todayIso = new Date().toISOString();
+  // Split date + actor onto their own lines so the horizontal stepper stacks them cleanly instead
+  // of wrap-jumbling one "date · name" string. When a completed stage has no stored timestamp
+  // (older seed data / uncaptured events), fall back to the created date/creator.
+  const stepDate = (done: boolean, date: string | null | undefined): string => done ? fmtDate(date) : 'Pending';
+  const stepBy = (done: boolean, actor: string | null | undefined): string | undefined => {
+    if (!done) return undefined;
+    const n = actorName(actor);
+    return n === '—' ? undefined : n;
+  };
   const fullLifecycle: SvdRailItem[] = !d ? [] : (() => {
     const submitted = tlEvent('submitted');
     const approved  = tlEvent('approved');
@@ -1048,15 +1057,12 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
     const appDone = !!d.approvedBy || !!approved || rank >= 2;
     const actDone = !!d.activatedAt || rank >= 3;
     const retDone = !!d.retiredAt || d.status === 'retired';
-    // When a stage is complete but its own timestamp isn't stored (older seed data, or events
-    // not captured), fall back to the version's created date/creator so it never shows a bare "—".
-    // Compact sub for the horizontal stepper: date + actor only (reason lives in History/Timeline).
     return [
-      { title: 'Created',   done: true,    color: '#94a3b8', sub: stageSub(true, d.createdAt, d.createdBy) },
-      { title: 'Submitted', done: subDone, color: '#fbbf24', sub: stageSub(subDone, submitted?.createdAt ?? d.createdAt, submitted?.actorId ?? d.createdBy) },
-      { title: 'Approved',  done: appDone, color: '#60a5fa', sub: stageSub(appDone, approved?.createdAt ?? d.createdAt, d.approvedBy ?? approved?.actorId ?? d.createdBy) },
-      { title: 'Activated', done: actDone, color: '#4ade80', sub: stageSub(actDone, d.activatedAt ?? todayIso, d.activatedBy ?? d.createdBy) },
-      { title: 'Retired',   done: retDone, color: '#94a3b8', sub: stageSub(retDone, d.retiredAt, d.retiredBy) },
+      { title: 'Created',   done: true,    color: '#94a3b8', date: stepDate(true, d.createdAt), by: stepBy(true, d.createdBy) },
+      { title: 'Submitted', done: subDone, color: '#fbbf24', date: stepDate(subDone, submitted?.createdAt ?? d.createdAt), by: stepBy(subDone, submitted?.actorId ?? d.createdBy) },
+      { title: 'Approved',  done: appDone, color: '#60a5fa', date: stepDate(appDone, approved?.createdAt ?? d.createdAt), by: stepBy(appDone, d.approvedBy ?? approved?.actorId ?? d.createdBy) },
+      { title: 'Activated', done: actDone, color: '#4ade80', date: stepDate(actDone, d.activatedAt ?? todayIso), by: stepBy(actDone, d.activatedBy ?? d.createdBy) },
+      { title: 'Retired',   done: retDone, color: '#94a3b8', date: stepDate(retDone, d.retiredAt), by: stepBy(retDone, d.retiredBy) },
     ];
   })();
 
@@ -1332,7 +1338,13 @@ function SvdSection({ label, action, children }: { label: string; action?: Compo
   );
 }
 
-export interface SvdRailItem { title: string; sub: string; color: string; done?: boolean; }
+export interface SvdRailItem {
+  title: string; color: string; done?: boolean;
+  /** One-line sub used by the VERTICAL rail (History / Timeline). */
+  sub?: string;
+  /** Split date + actor used by the HORIZONTAL stepper so they stack cleanly, not wrap-jumble. */
+  date?: string; by?: string;
+}
 
 /** HORIZONTAL lifecycle stepper — dots in a row joined by connectors, title + sub beneath each.
  *  For the fixed-length lifecycle (Summary). `done === false` renders a hollow dot + muted text. */
@@ -1352,7 +1364,8 @@ function SvdSteps({ items }: { items: SvdRailItem[] }): VNode {
               <span class="svd-step-line" style={{ visibility: i === items.length - 1 ? 'hidden' : 'visible' }} />
             </div>
             <div class="svd-step-title">{it.title}</div>
-            <div class="svd-step-sub">{it.sub}</div>
+            {it.date && <div class="svd-step-date">{it.date}</div>}
+            {it.by && <div class="svd-step-by" title={it.by}>{it.by}</div>}
           </div>
         );
       })}
