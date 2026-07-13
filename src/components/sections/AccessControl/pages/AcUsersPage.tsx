@@ -412,7 +412,7 @@ export function AcUsersPage(): VNode {
         />
       )}
 
-      <AcExportDrawer open={showExport} onClose={() => setShowExport(false)} />
+      <AcExportDrawer open={showExport} onClose={() => setShowExport(false)} user={user} />
 
       {creatingRole && <AcCreateRolePage onDone={() => setCreatingRole(false)} />}
     </div>

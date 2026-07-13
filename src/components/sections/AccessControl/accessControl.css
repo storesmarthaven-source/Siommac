@@ -666,6 +666,8 @@
 .acx .exp-radios { display: flex; gap: 22px; }
 .acx .exp-radio { display: inline-flex; align-items: center; gap: 8px; font-size: 13px; color: #e2e8f0; cursor: pointer; }
 .acx .exp-radio input, .acx .exp-check input { accent-color: #60a5fa; width: 16px; height: 16px; flex: none; cursor: pointer; }
+.acx .exp-radio input:disabled { opacity: .4; cursor: not-allowed; }
+.acx .exp-cap { text-transform: capitalize; }
 .acx .exp-scope { display: flex; flex-direction: column; gap: 7px; }
 .acx .exp-scope-row { display: flex; align-items: center; justify-content: space-between; }
 .acx .exp-scope-row > span { font-size: 12.5px; color: rgba(226, 238, 252, .72); }
