@@ -152,7 +152,9 @@ const goTo = (id: string) => { try { window.dispatchEvent(new CustomEvent('sioma
 export function AcOverviewPage(): VNode {
   const rolesQ = useRoles(true);
   const usersQ = useConsoleUsers(true);
-  const auditQ = useAuditLogs({ limit: 6, excludeActions: ['tokenRefresh'] }, true);
+  // Only true access changes belong in this feed — whitelist the ACTION_LABEL set (grants,
+  // revokes, role changes, overrides), never routine audit noise (tokenRefresh, login, …).
+  const auditQ = useAuditLogs({ limit: 6, includeActions: Object.keys(ACTION_LABEL) }, true);
 
   const [activeModule, setActiveModule] = useState<string>('all');
   const [groupsCollapsed, setGroupsCollapsed] = useState(false);

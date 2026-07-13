@@ -299,6 +299,7 @@ router.post('/revokeSession', async c => {
 const GetAuditLogsSchema = z.object({
   search:    z.string().optional(),
   action:    z.string().optional(),
+  includeActions: z.array(z.string()).optional(), // whitelist (e.g. only real access changes)
   excludeActions: z.array(z.string()).optional(), // drop noisy routine actions (e.g. tokenRefresh)
   entity:    z.string().optional(),
   entity_id: z.string().optional(),  // filter to a specific record (e.g. a user's ID)
@@ -326,6 +327,7 @@ router.post('/getAuditLogs', async c => {
     .range(offset, offset + limit - 1);
 
   if (action)    q = q.eq('action', action);
+  if (v.data.includeActions?.length) q = q.in('action', v.data.includeActions);
   for (const a of v.data.excludeActions ?? []) q = q.neq('action', a);
   if (entity)    q = q.eq('entity', entity);
   if (entity_id) q = q.eq('entity_id', entity_id);

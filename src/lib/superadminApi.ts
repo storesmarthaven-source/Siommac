@@ -123,6 +123,8 @@ export interface AuditLogRow {
 export interface AuditLogFilters {
   search?:    string;
   action?:    string;
+  /** Whitelist — only return these actions (e.g. only real access changes). */
+  includeActions?: string[];
   /** Exclude these actions (e.g. routine `tokenRefresh` noise). */
   excludeActions?: string[];
   entity?:    string;
