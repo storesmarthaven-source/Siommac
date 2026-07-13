@@ -162,8 +162,7 @@ function _freezeBsModals(): void {
     m.setAttribute('data-bs-backdrop', 'static');
     m.setAttribute('data-cpop-prev-keyboard', m.getAttribute('data-bs-keyboard') ?? '');
     m.setAttribute('data-bs-keyboard', 'false');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inst = (window as any).bootstrap?.Modal?.getInstance?.(m);
+    const inst = window.bootstrap?.Modal?.getInstance(m);
     if (inst) { inst._config.backdrop = 'static'; inst._config.keyboard = false; }
   });
 }
@@ -176,8 +175,7 @@ function _unfreezeBsModals(): void {
     const prevK = m.getAttribute('data-cpop-prev-keyboard');
     if (prevK) m.setAttribute('data-bs-keyboard', prevK); else m.removeAttribute('data-bs-keyboard');
     m.removeAttribute('data-cpop-prev-keyboard');
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const inst = (window as any).bootstrap?.Modal?.getInstance?.(m);
+    const inst = window.bootstrap?.Modal?.getInstance(m);
     if (inst) { inst._config.backdrop = prev ?? true; inst._config.keyboard = prevK !== 'false'; }
   });
 }

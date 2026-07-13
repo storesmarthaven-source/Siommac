@@ -33,8 +33,16 @@ declare global {
 
 // ── Bootstrap ─────────────────────────────────────────────────────────────────
 // bootstrap is loaded via CDN; re-export its namespace so `bootstrap.Modal` etc. work.
+// The package ships no type declarations, so we use a minimal hand-rolled shape.
+interface BootstrapModalConfig { backdrop: string | boolean; keyboard: boolean }
+interface BootstrapModalInstance { _config: BootstrapModalConfig }
+interface BootstrapModalStatic {
+  getInstance(element: Element): BootstrapModalInstance | null | undefined;
+}
+interface BootstrapBundle { Modal?: BootstrapModalStatic }
 declare global {
-  const bootstrap: typeof import('bootstrap');
+  const bootstrap: BootstrapBundle;
+  interface Window { bootstrap?: BootstrapBundle }
 }
 
 // ── Supabase (UMD bundle) ─────────────────────────────────────────────────────
