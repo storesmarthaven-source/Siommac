@@ -100,8 +100,15 @@ Each of these cost real debugging time. Don't relearn them.
   MFA off. Don't flip it blind.
 
 ## Worktree Rule
-Work ONLY in this worktree: `C:\Users\MSI Laptop\Desktop\Siomac\.claude\worktrees\wonderful-panini-34b331` (branch `claude/wonderful-panini-34b331`).  
-NEVER touch `C:\Users\MSI Laptop\Desktop\Siomac` (main branch production copy).
+The working branch `claude/wonderful-panini-34b331` is checked out **directly in
+`C:\Users\MSI Laptop\Desktop\Siomac`** — that is the complete, runnable copy (has `.env`,
+`node_modules`, `netlify/`, `assets/`, `docs/`). Work THERE.
+
+The old `C:\Users\MSI Laptop\Desktop\Siomac\.claude\worktrees\wonderful-panini-34b331`
+folder was a stray, incomplete non-worktree copy (missing `netlify/`, `assets/`, `docs/`,
+`index.html`) and must NOT be used. If a genuine separate worktree is ever wanted at that
+path, rebuild it with `REBUILD_WORKTREE.bat` (rename-not-delete; run with no Claude session
+anchored in that folder).
 
 ## Commit Message Rule
 Every commit message MUST end with:
