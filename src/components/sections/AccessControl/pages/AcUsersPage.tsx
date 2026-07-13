@@ -301,8 +301,6 @@ export function AcUsersPage(): VNode {
                       <div class="u-prof-ref">{user.role.replace(/_/g, ' ')}</div>
                       <div class="u-prof-meta">
                         {user.position && <span><LucideIcon name="Briefcase" size={14} /> {user.position}</span>}
-                        {user.position && user.department && <span class="u-prof-sep">·</span>}
-                        {user.department && <span><LucideIcon name="Building2" size={14} /> {user.department}</span>}
                         {(user.email || user.username) && <span><LucideIcon name="Mail" size={14} /> {user.email || user.username}</span>}
                       </div>
                     </div>
