@@ -329,7 +329,7 @@ export function AcUsersPage(): VNode {
                       return (
                         <>
                           <tr class="grp" key={`g-${mod}`}>
-                            <td colSpan={6} style={{ padding: '12px 18px', background: '#f9fafb', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
+                            <td colSpan={6} style={{ padding: '12px 18px', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
                               <span style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                                 <i class={`fas fa-chevron-${open ? 'down' : 'right'}`} style={{ color: 'var(--faint)', fontSize: '11px', width: '12px', textAlign: 'center', flex: 'none' }} />
                                 <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
@@ -338,11 +338,11 @@ export function AcUsersPage(): VNode {
                               </span>
                             </td>
                           </tr>
-                          {open && keys.map(k => {
+                          {open && keys.map((k, i) => {
                             const t = target(k); const ov = t !== 'inherit'; const submitted = localPending.has(k);
                             return (
                               <tr key={k} class={ov ? 'u-row-override' : undefined}>
-                                <td>
+                                <td class={`u-cap-cell${i === keys.length - 1 ? ' is-last' : ''}`}>
                                   <div class="u-cap-name">{PERMISSION_META[k].label}{CRITICAL_GRANT_KEYS.has(k) && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Critical</span>}</div>
                                   <div class="u-cap-desc">{PERMISSION_META[k].description}</div>
                                 </td>

@@ -150,9 +150,13 @@
 .acx .tbl th { text-align: left; font-size: 12px; font-weight: 600; color: var(--muted); padding: 13px 18px; border-bottom: 1px solid var(--line); white-space: nowrap; }
 .acx .tbl td { padding: 15px 18px; border-bottom: 1px solid var(--line-2); vertical-align: middle; }
 .acx .tbl tr:last-child td { border-bottom: 0; }
-.acx .tbl .grp td { background: #fbfcfe; font-weight: 600; }
+.acx .tbl .grp td { font-weight: 600; }
 .acx .tbl td.cell { padding: 14px 8px; }
-.acx .tbl tbody tr:hover td { background: #fbfcfe; }
+/* Expanded sub-capabilities: tree connector descending from the module to each child. */
+.acx .tbl td.u-cap-cell { position: relative; padding-left: 42px; }
+.acx .tbl td.u-cap-cell::before { content: ''; position: absolute; left: 26px; top: 0; bottom: 0; width: 1.5px; background: var(--line); }
+.acx .tbl td.u-cap-cell::after { content: ''; position: absolute; left: 26px; top: 50%; width: 13px; height: 1.5px; background: var(--line); }
+.acx .tbl td.u-cap-cell.is-last::before { bottom: 50%; }
 
 /* ── Form controls ───────────────────────────────────────────────────────────── */
 .acx .input, .acx .select { height: 40px; border: 1px solid var(--line); border-radius: 10px; padding: 0 12px; font: inherit; font-size: 13px; background: #fff; color: var(--ink); outline: none; width: 100%; }
