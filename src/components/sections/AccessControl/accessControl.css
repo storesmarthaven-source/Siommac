@@ -428,7 +428,7 @@
 /* Sub-capability rows fade/slide in on expand + light accent surface */
 @keyframes u-sub-in { from { opacity: 0; transform: translateY(-5px); } to { opacity: 1; transform: translateY(0); } }
 .acx .tbl tbody tr.u-sub { animation: u-sub-in .2s ease both; }
-.acx .tbl tbody tr.u-sub > td { background: #fafbfc; }
+.acx .tbl tbody tr.u-sub > td { background: #f8f8f8; }
 /* Capability table (per-user override editor) — mockup restyle. */
 .acx .cap-allow { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #157a3a; padding: 3px 10px; border-radius: 999px; background: var(--green-bg); }
 .acx .cap-deny { display: inline-flex; align-items: center; gap: 5px; font-size: 12.5px; font-weight: 600; color: #b91c1c; padding: 3px 10px; border-radius: 999px; background: var(--red-bg); }
@@ -459,12 +459,12 @@
 .acx .u-ab-ico { width: 34px; height: 34px; border-radius: 9px; background: #fef3e2; color: #d97706; display: grid; place-items: center; font-size: 15px; flex: none; }
 .acx .u-ab-title { font-size: 14px; font-weight: 700; color: #b45309; }
 .acx .u-ab-sub { font-size: 12px; color: var(--muted); margin-top: 1px; }
-.acx .u-ab-chips { display: flex; align-items: center; gap: 10px; }
-.acx .u-ab-chip { display: inline-flex; align-items: stretch; border-radius: 10px; overflow: hidden; }
-.acx .u-ab-num { display: grid; place-items: center; min-width: 40px; padding: 0 11px; font-size: 20px; font-weight: 700; }
-.acx .u-ab-chip-t { display: flex; flex-direction: column; justify-content: center; line-height: 1.25; padding: 7px 14px; }
-.acx .u-ab-chip-lbl { font-size: 12.5px; font-weight: 500; color: #64748b; }
-.acx .u-ab-chip-val { font-size: 12.5px; font-weight: 600; color: var(--ink); }
+.acx .u-ab-chips { display: flex; align-items: center; gap: 9px; }
+.acx .u-ab-chip { display: inline-flex; align-items: stretch; border-radius: 9px; overflow: hidden; }
+.acx .u-ab-num { display: grid; place-items: center; min-width: 34px; padding: 0 9px; font-size: 17px; font-weight: 700; }
+.acx .u-ab-chip-t { display: flex; flex-direction: column; justify-content: center; line-height: 1.25; padding: 6px 12px; }
+.acx .u-ab-chip-lbl { font-size: 11.5px; font-weight: 500; color: #64748b; }
+.acx .u-ab-chip-val { font-size: 11.5px; font-weight: 600; color: var(--ink); }
 .acx .u-ab-chip.green .u-ab-num { background: #cdefd9; color: #15803d; }
 .acx .u-ab-chip.green .u-ab-chip-t { background: #edf9f1; }
 .acx .u-ab-chip.green .u-ab-chip-val { color: #16a34a; }
