@@ -113,9 +113,9 @@ export function AcRolesPage(): VNode {
               <span class="u-recent-title"><LucideIcon name="Layers" size={15} /> Role Directory <span class="muted" style={{ fontWeight: 500 }}>({roles.length})</span></span>
             </div>
             <div class="r2-rail-stats">
-              <div class="r2-rst"><span class="r2-rst-n">{roles.length}</span><span class="r2-rst-l">Roles</span></div>
-              <div class="r2-rst"><span class="r2-rst-n">{inUse}</span><span class="r2-rst-l">In Use</span></div>
-              <div class="r2-rst"><span class="r2-rst-n">{roles.length - inUse}</span><span class="r2-rst-l">Empty</span></div>
+              <span class="r2-rst"><span class="r2-rst-ic blue"><LucideIcon name="Layers" size={13} /></span><strong>{roles.length}</strong> Roles</span>
+              <span class="r2-rst"><span class="r2-rst-ic green"><LucideIcon name="UserCheck" size={13} /></span><strong>{inUse}</strong> In Use</span>
+              <span class="r2-rst"><span class="r2-rst-ic amber"><LucideIcon name="CircleDashed" size={13} /></span><strong>{roles.length - inUse}</strong> Empty</span>
             </div>
             <div class="r2-rail-search"><i class="fas fa-magnifying-glass" /><input class="input" placeholder="Search roles…" value={railSearch} onInput={e => setRailSearch((e.target as HTMLInputElement).value)} /></div>
             <div class="r2-rail-tabs">
@@ -279,6 +279,7 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
   const [filter, setFilter] = useState<{ modules: string[]; risks: string[]; state: string[]; search: string }>({ modules: [], risks: [], state: [], search: '' });
   const { openId, setOpenId } = useFilterDropdowns();
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean) as string[]));
+  const [fCollapsed, setFCollapsed] = useState<Set<string>>(new Set());   // collapsed groups while filtering (default: all open)
   const [critPrompt, setCritPrompt] = useState<string | null>(null);
   const [reviewing, setReviewing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -409,7 +410,10 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
     finally { setSaving(false); }
   };
 
-  const toggleMod = (m: string) => setCollapsed(prev => { const n = new Set(prev); n.has(m) ? n.delete(m) : n.add(m); return n; });
+  const toggleMod = (m: string) => {
+    const setter = filterActive ? setFCollapsed : setCollapsed;
+    setter(prev => { const n = new Set(prev); n.has(m) ? n.delete(m) : n.add(m); return n; });
+  };
   const st = roleStyle(role.name);
 
   return (
@@ -461,7 +465,7 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
       {/* Capability table — sibling of the User Access override table */}
       <div class="card" style={{ overflow: 'hidden' }}>
         <div class="u-tbl-top">
-          <span class="u-tbl-count">{view.size} module{view.size === 1 ? '' : 's'} · {totalShown} capabilities{filterActive ? ' shown' : ''}</span>
+          <span class="u-tbl-count">{filter.search.trim() ? `${totalShown} result${totalShown === 1 ? '' : 's'} for “${filter.search.trim()}”` : `${view.size} module${view.size === 1 ? '' : 's'} · ${totalShown} capabilities${filterActive ? ' shown' : ''}`}</span>
         </div>
         <table class="tbl" style={{ tableLayout: 'fixed' }}>
           <colgroup><col style={{ width: '46%' }} /><col style={{ width: '13%' }} /><col style={{ width: '20%' }} /><col style={{ width: '21%' }} /></colgroup>
@@ -474,37 +478,42 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
             ) : [...view.entries()].map(([mod, grps]) => {
               const keys = modKeys(mod);
               const en = keys.filter(k => granted(k)).length;
-              const catTotal = [...(catalogue.get(mod)?.values() ?? [])].flat().length;
-              const open = filterActive || !collapsed.has(mod);
+              const open = filterActive ? !fCollapsed.has(mod) : !collapsed.has(mod);
               const full = en === keys.length && keys.length > 0;
               const hasHot = keys.some(k => granted(k) && CRITICAL_GRANT_KEYS.has(k));
               const multiGroup = grps.size > 1;
               return (
                 <Fragment key={mod}>
                   <tr class="grp">
-                    <td colSpan={4} style={{ padding: '12px 18px', cursor: filterActive ? 'default' : 'pointer' }} onClick={() => { if (!filterActive) toggleMod(mod); }}>
+                    <td colSpan={4} style={{ padding: '12px 18px', cursor: 'pointer' }} onClick={() => toggleMod(mod)}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '11px' }}>
                         <span style={{ color: 'var(--faint)', width: '14px', display: 'inline-flex', flex: 'none' }}><LucideIcon name={open ? 'Minus' : 'Plus'} size={14} strokeWidth={2.5} /></span>
                         <span class="u-mod-ico"><LucideIcon name={moduleLucide(mod)} size={15} /></span>
                         <span class="u-mod-name">{mod}</span>
-                        <span class="u-mod-count">{filterActive ? `${keys.length}/${catTotal}` : keys.length}</span>
-                        <span class="r2-bar"><span class={`r2-bar-fill${full ? ' full' : ''}`} style={{ width: `${keys.length ? Math.round((en / keys.length) * 100) : 0}%` }} /></span>
-                        <span class="r2-mod-en">{en}/{keys.length} enabled</span>
-                        {full ? <span class="r2-mod-full"><LucideIcon name="CircleCheck" size={14} /></span>
-                          : hasHot ? <span class="r2-mod-hot" title="High-risk capability enabled" /> : null}
-                        {open && !isSuper && (
-                          <span class="r2-bulk" onClick={e => e.stopPropagation()}>
-                            <button type="button" onClick={() => bulk(keys, true)}>Enable All</button>
-                            <span class="r2-bulk-sep">·</span>
-                            <button type="button" class="off" onClick={() => bulk(keys, false)}>Disable All</button>
-                          </span>
+                        {filterActive ? (
+                          <span class="r2-results">{keys.length} result{keys.length === 1 ? '' : 's'}</span>
+                        ) : (
+                          <>
+                            <span class="u-mod-count">{keys.length}</span>
+                            <span class="r2-bar"><span class={`r2-bar-fill${full ? ' full' : ''}`} style={{ width: `${keys.length ? Math.round((en / keys.length) * 100) : 0}%` }} /></span>
+                            <span class="r2-mod-en">{en}/{keys.length} enabled</span>
+                            {full ? <span class="r2-mod-full"><LucideIcon name="CircleCheck" size={14} /></span>
+                              : hasHot ? <span class="r2-mod-hot" title="High-risk capability enabled" /> : null}
+                            {open && !isSuper && (
+                              <span class="r2-bulk" onClick={e => e.stopPropagation()}>
+                                <button type="button" onClick={() => bulk(keys, true)}>Enable All</button>
+                                <span class="r2-bulk-sep">·</span>
+                                <button type="button" class="off" onClick={() => bulk(keys, false)}>Disable All</button>
+                              </span>
+                            )}
+                          </>
                         )}
                       </span>
                     </td>
                   </tr>
                   {open && [...grps.entries()].map(([grp, gkeys]) => (
                     <Fragment key={grp}>
-                      {multiGroup && (
+                      {multiGroup && !filterActive && (
                         <tr class="u-sub r2-grp-row">
                           <td colSpan={4}>
                             <span class="r2-grp-inner">
