@@ -62,7 +62,7 @@ router.post('/decide', async c => {
   try {
     const wf = await decideTask({ workflowId: v.data.workflowId, taskId: v.data.taskId, actor: actorOf(user), decision: v.data.decision, comment: v.data.comment, attachmentIds: v.data.attachmentIds });
     return c.json({ success: true, data: wf });
-  } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Decision failed' }, 400 as 200); }
+  } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Decision failed' }, ((err as { status?: number }).status ?? 400) as 200); }
 });
 
 // POST /api/workflow-engine/delegate

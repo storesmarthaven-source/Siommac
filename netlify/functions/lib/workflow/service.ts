@@ -20,6 +20,7 @@ import { resolveStepAssignee } from './assigneeResolver';
 import { validateWorkflowDefinition } from './validateDefinition';
 import { firstSteps, resolveNext } from './transitions';
 import { getWorkflowAdapter } from './adapterRegistry';
+import { userCan } from '../auth';
 
 export interface WorkflowActor { id: string; role?: string }
 
@@ -242,6 +243,25 @@ export async function decideTask(params: {
   const task = await getTask(params.taskId);
   if (task.workflow_id !== wf.id) throw new Error('Task does not belong to this workflow.');
   if (!['pending', 'open', 'in_progress'].includes(task.status)) throw new Error(`Task already ${task.status}.`);
+
+  // ── Authorization (defense-in-depth; enforced here so EVERY caller is covered, not just
+  //    the workflow-engine router). Resolve the actor's CURRENT role from app_users — never
+  //    trust a passed/JWT role — then require the task be assigned to this user or their role.
+  //    Closes the horizontal-escalation bypass where any `workflow.approve` holder could decide
+  //    ANY task via the legacy /workflows/decision route. (Full transactional guard: RPC, next.)
+  const { data: actorRow } = await sb.from('app_users').select('role').eq('id', params.actor.id).maybeSingle<{ role: string }>();
+  const actorRole = actorRow?.role ?? params.actor.role ?? null;
+  const assignedTo   = (task.assigned_to as string | null) ?? null;
+  const assignedRole = (task.assigned_role as string | null) ?? null;
+  const isAssigned = assignedTo === params.actor.id || (!!assignedRole && assignedRole === actorRole);
+  const isElevated = actorRole === 'superadmin'
+    || await userCan({ id: params.actor.id, role: actorRole }, 'workflow.instances.admin_override')
+    || await userCan({ id: params.actor.id, role: actorRole }, 'workflow.instances.reassign');
+  if (!isAssigned && !isElevated) {
+    const e = new Error('This task is not assigned to you.') as Error & { status?: number };
+    e.status = 403;
+    throw e;
+  }
 
   const definition = wf.template_snapshot;
   const step = definition.steps.find((s) => s.stepKey === task.step_key);

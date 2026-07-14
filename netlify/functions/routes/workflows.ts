@@ -168,7 +168,8 @@ router.post('/workflows/decision', async c => {
     const wf = await decideTask({ workflowId: task.workflow_id, taskId: v.data.taskId, actor: { id: user.id, role: user.role }, decision, comment: v.data.note });
     return c.json({ success: true, workflowId: wf.id, status: wf.status });
   } catch (err) {
-    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to process decision' }, 500 as 200);
+    const status = (err as { status?: number }).status ?? 500;   // auth denial → 403
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to process decision' }, status as 200);
   }
 });
 
