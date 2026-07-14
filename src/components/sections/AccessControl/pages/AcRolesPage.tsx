@@ -414,26 +414,24 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
 
   return (
     <>
-      {/* Role Profile — navy palette, distinct layout: single surface + full-width metric band */}
+      {/* Role Profile — single navy row: identity + inline metrics, no header section */}
       <div class="r2-prof">
-        <div class="r2-prof-top">
-          <span class="r2-prof-ico"><LucideIcon name={st.icon} size={28} /></span>
-          <div class="r2-prof-id">
-            <div class="r2-prof-nameline">
-              <h2 class="r2-prof-name">{role.label}</h2>
-              <span class={`r2-prof-badge ${role.isSystem ? 'sys' : 'cust'}`}>{role.isSystem ? 'System Role' : 'Custom Role'}</span>
-              {isSuper && <span class="r2-prof-badge lock"><LucideIcon name="Lock" size={11} /> Immutable</span>}
-            </div>
-            <div class="r2-prof-desc">{role.description || (isSuper ? 'Full, unrestricted access. Permanent.' : 'Role default capability set.')}</div>
+        <span class="r2-prof-ico"><LucideIcon name={st.icon} size={26} /></span>
+        <div class="r2-prof-id">
+          <div class="r2-prof-nameline">
+            <h2 class="r2-prof-name">{role.label}</h2>
+            <span class={`r2-prof-badge ${role.isSystem ? 'sys' : 'cust'}`}>{role.isSystem ? 'System' : 'Custom'}</span>
+            {isSuper && <span class="r2-prof-badge lock"><LucideIcon name="Lock" size={11} /> Immutable</span>}
           </div>
-          {!isSuper && <button type="button" class="r2-prof-btn" onClick={onEdit}><LucideIcon name="Settings2" size={14} /> Role Details</button>}
+          <div class="r2-prof-desc">{role.description || (isSuper ? 'Full, unrestricted access. Permanent.' : 'Role default capability set.')}</div>
         </div>
-        <div class="r2-prof-band">
-          <div class="r2-prof-metric"><span class="r2-prof-metric-ic"><LucideIcon name="Users" size={15} /></span><div><div class="r2-prof-metric-n">{role.userCount}</div><div class="r2-prof-metric-l">Members</div></div></div>
-          <div class="r2-prof-metric"><span class="r2-prof-metric-ic"><LucideIcon name="ToggleRight" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? enabledCount : '—'}</div><div class="r2-prof-metric-l">Enabled</div></div></div>
-          <div class="r2-prof-metric"><span class="r2-prof-metric-ic red"><LucideIcon name="ShieldAlert" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? highRiskEnabled : '—'}</div><div class="r2-prof-metric-l">High-Risk</div></div></div>
-          <div class="r2-prof-metric"><span class="r2-prof-metric-ic green"><LucideIcon name="Gauge" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? `${Math.round((enabledCount / totalCaps) * 100)}%` : '—'}</div><div class="r2-prof-metric-l">Coverage</div></div></div>
+        <div class="r2-prof-metrics">
+          <div class="r2-prof-m"><div class="r2-prof-m-n">{role.userCount}</div><div class="r2-prof-m-l">Members</div></div>
+          <div class="r2-prof-m"><div class="r2-prof-m-n">{loaded ? enabledCount : '—'}</div><div class="r2-prof-m-l">Enabled</div></div>
+          <div class="r2-prof-m"><div class="r2-prof-m-n hot">{loaded ? highRiskEnabled : '—'}</div><div class="r2-prof-m-l">High-Risk</div></div>
+          <div class="r2-prof-m"><div class="r2-prof-m-n">{loaded ? `${Math.round((enabledCount / totalCaps) * 100)}%` : '—'}</div><div class="r2-prof-m-l">Coverage</div></div>
         </div>
+        {!isSuper && <button type="button" class="r2-prof-btn" onClick={onEdit}><LucideIcon name="Settings2" size={14} /> Details</button>}
       </div>
 
       {/* Immutable notice (superadmin only) */}
