@@ -98,6 +98,60 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
       });
     },
   },
+
+  'finance_remittances:finance_remittance_approval': {
+    async commit({ transitionId, sourceRecordId, actorId, outcome, comment, inputHash }) {
+      const { error } = await sb.rpc('finance_remittances_workflow_transition_tx', {
+        p_transition_id: transitionId, p_remittance_id: sourceRecordId, p_actor_id: actorId,
+        p_target_status: outcome, p_comment: comment, p_input_hash: inputHash,
+      });
+      if (error) throw Object.assign(new Error(`remittance source transition: ${error.message}`), { code: (error as { code?: string }).code });
+    },
+    async afterCommit({ sourceRecordId, outcome }) {
+      if (outcome !== 'approved') return;
+      const [{ getRemittance }, { notifyUsersByRole }] = await Promise.all([
+        import('../finance/remittances.js'), import('../finance/financeEvents.js'),
+      ]);
+      const rem = await getRemittance(sourceRecordId);
+      if (!rem) return;
+      void notifyUsersByRole('finance_manager', {
+        type: 'finance.remittance.approved',
+        title: `Remittance ${rem.remittanceNo} approved`,
+        body: `${rem.remittanceNo} (${rem.authority}) approved — ready for payment.`,
+        module: 'finance_remittances', severity: 'success',
+        sourceType: 'remittance', sourceId: rem.id,
+        dedupeKey: `finance.remittance.approved.${rem.id}`,
+      });
+    },
+  },
+
+  'finance_loan:finance_loan_approval': {
+    async commit({ transitionId, sourceRecordId, actorId, outcome, comment, inputHash }) {
+      const { error } = await sb.rpc('finance_loan_workflow_transition_tx', {
+        p_transition_id: transitionId, p_loan_id: sourceRecordId, p_actor_id: actorId,
+        p_target_status: outcome, p_comment: comment, p_input_hash: inputHash,
+      });
+      if (error) throw Object.assign(new Error(`loan source transition: ${error.message}`), { code: (error as { code?: string }).code });
+    },
+    async afterCommit({ sourceRecordId, outcome }) {
+      if (outcome !== 'approved') return;
+      // Mirrors emitLoanActivatedSideEffects — the borrower "loan approved" ping
+      // (the durable activated event is already written by the receipt RPC).
+      const [{ getLoan }, { notify }] = await Promise.all([
+        import('../finance/loans.js'), import('../notify.js'),
+      ]);
+      const loan = await getLoan(sourceRecordId);
+      if (!loan) return;
+      void notify({
+        userId: loan.employeeId, type: 'finance.loan.activated',
+        title: `Loan ${loan.reference} approved`,
+        body: `Your ${loan.loanType === 'advance' ? 'salary advance' : 'loan'} of ${loan.totalRepayable.toFixed(2)} is approved — ${loan.installmentAmount.toFixed(2)} will be deducted each pay period until it clears.`,
+        module: 'finance_loan', severity: 'success',
+        sourceType: 'employee_loan', sourceId: loan.id,
+        dedupeKey: `finance.loan.activated.${loan.id}`,
+      });
+    },
+  },
 };
 
 /** Run the module's source mutation for a terminal outcome — receipt RPC when

@@ -13,15 +13,6 @@ import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { writeHrAudit } from '../hr/employeeCore';
-import { emitAppEvent } from '../appEvents';
-import { getLoan, emitLoanActivatedSideEffects } from '../finance/loans';
-
-async function decidedBy(workflowId: string): Promise<string | null> {
-  const { data } = await sb.from('workflow_decisions')
-    .select('actor_id').eq('workflow_id', workflowId)
-    .order('created_at', { ascending: false }).limit(1).maybeSingle<{ actor_id: string | null }>();
-  return data?.actor_id ?? null;
-}
 
 async function setLoanStatus(loanId: string, status: string, patch: Record<string, unknown> = {}): Promise<void> {
   const { error } = await sb.from('finance_employee_loans').update({ status, ...patch }).eq('id', loanId);
@@ -39,55 +30,21 @@ const financeLoanAdapter: ModuleWorkflowAdapter = {
   onWorkflowStarted: async () => { /* status already pending_approval at submit time */ },
   onWorkflowStepCompleted: async () => {},
 
-  onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
-    const actor = await decidedBy(workflowId);
-    const loan = await getLoan(sourceRecordId);
-    if (!loan) return;
-
-    // SoD: the loan's creator cannot approve their own loan.
-    if (actor && loan.createdBy && actor === loan.createdBy) {
-      throw Object.assign(new Error('Segregation of duties violation: creator cannot approve their own loan.'), { status: 422 });
-    }
-
-    await setLoanStatus(sourceRecordId, 'active', { approved_by: actor, approved_at: new Date().toISOString() });
-
-    await writeHrAudit({
-      submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: actor ?? 'workflow',
-      action: 'loan.approved', previousState: { status: 'pending_approval' }, newState: { status: 'active', approvedBy: actor },
-    });
-
-    const activated = await getLoan(sourceRecordId);
-    if (activated) await emitLoanActivatedSideEffects(activated, actor);
+  // Terminal decision outcomes (approve/return/reject) commit through the
+  // transactional finance_loan_workflow_transition_tx receipt RPC via the workflow
+  // outbox worker (exactly-once). Loud dead-ends so a stray caller can't silently
+  // fork a second, non-atomic commit path.
+  onWorkflowCompleted: async () => {
+    throw new Error('finance_loan: completion commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
+  },
+  onWorkflowReturned: async () => {
+    throw new Error('finance_loan: return commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
+  },
+  onWorkflowRejected: async () => {
+    throw new Error('finance_loan: rejection commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowReturned: async ({ workflowId, sourceRecordId, comment }) => {
-    const actor = await decidedBy(workflowId);
-    await setLoanStatus(sourceRecordId, 'draft');
-    await writeHrAudit({
-      submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: actor ?? 'workflow',
-      action: 'loan.returned', previousState: { status: 'pending_approval' }, newState: { status: 'draft' }, reason: comment ?? null,
-    });
-    void emitAppEvent({
-      eventType: 'finance.loan.returned', sourceModule: 'finance_loan',
-      sourceEntityType: 'employee_loan', sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow', severity: 'warning',
-      payload: { reason: comment ?? null },
-    });
-  },
-
-  onWorkflowRejected: async ({ workflowId, sourceRecordId, comment }) => {
-    const actor = await decidedBy(workflowId);
-    await setLoanStatus(sourceRecordId, 'rejected');
-    await writeHrAudit({
-      submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: actor ?? 'workflow',
-      action: 'loan.rejected', previousState: { status: 'pending_approval' }, newState: { status: 'rejected' }, reason: comment ?? null,
-    });
-    void emitAppEvent({
-      eventType: 'finance.loan.rejected', sourceModule: 'finance_loan',
-      sourceEntityType: 'employee_loan', sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow', severity: 'warning',
-      payload: { reason: comment ?? null },
-    });
-  },
-
+  // Cancel still routes through cancelWorkflow() → this callback (not the worker).
   onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await setLoanStatus(sourceRecordId, 'cancelled');
     // Use the real canceller (threaded from cancelWorkflow); null is a valid
