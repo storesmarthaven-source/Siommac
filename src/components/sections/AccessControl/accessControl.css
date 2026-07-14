@@ -738,9 +738,9 @@
 .acx.exp-portal .exp-footbar .acx-hdr-btn.primary svg { color: #1b2d54; }
 
 
-/* ══ Roles (.r2-*) — sibling of the User Access page. Reuses .tbl/.grp/.u-cap-*/.u-sub/
-      .risk/.toggle/.u-action-bar/.u-ab-*/.u-prof-*/.u-info-banner/.u-tbl-top; only the
-      role-specific pieces are defined here. ═══════════════════════════════════════ */
+/* Roles (.r2-) — sibling of the User Access page. Reuses the shared tbl, grp, u-cap,
+   u-sub, risk, toggle, u-action-bar, u-ab, u-prof, u-info-banner and u-tbl-top styles;
+   only the role-specific pieces are defined below. */
 .acx .r2-layout { display: grid; grid-template-columns: 340px minmax(0, 1fr); gap: 20px; align-items: start; }
 .acx .r2-left { display: flex; flex-direction: column; gap: 16px; align-self: start; }
 .acx .r2-center { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
