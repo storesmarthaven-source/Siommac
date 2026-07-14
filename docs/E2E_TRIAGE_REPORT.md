@@ -45,8 +45,26 @@ the real picture below. **~80% are unapplied operator migrations, not code regre
 - **`expected failure — got success` (×2, investigations/access):** an access/validation guard not
   firing — investigate whether code or test.
 
+## POST-APPLY residual (migrations applied + settled server) — exactly 8
+After the operator applied the migration batch, a clean re-run isolates the true residual to **8**
+real items (367 passed · 8 failed across the residual suites). Root-caused:
+| # | suite | root cause | category | status |
+|---|---|---|---|---|
+| 1 | communications | `realtime DELIVERY (anon)` — `communication_signals` not published for realtime / anon SELECT | A (mig `20260628100000` not applied / verify) | operator |
+| 2 | financeBudgets | variance-breach `notifications` rows not written for recipients | D (recipient logic) | TODO |
+| 3 | financePayComponents | duplicate code accepted — optimistic check hit `finance_pay_components` (empty until approval), missed a pending CREATE CR | D | **FIXED** (pending-CR check; verifying) |
+| 4 | hrDocuments | duplicate requirement accepted — code maps 23505→409 but the UNIQUE constraint was never created | A/D | **FIXED** (mig `20260919000250` — operator applies) |
+| 5 | hrOnboarding | "Contractor Worker package not available for employee onboarding" — test uses an incompatible package/case-type combo | E (test) | TODO (test) |
+| 6 | hrOrganization | position reports-to CYCLE accepted — no cycle detection in the org-change path | D (feature gap) | TODO (feature) |
+| 7 | hrOrganization | delete-unit counts an ARCHIVED child as blocking | D (count should exclude archived) | TODO |
+| 8 | hrRoster | min-rest not enforced — test scenario is actually 32h rest (test bug) AND the rest formula is wrong for crosses-midnight adjacents (code bug) | D+E | TODO (datetime math + test) |
+
+Fixed this pass: #3 (code) + #4 (constraint migration). Remaining #2/#6/#7/#8 are genuine feature-
+logic fixes best done as focused commits with their own verifying tests (esp. #6 cycle detection and
+#8 crosses-midnight rest math); #1 is an operator migration; #5 is a test-fixture combo.
+
 ## Bottom line
-Applying the 5 Category-A migrations clears ~80 failures. The agent's committed fixes clear another
-handful. The remaining ~15 are genuine code/seed/test items (biggest: the `change_type` constraint
-cluster) still to be worked. None of these are regressions from the finding #1/#2 workflow changes
-(those suites are green).
+The pre-release triage took the non-workflow suites from ~102 failures to **8 real, precisely-scoped
+items** — the rest were unapplied operator migrations (applied) + the agent's committed fixes + the
+`change_type`/roster fixes + #3/#4 here. NONE are regressions from the finding #1/#2 workflow changes
+or the RLS security fix (all those suites are green + verified).

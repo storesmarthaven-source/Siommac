@@ -261,6 +261,21 @@ export async function createPayComponent(
     throw Object.assign(new Error(`Pay component code "${code}" already exists.`), { status: 409 });
   }
 
+  // Also reject when a CREATE change-request for this code is already pending: the
+  // component row doesn't exist until approval, so the check above can't see a
+  // second submission made before the first is approved.
+  const { data: pendingCr } = await sb
+    .from('finance_pay_component_change_requests')
+    .select('id')
+    .eq('change_type', 'create')
+    .eq('status', 'pending_approval')
+    .eq('payload->>code', code)
+    .limit(1)
+    .maybeSingle<{ id: string }>();
+  if (pendingCr) {
+    throw Object.assign(new Error(`A create request for pay component code "${code}" is already pending approval.`), { status: 409 });
+  }
+
   return openChangeRequest({
     changeType:  'create',
     componentId: null,
