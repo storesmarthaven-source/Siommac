@@ -148,9 +148,10 @@ router.post('/workflows/tasks', async c => {
 // ── POST /api/workflows/decision ──────────────────────────────────────────────
 
 const DecisionSchema = z.object({
-  taskId:   z.string().uuid(),
-  decision: z.enum(['approved','rejected','returned','verified','completed']),
-  note:     z.string().max(2000).optional(),
+  taskId:         z.string().uuid(),
+  decision:       z.enum(['approved','rejected','returned','verified','completed']),
+  note:           z.string().max(2000).optional(),
+  overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions
 });
 
 router.post('/workflows/decision', async c => {
@@ -160,15 +161,17 @@ router.post('/workflows/decision', async c => {
   if (!v.ok) return v.response;
 
   // Look up the workflow from the task; map legacy decisions to the spec set.
+  // Authorization/state re-checks happen atomically inside workflow_decide_task_tx.
   const { data: task } = await sb.from('workflow_tasks').select('workflow_id').eq('id', v.data.taskId).maybeSingle<{ workflow_id: string }>();
   if (!task) return c.json({ success: false, message: 'Task not found' }, 404 as 200);
   const decision = v.data.decision === 'rejected' ? 'rejected' : v.data.decision === 'returned' ? 'returned' : 'approved';
 
   try {
-    const wf = await decideTask({ workflowId: task.workflow_id, taskId: v.data.taskId, actor: { id: user.id, role: user.role }, decision, comment: v.data.note });
-    return c.json({ success: true, workflowId: wf.id, status: wf.status });
+    const wf = await decideTask({ workflowId: task.workflow_id, taskId: v.data.taskId, actor: { id: user.id, role: user.role }, decision, comment: v.data.note, overrideReason: v.data.overrideReason });
+    // 202 = decision committed, finalization pending (recovery worker completes it).
+    return c.json({ success: true, workflowId: wf.id, status: wf.status, pending: wf.pendingTransition === true }, (wf.pendingTransition ? 202 : 200) as 200);
   } catch (err) {
-    const status = (err as { status?: number }).status ?? 500;   // auth denial → 403
+    const status = (err as { status?: number }).status ?? 500;   // auth denial → 403; conflicts → 409
     return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to process decision' }, status as 200);
   }
 });

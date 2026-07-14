@@ -11,16 +11,14 @@
 import { sb } from '../db';
 import { nextRef } from '../refGenerator';
 import { emitAppEvent } from '../appEvents';
-import { createHandoff } from '../handoffBus';
 import type {
   ModuleWorkflowContext, WorkflowTemplateDefinition, WorkflowStepDefinition,
 } from './definitionTypes';
 import { selectWorkflowBinding, type WorkflowBindingRow } from './bindingResolver';
 import { resolveStepAssignee } from './assigneeResolver';
 import { validateWorkflowDefinition } from './validateDefinition';
-import { firstSteps, resolveNext } from './transitions';
+import { firstSteps } from './transitions';
 import { getWorkflowAdapter } from './adapterRegistry';
-import { userCan } from '../auth';
 
 export interface WorkflowActor { id: string; role?: string }
 
@@ -89,7 +87,7 @@ const MODULE_ROUTE: Record<string, string> = {
   hr_requests:                's-hr-requests',
   finance_payroll_templates:  's-finance-payslip-designer',
 };
-function moduleRoute(moduleKey: string): string {
+export function moduleRoute(moduleKey: string): string {
   if (MODULE_ROUTE[moduleKey]) return MODULE_ROUTE[moduleKey];
   // Derive an hse/<area> path the FE resolver can navigate (never a bare section).
   const area = moduleKey.replace(/^hse_/, '').replace(/_/g, '-') || 'incidents';
@@ -97,19 +95,20 @@ function moduleRoute(moduleKey: string): string {
 }
 
 /** Requester + owner recipients for terminal workflow events. */
-function ownerRecipients(wf: WorkflowRow): WfRecipient[] {
+export function ownerRecipients(wf: WorkflowRow): WfRecipient[] {
   const out: WfRecipient[] = [];
   if (wf.requested_by) out.push({ userId: wf.requested_by, reason: 'reporter' });
   if (wf.owner_id && wf.owner_id !== wf.requested_by) out.push({ userId: wf.owner_id, reason: 'owner' });
   return out;
 }
 
-interface WorkflowRow {
+export interface WorkflowRow {
   id: string; workflow_no: string | null; module_key: string; workflow_type: string;
   source_record_id: string; source_record_ref: string | null; status: string; current_step_key: string | null;
   priority: string; site_id: string | null; department_id: string | null; requested_by: string | null;
   owner_id: string | null; template_id: string; template_version_id: string | null;
   template_snapshot: WorkflowTemplateDefinition; source_snapshot: Record<string, unknown>;
+  active_transition_id: string | null;
 }
 interface TaskRow {
   id: string; workflow_id: string; step_key: string; status: string; is_required: boolean;
@@ -138,28 +137,42 @@ async function resolveDefinition(binding: WorkflowBindingRow): Promise<{ definit
   throw new Error('Workflow binding has no published template version.');
 }
 
-async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, context: ModuleWorkflowContext): Promise<void> {
+/** Pure task-row builder (no workflow_id — the caller/finalize-RPC supplies it).
+ *  Shared by the start path (direct insert) and the outbox worker (jsonb rows
+ *  passed to workflow_finalize_transition_tx, which inserts them atomically). */
+export function buildTaskRowForStep(step: WorkflowStepDefinition, context: ModuleWorkflowContext): Record<string, unknown> {
   const assignee = resolveStepAssignee(step, context);
-  const dueAt = addHoursIso(step.dueDurationHours);
-  await sb.from('workflow_tasks').insert({
-    workflow_id: wf.id,
+  return {
     step_key: step.stepKey, step_name: step.stepName, step_type: step.stepType, task_title: step.stepName,
     assigned_to: assignee.userId ?? null, assigned_role: assignee.roleKey ?? null,
-    status: 'pending', due_at: dueAt, is_required: step.required,
+    due_at: addHoursIso(step.dueDurationHours), is_required: step.required,
     metadata: { assignmentType: step.assignment.type },
+  };
+}
+
+/** "Action required" fan-out to a step's assignee(s) — fired after the task row
+ *  is committed (start path inserts directly; worker calls this post-finalize).
+ *  Idempotent per user via the notify() dedupe pipeline. */
+export function notifyTaskAssigned(wf: WorkflowRow, step: WorkflowStepDefinition, context: ModuleWorkflowContext): void {
+  const assignee = resolveStepAssignee(step, context);
+  void assigneeRecipients(assignee).then(recipients => {
+    emitWf('workflow.task.assigned', wf, wf.requested_by ?? '', {
+      payload: { stepKey: step.stepKey, assignedRole: assignee.roleKey, assignedTo: assignee.userId },
+      explicitRecipients: recipients,
+      notification: recipients.length ? {
+        title: `Action required: ${step.stepName}`,
+        body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} needs ${step.stepName.toLowerCase()}.`,
+        actionRoute: moduleRoute(wf.module_key),
+        type: 'workflow.task.assigned',
+        actionRequired: true,
+      } : undefined,
+    });
   });
-  const recipients = await assigneeRecipients(assignee);
-  emitWf('workflow.task.assigned', wf, wf.requested_by ?? '', {
-    payload: { stepKey: step.stepKey, assignedRole: assignee.roleKey, assignedTo: assignee.userId },
-    explicitRecipients: recipients,
-    notification: recipients.length ? {
-      title: `Action required: ${step.stepName}`,
-      body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} needs ${step.stepName.toLowerCase()}.`,
-      actionRoute: moduleRoute(wf.module_key),
-      type: 'workflow.task.assigned',
-      actionRequired: true,
-    } : undefined,
-  });
+}
+
+async function createTaskForStep(wf: WorkflowRow, step: WorkflowStepDefinition, context: ModuleWorkflowContext): Promise<void> {
+  await sb.from('workflow_tasks').insert({ workflow_id: wf.id, status: 'pending', ...buildTaskRowForStep(step, context) });
+  notifyTaskAssigned(wf, step, context);
 }
 
 // ── start ────────────────────────────────────────────────────────────────────
@@ -227,119 +240,73 @@ export async function startWorkflowByTemplate(params: { templateKey: string; con
 }
 
 // ── decide ───────────────────────────────────────────────────────────────────
-function validateDecisionRequirements(step: WorkflowStepDefinition, decision: string, comment: string | undefined, attachmentIds: string[]): void {
-  const r = step.decisionRules;
-  if (decision === 'approved' && r.requireCommentOnApprove && !comment) throw new Error('Comment is required to approve this task.');
-  if (decision === 'returned' && r.requireCommentOnReturn && !comment) throw new Error('Comment is required to return this task.');
-  if (decision === 'rejected' && r.requireCommentOnReject && !comment) throw new Error('Comment is required to reject this task.');
-  if (r.requireAttachment && attachmentIds.length === 0) throw new Error('An attachment is required for this decision.');
+// The decision is committed by the workflow_decide_task_tx RPC — ONE atomic
+// transaction that locks instance→task, resolves authorization from canonical
+// tables (never the caller), re-validates the step's decision rules against the
+// immutable template snapshot, records task/decision/audit/event, and enqueues
+// the transition + outbox job. This shared entry point covers EVERY caller
+// (workflow-engine route, legacy /workflows/decision, adapters), so the
+// horizontal-bypass fix (0ed1ea8a) now lives in the database itself.
+//
+// Custom SQLSTATEs from the RPC map to HTTP: WF403 not-assigned · WF409
+// concurrent/already-decided/mid-transition · WF400 requirement · WF422
+// override-reason · WF404 not-found.
+
+const WF_SQLSTATE_HTTP: Record<string, number> = { WF400: 400, WF403: 403, WF404: 404, WF409: 409, WF422: 422 };
+
+/** Convert a supabase-js RPC error into a status-tagged Error the routes honor. */
+function rpcHttpError(error: { code?: string | null; message: string }): Error & { status?: number } {
+  const status = error.code ? WF_SQLSTATE_HTTP[error.code] : undefined;
+  // Strip the plpgsql function prefix ('workflow_decide: …') for user-facing text.
+  const message = error.message.replace(/^workflow_[a-z_]+:\s*/i, '');
+  return Object.assign(new Error(message), status ? { status } : {});
 }
 
 export async function decideTask(params: {
   workflowId: string; taskId: string; actor: WorkflowActor;
   decision: 'approved' | 'returned' | 'rejected'; comment?: string; attachmentIds?: string[];
-}): Promise<WorkflowRow> {
-  const wf = await getWorkflow(params.workflowId);
-  const task = await getTask(params.taskId);
-  if (task.workflow_id !== wf.id) throw new Error('Task does not belong to this workflow.');
-  if (!['pending', 'open', 'in_progress'].includes(task.status)) throw new Error(`Task already ${task.status}.`);
+  overrideReason?: string;
+}): Promise<WorkflowRow & { pendingTransition?: boolean }> {
+  const { data, error } = await sb.rpc('workflow_decide_task_tx', {
+    p_workflow_id:     params.workflowId,
+    p_task_id:         params.taskId,
+    p_actor_id:        params.actor.id,
+    p_decision:        params.decision,
+    p_comment:         params.comment ?? null,
+    p_attachment_ids:  params.attachmentIds ?? [],
+    p_override_reason: params.overrideReason ?? null,
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
 
-  // ── Authorization (defense-in-depth; enforced here so EVERY caller is covered, not just
-  //    the workflow-engine router). Resolve the actor's CURRENT role from app_users — never
-  //    trust a passed/JWT role — then require the task be assigned to this user or their role.
-  //    Closes the horizontal-escalation bypass where any `workflow.approve` holder could decide
-  //    ANY task via the legacy /workflows/decision route. (Full transactional guard: RPC, next.)
-  const { data: actorRow } = await sb.from('app_users').select('role').eq('id', params.actor.id).maybeSingle<{ role: string }>();
-  const actorRole = actorRow?.role ?? params.actor.role ?? null;
-  const assignedTo   = (task.assigned_to as string | null) ?? null;
-  const assignedRole = (task.assigned_role as string | null) ?? null;
-  const isAssigned = assignedTo === params.actor.id || (!!assignedRole && assignedRole === actorRole);
-  const isElevated = actorRole === 'superadmin'
-    || await userCan({ id: params.actor.id, role: actorRole }, 'workflow.instances.admin_override')
-    || await userCan({ id: params.actor.id, role: actorRole }, 'workflow.instances.reassign');
-  if (!isAssigned && !isElevated) {
-    const e = new Error('This task is not assigned to you.') as Error & { status?: number };
-    e.status = 403;
-    throw e;
+  const r = (data ?? {}) as { outcome?: string; transitionId?: string };
+
+  // Happy path: run the enqueued transition's side-effects in-request so the
+  // caller sees the finalized state. A failure here is NOT an error — the
+  // decision is already committed; the scheduled recovery worker finishes the
+  // transition. The caller gets pendingTransition (routes map it to 202).
+  let pending = false;
+  if (r.outcome === 'transition_enqueued' && r.transitionId) {
+    try {
+      const { processTransitionInline } = await import('./outboxWorker.js');
+      pending = !(await processTransitionInline(r.transitionId));
+    } catch (e) {
+      console.error('[workflow] inline transition processing failed (recovery worker will retry):', e instanceof Error ? e.message : e);
+      pending = true;
+    }
   }
 
-  const definition = wf.template_snapshot;
-  const step = definition.steps.find((s) => s.stepKey === task.step_key);
-  if (!step) throw new Error('Workflow step definition not found.');
-  validateDecisionRequirements(step, params.decision, params.comment, params.attachmentIds ?? []);
-
-  await sb.from('workflow_tasks').update({
-    status: params.decision, decision: params.decision, decision_comment: params.comment ?? null,
-    completed_by: params.actor.id, completed_at: new Date().toISOString(), decided_at: new Date().toISOString(),
-  }).eq('id', task.id);
-
-  await sb.from('workflow_decisions').insert({
-    workflow_id: wf.id, task_id: task.id, actor_id: params.actor.id, decision: params.decision,
-    comment: params.comment ?? null, attachment_ids: params.attachmentIds ?? [], previous_status: task.status, new_status: params.decision,
-  });
-  await writeWorkflowAudit({ workflowId: wf.id, taskId: task.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: `workflow.task.${params.decision}`, reason: params.comment ?? null });
-
-  if (params.decision === 'returned') return returnWorkflow(wf, params.actor, params.comment ?? '');
-  if (params.decision === 'rejected') return rejectWorkflow(wf, params.actor, params.comment ?? '');
-  return advanceWorkflow(wf, task.step_key, params.actor);
-}
-
-async function advanceWorkflow(wf: WorkflowRow, completedStepKey: string, actor: WorkflowActor): Promise<WorkflowRow> {
-  // Parallel: wait for siblings in the same step.
-  const { data: pending } = await sb.from('workflow_tasks').select('id').eq('workflow_id', wf.id).eq('step_key', completedStepKey).in('status', ['pending', 'open', 'in_progress']);
-  if ((pending?.length ?? 0) > 0) return wf;
-
-  const { nextSteps, complete } = resolveNext(wf.template_snapshot, completedStepKey, 'approved', { workflow: wf, recordData: wf.source_snapshot });
-  if (complete || nextSteps.length === 0) return completeWorkflow(wf, actor);
-
-  const context = workflowToContext(wf);
-  for (const step of nextSteps) await createTaskForStep(wf, step, context);
-  const nextKey = nextSteps[0]!.stepKey;
-  await sb.from('workflow_instances').update({ current_step_key: nextKey, status: 'in_progress' }).eq('id', wf.id);
-  return { ...wf, current_step_key: nextKey, status: 'in_progress' };
-}
-
-async function completeWorkflow(wf: WorkflowRow, actor: WorkflowActor): Promise<WorkflowRow> {
-  const completedAt = new Date().toISOString();
-  await sb.from('workflow_instances').update({ status: 'completed', completed_at: completedAt, closed_at: completedAt }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
-  await runWorkflowHandoffs(wf, 'workflow.completed', actor.id);
-  await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.completed', newState: { status: 'completed' } });
-  emitWf('workflow.completed', wf, actor.id, {
-    severity: 'success',
-    explicitRecipients: ownerRecipients(wf),
-    notification: { title: 'Workflow approved', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was approved.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.completed' },
-  });
-  return { ...wf, status: 'completed' };
-}
-
-async function returnWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: string): Promise<WorkflowRow> {
-  await sb.from('workflow_instances').update({ status: 'returned' }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
-  await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.returned', reason: comment });
-  emitWf('workflow.returned', wf, actor.id, {
-    severity: 'warning',
-    explicitRecipients: ownerRecipients(wf),
-    notification: { title: 'Workflow returned', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was returned${comment ? `: ${comment}` : ''}.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.returned', actionRequired: true },
-  });
-  return { ...wf, status: 'returned' };
-}
-
-async function rejectWorkflow(wf: WorkflowRow, actor: WorkflowActor, comment: string): Promise<WorkflowRow> {
-  const at = new Date().toISOString();
-  await sb.from('workflow_instances').update({ status: 'rejected', completed_at: at, closed_at: at }).eq('id', wf.id);
-  await getWorkflowAdapter(wf.module_key, wf.workflow_type)?.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment });
-  await writeWorkflowAudit({ workflowId: wf.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: actor.id, action: 'workflow.rejected', reason: comment });
-  emitWf('workflow.rejected', wf, actor.id, {
-    severity: 'warning',
-    explicitRecipients: ownerRecipients(wf),
-    notification: { title: 'Workflow rejected', body: `${wf.workflow_no ?? ''} — ${wf.source_record_ref ?? wf.source_record_id} was rejected${comment ? `: ${comment}` : ''}.`, actionRoute: moduleRoute(wf.module_key), type: 'workflow.rejected' },
-  });
-  return { ...wf, status: 'rejected' };
+  const wf = await getWorkflow(params.workflowId);
+  return pending ? { ...wf, pendingTransition: true } : wf;
 }
 
 export async function cancelWorkflow(params: { workflowId: string; actor: WorkflowActor; reason: string }): Promise<WorkflowRow> {
   const wf = await getWorkflow(params.workflowId);
+  // Competing-command gate (§3 of DECIDE_TX_DESIGN): no command may race a
+  // committed-but-unfinalized decision, and only an active workflow can be
+  // cancelled. (TS-side guard; the full instance-first-locking cancel RPC is the
+  // next migration in this package.)
+  if (wf.active_transition_id) throw Object.assign(new Error('Workflow has a decision mid-transition — retry shortly.'), { status: 409 });
+  if (wf.status !== 'in_progress') throw Object.assign(new Error(`Workflow is already ${wf.status}.`), { status: 409 });
   const at = new Date().toISOString();
   await sb.from('workflow_instances').update({ status: 'cancelled', cancelled_at: at, closed_at: at }).eq('id', wf.id);
   await sb.from('workflow_tasks').update({ status: 'cancelled' }).eq('workflow_id', wf.id).in('status', ['pending', 'open', 'in_progress']);
@@ -357,6 +324,9 @@ export async function cancelWorkflow(params: { workflowId: string; actor: Workfl
 export async function delegateTask(params: { taskId: string; actor: WorkflowActor; delegateTo: string; reason: string }): Promise<void> {
   const task = await getTask(params.taskId);
   const wf = await getWorkflow(task.workflow_id);
+  if (wf.active_transition_id) throw Object.assign(new Error('Workflow has a decision mid-transition — retry shortly.'), { status: 409 });
+  // Open-for-action statuses (a delegated/reassigned task is still awaiting a decision).
+  if (!['pending', 'open', 'in_progress', 'delegated', 'reassigned'].includes(task.status)) throw Object.assign(new Error(`Task already ${task.status}.`), { status: 409 });
   const step = wf.template_snapshot.steps.find((s) => s.stepKey === task.step_key);
   if (!step?.decisionRules.canDelegate) throw new Error('This task cannot be delegated.');
   await sb.from('workflow_tasks').update({ status: 'delegated', delegated_to: params.delegateTo, assigned_to: params.delegateTo }).eq('id', task.id);
@@ -366,34 +336,18 @@ export async function delegateTask(params: { taskId: string; actor: WorkflowActo
 export async function reassignTask(params: { taskId: string; actor: WorkflowActor; reassignTo: string; reason: string }): Promise<void> {
   const task = await getTask(params.taskId);
   const wf = await getWorkflow(task.workflow_id);
+  if (wf.active_transition_id) throw Object.assign(new Error('Workflow has a decision mid-transition — retry shortly.'), { status: 409 });
+  // Open-for-action statuses (a delegated/reassigned task is still awaiting a decision).
+  if (!['pending', 'open', 'in_progress', 'delegated', 'reassigned'].includes(task.status)) throw Object.assign(new Error(`Task already ${task.status}.`), { status: 409 });
   await sb.from('workflow_tasks').update({ status: 'reassigned', assigned_to: params.reassignTo }).eq('id', task.id);
   await writeWorkflowAudit({ workflowId: wf.id, taskId: task.id, moduleKey: wf.module_key, sourceRecordId: wf.source_record_id, actorId: params.actor.id, action: 'workflow.task.reassigned', reason: params.reason });
 }
 
-// ── handoffs ──────────────────────────────────────────────────────────────────
-// Canonical cross-module delivery uses the shared handoff_outbox bus (createHandoff →
-// module receivers). workflow_handoffs is kept only as an audit/projection row so a
-// workflow's handoffs are queryable from the workflow. (No second delivery mechanism.)
-async function runWorkflowHandoffs(wf: WorkflowRow, event: string, actorId: string): Promise<void> {
-  const handoffs = (wf.template_snapshot.handoffs ?? []).filter((h) => h.event === event);
-  for (const h of handoffs) {
-    const res = await createHandoff({
-      sourceModule:     wf.module_key,
-      targetModule:     h.targetModule,
-      sourceEntityType: wf.workflow_type,
-      sourceEntityId:   wf.source_record_id,
-      payload:          { ...wf.source_snapshot, action: h.action, mappedFields: h.fieldMap ?? {} },
-      createdBy:        actorId,
-    });
-    await sb.from('workflow_handoffs').insert({
-      workflow_id: wf.id, from_module: wf.module_key, to_module: h.targetModule,
-      source_record_id: wf.source_record_id, trigger_event: event, action_key: h.action,
-      status: res.ok ? 'completed' : 'failed', payload: wf.source_snapshot, mapped_fields: h.fieldMap ?? {},
-    });
-  }
-}
-
-function workflowToContext(wf: WorkflowRow): ModuleWorkflowContext {
+// ── context ───────────────────────────────────────────────────────────────────
+// (Template-declared handoffs now commit as durable intent INSIDE
+// workflow_finalize_transition_tx — handoff_outbox + workflow_handoffs rows in
+// the same transaction as the terminal status. Delivery stays async on the bus.)
+export function workflowToContext(wf: WorkflowRow): ModuleWorkflowContext {
   return {
     moduleKey: wf.module_key, workflowType: wf.workflow_type, triggerEvent: 'workflow.step.completed',
     sourceRecordId: wf.source_record_id, sourceRecordRef: wf.source_record_ref ?? undefined,

@@ -1,6 +1,9 @@
 // E2E — Central Workflow Engine (seed template+version+binding → start → decide →
-// advance → complete + access control + §2 side-effects). Requires the workflow
-// migrations (20260704000000/01/02) applied.
+// advance → complete + access control + §2 side-effects + atomic decide-tx).
+// Requires the workflow migrations (20260704000000/01/02) AND the decide-tx
+// migrations (20260919000150/160/170/180) applied.
+
+import crypto from 'node:crypto';
 
 export const title = 'Central Workflow Engine';
 
@@ -129,7 +132,9 @@ export default async function run(h) {
 
   await test('HSE (admin) approves → workflow completed + event', async () => {
     const task = await openTask(workflowId);
-    const r = await api('workflow-engine/decide', T.admin, { workflowId, taskId: task.id, decision: 'approved', comment: 'approved' });
+    // overrideReason: required by the atomic RPC when the harness admin is a
+    // superadmin (elevated-not-assigned); ignored when the role matches.
+    const r = await api('workflow-engine/decide', T.admin, { workflowId, taskId: task.id, decision: 'approved', comment: 'approved', overrideReason: 'E2E elevated decision' });
     ok(r, 'hse approve failed');
     const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', workflowId).single();
     expect(wf?.status === 'completed', `expected completed, got ${wf?.status}`);
@@ -222,9 +227,223 @@ export default async function run(h) {
 
   await test('POSITIVE control: legacy route works for an elevated approver', async () => {
     const task = await openTask(bypassWfId);   // hse step, assigned_role admin
-    const r = await api('workflows/decision', T.admin, { taskId: task.id, decision: 'approved', note: 'approve via legacy route' });
+    const r = await api('workflows/decision', T.admin, { taskId: task.id, decision: 'approved', note: 'approve via legacy route', overrideReason: 'E2E elevated decision' });
     ok(r, 'legacy-route decision by an elevated admin failed');
     const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', bypassWfId).single();
     expect(wf?.status === 'completed', `expected completed, got ${wf?.status}`);
+  });
+
+  // ── Atomic decisions — transition/outbox/idempotency (finding #2) ─────────────
+  // The decide path now commits through workflow_decide_task_tx + a transactional
+  // outbox. Assert the machinery end-to-end: §2 rows, semantic idempotency (exact
+  // retry = original result, different payload = 409), concurrency (one 200 + one
+  // 409), record_only on parallel siblings, terminal sibling-close, lease fencing,
+  // dead-letter + gated instance + admin replay.
+  h.section('Workflow › Atomic decisions');
+
+  const atomRecord  = `PTW-E2E-ATOM-${TAG}`;
+  const concRecord  = `PTW-E2E-CONC-${TAG}`;
+  const rejRecord   = `PTW-E2E-REJ-${TAG}`;
+  const dlRecord    = `${crypto.randomUUID()}`;   // finance receipt RPC needs a uuid source id
+  const parTplKey   = `e2e_wfpar_${TAG}`;
+  const parTrigger  = `ptw.par.e2e.${TAG}`;
+  const finTplKey   = `e2e_wffin_${TAG}`;
+  const finTrigger  = `fin.e2e.${TAG}`;
+  let parTplId = null, finTplId = null;
+
+  h.onCleanup(async () => {
+    for (const rec of [atomRecord, concRecord, rejRecord, dlRecord]) {
+      try {
+        const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', rec);
+        const ids = (wfs ?? []).map(w => w.id);
+        if (ids.length) {
+          // active_transition_id → transitions is FK'd; clear the gate before deleting.
+          await sb.from('workflow_instances').update({ active_transition_id: null }).in('id', ids);
+          await sb.from('workflow_transitions').delete().in('workflow_id', ids);
+          await sb.from('workflow_audit_log').delete().in('workflow_id', ids);
+          await sb.from('workflow_instances').delete().in('id', ids);
+        }
+      } catch {}
+    }
+    try { await sb.from('module_workflow_bindings').delete().in('trigger_event', [parTrigger, finTrigger]); } catch {}
+    try { if (parTplId) await sb.from('workflow_templates').delete().eq('id', parTplId); } catch {}
+    try { if (finTplId) await sb.from('workflow_templates').delete().eq('id', finTplId); } catch {}
+  });
+
+  const seedTemplate = async (key, moduleKey, wfType, trigger, definition) => {
+    const { data: tpl, error: e1 } = await sb.from('workflow_templates').insert({
+      name: `E2E ${key}`, definition: {}, template_key: key, module_key: moduleKey, workflow_type: wfType, status: 'active',
+    }).select('id').single();
+    expect(!e1 && !!tpl, `template ${key} insert failed: ${e1?.message}`);
+    const { data: ver, error: e2 } = await sb.from('workflow_template_versions').insert({
+      template_id: tpl.id, version_no: 1, version_status: 'published', definition, published_at: new Date().toISOString(),
+    }).select('id').single();
+    expect(!e2 && !!ver, `version ${key} insert failed: ${e2?.message}`);
+    const { error: e3 } = await sb.from('module_workflow_bindings').insert({
+      module_key: moduleKey, workflow_type: wfType, trigger_event: trigger,
+      template_id: tpl.id, template_version_id: ver.id, scope_type: 'global', is_active: true, priority: 100,
+    });
+    expect(!e3, `binding ${key} insert failed: ${e3?.message}`);
+    return tpl.id;
+  };
+
+  const startWf = async (trigger, moduleKey, wfType, recordId, recordData) => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey, workflowType: wfType, triggerEvent: trigger, sourceRecordId: recordId, recordData,
+    });
+    ok(r, `start ${recordId} failed`);
+    return r.body.data.id;
+  };
+
+  let atomWfId = null, atomTaskId = null;
+
+  await test('decide commits transition + outbox + §2 rows atomically', async () => {
+    atomWfId = await startWf(trigger, 'ptw', 'permit_approval', atomRecord, { supervisorId: bypass.supervisor.id });
+    const task = await openTask(atomWfId);
+    atomTaskId = task.id;
+    const r = await api('workflow-engine/decide', tSup, { workflowId: atomWfId, taskId: task.id, decision: 'approved', comment: 'atomic ok' });
+    ok(r, 'decide failed');
+    expect(r.status === 200, `expected 200 (finalized in-request), got ${r.status}`);
+    // Transition committed + finalized; instance not gated.
+    const { data: tr } = await sb.from('workflow_transitions').select('*').eq('task_id', task.id).single();
+    expect(tr && tr.kind === 'resolve_approved_step' && tr.status === 'completed', `transition wrong: ${tr?.kind}/${tr?.status}`);
+    const { data: ob } = await sb.from('workflow_outbox').select('status').eq('transition_id', tr.id).single();
+    expect(ob?.status === 'completed', `outbox not completed: ${ob?.status}`);
+    const { data: wf } = await sb.from('workflow_instances').select('status, current_step_key, active_transition_id').eq('id', atomWfId).single();
+    expect(wf.status === 'in_progress' && wf.current_step_key === 'hse' && !wf.active_transition_id,
+      `instance wrong after advance: ${wf.status}/${wf.current_step_key}/gated=${!!wf.active_transition_id}`);
+    // §2: decision + audit + dedupe-keyed event.
+    const { data: decs } = await sb.from('workflow_decisions').select('id').eq('task_id', task.id);
+    expect(decs?.length === 1, `expected 1 decision, got ${decs?.length}`);
+    const { data: audit } = await sb.from('workflow_audit_log').select('id').eq('workflow_id', atomWfId).eq('action', 'workflow.task.approved');
+    expect((audit?.length ?? 0) >= 1, 'decision audit row missing');
+    const { data: ev } = await sb.from('app_events').select('id').eq('dedupe_key', `wf.task.approved:${task.id}`);
+    expect(ev?.length === 1, `expected 1 dedupe-keyed decision event, got ${ev?.length}`);
+  });
+
+  await test('IDEMPOTENCY: exact retry returns success and writes nothing new', async () => {
+    const before = await sb.from('workflow_tasks').select('id').eq('workflow_id', atomWfId);
+    const r = await api('workflow-engine/decide', tSup, { workflowId: atomWfId, taskId: atomTaskId, decision: 'approved', comment: 'atomic ok' });
+    ok(r, 'exact retry should return the original success');
+    const { data: decs } = await sb.from('workflow_decisions').select('id').eq('task_id', atomTaskId);
+    expect(decs?.length === 1, `retry duplicated the decision: ${decs?.length}`);
+    const after = await sb.from('workflow_tasks').select('id').eq('workflow_id', atomWfId);
+    expect(after.data?.length === before.data?.length, `retry created tasks: ${before.data?.length} → ${after.data?.length}`);
+  });
+
+  await test('IDEMPOTENCY: different payload for a decided task → 409', async () => {
+    const r = await api('workflow-engine/decide', tSup, { workflowId: atomWfId, taskId: atomTaskId, decision: 'approved', comment: 'DIFFERENT comment' });
+    fails(r, 'different-payload retry should fail');
+    expect(r.status === 409, `expected 409, got ${r.status}`);
+  });
+
+  await test('CONCURRENCY: two simultaneous decides → one success + one 409, one decision row', async () => {
+    // Linear DEF (supervisor → hse); both racers hit the supervisor task.
+    const wfId = await startWf(trigger, 'ptw', 'permit_approval', concRecord, { supervisorId: bypass.supervisor.id });
+    const task = await openTask(wfId);
+    const [r1, r2] = await Promise.all([
+      api('workflow-engine/decide', tSup, { workflowId: wfId, taskId: task.id, decision: 'approved', comment: 'racer one' }),
+      api('workflow-engine/decide', tSup, { workflowId: wfId, taskId: task.id, decision: 'approved', comment: 'racer two' }),
+    ]);
+    const oks   = [r1, r2].filter(r => r.body.success === true);
+    const confs = [r1, r2].filter(r => r.status === 409);
+    expect(oks.length === 1 && confs.length === 1, `expected 1 success + 1 conflict, got ${r1.status}/${r2.status}`);
+    const { data: decs } = await sb.from('workflow_decisions').select('id').eq('task_id', task.id);
+    expect(decs?.length === 1, `race produced ${decs?.length} decision rows`);
+    // The winner advanced the workflow to the hse step.
+    const { data: wf } = await sb.from('workflow_instances').select('current_step_key, active_transition_id').eq('id', wfId).single();
+    expect(wf.current_step_key === 'hse' && !wf.active_transition_id, `winner should advance to hse+ungated, got ${wf.current_step_key}`);
+  });
+
+  await test('TERMINAL: rejection closes open siblings atomically', async () => {
+    // Parallel first steps a + b (both sequenceNo 1 → firstSteps returns both).
+    parTplId = await seedTemplate(parTplKey, 'ptw', 'permit_approval', parTrigger, {
+      ...DEF,
+      steps: [
+        { ...DEF.steps[0], stepKey: 'a', stepName: 'A', assignment: { type: 'supervisor' } },
+        { ...DEF.steps[0], stepKey: 'b', stepName: 'B', sequenceNo: 1, assignment: { type: 'role', value: 'admin' } },
+      ],
+      transitions: [
+        { fromStep: 'a', onDecision: 'approved', completeWorkflow: true },
+        { fromStep: 'b', onDecision: 'approved', completeWorkflow: true },
+      ],
+    });
+    const rejWfId = await startWf(parTrigger, 'ptw', 'permit_approval', rejRecord, { supervisorId: bypass.supervisor.id });
+    const { data: aTask } = await sb.from('workflow_tasks').select('id').eq('workflow_id', rejWfId).eq('step_key', 'a').single();
+    const r = await api('workflow-engine/decide', tSup, { workflowId: rejWfId, taskId: aTask.id, decision: 'rejected', comment: 'not acceptable' });
+    ok(r, 'reject failed');
+    const { data: wf } = await sb.from('workflow_instances').select('status, active_transition_id').eq('id', rejWfId).single();
+    expect(wf.status === 'rejected' && !wf.active_transition_id, `expected rejected+ungated, got ${wf.status}`);
+    const { data: bTask } = await sb.from('workflow_tasks').select('status').eq('workflow_id', rejWfId).eq('step_key', 'b').single();
+    expect(bTask.status === 'cancelled', `sibling b should be cancelled, got ${bTask.status}`);
+  });
+
+  // ── Failure path: fencing, dead-letter, gated instance, admin replay ─────────
+  // A finance_payroll workflow whose source run doesn't exist → the receipt RPC
+  // fails on every attempt → controlled, repeatable transition failure.
+  let dlWfId = null, dlTransitionId = null;
+
+  await test('FAILURE: source-RPC failure leaves instance GATED, never completed (202)', async () => {
+    finTplId = await seedTemplate(finTplKey, 'finance_payroll', 'finance_payroll_approval', finTrigger, {
+      ...DEF,
+      steps: [{ ...DEF.steps[0], stepKey: 'approve', stepName: 'Approve', assignment: { type: 'supervisor' } }],
+      transitions: [{ fromStep: 'approve', onDecision: 'approved', completeWorkflow: true }],
+    });
+    dlWfId = await startWf(finTrigger, 'finance_payroll', 'finance_payroll_approval', dlRecord, { supervisorId: bypass.supervisor.id });
+    const task = await openTask(dlWfId);
+    const r = await api('workflow-engine/decide', tSup, { workflowId: dlWfId, taskId: task.id, decision: 'approved', comment: 'approve missing run' });
+    expect(r.body.success === true, `decision should commit even when finalization fails — got ${JSON.stringify(r.body).slice(0, 200)}`);
+    expect(r.status === 202, `expected 202 (committed, finalization pending), got ${r.status}`);
+    const { data: wf } = await sb.from('workflow_instances').select('status, active_transition_id').eq('id', dlWfId).single();
+    expect(wf.status === 'in_progress' && !!wf.active_transition_id, `instance must stay gated + non-terminal: ${wf.status}/gated=${!!wf.active_transition_id}`);
+    dlTransitionId = wf.active_transition_id;
+    const { data: run } = await sb.from('finance_payroll_runs').select('id').eq('id', dlRecord).maybeSingle();
+    expect(!run, 'sanity: source run must not exist');
+  });
+
+  await test('FENCING: a stale lease cannot complete or fail a reclaimed job', async () => {
+    // Make the job claimable now, claim as worker A…
+    await sb.from('workflow_outbox').update({ status: 'pending', next_attempt_at: new Date(0).toISOString(), lease_token: null, lease_expires_at: null }).eq('transition_id', dlTransitionId);
+    const { data: claimedA } = await sb.rpc('workflow_outbox_claim', { p_worker_id: 'e2e-A', p_limit: 5 });
+    const jobA = (claimedA ?? []).find(j => j.transition_id === dlTransitionId);
+    expect(!!jobA, 'worker A failed to claim the job');
+    // …expire A's lease, reclaim as worker B (fresh token)…
+    await sb.from('workflow_outbox').update({ lease_expires_at: new Date(0).toISOString() }).eq('transition_id', dlTransitionId);
+    const { data: claimedB } = await sb.rpc('workflow_outbox_claim', { p_worker_id: 'e2e-B', p_limit: 5 });
+    const jobB = (claimedB ?? []).find(j => j.transition_id === dlTransitionId);
+    expect(!!jobB && jobB.lease_token !== jobA.lease_token, 'worker B should reclaim with a fresh lease');
+    // …then A (stale) must be rejected on both complete and fail.
+    const { error: e1 } = await sb.rpc('workflow_outbox_complete', { p_transition_id: dlTransitionId, p_lease_token: jobA.lease_token });
+    expect(e1 && e1.code === 'WF409', `stale complete should be WF409, got ${e1?.code ?? 'success'}`);
+    const { error: e2 } = await sb.rpc('workflow_outbox_fail', { p_transition_id: dlTransitionId, p_lease_token: jobA.lease_token, p_error: 'stale' });
+    expect(e2 && e2.code === 'WF409', `stale fail should be WF409, got ${e2?.code ?? 'success'}`);
+    // B's fail is honored (releases the job back to pending with backoff).
+    const { error: e3 } = await sb.rpc('workflow_outbox_fail', { p_transition_id: dlTransitionId, p_lease_token: jobB.lease_token, p_error: 'e2e fencing test' });
+    expect(!e3, `current-lease fail should succeed: ${e3?.message}`);
+  });
+
+  await test('DEAD-LETTER: exhausted retries → dead_letter + critical event + instance still gated', async () => {
+    // Force the next failure to exhaust the budget, then drain via the ops route.
+    await sb.from('workflow_outbox').update({ max_attempts: 1, status: 'pending', next_attempt_at: new Date(0).toISOString() }).eq('transition_id', dlTransitionId);
+    const r = await api('workflow-engine/outbox/process', T.admin, {});
+    ok(r, 'outbox process route failed');
+    const { data: ob } = await sb.from('workflow_outbox').select('status, last_error').eq('transition_id', dlTransitionId).single();
+    expect(ob.status === 'dead_letter', `expected dead_letter, got ${ob.status} (${ob.last_error})`);
+    const { data: tr } = await sb.from('workflow_transitions').select('status').eq('id', dlTransitionId).single();
+    expect(tr.status === 'dead_letter', `transition should be dead_letter, got ${tr.status}`);
+    const { data: wf } = await sb.from('workflow_instances').select('status, active_transition_id').eq('id', dlWfId).single();
+    expect(wf.status === 'in_progress' && wf.active_transition_id === dlTransitionId, 'dead-letter must NOT clear the gate');
+    const { data: ev } = await sb.from('app_events').select('id').eq('dedupe_key', `workflow.transition_failed:${dlTransitionId}`);
+    expect(ev?.length === 1, 'critical transition_failed event missing');
+  });
+
+  await test('REPLAY: admin replay resets the job for a fresh cycle (audited)', async () => {
+    const r = await api('workflow-engine/outbox/replay', T.admin, { transitionId: dlTransitionId, reason: 'E2E replay test' });
+    ok(r, 'replay route failed');
+    const { data: audit } = await sb.from('workflow_audit_log').select('id').eq('workflow_id', dlWfId).eq('action', 'workflow.transition.replayed');
+    expect((audit?.length ?? 0) >= 1, 'replay audit row missing');
+    // Source still missing → it fails again, but the job is back in the retry loop (not lost).
+    const { data: ob } = await sb.from('workflow_outbox').select('status, attempts, max_attempts').eq('transition_id', dlTransitionId).single();
+    expect(['pending','processing','dead_letter'].includes(ob.status), `job should be cycling, got ${ob.status}`);
   });
 }

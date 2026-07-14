@@ -20,30 +20,6 @@ import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { writeHrAudit } from '../hr/employeeCore';
-import { emitAppEvent } from '../appEvents';
-import { getPayrollRun, emitRunApprovedSideEffects } from '../finance/payrollRuns';
-
-/** Resolve the actor from the most recent workflow decision. */
-async function decidedBy(workflowId: string): Promise<string | null> {
-  const { data } = await sb
-    .from('workflow_decisions')
-    .select('actor_id')
-    .eq('workflow_id', workflowId)
-    .order('created_at', { ascending: false })
-    .limit(1)
-    .maybeSingle<{ actor_id: string | null }>();
-  return data?.actor_id ?? null;
-}
-
-/** Load a run's created_by for SoD check. */
-async function getRunCreatedBy(runId: string): Promise<string | null> {
-  const { data } = await sb
-    .from('finance_payroll_runs')
-    .select('created_by')
-    .eq('id', runId)
-    .maybeSingle<{ created_by: string | null }>();
-  return data?.created_by ?? null;
-}
 
 /** Set the run status and optionally stamp approved_by/at. */
 async function setRunStatus(
@@ -77,95 +53,22 @@ const financePayrollAdapter: ModuleWorkflowAdapter = {
 
   onWorkflowStepCompleted: async () => {},
 
-  onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
-    const actor = await decidedBy(workflowId);
-    const createdBy = await getRunCreatedBy(sourceRecordId);
-
-    // SoD: creator cannot approve their own payroll run.
-    if (actor && createdBy && actor === createdBy) {
-      throw Object.assign(
-        new Error('Segregation of duties violation: creator cannot approve.'),
-        { status: 422 },
-      );
-    }
-
-    await setRunStatus(sourceRecordId, 'approved', actor, actor);
-
-    await writeHrAudit({
-      submoduleKey: 'finance_payroll',
-      recordId:     sourceRecordId,
-      actorId:      actor ?? 'workflow',
-      action:       'payroll_run.approved',
-      previousState: { status: 'pending_approval' },
-      newState:      { status: 'approved', approvedBy: actor },
-    });
-
-    void emitAppEvent({
-      eventType:        'finance.payroll.run.approved',
-      sourceModule:     'finance_payroll',
-      sourceEntityType: 'payroll_run',
-      sourceEntityId:   sourceRecordId,
-      actorUserId:      actor ?? 'workflow',
-      severity:         'success',
-      payload:          { approvedBy: actor },
-    });
-
-    // "Ready to lock" notifications + payroll_locking handoff — the SAME side-effects
-    // the direct approve route fires, so downstream automation doesn't depend on which
-    // path approved the run.
-    const approvedRun = await getPayrollRun(sourceRecordId);
-    if (approvedRun) await emitRunApprovedSideEffects(approvedRun, actor ?? 'workflow');
+  // Terminal decision outcomes commit through the transactional, receipt-guarded
+  // finance_payroll_workflow_transition_tx RPC (dispatched by the workflow outbox
+  // worker) — status + SoD + audit + event + payroll_locking handoff in ONE
+  // exactly-once transaction. These callbacks are intentionally LOUD dead-ends so
+  // any stray caller surfaces immediately instead of silently forking a second,
+  // non-atomic commit path (no dual system).
+  onWorkflowCompleted: async () => {
+    throw new Error('finance_payroll: workflow completion commits via finance_payroll_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowReturned: async ({ workflowId, sourceRecordId, comment }) => {
-    const actor = await decidedBy(workflowId);
-    await setRunStatus(sourceRecordId, 'returned', actor);
-
-    await writeHrAudit({
-      submoduleKey: 'finance_payroll',
-      recordId:     sourceRecordId,
-      actorId:      actor ?? 'workflow',
-      action:       'payroll_run.returned',
-      previousState: { status: 'pending_approval' },
-      newState:      { status: 'returned' },
-      reason:        comment ?? null,
-    });
-
-    void emitAppEvent({
-      eventType:        'finance.payroll.run.returned',
-      sourceModule:     'finance_payroll',
-      sourceEntityType: 'payroll_run',
-      sourceEntityId:   sourceRecordId,
-      actorUserId:      actor ?? 'workflow',
-      severity:         'warning',
-      payload:          { reason: comment ?? null },
-    });
+  onWorkflowReturned: async () => {
+    throw new Error('finance_payroll: workflow return commits via finance_payroll_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowRejected: async ({ workflowId, sourceRecordId, comment }) => {
-    // Per spec sourceStatusMap: onRejected → 'returned' (not a separate rejected state)
-    const actor = await decidedBy(workflowId);
-    await setRunStatus(sourceRecordId, 'returned', actor);
-
-    await writeHrAudit({
-      submoduleKey: 'finance_payroll',
-      recordId:     sourceRecordId,
-      actorId:      actor ?? 'workflow',
-      action:       'payroll_run.rejected_by_workflow',
-      previousState: { status: 'pending_approval' },
-      newState:      { status: 'returned' },
-      reason:        comment ?? null,
-    });
-
-    void emitAppEvent({
-      eventType:        'finance.payroll.run.rejected',
-      sourceModule:     'finance_payroll',
-      sourceEntityType: 'payroll_run',
-      sourceEntityId:   sourceRecordId,
-      actorUserId:      actor ?? 'workflow',
-      severity:         'warning',
-      payload:          { reason: comment ?? null },
-    });
+  onWorkflowRejected: async () => {
+    throw new Error('finance_payroll: workflow rejection commits via finance_payroll_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
   onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {

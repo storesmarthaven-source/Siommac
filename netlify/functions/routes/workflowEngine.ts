@@ -43,25 +43,28 @@ router.post('/start', async c => {
 });
 
 // POST /api/workflow-engine/decide — approve | return | reject (assignee or elevated)
+// Authorization + state guards are enforced ATOMICALLY inside workflow_decide_task_tx
+// (assignment/elevation re-resolved from canonical tables under lock); the route keeps
+// only the capability gate. 202 = decision committed, finalization pending (recovery
+// worker completes it) — never a 5xx after the decision has committed.
 router.post('/decide', async c => {
   const user = await requireUser(c);
   const v = zv(c, z.object({
     workflowId: z.string().uuid(), taskId: z.string().uuid(),
     decision: z.enum(['approved','returned','rejected']), comment: z.string().max(2000).optional(),
     attachmentIds: z.array(z.string()).optional(),
+    overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions
   }), body(c));
   if (!v.ok) return v.response;
   const permKey = `workflow.tasks.${v.data.decision === 'approved' ? 'approve' : v.data.decision === 'returned' ? 'return' : 'reject'}`;
   if (!(await userCan(user, permKey))) return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
-  // Assignee-or-elevated check.
-  const { data: task } = await sb.from('workflow_tasks').select('assigned_to, assigned_role').eq('id', v.data.taskId).maybeSingle<{ assigned_to: string | null; assigned_role: string | null }>();
-  if (!task) return c.json({ success: false, message: 'Task not found.' }, 404 as 200);
-  const elevated = user.role === 'superadmin' || await userCan(user, 'workflow.instances.admin_override') || await userCan(user, 'workflow.instances.reassign');
-  const assigned = task.assigned_to === user.id || (!!task.assigned_role && task.assigned_role === user.role);
-  if (!assigned && !elevated) return c.json({ success: false, message: 'This task is not assigned to you.' }, 403 as 200);
   try {
-    const wf = await decideTask({ workflowId: v.data.workflowId, taskId: v.data.taskId, actor: actorOf(user), decision: v.data.decision, comment: v.data.comment, attachmentIds: v.data.attachmentIds });
-    return c.json({ success: true, data: wf });
+    const wf = await decideTask({
+      workflowId: v.data.workflowId, taskId: v.data.taskId, actor: actorOf(user),
+      decision: v.data.decision, comment: v.data.comment, attachmentIds: v.data.attachmentIds,
+      overrideReason: v.data.overrideReason,
+    });
+    return c.json({ success: true, data: wf, pending: wf.pendingTransition === true }, (wf.pendingTransition ? 202 : 200) as 200);
   } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Decision failed' }, ((err as { status?: number }).status ?? 400) as 200); }
 });
 
@@ -125,6 +128,66 @@ router.post('/get', async c => {
     sb.from('workflow_decisions').select('*').eq('workflow_id', wf.id).order('created_at', { ascending: false }),
   ]);
   return c.json({ success: true, data: { workflow: wf, tasks: tasks ?? [], decisions: decisions ?? [] } });
+});
+
+// ── Transactional outbox — ops surface (dead-letter recovery, queue visibility) ─
+
+// POST /api/workflow-engine/outbox/list — queue + dead-letter visibility
+router.post('/outbox/list', async c => {
+  await requirePermission(c, 'workflow.handoffs.view');
+  const v = zv(c, z.object({ status: z.string().optional(), workflowId: z.string().uuid().optional() }), body(c));
+  if (!v.ok) return v.response;
+  let q = sb.from('workflow_outbox')
+    .select('id, transition_id, status, attempts, max_attempts, next_attempt_at, locked_by, last_error, created_at, processed_at, workflow_transitions(workflow_id, task_id, kind, decision, actor_id, status)')
+    .order('created_at', { ascending: false }).limit(200);
+  if (v.data.status) q = q.eq('status', v.data.status);
+  const { data, error } = await q;
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
+  const rows = (data ?? []).filter(r => !v.data.workflowId || (r as { workflow_transitions?: { workflow_id?: string } }).workflow_transitions?.workflow_id === v.data.workflowId);
+  // Ops metrics: queue depth + oldest unprocessed job.
+  const open = (data ?? []).filter(r => ['pending', 'processing'].includes((r as { status: string }).status));
+  return c.json({ success: true, data: rows, stats: {
+    queueDepth: open.length,
+    oldestPendingAt: open.length ? (open[open.length - 1] as { created_at: string }).created_at : null,
+    deadLetters: (data ?? []).filter(r => (r as { status: string }).status === 'dead_letter').length,
+  } });
+});
+
+// POST /api/workflow-engine/outbox/process — run a worker pass NOW (ops/manual drain)
+router.post('/outbox/process', async c => {
+  await requirePermission(c, 'workflow.handoffs.retry');
+  const { processWorkflowOutbox } = await import('../lib/workflow/outboxWorker.js');
+  const summary = await processWorkflowOutbox('manual', 20);
+  return c.json({ success: true, data: summary });
+});
+
+// POST /api/workflow-engine/outbox/replay — resurrect a dead-lettered transition.
+// Resets the job for a fresh retry cycle; the workflow stays gated until the
+// replayed transition finalizes. Audited (§2).
+router.post('/outbox/replay', async c => {
+  const user = await requirePermission(c, 'workflow.handoffs.retry');
+  const v = zv(c, z.object({ transitionId: z.string().uuid(), reason: z.string().min(1).max(500) }), body(c));
+  if (!v.ok) return v.response;
+  const { data: tr } = await sb.from('workflow_transitions').select('id, workflow_id, status').eq('id', v.data.transitionId).maybeSingle<{ id: string; workflow_id: string; status: string }>();
+  if (!tr) return c.json({ success: false, message: 'Transition not found.' }, 404 as 200);
+  if (tr.status !== 'dead_letter') return c.json({ success: false, message: `Transition is ${tr.status}, not dead_letter.` }, 409 as 200);
+
+  const { error: obErr } = await sb.from('workflow_outbox').update({
+    status: 'pending', attempts: 0, next_attempt_at: new Date().toISOString(),
+    lease_token: null, lease_expires_at: null, last_error: null,
+  }).eq('transition_id', tr.id).eq('status', 'dead_letter');
+  if (obErr) return c.json({ success: false, message: obErr.message }, 500 as 200);
+  const { error: trErr } = await sb.from('workflow_transitions').update({ status: 'pending' }).eq('id', tr.id);
+  if (trErr) return c.json({ success: false, message: trErr.message }, 500 as 200);
+
+  await sb.from('workflow_audit_log').insert({
+    workflow_id: tr.workflow_id, actor_id: user.id, action: 'workflow.transition.replayed',
+    reason: v.data.reason, new_state: { transitionId: tr.id, status: 'pending' },
+  });
+  // Process immediately so the admin sees the outcome.
+  const { processWorkflowOutbox } = await import('../lib/workflow/outboxWorker.js');
+  const summary = await processWorkflowOutbox(`replay:${user.id}`, 20);
+  return c.json({ success: true, data: summary });
 });
 
 // POST /api/workflow-engine/audit/list
