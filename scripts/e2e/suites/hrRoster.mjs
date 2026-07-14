@@ -76,7 +76,9 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('seed site, employees, hr_staff', async () => {
-    const { error: sErr } = await sb.from('project_sites').insert({ id: siteId, name: `RST Test Site ${TAG}` });
+    // project_sites.latitude/longitude are NOT NULL (schema.sql) — a bare name+id
+    // insert violates them and strands the whole roster suite on setup.
+    const { error: sErr } = await sb.from('project_sites').insert({ id: siteId, name: `RST Test Site ${TAG}`, latitude: 10.6667, longitude: -61.5167 });
     expect(!sErr, `seed site failed: ${sErr?.message}`);
 
     const { error: aErr } = await sb.from('app_users').insert({

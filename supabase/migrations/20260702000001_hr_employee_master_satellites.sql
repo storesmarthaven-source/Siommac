@@ -74,7 +74,7 @@ create table if not exists public.hr_employee_change_requests (
   change_type     text not null
                   check (change_type in ('role_change','department_transfer','site_transfer',
                                          'supervisor_change','status_change','employment_type_change',
-                                         'salary_change','contact_update')),
+                                         'salary_change','contact_update','transfer_promotion')),
   requested_by    text references public.app_users(id) on delete set null,
   previous_value  jsonb,
   requested_value jsonb,
