@@ -65,57 +65,51 @@ export function AcRolesPage(): VNode {
   }, [roles, listTab, listSearch]);
 
   const selRole = roles.find(r => r.name === selName) ?? null;
+  useEffect(() => { if (!selName && roles.length) setSelName(roles[0]!.name); }, [roles, selName]);
 
   return (
     <div class="acx">
-      {!selName || !selRole ? (
-        // ── LIST ──────────────────────────────────────────────────────────────
-        <>
-          <div class="rl2-hd">
-            <div>
-              <h1 class="page-title">Roles</h1>
-              <p class="page-sub">Manage roles and the default capabilities each one grants.</p>
-            </div>
-            <button type="button" class="acx-hdr-btn primary" onClick={() => setEditing('new')}><LucideIcon name="Plus" size={15} /> New Role</button>
-          </div>
+      <div class="rl2-hd">
+        <div>
+          <h1 class="page-title">Roles</h1>
+          <p class="page-sub">Manage roles and the default capabilities each one grants.</p>
+        </div>
+        <button type="button" class="acx-hdr-btn primary" onClick={() => setEditing('new')}><LucideIcon name="Plus" size={15} /> New Role</button>
+      </div>
 
-          <div class="card">
-            <div class="rl2-list-top">
-              <div class="rl2-list-tabs">
-                <button class={`rl2-ltab${listTab === 'system' ? ' on' : ''}`} onClick={() => setListTab('system')}>System <span>{systemRoles.length}</span></button>
-                <button class={`rl2-ltab${listTab === 'custom' ? ' on' : ''}`} onClick={() => setListTab('custom')}>Custom <span>{customRoles.length}</span></button>
-              </div>
-              <div class="rl2-list-search"><LucideIcon name="Search" size={15} /><input placeholder="Search roles…" value={listSearch} onInput={e => setListSearch((e.target as HTMLInputElement).value)} /></div>
-            </div>
-            <div class="rl2-grid">
-              {rolesQ.isLoading ? <div class="ac-loading">Loading roles…</div>
-               : listRoles.length === 0 ? <div class="ac-empty">{listTab === 'custom' ? 'No custom roles yet.' : 'No roles match.'}</div>
-               : listRoles.map(r => {
-                const st = roleStyle(r.name);
-                return (
-                  <button type="button" key={r.name} class="rl2-rcard" onClick={() => setSelName(r.name)}>
-                    <span class="rl2-rcard-ico" style={{ background: st.bg, color: st.fg }}><LucideIcon name={st.icon} size={20} /></span>
-                    <div class="rl2-rcard-main">
-                      <div class="rl2-rcard-top"><span class="rl2-rcard-name">{r.label}</span><span class={`rl2-tag ${r.isSystem ? 'sys' : 'cust'}`}>{r.isSystem ? 'System' : 'Custom'}</span></div>
-                      <div class="rl2-rcard-desc">{r.description || 'Role default capability set.'}</div>
-                      <div class="rl2-rcard-meta"><LucideIcon name="Users" size={13} /> {r.userCount} member{r.userCount === 1 ? '' : 's'}</div>
-                    </div>
-                    <LucideIcon name="ChevronRight" size={18} />
-                  </button>
-                );
-              })}
-            </div>
+      <div class="rl2-layout">
+        {/* LEFT RAIL — role list */}
+        <div class="card rl2-rail">
+          <div class="rl2-rail-search"><LucideIcon name="Search" size={15} /><input placeholder="Search roles…" value={listSearch} onInput={e => setListSearch((e.target as HTMLInputElement).value)} /></div>
+          <div class="rl2-rail-tabs">
+            <button class={`rl2-rtab${listTab === 'system' ? ' on' : ''}`} onClick={() => setListTab('system')}>System <span>{systemRoles.length}</span></button>
+            <button class={`rl2-rtab${listTab === 'custom' ? ' on' : ''}`} onClick={() => setListTab('custom')}>Custom <span>{customRoles.length}</span></button>
           </div>
-        </>
-      ) : (
-        <RoleDetail
-          role={selRole}
-          qc={qc}
-          onBack={() => setSelName(null)}
-          onEdit={() => setEditing(selRole)}
-          rolesRefetch={() => void rolesQ.refetch()}
-        />
-      )}
+          <div class="rl2-rail-list">
+            {rolesQ.isLoading ? <div class="ac-loading">Loading…</div>
+             : listRoles.length === 0 ? <div class="ac-empty">{listTab === 'custom' ? 'No custom roles yet.' : 'No roles match.'}</div>
+             : listRoles.map(r => {
+              const rst = roleStyle(r.name);
+              return (
+                <button type="button" key={r.name} class={`rl2-ritem${r.name === selName ? ' on' : ''}`} onClick={() => setSelName(r.name)}>
+                  <span class="rl2-ritem-ico" style={{ background: rst.bg, color: rst.fg }}><LucideIcon name={rst.icon} size={17} /></span>
+                  <div class="rl2-ritem-main">
+                    <div class="rl2-ritem-top"><span class="rl2-ritem-name">{r.label}</span><span class={`rl2-tag ${r.isSystem ? 'sys' : 'cust'}`}>{r.isSystem ? 'System' : 'Custom'}</span></div>
+                    <div class="rl2-ritem-meta">{r.userCount} member{r.userCount === 1 ? '' : 's'}</div>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* RIGHT — capability editor */}
+        <div class="rl2-detail">
+          {!selRole ? <div class="card"><div class="ac-empty">Select a role.</div></div> : (
+            <RoleDetail role={selRole} qc={qc} onEdit={() => setEditing(selRole)} rolesRefetch={() => void rolesQ.refetch()} />
+          )}
+        </div>
+      </div>
 
       {editing && <AcCreateRolePage role={editing === 'new' ? undefined : editing} onDone={() => { setEditing(null); void rolesQ.refetch(); }} />}
     </div>
@@ -126,8 +120,8 @@ export function AcRolesPage(): VNode {
 
 type Tab = 'all' | 'highrisk' | 'recent' | `mod:${string}`;
 
-function RoleDetail({ role, qc, onBack, onEdit, rolesRefetch }: {
-  role: RoleRow; qc: ReturnType<typeof useQueryClient>; onBack: () => void; onEdit: () => void; rolesRefetch: () => void;
+function RoleDetail({ role, qc, onEdit, rolesRefetch }: {
+  role: RoleRow; qc: ReturnType<typeof useQueryClient>; onEdit: () => void; rolesRefetch: () => void;
 }): VNode {
   const isSuper = role.name === 'superadmin';
   const rolePermsQ = useRolePermissions(role.name);
@@ -255,8 +249,6 @@ function RoleDetail({ role, qc, onBack, onEdit, rolesRefetch }: {
 
   return (
     <>
-      <div class="rl2-crumb"><button type="button" onClick={onBack}>Roles</button><LucideIcon name="ChevronRight" size={14} /><span>{role.label}</span></div>
-
       {/* Header */}
       <div class="card rl2-detail-hd">
         <span class="rl2-hd-ico" style={{ background: st.bg, color: st.fg }}><LucideIcon name={st.icon} size={26} /></span>
