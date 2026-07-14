@@ -769,14 +769,31 @@
 .acx .r2-ritem-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
 .acx .r2-ritem.on .r2-ritem-name { color: var(--siomac-navy, #1b2d54); }
 .acx .r2-ritem-meta { font-size: 11.5px; color: var(--muted); }
-/* Role Profile card additions (on the navy u-prof-card) */
-.acx .r2-role-ico { width: 64px; height: 64px; flex: none; border-radius: 16px; display: grid; place-items: center; background: rgb(255 255 255 / 13%); border: 1px solid rgba(255, 255, 255, .16); }
-.acx .r2-hd-btn { display: inline-flex; align-items: center; gap: 7px; height: 32px; padding: 0 13px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .2); background: transparent; color: rgba(255, 255, 255, .9); font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; }
-.acx .r2-hd-btn:hover { background: rgba(255, 255, 255, .1); color: #fff; }
-.acx .r2-hd-btn svg { color: rgba(255, 255, 255, .85); }
-.acx .u-prof-top { justify-content: space-between; }
-.acx .u-prof-badge.r2-badge-cust { color: #bfdbfe; background: rgba(96, 165, 250, .18); border-color: rgba(96, 165, 250, .3); }
-.acx .u-prof-badge.r2-badge-cust i { color: #60a5fa; }
+/* Role Profile — navy palette, own layout (single surface + full-width metric band) */
+.acx .r2-prof { border-radius: 18px; background: #1b2d54; color: #fff; border: 1px solid rgba(255, 255, 255, .1); overflow: hidden; }
+.acx .r2-prof-top { display: flex; align-items: center; gap: 16px; padding: 20px 22px; }
+.acx .r2-prof-ico { width: 56px; height: 56px; flex: none; border-radius: 15px; display: grid; place-items: center; background: rgb(255 255 255 / 12%); border: 1px solid rgba(255, 255, 255, .16); color: #fff; }
+.acx .r2-prof-id { flex: 1; min-width: 0; }
+.acx .r2-prof-nameline { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+.acx .r2-prof-name { margin: 0; font-size: 23px; font-weight: 700; letter-spacing: -.01em; color: #fff; text-transform: capitalize; }
+.acx .r2-prof-badge { display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 10px; border-radius: 999px; font-size: 11px; font-weight: 600; }
+.acx .r2-prof-badge.sys { background: rgba(255, 255, 255, .12); color: #cbd5e1; }
+.acx .r2-prof-badge.cust { background: rgba(96, 165, 250, .2); color: #bfdbfe; }
+.acx .r2-prof-badge.lock { background: rgba(248, 113, 113, .16); color: #fecaca; }
+.acx .r2-prof-badge.lock svg { color: #fca5a5; }
+.acx .r2-prof-desc { font-size: 13px; color: rgba(226, 238, 252, .68); margin-top: 5px; }
+.acx .r2-prof-btn { display: inline-flex; align-items: center; gap: 7px; height: 34px; padding: 0 14px; border-radius: 9px; border: 1px solid rgba(255, 255, 255, .2); background: rgba(255, 255, 255, .06); color: #fff; font: inherit; font-size: 12.5px; font-weight: 600; cursor: pointer; flex: none; }
+.acx .r2-prof-btn:hover { background: rgba(255, 255, 255, .14); }
+.acx .r2-prof-btn svg { color: rgba(255, 255, 255, .85); }
+.acx .r2-prof-band { display: grid; grid-template-columns: repeat(4, 1fr); border-top: 1px solid rgba(255, 255, 255, .1); }
+.acx .r2-prof-metric { display: flex; align-items: center; gap: 12px; padding: 15px 22px; }
+.acx .r2-prof-metric + .r2-prof-metric { border-left: 1px solid rgba(255, 255, 255, .08); }
+.acx .r2-prof-metric-ic { width: 34px; height: 34px; flex: none; border-radius: 9px; display: grid; place-items: center; background: rgba(96, 165, 250, .18); color: #bfdbfe; }
+.acx .r2-prof-metric-ic.red { background: rgba(248, 113, 113, .18); color: #fecaca; }
+.acx .r2-prof-metric-ic.green { background: rgba(34, 197, 94, .18); color: #bbf7d0; }
+.acx .r2-prof-metric-n { font-size: 20px; font-weight: 700; color: #fff; line-height: 1.1; }
+.acx .r2-prof-metric-l { font-size: 11px; color: rgba(226, 238, 252, .6); margin-top: 2px; }
+@media (max-width: 720px) { .acx .r2-prof-band { grid-template-columns: repeat(2, 1fr); } .acx .r2-prof-metric:nth-child(2n) { border-left: 0; } }
 /* Toolbar */
 .acx .r2-toolbar { display: flex; gap: 10px; align-items: center; }
 .acx .r2-toolbar-search { flex: 1; min-width: 0; }

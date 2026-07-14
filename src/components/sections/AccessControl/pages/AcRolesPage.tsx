@@ -414,36 +414,25 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
 
   return (
     <>
-      {/* Role Profile — navy sibling of the User Access "Access Profile" card */}
-      <div class="u-prof-card">
-        <div class="u-prof-top">
-          <span class="u-prof-title"><LucideIcon name="ShieldCheck" size={19} /> Role Profile</span>
-          {!isSuper && (
-            <button type="button" class="r2-hd-btn" onClick={onEdit}><LucideIcon name="Settings2" size={14} /> Role Details</button>
-          )}
-        </div>
-        <div class="u-prof-main">
-          <div class="u-prof-entity">
-            <span class="r2-role-ico" style={{ color: '#fff' }}><LucideIcon name={st.icon} size={26} /></span>
-            <div class="u-prof-id">
-              <div class="u-prof-name-line">
-                <h2 class="u-prof-name">{role.label}</h2>
-                <span class={`u-prof-badge${role.isSystem ? '' : ' r2-badge-cust'}`}><i class="fas fa-circle" /> {role.isSystem ? 'System Role' : 'Custom Role'}</span>
-                {isSuper && <span class="u-prof-badge off"><i class="fas fa-circle" /> Immutable</span>}
-              </div>
-              <div class="u-prof-ref">{role.description || (isSuper ? 'Full, unrestricted access. Permanent.' : 'Role default capability set.')}</div>
-              <div class="u-prof-meta">
-                <span><LucideIcon name="Users" size={14} /> {role.userCount} member{role.userCount === 1 ? '' : 's'}</span>
-                <span class="u-prof-sep">·</span>
-                <span><LucideIcon name="ToggleRight" size={14} /> {loaded ? `${enabledCount} of ${totalCaps} enabled` : 'Loading…'}</span>
-              </div>
+      {/* Role Profile — navy palette, distinct layout: single surface + full-width metric band */}
+      <div class="r2-prof">
+        <div class="r2-prof-top">
+          <span class="r2-prof-ico"><LucideIcon name={st.icon} size={28} /></span>
+          <div class="r2-prof-id">
+            <div class="r2-prof-nameline">
+              <h2 class="r2-prof-name">{role.label}</h2>
+              <span class={`r2-prof-badge ${role.isSystem ? 'sys' : 'cust'}`}>{role.isSystem ? 'System Role' : 'Custom Role'}</span>
+              {isSuper && <span class="r2-prof-badge lock"><LucideIcon name="Lock" size={11} /> Immutable</span>}
             </div>
+            <div class="r2-prof-desc">{role.description || (isSuper ? 'Full, unrestricted access. Permanent.' : 'Role default capability set.')}</div>
           </div>
-          <div class="u-prof-stats">
-            <div class="u-prof-stat"><span class="u-prof-stat-ic"><LucideIcon name="TableProperties" size={15} /></span><div><div class="u-prof-stat-n">{loaded ? enabledCount : '—'}</div><div class="u-prof-stat-l">Enabled</div></div></div>
-            <div class="u-prof-stat"><span class="u-prof-stat-ic red"><LucideIcon name="ShieldAlert" size={15} /></span><div><div class="u-prof-stat-n">{loaded ? highRiskEnabled : '—'}</div><div class="u-prof-stat-l">High-Risk</div></div></div>
-            <div class="u-prof-stat"><span class="u-prof-stat-ic green"><LucideIcon name="Gauge" size={15} /></span><div><div class="u-prof-stat-n">{loaded ? `${Math.round((enabledCount / totalCaps) * 100)}%` : '—'}</div><div class="u-prof-stat-l">Coverage</div></div></div>
-          </div>
+          {!isSuper && <button type="button" class="r2-prof-btn" onClick={onEdit}><LucideIcon name="Settings2" size={14} /> Role Details</button>}
+        </div>
+        <div class="r2-prof-band">
+          <div class="r2-prof-metric"><span class="r2-prof-metric-ic"><LucideIcon name="Users" size={15} /></span><div><div class="r2-prof-metric-n">{role.userCount}</div><div class="r2-prof-metric-l">Members</div></div></div>
+          <div class="r2-prof-metric"><span class="r2-prof-metric-ic"><LucideIcon name="ToggleRight" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? enabledCount : '—'}</div><div class="r2-prof-metric-l">Enabled</div></div></div>
+          <div class="r2-prof-metric"><span class="r2-prof-metric-ic red"><LucideIcon name="ShieldAlert" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? highRiskEnabled : '—'}</div><div class="r2-prof-metric-l">High-Risk</div></div></div>
+          <div class="r2-prof-metric"><span class="r2-prof-metric-ic green"><LucideIcon name="Gauge" size={15} /></span><div><div class="r2-prof-metric-n">{loaded ? `${Math.round((enabledCount / totalCaps) * 100)}%` : '—'}</div><div class="r2-prof-metric-l">Coverage</div></div></div>
         </div>
       </div>
 
