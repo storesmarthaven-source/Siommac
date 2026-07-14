@@ -10,11 +10,9 @@
 
 export * from './Employees';
 export * from './Attendance';
-export * from './AdminLeave';
+// './AdminLeave' REMOVED — legacy AdminLeave section retired. Leave management now served by HR/LeaveOverview.
 export * from './Profile';
 export * from './Settings';
-export * from './HourlyRates';
-export * from './Payroll';
 export * from './Dashboard';
 export * from './LiveMap';
 export * from './ProjectSites';

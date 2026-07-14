@@ -13,7 +13,7 @@
 import { type VNode }            from 'preact';
 import { Spinner }               from '@shared/Spinner';
 import { StatCard }              from './StatCard';
-import { LeaveSection }          from './LeaveSection';
+// LeaveSection REMOVED — managers access leave approvals via HR ▸ Leave & Absence (HR/LeaveOverview).
 import { useDeptStats, useDeptEmployees } from './hooks';
 import { fmtLocalTime, TODAY_STATUS_COLOR, TODAY_STATUS_LABEL } from './utils';
 import type { DeptEmployee }     from './types';
@@ -77,8 +77,7 @@ export function ManagerDashboard({ currentUsername }: ManagerDashboardProps): VN
         )}
       </div>
 
-      {/* Leave management for manager */}
-      <LeaveSection currentRole="manager" currentUsername={currentUsername} />
+      {/* Leave management for manager — now in HR ▸ Leave & Absence (HR/LeaveOverview). */}
 
     </div>
   );

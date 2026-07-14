@@ -29,7 +29,8 @@ import { ErrorBoundary }            from '@shared/ErrorBoundary';
 import type { UserRole }            from './types';
 import { EmployeesSection }         from './EmployeesSection';
 import { DepartmentsSection }       from './DepartmentsSection';
-import { LeaveSection }             from './LeaveSection';
+// LeaveSection REMOVED — legacy leave section retired. ESS employee leave and
+// manager leave are now served by HR/LeaveOverview via the canonical hr/leave/* API.
 import { HistorySection }           from './HistorySection';
 import { PayslipsSection }          from './PayslipsSection';
 import { ManagerDashboard }         from './ManagerDashboard';
@@ -39,12 +40,11 @@ import { ManagerDashboard }         from './ManagerDashboard';
 export type EmployeeSectionId =
   | 'employees'
   | 'departments'
-  | 'leave'
+  // 'leave' and 'manager-leaves' RETIRED — now served by HR/LeaveOverview directly in main.tsx
   | 'history'
   | 'payslips'
   | 'manager-overview'
-  | 'manager-employees'
-  | 'manager-leaves';
+  | 'manager-employees';
 
 // ── Mount options ─────────────────────────────────────────────────────────────
 
@@ -89,9 +89,7 @@ function SectionRouter({
     case 'departments':
       return <DepartmentsSection />;
 
-    case 'leave':
-    case 'manager-leaves':
-      return <LeaveSection currentRole={currentRole} currentUsername={currentUsername} />;
+    // 'leave' and 'manager-leaves' cases REMOVED — rendered directly by main.tsx as HR/LeaveOverview.
 
     case 'history':
       return <HistorySection />;
@@ -139,7 +137,6 @@ export function unmountEmployeesModule(container: Element): void {
 export {
   EmployeesSection,
   DepartmentsSection,
-  LeaveSection,
   HistorySection,
   PayslipsSection,
   ManagerDashboard,

@@ -118,11 +118,9 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-adm-dashboard',   label: 'Dashboard',    icon: 'fa-tachometer-alt',      sub: "What's happening across the company right now", group: 'overview' },
     { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce',            group: 'workforce' },
     { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
-    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications',    group: 'workforce' },
+    // s-adm-leaves RETIRED — leave management is now under HR ▸ Leave & Absence (s-hr-leave).
     { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details',  group: 'operations' },
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
-    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
-    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
   ],
   // Superadmin has the same nav as admin — permission management is via a
   // dedicated settings panel, not a separate section.
@@ -131,11 +129,9 @@ export const SECTION_DEFS: Record<UserRole, SectionDef[]> = {
     { id: 's-adm-employees',   label: 'Employees',    icon: 'fa-users',               sub: 'Add, edit and manage the workforce',            group: 'workforce' },
     { id: 's-adm-departments', label: 'Departments',  icon: 'fa-building',            sub: 'Structure your organisation and assign leads',  group: 'workforce' },
     { id: 's-adm-attendance',  label: 'Attendance',   icon: 'fa-calendar-check',      sub: 'Full daily log — filter by month, dept or status', group: 'workforce' },
-    { id: 's-adm-leaves',      label: 'Leaves',       icon: 'fa-umbrella-beach',      sub: 'Approve, reject or flag leave applications',    group: 'workforce' },
+    // s-adm-leaves RETIRED — leave management is now under HR ▸ Leave & Absence (s-hr-leave).
     { id: 's-adm-projects',    label: 'Project Sites',icon: 'fa-map-marker-alt',      sub: 'Field locations, boundaries and site details',  group: 'operations' },
     { id: 's-projectMap',      label: 'Live Map',     icon: 'fa-map-marked-alt',      sub: 'Live positions of everyone currently clocked in', group: 'operations' },
-    { id: 's-adm-rates',       label: 'Hourly Rates', icon: 'fa-money-bill-wave',     sub: 'Per-employee and per-department pay configuration', group: 'finance' },
-    { id: 's-payroll',         label: 'Payroll',      icon: 'fa-file-invoice-dollar', sub: 'Hours worked, rates applied and export-ready reports', group: 'finance' },
     // Console retired — its tools now live under Settings ▸ Administration (superadmin).
   ],
 };

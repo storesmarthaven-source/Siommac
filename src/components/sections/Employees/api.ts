@@ -26,9 +26,6 @@ import type {
   Manager,
   AddDepartmentPayload,
   UpdateDepartmentPayload,
-  LeaveRequest,
-  SubmitLeavePayload,
-  UpdateLeavePayload,
   HistoryRecord,
   Payslip,
   DeptStats,
@@ -108,48 +105,6 @@ export async function updateDepartment(payload: UpdateDepartmentPayload): Promis
 
 export async function deleteDepartment(id: string): Promise<void> {
   const res = await apiPost<ApiResult<never>>('deleteDepartment', { id });
-  if (!res.success) throw new Error(res.message);
-}
-
-// ── Leave endpoints ───────────────────────────────────────────────────────────
-
-export async function getMyLeaves(signal?: AbortSignal): Promise<LeaveRequest[]> {
-  const res = await apiPost<ApiResult<LeaveRequest[]>>('getMyLeaves', {}, signal ? { signal } : undefined);
-  return unwrap(res);
-}
-
-export async function getPendingLeavesForManager(managerUsername: string, signal?: AbortSignal): Promise<LeaveRequest[]> {
-  const res = await apiPost<ApiResult<LeaveRequest[]>>('getPendingLeavesForManager', { managerUsername }, signal ? { signal } : undefined);
-  return unwrap(res);
-}
-
-export async function listAllLeaves(signal?: AbortSignal): Promise<LeaveRequest[]> {
-  const res = await apiPost<ApiResult<LeaveRequest[]>>('listAllLeaves', {}, signal ? { signal } : undefined);
-  return unwrap(res);
-}
-
-export async function submitLeave(payload: SubmitLeavePayload): Promise<void> {
-  const res = await apiPost<ApiResult<never>>('submitLeave', payload as unknown as Record<string, unknown>);
-  if (!res.success) throw new Error(res.message);
-}
-
-export async function updateLeave(payload: UpdateLeavePayload): Promise<void> {
-  const res = await apiPost<ApiResult<never>>('updateLeave', payload as unknown as Record<string, unknown>);
-  if (!res.success) throw new Error(res.message);
-}
-
-export async function deleteLeave(leaveId: string): Promise<void> {
-  const res = await apiPost<ApiResult<never>>('deleteLeave', { leaveId });
-  if (!res.success) throw new Error(res.message);
-}
-
-export async function approveLeave(leaveId: string): Promise<void> {
-  const res = await apiPost<ApiResult<never>>('approveLeave', { leaveId });
-  if (!res.success) throw new Error(res.message);
-}
-
-export async function rejectLeave(leaveId: string): Promise<void> {
-  const res = await apiPost<ApiResult<never>>('rejectLeave', { leaveId });
   if (!res.success) throw new Error(res.message);
 }
 

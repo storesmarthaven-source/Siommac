@@ -26,14 +26,12 @@ import { useSessionStore } from '@store/session';
 import {
   listEmployees, getEmployee, addEmployee, updateEmployee, deleteEmployee,
   listDepartments, listManagers, listAssignableRoles, addDepartment, updateDepartment, deleteDepartment,
-  getMyLeaves, getPendingLeavesForManager, listAllLeaves,
-  submitLeave, updateLeave, deleteLeave, approveLeave, rejectLeave,
   getMyHistory, getMyPayslips,
   getDeptStats, getDeptEmployees,
   getAdminStats, getRecentAttendance,
 } from './api';
 import {
-  employeeKeys, departmentKeys, leaveKeys, historyKeys,
+  employeeKeys, departmentKeys, historyKeys,
   payslipKeys, dashboardKeys,
 } from './queryKeys';
 
@@ -179,111 +177,6 @@ export function useDeleteDepartment() {
     },
     onError: (err: Error) => {
       toast.error(err.message || 'Failed to delete department.');
-    },
-  });
-}
-
-// ── Leave queries ─────────────────────────────────────────────────────────────
-
-export function useMyLeaves() {
-  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  return useQuery({
-    queryKey: leaveKeys.mine(),
-    queryFn:  ({ signal }) => getMyLeaves(signal),
-    staleTime: 30_000,
-    enabled:  isAuthenticated,
-  });
-}
-
-export function useManagerLeaves(managerUsername: string | null) {
-  return useQuery({
-    queryKey: leaveKeys.manager(managerUsername ?? ''),
-    queryFn:  ({ signal }) => getPendingLeavesForManager(managerUsername!, signal),
-    enabled:  !!managerUsername,
-    staleTime: 30_000,
-  });
-}
-
-export function useAdminLeaves() {
-  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  return useQuery({
-    queryKey: leaveKeys.admin(),
-    queryFn:  ({ signal }) => listAllLeaves(signal),
-    staleTime: 30_000,
-    enabled:  isAuthenticated,
-  });
-}
-
-// ── Leave mutations ───────────────────────────────────────────────────────────
-
-export function useSubmitLeave() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: submitLeave,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: leaveKeys.all });
-      toast.success('Leave request submitted.');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to submit leave request.');
-    },
-  });
-}
-
-export function useUpdateLeave() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: updateLeave,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: leaveKeys.all });
-      toast.success('Leave request updated.');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to update leave request.');
-    },
-  });
-}
-
-export function useDeleteLeave() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: deleteLeave,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: leaveKeys.all });
-      toast.success('Leave request deleted.');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to delete leave request.');
-    },
-  });
-}
-
-export function useApproveLeave(managerUsername?: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: approveLeave,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: leaveKeys.all });
-      if (managerUsername) void qc.invalidateQueries({ queryKey: leaveKeys.manager(managerUsername) });
-      toast.success('Leave approved.');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to approve leave.');
-    },
-  });
-}
-
-export function useRejectLeave(managerUsername?: string) {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: rejectLeave,
-    onSuccess: () => {
-      void qc.invalidateQueries({ queryKey: leaveKeys.all });
-      if (managerUsername) void qc.invalidateQueries({ queryKey: leaveKeys.manager(managerUsername) });
-      toast.success('Leave rejected.');
-    },
-    onError: (err: Error) => {
-      toast.error(err.message || 'Failed to reject leave.');
     },
   });
 }

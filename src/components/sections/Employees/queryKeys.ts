@@ -29,12 +29,8 @@ export const departmentKeys = {
   managers: () => [...departmentKeys.all, 'managers']  as const,
 } as const;
 
-export const leaveKeys = {
-  all:        ['leaves']                               as const,
-  mine:       () => [...leaveKeys.all, 'mine']         as const,
-  manager:    (username: string) => [...leaveKeys.all, 'manager', username]  as const,
-  admin:      () => [...leaveKeys.all, 'admin']        as const,
-} as const;
+// leaveKeys REMOVED — legacy leave query keys retired with the legacy leave system.
+// Use 'hr-leave-my', 'hr-leave-all', 'hr-leave-stats' (from @api/hr/leave) instead.
 
 export const historyKeys = {
   all:   ['history']                                   as const,

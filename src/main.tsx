@@ -40,12 +40,12 @@ import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';
 import { mountAttendanceSection }     from '@sections/Attendance';
-import { mountAdminLeaveSection }     from '@sections/AdminLeave';
+// mountAdminLeaveSection REMOVED — AdminLeave section retired; leave management
+// for admin/superadmin is now under HR ▸ Leave & Absence (s-hr-leave).
+import { LeaveOverview }              from '@sections/HR/LeaveOverview';
 import { mountProfileSection }        from '@sections/Profile';
 import { mountSettingsSection }       from '@sections/Settings';
 import { applyCompanyLogoToDom, applyCompanyNameToDom } from '@sections/Settings/domSync';
-import { mountHourlyRatesSection }    from '@sections/HourlyRates';
-import { mountPayrollSection }        from '@sections/Payroll';
 import { mountDashboardController }   from '@sections/Dashboard';
 import { mountLiveMapController }     from '@sections/LiveMap';
 import { mountProjectSitesSection }   from '@sections/ProjectSites';
@@ -208,11 +208,8 @@ async function bootApp(): Promise<void> {
     mountAttendanceSection(attRoot, { queryClient });
   }
 
-  // Admin Leave section (replaces leave.js)
-  const adminLeaveRoot = document.getElementById('preact-admin-leave-root');
-  if (adminLeaveRoot) {
-    mountAdminLeaveSection(adminLeaveRoot, { queryClient });
-  }
+  // Admin Leave section RETIRED — preact-admin-leave-root no longer rendered in the shell.
+  // Leave management for admin/superadmin is provided by the HR module (s-hr-leave).
 
   // Settings section (replaces settings-view.js)
   const settingsRoot = document.getElementById('preact-settings-root');
@@ -237,60 +234,6 @@ async function bootApp(): Promise<void> {
     setCompanyInfo:    () => undefined,
     setStatutoryRates: () => undefined,
     _stgActivatePanel: () => undefined,
-  };
-
-  // Hourly Rates section (replaces payroll.js hourly rates, s-adm-rates)
-  const hourlyRatesRoot = document.getElementById('preact-hourly-rates-root');
-  if (hourlyRatesRoot) {
-    mountHourlyRatesSection(hourlyRatesRoot, { queryClient });
-  }
-
-  // Payroll section (replaces payroll.js payroll run, s-payroll)
-  const payrollRoot = document.getElementById('preact-payroll-root');
-  if (payrollRoot) {
-    mountPayrollSection(payrollRoot, { queryClient });
-  }
-
-  // window.Payroll shim — any legacy call to Payroll.loadHourlyRates() / initPayrollSection()
-  // invalidates the relevant TanStack Query caches so sections refetch.
-  (window as unknown as Record<string, unknown>).Payroll = {
-    loadHourlyRates:   () => { void queryClient.invalidateQueries({ queryKey: ['hourlyRates'] }); },
-    initPayrollSection:() => { void queryClient.invalidateQueries({ queryKey: ['payroll'] }); },
-    renderHourlyRates: () => { void queryClient.invalidateQueries({ queryKey: ['hourlyRates'] }); },
-    // stubs for rarely-called helpers referenced from app.js event delegation
-    saveHourlyRate:         () => undefined,
-    triggerRatesImport:     () => undefined,
-    handleRatesImport:      () => undefined,
-    parseRatesCsv:          () => [],
-    _hrSaveAll:             () => undefined,
-    _hrExportCsv:           () => undefined,
-    _hrOpenModal:           () => undefined,
-    _hrCloseModal:          () => undefined,
-    _hrHandleFile:          () => undefined,
-    _hrConfirmImport:       () => undefined,
-    _hrSearch:              () => undefined,
-    _hrDept:                () => undefined,
-    _hrRole:                () => undefined,
-    _prRunPayroll:          () => undefined,
-    _prRunReportsSearch:    () => undefined,
-    _prToggleReportsMode:   () => undefined,
-    _prOpenPayslip:         () => undefined,
-    _prOpenEditPayroll:     () => undefined,
-    _prSendForApproval:     () => undefined,
-    _prsOpen:               () => undefined,
-    _prsClose:              () => undefined,
-    _prsSave:               () => undefined,
-    _prsToggleRateRows:     () => undefined,
-    _prsRefreshEstimate:    () => undefined,
-    _prcOpen:               () => undefined,
-    _prcClose:              () => undefined,
-    _prcVerify:             () => undefined,
-    _prcSave:               () => undefined,
-    _prcRestoreDefaults:    () => undefined,
-    getRunData:             () => null,
-    getCurrentRows:         () => [],
-    initDataTable:          () => null,
-    destroyDataTable:       () => undefined,
   };
 
   // Dashboard controller (replaces dashboard.js — headless, wires layout editor + chart queries)
@@ -385,10 +328,16 @@ async function bootApp(): Promise<void> {
   // Manager sections
   _mountEmp('preact-mgr-overview-root',   'manager-overview');
   _mountEmp('preact-mgr-employees-root',  'manager-employees');
-  _mountEmp('preact-mgr-leaves-root',     'manager-leaves');
+  // manager-leaves RETIRED — manager leave is now s-hr-leave via the HR module.
 
-  // Employee sections
-  _mountEmp('preact-emp-leave-root',   'leave');
+  // Employee sections — ESS "My Leave" now uses the canonical HR LeaveOverview.
+  // LeaveOverview detects employee role via can('hr.leave.view_all') = false and shows
+  // the employee's own requests only.  The employee role already holds the required
+  // hr.leave.view / hr.leave.submit / hr.leave.cancel_own / hr.leave.balances.view keys.
+  const empLeaveRoot = document.getElementById('preact-emp-leave-root');
+  if (empLeaveRoot) {
+    render(h(QueryClientProvider, { client: queryClient }, h(LeaveOverview, null)), empLeaveRoot);
+  }
   _mountEmp('preact-emp-history-root', 'history');
   _mountEmp('preact-emp-payroll-root', 'payslips');
 
@@ -397,8 +346,9 @@ async function bootApp(): Promise<void> {
   (window as unknown as Record<string, unknown>).Employees = {
     loadEmployeeList:             () => { void queryClient.invalidateQueries({ queryKey: ['employees'] }); },
     loadDepartments:              () => { void queryClient.invalidateQueries({ queryKey: ['departments'] }); },
-    loadLeaveRequests:            () => { void queryClient.invalidateQueries({ queryKey: ['leaves', 'employee'] }); },
-    loadManagerLeaveApplications: () => { void queryClient.invalidateQueries({ queryKey: ['leaves', 'manager'] }); },
+    // Leave queries now target the canonical HR leave service (hr/leave/*).
+    loadLeaveRequests:            () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-my'] }); },
+    loadManagerLeaveApplications: () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-all'] }); },
     loadMyPayslips:               () => { void queryClient.invalidateQueries({ queryKey: ['payslips'] }); },
     loadHistoryInline:            () => { void queryClient.invalidateQueries({ queryKey: ['attendance', 'history'] }); },
     loadDepartmentData:           () => { void queryClient.invalidateQueries({ queryKey: ['manager', 'overview'] }); },
@@ -458,14 +408,16 @@ async function bootApp(): Promise<void> {
     },
   };
 
-  // window.LeaveView shim — any legacy call to LeaveView.loadLeaveApplications()
-  // (e.g. from nav.js refreshSection) simply invalidates the TanStack Query cache.
+  // window.LeaveView shim — invalidates the canonical HR leave query cache so
+  // LeaveOverview (now serving both admin and ESS) refreshes on nav.
   (window as unknown as Record<string, unknown>).LeaveView = {
     loadLeaveApplications: () => {
-      void queryClient.invalidateQueries({ queryKey: ['admin', 'leaves'] });
+      // Canonical HR leave query keys (hr/leave/* endpoints)
+      void queryClient.invalidateQueries({ queryKey: ['hr-leave-all'] });
+      void queryClient.invalidateQueries({ queryKey: ['hr-leave-my'] });
+      void queryClient.invalidateQueries({ queryKey: ['hr-leave-stats'] });
     },
-    // _lvCard / _diffLeaveList were shared with employees.js which is already
-    // replaced by Preact; no callers remain — stubs provided for safety.
+    // Stubs for any legacy callers — no active callers remain after AdminLeave removal.
     _lvCard:        () => '',
     _diffLeaveList: () => undefined,
   };

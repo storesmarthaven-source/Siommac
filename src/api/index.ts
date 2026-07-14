@@ -25,7 +25,7 @@ export * from './queryKeys';
 export * from './auth';
 export * from './employees';
 export * from './attendance';
-export * from './leave';
+// './leave' REMOVED — legacy leave API retired. Use @api/hr/leave for canonical leave endpoints.
 export * from './payroll';
 export * from './sites';
 export * from './settings';

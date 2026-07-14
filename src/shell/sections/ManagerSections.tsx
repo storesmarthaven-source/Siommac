@@ -29,10 +29,9 @@ export default function ManagerSections() {
         <div id="preact-mgr-employees-root" />
       </AppSection>
 
-      {/* Manager — Pending Leaves */}
-      <AppSection id="s-mgr-leaves" role="manager">
-        <div id="preact-mgr-leaves-root" />
-      </AppSection>
+      {/* s-mgr-leaves RETIRED — manager leave management now served by the HR module's
+          Leave & Absence tab (s-hr-leave / preact-hr-root). Managers have hr.leave.view_all
+          which makes LeaveOverview show all team requests with approve/reject/cancel. */}
     </>
   );
 }

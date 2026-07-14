@@ -17,8 +17,8 @@ export type UserStatus      = 'active' | 'inactive';
 export type TodayStatus     = 'checkedin' | 'checkedout' | 'notchecked';
 export type PayCycle        = 'daily' | 'weekly' | 'fortnightly' | 'monthly';
 export type PayBasis        = 'salary' | 'hourly';
-export type LeaveStatus     = 'pending' | 'approved' | 'rejected';
-export type LeaveType       = 'sick' | 'casual' | 'annual' | 'medical';
+// LeaveStatus / LeaveType / SubmitLeavePayload / UpdateLeavePayload / LeaveRequest REMOVED.
+// Legacy leave types retired with the legacy leave system. Use types/hrLeave.ts instead.
 export type AttendanceStatus = 'present' | 'late' | 'absent';
 
 // ── Employee (list view — from listEmployees) ─────────────────────────────────
@@ -138,39 +138,6 @@ export interface UpdateDepartmentPayload {
   id:          string;
   name?:       string;
   managerId?:  string;
-}
-
-// ── Leave ─────────────────────────────────────────────────────────────────────
-
-export interface LeaveRequest {
-  id:         string;
-  type:       LeaveType;
-  from:       string;   // YYYY-MM-DD
-  to:         string;
-  days:       number;
-  reason:     string;
-  status:     LeaveStatus;
-  appliedOn:  string;
-  // For manager/admin views
-  employee?:  string;
-  department?: string;
-  fromDate?:  string;   // alias used by some responses
-  toDate?:    string;
-}
-
-export interface SubmitLeavePayload {
-  type:     LeaveType;
-  fromDate: string;
-  toDate:   string;
-  reason:   string;
-}
-
-export interface UpdateLeavePayload {
-  id:        string;
-  type?:     LeaveType;
-  fromDate?: string;
-  toDate?:   string;
-  reason?:   string;
 }
 
 // ── Attendance history (employee self-service) ────────────────────────────────

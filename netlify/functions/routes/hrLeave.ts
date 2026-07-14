@@ -68,7 +68,12 @@ router.post('/leave/request/submit', async c => {
   if (!b.leaveTypeId || !b.fromDate || !b.toDate) {
     return c.json({ success: false, message: 'leaveTypeId, fromDate, toDate are required.' }, 400);
   }
-  const employeeId = (b.employeeId as string | undefined) ?? actor.id;
+  // Employees may only submit leave for themselves — ignore any employeeId override.
+  // Managers and admins may pass an explicit employeeId (on behalf of).
+  const canSubmitOnBehalf = ['manager', 'admin', 'superadmin'].includes(actor.role);
+  const employeeId = canSubmitOnBehalf
+    ? (b.employeeId as string | undefined) ?? actor.id
+    : actor.id;
   return mutate(c, () => submitLeaveRequest(actor.id, { ...b, employeeId } as Parameters<typeof submitLeaveRequest>[1]));
 });
 
@@ -88,10 +93,20 @@ router.post('/leave/request/list-all', async c => {
 });
 
 router.post('/leave/request/get', async c => {
-  await requirePermission(c, 'hr.leave.view');
+  const actor = await requirePermission(c, 'hr.leave.view');
   const b = body(c);
   if (!b.requestId) return c.json({ success: false, message: 'requestId is required.' }, 400);
-  return mutate(c, () => getLeaveRequest(b.requestId as string));
+  try {
+    const req = await getLeaveRequest(b.requestId as string);
+    // Employees can only view their own leave requests. Return 404 (not 403) to prevent ID enumeration.
+    if (actor.role === 'employee' && req.employeeId !== actor.id) {
+      return c.json({ success: false, message: 'Leave request not found.' }, 404);
+    }
+    return c.json({ success: true, data: req });
+  } catch (e) {
+    const er = e as { status?: number; message?: string };
+    return c.json({ success: false, message: er.message ?? 'Request failed.' }, (er.status ?? 500) as 200);
+  }
 });
 
 router.post('/leave/request/update', async c => {
@@ -107,6 +122,19 @@ router.post('/leave/request/cancel', async c => {
   if (!b.requestId) return c.json({ success: false, message: 'requestId is required.' }, 400);
   // A cancellation reason is mandatory (matches the UI) and is persisted to the audit trail.
   if (typeof b.reason !== 'string' || !b.reason.trim()) return c.json({ success: false, message: 'A reason is required to cancel a leave request.' }, 400);
+  // Employees may only cancel their own leave requests.
+  // Managers and admins can cancel any (for on-behalf-of scenarios in LeaveOverview).
+  if (actor.role === 'employee') {
+    try {
+      const req = await getLeaveRequest(b.requestId as string);
+      if (req.employeeId !== actor.id) {
+        return c.json({ success: false, message: 'You can only cancel your own leave requests.' }, 403);
+      }
+    } catch (e) {
+      const er = e as { status?: number; message?: string };
+      return c.json({ success: false, message: er.message ?? 'Leave request not found.' }, (er.status ?? 404) as 200);
+    }
+  }
   return mutate(c, () => cancelLeave(actor.id, b as unknown as Parameters<typeof cancelLeave>[1]));
 });
 

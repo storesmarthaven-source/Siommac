@@ -18,10 +18,10 @@ import employeesRouter     from './routes/employees';
 import departmentsRouter   from './routes/departments';
 import sitesRouter         from './routes/sites';
 import attendanceRouter    from './routes/attendance';
-import leavesRouter        from './routes/leaves';
+// leavesRouter RETIRED — legacy leave routes removed; all leave traffic now
+// served by hrLeaveRouter at /api/hr/leave/* (canonical HR Leave service).
 // payrollRouter UNMOUNTED — legacy payroll router removed per Spec §21.
 // File quarantined: routes/payroll.ts. Use routes/financePayroll.ts instead.
-// import payrollRouter from './routes/payroll'; // DEPRECATED — DO NOT RE-ENABLE
 import settingsRouter      from './routes/settings';
 import settingsCatalogRouter from './routes/settingsCatalog';
 import ticketsRouter       from './routes/tickets';
@@ -217,7 +217,7 @@ app.route('/api/hr', hrStatutoryProfileRouter);
 app.route('/api', departmentsRouter);
 app.route('/api', sitesRouter);
 app.route('/api', attendanceRouter);
-app.route('/api', leavesRouter);
+// leavesRouter removed — canonical HR leave at /api/hr/leave/* via hrLeaveRouter (mounted above).
 // payrollRouter UNMOUNTED — see Spec §21 legacy removal. Legacy /api/payroll/* routes are gone.
 // The replacement is /api/finance/payroll/* (financePayrollRouter, already mounted above).
 app.route('/api', settingsRouter);

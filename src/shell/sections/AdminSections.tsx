@@ -614,15 +614,9 @@ export default function AdminSections() {
         <div id="preact-attendance-root" />
       </AppSection>
 
-      {/* Admin — Leave Applications */}
-      <AppSection id="s-adm-leaves" role="admin">
-        <div id="preact-admin-leave-root" />
-      </AppSection>
-
-      {/* Admin — Hourly Rates */}
-      <AppSection id="s-adm-rates" role="admin">
-        <div id="preact-hourly-rates-root" />
-      </AppSection>
+      {/* s-adm-leaves RETIRED — leave management for admin/superadmin is now
+          served by the HR module's Leave & Absence tab (s-hr-leave / preact-hr-root).
+          The AdminLeave section and its legacy /api/listAllLeaves endpoint are gone. */}
 
       {/* Payroll-related modals — included here as they are wired by admin sections */}
       <StatutoryRatesModal />

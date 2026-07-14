@@ -9,7 +9,7 @@
  * @see docs/UI_DESIGN_SYSTEM.md
  */
 
-import type { TodayStatus, LeaveStatus, LeaveType, AttendanceStatus } from './types';
+import type { TodayStatus, AttendanceStatus } from './types';
 
 // ── Currency formatting ───────────────────────────────────────────────────────
 
@@ -95,31 +95,8 @@ export const TODAY_STATUS_COLOR: Record<TodayStatus, string> = {
   notchecked: '#9ca3af',
 };
 
-export const LEAVE_STATUS_LABEL: Record<LeaveStatus, string> = {
-  pending:  'PENDING',
-  approved: 'APPROVED',
-  rejected: 'REJECTED',
-};
-
-export const LEAVE_STATUS_COLOR: Record<LeaveStatus, { bg: string; text: string }> = {
-  pending:  { bg: '#fef9c3', text: '#92400e' },
-  approved: { bg: '#dcfce7', text: '#166534' },
-  rejected: { bg: '#fee2e2', text: '#991b1b' },
-};
-
-export const LEAVE_TYPE_LABEL: Record<LeaveType, string> = {
-  sick:    'Sick',
-  casual:  'Casual',
-  annual:  'Annual',
-  medical: 'Medical',
-};
-
-export const LEAVE_TYPE_COLOR: Record<LeaveType, { bg: string; text: string }> = {
-  sick:    { bg: '#fee2e2', text: '#991b1b' },
-  casual:  { bg: '#dbeafe', text: '#1e40af' },
-  annual:  { bg: '#dcfce7', text: '#166534' },
-  medical: { bg: '#f3e8ff', text: '#6b21a8' },
-};
+// LEAVE_STATUS_LABEL / LEAVE_STATUS_COLOR / LEAVE_TYPE_LABEL / LEAVE_TYPE_COLOR REMOVED.
+// Legacy leave utilities retired with the legacy leave system. Use types/hrLeave.ts instead.
 
 export const ATTENDANCE_STATUS_COLOR: Record<AttendanceStatus, { bg: string; text: string }> = {
   present: { bg: '#dcfce7', text: '#166534' },
