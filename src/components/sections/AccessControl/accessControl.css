@@ -259,14 +259,14 @@
 .acx .mg-collapse:hover { background: #f3f5f9; color: var(--ink-2); }
 .acx .mg-list { display: flex; flex-direction: column; gap: 2px; }
 .acx .mg-item { position: relative; display: flex; align-items: center; gap: 12px; width: 100%; min-height: 42px; padding: 10px 12px; border: none; border-radius: 10px; background: none; color: var(--ink-2); font: inherit; text-align: left; cursor: pointer; transition: background .12s ease; }
-.acx .mg-item:hover { background: #f6f8fb; }
+.acx .mg-item:hover:not(.active) { background: #f5f7fb; }
 .acx .mg-item-ico { color: var(--muted); flex: none; }
 .acx .mg-item-label { font-size: 13.5px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .acx .mg-badge { margin-left: auto; min-width: 26px; height: 22px; padding: 0 8px; display: inline-flex; align-items: center; justify-content: center; border-radius: 7px; background: #eef1f5; color: var(--muted); font-size: 12.5px; font-weight: 600; flex: none; }
-.acx .mg-item.active { background: #364263; color: #ffffff; }
-.acx .mg-item.active .mg-item-ico { color: #ffffff; }
-.acx .mg-item.active .mg-item-label { font-weight: 650; }
-.acx .mg-item.active .mg-badge { background: #fff; color: #384260; }
+.acx .mg-item.active { background: #eef1f8; color: var(--ink); }
+.acx .mg-item.active .mg-item-ico { color: var(--siomac-navy, #1b2d54); }
+.acx .mg-item.active .mg-item-label { font-weight: 650; color: var(--siomac-navy, #1b2d54); }
+.acx .mg-item.active .mg-badge { background: #dce3ee; color: #364263; }
 @media (max-width: 1080px) { .acx .ov-grid { grid-template-columns: 1fr; } }
 
 /* ── Access Matrix (compact module-by-role coverage) ─────────────────────────── */
