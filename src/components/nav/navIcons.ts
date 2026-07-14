@@ -28,6 +28,7 @@ const FA_TO_LUCIDE: Record<string, keyof typeof lucide> = {
   'fa-palette':             'Palette',
   'fa-info-circle':         'Info',
   'fa-user-shield':         'ShieldCheck',
+  'fa-user-lock':           'UserRoundCog',
   'fa-user-tie':            'UserCog',
   'fa-hard-hat':            'HardHat',
   // HSE / PPE Manager sub-items
