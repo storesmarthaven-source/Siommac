@@ -531,7 +531,7 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
                             <td class={`u-cap-cell${isLast ? ' is-last' : ''}`}>
                               <div class="u-cap-name">
                                 {meta.label}
-                                {isCrit && <span class="risk critical" style={{ marginLeft: '8px', fontSize: '10px' }}>Approval</span>}
+                                {isCrit && <span class="r2-appr" style={{ marginLeft: '8px' }}>Approval</span>}
                                 {dirty && <span class="r2-edited">Edited</span>}
                               </div>
                               <div class="u-cap-desc">{meta.description}</div>

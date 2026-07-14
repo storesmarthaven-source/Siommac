@@ -816,7 +816,8 @@
 .acx .r2-grp-inner { display: flex; align-items: center; gap: 10px; }
 .acx .r2-grp-name { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: #64748b; }
 /* Capability row extras */
-.acx .tbl tbody tr.r2-dirty > td:first-child { box-shadow: inset 3px 0 0 var(--accent); }
+.acx .tbl tbody tr.r2-dirty > td { background: #fff8f1; }
+.acx .tbl tbody tr.r2-dirty > td:first-child { box-shadow: inset 3px 0 0 var(--amber); }
 .acx .r2-edited { display: inline-block; margin-left: 8px; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--accent-bg); color: var(--accent-ink); }
 .acx .r2-upd { font-size: 12px; color: var(--ink-2); }
 .acx .r2-upd-by { display: block; font-size: 11px; color: var(--faint); margin-top: 1px; text-transform: capitalize; }
@@ -824,7 +825,7 @@
 .acx .r2-tgl-wrap { display: inline-flex; align-items: center; gap: 9px; }
 .acx .r2-tgl-wrap > svg { color: var(--faint); }
 .acx .toggle:disabled { opacity: .55; cursor: not-allowed; }
-.acx .r2-appr { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 7px; border-radius: 999px; background: var(--amber-bg); color: #b45309; white-space: nowrap; }
+.acx .r2-appr { display: inline-block; font-size: 10px; font-weight: 600; padding: 1px 8px; border-radius: 999px; background: #fef2f2; border: 1px solid #fca5a5; color: #dc2626; white-space: nowrap; }
 /* Modals (approval + review) */
 .acx.r2-overlay { position: fixed; inset: 0; z-index: 1200; background: rgba(15, 23, 42, .42); display: grid; place-items: center; padding: 24px; animation: r2-fade .15s ease; }
 @keyframes r2-fade { from { opacity: 0; } to { opacity: 1; } }
