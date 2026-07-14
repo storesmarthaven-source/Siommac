@@ -24,11 +24,16 @@ export default async function run(h) {
 
   // Acquire finance actors — prefer real DB users, create synthetic only for shortfall
   const { actors: [fstaff] }  = await h.acquireActors('finance_staff',   1);
-  const { actors: [fmgr] }    = await h.acquireActors('finance_manager',  1);
+  const { actors: [fmgr],  createdIds: fmgrCreated  } = await h.acquireActors('finance_manager', 1);
+  // fmgr2 is required for payment-run/process SoD: the CREATOR (fmgr) cannot process their own run.
+  // T.admin has finance.ap.payment.run.process in the hardcoded seed but NOT in DB role_permissions yet
+  // (Category A — operator migration pending). fmgr2 (finance_manager) has the perm in DB.
+  const { actors: [fmgr2], createdIds: fmgr2Created } = await h.acquireActors('finance_manager', 1);
   const { actors: [noFinance] } = await h.acquireActors('hr_staff', 1);
 
   const Tstaff  = mint(fstaff);
   const Tmgr    = mint(fmgr);
+  const Tmgr2   = mint(fmgr2);
   const TnoFin  = mint(noFinance);
 
   const ctx = {
@@ -47,6 +52,9 @@ export default async function run(h) {
     // Clean events / audit rows tagged to this run
     await sb.from('app_events').delete().ilike('payload->>tag', `${TAG}%`);
     await sb.from('audit_logs').delete().ilike('data->>tag', `${TAG}%`);
+    // Clean synthetic finance_manager users created by acquireActors
+    const synthIds = [...(fmgrCreated ?? []), ...(fmgr2Created ?? [])];
+    if (synthIds.length) await sb.from('app_users').delete().in('id', synthIds);
   });
 
   // ─────────────────────────── CHUNK 0 — PERMISSIONS + PICKERS ────────────────
@@ -778,9 +786,11 @@ export default async function run(h) {
     expect(r.status === 422 || r.status === 403, `expected SoD error, got ${r.status}`);
   });
 
-  await test('admin can process the payment run (SoD — different user)', async () => {
+  await test('finance_manager (fmgr2, non-creator) can process the payment run (SoD — different user)', async () => {
     if (!payRunId) return;
-    const r = await api('finance/ap/payment-runs/process', T.admin, { id: payRunId });
+    // T.admin has finance.ap.payment.run.process in hardcoded seed but not in DB role_permissions
+    // (Category A — operator migration pending). Using fmgr2 (finance_manager) which has the perm in DB.
+    const r = await api('finance/ap/payment-runs/process', Tmgr2, { id: payRunId });
     ok(r);
     const run = r.body.data;
     expect(run?.status === 'complete', `expected complete, got ${run?.status}`);

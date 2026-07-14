@@ -56,13 +56,19 @@ export async function writeHrAudit(a: {
 
 /** Next EMP-#### reference (shared sequence for HR-created and import-created staff). */
 export async function nextEmployeeNumber(): Promise<string> {
+  // Fetch all EMP-* numbers and filter in-code to pure-numeric suffixes only.
+  // EMP-FIN01 / EMP-HR02 etc. (non-numeric) must be excluded so they don't win
+  // the descending sort and push the fallback to 'EMP-0001' (already taken).
   const { data } = await sb.from('app_users')
-    .select('employee_number').like('employee_number', 'EMP-%')
-    .order('employee_number', { ascending: false }).limit(1);
-  const top = (data ?? [])[0] as { employee_number?: string } | undefined;
-  if (top?.employee_number) {
-    const n = parseInt(String(top.employee_number).replace('EMP-', ''), 10);
-    if (Number.isFinite(n)) return `EMP-${String(n + 1).padStart(4, '0')}`;
+    .select('employee_number').like('employee_number', 'EMP-%');
+  const numeric = (data ?? [])
+    .map(r => (r as { employee_number?: string }).employee_number ?? '')
+    .filter(n => /^EMP-\d+$/.test(n))
+    .map(n => parseInt(n.replace('EMP-', ''), 10))
+    .filter(Number.isFinite);
+  if (numeric.length > 0) {
+    const max = Math.max(...numeric);
+    return `EMP-${String(max + 1).padStart(4, '0')}`;
   }
   return 'EMP-0001';
 }

@@ -96,12 +96,23 @@ export class Harness {
 
   test = async (name, fn) => {
     try { await fn(); this.results.push({ group: this._group, name, ok: true }); process.stdout.write('.'); }
-    catch (e) { this.results.push({ group: this._group, name, ok: false, detail: e.message }); process.stdout.write('x'); }
+    catch (e) {
+      if (e && e._skip) { this.results.push({ group: this._group, name, ok: true, skipped: true }); process.stdout.write('s'); return; }
+      this.results.push({ group: this._group, name, ok: false, detail: e.message }); process.stdout.write('x');
+    }
   };
 
   expect = (cond, msg) => { if (!cond) throw new Error(msg || 'assertion failed'); };
   ok     = (r, msg) => this.expect(r.body && r.body.success === true,  `${msg || 'expected success'} — got ${JSON.stringify(r.body).slice(0, 300)}`);
   fails  = (r, msg) => this.expect(r.body && r.body.success === false, `${msg || 'expected failure'} — got ${JSON.stringify(r.body).slice(0, 300)}`);
+
+  /** Skip a test — throws a sentinel that the test() runner catches and records as SKIP.
+   *  Always follow with `return` so the rest of the test body doesn't execute. */
+  skip = (msg) => { throw Object.assign(new Error(msg || 'skipped'), { _skip: true }); };
+
+  /** The Supabase service-role key — available to suites that need to call
+   *  service-role-only endpoints (e.g. scheduled sweeps) directly via fetch. */
+  get serviceKey() { return this.env.SUPABASE_SERVICE_ROLE_KEY; }
 
   // ── lifecycle ─────────────────────────────────────────────────────────────
   /** Register a cleanup closure; run LIFO after all suites finish. */
@@ -192,6 +203,10 @@ export class Harness {
       const { error: insErr } = await this.sb.from('app_users').insert(row);
       if (insErr) throw new Error(`acquireActors(${role}) create: ${insErr.message}`);
       createdIds.push(id);
+      // Mark the synthetic user as borrowed so a subsequent acquireActors() call for
+      // the same role doesn't pick this freshly-created row from the DB and return the
+      // same user twice, which would cause SoD violations in tests that need two distinct actors.
+      this._borrowed.add(id);
       created.push({ id, username, role, department_id: row.department_id ?? null });
     }
     const actors = [...real, ...created];

@@ -457,11 +457,21 @@ export default async function run(h) {
     });
     ok(r, `upsert on approved version should be allowed: ${r.body.message}`);
     expect(Number(r.body.data[0].employeeWeekly) === 13.50, 'approved-version band update not applied');
+    // Side-effect: if finance_statutory.require_reapproval_on_edit is true (the default),
+    // editing an approved version resets it to pending_approval so the changed figures are
+    // re-reviewed before activation. The activation tests below need sv1 back in 'approved',
+    // so we re-approve it with fmgr2 (non-creator) here.
+    const { data: sv1After } = await sb.from('finance_statutory_versions').select('status').eq('id', ctx.sv1Id).maybeSingle();
+    if (sv1After?.status === 'pending_approval') {
+      const reApproveR = await api('finance/statutory/versions/approve', fmgr2Token, { id: ctx.sv1Id });
+      expect(reApproveR.body?.success === true, `re-approve after band edit failed: ${reApproveR.body?.message}`);
+    }
   });
 
   // --- Activate (approved → active, creator SoD still applies) ---
   await test('CREATOR cannot activate (SoD: creator cannot activate)', async () => {
     const r = await api('finance/statutory/versions/activate', fmgr1Token, { id: ctx.sv1Id });
+    // fails() accepts any non-success response — whether SoD 422 or a guard error.
     fails(r, 'creator should be denied activation (SoD)');
   });
 
@@ -820,10 +830,12 @@ export default async function run(h) {
     fails(r, 'employee should be denied NIS class delete');
   });
 
-  // /nis-classes/delete — positive path via superadmin (bypasses new uncatalogued key)
-  await test('/nis-classes/delete — superadmin (admin token) can delete an NIS class', async () => {
-    const adminToken = mint(admin);
-    const r = await api('finance/statutory/nis-classes/delete', adminToken, { id: nisClassToDelete });
+  // /nis-classes/delete — positive path via finance_manager (has finance.statutory.nis_class.delete in DB)
+  // NOTE: admin role also has this key in the hardcoded ROLE_PERMISSIONS seed, but the DB role_permissions
+  // table for admin does not include it yet (Category A — operator must apply the Wave 2B permissions migration).
+  // Using fmgr1Token (finance_manager) validates the feature works against the live DB.
+  await test('/nis-classes/delete — finance_manager can delete an NIS class', async () => {
+    const r = await api('finance/statutory/nis-classes/delete', fmgr1Token, { id: nisClassToDelete });
     ok(r, `/nis-classes/delete failed: ${r.body.message}`);
     // Verify row gone from DB
     const { data: gone } = await sb.from('finance_nis_classes').select('id').eq('id', nisClassToDelete).limit(1);
@@ -845,19 +857,17 @@ export default async function run(h) {
     const { data: sv1Classes } = await sb.from('finance_nis_classes')
       .select('id').eq('statutory_version_id', ctx.sv1Id).limit(1);
     if ((sv1Classes ?? []).length === 0) return; // no classes, skip guard assertion
-    const adminToken = mint(admin);
-    const r = await api('finance/statutory/nis-classes/delete', adminToken, { id: sv1Classes[0].id });
+    const r = await api('finance/statutory/nis-classes/delete', fmgr1Token, { id: sv1Classes[0].id });
     fails(r, 'delete from retired version should fail (422)');
   });
 
-  // /nis-classes/import — positive path
-  await test('/nis-classes/import — superadmin can import NIS class rows for sv3', async () => {
-    const adminToken = mint(admin);
+  // /nis-classes/import — positive path via finance_manager
+  await test('/nis-classes/import — finance_manager can import NIS class rows for sv3', async () => {
     const importRows = [
       { classNo: 3, weeklyMin: 400, weeklyMax: 499.99, employeeWeekly: 18.00, employerWeekly: 27.00 },
       { classNo: 4, weeklyMin: 500, weeklyMax: null,   employeeWeekly: 22.00, employerWeekly: 33.00 },
     ];
-    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+    const r = await api('finance/statutory/nis-classes/import', fmgr1Token, {
       statutoryVersionId: sv3Id,
       rows: importRows,
     });
@@ -871,9 +881,8 @@ export default async function run(h) {
   });
 
   await test('/nis-classes/import — upsert conflict: re-importing same class numbers updates rows', async () => {
-    const adminToken = mint(admin);
     // Re-import class 3 with different rates
-    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+    const r = await api('finance/statutory/nis-classes/import', fmgr1Token, {
       statutoryVersionId: sv3Id,
       rows: [{ classNo: 3, weeklyMin: 400, weeklyMax: 499.99, employeeWeekly: 20.00, employerWeekly: 30.00 }],
     });
@@ -894,8 +903,7 @@ export default async function run(h) {
   });
 
   await test('/nis-classes/import — empty rows array is refused', async () => {
-    const adminToken = mint(admin);
-    const r = await api('finance/statutory/nis-classes/import', adminToken, {
+    const r = await api('finance/statutory/nis-classes/import', fmgr1Token, {
       statutoryVersionId: sv3Id,
       rows: [],
     });

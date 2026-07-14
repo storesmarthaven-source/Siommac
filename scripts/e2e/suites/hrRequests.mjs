@@ -55,6 +55,9 @@ export default async function run(h) {
     try { if (reqIds.length) await sb.from('hr_requests').delete().in('id', reqIds); } catch {}
     try { if (reqIds.length) await sb.from('app_events').delete().eq('source_module', 'hr').in('source_entity_id', reqIds); } catch {}
     try { if (reqIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'requests').in('record_id', reqIds); } catch {}
+    // Clean up module_mutation_runs so stale completed entries don't dedup future
+    // test runs when the same real employee IDs and request titles are reused.
+    try { if (reqIds.length) await sb.from('module_mutation_runs').delete().in('entity_id', reqIds); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -95,7 +98,7 @@ export default async function run(h) {
   await test('employee A submits an employment_letter request → REQ-#### ref', async () => {
     const r = await api('hr/requests/submit', ctx.empAToken, {
       requestType: 'employment_letter',
-      title:       'Employment letter for visa application',
+      title:       `Employment letter for visa application ${TAG}`,
       details:     { purpose: 'visa' },
       priority:    'normal',
     });
@@ -117,7 +120,7 @@ export default async function run(h) {
   await test('employee A submits a non-approvable general_inquiry → no workflow_id', async () => {
     const r = await api('hr/requests/submit', ctx.empAToken, {
       requestType: 'general_inquiry',
-      title:       'Question about leave policy',
+      title:       `Question about leave policy ${TAG}`,
     });
     ok(r, `submit general_inquiry failed: ${r.body.message}`);
     // non-approvable → workflowId should be null
@@ -127,7 +130,7 @@ export default async function run(h) {
   await test('admin submits on behalf of employee B (employeeId override)', async () => {
     const r = await api('hr/requests/submit', A, {
       requestType: 'document_copy',
-      title:       'Copy of employment contract',
+      title:       `Copy of employment contract ${TAG}`,
       employeeId:  empBId,
     });
     ok(r, `admin-on-behalf submit failed: ${r.body.message}`);
@@ -190,7 +193,7 @@ export default async function run(h) {
   await test('submit with employeeId=B while acting as employee A is rejected (self-scope)', async () => {
     const r = await api('hr/requests/submit', ctx.empAToken, {
       requestType: 'general_inquiry',
-      title:       'Self-scope bypass attempt',
+      title:       `Self-scope bypass attempt ${TAG}`,
       employeeId:  empBId,   // A does not have manage → should be rejected
     });
     fails(r, 'employee A should not be allowed to submit on behalf of employee B');
@@ -232,7 +235,7 @@ export default async function run(h) {
     // First: find or submit a non-approvable request for empB to test direct decide path.
     const submitR = await api('hr/requests/submit', A, {
       requestType: 'general_inquiry',
-      title:       'Test inquiry for triage decide',
+      title:       `Test inquiry for triage decide ${TAG}`,
       employeeId:  empBId,
     });
     ok(submitR, `setup submit for decide test failed: ${submitR.body.message}`);
@@ -302,7 +305,7 @@ export default async function run(h) {
     // Submit a fresh one to cancel (the first may already be in_review/workflow)
     const submitR = await api('hr/requests/submit', ctx.empAToken, {
       requestType: 'general_inquiry',
-      title:       'Cancel-me test request',
+      title:       `Cancel-me test request ${TAG}`,
     });
     ok(submitR, `setup for cancel test failed: ${submitR.body.message}`);
     const toCancel = submitR.body.data.requestId;

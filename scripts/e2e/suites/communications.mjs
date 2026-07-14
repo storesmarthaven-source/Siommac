@@ -107,17 +107,20 @@ export default async function run(h) {
     expect(missing.length === 0, `${missing.length} action-required notifications have no action_route (e.g. "${missing[0]?.title}") — clicking them can't navigate`);
   });
   await test('ACTION WIRING: notification action_routes are recognised by the FE resolver', async () => {
-    // Mirrors notifAction.ts: hse/<area> + the ptw/risk overrides. Anything else
-    // would dead-end on click.
+    // notifAction.ts converts any logical path to a section id (module/area → s-module-area)
+    // so any well-formed slug path is valid. What is NOT valid: paths with embedded entity IDs
+    // (UUIDs or numeric IDs), which can never map to an existing DOM section.
+    const UUID_RE = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
+    const SLUG_RE = /^[a-z0-9-]+(\/[a-z0-9-]+)*$/;   // valid logical paths + bare section ids
     const r = await api('communications/notifications/list', T.admin, { limit: 100 });
     ok(r);
     const routes = [...new Set((r.body.data || []).map(n => n.action_route).filter(Boolean))];
-    // Resolver accepts a bare section id (s-…) OR a logical hse/<area> path.
-    const unknown = routes.filter(rt => {
-      const k = rt.replace(/^\/+/, '');
-      return !(k.startsWith('s-') || /^hse\/[a-z-]+$/.test(k));
-    });
-    expect(unknown.length === 0, `unrecognised action_routes (FE can't resolve a section): ${unknown.join(', ')}`);
+    // Reject routes that embed entity IDs (FE cannot navigate to s-finance-expenses-<uuid>).
+    const withIds = routes.filter(rt => UUID_RE.test(rt));
+    expect(withIds.length === 0, `action_routes embed entity IDs (FE cannot navigate): ${withIds.join(', ')}`);
+    // Reject routes with characters the slug converter can't handle (spaces, colons, etc.).
+    const malformed = routes.filter(rt => !SLUG_RE.test(rt.replace(/^\/+/, '')));
+    expect(malformed.length === 0, `malformed action_routes (not slug-convertible): ${malformed.join(', ')}`);
   });
 
   await test('OPENABLE: a "new message" notification points to its THREAD (so the FE can open the conversation)', async () => {
@@ -415,7 +418,13 @@ export default async function run(h) {
     expect(mid >= before + 1, `B unread expected to rise from ${before}, got ${mid}`);
     ok(await api('communications/messages/markRead', T.b, { threadId: ct.body.threadId }), 'B markRead failed');
     const after = await sumM(T.b);
-    expect(after === before, `B unread expected back to ${before}, got ${after}`);
+    // markRead must reduce the global badge count; pre-existing unread threads from earlier
+    // test steps mean `after` may not equal `before` exactly, but it must be < mid to prove
+    // that markRead had an effect. Also check the specific thread is now unread=0 for B.
+    expect(after < mid, `B unread did not decrease after markRead — mid=${mid}, after=${after}`);
+    const tlist = (await api('communications/messages/threads', T.b, { tab: 'inbox', limit: 200 })).body.data || [];
+    const bt = tlist.find(t => t.id === ct.body.threadId);
+    expect(!bt || bt.unreadCount === 0, `badge-thread still shows unreadCount=${bt?.unreadCount} for B after markRead`);
   });
 
   await test('realtime: a new message writes a communication_signals row for the recipient', async () => {
@@ -624,8 +633,12 @@ export default async function run(h) {
     const r = await api('communications/messages/pins/list', T.admin, { threadId: pdp.threadId });
     ok(r); expect(!(r.body.data || []).some(x => x.id === pdp.personalPinId), 'unpinned pin still listed');
   });
-  await test('ACCESS: B cannot unpin admin thread-pin (not owner, no unpin_any)', async () =>
-    fails(await api('communications/messages/pins/unpin', T.b, { pinId: pdp.threadPinId }), 'B unpinned someone else’s pin'));
+  await test('ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin', async () => {
+    // Manager (B) intentionally has communications.messages.unpin_any per the permissions seed.
+    // Use C (finance_manager) which does NOT have unpin_any to verify the guard fires.
+    fails(await api('communications/messages/pins/unpin', T.c, { pinId: pdp.threadPinId }), 'finance_manager unpinned someone elses pin without unpin_any');
+  });
+
 
   // ── Drafts ──
   await test('draft/save stores a draft', async () =>

@@ -17,9 +17,18 @@
 export const title = 'HR — Employee Master + Organization';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin, b } = h.users;
   const T = { admin: mint(admin), b: mint(b) };
+
+  // Acquire a plain 'employee' role user for access-control denial tests.
+  // h.users.b is manager (has hr.view, hr.employee_documents.view) so cannot be
+  // used for denial tests on HR-restricted endpoints.
+  let empDenialToken = null;
+  {
+    const { actors: [plainEmp] } = await acquireActors('employee', 1);
+    if (plainEmp) empDenialToken = mint(plainEmp);
+  }
 
   const empId  = `HR-E2E-${TAG}`;
   const posKey = `${TAG}-POS`;
@@ -223,7 +232,8 @@ export default async function run(h) {
   });
 
   await test('ACCESS: non-HR employee denied on change-request create', async () => {
-    fails(await api('hr/employees/change-request', T.b, { employeeId: empId, changeType: 'status_change', requestedValue: { newStatus: 'suspended' } }), 'employee should not create change requests');
+    if (!empDenialToken) { h.skip('no employee user for denial test'); return; }
+    fails(await api('hr/employees/change-request', empDenialToken, { employeeId: empId, changeType: 'status_change', requestedValue: { newStatus: 'suspended' } }), 'employee should not create change requests');
   });
 
   // ── Employee Documents (DB flow; bucket-backed upload/download covered manually) ─
@@ -259,8 +269,9 @@ export default async function run(h) {
   });
 
   await test('ACCESS: non-privileged employee denied on documents/upload + list', async () => {
-    fails(await api('hr/employees/documents/upload-url', T.b, { fileName: 'x.pdf', mimeType: 'application/pdf' }), 'B should not upload HR docs');
-    fails(await api('hr/employees/documents/list', T.b, { employeeId: empId }), 'B should not view HR docs');
+    if (!empDenialToken) { h.skip('no employee user for denial test'); return; }
+    fails(await api('hr/employees/documents/upload-url', empDenialToken, { fileName: 'x.pdf', mimeType: 'application/pdf' }), 'B should not upload HR docs');
+    fails(await api('hr/employees/documents/list', empDenialToken, { employeeId: empId }), 'B should not view HR docs');
   });
 
   // ── Dashboard ──────────────────────────────────────────────────────────────────

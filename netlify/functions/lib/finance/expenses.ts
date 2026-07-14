@@ -582,7 +582,7 @@ export async function submitExpenseClaim(
         notification: {
           title:           'Missing receipt — action required',
           body:            `Expense claim ${existing.claimNo} is reimbursable but has no receipt attached.`,
-          actionRoute:     `/finance/expenses/${id}`,
+          actionRoute:     's-finance-expenses',
           recipientUserIds:[existing.claimantId],
           severity:        'warning' as const,
           type:            'finance.expense.receipt.missing',
@@ -670,7 +670,7 @@ export async function approveExpenseClaim(
           ? 'Expense claim approved — reimbursement queued'
           : 'Expense claim approved',
         body:             `Claim ${existing.claimNo} has been approved.${existing.reimbursable ? ' Reimbursement has been queued.' : ''}`,
-        actionRoute:      `/finance/expenses/${id}`,
+        actionRoute:      's-finance-expenses',
         type:             existing.reimbursable ? 'finance.expense.approved.reimbursable' : 'finance.expense.approved',
         severity:         'info' as const,
         recipientUserIds: notifRecipients,
@@ -742,7 +742,7 @@ export async function rejectExpenseClaim(
       notification: {
         title:           'Expense claim rejected',
         body:            `Your claim ${existing.claimNo} was rejected: ${reason.trim()}`,
-        actionRoute:     `/finance/expenses/${id}`,
+        actionRoute:     's-finance-expenses',
         recipientUserIds:[existing.claimantId],
         type:            'finance.expense.rejected',
         severity:        'warning' as const,
@@ -803,7 +803,7 @@ export async function markExpenseReimbursed(
       notification: {
         title:           'Expense claim reimbursed',
         body:            `Your expense claim ${existing.claimNo} has been reimbursed.` + (opts.reference ? ` Reference: ${opts.reference}.` : ''),
-        actionRoute:     `/finance/expenses/${id}`,
+        actionRoute:     's-finance-expenses',
         recipientUserIds:[existing.claimantId],
         type:            'finance.expense.reimbursed',
         severity:        'info' as const,

@@ -28,7 +28,8 @@
 export const title = 'HR Documents';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG, BASE_URL } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const BASE_URL = h.base;
   const { admin } = h.users;
   const A = mint(admin);
 
@@ -55,13 +56,15 @@ export default async function run(h) {
     }
   });
 
-  // Find an employee with at least one HR document (or any employee for compliance tests)
+  // Find a plain 'employee' user for access-control denial tests.
+  // Must be role='employee' specifically — manager/hr_staff/finance_manager also
+  // hold hr.employee_documents.view in the DB so they would pass where we expect denial.
   {
     const { data: emp } = await sb
       .from('app_users')
       .select('id, role')
       .eq('status', 'active')
-      .not('role', 'in', '("superadmin","admin","hr_manager")')
+      .eq('role', 'employee')
       .limit(1)
       .maybeSingle();
     if (emp) {

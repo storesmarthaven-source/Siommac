@@ -247,7 +247,10 @@ export default async function run(h) {
       const { data } = await sb.from('app_events').select('event_type')
         .eq('source_module', 'finance_expenses').eq('source_entity_id', ctx.claimId);
       const types = new Set((data ?? []).map(e => e.event_type));
-      return ['finance.expense.submitted', 'finance.expense.approved', 'finance.expense.reimbursed'].every(t => types.has(t));
+      // Reimbursable claims emit 'finance.expense.approved.reimbursable'; non-reimbursable
+      // emit 'finance.expense.approved'. Accept either so the check works for both paths.
+      const approvedOk = types.has('finance.expense.approved') || types.has('finance.expense.approved.reimbursable');
+      return types.has('finance.expense.submitted') && approvedOk && types.has('finance.expense.reimbursed');
     });
     expect(gotAll, 'submitted/approved/reimbursed events not all present');
   });

@@ -9,6 +9,7 @@
 // has hr.requests.manage (HR submits on behalf). Enforced at the route layer;
 // this function trusts the already-resolved employeeId.
 
+import { createHash }           from 'node:crypto';
 import { sb }                  from '../db';
 import { nextRef }             from '../refGenerator';
 import { runModuleMutation }   from '../moduleServiceAdapter';
@@ -36,7 +37,12 @@ export async function submitRequest(
 
   const details = args.details ?? {};
   // Content-addressable idempotency key — same employee + type + title ≈ same intent.
-  const hash = Buffer.from(JSON.stringify({ e: resolvedEmployeeId, t: args.requestType, ti: args.title })).toString('base64').slice(0, 32);
+  // SHA-256 avoids the prefix-collision risk of a base64-truncated raw-JSON hash: two
+  // titles that share a long common prefix (e.g. "Employment letter for visa X" vs "...Y")
+  // would produce the same 32-char base64 key. SHA-256 distributes the full content.
+  const hash = createHash('sha256')
+    .update(JSON.stringify({ e: resolvedEmployeeId, t: args.requestType, ti: args.title }))
+    .digest('hex').slice(0, 32);
   const idempotencyKey = `hr.request:${resolvedEmployeeId}:${args.requestType}:${hash}`;
 
   const result = await runModuleMutation<{ id: string; requestNo: string }>({

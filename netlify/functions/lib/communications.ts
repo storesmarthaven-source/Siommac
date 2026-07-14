@@ -662,6 +662,16 @@ async function _ensureRealtimeChannel(userId: string): Promise<string> {
  * For each participant row, compare last_post_at on the thread against last_read_at.
  * This is a close-enough approximation that is fully server-side.
  */
+/** Millisecond-precision timestamp comparison helper.
+ *  PostgREST may return `last_read_at` with trailing zeros stripped, e.g.
+ *  '2026-07-14T18:00:00.2+00:00' when stored from JS '...00.200Z'. A naïve
+ *  string comparison against a Postgres `created_at` like '...00.200123+00:00'
+ *  gives the WRONG result ('0' > '+' in ASCII) — the post appears newer than
+ *  last_read_at even when it was created at the same millisecond. Parsing both
+ *  sides to ms-epoch integers eliminates this format mismatch.
+ */
+const tsMs = (s: string): number => new Date(s).getTime();
+
 async function _countUnreadThreads(userId: string): Promise<{ count: number | null }> {
   // A thread is unread when it has ≥1 post by ANOTHER author created after the
   // user's last_read_at. This MUST match the per-thread unreadCount computed in
@@ -669,7 +679,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
   // Unread tab disagree: the old version counted last_post_at > last_read_at
   // regardless of author, so your OWN message bumped the badge while the Unread
   // tab (others-only) stayed empty.
-  const epoch = new Date(0).toISOString();
+  const epochMs = 0; // ms since epoch for "never read"
 
   const { data: parts, error } = await sb
     .from('message_participants')
@@ -681,7 +691,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
     };
   if (error || !parts || parts.length === 0) return { count: 0 };
 
-  const readAt    = new Map(parts.map(p => [p.thread_id, p.last_read_at ?? epoch]));
+  const readAtMs  = new Map(parts.map(p => [p.thread_id, p.last_read_at ? tsMs(p.last_read_at) : epochMs]));
   const threadIds = parts.map(p => p.thread_id);
 
   const { data: posts } = await sb
@@ -693,7 +703,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
 
   const unreadThreads = new Set<string>();
   for (const p of posts ?? []) {
-    if (p.created_at > (readAt.get(p.thread_id) ?? epoch)) unreadThreads.add(p.thread_id);
+    if (tsMs(p.created_at) > (readAtMs.get(p.thread_id) ?? epochMs)) unreadThreads.add(p.thread_id);
   }
   return { count: unreadThreads.size };
 }
@@ -1116,9 +1126,11 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       participantMap.set(p.thread_id, list);
     }
 
-    // readAt per thread from the caller's own participant rows (already fetched).
-    const readAtMap = new Map<string, string>();
-    for (const r of page) readAtMap.set(r.thread_id, r.last_read_at ?? epoch);
+    // readAt per thread — store as ms-epoch to avoid format mismatch in string
+    // comparison (PostgREST may strip trailing zeros from last_read_at, causing
+    // '...200.2+00:00' < '...200.123+00:00' incorrectly as string; tsMs() fixes this).
+    const readAtMsMap = new Map<string, number>();
+    for (const r of page) readAtMsMap.set(r.thread_id, r.last_read_at ? tsMs(r.last_read_at) : 0);
 
     // One pass over the page's non-deleted posts computes unread (others' posts
     // after readAt), hasAttachments, failedSendCount (own failed posts) and the
@@ -1137,8 +1149,8 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         };
 
       for (const p of posts ?? []) {
-        const readAt = readAtMap.get(p.thread_id) ?? epoch;
-        if (p.author_user_id !== userId && p.created_at > readAt) {
+        const readAtMs = readAtMsMap.get(p.thread_id) ?? 0;
+        if (p.author_user_id !== userId && tsMs(p.created_at) > readAtMs) {
           unreadCountMap.set(p.thread_id, (unreadCountMap.get(p.thread_id) ?? 0) + 1);
         }
         if ((p.attachment_count ?? 0) > 0) hasAttachMap.set(p.thread_id, true);
