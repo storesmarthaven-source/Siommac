@@ -112,8 +112,8 @@
 }
 .ui-textarea { min-height: 76px; padding: 10px 12px; resize: vertical; line-height: 1.4; }
 .ui-input:focus, .ui-select:focus, .ui-textarea:focus {
-  border-color: var(--siomac-navy);
-  box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08));
+  border-color: #cbd5e1;
+  box-shadow: 0 0 0 3px rgba(148, 163, 184, .18);
 }
 
 /* Native <select>s adopt the .tf-select look (taller, rounder, soft #d8e0ec border) so every
@@ -126,7 +126,7 @@
   color: #1f2937; padding: 6px 12px; font: inherit; font-size: 0.82rem; cursor: pointer;
   outline: none; transition: border-color .15s, box-shadow .15s;
 }
-.emp-filter-select:focus { border-color: var(--siomac-navy); box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08)); }
+.emp-filter-select:focus { border-color: #cbd5e1; box-shadow: 0 0 0 3px rgba(148, 163, 184, .18); }
 
 /* ── PersonSearchSelect — searchable person combobox (avatar + name + results list) ─ */
 .ui-person-search { position: relative; }
@@ -136,7 +136,7 @@
   background: #fff; padding: 0 12px;
 }
 .ui-person-search-control .ui-input { min-height: 0; border: 0; padding: 0; }
-.ui-person-search-control:focus-within { border-color: var(--siomac-navy); box-shadow: 0 0 0 3px var(--focus-ring, rgba(27, 45, 84, .08)); }
+.ui-person-search-control:focus-within { border-color: #cbd5e1; box-shadow: 0 0 0 3px rgba(148, 163, 184, .18); }
 .ui-person-search-icon { flex: 0 0 auto; width: 16px; height: 16px; color: var(--text-muted); }
 .ui-person-search-selected {
   width: 100%; min-height: 40px; display: grid; grid-template-columns: auto 1fr auto; align-items: center; gap: 8px;

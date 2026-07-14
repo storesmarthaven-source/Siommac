@@ -488,12 +488,12 @@
 .acx .u-cap-sel { height: 34px; border: 1px solid var(--line); border-radius: 9px; padding: 0 28px 0 12px; font: inherit; font-size: 12.5px; font-weight: 500; background: #fff url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='none' stroke='%236b7280' stroke-width='2'><path d='M2 3.5l3 3 3-3'/></svg>") no-repeat right 10px center; appearance: none; color: var(--ink-2); outline: none; cursor: pointer; width: 116px; }
 .acx .u-cap-sel--allow { color: #157a3a; font-weight: 600; }
 .acx .u-cap-sel--deny { color: #b91c1c; font-weight: 600; }
-.acx .u-cap-sel:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-bg); }
+.acx .u-cap-sel:focus { border-color: #cbd5e1; box-shadow: 0 0 0 3px rgba(148, 163, 184, .18); }
 .acx .u-cap-sel:disabled { background-color: #f4f5f7; color: var(--muted); cursor: not-allowed; }
 .acx .u-reset-btn { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--line); background: #f4f6fa; color: #64748b; cursor: pointer; display: inline-grid; place-items: center; }
 .acx .u-reset-btn:hover:not(:disabled) { background: #e9edf3; color: var(--ink); }
 .acx .u-reset-btn:disabled { opacity: .4; cursor: default; }
-.acx .u-reset-btn-ovr { background: #eef0fe; border-color: #d6dbfa; color: #4338ca; }
+.acx .u-reset-btn-ovr { background: #eef2f7; border-color: #dbe1ea; color: #475569; }
 .acx .u-tbl-foot { display: flex; align-items: center; gap: 16px; padding: 12px 16px; border-top: 1px solid var(--line); flex-wrap: wrap; }
 .acx .u-action-bar { position: sticky; bottom: 0; z-index: 10; background: rgba(255, 255, 255, .82); backdrop-filter: blur(9px); -webkit-backdrop-filter: blur(9px); border: 1px solid var(--line); border-radius: var(--radius); padding: 13px 18px; display: flex; align-items: center; gap: 18px; box-shadow: 0 -4px 14px rgba(16,24,40,.08); }
 .acx .u-ab-lead { display: flex; align-items: center; gap: 12px; flex: none; }
