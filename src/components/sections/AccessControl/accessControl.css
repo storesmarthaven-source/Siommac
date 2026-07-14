@@ -877,3 +877,45 @@
 .acx .rl2-ritem.on .rl2-ritem-name { color: var(--siomac-navy, #1b2d54); }
 .acx .rl2-ritem-meta { font-size: 11.5px; color: var(--faint); margin-top: 2px; }
 @media (max-width: 900px) { .acx .rl2-layout { grid-template-columns: 1fr; } .acx .rl2-rail-list { max-height: 320px; } }
+
+/* Roles v2 — "one module at a time" capability editor */
+.acx .rl2-ed { overflow: hidden; }
+.acx .rl2-ed-top { display: flex; align-items: center; gap: 14px; padding: 14px; border-bottom: 1px solid var(--line); }
+.acx .rl2-ed-search { flex: 1; display: flex; align-items: center; gap: 8px; height: 38px; padding: 0 12px; border: 1px solid var(--line); border-radius: 9px; background: #fff; }
+.acx .rl2-ed-search svg { color: var(--faint); flex: none; }
+.acx .rl2-ed-search input { border: 0; outline: 0; background: transparent; font: inherit; font-size: 13px; width: 100%; color: var(--ink); }
+.acx .rl2-ed-clear { border: 0; background: none; color: var(--faint); cursor: pointer; display: grid; place-items: center; padding: 0; flex: none; }
+.acx .rl2-ed-clear:hover { color: var(--ink); }
+.acx .rl2-ed-summary { font-size: 12.5px; color: var(--muted); white-space: nowrap; flex: none; }
+.acx .rl2-ed-summary strong { color: var(--ink); font-weight: 700; }
+.acx .rl2-ed-body { display: grid; grid-template-columns: 220px minmax(0, 1fr); align-items: start; }
+/* Module menu */
+.acx .rl2-modnav { border-right: 1px solid var(--line); padding: 8px; max-height: 62vh; overflow-y: auto; }
+.acx .rl2-modli { display: flex; align-items: center; gap: 9px; width: 100%; padding: 9px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left; }
+.acx .rl2-modli:hover:not(.on) { background: #f5f7fb; }
+.acx .rl2-modli.on { background: #eef1f8; }
+.acx .rl2-modli-ico { color: #475569; flex: none; display: inline-flex; }
+.acx .rl2-modli.on .rl2-modli-ico { color: var(--siomac-navy, #1b2d54); }
+.acx .rl2-modli-name { flex: 1; min-width: 0; font-size: 13px; font-weight: 500; color: var(--ink-2); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.acx .rl2-modli.on .rl2-modli-name { color: var(--siomac-navy, #1b2d54); font-weight: 600; }
+.acx .rl2-modli-hr { width: 7px; height: 7px; border-radius: 50%; background: var(--red); flex: none; }
+.acx .rl2-modli-ct { font-size: 11px; color: var(--faint); flex: none; }
+/* Capability panel */
+.acx .rl2-modpanel { max-height: 62vh; overflow-y: auto; }
+.acx .rl2-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: #fff; z-index: 1; }
+.acx .rl2-panel-title { display: inline-flex; align-items: center; gap: 8px; font-size: 14.5px; font-weight: 600; color: var(--ink); }
+.acx .rl2-panel-title svg { color: var(--muted); }
+.acx .rl2-panel-sub { font-weight: 400; color: var(--muted); font-size: 13px; }
+.acx .rl2-panel-bulk { display: inline-flex; align-items: center; gap: 8px; font-size: 12.5px; flex: none; }
+.acx .rl2-panel-bulk button { border: 0; background: none; color: var(--accent); font: inherit; font-weight: 600; cursor: pointer; padding: 0; }
+.acx .rl2-panel-bulk button.off { color: var(--muted); }
+.acx .rl2-panel-bulk-sep { color: #cbd5e1; }
+.acx .rl2-panel-grp { padding: 10px 16px 6px; font-size: 11px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; color: var(--faint); background: #fafbfd; }
+.acx .rl2-caprow { display: flex; align-items: center; gap: 14px; padding: 12px 16px; border-bottom: 1px solid var(--line-2); }
+.acx .rl2-caprow:hover { background: #f9fafc; }
+.acx .rl2-caprow.dirty { box-shadow: inset 3px 0 0 var(--accent); }
+.acx .rl2-caprow-main { flex: 1; min-width: 0; }
+.acx .rl2-caprow-name { display: flex; align-items: center; gap: 8px; font-size: 13.5px; font-weight: 600; color: var(--ink); }
+.acx .rl2-caprow-desc { font-size: 12px; color: var(--muted); margin-top: 2px; max-width: 560px; }
+.acx .rl2-caprow-upd { font-size: 11px; color: var(--faint); white-space: nowrap; flex: none; }
+@media (max-width: 760px) { .acx .rl2-ed-body { grid-template-columns: 1fr; } .acx .rl2-modnav { border-right: 0; border-bottom: 1px solid var(--line); display: flex; gap: 4px; overflow-x: auto; max-height: none; } .acx .rl2-modli { width: auto; white-space: nowrap; } .acx .rl2-modli-name { overflow: visible; } }
