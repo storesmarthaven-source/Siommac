@@ -16,9 +16,11 @@ import {
   getActiveSessionsApi, revokeSessionApi,
   getAuditLogsApi,
   listRolesApi, getRolePermissionsApi, createRoleApi, updateRoleApi, deleteRoleApi, setRolePermissionApi,
+  listRoleCategoriesApi, createRoleCategoryApi, updateRoleCategoryApi, deleteRoleCategoryApi,
   listApprovalsApi, approveGrantApi, rejectGrantApi, cancelGrantApi,
   type AuditLogFilters,
   type ApprovalStatus,
+  type RoleCategory,
 } from '@lib/superadminApi';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import { consoleKeys } from './queryKeys';
@@ -160,10 +162,45 @@ export function useRolePermissions(roleName: string | null) {
   });
 }
 
+export function useRoleCategories(enabled = true) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: consoleKeys.roleCategories(),
+    enabled:  enabled && isAuthenticated,
+    queryFn: async () => {
+      const res = await listRoleCategoriesApi();
+      if (!res.success) throw new Error(res.message ?? 'Failed to load tiers');
+      return res.categories ?? [];
+    },
+  });
+}
+
+/** Create / rename / delete a managed tier. Invalidates tiers + roles on success. */
+export function useRoleCategoryMutations() {
+  const qc = useQueryClient();
+  const invalidate = () => { void qc.invalidateQueries({ queryKey: consoleKeys.roleCategories() }); void qc.invalidateQueries({ queryKey: consoleKeys.roles() }); };
+  const create = useMutation({
+    mutationFn: (label: string) => createRoleCategoryApi(label), retry: false,
+    onSuccess: (res) => { if (!res.success) { toast.error(res.message ?? 'Failed to create tier.'); return; } toast.success('Tier created.'); invalidate(); },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+  const update = useMutation({
+    mutationFn: ({ key, patch }: { key: string; patch: { label?: string; sortOrder?: number } }) => updateRoleCategoryApi(key, patch), retry: false,
+    onSuccess: (res) => { if (!res.success) { toast.error(res.message ?? 'Failed to update tier.'); return; } toast.success('Tier updated.'); invalidate(); },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+  const remove = useMutation({
+    mutationFn: (key: string) => deleteRoleCategoryApi(key), retry: false,
+    onSuccess: (res) => { if (!res.success) { toast.error(res.message ?? 'Failed to delete tier.'); return; } toast.success('Tier deleted.'); invalidate(); },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+  return { create, update, remove };
+}
+
 export function useCreateRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (role: { name: string; label: string; description?: string }) => createRoleApi(role),
+    mutationFn: (role: { name: string; label: string; description?: string; category: RoleCategory }) => createRoleApi(role),
     retry: false,
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to create role.'); return; }
@@ -177,7 +214,7 @@ export function useCreateRole() {
 export function useUpdateRole() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ roleName, patch }: { roleName: string; patch: { label?: string; description?: string; protected?: boolean } }) =>
+    mutationFn: ({ roleName, patch }: { roleName: string; patch: { label?: string; description?: string; protected?: boolean; category?: RoleCategory } }) =>
       updateRoleApi(roleName, patch),
     retry: false,
     onSuccess: (res) => {

@@ -24,10 +24,10 @@ import { type VNode, Fragment } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { createPortal } from 'preact/compat';
 import { useQueryClient } from '@tanstack/preact-query';
-import { useRoles, useRolePermissions, useAuditLogs } from '@sections/SuperadminConsole/hooks';
+import { useRoles, useRolePermissions, useAuditLogs, useRoleCategories, useRoleCategoryMutations } from '@sections/SuperadminConsole/hooks';
 import { consoleKeys } from '@sections/SuperadminConsole/queryKeys';
 import { AcCreateRolePage } from './AcCreateRolePage';
-import { setRolePermissionApi, setRolePermissionWithReasonApi, type RoleRow } from '@lib/superadminApi';
+import { setRolePermissionApi, setRolePermissionWithReasonApi, type RoleRow, type RoleCategory, type RoleCategoryRow } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
@@ -61,6 +61,12 @@ const capz = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
 
 const RISKS: PermissionRisk[] = ['low', 'medium', 'high', 'critical'];
 
+// Category = organizational tier (Source = isSystem; Module = capability grouping — kept separate).
+// Tiers are a MANAGED taxonomy (useRoleCategories) — no hardcoded list. `tierLabel` resolves a key
+// against the fetched tiers, built per-component where needed.
+const makeTierLabel = (tiers: RoleCategoryRow[]) => (key: string | null): string =>
+  (key ? (tiers.find(t => t.key === key)?.label ?? key) : 'Uncategorized');
+
 export function AcRolesPage(): VNode {
   const qc = useQueryClient();
   const rolesQ = useRoles(true);
@@ -69,27 +75,41 @@ export function AcRolesPage(): VNode {
   const [selName, setSelName] = useState<string | null>(() => {
     try { return localStorage.getItem('siomac_ac_roles_sel'); } catch { return null; }
   });
-  const [railTab, setRailTab] = useState<'system' | 'custom'>('system');
+  const [category, setCategory] = useState<'all' | RoleCategory | 'uncategorized'>('all');
   const [railSearch, setRailSearch] = useState('');
   const [editing, setEditing] = useState<RoleRow | 'new' | null>(null);
+  const [createCat, setCreateCat] = useState<RoleCategory | undefined>(undefined);
+  const [managingTiers, setManagingTiers] = useState(false);
 
-  const systemRoles = roles.filter(r => r.isSystem);
-  const customRoles = roles.filter(r => !r.isSystem);
-  const inUse = roles.filter(r => r.userCount > 0).length;
+  const tiers = useRoleCategories().data ?? [];
+  const tierLabel = makeTierLabel(tiers);
+
+  // Category (tier) is the single directory filter. Source (System/Custom) is shown as a badge on
+  // each role row, not as a separate filter.
+  const catCount = (cat: RoleCategory) => roles.filter(r => r.category === cat).length;
+  const uncategorizedCount = roles.filter(r => r.category == null).length;
+  const totalCount = roles.length;
+
   const railRoles = useMemo(() => {
     const q = railSearch.trim().toLowerCase();
-    return roles.filter(r => (railTab === 'system' ? r.isSystem : !r.isSystem) && (!q || r.label.toLowerCase().includes(q) || r.name.includes(q)));
-  }, [roles, railTab, railSearch]);
+    return roles.filter(r =>
+      (category === 'all' || (category === 'uncategorized' ? r.category == null : r.category === category))
+      && (!q || r.label.toLowerCase().includes(q) || r.name.includes(q)));
+  }, [roles, category, railSearch]);
 
   const selRole = roles.find(r => r.name === selName) ?? null;
-  useEffect(() => { if ((!selName || !roles.some(r => r.name === selName)) && roles.length) setSelName(roles[0]!.name); }, [roles, selName]);
+  // Keep a selection that's visible in the current facet; fall back to the first visible role.
+  useEffect(() => {
+    if (!roles.length) return;
+    if (!selRole) { setSelName((railRoles[0] ?? roles[0])!.name); return; }
+    if (railRoles.length && !railRoles.some(r => r.name === selName)) setSelName(railRoles[0]!.name);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [roles, railRoles, selName]);
   const pickRole = (name: string) => {
     setSelName(name);
-    // If the picked role lives on the other tab, follow it so the selection stays visible.
-    const r = roles.find(x => x.name === name);
-    if (r) setRailTab(r.isSystem ? 'system' : 'custom');
     try { localStorage.setItem('siomac_ac_roles_sel', name); } catch { /* ignore */ }
   };
+  const createInCategory = (cat?: RoleCategory) => { setCreateCat(cat); setEditing('new'); };
 
   return (
     <div class="acx">
@@ -99,7 +119,7 @@ export function AcRolesPage(): VNode {
         title="Roles"
         sub="Manage roles and the default capabilities each one grants. User-level exceptions live in User Access."
         actions={
-          <button type="button" class="acx-hdr-btn primary" onClick={() => setEditing('new')}>
+          <button type="button" class="acx-hdr-btn primary" onClick={() => createInCategory()}>
             <LucideIcon name="Plus" size={15} /> New Role
           </button>
         }
@@ -112,27 +132,57 @@ export function AcRolesPage(): VNode {
             <div class="r2-rail-head">
               <span class="u-recent-title"><LucideIcon name="Layers" size={15} /> Role Directory <span class="muted" style={{ fontWeight: 500 }}>({roles.length})</span></span>
             </div>
-            <div class="r2-rail-stats">
-              <span class="r2-rst"><span class="r2-rst-ic blue"><LucideIcon name="Layers" size={13} /></span><strong>{roles.length}</strong> Roles</span>
-              <span class="r2-rst"><span class="r2-rst-ic green"><LucideIcon name="UserCheck" size={13} /></span><strong>{inUse}</strong> In Use</span>
-              <span class="r2-rst"><span class="r2-rst-ic amber"><LucideIcon name="CircleDashed" size={13} /></span><strong>{roles.length - inUse}</strong> Empty</span>
-            </div>
             <div class="r2-rail-search"><i class="fas fa-magnifying-glass" /><input class="input" placeholder="Search roles…" value={railSearch} onInput={e => setRailSearch((e.target as HTMLInputElement).value)} /></div>
-            <div class="r2-rail-tabs">
-              <button type="button" class={`r2-rtab${railTab === 'system' ? ' on' : ''}`} onClick={() => setRailTab('system')}>System <span>{systemRoles.length}</span></button>
-              <button type="button" class={`r2-rtab${railTab === 'custom' ? ' on' : ''}`} onClick={() => setRailTab('custom')}>Custom <span>{customRoles.length}</span></button>
+            {/* Needs Categorization — a migration to-do (unclassified custom roles), shown as an
+                alert, NOT a real tier. Disappears once every role has a category. */}
+            {uncategorizedCount > 0 && (
+              <button type="button" class={`r2-uncat${category === 'uncategorized' ? ' on' : ''}`} onClick={() => setCategory('uncategorized')}>
+                <LucideIcon name="TriangleAlert" size={15} />
+                <span class="r2-uncat-t">{uncategorizedCount} role{uncategorizedCount === 1 ? '' : 's'} need{uncategorizedCount === 1 ? 's' : ''} a category</span>
+                <span class="r2-uncat-cta">{category === 'uncategorized' ? 'Viewing' : 'Review'}</span>
+              </button>
+            )}
+            {/* Category (tier) — the primary filter. Tiers are a managed taxonomy. */}
+            <div class="r2-rail-facet">
+              <div class="r2-facet-head">
+                <span class="r2-facet-lbl">Category</span>
+                <button type="button" class="r2-facet-manage" onClick={() => setManagingTiers(true)}><LucideIcon name="Settings2" size={12} /> Manage</button>
+              </div>
+              <button type="button" class={`r2-cat${category === 'all' ? ' on' : ''}`} onClick={() => setCategory('all')}>
+                <span class="r2-cat-nm">All roles</span><span class="r2-cat-ct">{totalCount}</span>
+              </button>
+              {tiers.map(t => (
+                <button type="button" key={t.key} class={`r2-cat${category === t.key ? ' on' : ''}`} onClick={() => setCategory(t.key)}>
+                  <span class="r2-cat-nm">{t.label}</span><span class="r2-cat-ct">{catCount(t.key)}</span>
+                </button>
+              ))}
+            </div>
+            <div class="r2-rail-listhead">
+              {category === 'all' ? 'All roles' : tierLabel(category === 'uncategorized' ? null : category)}
+              <span> · {railRoles.length} role{railRoles.length === 1 ? '' : 's'}</span>
             </div>
             <div class="r2-rail-list">
               {rolesQ.isLoading ? <div class="ac-loading">Loading roles…</div>
-               : railRoles.length === 0 ? <div class="ac-empty">{railTab === 'custom' ? 'No custom roles yet.' : 'No roles match.'}</div>
-               : railRoles.map(r => {
+               : railRoles.length === 0 ? (
+                <div class="r2-cat-empty">
+                  <div class="r2-cat-empty-t">No {category === 'all' ? '' : `${tierLabel(category === 'uncategorized' ? null : category)} `}roles{railSearch.trim() ? ' match' : ''}</div>
+                  {!railSearch.trim() && category !== 'all' && category !== 'uncategorized' && (
+                    <>
+                      <div class="r2-cat-empty-s">Roles assigned to {tierLabel(category)} will appear here.</div>
+                      <button type="button" class="acx-hdr-btn primary" style={{ height: '34px' }} onClick={() => createInCategory(category)}>
+                        <LucideIcon name="Plus" size={14} /> Create {tierLabel(category)} Role
+                      </button>
+                    </>
+                  )}
+                </div>
+              ) : railRoles.map(r => {
                 const st = roleStyle(r.name);
                 return (
                   <button type="button" key={r.name} class={`r2-ritem${r.name === selName ? ' on' : ''}`} onClick={() => pickRole(r.name)}>
                     <span class="r2-ritem-ico" style={{ background: st.bg, color: st.fg }}><LucideIcon name={st.icon} size={17} /></span>
                     <span class="r2-ritem-main">
                       <span class="r2-ritem-name">{r.label}</span>
-                      <span class="r2-ritem-meta">{r.isSystem ? 'System' : 'Custom'} · {r.userCount} member{r.userCount === 1 ? '' : 's'}</span>
+                      <span class="r2-ritem-meta">{tierLabel(r.category)} · {r.isSystem ? 'System' : 'Custom'} · {r.userCount} member{r.userCount === 1 ? '' : 's'}</span>
                     </span>
                     <LucideIcon name="ChevronRight" size={15} />
                   </button>
@@ -150,7 +200,85 @@ export function AcRolesPage(): VNode {
         </div>
       </div>
 
-      {editing && <AcCreateRolePage role={editing === 'new' ? undefined : editing} onDone={() => { setEditing(null); void rolesQ.refetch(); }} />}
+      {editing && <AcCreateRolePage role={editing === 'new' ? undefined : editing} initialCategory={editing === 'new' ? createCat : undefined} onDone={() => { setEditing(null); void rolesQ.refetch(); }} />}
+      {managingTiers && <TierManagerDialog onClose={() => setManagingTiers(false)} />}
+    </div>
+  );
+}
+
+// ── Tier manager (add / rename / delete managed role categories) ──────────────
+
+function TierManagerDialog({ onClose }: { onClose: () => void }): VNode {
+  const tiersQ = useRoleCategories();
+  const tiers = tiersQ.data ?? [];
+  const { create, update, remove } = useRoleCategoryMutations();
+  const [newLabel, setNewLabel] = useState('');
+  const busy = create.isPending || update.isPending || remove.isPending;
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') onClose(); };
+    window.addEventListener('keydown', onKey); return () => window.removeEventListener('keydown', onKey);
+  }, [onClose]);
+
+  const addTier = () => {
+    const l = newLabel.trim(); if (!l || busy) return;
+    create.mutate(l, { onSuccess: r => { if (r.success) setNewLabel(''); } });
+  };
+
+  return createPortal(
+    <div class="acx r2-overlay" onClick={onClose}>
+      <div class="r2-modal" onClick={e => e.stopPropagation()} role="dialog" aria-modal="true" aria-label="Manage tiers">
+        <div class="r2-modal-head">
+          <span class="r2-modal-ico blue"><LucideIcon name="Layers" size={17} /></span>
+          <div class="r2-modal-titles">
+            <div class="r2-modal-title">Manage Tiers</div>
+            <div class="r2-modal-sub">Organizational tiers roles are grouped by. Built-in tiers can be renamed but not removed; a tier in use can't be deleted until its roles are reassigned.</div>
+          </div>
+          <button type="button" class="r2-modal-x" onClick={onClose} aria-label="Close"><LucideIcon name="X" size={17} /></button>
+        </div>
+        <div class="r2-modal-body">
+          <div class="tm-list">
+            {tiersQ.isLoading ? <div class="ac-loading">Loading tiers…</div>
+             : tiers.map(t => (
+              <TierRow key={t.key} tier={t} busy={busy}
+                onRename={label => update.mutate({ key: t.key, patch: { label } })}
+                onDelete={() => remove.mutate(t.key)} />
+            ))}
+          </div>
+          <div class="tm-add">
+            <input class="input" placeholder="New tier name (e.g. Supervisors)" maxLength={40} value={newLabel}
+              onInput={e => setNewLabel((e.target as HTMLInputElement).value)}
+              onKeyDown={e => { if (e.key === 'Enter') addTier(); }} />
+            <button type="button" class="btn primary" disabled={!newLabel.trim() || busy} onClick={addTier}><LucideIcon name="Plus" size={14} /> Add Tier</button>
+          </div>
+        </div>
+        <div class="r2-modal-foot">
+          <button type="button" class="btn" onClick={onClose}>Done</button>
+        </div>
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function TierRow({ tier, busy, onRename, onDelete }: {
+  tier: RoleCategoryRow; busy: boolean; onRename: (label: string) => void; onDelete: () => void;
+}): VNode {
+  const [label, setLabel] = useState(tier.label);
+  useEffect(() => setLabel(tier.label), [tier.label]);
+  const dirty = label.trim().length > 0 && label.trim() !== tier.label;
+  const canDelete = !tier.isSystem && tier.roleCount === 0;
+  const commit = () => { if (dirty) onRename(label.trim()); };
+  return (
+    <div class="tm-row">
+      <input class="input tm-row-input" value={label} maxLength={40} disabled={busy}
+        onInput={e => setLabel((e.target as HTMLInputElement).value)}
+        onKeyDown={e => { if (e.key === 'Enter') commit(); }} onBlur={commit} />
+      {tier.isSystem && <span class="tm-row-badge">Built-in</span>}
+      <span class="tm-row-ct">{tier.roleCount} role{tier.roleCount === 1 ? '' : 's'}</span>
+      <button type="button" class="tm-row-del" disabled={!canDelete || busy}
+        title={tier.isSystem ? 'Built-in tiers cannot be deleted' : tier.roleCount > 0 ? 'Reassign its roles first' : 'Delete tier'}
+        onClick={onDelete} aria-label={`Delete ${tier.label}`}><LucideIcon name="Trash2" size={15} /></button>
     </div>
   );
 }
@@ -271,6 +399,7 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
   role: RoleRow; qc: ReturnType<typeof useQueryClient>; onEdit: () => void; rolesRefetch: () => void;
 }): VNode {
   const isSuper = role.name === 'superadmin';
+  const tierLabel = makeTierLabel(useRoleCategories().data ?? []);
   const rolePermsQ = useRolePermissions(role.name);
   const auditQ = useAuditLogs({ entity_id: role.name, includeActions: ['role_perm_grant', 'role_perm_revoke'], limit: 500 }, !isSuper);
 
@@ -424,6 +553,7 @@ function RoleEditor({ role, qc, onEdit, rolesRefetch }: {
         <div class="r2-prof-id">
           <div class="r2-prof-nameline">
             <h2 class="r2-prof-name">{role.label}</h2>
+            <span class={`r2-prof-badge cat${role.category ? '' : ' warn'}`}>{tierLabel(role.category)}</span>
             <span class={`r2-prof-badge ${role.isSystem ? 'sys' : 'cust'}`}>{role.isSystem ? 'System' : 'Custom'}</span>
             {isSuper && <span class="r2-prof-badge lock"><LucideIcon name="Lock" size={11} /> Immutable</span>}
           </div>

@@ -10,8 +10,8 @@
 
 import { type VNode } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
-import { useCreateRole, useUpdateRole, useRolePermissions } from '@sections/SuperadminConsole/hooks';
-import { setRolePermissionApi, setRolePermissionWithReasonApi, type RoleRow } from '@lib/superadminApi';
+import { useCreateRole, useUpdateRole, useRolePermissions, useRoleCategories } from '@sections/SuperadminConsole/hooks';
+import { setRolePermissionApi, setRolePermissionWithReasonApi, type RoleRow, type RoleCategory } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META } from '@lib/permissionMeta';
 import { toast } from '@store/ui';
@@ -30,10 +30,12 @@ const MOD_STYLE: Record<string, { icon: string; bg: string; fg: string }> = {
 };
 const modStyle = (m: string) => MOD_STYLE[m] ?? { icon: 'fa-cube', bg: '#eef1f7', fg: '#64748b' };
 
-export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRow; onDone: () => void }): VNode {
+export function AcCreateRolePage({ role: existingRole, initialCategory, onDone }: { role?: RoleRow; initialCategory?: RoleCategory; onDone: () => void }): VNode {
+  const tiers = useRoleCategories().data ?? [];
   const [step, setStep] = useState(1);
   const [label, setLabel] = useState(existingRole?.label ?? '');
   const [description, setDesc] = useState(existingRole?.description ?? '');
+  const [category, setCategory] = useState<RoleCategory | ''>((existingRole?.category ?? initialCategory) ?? '');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [reason, setReason] = useState('');
   const [openMods, setOpen] = useState<Set<string>>(new Set());
@@ -67,7 +69,9 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
   const toggleMod = (m: string) => setOpen(p => { const n = new Set(p); n.has(m) ? n.delete(m) : n.add(m); return n; });
   const selectAllIn = (keys: PermissionKey[], on: boolean) => setSelected(p => { const n = new Set(p); keys.forEach(k => on ? n.add(k) : n.delete(k)); return n; });
 
-  const canNext = step === 1 ? label.trim().length >= 2 : step === 3 ? (newCritical.length === 0 || reason.trim().length > 0) : true;
+  // Category (tier) required for new + custom roles; system roles keep their canonical tier.
+  const catOk = existingRole?.isSystem ? true : category !== '';
+  const canNext = step === 1 ? (label.trim().length >= 2 && catOk) : step === 3 ? (newCritical.length === 0 || reason.trim().length > 0) : true;
 
   const publish = async () => {
     if (!name || publishing) return;
@@ -75,8 +79,8 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
     setPublishing(true);
     try {
       const res = existingRole
-        ? await updateRole.mutateAsync({ roleName, patch: { label: label.trim(), description: description.trim() } })
-        : await createRole.mutateAsync({ name, label: label.trim(), description: description.trim() });
+        ? await updateRole.mutateAsync({ roleName, patch: { label: label.trim(), description: description.trim(), ...(!existingRole.isSystem && category ? { category } : {}) } })
+        : await createRole.mutateAsync({ name, label: label.trim(), description: description.trim(), category: category as RoleCategory });
       if (!res.success) { toast.error(res.message ?? 'Failed to save role.'); return; }
 
       const toRevoke = existingRole ? [...prev].filter(k => !selected.has(k)) : [];
@@ -159,7 +163,18 @@ export function AcCreateRolePage({ role: existingRole, onDone }: { role?: RoleRo
                 <div style={{ position: 'relative' }}><textarea class="input" style={{ resize: 'none', height: '82px', paddingBottom: '26px' }} maxLength={250} value={description} onInput={e => setDesc((e.target as HTMLTextAreaElement).value)} placeholder="What is this role for?" /><span class="cr-char-count">{description.length}/250</span></div>
               </div>
               <div class="grid-2">
-                <div><label class="field-lbl">Assignment Scope</label><div class="cr-sel-wrap"><i class="fas fa-globe cr-sel-ico" /><select class="select" style={{ paddingLeft: '34px' }}><option>Global (All Organizations)</option><option>Department Scoped</option></select></div></div>
+                <div>
+                  <label class="field-lbl">Category <span class="req">*</span></label>
+                  <div class="cr-sel-wrap">
+                    <i class="fas fa-layer-group cr-sel-ico" />
+                    <select class="select" style={{ paddingLeft: '34px' }} value={category} disabled={!!existingRole?.isSystem}
+                      onChange={e => setCategory((e.target as HTMLSelectElement).value as RoleCategory | '')}>
+                      <option value="">Select the organizational tier…</option>
+                      {tiers.map(t => <option value={t.key} key={t.key}>{t.label}</option>)}
+                    </select>
+                  </div>
+                  <div class="sub" style={{ marginTop: '5px' }}>The tier this role belongs to — organizes the directory only; it doesn't limit capabilities.</div>
+                </div>
                 <div><label class="field-lbl">Approval Requirement</label><div class="cr-sel-wrap"><i class="fas fa-shield-halved cr-sel-ico" /><select class="select" style={{ paddingLeft: '34px' }}><option>Require Approval (Maker-Checker)</option></select></div></div>
               </div>
             </>

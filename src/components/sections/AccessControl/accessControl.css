@@ -463,8 +463,15 @@
 .acx .u-info-title { font-size: 13.5px; font-weight: 700; color: var(--ink); }
 .acx .u-info-sub { font-size: 12px; color: var(--muted); margin-top: 2px; line-height: 1.4; }
 /* Table top strip (moved-up legend + count) */
-.acx .u-tbl-top { display: flex; align-items: center; gap: 16px; padding: 11px 18px; border-bottom: 1px solid var(--line); }
-.acx .u-tbl-count { font-size: 12px; color: var(--muted); }
+.acx .u-tbl-top { display: flex; align-items: center; gap: 12px; padding: 11px 18px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
+.acx .u-tbl-count { font-size: 12px; color: var(--muted); white-space: nowrap; }
+/* Active-filter chips + Clear all (make the filtered view legible) */
+.acx .u-tbl-filters { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; margin-left: auto; }
+.acx .u-fchip { display: inline-flex; align-items: center; gap: 5px; height: 24px; padding: 0 4px 0 10px; border-radius: 999px; background: var(--accent-bg); color: var(--accent-ink); border: 1px solid #c9dcfb; font-size: 11.5px; font-weight: 600; white-space: nowrap; }
+.acx .u-fchip-x { display: inline-grid; place-items: center; width: 17px; height: 17px; border: 0; border-radius: 999px; background: transparent; color: var(--accent); cursor: pointer; padding: 0; }
+.acx .u-fchip-x:hover { background: rgba(37, 99, 235, .16); }
+.acx .u-fclear { border: 0; background: none; color: var(--muted); font: inherit; font-size: 12px; font-weight: 600; cursor: pointer; padding: 3px 6px; border-radius: 6px; }
+.acx .u-fclear:hover { color: var(--red); background: var(--red-bg); }
 /* Save Changes → siomac navy when enabled */
 .acx .btn.primary.u-save:not(:disabled) { background: var(--siomac-navy, #1b2d54); border-color: var(--siomac-navy, #1b2d54); }
 .acx .btn.primary.u-save:not(:disabled):hover { background: #16243f; }
@@ -750,13 +757,13 @@
 /* Rail — role directory */
 .acx .r2-rail { display: flex; flex-direction: column; overflow: hidden; }
 .acx .r2-rail-head { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px 10px; border-bottom: 1px solid var(--line); flex: none; }
-.acx .r2-rail-stats { display: flex; align-items: center; justify-content: space-between; gap: 6px; padding: 11px 14px; border-bottom: 1px solid var(--line-2); flex: none; }
-.acx .r2-rst { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--muted); white-space: nowrap; }
-.acx .r2-rst strong { font-size: 14px; font-weight: 700; color: var(--ink); }
-.acx .r2-rst-ic { width: 22px; height: 22px; flex: none; border-radius: 6px; display: grid; place-items: center; }
-.acx .r2-rst-ic.blue { background: var(--accent-bg); color: var(--accent); }
-.acx .r2-rst-ic.green { background: var(--green-bg); color: var(--green); }
-.acx .r2-rst-ic.amber { background: var(--amber-bg); color: var(--amber); }
+/* Needs Categorization — migration alert (unclassified custom roles), not a tier */
+.acx .r2-uncat { display: flex; align-items: center; gap: 8px; margin: 8px 14px 4px; padding: 9px 11px; border: 1px solid #fcd9a8; border-radius: 10px; background: var(--amber-bg); cursor: pointer; text-align: left; font: inherit; flex: none; transition: background .12s; }
+.acx .r2-uncat > svg { color: var(--amber); flex: none; }
+.acx .r2-uncat-t { flex: 1; min-width: 0; font-size: 12px; font-weight: 600; color: #9a5b06; }
+.acx .r2-uncat-cta { font-size: 12px; font-weight: 700; color: #b45309; flex: none; }
+.acx .r2-uncat:hover { background: #fde6c8; }
+.acx .r2-uncat.on { border-color: var(--amber); box-shadow: 0 0 0 1px var(--amber) inset; }
 .acx .r2-rail-search { padding: 10px 12px 4px; flex: none; position: relative; }
 .acx .r2-rail-search i { position: absolute; left: 23px; top: 50%; transform: translateY(-4%); color: var(--faint); font-size: 12px; pointer-events: none; }
 .acx .r2-rail-search .input { padding-left: 32px; height: 36px; font-size: 13px; }
@@ -776,6 +783,42 @@
 .acx .r2-ritem-name { font-size: 13px; font-weight: 600; color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-transform: capitalize; }
 .acx .r2-ritem.on .r2-ritem-name { color: var(--siomac-navy, #1b2d54); }
 .acx .r2-ritem-meta { font-size: 11.5px; color: var(--muted); }
+
+/* ── Rail facets: Category (tier) + Source ─────────────────────────────────────── */
+.acx .r2-rail-facet { padding: 10px 12px 6px; border-bottom: 1px solid var(--line-2); flex: none; }
+.acx .r2-facet-lbl { font-size: 10.5px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--faint); padding: 0 4px 6px; }
+.acx .r2-facet-head { display: flex; align-items: center; justify-content: space-between; }
+.acx .r2-facet-head .r2-facet-lbl { padding: 0 4px; }
+.acx .r2-facet-manage { display: inline-flex; align-items: center; gap: 4px; border: 0; background: none; color: var(--accent); font: inherit; font-size: 11px; font-weight: 600; cursor: pointer; padding: 2px 5px; border-radius: 6px; margin-bottom: 4px; }
+.acx .r2-facet-manage:hover { background: var(--accent-bg); }
+/* Tier manager dialog rows */
+.acx .tm-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 4px; }
+.acx .tm-row { display: flex; align-items: center; gap: 10px; }
+.acx .tm-row-input { flex: 1; min-width: 0; height: 38px; }
+.acx .tm-row-badge { flex: none; font-size: 10.5px; font-weight: 600; padding: 2px 8px; border-radius: 999px; background: #eef1f6; color: #475569; }
+.acx .tm-row-ct { flex: none; min-width: 52px; text-align: right; font-size: 12px; color: var(--muted); white-space: nowrap; }
+.acx .tm-row-del { flex: none; width: 34px; height: 34px; display: grid; place-items: center; border: 1px solid var(--line); border-radius: 8px; background: #fff; color: var(--muted); cursor: pointer; transition: all .12s; }
+.acx .tm-row-del:hover:not(:disabled) { border-color: #fca5a5; background: var(--red-bg); color: var(--red); }
+.acx .tm-row-del:disabled { opacity: .4; cursor: not-allowed; }
+.acx .tm-add { display: flex; gap: 10px; margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--line-2); }
+.acx .tm-add .input { flex: 1; height: 38px; }
+.acx .r2-cat { display: flex; align-items: center; justify-content: space-between; gap: 8px; width: 100%; padding: 7px 10px; border: 0; border-radius: 8px; background: transparent; cursor: pointer; text-align: left; font: inherit; }
+.acx .r2-cat:hover:not(.on) { background: #f5f7fb; }
+.acx .r2-cat.on { background: var(--accent-bg); }
+.acx .r2-cat-nm { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.acx .r2-cat.on .r2-cat-nm { color: var(--accent-ink); }
+.acx .r2-cat-ct { font-size: 11.5px; font-weight: 600; color: var(--muted); background: #eef1f6; border-radius: 999px; padding: 1px 8px; min-width: 22px; text-align: center; }
+.acx .r2-cat.on .r2-cat-ct { background: #fff; color: var(--accent-ink); }
+.acx .r2-rail-listhead { padding: 11px 16px 4px; font-size: 11px; font-weight: 700; letter-spacing: .03em; text-transform: uppercase; color: var(--muted); flex: none; }
+.acx .r2-rail-listhead span { font-weight: 500; text-transform: none; letter-spacing: 0; color: var(--faint); }
+.acx .r2-cat-empty { display: flex; flex-direction: column; align-items: center; gap: 9px; padding: 34px 18px; text-align: center; }
+.acx .r2-cat-empty-t { font-size: 13px; font-weight: 600; color: var(--ink-2); }
+.acx .r2-cat-empty-s { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+/* Category badge on the role profile (pairs with the System/Custom badge) */
+.acx .r2-prof-badge.cat { background: rgba(96, 165, 250, .16); color: #dbeafe; }
+.acx .r2-prof-badge.cat.warn { background: rgba(245, 158, 11, .18); color: #fde68a; }
+
 /* Role Profile — single navy row: identity + inline metrics, no header section */
 .acx .r2-prof { display: flex; align-items: center; gap: 18px; padding: 17px 22px; border-radius: 18px; background: #1e293b; color: #fff; border: 1px solid rgba(255, 255, 255, .1); flex-wrap: wrap; }
 .acx .r2-prof-ico { width: 52px; height: 52px; flex: none; border-radius: 14px; display: grid; place-items: center; background: rgb(255 255 255 / 12%); border: 1px solid rgba(255, 255, 255, .16); color: #fff; }

@@ -132,6 +132,19 @@ export function AcUsersPage(): VNode {
     effective: PERMISSION_KEYS.filter(k => effGranted(k)).length,
   }), [target, effGranted]);
 
+  // Filter legibility — total vs. shown + removable active-filter chips.
+  const cap = (s: string) => (s ? s[0]!.toUpperCase() + s.slice(1) : s);
+  const totalCaps = useMemo(() => PERMISSION_KEYS.filter(k => !!PERMISSION_META[k]).length, []);
+  const shownCaps = useMemo(() => [...groups.values()].reduce((n, a) => n + a.length, 0), [groups]);
+  const activeChips: { id: string; label: string; remove: () => void }[] = [];
+  if (filter.search) activeChips.push({ id: 'search', label: `Search: ${filter.search}`, remove: () => setFilter(f => ({ ...f, search: '' })) });
+  for (const m of filter.modules) activeChips.push({ id: `mod:${m}`, label: m, remove: () => setFilter(f => ({ ...f, modules: f.modules.filter(x => x !== m) })) });
+  for (const r of filter.risks) activeChips.push({ id: `risk:${r}`, label: `Risk: ${cap(r)}`, remove: () => setFilter(f => ({ ...f, risks: f.risks.filter(x => x !== r) })) });
+  for (const e of filter.effective) activeChips.push({ id: `eff:${e}`, label: `Result: ${cap(e)}`, remove: () => setFilter(f => ({ ...f, effective: f.effective.filter(x => x !== e) })) });
+  for (const o of filter.overridden) activeChips.push({ id: `ovr:${o}`, label: o === 'overridden' ? 'User override' : 'Role default', remove: () => setFilter(f => ({ ...f, overridden: f.overridden.filter(x => x !== o) })) });
+  const filterActive = activeChips.length > 0;
+  const clearAllFilters = () => setFilter({ modules: [], risks: [], effective: [], overridden: [], search: '' });
+
   // Pending-changes tallies for the action-bar chips.
   const pendAllow = [...pending.values()].filter(v => v === 'allow').length;
   const pendDeny  = [...pending.values()].filter(v => v === 'deny').length;
@@ -340,7 +353,20 @@ export function AcUsersPage(): VNode {
 
               <div class="card" style={{ overflow: 'hidden' }}>
                 <div class="u-tbl-top">
-                  <span class="u-tbl-count">{groups.size} module{groups.size === 1 ? '' : 's'} · {[...groups.values()].reduce((n, a) => n + a.length, 0)} capabilities</span>
+                  <span class="u-tbl-count">{filterActive
+                    ? `Showing ${shownCaps} of ${totalCaps} capabilities`
+                    : `${groups.size} module${groups.size === 1 ? '' : 's'} · ${shownCaps} capabilities`}</span>
+                  {filterActive && (
+                    <div class="u-tbl-filters">
+                      {activeChips.map(c => (
+                        <span class="u-fchip" key={c.id}>
+                          {c.label}
+                          <button type="button" class="u-fchip-x" aria-label={`Remove ${c.label} filter`} onClick={c.remove}><LucideIcon name="X" size={12} strokeWidth={2.6} /></button>
+                        </span>
+                      ))}
+                      <button type="button" class="u-fclear" onClick={clearAllFilters}>Clear all</button>
+                    </div>
+                  )}
                 </div>
                 <table class="tbl" style={{ tableLayout: 'fixed' }}>
                   <colgroup><col style={{ width: '30%' }} /><col style={{ width: '14%' }} /><col style={{ width: '15%' }} /><col style={{ width: '15%' }} /><col style={{ width: '14%' }} /><col style={{ width: '52px' }} /></colgroup>

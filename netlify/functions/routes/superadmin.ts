@@ -381,16 +381,21 @@ router.post('/getAuditLogs', async c => {
 // Gated by 'roles.manage' (superadmin by default).
 
 const RoleNameSchema  = z.string().regex(/^[a-z][a-z0-9_]*$/, 'lowercase letters, digits, underscore');
+// Category = organizational tier (orthogonal to Source/is_system). A managed taxonomy
+// (role_categories table), so this is a slug validated by FK, not a fixed enum. Required on create.
+const RoleCategorySchema = z.string().regex(/^[a-z][a-z0-9_]*$/, 'lowercase letters, digits, underscore');
 const CreateRoleSchema = z.object({
   name:        RoleNameSchema,
   label:       z.string().min(1).max(60),
   description: z.string().max(300).optional(),
+  category:    RoleCategorySchema,
 });
 const UpdateRoleSchema = z.object({
   roleName:    z.string().min(1),
   label:       z.string().min(1).max(60).optional(),
   description: z.string().max(300).optional(),
   protected:   z.boolean().optional(),
+  category:    RoleCategorySchema.optional(),
 });
 const GetRolePermsSchema = z.object({ roleName: z.string().min(1) });
 const SetRolePermSchema  = z.object({
@@ -406,7 +411,7 @@ router.post('/listRoles', async c => {
   await requirePermission(c, 'roles.manage');
   const { data: roles, error } = await sb
     .from('roles')
-    .select('name, label, description, is_system, protected, sort_order')
+    .select('name, label, description, is_system, protected, sort_order, role_category')
     .order('sort_order');
   if (error) {
     console.error('[superadmin/listRoles] error:', error.message);
@@ -420,6 +425,7 @@ router.post('/listRoles', async c => {
   const out = (roles ?? []).map(r => ({
     name: r.name, label: r.label, description: r.description,
     isSystem: r.is_system, protected: r.protected, sortOrder: r.sort_order,
+    category: r.role_category ?? null,
     userCount: counts.get(r.name) ?? 0,
   }));
   return c.json({ success: true, roles: out });
@@ -449,13 +455,14 @@ router.post('/createRole', async c => {
   const actor = await requirePermission(c, 'roles.manage');
   const v = zv(c, CreateRoleSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { name, label, description } = v.data;
+  const { name, label, description, category } = v.data;
   const { error } = await sb.from('roles').insert({
     name, label, description: description ?? '', is_system: false, protected: false,
-    sort_order: 100, updated_by: actor.username,
+    sort_order: 100, role_category: category, updated_by: actor.username,
   });
   if (error) {
     if (error.code === '23505') return c.json({ success: false, message: 'A role with that name already exists.' }, 409);
+    if (error.code === '23503') return c.json({ success: false, message: 'Unknown category.' }, 400);
     console.error('[superadmin/createRole] error:', error.message);
     return c.json({ success: false, message: 'Failed to create role.' }, 500);
   }
@@ -478,9 +485,13 @@ router.post('/updateRole', async c => {
   if (description !== undefined) patch.description = description;
   // protected flag editable for non-system roles; superadmin/employee stay protected.
   if (v.data.protected !== undefined && !role.is_system) patch.protected = v.data.protected;
+  // Category (tier) reassignment — only for custom roles; built-ins keep their canonical
+  // tier (D2). Also how a "Needs Categorization" custom role gets classified.
+  if (v.data.category !== undefined && !role.is_system) patch.role_category = v.data.category;
 
   const { error } = await sb.from('roles').update(patch).eq('name', roleName);
   if (error) {
+    if (error.code === '23503') return c.json({ success: false, message: 'Unknown category.' }, 400);
     console.error('[superadmin/updateRole] error:', error.message);
     return c.json({ success: false, message: 'Failed to update role.' }, 500);
   }
@@ -509,6 +520,69 @@ router.post('/deleteRole', async c => {
   }
   invalidateRolePermissions(roleName);
   await log_(actor, 'role_delete', 'role', roleName, `deleted role`);
+  return c.json({ success: true });
+});
+
+// ── Role categories (managed tiers) ───────────────────────────────────────────
+const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '');
+const CreateCategorySchema = z.object({ label: z.string().min(1).max(40) });
+const UpdateCategorySchema = z.object({ key: RoleCategorySchema, label: z.string().min(1).max(40).optional(), sortOrder: z.number().int().optional() });
+const DeleteCategorySchema = z.object({ key: RoleCategorySchema });
+
+// POST /superadmin/listRoleCategories — tiers + role counts.
+router.post('/listRoleCategories', async c => {
+  await requirePermission(c, 'roles.manage');
+  const { data: cats, error } = await sb.from('role_categories').select('key, label, sort_order, is_system').order('sort_order');
+  if (error) { console.error('[superadmin/listRoleCategories] error:', error.message); return c.json({ success: false, message: 'Failed to load tiers.' }, 500); }
+  const { data: roles } = await sb.from('roles').select('role_category');
+  const counts = new Map<string, number>();
+  for (const r of (roles ?? []) as { role_category: string | null }[]) if (r.role_category) counts.set(r.role_category, (counts.get(r.role_category) ?? 0) + 1);
+  const out = (cats ?? []).map(x => ({ key: x.key, label: x.label, sortOrder: x.sort_order, isSystem: x.is_system, roleCount: counts.get(x.key) ?? 0 }));
+  return c.json({ success: true, categories: out });
+});
+
+// POST /superadmin/createRoleCategory
+router.post('/createRoleCategory', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, CreateCategorySchema, c.get('body').args ?? {}); if (!v.ok) return v.response;
+  const key = slugify(v.data.label);
+  if (!key) return c.json({ success: false, message: 'Enter a valid tier name.' }, 400);
+  const { data: max } = await sb.from('role_categories').select('sort_order').order('sort_order', { ascending: false }).limit(1).maybeSingle<{ sort_order: number }>();
+  const { error } = await sb.from('role_categories').insert({ key, label: v.data.label.trim(), sort_order: (max?.sort_order ?? 0) + 10, is_system: false });
+  if (error) {
+    if (error.code === '23505') return c.json({ success: false, message: 'A tier with that name already exists.' }, 409);
+    console.error('[superadmin/createRoleCategory] error:', error.message);
+    return c.json({ success: false, message: 'Failed to create tier.' }, 500);
+  }
+  await log_(actor, 'role_category_create', 'role_category', key, `created tier "${v.data.label.trim()}"`);
+  return c.json({ success: true, key });
+});
+
+// POST /superadmin/updateRoleCategory — rename / reorder (system tiers can be renamed, not removed).
+router.post('/updateRoleCategory', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, UpdateCategorySchema, c.get('body').args ?? {}); if (!v.ok) return v.response;
+  const patch: Record<string, unknown> = { updated_at: new Date().toISOString() };
+  if (v.data.label !== undefined) patch.label = v.data.label.trim();
+  if (v.data.sortOrder !== undefined) patch.sort_order = v.data.sortOrder;
+  const { error } = await sb.from('role_categories').update(patch).eq('key', v.data.key);
+  if (error) { console.error('[superadmin/updateRoleCategory] error:', error.message); return c.json({ success: false, message: 'Failed to update tier.' }, 500); }
+  await log_(actor, 'role_category_update', 'role_category', v.data.key, JSON.stringify(patch));
+  return c.json({ success: true });
+});
+
+// POST /superadmin/deleteRoleCategory — blocked for system tiers and tiers in use.
+router.post('/deleteRoleCategory', async c => {
+  const actor = await requirePermission(c, 'roles.manage');
+  const v = zv(c, DeleteCategorySchema, c.get('body').args ?? {}); if (!v.ok) return v.response;
+  const { data: cat } = await sb.from('role_categories').select('is_system').eq('key', v.data.key).maybeSingle<{ is_system: boolean }>();
+  if (!cat) return c.json({ success: false, message: 'Tier not found.' }, 404);
+  if (cat.is_system) return c.json({ success: false, message: 'Built-in tiers cannot be deleted.' }, 400);
+  const { count } = await sb.from('roles').select('name', { count: 'exact', head: true }).eq('role_category', v.data.key) as unknown as { count: number };
+  if (count && count > 0) return c.json({ success: false, message: `Cannot delete: ${count} role(s) use this tier. Reassign them first.` }, 400);
+  const { error } = await sb.from('role_categories').delete().eq('key', v.data.key);
+  if (error) { console.error('[superadmin/deleteRoleCategory] error:', error.message); return c.json({ success: false, message: 'Failed to delete tier.' }, 500); }
+  await log_(actor, 'role_category_delete', 'role_category', v.data.key, 'deleted tier');
   return c.json({ success: true });
 });
 

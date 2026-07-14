@@ -63,6 +63,7 @@ export default async function run(h) {
   // delete a live grant. This temp role is created fresh and torn down with the rest.
   const roleNameCrit = roleName + '_c';
   const createdRoles = [];
+  const createdTiers = [];   // managed role_categories created by this suite
 
   // Capture the target's pre-test override for PERM so cleanup restores it exactly.
   const { body: baseBody } = await api('superadmin/getUserPermissions', T.sadmin, { userId: tgt.id });
@@ -82,6 +83,11 @@ export default async function run(h) {
       await sb.from('role_permissions').delete().in('role_name', createdRoles);
       await sb.from('roles').delete().in('name', createdRoles);
       await sb.from('activity_logs').delete().eq('entity', 'role').in('entity_id', createdRoles);
+    }
+    // Managed tiers created by this suite — AFTER roles (FK role_category → role_categories restricts).
+    if (createdTiers.length) {
+      await sb.from('role_categories').delete().in('key', createdTiers);
+      await sb.from('activity_logs').delete().eq('entity', 'role_category').in('entity_id', createdTiers);
     }
     // Remove only THIS run's user-scoped permission audit rows for the manager.
     await sb.from('activity_logs').delete()
@@ -123,13 +129,13 @@ export default async function run(h) {
     ok(r);
     expect(Array.isArray(r.body.roles) && r.body.roles.length > 0, 'roles array non-empty');
     const row = r.body.roles[0];
-    for (const f of ['name', 'label', 'description', 'isSystem', 'protected', 'sortOrder', 'userCount'])
+    for (const f of ['name', 'label', 'description', 'isSystem', 'protected', 'sortOrder', 'category', 'userCount'])
       expect(f in row, `RoleRow.${f} present`);
     expect(typeof row.userCount === 'number', 'userCount is numeric');
   });
 
   await test('createRole creates a custom role + writes role_create audit', async () => {
-    const r = await api('superadmin/createRole', T.sadmin, { name: roleName, label: 'E2E RBAC Role', description: 'temp' });
+    const r = await api('superadmin/createRole', T.sadmin, { name: roleName, label: 'E2E RBAC Role', description: 'temp', category: 'staff' });
     ok(r); createdRoles.push(roleName);
     const { role } = await findRole(roleName);
     expect(!!role, 'role appears in listRoles');
@@ -139,7 +145,7 @@ export default async function run(h) {
   });
 
   await test('createRole with a duplicate name → 409', async () => {
-    const r = await api('superadmin/createRole', T.sadmin, { name: roleName, label: 'dup' });
+    const r = await api('superadmin/createRole', T.sadmin, { name: roleName, label: 'dup', category: 'staff' });
     fails(r); expect(r.status === 409, `expected 409, got ${r.status}`);
   });
 
@@ -191,6 +197,68 @@ export default async function run(h) {
   await test('deleteRole is blocked for a protected/system role', async () => {
     const r = await api('superadmin/deleteRole', T.sadmin, { roleName: 'employee' });
     fails(r); expect(r.status === 400, `expected 400, got ${r.status}`);
+  });
+
+  // ── Role categories: managed tiers (list · create · rename · delete guards) ──
+  h.section('RBAC Console › Role categories (tiers)');
+
+  const tierLabel = `E2E Tier ${TAG}`;
+  let tierKey = null;
+  const tierRoleName = roleName + '_t';
+
+  await test('listRoleCategories returns the tier contract + the built-ins', async () => {
+    const r = await api('superadmin/listRoleCategories', T.sadmin, {});
+    ok(r);
+    expect(Array.isArray(r.body.categories) && r.body.categories.length >= 4, 'categories array (≥ 4 built-ins)');
+    const row = r.body.categories[0];
+    for (const f of ['key', 'label', 'sortOrder', 'isSystem', 'roleCount'])
+      expect(f in row, `tier.${f} present`);
+    const keys = r.body.categories.map(c => c.key);
+    for (const k of ['administration', 'management', 'staff', 'self_service'])
+      expect(keys.includes(k), `built-in tier "${k}" present`);
+    const staff = r.body.categories.find(c => c.key === 'staff');
+    expect(staff && staff.isSystem === true, 'built-in tier is isSystem');
+  });
+
+  await test('createRoleCategory creates a custom tier + role_category_create audit', async () => {
+    const r = await api('superadmin/createRoleCategory', T.sadmin, { label: tierLabel });
+    ok(r); expect(typeof r.body.key === 'string' && r.body.key.length > 0, 'returns a slug key');
+    tierKey = r.body.key; createdTiers.push(tierKey);
+    const lr = await api('superadmin/listRoleCategories', T.sadmin, {});
+    const t = (lr.body.categories ?? []).find(c => c.key === tierKey);
+    expect(t && t.label === tierLabel && t.isSystem === false && t.roleCount === 0, 'custom tier listed, non-system, empty');
+    expect(await auditHas('role_category', tierKey, 'role_category_create'), 'role_category_create audit');
+  });
+
+  await test('updateRoleCategory renames a tier + role_category_update audit', async () => {
+    const r = await api('superadmin/updateRoleCategory', T.sadmin, { key: tierKey, label: `${tierLabel} (edited)` });
+    ok(r);
+    const lr = await api('superadmin/listRoleCategories', T.sadmin, {});
+    const t = (lr.body.categories ?? []).find(c => c.key === tierKey);
+    expect(t && t.label === `${tierLabel} (edited)`, 'label updated');
+    expect(await auditHas('role_category', tierKey, 'role_category_update'), 'role_category_update audit');
+  });
+
+  await test('deleteRoleCategory is blocked for a built-in tier', async () => {
+    const r = await api('superadmin/deleteRoleCategory', T.sadmin, { key: 'staff' });
+    fails(r); expect(r.status === 400, `expected 400, got ${r.status}`);
+  });
+
+  await test('deleteRoleCategory is blocked while a role uses the tier', async () => {
+    const cr = await api('superadmin/createRole', T.sadmin, { name: tierRoleName, label: 'E2E Tier Role', category: tierKey });
+    ok(cr); createdRoles.push(tierRoleName);
+    const del = await api('superadmin/deleteRoleCategory', T.sadmin, { key: tierKey });
+    fails(del); expect(del.status === 400, `expected 400 (in use), got ${del.status}`);
+    // free the tier again so the next test can delete it
+    ok(await api('superadmin/deleteRole', T.sadmin, { roleName: tierRoleName }));
+  });
+
+  await test('deleteRoleCategory removes an empty custom tier + role_category_delete audit', async () => {
+    const r = await api('superadmin/deleteRoleCategory', T.sadmin, { key: tierKey });
+    ok(r);
+    const lr = await api('superadmin/listRoleCategories', T.sadmin, {});
+    expect(!(lr.body.categories ?? []).some(c => c.key === tierKey), 'tier no longer listed');
+    expect(await auditHas('role_category', tierKey, 'role_category_delete'), 'role_category_delete audit');
   });
 
   // ── Users: per-user override model (Inherit / Allow / Deny) ──────────────────
@@ -309,7 +377,7 @@ export default async function run(h) {
 
   await test('critical ROLE grant routes through approval too', async () => {
     // Target a fresh throwaway role — never a real one — so nothing real is mutated.
-    const cr = await api('superadmin/createRole', T.sadmin, { name: roleNameCrit, label: 'E2E Crit Role' });
+    const cr = await api('superadmin/createRole', T.sadmin, { name: roleNameCrit, label: 'E2E Crit Role', category: 'staff' });
     ok(cr); createdRoles.push(roleNameCrit);
     const noReason = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT, granted: true });
     fails(noReason); expect(noReason.status === 400 && noReason.body.code === 'reason_required', 'role critical grant needs a reason');
@@ -335,6 +403,8 @@ export default async function run(h) {
   await denied('employee cannot listUsers', 'superadmin/listUsers', {});
   await denied('employee cannot getAuditLogs', 'superadmin/getAuditLogs', {});
   await denied('employee cannot getRolePermissions', 'superadmin/getRolePermissions', { roleName: 'manager' });
+  await denied('employee cannot listRoleCategories', 'superadmin/listRoleCategories', {});
+  await denied('employee cannot createRoleCategory', 'superadmin/createRoleCategory', { label: 'nope' });
 
   await test('employee cannot createRole (and no role row is written)', async () => {
     const sneaky = roleName + '_sneak';

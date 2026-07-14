@@ -155,6 +155,19 @@ export async function getAuditLogsApi(filters: AuditLogFilters = {}): Promise<{
 
 // ── Roles (roles-as-data) ─────────────────────────────────────────────────────
 
+/** Organizational tier a role belongs to (orthogonal to isSystem = Source).
+ *  A MANAGED taxonomy (role_categories table) — any slug, not a fixed enum. */
+export type RoleCategory = string;
+
+/** A tier row from the managed role_categories table. */
+export interface RoleCategoryRow {
+  key:       string;
+  label:     string;
+  sortOrder: number;
+  isSystem:  boolean;   // seeded tiers: renameable but not deletable
+  roleCount: number;
+}
+
 export interface RoleRow {
   name:        string;
   label:       string;
@@ -162,6 +175,8 @@ export interface RoleRow {
   isSystem:    boolean;
   protected:   boolean;
   sortOrder:   number;
+  /** Tier. `null` = not yet classified (existing custom roles → "Needs Categorization"). */
+  category:    RoleCategory | null;
   userCount:   number;
 }
 
@@ -177,19 +192,33 @@ export async function getRolePermissionsApi(roleName: string): Promise<{
   return apiFetch('superadmin/getRolePermissions', { method: 'POST', body: { args: { roleName } } });
 }
 
-/** Create a new custom role. */
-export async function createRoleApi(role: { name: string; label: string; description?: string }): Promise<{ success: boolean; message?: string }> {
+/** Create a new custom role. Category (tier) is required. */
+export async function createRoleApi(role: { name: string; label: string; description?: string; category: RoleCategory }): Promise<{ success: boolean; message?: string }> {
   return apiFetch('superadmin/createRole', { method: 'POST', body: { args: role } });
 }
 
-/** Update a role's label/description/protected flag. */
-export async function updateRoleApi(roleName: string, patch: { label?: string; description?: string; protected?: boolean }): Promise<{ success: boolean; message?: string }> {
+/** Update a role's label/description/protected flag or reassign its category (tier). */
+export async function updateRoleApi(roleName: string, patch: { label?: string; description?: string; protected?: boolean; category?: RoleCategory }): Promise<{ success: boolean; message?: string }> {
   return apiFetch('superadmin/updateRole', { method: 'POST', body: { args: { roleName, ...patch } } });
 }
 
 /** Delete a custom role (blocked for system/protected roles or roles in use). */
 export async function deleteRoleApi(roleName: string): Promise<{ success: boolean; message?: string }> {
   return apiFetch('superadmin/deleteRole', { method: 'POST', body: { args: { roleName } } });
+}
+
+// ── Role categories (managed tiers) ───────────────────────────────────────────
+export async function listRoleCategoriesApi(): Promise<{ success: boolean; categories?: RoleCategoryRow[]; message?: string }> {
+  return apiFetch('superadmin/listRoleCategories', { method: 'POST', body: { args: {} } });
+}
+export async function createRoleCategoryApi(label: string): Promise<{ success: boolean; key?: string; message?: string }> {
+  return apiFetch('superadmin/createRoleCategory', { method: 'POST', body: { args: { label } } });
+}
+export async function updateRoleCategoryApi(key: string, patch: { label?: string; sortOrder?: number }): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/updateRoleCategory', { method: 'POST', body: { args: { key, ...patch } } });
+}
+export async function deleteRoleCategoryApi(key: string): Promise<{ success: boolean; message?: string }> {
+  return apiFetch('superadmin/deleteRoleCategory', { method: 'POST', body: { args: { key } } });
 }
 
 /** Grant or revoke a single permission in a role's default set. */
