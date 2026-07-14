@@ -15,11 +15,11 @@
 import { type VNode, Fragment } from 'preact';
 import { useState, useMemo, useEffect } from 'preact/hooks';
 import { useQueryClient } from '@tanstack/preact-query';
-import { useRoles, useRolePermissions, useSetRolePermission, useAuditLogs } from '@sections/SuperadminConsole/hooks';
+import { useRoles, useRolePermissions, useAuditLogs } from '@sections/SuperadminConsole/hooks';
 import { consoleKeys } from '@sections/SuperadminConsole/queryKeys';
 import { CriticalGrantDialog } from '@sections/SuperadminConsole/CriticalGrantDialog';
 import { AcCreateRolePage } from './AcCreateRolePage';
-import { setRolePermissionWithReasonApi, type RoleRow } from '@lib/superadminApi';
+import { setRolePermissionApi, setRolePermissionWithReasonApi, type RoleRow } from '@lib/superadminApi';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META } from '@lib/permissionMeta';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
@@ -125,7 +125,6 @@ function RoleDetail({ role, qc, onEdit, rolesRefetch }: {
   const isSuper = role.name === 'superadmin';
   const rolePermsQ = useRolePermissions(role.name);
   const auditQ     = useAuditLogs({ entity_id: role.name, includeActions: ['role_perm_grant', 'role_perm_revoke'], limit: 500 }, !isSuper);
-  const setRolePerm = useSetRolePermission();
 
   const [pending, setPending] = useState<Map<string, boolean>>(new Map());
   const [selMod, setSelMod]   = useState<string>('');
@@ -206,11 +205,17 @@ function RoleDetail({ role, qc, onEdit, rolesRefetch }: {
   const save = async () => {
     if (!pending.size) return;
     setSaving(true);
+    const count = pending.size;
     try {
-      for (const [key, want] of pending) await setRolePerm.mutateAsync({ roleName: role.name, permission: key, granted: want });
+      // Raw API in a loop, then ONE toast — the useSetRolePermission hook toasts per call.
+      for (const [key, want] of pending) {
+        const res = await setRolePermissionApi(role.name, key, want);
+        if (!res.success) throw new Error(res.message ?? `Failed to update ${key}.`);
+      }
       setPending(new Map());
+      void qc.invalidateQueries({ queryKey: consoleKeys.rolePerms(role.name) });
       void rolePermsQ.refetch(); void auditQ.refetch(); rolesRefetch();
-      toast.success('Role defaults saved.');
+      toast.success(`Saved ${count} change${count === 1 ? '' : 's'} to ${role.label}.`);
     } catch (e) { toast.error(e instanceof Error ? e.message : 'Failed to save.'); }
     finally { setSaving(false); }
   };
