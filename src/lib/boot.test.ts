@@ -229,7 +229,6 @@ describe('Boot invariant 4 — registerWindowShims: all required shims are funct
   const REQUIRED_SHIMS: [keyof Window, string[]][] = [
     ['Dashboard',      ['loadDashboardCharts', 'getDashEditMode', 'toggleEditMode']],
     ['SettingsView',   ['loadAdminBrandingSettings', 'refreshCompanySettings', 'applyCompanyLogo', 'applyCompanyName']],
-    ['Payroll',        ['loadHourlyRates', 'initPayrollSection']],
     ['Sites',          ['loadProjectSites']],
     ['Employees',      ['loadEmployeeList', 'loadDepartments', 'loadLeaveRequests', 'loadManagerLeaveApplications', 'loadMyPayslips', 'loadHistoryInline', 'loadDepartmentData', 'loadDepartmentEmployees']],
     ['Profile',        ['loadMyProfile']],
@@ -261,7 +260,6 @@ describe('Boot invariant 4 — registerWindowShims: all required shims are funct
       setStatutoryRates:         stub,
       _stgActivatePanel:         stub,
     };
-    window.Payroll        = { loadHourlyRates: stub, initPayrollSection: stub, renderHourlyRates: stub };
     window.Sites          = { loadProjectSites: stub, displayProjectSites: stub, showAddProjectModal: stub };
     window.Employees      = {
       loadEmployeeList: stub, loadDepartments: stub, loadLeaveRequests: stub,

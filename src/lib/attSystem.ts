@@ -907,7 +907,7 @@ function handleLocationError(error: GeolocationPositionError): void {
 
 // ── Auto-sync ─────────────────────────────────────────────────────────────────
 
-const _noSyncSections = new Set(['s-settings', 's-profile', 's-payroll', 's-adm-rates']);
+const _noSyncSections = new Set(['s-settings', 's-profile']);
 
 function _userIsInteracting(): boolean {
   const tag = document.activeElement?.tagName;

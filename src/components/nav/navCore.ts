@@ -684,8 +684,6 @@ export function refreshSection(id: string): void {
     case 's-adm-projects':    win.Sites?.loadProjectSites?.();                 break;
     case 's-adm-attendance':  win.AttendanceView?.loadAttendanceData?.();      break;
     case 's-adm-leaves':      win.LeaveView?.loadLeaveApplications?.();        break;
-    case 's-adm-rates':       win.Payroll?.loadHourlyRates?.();               break;
-    case 's-payroll':         win.Payroll?.initPayrollSection?.();             break;
   }
 }
 

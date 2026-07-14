@@ -201,11 +201,6 @@ export default function SharedSections() {
         <div id="preact-access-control-root" />
       </AppSection>
 
-      {/* Payroll — admin + manager */}
-      <AppSection id="s-payroll">
-        <div id="preact-payroll-root" />
-      </AppSection>
-
       {/* My Profile — every role.
           NO wrapper <UserPill> here: the Preact component's <PageHeader>
           already renders the single standard pill. A second one duplicates it. */}
