@@ -21,10 +21,11 @@
 import { sb } from '../db';
 import { selectAllRows } from '../dbBulk';
 import { nextRef } from '../refGenerator';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from './financeEvents';
 import { assertDifferentApprover } from './statutoryConfig';
 import { emitFinanceMutationBackbone } from './backbone';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -446,70 +447,58 @@ export async function createRemittance(
 export async function submitRemittance(
   id: string,
   actorId: string,
+  idempotencyKey: string,
 ): Promise<RemittanceDto> {
+  // ATOMIC (finding #3): the source status flip (draft->submitted), workflow_id, the
+  // whole workflow, the business event and hr_audit_log are ALL committed in ONE
+  // transaction by workflow_submit_for_record_tx (finance_remittances branch) — no
+  // strand, no crash-window, no compensating rollback, no double-start. The RPC owns
+  // idempotency; only the assignee notification stays here (best-effort, post-commit —
+  // it replaces the fan-out startWorkflowForRecord used to do via notifyTaskAssigned).
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a remittance.'), { status: 400 });
+
   const existing = await getRemittance(id);
   if (!existing) throw Object.assign(new Error('Remittance not found.'), { status: 404 });
-  if (existing.status !== 'draft') {
-    throw Object.assign(new Error('Only draft remittances can be submitted for approval.'), { status: 422 });
-  }
 
-  const { data, error } = await sb.from('finance_remittances')
-    .update({ status: 'submitted' })
-    .eq('id', id).select().single<DbRemittanceRow>();
-  if (error) throw Object.assign(new Error('submitRemittance: ' + error.message), { status: 500 });
-  const row = toDto(data);
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_remittances',
+    workflowType:   'finance_remittance_approval',
+    triggerEvent:   'finance.remittance.submitted',
+    sourceRecordId: id,
+    requestedBy:    actorId,
+    recordData:     {},
+  });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for remittances.'), { status: 422 });
 
-  // Backbone: app_event + hr_audit_log; if it throws, roll back to draft
-  try {
-    await emitFinanceMutationBackbone({
-      actorUserId:   actorId,
-      module:        'finance_remittances',
-      entityType:    'remittance',
-      entityId:      id,
-      eventType:     'finance.remittance.submitted',
-      auditAction:   'remittance.submitted',
-      severity:      'info',
-      previousState: { status: 'draft' },
-      newState:      { status: 'submitted' },
-      metadata: { authority: existing.authority, totalDue: existing.totalDue },
-    });
-  } catch (bbErr) {
-    await sb.from('finance_remittances').update({ status: 'draft' }).eq('id', id);
-    throw bbErr;
-  }
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_remittances',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { authority: existing.authority, totalDue: existing.totalDue, periodYear: existing.periodYear, periodMonth: existing.periodMonth },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
 
-  // Start workflow via central engine
-  const ctx: ModuleWorkflowContext = {
-    moduleKey:        'finance_remittances',
-    workflowType:     'finance_remittance_approval',
-    triggerEvent:     'finance.remittance.submitted',
-    sourceRecordId:   id,
-    sourceRecordRef:  existing.remittanceNo,
-    requestedBy:      actorId,
-    priority:         'normal',
-    recordData: {
-      authority:   existing.authority,
-      totalDue:    existing.totalDue,
-      periodYear:  existing.periodYear,
-      periodMonth: existing.periodMonth,
-    },
-  };
+  // Notify the finance_manager assignees (best-effort, post-commit). workflow id in the
+  // dedupe key so a RESUBMIT notifies afresh.
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.remittance.pending_approval',
+    title:          `Remittance ${existing.remittanceNo} submitted for approval`,
+    body:           `${existing.authority} remittance is awaiting your approval.`,
+    module:         'finance_remittances',
+    severity:       'warning',
+    sourceType:     'remittance',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `remittance.pending_approval.${id}.${result.workflowId ?? ''}`,
+  });
 
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) {
-      await sb.from('finance_remittances').update({ workflow_id: wf.id }).eq('id', id);
-    }
-  } catch (wfErr) {
-    // Workflow start failed — roll back to draft (backbone already written; that's OK)
-    await sb.from('finance_remittances').update({ status: 'draft' }).eq('id', id);
-    throw Object.assign(
-      new Error('Workflow start failed — remittance rolled back to draft: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
-
-  return row;
+  const updated = await getRemittance(id);
+  if (!updated) throw Object.assign(new Error('Remittance submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updated;
 }
 
 // ── Approve (submitted → approved; SoD: creator ≠ approver) ──────────────────

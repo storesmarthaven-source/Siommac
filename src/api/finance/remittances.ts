@@ -154,7 +154,8 @@ export const financeRemittancesApi = {
   compute:  (a: { payrollRunId: string; authority: RemittanceAuthority }) =>
               call<ComputedRemittance>('finance/remittances/compute', a),
   create:   (a: CreateRemittanceArgs)                       => call<Remittance>('finance/remittances/create', a),
-  submit:   (a: { id: string })                             => call<Remittance>('finance/remittances/submit', a),
+  // idempotencyKey REQUIRED, stable across retries of one attempt (see RemittancesOverview).
+  submit:   (a: { id: string; idempotencyKey: string })     => call<Remittance>('finance/remittances/submit', a),
   approve:  (a: { id: string })                             => call<Remittance>('finance/remittances/approve', a),
   markPaid: (a: MarkPaidArgs)                               => call<Remittance>('finance/remittances/mark-paid', a),
   markFiled:(a: MarkFiledArgs)                              => call<Remittance>('finance/remittances/mark-filed', a),

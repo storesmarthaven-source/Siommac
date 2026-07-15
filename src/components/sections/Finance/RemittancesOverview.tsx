@@ -19,7 +19,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
@@ -319,9 +319,15 @@ export function RemittancesOverview(): VNode {
   const submitMut  = useSubmitRemittance();
   const approveMut = useApproveRemittance();
   const cancelMut  = useCancelRemittance();
+  // Idempotency: one stable key per submit ATTEMPT (per id), held across retries so a
+  // lost response recovers via the RPC receipt; cleared only on definitive success.
+  const submitKeys = useRef<Map<string, string>>(new Map());
 
   async function doSubmit(id: string) {
-    try { await submitMut.mutateAsync({ id }); toast('Submitted for approval.'); }
+    const keys = submitKeys.current;
+    const key = keys.get(id) ?? crypto.randomUUID();
+    keys.set(id, key);
+    try { await submitMut.mutateAsync({ id, idempotencyKey: key }); keys.delete(id); toast('Submitted for approval.'); }
     catch (e) { toast.error((e as Error).message); }
   }
 

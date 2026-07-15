@@ -170,10 +170,10 @@ router.post('/remittances/create', async c => {
 // POST /api/finance/remittances/submit
 router.post('/remittances/submit', async c => {
   const actor = await requirePermission(c, 'finance.remittances.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await submitRemittance(v.data.id, actor.id);
+    const data = await submitRemittance(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });

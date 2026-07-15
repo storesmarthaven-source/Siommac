@@ -157,6 +157,89 @@ export default async function run(h) {
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Remittances › Atomic submit (finding #3, slice A3)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Submit now commits status(draft->submitted) + workflow_id + the whole workflow +
+  // business event/audit in ONE txn (workflow_submit_for_record_tx, finance_remittances
+  // branch), with request-key idempotency. Fresh isolated run + drafts (one per
+  // authority — unique(payroll_run_id,authority)); self-cleaned below.
+
+  const atomCtx = { runId: null, remIds: [] };
+  await test('A3 atomic setup: seed a fresh approved run', async () => {
+    const { data, error } = await sb.from('finance_payroll_runs').insert({
+      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 21),
+      statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
+    }).select('id').single();
+    expect(!error, `seed atom run failed: ${error?.message}`);
+    atomCtx.runId = data.id;
+  });
+  const seedDraftRem = async (authority) => {
+    const { data, error } = await sb.from('finance_remittances').insert({
+      remittance_no: `REM-E2E-A3-${authority}-${TAG.slice(-6)}`,
+      period_year: 2026, period_month: 6, authority, payroll_run_id: atomCtx.runId,
+      status: 'draft', created_by: fmgr1Id, total_due: 100, employee_portion: 40, employer_portion: 60,
+    }).select('id').single();
+    if (error) throw new Error(`seedDraftRem(${authority}): ${error.message}`);
+    atomCtx.remIds.push(data.id);
+    return data.id;
+  };
+
+  await test('A3 atomic: retry same key returns original workflow (no double-create, exact counts, no strand)', async () => {
+    const id = await seedDraftRem('paye_bir');
+    const key = `a3-idem-${TAG}-${id}`;
+    const r1 = await api('finance/remittances/submit', fmgr1Token, { id, idempotencyKey: key });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wf1 = r1.body.data.workflowId;
+    expect(wf1, 'first submit returns a workflowId');
+    expect(r1.body.data.status === 'submitted', `status should be submitted, got ${r1.body.data.status}`);
+    const r2 = await api('finance/remittances/submit', fmgr1Token, { id, idempotencyKey: key });
+    ok(r2, `idempotent retry failed: ${r2.body.message}`);
+    expect(r2.body.data.workflowId === wf1, `retry should return ${wf1}, got ${r2.body.data.workflowId}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', id).eq('event_type', 'finance.remittance.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true })
+      .eq('record_id', id).eq('action', 'remittance.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit row, got ${auc}`);
+    const r3 = await api('finance/remittances/submit', fmgr1Token, { id, idempotencyKey: `a3-str-${id}` });
+    fails(r3, 'resubmitting a submitted remittance should be rejected');
+    const { data: wfs2 } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs2 ?? []).length === 1, `still exactly one workflow, got ${(wfs2 ?? []).length}`);
+  });
+
+  await test('A3 atomic: concurrent submits — exactly one succeeds, one workflow', async () => {
+    const id = await seedDraftRem('nis_nibtt');
+    const [a, b2] = await Promise.all([
+      api('finance/remittances/submit', fmgr1Token, { id, idempotencyKey: `a3-c1-${id}` }),
+      api('finance/remittances/submit', fmgr1Token, { id, idempotencyKey: `a3-c2-${id}` }),
+    ]);
+    expect([a, b2].filter(x => x.body.success).length === 1, 'exactly one concurrent submit should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+  });
+
+  await test('A3 atomic: a submit without an idempotency key is rejected', async () => {
+    const id = await seedDraftRem('health_surcharge');
+    const r = await api('finance/remittances/submit', fmgr1Token, { id });
+    fails(r, 'submit without an idempotency key should be rejected');
+    const { data: rem } = await sb.from('finance_remittances').select('status').eq('id', id).single();
+    expect(rem.status === 'draft', `remittance should stay draft, got ${rem.status}`);
+  });
+
+  await test('A3 atomic: cleanup seeded run + remittances', async () => {
+    for (const rid of atomCtx.remIds) {
+      try { await sb.from('workflow_instances').delete().eq('source_record_id', rid); } catch {}
+      try { await sb.from('app_events').delete().eq('source_entity_id', rid); } catch {}
+      try { await sb.from('hr_audit_log').delete().eq('record_id', rid); } catch {}
+      try { await sb.from('finance_remittances').delete().eq('id', rid); } catch {}
+    }
+    if (atomCtx.runId) { try { await sb.from('finance_payroll_runs').delete().eq('id', atomCtx.runId); } catch {} }
+    expect(true, 'cleanup complete');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Remittances › Access control');
   // ═══════════════════════════════════════════════════════════════════════════
 
@@ -234,7 +317,7 @@ export default async function run(h) {
   });
 
   await test('submit (draft → submitted) starts the approval workflow', async () => {
-    const r = await api('finance/remittances/submit', fmgr1Token, { id: ctx.nisRemId });
+    const r = await api('finance/remittances/submit', fmgr1Token, { id: ctx.nisRemId, idempotencyKey: `rem-nis-submit-${TAG}` });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
   });
@@ -440,7 +523,7 @@ export default async function run(h) {
 
   await test('take staffRemId (paye_bir) to filed without receipt reference — triggers §12 ticket', async () => {
     // submit as fstaff1 (has finance.remittances.manage)
-    let r = await api('finance/remittances/submit', fstaff1Token, { id: ctx.staffRemId });
+    let r = await api('finance/remittances/submit', fstaff1Token, { id: ctx.staffRemId, idempotencyKey: `rem-staff-submit-${TAG}` });
     ok(r, `submit staffRemId failed: ${r.body.message}`);
     expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
 
