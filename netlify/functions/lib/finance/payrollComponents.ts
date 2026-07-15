@@ -163,7 +163,15 @@ async function openChangeRequest(opts: {
     })
     .select()
     .single<DbCrRow>();
-  if (error) throw Object.assign(new Error('openChangeRequest: ' + error.message), { status: 500 });
+  if (error) {
+    // The partial-unique index (20260919000260) closes the pending-create TOCTOU race: the
+    // loser of two concurrent identical submissions hits 23505 here. Map it to the same 409
+    // the precheck returns, instead of a 500.
+    if ((error as { code?: string }).code === '23505') {
+      throw Object.assign(new Error('A create request for this pay component code is already pending approval.'), { status: 409 });
+    }
+    throw Object.assign(new Error('openChangeRequest: ' + error.message), { status: 500 });
+  }
 
   const cr = toCrDto(data);
 

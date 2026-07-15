@@ -55,31 +55,39 @@ export default async function run(h) {
       await sb.from('app_events').delete().eq('event_type', 'onboarding.custom_action_template.created').eq('payload->>actionName', ctx.tplName);
       await sb.from('hr_onboarding_action_templates').delete().eq('id', ctx.templateId);
     }
-    for (const id of [ctx.empId, ctx.empId2].filter(Boolean)) {
-      // (employeeId, packageKey)-keyed artifacts: the mutation-run idempotency ledger AND the
-      // derived onboarding.started event dedupe_key. Both must be cleared or a re-run of the
-      // same employee+package dedupes the start's case/event. Mirror this in setup too.
+    for (const id of (ctx.createdEmpIds ?? []).filter(Boolean)) {
+      // (employeeId, packageKey)-keyed artifacts this run created for the TAGGED test
+      // employees: the mutation-run idempotency ledger + the derived onboarding.started
+      // event dedupe_key (text keys, not FKs, so they don't cascade with the employee).
       try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
       try { await sb.from('app_events').delete().ilike('dedupe_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
     }
+    if (ctx.createdEmpIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.createdEmpIds); } catch { /* FK-blocked → leaked test user, non-fatal */ } }
     // Remove the global setting overrides this suite set (revert to catalog defaults).
     for (const k of (ctx.settingKeys ?? [])) {
       try { await sb.from('app_setting_values').delete().eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null); } catch { /* optional */ }
     }
   });
 
-  // Real identities: a target employee (also the low-priv token) + a manager + a second
-  // employee. The second employee exists so cases that must stay simultaneously active
-  // for assertion purposes (handoff-retry case + the probation-wiring cases) don't collide
-  // with the "one active onboarding case per employee" gate or reuse an already-completed
-  // (employeeId, packageKey) idempotency key from an earlier case on the same employee.
+  // Test-owned identities. The two onboarding TARGETS are CREATED + tagged — never a
+  // borrowed real employee (review finding #3): this suite cancels cases, clears onboarding
+  // idempotency/event history and reruns starts, all of which must touch test-owned rows
+  // only. The manager is borrowed for a read-only auth TOKEN (no data mutation on it); the
+  // created employees point their supervisor at that manager so supervisor tasks resolve an
+  // assignee. Unique per-run ids also make the (employee,packageKey) idempotency key unique,
+  // so concurrent/repeat runs can never dedupe each other's start case or event. The second
+  // employee lets the probation-wiring cases stay active without hitting the "one active
+  // case per employee" gate.
   {
-    const { data: emp } = await sb.from('app_users').select('id, username, role, department_id').eq('role', 'employee').eq('status', 'active').limit(1).maybeSingle();
-    if (emp) { ctx.empId = emp.id; ctx.empTok = mint(emp); }
     const { data: mgr } = await sb.from('app_users').select('id, username, role, department_id').eq('role', 'manager').eq('status', 'active').neq('id', admin.id).limit(1).maybeSingle();
     if (mgr) ctx.mgrTok = mint(mgr);
-    const { data: emp2 } = await sb.from('app_users').select('id').eq('role', 'employee').eq('status', 'active').neq('id', ctx.empId ?? '').limit(1).maybeSingle();
-    if (emp2) ctx.empId2 = emp2.id;
+    const mk = (suffix) => ({ id: `ONB-${suffix}-${TAG}`, username: `${TAG}_onb_${suffix.toLowerCase()}`, full_name: `Onboarding E2E ${suffix}`, role: 'employee', status: 'active', employment_type: 'employee', supervisor_id: mgr?.id ?? null });
+    const empRow = mk('EMPA'), emp2Row = mk('EMPB');
+    const { error: empErr } = await sb.from('app_users').insert([empRow, emp2Row]);
+    if (empErr) throw new Error(`onboarding: failed to seed tagged test employees: ${empErr.message}`);
+    ctx.empId = empRow.id; ctx.empTok = mint({ id: empRow.id, username: empRow.username, role: 'employee', department_id: null });
+    ctx.empId2 = emp2Row.id;
+    ctx.createdEmpIds = [empRow.id, emp2Row.id];
   }
 
   // Cancel every currently-active onboarding case for an employee — used between `start`
@@ -113,20 +121,9 @@ export default async function run(h) {
     }
   });
 
-  await test('setup: clear leftover state for the shared test employees', async () => {
-    // ctx.empId / empId2 are STABLE roster employees (not per-run), so a prior INTERRUPTED
-    // run can leak state keyed by (employeeId, packageKey) that poisons this run:
-    //   • an active case → trips the "one active case per employee" gate on the first start;
-    //   • a completed module_mutation_run → the start dedupes and returns the OLD caseId;
-    //   • the derived onboarding.started app_event dedupe_key → the start emits NO fresh event
-    //     (emitAppEvent dedupes), so the source_entity_id=caseId assertion finds nothing.
-    // Clear all three defensively so every start below is fresh and deterministic.
-    for (const id of [ctx.empId, ctx.empId2].filter(Boolean)) {
-      await closeActiveCasesFor(id);
-      try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
-      try { await sb.from('app_events').delete().ilike('dedupe_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
-    }
-  });
+  // (No defensive "clear leftover state" step is needed: the onboarding target employees
+  // are CREATED fresh + tagged per run, so there is never pre-existing case / idempotency /
+  // event state to collide with — the root cause the old defensive step worked around.)
 
   // ── preview ───────────────────────────────────────────────────────────────────
   await test('preview-package (admin) → tasks + handoffs', async () => {

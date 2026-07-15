@@ -338,6 +338,22 @@ export default async function run(h) {
     ok(r, `well-rested crosses-midnight assignment should be allowed: ${r.body?.message}`);
   });
 
+  await test('min-rest NEXT-DAY branch: inserting the earlier shift when a next-day assignment exists is rejected', async () => {
+    // Exercises the OTHER rest branch (adj is the LATER day): a DAY on day 6 (07:00-15:00)
+    // exists; inserting a NIGHT on day 5 (ends 07:00 day 6) leaves 0h rest before it →
+    // rejected. Uses empB and cleans up so the later "empB has no assignments" checks hold.
+    const later = await api('hr/roster/assignments/upsert', A, {
+      rosterId: ctx.rosterId, employeeId: empBId, workDate: '2026-09-06', shiftTemplateId: ctx.templateId, kind: 'shift',
+    });
+    ok(later, `next-day setup (later DAY shift for empB) failed: ${later.body?.message}`);
+    const r = await api('hr/roster/assignments/upsert', A, {
+      rosterId: ctx.rosterId, employeeId: empBId, workDate: '2026-09-05', shiftTemplateId: ctx.nightTmplId, kind: 'shift',
+    });
+    fails(r, 'inserting an earlier NIGHT before a next-day DAY (0h rest) should be rejected');
+    expect(r.body?.message?.toLowerCase().includes('rest'), `expected rest-violation message, got: ${r.body?.message}`);
+    await sb.from('hr_shift_assignments').delete().eq('roster_id', ctx.rosterId).eq('employee_id', empBId);
+  });
+
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Roster › Coverage Gaps');
   // ═══════════════════════════════════════════════════════════════════════════

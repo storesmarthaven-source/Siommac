@@ -79,7 +79,7 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
       const run = await getPayrollRun(sourceRecordId);
       if (!run) return;
       if (run.createdBy && run.createdBy !== actorId) {
-        void notify({
+        await notify({
           userId: run.createdBy, type: 'finance.payroll.run.approved',
           title: `Payroll run ${run.runNo} approved`,
           body: `Period ${run.periodMonth.slice(0, 7)} payroll run has been approved. It is ready to lock.`,
@@ -88,7 +88,7 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
           dedupeKey: `payroll_run.approved.${run.id}`,
         });
       }
-      void notifyUsersByRole('finance_manager', {
+      await notifyUsersByRole('finance_manager', {
         type: 'finance.payroll.run.approved',
         title: `Payroll run ${run.runNo} approved — ready to lock`,
         body: `Period ${run.periodMonth.slice(0, 7)} payroll run is approved. Lock the run to generate payslips.`,
@@ -114,7 +114,7 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
       ]);
       const rem = await getRemittance(sourceRecordId);
       if (!rem) return;
-      void notifyUsersByRole('finance_manager', {
+      await notifyUsersByRole('finance_manager', {
         type: 'finance.remittance.approved',
         title: `Remittance ${rem.remittanceNo} approved`,
         body: `${rem.remittanceNo} (${rem.authority}) approved — ready for payment.`,
@@ -142,7 +142,7 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
       ]);
       const loan = await getLoan(sourceRecordId);
       if (!loan) return;
-      void notify({
+      await notify({
         userId: loan.employeeId, type: 'finance.loan.activated',
         title: `Loan ${loan.reference} approved`,
         body: `Your ${loan.loanType === 'advance' ? 'salary advance' : 'loan'} of ${loan.totalRepayable.toFixed(2)} is approved — ${loan.installmentAmount.toFixed(2)} will be deducted each pay period until it clears.`,
@@ -166,7 +166,19 @@ async function runSourceTransition(wf: WorkflowRow, tr: TransitionRow, outcome: 
     return handler;
   }
   const adapter = getWorkflowAdapter(wf.module_key, wf.workflow_type);
-  if (!adapter) return null;
+  if (!adapter) {
+    // No receipt handler AND no registered adapter ⇒ the source mutation CANNOT be
+    // committed. Returning null here would let the caller finalize the workflow as
+    // completed while the source record was never transitioned (finding #2 — a workflow
+    // completing without its source mutation). Fail loudly instead: the transition retries
+    // and, if the gap persists, dead-letters — never a silent false completion. Adapters
+    // are registered at process load (api.ts + the scheduled worker), so a null adapter is
+    // a registration/configuration bug, not a timing race.
+    throw Object.assign(
+      new Error(`no source-transition handler for ${wf.module_key}:${wf.workflow_type} — refusing to finalize without committing the source`),
+      { code: 'WF_NO_ADAPTER' },
+    );
+  }
   if (outcome === 'approved') await adapter.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
   else if (outcome === 'returned') await adapter.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });
   else await adapter.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });

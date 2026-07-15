@@ -45,10 +45,14 @@ mirroring `workflow_outbox_claim`), calls the provider (at-least-once unless the
 idempotency keys), records result, backs off → dead-letter.
 
 ## Build order (each = a reviewed commit + focused checks)
-1. **Migration 210 — foundation schema** (this step's code): `wf_internal` schema + grants;
-   `workflow_request_receipts`; `workflow_instances.supersedes_workflow_id`; `notification_deliveries`
-   hardening (status constraint + retry cols + `(notification_id,channel)` unique). Pure schema, low
+1. **Migration 210 — foundation schema** (this step's code): `wf_internal` schema + grants
+   (schema usage AND `service_role` table/default privileges — the 211 `SECURITY INVOKER`
+   helpers run as `service_role` and would otherwise hit "permission denied");
+   `workflow_request_receipts`; `workflow_instances.supersedes_workflow_id`. Pure schema, low
    risk. Operator applies + NOTIFY. Post-apply probe (extend `verify-workflow-tx-apply.mjs`).
+   NOTE: the `notification_deliveries` durability hardening (status constraint + retry cols +
+   `(notification_id,channel)` unique + the scheduled worker) is a SEPARATE migration with its
+   own data-migration preflight — it is deliberately NOT bundled into 210 (see 210's header).
 2. **Migration 211 — primitive + helpers**: `wf_internal._resolve_and_validate_assignee`,
    `_enqueue_notification`, `_claim_request` (advisory lock + receipt), `_create_instance`
    (config-revalidate binding/version active+published+belongs-to-template; snapshot-derived tasks;

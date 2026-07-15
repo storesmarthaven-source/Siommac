@@ -59,12 +59,21 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
+    // Delete only the side-effects THIS run generated, scoped by the run's own budget-line
+    // ids (captured BEFORE the lines are removed). fmgrId/fstaffId may be BORROWED real
+    // users, so a broad module+actor/user delete would destroy their real budget events,
+    // audit rows and variance notifications. All three carry the line id: notifications via
+    // source_id, app_events via source_entity_id, hr_audit_log via record_id.
+    let lineIds = [];
+    try { const { data: lines } = await sb.from('finance_budget_lines').select('id').eq('cost_center_id', ctx.ccId); lineIds = (lines ?? []).map(l => l.id); } catch {}
+    if (lineIds.length) {
+      try { await sb.from('notifications').delete().eq('module', 'finance_budgets').in('source_id', lineIds); } catch {}
+      try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').in('source_entity_id', lineIds); } catch {}
+      try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_budgets').in('record_id', lineIds); } catch {}
+    }
     try { await sb.from('finance_budget_lines').delete().eq('cost_center_id', ctx.ccId); } catch {}
     try { if (ctx.ceIds.length) await sb.from('finance_cost_entries').delete().in('id', ctx.ceIds); } catch {}
     try { if (ctx.ccId) await sb.from('finance_cost_centers').delete().eq('id', ctx.ccId); } catch {}
-    try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_budgets').in('actor_id', [fmgrId, fstaffId].filter(Boolean)); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').in('actor_user_id', [fmgrId, fstaffId, empId].filter(Boolean)); } catch {}
-    try { await sb.from('notifications').delete().eq('module', 'finance_budgets').in('user_id', [fmgrId, fstaffId, empId].filter(Boolean)); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 

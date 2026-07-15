@@ -48,6 +48,14 @@ create index if not exists workflow_request_receipts_wf_idx
   on wf_internal.workflow_request_receipts(workflow_id);
 alter table wf_internal.workflow_request_receipts enable row level security;
 -- No policies: service_role bypasses RLS; the private schema is off the API surface.
+-- BUT RLS-bypass is not GRANT-bypass: the migration-211 helpers run SECURITY INVOKER (as
+-- the calling `service_role`), and wf_internal is a NEW schema NOT covered by the standard
+-- `GRANT ALL ON ALL TABLES IN SCHEMA public TO service_role`. Without explicit table privs
+-- those helpers fail with "permission denied for table workflow_request_receipts". Grant
+-- them here, and set default privileges so the 211+ helper tables inherit the grant.
+grant select, insert, update, delete on wf_internal.workflow_request_receipts to service_role;
+alter default privileges in schema wf_internal grant select, insert, update, delete on tables to service_role;
+alter default privileges in schema wf_internal grant usage, select on sequences to service_role;
 
 -- ── workflow_instances.supersedes_workflow_id ─────────────────────────────────
 alter table public.workflow_instances

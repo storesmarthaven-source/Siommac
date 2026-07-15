@@ -77,13 +77,16 @@ begin
   if v_role is null then
     raise exception 'workflow_decide: actor % not found', p_actor_id using errcode = 'WF404';
   end if;
+  -- Elevation = `workflow.instances.admin_override` ONLY (+ superadmin). `reassign`
+  -- is a ROUTING power (managers/admins hold it to move a task to the right person)
+  -- and MUST NOT grant authority to DECIDE a task you are not assigned — treating it
+  -- as elevation is horizontal privilege escalation across payroll/HR/finance approvals
+  -- (any manager could approve any pending workflow). Only admin_override bypasses the
+  -- assignment check, and only with a mandatory reason (enforced in step 5).
   v_is_elevated := (v_role = 'superadmin')
     or coalesce(
          (select granted from public.user_permissions where user_id = p_actor_id and permission = 'workflow.instances.admin_override'),
-         exists (select 1 from public.role_permissions where role_name = v_role and permission = 'workflow.instances.admin_override'))
-    or coalesce(
-         (select granted from public.user_permissions where user_id = p_actor_id and permission = 'workflow.instances.reassign'),
-         exists (select 1 from public.role_permissions where role_name = v_role and permission = 'workflow.instances.reassign'));
+         exists (select 1 from public.role_permissions where role_name = v_role and permission = 'workflow.instances.admin_override'));
   -- coalesce(...,false): a role-assigned task has assigned_to = NULL, and
   -- `NULL = actor` is NULL (not false) in three-valued logic — which would make the
   -- authorization IF fall through and admit an unassigned actor. Force it to false.
@@ -122,13 +125,18 @@ begin
   if not (v_is_assigned or v_is_elevated) then
     raise exception 'workflow_decide: this task is not assigned to you' using errcode = 'WF403';
   end if;
-  -- An elevated actor deciding a task not assigned to them is an OVERRIDE — flagged
-  -- distinctly in the decision + audit metadata below. The override reason is
-  -- captured when supplied but NOT hard-required here: a hard BE gate would break
-  -- every existing elevated-decide caller (and the FE decide flow). Requiring a
-  -- reason is a FE/policy concern layered on top of this audit flag.
+  -- An elevated (admin_override) actor deciding a task not assigned to them is an
+  -- OVERRIDE — it demands a written justification (segregation-of-duties audit trail)
+  -- and is flagged distinctly in the decision + audit metadata below. Now that
+  -- elevation is admin_override-only (no longer the broadly-held `reassign`), a
+  -- mandatory reason cannot break ordinary assigned-decide flows — only genuine
+  -- superadmin/admin_override overrides must supply one.
   if (not v_is_assigned) and v_is_elevated then
     v_is_override := true;
+    if p_override_reason is null or btrim(p_override_reason) = '' then
+      raise exception 'workflow_decide: an override reason is required to decide a task that is not assigned to you'
+        using errcode = 'WF422';
+    end if;
   end if;
 
   -- 6. Decision-requirement re-validation vs the immutable template snapshot.

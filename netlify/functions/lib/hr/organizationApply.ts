@@ -10,7 +10,7 @@
 import { sb }           from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { httpError, normalizeCode, assertNoPositionCycle } from './organizationCore';
+import { httpError, normalizeCode } from './organizationCore';
 
 function nowISO(): string { return new Date().toISOString(); }
 function fail(e: { message?: string } | null): Error { return httpError(500, e?.message ?? 'Database error.'); }
@@ -81,19 +81,29 @@ export async function applyOrgUnitDelete(actorId: string, unitId: string, previo
 }
 
 export async function applyPositionChange(actorId: string, positionId: string, action: PosAction, newState: State, previousState: State, changeRequestId?: string | null): Promise<void> {
-  // Apply-time backstop: a reports-to change approved AFTER a conflicting change already
-  // landed must not create a hierarchy cycle in committed state (submission-time overlay
-  // catches concurrent in-flight requests; this catches sequential approvals).
-  if (action === 'update' && newState['reportsToPositionId']) {
-    const { data: positions, error: posErr } = await sb.from('hr_positions').select('id, reports_to_position_id');
-    if (posErr) throw fail(posErr);
-    assertNoPositionCycle(
-      ((positions ?? []) as { id: string; reports_to_position_id: string | null }[]).map(p => ({ id: p.id, reportsToPositionId: p.reports_to_position_id })),
-      positionId, newState['reportsToPositionId'] as string,
-    );
+  const patch = toPatch(newState, POS_COLS);
+  // A reports-to change goes through a SERIALIZED, cycle-safe RPC: an advisory lock inside
+  // the transaction makes the cycle check + write atomic, so two concurrent hierarchy
+  // approvals cannot both pass their check before either write lands (a TS check + a separate
+  // UPDATE cannot serialize across PostgREST calls). Other fields don't touch the hierarchy
+  // invariant and are written normally alongside.
+  if (action === 'update' && 'reportsToPositionId' in newState) {
+    const { error: rpcErr } = await sb.rpc('hr_position_apply_reports_to_tx', {
+      p_position_id: positionId,
+      p_reports_to:  (newState['reportsToPositionId'] as string | null) ?? null,
+    });
+    if (rpcErr) {
+      const code = (rpcErr as { code?: string }).code;
+      if (code === 'HR409') throw httpError(409, rpcErr.message);
+      if (code === 'HR404') throw httpError(404, 'Position not found.');
+      throw fail(rpcErr);
+    }
+    delete patch['reports_to_position_id'];   // already written atomically by the RPC
   }
-  const { error } = await sb.from('hr_positions').update(toPatch(newState, POS_COLS)).eq('id', positionId);
-  if (error) throw fail(error);
+  if (Object.keys(patch).some(k => k !== 'updated_at')) {
+    const { error } = await sb.from('hr_positions').update(patch).eq('id', positionId);
+    if (error) throw fail(error);
+  }
   void emitAppEvent({ eventType: action === 'retire' ? 'org.position.retired' : 'org.position.updated', sourceModule: 'hr', sourceEntityType: 'position', sourceEntityId: positionId, actorUserId: actorId, severity: 'info', payload: { ...newState, changeRequestId: changeRequestId ?? null } });
   await writeHrAudit({ submoduleKey: 'organization', recordId: positionId, actorId, action: action === 'retire' ? 'hr.position.retired' : 'hr.position.updated', previousState, newState });
 }

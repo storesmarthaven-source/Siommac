@@ -250,17 +250,21 @@ export async function saveAssignment(actorId: string, args: UpsertAssignmentArgs
     const nextDate = new Date(args.workDate + 'T00:00:00Z');
     nextDate.setUTCDate(nextDate.getUTCDate() + 1);
 
-    const { data: adjacent } = await sb.from('hr_shift_assignments')
+    const { data: adjacent, error: adjErr } = await sb.from('hr_shift_assignments')
       .select('work_date, kind, shift_template_id')
       .eq('roster_id', args.rosterId).eq('employee_id', args.employeeId)
       .in('work_date', [prevDate.toISOString().slice(0, 10), nextDate.toISOString().slice(0, 10)]);
+    // Fail CLOSED: a failed lookup must NOT be read as "no adjacent shifts" — that would
+    // silently skip the min-rest guard and admit an unsafe assignment. Reject instead.
+    if (adjErr) throw Object.assign(new Error(`Could not verify minimum rest (adjacent shifts lookup failed): ${adjErr.message}`), { status: 500 });
 
     const adjRows = (adjacent ?? []) as { work_date: string; kind: string; shift_template_id: string | null }[];
     if (adjRows.length) {
       const adjTemplIds = adjRows.map(a => a.shift_template_id).filter((x): x is string => !!x);
       let adjTmplMap = new Map<string, { starts_at: string; ends_at: string; crosses_midnight: boolean }>();
       if (adjTemplIds.length) {
-        const { data: adjTmpls } = await sb.from('hr_shift_templates').select('id, starts_at, ends_at, crosses_midnight').in('id', adjTemplIds);
+        const { data: adjTmpls, error: adjTmplErr } = await sb.from('hr_shift_templates').select('id, starts_at, ends_at, crosses_midnight').in('id', adjTemplIds);
+        if (adjTmplErr) throw Object.assign(new Error(`Could not verify minimum rest (shift template lookup failed): ${adjTmplErr.message}`), { status: 500 });
         adjTmplMap = new Map(((adjTmpls ?? []) as { id: string; starts_at: string; ends_at: string; crosses_midnight: boolean }[]).map(t => [t.id, t]));
       }
       const newStart = toHHMM(tmpl.starts_at);
@@ -305,13 +309,16 @@ export async function saveAssignment(actorId: string, args: UpsertAssignmentArgs
     const windowEnd = new Date(args.workDate + 'T00:00:00Z');
     windowEnd.setUTCDate(windowEnd.getUTCDate() + MAX_CONSECUTIVE);
 
-    const { data: windowRows } = await sb.from('hr_shift_assignments')
+    const { data: windowRows, error: windowErr } = await sb.from('hr_shift_assignments')
       .select('work_date, kind')
       .eq('roster_id', args.rosterId).eq('employee_id', args.employeeId)
       .gte('work_date', windowStart.toISOString().slice(0, 10))
       .lte('work_date', windowEnd.toISOString().slice(0, 10))
       .neq('work_date', args.workDate)  // exclude the slot being saved
       .order('work_date');
+    // Fail CLOSED: don't treat a failed window lookup as "no other shifts" (which would
+    // skip the max-consecutive-days guard).
+    if (windowErr) throw Object.assign(new Error(`Could not verify max consecutive days (window lookup failed): ${windowErr.message}`), { status: 500 });
 
     const shiftDates = new Set(((windowRows ?? []) as { work_date: string; kind: string }[]).filter(r => r.kind === 'shift').map(r => r.work_date));
     shiftDates.add(args.workDate); // the new assignment

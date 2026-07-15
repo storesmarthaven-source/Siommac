@@ -208,6 +208,25 @@ export default async function run(h) {
     expect(/not assigned/i.test(r.body.message ?? ''), `expected an assignment-denial message, got: ${r.body.message}`);
   });
 
+  await test('DENY (review finding): a manager holding only workflow.instances.reassign cannot decide a non-assigned task', async () => {
+    // `reassign` is a ROUTING power (admin/manager hold it to move a task to the right
+    // person); it MUST NOT grant authority to DECIDE a task you are not assigned. Only
+    // `workflow.instances.admin_override` bypasses assignment. Before the mig-160 fix the
+    // manager was treated as elevated and could approve ANY pending workflow (horizontal
+    // escalation across payroll/HR/finance). This goes green after the operator re-applies
+    // 20260919000160 + NOTIFY pgrst.
+    const { actors: [mgr], createdIds } = await h.acquireActors('manager', 1);
+    bypass.createdIds.push(...createdIds);
+    const tMgr = mint(mgr);
+    const r = await api('workflow-engine/decide', tMgr, { workflowId: bypassWfId, taskId: bypassTaskId, decision: 'approved', comment: 'reassign-holder attempt' });
+    fails(r, 'a reassign-holding manager must not decide a task assigned to someone else (new engine)');
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+    expect(/not assigned/i.test(r.body.message ?? ''), `expected assignment denial, got: ${r.body.message}`);
+    const r2 = await api('workflows/decision', tMgr, { taskId: bypassTaskId, decision: 'approved', note: 'reassign-holder attempt' });
+    fails(r2, 'a reassign-holding manager must be denied on the legacy route too');
+    expect(r2.status === 403, `expected 403, got ${r2.status}`);
+  });
+
   await test('bypass attempts left NO trace — task still pending, zero decisions', async () => {
     const task = await openTask(bypassWfId);
     expect(task && task.step_key === 'supervisor' && ['pending','open','in_progress'].includes(task.status),

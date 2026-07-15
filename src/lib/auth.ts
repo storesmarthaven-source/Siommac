@@ -99,9 +99,10 @@ function parseSession(raw: LoginResult): FullSession {
  * Silently swallows errors — if overrides can't be loaded, fall back to
  * role defaults (the safe default; per docs/CODING_STANDARDS.md §P4).
  */
-async function applyPermissionOverrides(userId: string): Promise<void> {
+async function applyPermissionOverrides(): Promise<void> {
   try {
-    const overrides = await loadPermissionOverrides(userId);
+    // Resolves the caller from the JWT server-side (returns only their own overrides).
+    const overrides = await loadPermissionOverrides();
     const { useSessionStore } = await import('@store/session');
     useSessionStore.getState().setPermissionOverrides(overrides);
   } catch (err) {
@@ -307,8 +308,8 @@ async function _applyFullSession(session: FullSession): Promise<void> {
   const { useSessionStore } = await import('@store/session');
   useSessionStore.getState().login(session as unknown as import('../../types/api').LoginResponse);
 
-  // Load per-user permission overrides from DB (non-blocking, fire in background)
-  void applyPermissionOverrides(session.userId);
+  // Load per-user permission overrides via the authenticated API (non-blocking).
+  void applyPermissionOverrides();
 
   // Subscribe to the user-scoped Realtime notifications channel (idempotent)
   const { initNotificationsRealtime } = await import('@lib/notifications');

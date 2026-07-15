@@ -23,6 +23,7 @@
 do $$
 declare
   r record;
+  v_exposed_realtime text;
   -- Tables the browser subscribes to via Supabase Realtime (postgres_changes).
   -- These need an anon/authenticated SELECT policy for delivery and already carry
   -- RLS + that policy; never blanket-deny them here.
@@ -45,17 +46,19 @@ begin
     raise notice 'RLS enabled on public.%', r.relname;
   end loop;
 
-  -- Safety net: if any realtime table is ALSO exposed (RLS off) it is a real hole
-  -- too, but it needs a scoped anon-read policy — surface it rather than silently
-  -- leaving it, so it gets a proper policy (do NOT blanket-enable without one).
-  for r in
-    select c.relname
-    from pg_class c join pg_namespace n on n.oid = c.relnamespace
-    where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity = false
-      and c.relname = any(v_realtime)
-  loop
-    raise warning 'REALTIME table public.% has RLS disabled — needs an anon SELECT policy (see 20260628100000 pattern), NOT handled by this migration', r.relname;
-  end loop;
+  -- Fail CLOSED (review finding #5): a realtime table with RLS OFF is still exposed. It
+  -- must NOT be blanket-enabled here (that would deny its anon realtime SELECT and break
+  -- delivery) — it needs a SCOPED anon-read policy (20260628100000 pattern). Rather than
+  -- finish "successfully" while a public table is left anon-reachable, ABORT: apply that
+  -- policy migration first, then re-run this one. This migration therefore can never report
+  -- success with an exposed table.
+  select string_agg(c.relname, ', ' order by c.relname) into v_exposed_realtime
+  from pg_class c join pg_namespace n on n.oid = c.relnamespace
+  where n.nspname = 'public' and c.relkind = 'r' and c.relrowsecurity = false
+    and c.relname = any(v_realtime);
+  if v_exposed_realtime is not null then
+    raise exception 'RLS-hardening ABORTED: realtime table(s) still exposed with RLS off: %. Apply their scoped anon-read policy first (20260628100000 pattern), then re-run this migration. Refusing to report success while a public table is anon-reachable.', v_exposed_realtime;
+  end if;
 end $$;
 
 -- After applying:  NOTIFY pgrst, 'reload schema';

@@ -56,21 +56,17 @@ export async function writeHrAudit(a: {
 
 /** Next EMP-#### reference (shared sequence for HR-created and import-created staff). */
 export async function nextEmployeeNumber(): Promise<string> {
-  // Fetch all EMP-* numbers and filter in-code to pure-numeric suffixes only.
-  // EMP-FIN01 / EMP-HR02 etc. (non-numeric) must be excluded so they don't win
-  // the descending sort and push the fallback to 'EMP-0001' (already taken).
-  const { data } = await sb.from('app_users')
-    .select('employee_number').like('employee_number', 'EMP-%');
-  const numeric = (data ?? [])
-    .map(r => (r as { employee_number?: string }).employee_number ?? '')
-    .filter(n => /^EMP-\d+$/.test(n))
-    .map(n => parseInt(n.replace('EMP-', ''), 10))
-    .filter(Number.isFinite);
-  if (numeric.length > 0) {
-    const max = Math.max(...numeric);
-    return `EMP-${String(max + 1).padStart(4, '0')}`;
+  // Atomic, race-free allocation via the shared reference-counter RPC. Year sentinel 0 = a
+  // single GLOBAL EMP sequence (the number carries no year, unlike ORC-2026-#### refs). The
+  // counter is seeded to the current max by migration 20260919000270, so it continues the
+  // existing sequence. The previous scan-max-then-increment was non-atomic: two concurrent
+  // creates read the same max and minted the SAME EMP-#### (duplicate reference).
+  const { data, error } = await sb.rpc('increment_ref_counter', { p_prefix: 'EMP', p_year: 0 });
+  if (error || data == null) {
+    // No safe fallback: a scan or timestamp would re-introduce the collision / break format.
+    throw Object.assign(new Error(`Could not allocate an employee number: ${error?.message ?? 'reference counter unavailable'}`), { status: 500 });
   }
-  return 'EMP-0001';
+  return `EMP-${String(data as number).padStart(4, '0')}`;
 }
 
 // ── Statutory & payroll readiness (v36 §7.2) ────────────────────────────────────

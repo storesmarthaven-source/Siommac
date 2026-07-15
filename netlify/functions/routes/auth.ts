@@ -676,6 +676,25 @@ router.post('/getMyRecentActivity', async c => {
   })) });
 });
 
+router.post('/getMyPermissionOverrides', async c => {
+  // The authenticated user's OWN per-user permission overrides, loaded at login to reconcile
+  // the client permission set. Service-role read keyed off the JWT actor — never another
+  // user's rows. This is the ONLY browser read path: the user_permissions table is deny-all
+  // to anon/authenticated (review finding #4 — the old USING(true) policy let anyone with
+  // the anon key enumerate every user's allow/deny exceptions).
+  const actor = await requireUser(c);
+  const { data, error } = await sb
+    .from('user_permissions')
+    .select('user_id, permission, granted, set_by, set_at')
+    .eq('user_id', actor.id);
+  if (error) {
+    // Table absent (pre-migration) → no overrides, fall back to role defaults.
+    if ((error as { code?: string }).code === '42P01') return c.json({ success: true, data: [] });
+    return c.json({ success: false, message: error.message });
+  }
+  return c.json({ success: true, data: data ?? [] });
+});
+
 router.post('/verifyPassword', async c => {
   const u = await requireUser(c);
   const v = zv(c, VerifyPasswordSchema, c.get('body').args ?? {});

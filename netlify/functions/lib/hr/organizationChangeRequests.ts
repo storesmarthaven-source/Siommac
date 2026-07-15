@@ -119,8 +119,16 @@ export async function applyApprovedOrgChange(changeRequestId: string, approverId
     await dispatchApply(cr, approverId ?? cr.entity_id);
     await sb.from('hr_org_change_requests').update({ status: 'applied', applied_by: approverId, applied_at: nowISO(), ...decided }).eq('id', cr.id);
   } catch (e) {
-    await sb.from('hr_org_change_requests').update({ status: 'failed', rejection_reason: e instanceof Error ? e.message : 'Apply failed', ...decided }).eq('id', cr.id);
-    console.error('[org] applyApprovedOrgChange failed', { changeRequestId, error: e instanceof Error ? e.message : e });
+    // The source mutation FAILED. This runs inside the workflow-completion adapter, so we
+    // MUST rethrow — swallowing here lets the workflow finalize as `completed` while the
+    // change request was never applied (finding #2). Rethrowing fails the outbox
+    // transition → retry with backoff → dead-letter, and the workflow stays gated (never
+    // falsely completed). Do NOT flip the CR to a terminal `status='failed'`: the status
+    // guard above would then early-return on the next retry and hand the adapter a false
+    // success. Leave it re-attemptable; record the last error for diagnostics only.
+    await sb.from('hr_org_change_requests').update({ rejection_reason: e instanceof Error ? e.message : 'Apply failed', updated_at: nowISO() }).eq('id', cr.id);
+    console.error('[org] applyApprovedOrgChange failed — rethrowing to gate the workflow', { changeRequestId, error: e instanceof Error ? e.message : e });
+    throw e;
   }
 }
 
