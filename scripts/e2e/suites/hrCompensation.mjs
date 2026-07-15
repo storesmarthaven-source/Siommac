@@ -245,10 +245,22 @@ export default async function run(h) {
   h.section('HR Compensation › Submit + Approval Workflow');
   // ═══════════════════════════════════════════════════════════════════════════
 
-  await test('hr_staff can submit item1 for approval', async () => {
-    const r = await api('hr/compensation/pay-items/submit', hrStaff1Token, { id: ctx.item1Id });
+  await test('hr_staff can submit item1 for approval — ATOMIC + idempotent (finding #3)', async () => {
+    const key = `e2e-submit-1-${TAG}`;
+    const r = await api('hr/compensation/pay-items/submit', hrStaff1Token, { id: ctx.item1Id, idempotencyKey: key });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'pending_approval', `expected pending_approval, got: ${r.body.data.status}`);
+    // Atomic: status + workflow_id committed together (no strand).
+    const { data: row } = await sb.from('hr_employee_pay_items').select('workflow_id').eq('id', ctx.item1Id).maybeSingle();
+    expect(row?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', ctx.item1Id).eq('event_type', 'hr.compensation.item.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true }).eq('record_id', ctx.item1Id).eq('action', 'pay_item.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one submitted audit, got ${auc}`);
+    // Idempotent retry with the SAME key: succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('hr/compensation/pay-items/submit', hrStaff1Token, { id: ctx.item1Id, idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.item1Id);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
 
   await test('§2 side-effects: pay_item.submitted event after submit', async () => {
@@ -312,7 +324,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('submit item2 for rejection test', async () => {
-    const r = await api('hr/compensation/pay-items/submit', hrMgr1Token, { id: ctx.item2Id });
+    const r = await api('hr/compensation/pay-items/submit', hrMgr1Token, { id: ctx.item2Id, idempotencyKey: `e2e-submit-2-${TAG}` });
     ok(r, `submit item2 failed: ${r.body.message}`);
     expect(r.body.data.status === 'pending_approval', 'item2 should be pending_approval');
   });
@@ -336,7 +348,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('submit and approve item3 so it becomes active', async () => {
-    const rs = await api('hr/compensation/pay-items/submit', hrStaff1Token, { id: ctx.item3Id });
+    const rs = await api('hr/compensation/pay-items/submit', hrStaff1Token, { id: ctx.item3Id, idempotencyKey: `e2e-submit-3-${TAG}` });
     ok(rs, `submit item3 failed: ${rs.body.message}`);
     const ra = await api('hr/compensation/pay-items/approve', hrMgr2Token, { id: ctx.item3Id });
     ok(ra, `approve item3 failed: ${ra.body.message}`);

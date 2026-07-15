@@ -3,12 +3,15 @@
 // ============================================================================
 import { sb } from '../db';
 import { nextRef } from '../refGenerator';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from './financeEvents';
+import { notify } from '../notify';
+import { createTicket, createMessageThread } from '../communications';
 import { assertDifferentApprover } from './statutoryConfig';
 import { createAttachmentUploadUrl } from '../upload';
 import { emitFinanceMutationBackbone } from './backbone';
 import { createReimbursementHandoff } from './bridges';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export const EXPENSE_RECEIPT_BUCKET = 'finance-receipts';
 
@@ -545,87 +548,102 @@ export async function commitReceipt(
 export async function submitExpenseClaim(
   id: string,
   actorId: string,
+  idempotencyKey: string,
 ): Promise<ExpenseClaimDto> {
+  // ATOMIC (finding #3): status flip (draft->submitted) + workflow_id + the whole
+  // workflow + business event + hr_audit_log commit in ONE txn via
+  // workflow_submit_for_record_tx (finance_expense_claims branch), with request-key
+  // idempotency. No strand, no crash-window, no compensating rollback. The approver
+  // notification AND the conditional missing-receipt side-effects (claimant notify +
+  // ticket + thread) stay here as post-commit best-effort — decoupled from the
+  // RPC-owned event/audit so they can no longer duplicate them.
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit an expense claim.'), { status: 400 });
+
   const existing = await getExpenseClaim(id);
   if (!existing) throw Object.assign(new Error('Expense claim not found.'), { status: 404 });
-  if (existing.status !== 'draft') {
-    throw Object.assign(new Error('Only draft expense claims can be submitted for approval.'), { status: 422 });
-  }
-  const { data, error } = await sb.from('finance_expense_claims')
-    .update({ status: 'submitted' })
-    .eq('id', id).select().single<DbClaimRow>();
-  if (error) throw Object.assign(new Error('submitExpenseClaim: ' + error.message), { status: 500 });
-  const row = toDto(data);
 
-  // Check for missing receipt before backbone (used for notification/ticket)
-  let hasMissingReceipt = false;
-  if (existing.reimbursable && !existing.receiptPath) {
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_expenses',
+    workflowType:   'finance_expense_approval',
+    triggerEvent:   'finance.expense.submitted',
+    sourceRecordId: id,
+    requestedBy:    actorId,
+    recordData:     {},
+  });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for expense claims.'), { status: 422 });
+
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_expense_claims',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { claimNo: existing.claimNo, title: existing.title, totalAmount: existing.totalAmount, category: existing.category },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
+
+  // Standard approver notification (finance_manager), best-effort post-commit.
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.expense.submitted',
+    title:          `Expense claim ${existing.claimNo} submitted for approval`,
+    body:           `${existing.title} (${existing.totalAmount.toFixed(2)}) is awaiting your approval.`,
+    module:         'finance_expenses',
+    severity:       'warning',
+    sourceType:     'expense_claim',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `expense.pending_approval.${id}.${result.workflowId ?? ''}`,
+  });
+
+  // Conditional missing-receipt nudge: reimbursable claim with no receipt path AND no
+  // attachments → notify the claimant, raise a receipt ticket, and open a thread.
+  // Only on the FRESH draft→submitted transition — an idempotent retry (same key) sees
+  // `existing` already 'submitted', so it must NOT raise a second ticket/thread.
+  if (existing.status === 'draft' && existing.reimbursable && !existing.receiptPath) {
     const { count: attCount } = await sb.from('finance_expense_attachments')
       .select('id', { count: 'exact', head: true })
       .eq('claim_id', id);
-    hasMissingReceipt = !attCount;
+    if (!attCount) {
+      void notify({
+        userId:         existing.claimantId,
+        type:           'finance.expense.receipt.missing',
+        title:          'Missing receipt — action required',
+        body:           `Expense claim ${existing.claimNo} is reimbursable but has no receipt attached.`,
+        module:         'finance_expenses',
+        severity:       'warning',
+        sourceType:     'expense_claim',
+        sourceId:       id,
+        actionRequired: true,
+        dedupeKey:      `finance.expense.receipt.missing.${id}`,
+      });
+      void createTicket({
+        category:         'expense_receipt',
+        priority:         'medium',
+        subject:          `Missing receipt for expense claim ${existing.claimNo}`,
+        description:      `Claim "${existing.title}" (${existing.claimNo}) submitted without a receipt. Please upload the receipt to enable reimbursement.`,
+        requesterUserId:  actorId,
+        sourceModule:     'finance_expenses',
+        sourceEntityType: 'expense_claim',
+        sourceEntityId:   id,
+      }).catch(e => console.error('[expenses] missing-receipt ticket failed:', e));
+      void createMessageThread({
+        threadType:         'record',
+        subject:            `Missing receipt — ${existing.claimNo}`,
+        sourceModule:       'finance_expenses',
+        sourceEntityType:   'expense_claim',
+        sourceEntityId:     id,
+        createdBy:          actorId,
+        participantUserIds: [...new Set([existing.claimantId, actorId])].filter(Boolean) as string[],
+        body:               `Expense claim ${existing.claimNo} ("${existing.title}") has been submitted for reimbursement but is missing a receipt. Please upload a receipt at your earliest convenience to avoid delays.`,
+      }).catch(e => console.error('[expenses] missing-receipt thread failed:', e));
+    }
   }
 
-  try {
-    await emitFinanceMutationBackbone({
-      actorUserId:   actorId,
-      module:        'finance_expenses',
-      entityType:    'expense_claim',
-      entityId:      id,
-      eventType:     'finance.expense.submitted',
-      auditAction:   'expense.submitted',
-      previousState: { status: 'draft' },
-      newState:      { status: 'submitted' },
-      severity:      'info',
-      metadata:      { claimNo: existing.claimNo, totalAmount: existing.totalAmount, category: existing.category },
-      ...(hasMissingReceipt ? {
-        notification: {
-          title:           'Missing receipt — action required',
-          body:            `Expense claim ${existing.claimNo} is reimbursable but has no receipt attached.`,
-          actionRoute:     's-finance-expenses',
-          recipientUserIds:[existing.claimantId],
-          severity:        'warning' as const,
-          type:            'finance.expense.receipt.missing',
-        },
-        ticket: {
-          category:        'expense_receipt',
-          priority:        'medium' as const,
-          subject:         `Missing receipt for expense claim ${existing.claimNo}`,
-          description:     `Claim "${existing.title}" (${existing.claimNo}) submitted without a receipt. Please upload the receipt to enable reimbursement.`,
-          requesterUserId: actorId,
-        },
-        messageThread: {
-          subject:            `Missing receipt — ${existing.claimNo}`,
-          participantUserIds: [...new Set([existing.claimantId, actorId])].filter(Boolean) as string[],
-          body:               `Expense claim ${existing.claimNo} ("${existing.title}") has been submitted for reimbursement but is missing a receipt. Please upload a receipt at your earliest convenience to avoid delays.`,
-        },
-      } : {}),
-    });
-  } catch (rollbackErr) {
-    // Compensate: rollback to draft
-    await sb.from('finance_expense_claims').update({ status: 'draft' }).eq('id', id);
-    throw rollbackErr;
-  }
-
-  // Start approval workflow (separate compensating rollback if this fails)
-  const ctx: ModuleWorkflowContext = {
-    moduleKey:        'finance_expenses',
-    workflowType:     'finance_expense_approval',
-    triggerEvent:     'finance.expense.submitted',
-    sourceRecordId:   id,
-    sourceRecordRef:  existing.claimNo,
-    requestedBy:      actorId,
-    priority:         'normal',
-    recordData:       { claimNo: existing.claimNo, title: existing.title, totalAmount: existing.totalAmount, category: existing.category },
-  };
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) { await sb.from('finance_expense_claims').update({ workflow_id: wf.id }).eq('id', id); }
-  } catch (wfErr) {
-    await sb.from('finance_expense_claims').update({ status: 'draft' }).eq('id', id);
-    throw Object.assign(new Error('Workflow start failed — expense claim rolled back to draft: ' + String(wfErr)), { status: 500 });
-  }
-  return row;
+  const updated = await getExpenseClaim(id);
+  if (!updated) throw Object.assign(new Error('Expense claim submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updated;
 }
 
 export async function approveExpenseClaim(

@@ -196,10 +196,24 @@ export default async function run(h) {
     expect(r.body.data.length === 2, `expected 2 lines, got ${r.body.data.length}`);
   });
 
-  await test('submit (draft -> submitted) starts the approval workflow', async () => {
-    const r = await api('finance/expenses/submit', fmgr1Token, { id: ctx.claimId });
+  await test('submit (draft -> submitted) starts the approval workflow — ATOMIC + idempotent (finding #3)', async () => {
+    const key = `e2e-submit-1-${TAG}`;
+    const r = await api('finance/expenses/submit', fmgr1Token, { id: ctx.claimId, idempotencyKey: key });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
+    // Atomic: status + workflow_id committed together (no strand).
+    const { data: row } = await sb.from('finance_expense_claims').select('workflow_id').eq('id', ctx.claimId).maybeSingle();
+    expect(row?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    // Decoupling proof: exactly ONE submitted event + audit — the missing-receipt ticket/thread
+    // no longer route through the backbone, so they cannot duplicate these.
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', ctx.claimId).eq('event_type', 'finance.expense.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true }).eq('record_id', ctx.claimId).eq('action', 'expense.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one submitted audit, got ${auc}`);
+    // Idempotent retry with the SAME key: succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('finance/expenses/submit', fmgr1Token, { id: ctx.claimId, idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.claimId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
 
   await test('section 2 side-effect: submit fires missing-receipt ticket when reimbursable and no receipt (Gap 15a)', async () => {
@@ -272,7 +286,7 @@ export default async function run(h) {
     ctx.rejectClaimId = cr.body.data.id;
 
     // Submit it
-    const sr = await api('finance/expenses/submit', fmgr1Token, { id: ctx.rejectClaimId });
+    const sr = await api('finance/expenses/submit', fmgr1Token, { id: ctx.rejectClaimId, idempotencyKey: `e2e-submit-2-${TAG}` });
     ok(sr, `submit for reject failed: ${sr.body.message}`);
 
     // Reject without reason -> should 422
@@ -464,7 +478,7 @@ export default async function run(h) {
     ok(cr, `create for extended reimb failed: ${cr.body.message}`);
     ctx.extReimbClaimId = cr.body.data.id;
 
-    const sr = await api('finance/expenses/submit', fmgr1Token, { id: ctx.extReimbClaimId });
+    const sr = await api('finance/expenses/submit', fmgr1Token, { id: ctx.extReimbClaimId, idempotencyKey: `e2e-submit-3-${TAG}` });
     ok(sr, `submit for extended reimb failed: ${sr.body.message}`);
 
     const ar = await api('finance/expenses/approve', fmgr2Token, { id: ctx.extReimbClaimId });
@@ -536,7 +550,7 @@ export default async function run(h) {
     ok(cr, `create for handoff failed: ${cr.body.message}`);
     ctx.handoffClaimId = cr.body.data.id;
 
-    await api('finance/expenses/submit', fmgr1Token, { id: ctx.handoffClaimId });
+    await api('finance/expenses/submit', fmgr1Token, { id: ctx.handoffClaimId, idempotencyKey: `e2e-submit-4-${TAG}` });
     const ar = await api('finance/expenses/approve', fmgr2Token, { id: ctx.handoffClaimId });
     ok(ar, `approve for handoff failed: ${ar.body.message}`);
 

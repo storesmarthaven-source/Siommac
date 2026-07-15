@@ -19,6 +19,8 @@ import { toast } from '@store';
 import { HrfinWizardModal, HrfinIcon } from '@ui';
 import {
   financeExpensesApi,
+  expenseSubmitKey,
+  clearExpenseSubmitKey,
   useExpenseMutation,
   useExpensePolicyCheck,
   type PolicyIssue,
@@ -182,7 +184,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
   const createClaim        = useExpenseMutation((args: Parameters<typeof financeExpensesApi.create>[0]) =>
     financeExpensesApi.create(args),
   );
-  const submitClaim        = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const submitClaim        = useExpenseMutation((id: string) => financeExpensesApi.submit({ id, idempotencyKey: expenseSubmitKey(id) }));
   const completeAttachment = useCompleteFinanceAttachment();
 
   // Policy check only runs once the claim is created (step 3 with createdId)
@@ -330,7 +332,7 @@ export function ExpNewClaimWizard({ open, onClose, onCreated }: ExpNewClaimWizar
     const id = createdId ?? await ensureCreated();
     if (!id) return;
     if (submitOnCreate) {
-      try { await submitClaim.mutateAsync(id); } catch (e) {
+      try { await submitClaim.mutateAsync(id); clearExpenseSubmitKey(id); } catch (e) {
         toast.error(e instanceof Error ? e.message : 'Claim created but submit failed.');
       }
     }

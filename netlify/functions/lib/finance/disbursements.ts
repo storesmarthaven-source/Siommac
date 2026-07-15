@@ -10,12 +10,12 @@ import { selectAllRows, chunk, chunkedInsert } from '../dbBulk';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { nextRef } from '../refGenerator';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
 import { assertDifferentApprover } from './statutoryConfig';
 import { notifyUsersByRole, createFinanceRecordThread } from './financeEvents';
 import { createHandoff } from '../handoffBus';
 import { createTicket } from '../communications';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 import {
   resolveBankCode, bankNameForCode, buildDirectCreditFile,
   type DirectCreditLine,
@@ -284,25 +284,56 @@ export async function createDisbursement(opts: { payrollRunId: string; actorId: 
   return row;
 }
 
-export async function submitDisbursement(id: string, actorId: string): Promise<DisbursementDto> {
+export async function submitDisbursement(id: string, actorId: string, idempotencyKey: string): Promise<DisbursementDto> {
+  // ATOMIC (finding #3): status flip (draft->submitted) + workflow_id + metadata.submittedAt
+  // + the whole workflow + business event + hr_audit_log commit in ONE txn via
+  // workflow_submit_for_record_tx (finance_disbursements branch), with request-key
+  // idempotency. No strand, no crash-window, no compensating rollback. Only the
+  // finance_manager approver notification stays here (best-effort, post-commit).
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a disbursement.'), { status: 400 });
+
   const existing = await getDisbursement(id);
   if (!existing) throw Object.assign(new Error('Disbursement not found.'), { status: 404 });
-  if (existing.status !== 'draft') throw Object.assign(new Error('Only draft disbursements can be submitted for approval.'), { status: 422 });
-  const submittedMeta = { ...existing.metadata, submittedAt: new Date().toISOString() };
-  const { data, error } = await sb.from('finance_disbursements').update({ status: 'submitted', metadata: submittedMeta }).eq('id', id).select().single<DbDisbursementRow>();
-  if (error) throw Object.assign(new Error('submitDisbursement: ' + error.message), { status: 500 });
-  const row = toDto(data);
-  void emitAppEvent({ eventType: 'finance.disbursement.submitted', sourceModule: 'finance_disbursements', sourceEntityType: 'disbursement', sourceEntityId: id, actorUserId: actorId, severity: 'info', payload: { totalAmount: existing.totalAmount, employeeCount: existing.employeeCount } });
-  await writeHrAudit({ submoduleKey: 'finance_disbursements', recordId: id, actorId, action: 'disbursement.submitted', previousState: { status: 'draft' }, newState: { status: 'submitted' } });
-  const ctx: ModuleWorkflowContext = { moduleKey: 'finance_disbursements', workflowType: 'finance_disbursement_approval', triggerEvent: 'finance.disbursement.submitted', sourceRecordId: id, sourceRecordRef: existing.disbursementNo, requestedBy: actorId, priority: 'normal', recordData: { disbursementNo: existing.disbursementNo, totalAmount: existing.totalAmount, employeeCount: existing.employeeCount } };
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) await sb.from('finance_disbursements').update({ workflow_id: wf.id }).eq('id', id);
-  } catch (wfErr) {
-    await sb.from('finance_disbursements').update({ status: 'draft' }).eq('id', id);
-    throw Object.assign(new Error('Workflow start failed -- disbursement rolled back to draft: ' + String(wfErr)), { status: 500 });
-  }
-  return row;
+
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_disbursements',
+    workflowType:   'finance_disbursement_approval',
+    triggerEvent:   'finance.disbursement.submitted',
+    sourceRecordId: id,
+    requestedBy:    actorId,
+    recordData:     {},
+  });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for disbursements.'), { status: 422 });
+
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_disbursements',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { disbursementNo: existing.disbursementNo, totalAmount: existing.totalAmount, employeeCount: existing.employeeCount },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
+
+  // Notify the finance_manager approvers (best-effort, post-commit). Workflow id in the
+  // dedupe key so a re-submit notifies afresh.
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.disbursement.submitted',
+    title:          `Disbursement ${existing.disbursementNo} submitted for approval`,
+    body:           `A payroll disbursement of ${existing.totalAmount.toFixed(2)} is awaiting your approval.`,
+    module:         'finance_disbursements',
+    severity:       'warning',
+    sourceType:     'disbursement',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `disbursement.pending_approval.${id}.${result.workflowId ?? ''}`,
+  });
+
+  const updated = await getDisbursement(id);
+  if (!updated) throw Object.assign(new Error('Disbursement submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updated;
 }
 
 export async function approveDisbursement(id: string, actorId: string): Promise<DisbursementDto> {

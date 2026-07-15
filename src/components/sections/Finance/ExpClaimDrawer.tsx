@@ -22,6 +22,8 @@ import {
   useExpenseAuditLog,
   useExpenseComment,
   financeExpensesApi,
+  expenseSubmitKey,
+  clearExpenseSubmitKey,
   type ExpenseClaim,
 } from '@api/finance/expenses';
 import { useFinanceAttachments, useFinanceAttachmentSignedUrl } from '@api/finance/attachments';
@@ -106,7 +108,7 @@ export function ExpClaimDrawer({
   const ccQ   = useCostCentres();
   const ccMap = useMemo(() => new Map((ccQ.data ?? []).map(c => [c.id, c.name])), [ccQ.data]);
 
-  const submitMutation   = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const submitMutation   = useExpenseMutation((id: string) => financeExpensesApi.submit({ id, idempotencyKey: expenseSubmitKey(id) }));
   const approveMutation  = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
   const rejectMutation   = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.reject({ id, reason }));
   const cancelMutation   = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.cancel({ id, reason }));
@@ -119,7 +121,7 @@ export function ExpClaimDrawer({
 
   async function handleSubmit(): Promise<void> {
     if (!claimId) return;
-    try { await submitMutation.mutateAsync(claimId); toast.success('Claim submitted.'); }
+    try { await submitMutation.mutateAsync(claimId); clearExpenseSubmitKey(claimId); toast.success('Claim submitted.'); }
     catch (e) { toast.error((e as Error).message); }
   }
 

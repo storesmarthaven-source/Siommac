@@ -367,10 +367,24 @@ export default async function run(h) {
     expect(gotEvent, 'created app_event not found');
   });
 
-  await test('submit (draft -> submitted)', async () => {
-    const r = await api('finance/disbursements/submit', fmgr1Token, { id: ctx.disbId });
+  await test('submit (draft -> submitted) is ATOMIC + idempotent (finding #3): workflow_id + metadata.submittedAt + exact side-effects, no double-create', async () => {
+    const key = `e2e-submit-1-${TAG}`;
+    const r = await api('finance/disbursements/submit', fmgr1Token, { id: ctx.disbId, idempotencyKey: key });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'submitted', `expected submitted, got ${r.body.data.status}`);
+    // Atomic: status + workflow_id + metadata.submittedAt all committed together (no strand).
+    const { data: row } = await sb.from('finance_disbursements').select('workflow_id, metadata').eq('id', ctx.disbId).maybeSingle();
+    expect(row?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    expect(row?.metadata?.submittedAt, 'metadata.submittedAt must be set atomically by the RPC');
+    // Exactly one submitted event + audit (no duplication from the RPC cutover).
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', ctx.disbId).eq('event_type', 'finance.disbursement.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true }).eq('record_id', ctx.disbId).eq('action', 'disbursement.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one submitted audit, got ${auc}`);
+    // Idempotent retry with the SAME key: succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('finance/disbursements/submit', fmgr1Token, { id: ctx.disbId, idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.disbId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
 
   await test('SoD: creator cannot approve their own disbursement -> refused', async () => {

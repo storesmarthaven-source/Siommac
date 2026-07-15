@@ -374,10 +374,22 @@ export default async function run(h) {
   });
 
   // --- Submit (draft → pending_approval) ---
-  await test('finance_manager (creator) can submit the version for approval', async () => {
-    const r = await api('finance/statutory/versions/submit', fmgr1Token, { id: ctx.sv1Id });
+  await test('finance_manager (creator) can submit the version for approval — ATOMIC + idempotent (finding #3)', async () => {
+    const key = `e2e-submit-1-${TAG}`;
+    const r = await api('finance/statutory/versions/submit', fmgr1Token, { id: ctx.sv1Id, idempotencyKey: key });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'pending_approval', `expected pending_approval, got ${r.body.data.status}`);
+    // Atomic: status + workflow_id committed together (no strand).
+    const { data: row } = await sb.from('finance_statutory_versions').select('workflow_id').eq('id', ctx.sv1Id).maybeSingle();
+    expect(row?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', ctx.sv1Id).eq('event_type', 'finance.statutory.version.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true }).eq('record_id', ctx.sv1Id).eq('action', 'statutory_version.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one submitted audit, got ${auc}`);
+    // Idempotent retry with the SAME key: succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('finance/statutory/versions/submit', fmgr1Token, { id: ctx.sv1Id, idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.sv1Id);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
 
   await test('submitted version cannot be updated (must be draft)', async () => {
@@ -498,7 +510,7 @@ export default async function run(h) {
     ctx.sv2Id = c.body.data.id;
 
     // Submit sv2 (by creator fmgr2)
-    const s = await api('finance/statutory/versions/submit', fmgr2Token, { id: ctx.sv2Id });
+    const s = await api('finance/statutory/versions/submit', fmgr2Token, { id: ctx.sv2Id, idempotencyKey: `e2e-submit-2-${TAG}` });
     ok(s, `submit sv2 failed: ${s.body.message}`);
 
     // Approve sv2 by fmgr1 (different from creator fmgr2)
@@ -587,7 +599,7 @@ export default async function run(h) {
     const rejectId = c.body.data.id;
 
     // Submit it (creator: fmgr1)
-    const s = await api('finance/statutory/versions/submit', fmgr1Token, { id: rejectId });
+    const s = await api('finance/statutory/versions/submit', fmgr1Token, { id: rejectId, idempotencyKey: `e2e-submit-3-${TAG}` });
     ok(s, `submit for reject test failed: ${s.body.message}`);
 
     // Creator cannot reject their own (SoD)
@@ -651,7 +663,7 @@ export default async function run(h) {
     ok(listR, 'finance_staff should be able to list statutory versions');
 
     // submit requires manage permission
-    const submitR = await api('finance/statutory/versions/submit', fstaff1Token, { id: ctx.sv2Id });
+    const submitR = await api('finance/statutory/versions/submit', fstaff1Token, { id: ctx.sv2Id, idempotencyKey: `e2e-submit-4-${TAG}` });
     fails(submitR, 'finance_staff should be denied submit');
 
     // approve requires approve permission

@@ -198,10 +198,10 @@ router.post('/expenses/policy-check', async c => {
 // POST /api/finance/expenses/submit
 router.post('/expenses/submit', async c => {
   const actor = await requirePermission(c, 'finance.expenses.submit');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await submitExpenseClaim(v.data.id, actor.id);
+    const data = await submitExpenseClaim(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { return handleErr(c, e); }
 });

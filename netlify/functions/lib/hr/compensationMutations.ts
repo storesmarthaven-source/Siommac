@@ -13,11 +13,12 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from '../finance/financeEvents';
 import { assertDifferentApprover } from '../finance/statutoryConfig';
 import { getPayItem, type PayItemDto, type DbPayItemRow } from './compensationQueries';
 import { toPayItemDto } from './compensationCore';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export { getPayItem };
 
@@ -82,58 +83,56 @@ export async function createPayItem(input: CreatePayItemInput): Promise<PayItemD
 
 // ── Submit (draft → pending_approval, starts workflow) ────────────────────────
 
-export async function submitPayItem(id: string, actorId: string): Promise<PayItemDto> {
+export async function submitPayItem(id: string, actorId: string, idempotencyKey: string): Promise<PayItemDto> {
+  // ATOMIC (finding #3): status flip (draft->pending_approval) + workflow_id + the whole
+  // workflow + business event + hr_audit_log commit in ONE txn via
+  // workflow_submit_for_record_tx (hr_employee_pay_items branch), with request-key
+  // idempotency. No strand, no crash-window, no compensating rollback. Only the
+  // hr_manager approver notification stays here (best-effort, post-commit).
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a pay item.'), { status: 400 });
+
   const existing = await getPayItem(id);
   if (!existing) throw Object.assign(new Error('Pay item not found.'), { status: 404 });
-  if (existing.status !== 'draft') {
-    throw Object.assign(new Error('Only draft pay items can be submitted for approval.'), { status: 422 });
-  }
 
-  const { data, error } = await sb.from('hr_employee_pay_items')
-    .update({ status: 'pending_approval' })
-    .eq('id', id).select().single<DbPayItemRow>();
-  if (error) throw Object.assign(new Error('submitPayItem: ' + error.message), { status: 500 });
-  const row = toPayItemDto(data);
-
-  await writeHrAudit({
-    submoduleKey: 'hr_compensation', recordId: id, actorId,
-    action: 'pay_item.submitted',
-    previousState: { status: 'draft' }, newState: { status: 'pending_approval' },
-  });
-
-  const ctx: ModuleWorkflowContext = {
-    moduleKey: 'hr_compensation',
-    workflowType: 'hr_compensation_change_approval',
-    triggerEvent: 'hr.compensation.item.submitted',
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'hr_compensation',
+    workflowType:   'hr_compensation_change_approval',
+    triggerEvent:   'hr.compensation.item.submitted',
     sourceRecordId: id,
-    sourceRecordRef: existing.itemNo ?? `PIT-${id.slice(0, 8).toUpperCase()}`,
-    requestedBy: actorId,
-    priority: 'normal',
-    recordData: { employeeId: existing.employeeId, componentId: existing.componentId, effectiveFrom: existing.effectiveFrom },
-  };
+    requestedBy:    actorId,
+    recordData:     {},
+  });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for compensation changes.'), { status: 422 });
 
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) {
-      await sb.from('hr_employee_pay_items').update({ workflow_id: wf.id }).eq('id', id);
-    }
-  } catch (wfErr) {
-    // Compensating rollback — roll back to draft so the user can retry
-    await sb.from('hr_employee_pay_items').update({ status: 'draft' }).eq('id', id);
-    throw Object.assign(
-      new Error('Workflow start failed — pay item rolled back to draft: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'hr_employee_pay_items',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { employeeId: existing.employeeId, componentId: existing.componentId, effectiveFrom: existing.effectiveFrom },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
 
-  void emitAppEvent({
-    eventType: 'hr.compensation.item.submitted',
-    sourceModule: 'hr_compensation', sourceEntityType: 'pay_item', sourceEntityId: id,
-    actorUserId: actorId, severity: 'info',
-    payload: { employeeId: existing.employeeId, componentId: existing.componentId },
+  // Notify the hr_manager approvers (best-effort, post-commit). Workflow id in the
+  // dedupe key so a re-submit notifies afresh.
+  void notifyUsersByRole('hr_manager', {
+    type:           'hr.compensation.item.submitted',
+    title:          `Pay item ${existing.itemNo ?? id.slice(0, 8).toUpperCase()} submitted for approval`,
+    body:           'A compensation change is awaiting HR manager approval.',
+    module:         'hr_compensation',
+    severity:       'warning',
+    sourceType:     'pay_item',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `compensation.item.pending_approval.${id}.${result.workflowId ?? ''}`,
   });
 
-  return row;
+  const updated = await getPayItem(id);
+  if (!updated) throw Object.assign(new Error('Pay item submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updated;
 }
 
 // ── Approve (workflow adapter calls this) ─────────────────────────────────────

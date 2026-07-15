@@ -42,6 +42,8 @@ import {
   useExpenseKpis,
   useExpenseMutation,
   financeExpensesApi,
+  expenseSubmitKey,
+  clearExpenseSubmitKey,
   type ExpenseClaim,
   type ExpenseStatus,
   type ExpenseReportType,
@@ -214,7 +216,7 @@ export function ExpensesOverview(): VNode {
 
   // ── Mutations ───────────────────────────────────────────────────────────────
 
-  const submitMutation  = useExpenseMutation((id: string) => financeExpensesApi.submit({ id }));
+  const submitMutation  = useExpenseMutation((id: string) => financeExpensesApi.submit({ id, idempotencyKey: expenseSubmitKey(id) }));
   const approveMutation = useExpenseMutation((id: string) => financeExpensesApi.approve({ id }));
   const rejectMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.reject({ id, reason }));
   const cancelMutation  = useExpenseMutation(({ id, reason }: { id: string; reason: string }) => financeExpensesApi.cancel({ id, reason }));
@@ -232,7 +234,7 @@ export function ExpensesOverview(): VNode {
       items.push({
         key: 'submit', label: 'Submit for approval', icon: 'send',
         onClick: () => { void (async () => {
-          try { await submitMutation.mutateAsync(c.id); toast.success('Claim submitted.'); }
+          try { await submitMutation.mutateAsync(c.id); clearExpenseSubmitKey(c.id); toast.success('Claim submitted.'); }
           catch (e) { toast.error((e as Error).message); }
         })(); },
       });

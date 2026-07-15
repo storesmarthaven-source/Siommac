@@ -53,6 +53,16 @@ import { DisbDrawer, type DisbDrawerActions, type DisbDrawerTab } from './DisbDr
 import { money } from './hrfinFormat';
 import { dialog } from '@lib/dialog';
 
+// ── Submit idempotency ──────────────────────────────────────────────────────────
+// One stable key per submit ATTEMPT (per id), reused on retry so a lost response
+// recovers via the RPC receipt; cleared only on definitive success.
+const submitKeyStore = new Map<string, string>();
+const nextSubmitKey = (id: string): string => {
+  const k = submitKeyStore.get(id) ?? crypto.randomUUID();
+  submitKeyStore.set(id, k);
+  return k;
+};
+
 // ── Formatters ────────────────────────────────────────────────────────────────
 
 const fmtDate = (iso: string | null | undefined): string =>
@@ -290,7 +300,7 @@ function DisbursementsTab({
         rowActions={d => [
           ...(canManage && d.status === 'draft' ? [{
             key: 'submit', label: 'Submit for approval', icon: 'send' as const,
-            onClick: () => void run(submitMut.mutateAsync({ id: d.id }), 'Submitted.'),
+            onClick: () => void run(submitMut.mutateAsync({ id: d.id, idempotencyKey: nextSubmitKey(d.id) }).then(r => { submitKeyStore.delete(d.id); return r; }), 'Submitted.'),
           }] : []),
           ...(canApprove && d.status === 'submitted' ? [{
             key: 'approve', label: 'Approve', icon: 'check' as const,
@@ -1159,7 +1169,7 @@ export function DisbursementsOverview(): VNode {
   }
 
   const drawerActions: DisbDrawerActions = {
-    onSubmit:       d => void run(submitMut.mutateAsync({ id: d.id }), 'Submitted.'),
+    onSubmit:       d => void run(submitMut.mutateAsync({ id: d.id, idempotencyKey: nextSubmitKey(d.id) }).then(r => { submitKeyStore.delete(d.id); return r; }), 'Submitted.'),
     onApprove:      d => void run(approveMut.mutateAsync({ id: d.id }), 'Approved.'),
     onGenerateFile: d => void run(genFileMut.mutateAsync({ id: d.id }), 'Bank file generated.'),
     onMarkPaid:     d => void run(markPaidMut.mutateAsync({ id: d.id }), 'Marked as paid.'),

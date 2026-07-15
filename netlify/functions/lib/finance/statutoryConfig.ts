@@ -15,7 +15,9 @@
 
 import { sb } from '../db';
 import { writeHrAudit } from '../hr/employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { startWorkflowForRecord, rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from './financeEvents';
 import { emitFinanceMutationBackbone } from './backbone';
 import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 import { resolveSettingValue } from '../settings/resolveSetting';
@@ -413,77 +415,57 @@ async function resolveStatutoryApproverIds(excludeUserId: string): Promise<strin
 export async function submitStatutoryVersion(
   id: string,
   actorId: string,
+  idempotencyKey: string,
 ): Promise<StatutoryVersionDto> {
+  // ATOMIC (finding #3): status flip (draft->pending_approval) + workflow_id + the whole
+  // workflow + business event + hr_audit_log all commit in ONE txn via
+  // workflow_submit_for_record_tx (finance_statutory_versions branch), with request-key
+  // idempotency. No strand, no crash-window, no compensating rollback. The RPC owns
+  // idempotency; only the approver notification stays here (best-effort, post-commit).
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a statutory version.'), { status: 400 });
+
   const existing = await getStatutoryVersion(id);
   if (!existing) throw Object.assign(new Error('Statutory version not found.'), { status: 404 });
-  if (existing.status !== 'draft') {
-    throw Object.assign(new Error('Only draft statutory versions can be submitted for approval.'), { status: 422 });
-  }
 
-  // Update to pending_approval
-  const { data, error } = await sb.from('finance_statutory_versions')
-    .update({ status: 'pending_approval' })
-    .eq('id', id).select().single<DbVersionRow>();
-  if (error) throw Object.assign(new Error('submitStatutoryVersion: ' + error.message), { status: 500 });
-  const row = toVersionDto(data);
-
-  // Start workflow via central engine
-  const ctx: ModuleWorkflowContext = {
-    moduleKey: 'finance_statutory',
-    workflowType: 'finance_statutory_approval',
-    triggerEvent: 'finance.statutory.version.submitted',
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_statutory',
+    workflowType:   'finance_statutory_approval',
+    triggerEvent:   'finance.statutory.version.submitted',
     sourceRecordId: id,
-    sourceRecordRef: `SV-${id.slice(0, 8).toUpperCase()}`,
-    requestedBy: actorId,
-    priority: 'normal',
-    recordData: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction, label: existing.label },
-  };
+    requestedBy:    actorId,
+    recordData:     {},
+  });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for statutory versions.'), { status: 422 });
 
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) {
-      await sb.from('finance_statutory_versions').update({ workflow_id: wf.id }).eq('id', id);
-    }
-  } catch (wfErr) {
-    // Workflow engine failure rolls back to draft so the user can retry
-    await sb.from('finance_statutory_versions').update({ status: 'draft' }).eq('id', id);
-    throw Object.assign(
-      new Error('Workflow start failed — version rolled back to draft: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_statutory_versions',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction, label: existing.label },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
 
-  // Backbone: audit (mandatory) + notification to approvers that a version needs review.
-  // Compensating rollback: revert status to draft if backbone throws.
-  const approverIds = await resolveStatutoryApproverIds(actorId);
-  try {
-    await emitFinanceMutationBackbone({
-      actorUserId: actorId,
-      module: 'finance_statutory',
-      entityType: 'statutory_version',
-      entityId: id,
-      eventType: 'finance.statutory.version.submitted',
-      auditAction: 'statutory_version.submitted',
-      previousState: { status: 'draft' },
-      newState: { status: 'pending_approval' },
-      severity: 'info',
-      metadata: { effectiveFrom: existing.effectiveFrom, jurisdiction: existing.jurisdiction },
-      notification: {
-        title: `Statutory version "${existing.label}" submitted for approval`,
-        body: `Effective from ${existing.effectiveFrom}. A finance manager must review and approve.`,
-        actionRoute: '/finance/statutory',
-        type: 'finance.statutory.version.submitted',
-        severity: 'info',
-        // Notify the finance managers who can approve (excludes the submitter per SoD).
-        ...(approverIds.length ? { recipientUserIds: approverIds } : {}),
-      },
-    });
-  } catch (backboneErr) {
-    try { await sb.from('finance_statutory_versions').update({ status: 'draft' }).eq('id', id); } catch (_) { /* best-effort rollback */ }
-    throw backboneErr;
-  }
+  // Notify the finance_manager approvers (best-effort, post-commit). Workflow id in the
+  // dedupe key so a re-submit notifies afresh.
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.statutory.version.submitted',
+    title:          `Statutory version "${existing.label}" submitted for approval`,
+    body:           `Effective from ${existing.effectiveFrom}. A finance manager must review and approve.`,
+    module:         'finance_statutory',
+    severity:       'info',
+    sourceType:     'statutory_version',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `statutory.version.pending_approval.${id}.${result.workflowId ?? ''}`,
+  });
 
-  return row;
+  const updated = await getStatutoryVersion(id);
+  if (!updated) throw Object.assign(new Error('Statutory version submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updated;
 }
 
 // ── Approve (workflow adapter calls this; also direct route for tests) ────────

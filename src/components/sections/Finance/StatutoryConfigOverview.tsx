@@ -15,7 +15,7 @@
  */
 
 import { type VNode, type ComponentChildren } from 'preact';
-import { useState, useMemo, useEffect } from 'preact/hooks';
+import { useState, useMemo, useEffect, useRef } from 'preact/hooks';
 import { toast } from '@store';
 import { useSessionStore, selectUserId } from '@store/session';
 import { can } from '@lib/permissions';
@@ -260,6 +260,8 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
   const { openId, setOpenId } = useFilterDropdowns();
 
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
+  // Idempotency: one stable key per submit ATTEMPT (per id), reused on retry, cleared on success.
+  const submitKeys  = useRef<Map<string, string>>(new Map());
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
   const rejectMut   = useStatutoryMutation(financeStatutoryApi.rejectVersion);
   const activateMut = useStatutoryMutation(financeStatutoryApi.activateVersion);
@@ -369,7 +371,7 @@ function VersionsTab({ versions, loading, error, canManage, canApprove, onOpenDr
       { key: 'view', label: 'View details', icon: 'file', onClick: () => onOpenDrawer(v.id) },
       ...(canManage && v.status === 'draft' ? [
         { key: 'edit', label: 'Edit rates', icon: 'refresh' as const, onClick: () => onEdit(v) },
-        { key: 'submit', label: 'Submit for approval', icon: 'send' as const, onClick: () => run(submitMut.mutateAsync({ id: v.id }), 'Submitted for approval.') },
+        { key: 'submit', label: 'Submit for approval', icon: 'send' as const, onClick: () => { const key = submitKeys.current.get(v.id) ?? crypto.randomUUID(); submitKeys.current.set(v.id, key); void run(submitMut.mutateAsync({ id: v.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(v.id); return r; }), 'Submitted for approval.'); } },
       ] : []),
       ...(canApprove && v.status === 'pending_approval' ? [
         ...(!isOwnVersion ? [{ key: 'approve', label: 'Approve', icon: 'check' as const, onClick: () => run(approveMut.mutateAsync({ id: v.id }), 'Version approved.') }] : []),
@@ -1000,6 +1002,8 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const { data: nameMap } = useEmployeeNames(allActorIds);
 
   const submitMut   = useStatutoryMutation(financeStatutoryApi.submitVersion);
+  // Idempotency: one stable key per submit ATTEMPT (per id), reused on retry, cleared on success.
+  const submitKeys  = useRef<Map<string, string>>(new Map());
   const approveMut  = useStatutoryMutation(financeStatutoryApi.approveVersion);
   const rejectMut   = useStatutoryMutation(financeStatutoryApi.rejectVersion);
   const activateMut = useStatutoryMutation(financeStatutoryApi.activateVersion);
@@ -1097,7 +1101,7 @@ function StatVersionDrawer({ id, open, initialTab = 'summary', onClose, canManag
   const footer = hasFooterActions && d ? (
     <div style={{ display: 'flex', gap: 8, width: '100%' }}>
       {canManage && d.status === 'draft' && (
-        <button class="ui-btn-primary" type="button" onClick={() => void run(submitMut.mutateAsync({ id: d.id }), 'Submitted for approval.')}>Submit for approval</button>
+        <button class="ui-btn-primary" type="button" onClick={() => { const key = submitKeys.current.get(d.id) ?? crypto.randomUUID(); submitKeys.current.set(d.id, key); void run(submitMut.mutateAsync({ id: d.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(d.id); return r; }), 'Submitted for approval.'); }}>Submit for approval</button>
       )}
       {canApprove && d.status === 'pending_approval' && (
         <>

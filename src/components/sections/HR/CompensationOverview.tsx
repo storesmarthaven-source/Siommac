@@ -11,7 +11,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { PageHeader, EmptyState } from '@ui';
@@ -73,6 +73,8 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
   });
 
   const submitMut  = useCompensationMutation(hrCompensationApi.submitPayItem);
+  // Idempotency: one stable key per submit ATTEMPT (per id), reused on retry, cleared on success.
+  const submitKeys = useRef<Map<string, string>>(new Map());
   const approveMut = useCompensationMutation(hrCompensationApi.approvePayItem);
   const rejectMut  = useCompensationMutation(hrCompensationApi.rejectPayItem);
   const retireMut  = useCompensationMutation(hrCompensationApi.retirePayItem);
@@ -109,7 +111,7 @@ function PayItemsSurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id:
                 <td><span class={`obx-pill ${statusTone(it.status)}`}>{humanize(it.status)}</span></td>
                 <td style={{ textAlign: 'right' }}>
                   <div class="obx-rowbtns" style={{ justifyContent: 'flex-end' }}>
-                    {canManage && it.status === 'draft' && <button class="obx-btn obx-btn-sm" onClick={() => void run(submitMut.mutateAsync({ id: it.id }), 'Submitted for approval.')}>Submit</button>}
+                    {canManage && it.status === 'draft' && <button class="obx-btn obx-btn-sm" onClick={() => { const key = submitKeys.current.get(it.id) ?? crypto.randomUUID(); submitKeys.current.set(it.id, key); void run(submitMut.mutateAsync({ id: it.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(it.id); return r; }), 'Submitted for approval.'); }}>Submit</button>}
                     {canApprove && it.status === 'pending_approval' && (
                       <>
                         <button class="obx-btn obx-btn-sm" onClick={() => void run(approveMut.mutateAsync({ id: it.id }), 'Approved.')}>Approve</button>

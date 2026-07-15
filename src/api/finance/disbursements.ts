@@ -148,7 +148,7 @@ export const financeDisbursementsApi = {
    *  Also emits finance.payroll.bridge.disbursement.created + notifies Payment Ops + handoff. */
   createFromRun:  (a: { payrollRunId: string; currency?: string; metadata?: Record<string, unknown> }) =>
                     call<Disbursement & { created: boolean }>('finance/disbursements/create-from-run', a),
-  submit:         (a: { id: string }) => call<Disbursement>('finance/disbursements/submit', a),
+  submit:         (a: { id: string; idempotencyKey: string }) => call<Disbursement>('finance/disbursements/submit', a),
   approve:        (a: { id: string }) => call<Disbursement>('finance/disbursements/approve', a),
   generateFile:   (a: { id: string }) => call<Disbursement & { filePath: string }>('finance/disbursements/generate-file', a),
   markPaid:       (a: { id: string }) => call<Disbursement>('finance/disbursements/mark-paid', a),

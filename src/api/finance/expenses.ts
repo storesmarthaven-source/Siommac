@@ -210,7 +210,7 @@ export const financeExpensesApi = {
   detail:  (a: { id: string })                   => call<ExpenseClaimDetail>('finance/expenses/detail', a),
   lines:   (a: { claimId: string })              => call<ExpenseCostEntry[]>('finance/expenses/lines/list', a),
   create:  (a: CreateExpenseClaimArgs)           => call<ExpenseClaim>('finance/expenses/create', a),
-  submit:  (a: { id: string })                   => call<ExpenseClaim>('finance/expenses/submit', a),
+  submit:  (a: { id: string; idempotencyKey: string }) => call<ExpenseClaim>('finance/expenses/submit', a),
   approve: (a: { id: string })                   => call<ExpenseClaim>('finance/expenses/approve', a),
   reject:  (a: { id: string; reason: string })   => call<ExpenseClaim>('finance/expenses/reject', a),
   markReimbursed: (a: MarkReimbursedArgs)        => call<ExpenseClaim>('finance/expenses/mark-reimbursed', a),
@@ -250,6 +250,17 @@ export const financeExpensesApi = {
   listReport: (a: { claimantId?: string; status?: ExpenseStatus; category?: string } = {}) =>
                 call<ExpenseReportRow[]>('finance/expenses/reports/list', a),
 };
+
+// ── Submit idempotency ────────────────────────────────────────────────────────
+// One stable key per submit ATTEMPT (per claim id), reused on retry so a lost
+// response recovers via the RPC receipt; cleared only on definitive success.
+const _expenseSubmitKeys = new Map<string, string>();
+export function expenseSubmitKey(id: string): string {
+  const k = _expenseSubmitKeys.get(id) ?? crypto.randomUUID();
+  _expenseSubmitKeys.set(id, k);
+  return k;
+}
+export function clearExpenseSubmitKey(id: string): void { _expenseSubmitKeys.delete(id); }
 
 // ── Local query keys (module-scoped; orchestrator owns keys.ts) ───────────────
 

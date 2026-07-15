@@ -53,7 +53,7 @@ export const hrCompensationApi = {
   listPayItems: (a: { employeeId?: string; status?: string; componentId?: string; activeOnly?: boolean } = {}) => call<PayItem[]>('hr/compensation/pay-items/list', a),
   getPayItem:   (a: { id: string })          => call<PayItem>('hr/compensation/pay-items/get', a),
   createPayItem:(a: CreatePayItemArgs)        => call<PayItem>('hr/compensation/pay-items/create', a),
-  submitPayItem:(a: { id: string })          => call<PayItem>('hr/compensation/pay-items/submit', a),
+  submitPayItem:(a: { id: string; idempotencyKey: string }) => call<PayItem>('hr/compensation/pay-items/submit', a),
   approvePayItem:(a: { id: string })         => call<PayItem>('hr/compensation/pay-items/approve', a),
   rejectPayItem:(a: { id: string; reason?: string }) => call<PayItem>('hr/compensation/pay-items/reject', a),
   retirePayItem:(a: { id: string })          => call<PayItem>('hr/compensation/pay-items/retire', a),
