@@ -111,7 +111,7 @@ export default async function run(h) {
   // ===========================================================================
 
   await test('plain employee CANNOT submit (manage -> 403)', async () => {
-    const r = await api('finance/payroll/payslip-templates/submit', plainToken, { id: '00000000-0000-0000-0000-000000000001' });
+    const r = await api('finance/payroll/payslip-templates/submit', plainToken, { id: '00000000-0000-0000-0000-000000000001', idempotencyKey: `tmpl-deny-${TAG}` });
     fails(r, 'employee must not submit');
     expect(r.status === 403, 'expected 403, got ' + r.status);
   });
@@ -135,6 +135,72 @@ export default async function run(h) {
   });
 
   // ===========================================================================
+  h.section('Template approval — Atomic submit (finding #3, slice A2)');
+  // ===========================================================================
+  // Submit now commits status + workflow_id + submitted_by + the whole workflow +
+  // business event/audit in ONE txn (workflow_submit_for_record_tx, payslip-template
+  // branch), with request-key idempotency. Fresh drafts (created_by=maker → the
+  // existing onCleanup removes them).
+
+  const makeDraft = async (salt) => {
+    const r = await api('finance/payroll/payslip-templates/create', makerToken,
+      { name: `${TAG} Atom ${salt}`, design: sampleDesign(`${TAG}_a${salt}`) });
+    ok(r, `create atom draft ${salt} failed: ${r.body.message}`);
+    return r.body.data.id;
+  };
+
+  await test('A2 atomic: retry same key returns original workflow (no double-create, exact counts, submitted_by set)', async () => {
+    const id = await makeDraft(1);
+    const key = `a2-idem-${TAG}-${id}`;
+    const r1 = await api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: key });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wf1 = r1.body.data.workflowId;
+    expect(wf1, 'first submit returns a workflowId');
+    const r2 = await api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: key });
+    ok(r2, `idempotent retry failed: ${r2.body.message}`);
+    expect(r2.body.data.workflowId === wf1, `retry should return workflow ${wf1}, got ${r2.body.data.workflowId}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', id).eq('event_type', 'finance.payroll.payslip_template.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true })
+      .eq('record_id', id).eq('action', 'payslip_template.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit row, got ${auc}`);
+    const { data: t } = await sb.from('payroll_payslip_templates').select('status, submitted_by, workflow_id').eq('id', id).single();
+    expect(t.status === 'pending_approval' && t.submitted_by === makerId && t.workflow_id === wf1,
+      `template should be pending_approval/submitted_by=maker/workflow=${wf1}, got ${t.status}/${t.submitted_by}/${t.workflow_id}`);
+  });
+
+  await test('A2 atomic: a rejected submit leaves the template UNCHANGED (no strand, no second workflow)', async () => {
+    const id = await makeDraft(2);
+    await api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: `a2-str-a-${id}` });
+    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: `a2-str-b-${id}` });
+    fails(r, 'submitting an already-pending template should be rejected');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `still exactly one workflow, got ${(wfs ?? []).length}`);
+  });
+
+  await test('A2 atomic: concurrent submits — exactly one succeeds, one workflow', async () => {
+    const id = await makeDraft(3);
+    const [a, b2] = await Promise.all([
+      api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: `a2-c1-${id}` }),
+      api('finance/payroll/payslip-templates/submit', makerToken, { id, idempotencyKey: `a2-c2-${id}` }),
+    ]);
+    expect([a, b2].filter(x => x.body.success).length === 1, 'exactly one concurrent submit should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+  });
+
+  await test('A2 atomic: a submit without an idempotency key is rejected', async () => {
+    const id = await makeDraft(4);
+    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id });
+    fails(r, 'submit without an idempotency key should be rejected');
+    const { data: t } = await sb.from('payroll_payslip_templates').select('status').eq('id', id).single();
+    expect(t.status === 'draft', `template should stay draft, got ${t.status}`);
+  });
+
+  // ===========================================================================
   h.section('Template approval — Full approval lifecycle');
   // ===========================================================================
 
@@ -152,12 +218,13 @@ export default async function run(h) {
   await test('cannot submit an already-pending template', async () => {
     // Force-insert to test the guard directly (submit on wrong status)
     // First create via API then try double-submit
-    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId });
+    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId, idempotencyKey: `tmpl1-submit-${TAG}` });
     ok(r, 'first submit failed: ' + r.body.message);
     ctx.workflowId = r.body.data.workflowId;
 
-    // Attempt a second submit — must fail (template is now pending_approval)
-    const r2 = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId });
+    // Attempt a second submit with a DIFFERENT key — must fail (template is now
+    // pending_approval). A same-key retry would idempotently return the original result.
+    const r2 = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId, idempotencyKey: `tmpl1-resubmit-deny-${TAG}` });
     fails(r2, 'double-submit must be refused');
   });
 
@@ -320,7 +387,7 @@ export default async function run(h) {
   });
 
   await test('submit template2 for approval', async () => {
-    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId2 });
+    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId2, idempotencyKey: `tmpl2-submit-${TAG}` });
     ok(r, 'submit template2 failed: ' + r.body.message);
     expect(r.body.data.status === 'pending_approval', 'template2 is pending_approval');
   });
@@ -360,7 +427,7 @@ export default async function run(h) {
   });
 
   await test('maker resubmits template2 -> back to pending_approval', async () => {
-    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId2 });
+    const r = await api('finance/payroll/payslip-templates/submit', makerToken, { id: ctx.templateId2, idempotencyKey: `tmpl2-resubmit-${TAG}` });
     ok(r, 'resubmit failed: ' + r.body.message);
     expect(r.body.data.status === 'pending_approval', 'resubmit returns to pending_approval');
   });

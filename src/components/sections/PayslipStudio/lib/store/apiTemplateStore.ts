@@ -39,8 +39,8 @@ export class ApiTemplateStore implements TemplateStore {
     return call<unknown>('set-default', { id }).then(() => undefined);
   }
   // ── Maker-checker lifecycle ────────────────────────────────────────────────
-  submit(id: string): Promise<StoredTemplate> {
-    return call<StoredTemplate>('submit', { id });
+  submit(id: string, idempotencyKey: string): Promise<StoredTemplate> {
+    return call<StoredTemplate>('submit', { id, idempotencyKey });
   }
   approve(id: string, comment?: string): Promise<StoredTemplate> {
     return call<StoredTemplate>('approve', { id, comment });

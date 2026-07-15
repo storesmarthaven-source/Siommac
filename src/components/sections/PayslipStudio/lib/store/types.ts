@@ -28,7 +28,8 @@ export interface TemplateStore {
   remove(id: string): Promise<void>;
   setDefault(id: string): Promise<void>;
   // Maker-checker lifecycle
-  submit(id: string): Promise<StoredTemplate>;
+  // idempotencyKey: one stable key per submit ATTEMPT (reused on retry) — required.
+  submit(id: string, idempotencyKey: string): Promise<StoredTemplate>;
   approve(id: string, comment?: string): Promise<StoredTemplate>;
   requestChanges(id: string, comment: string): Promise<StoredTemplate>;
   createVersion(id: string): Promise<StoredTemplate>;

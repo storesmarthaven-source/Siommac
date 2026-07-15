@@ -19,7 +19,8 @@ import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { validateDesign } from './payslipDesignSchema';
-import { startWorkflowForRecord, decideTask } from '../workflow/service';
+import { decideTask, rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
 import { assertDifferentApprover } from './statutoryConfig';
 import { notifyUsersByRole } from './financeEvents';
 import { notify } from '../notify';
@@ -241,11 +242,19 @@ export async function updateTemplate(input: UpdateTemplateInput, actorId: string
 }
 
 /**
- * Submit a draft/changes_requested template for approval via the central workflow engine.
+ * Submit a draft/changes_requested template for approval — ATOMIC (finding #3).
  * Transitions: draft|changes_requested -> pending_approval.
- * Compensating rollback: if startWorkflowForRecord fails, status is reverted.
+ *
+ * The source status flip, workflow_id + submitted_by, the whole workflow, the
+ * business event and hr_audit_log are ALL committed in ONE transaction by
+ * workflow_submit_for_record_tx (payroll_payslip_templates branch) — no strand, no
+ * crash-window, no compensating rollback. The RPC owns idempotency (request-key
+ * receipt); only the notification fan-out stays here (best-effort, post-commit).
  */
-export async function submitTemplate(id: string, actorId: string): Promise<PayslipTemplateDto> {
+export async function submitTemplate(id: string, actorId: string, idempotencyKey: string): Promise<PayslipTemplateDto> {
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw err('An idempotency key is required to submit a template.', 400);
+
   const { data: prev, error: loadErr } = await sb
     .from('payroll_payslip_templates')
     .select(SELECT)
@@ -254,75 +263,30 @@ export async function submitTemplate(id: string, actorId: string): Promise<Paysl
   if (loadErr) throw err('submitTemplate/load: ' + loadErr.message, 500);
   if (!prev) throw err('Payslip template not found.', 404);
   const prevRow = prev as unknown as DbRow;
-  if (!['draft', 'changes_requested'].includes(prevRow.status)) {
-    throw err(
-      `Cannot submit: template is in status '${prevRow.status}'. Only 'draft' or 'changes_requested' templates can be submitted.`,
-      422,
-    );
-  }
 
-  // Set to pending_approval first (workflow manages status from here)
-  const { data: updated, error: updErr } = await sb
-    .from('payroll_payslip_templates')
-    .update({ status: 'pending_approval', submitted_by: actorId })
-    .eq('id', id)
-    .in('status', ['draft', 'changes_requested'])
-    .select(SELECT)
-    .maybeSingle();
-  if (updErr) throw err('submitTemplate/update: ' + updErr.message, 500);
-  if (!updated) throw err('Template was modified concurrently — please retry.', 409);
-  const updatedRow = updated as unknown as DbRow;
-
-  let workflowInstance: { id: string } | null = null;
-  try {
-    workflowInstance = await startWorkflowForRecord({
-      context: {
-        moduleKey:      'finance_payroll_templates',
-        workflowType:   'payslip_template_approval',
-        triggerEvent:   'finance.payroll.template.submitted',
-        sourceRecordId: id,
-        requestedBy:    actorId,
-        recordData: {
-          templateName: prevRow.name,
-          version:      prevRow.version,
-          submittedBy:  actorId,
-        },
-      },
-      actor: { id: actorId },
-    });
-  } catch (wfErr) {
-    // Compensating rollback: revert to pre-submit status
-    await sb.from('payroll_payslip_templates')
-      .update({ status: prevRow.status, submitted_by: prevRow.submitted_by })
-      .eq('id', id);
-    throw err('submitTemplate/workflow: ' + (wfErr as Error).message, 500);
-  }
-
-  // Stamp workflow_id if a workflow was created
-  if (workflowInstance) {
-    await sb.from('payroll_payslip_templates')
-      .update({ workflow_id: workflowInstance.id })
-      .eq('id', id);
-  }
-
-  await writeHrAudit({
-    submoduleKey: SUBMODULE, recordId: id, actorId,
-    action: 'payslip_template.submitted',
-    previousState: { status: prevRow.status },
-    newState: { status: 'pending_approval', workflowId: workflowInstance?.id ?? null },
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_payroll_templates',
+    workflowType:   'payslip_template_approval',
+    triggerEvent:   'finance.payroll.template.submitted',
+    sourceRecordId: id,
+    requestedBy:    actorId,
+    recordData:     {},
   });
+  if (!binding) throw err('No approval workflow is configured for payslip templates.', 422);
 
-  void emitAppEvent({
-    eventType:        'finance.payroll.payslip_template.submitted',
-    sourceModule:     SUBMODULE,
-    sourceEntityType: ENTITY,
-    sourceEntityId:   id,
-    actorUserId:      actorId,
-    severity:         'info',
-    payload:          { name: prevRow.name, version: prevRow.version, workflowId: workflowInstance?.id ?? null },
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'payroll_payslip_templates',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { templateName: prevRow.name, version: prevRow.version, submittedBy: actorId },
   });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
 
-  // Notify Finance Managers that a template is awaiting approval
+  // Notify (best-effort, post-commit — the RPC wrote the business event/audit in-txn).
+  // workflow id in the dedupe key so a RESUBMIT (new workflow) notifies afresh.
   void notifyUsersByRole('finance_manager', {
     type:           'finance.payroll.template.pending_approval',
     title:          `Payslip template "${prevRow.name}" submitted for approval`,
@@ -332,10 +296,12 @@ export async function submitTemplate(id: string, actorId: string): Promise<Paysl
     sourceType:     ENTITY,
     sourceId:       id,
     actionRequired: true,
-    dedupeKey:      `payslip_template.pending_approval.${id}`,
+    dedupeKey:      `payslip_template.pending_approval.${id}.${result.workflowId ?? ''}`,
   });
 
-  return toDto({ ...updatedRow, workflow_id: workflowInstance?.id ?? null });
+  const updated = await getTemplate(id);
+  if (!updated) throw err('Template submitted but could not be reloaded — retry to fetch the result.', 503);
+  return updated;
 }
 
 /**

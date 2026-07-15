@@ -94,10 +94,10 @@ router.post(`${P}/delete`, async c => {
 
 router.post(`${P}/submit`, async c => {
   const actor = await requirePermission(c, 'finance.payroll.templates.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    return c.json({ success: true, data: await submitTemplate(v.data.id, actor.id) });
+    return c.json({ success: true, data: await submitTemplate(v.data.id, actor.id, v.data.idempotencyKey) });
   } catch (e) { return fail(c, e); }
 });
 

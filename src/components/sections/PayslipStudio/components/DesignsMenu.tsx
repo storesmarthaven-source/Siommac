@@ -47,6 +47,10 @@ export function DesignsMenu() {
   const [name, setName] = useState('');
   const [items, setItems] = useState<StoredTemplate[]>([]);
   const [busy, setBusy] = useState<BusyKind>(null);
+  // Idempotency: one stable key per submit ATTEMPT (per template id), held across
+  // retries so a lost response recovers the original result via the RPC receipt;
+  // cleared only on definitive success.
+  const submitKeys = useRef<Map<string, string>>(new Map());
   const [reviewComment, setReviewComment] = useState('');
   const [reviewingId, setReviewingId] = useState<string | null>(null);
   const [confirmRemoveId, setConfirmRemoveId] = useState<string | null>(null);
@@ -147,11 +151,16 @@ export function DesignsMenu() {
   const submitForApproval = async (item: StoredTemplate) => {
     if (busy) return;
     setBusy('submit');
+    const keys = submitKeys.current;
+    const key = keys.get(item.id) ?? crypto.randomUUID();
+    keys.set(item.id, key);
     try {
-      await templateStore.submit(item.id);
+      await templateStore.submit(item.id, key);
+      keys.delete(item.id);   // clear only on definitive success
       refresh();
       showToast(`"${item.name}" submitted for approval`);
     } catch (e) {
+      // retain the key so a re-click reuses it (lost-response recovery)
       showToast((e as Error)?.message || 'Could not submit for approval.', 'error');
     } finally {
       setBusy(null);
