@@ -5,7 +5,9 @@ import { sb } from '../db';
 import { nextRef } from '../refGenerator';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notify } from '../notify';
 import {
   listAttendanceRecords, getTimesheet, mapTimesheet,
 } from './attendanceQueries';
@@ -68,56 +70,77 @@ export async function buildTimesheet(actorId: string, args: {
   return getTimesheet(ts['id'] as string);
 }
 export async function submitTimesheet(actorId: string, args: {
-  timesheetId: string; notes?: string | null;
+  timesheetId: string; notes?: string | null; idempotencyKey: string;
 }) {
+  // ATOMIC (finding #3): when an approval binding exists, the status flip
+  // (draft/reopened -> in_review) + submitted_by/submitted_at + workflow_id + the whole
+  // workflow + business event + hr_audit_log commit in ONE txn via
+  // workflow_submit_for_record_tx (hr_timesheets branch), with request-key idempotency.
+  // The department_manager first step may be UNASSIGNED when the employee has no
+  // resolvable manager (mig 219 lets the RPC create an unassigned task, matching the
+  // engine). When NO binding is configured, fall back to the direct auto-approve path.
+  const requestKey = args.idempotencyKey?.trim();
+  if (!requestKey) throw err(400, 'An idempotency key is required to submit a timesheet.');
+
   const ts = await getTimesheet(args.timesheetId);
   if (!ts) throw err(404, 'Timesheet not found.');
-  if (!['draft', 'reopened'].includes(ts.status)) throw err(409, 'Timesheet cannot be submitted in current status.');
 
-  const now = new Date().toISOString();
-  const { error: updErr } = await sb.from('hr_timesheets').update({
-    status: 'submitted', submitted_at: now, submitted_by: actorId,
-    notes: args.notes ?? ts.notes,
-  }).eq('id', args.timesheetId);
-  if (updErr) throw err(500, 'Failed to submit timesheet: ' + updErr.message);
-
-  await writeHrAudit({
-    submoduleKey: 'hr_attendance', recordId: args.timesheetId, actorId,
-    action: 'timesheet.submitted', previousState: { status: ts.status }, newState: { status: 'submitted' },
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'hr_attendance', workflowType: 'hr_timesheet_approval',
+    triggerEvent: 'hr.timesheet.submitted', sourceRecordId: args.timesheetId,
+    requestedBy: actorId, recordData: {},
   });
 
-  // Start workflow -- null fallback: no binding -> direct approve
-  const wf = await startWorkflowForRecord({
-    context: {
-      moduleKey: 'hr_attendance', workflowType: 'hr_timesheet_approval',
-      triggerEvent: 'hr.timesheet.submitted',
-      sourceRecordId: args.timesheetId,
-      sourceRecordRef: ts.timesheetNo,
-      requestedBy: actorId, ownerId: actorId,
-      departmentId: null, siteId: null,
-      priority: 'medium',
-      recordData: { employeeId: ts.employeeId, periodStart: ts.periodStart, periodEnd: ts.periodEnd },
-    },
-    actor: { id: actorId },
-  });
-
-  if (wf) {
-    await sb.from('hr_timesheets').update({ workflow_id: wf.id, status: 'in_review' }).eq('id', args.timesheetId);
+  if (binding) {
+    // Resolve the employee's active department manager so the department_manager first
+    // step routes to a real approver; a missing department/manager leaves the task
+    // unassigned (mig 219), decidable by an elevated actor.
+    let departmentManagerId: string | null = null;
+    const { data: emp } = await sb.from('app_users').select('department_id').eq('id', ts.employeeId).maybeSingle<{ department_id: string | null }>();
+    if (emp?.department_id) {
+      const { data: dept } = await sb.from('departments').select('manager_id').eq('id', emp.department_id).maybeSingle<{ manager_id: string | null }>();
+      if (dept?.manager_id) {
+        const { data: mgr } = await sb.from('app_users').select('id').eq('id', dept.manager_id).eq('status', 'active').maybeSingle<{ id: string }>();
+        departmentManagerId = mgr?.id ?? null;
+      }
+    }
+    const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'hr_timesheets', p_source_id: args.timesheetId, p_actor_id: actorId,
+      p_binding_id: binding.id, p_request_key: requestKey,
+      p_business: { employeeId: ts.employeeId, periodStart: ts.periodStart, periodEnd: ts.periodEnd, departmentManagerId },
+    });
+    if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+    const result = (data ?? {}) as { firstTasks?: Array<{ assignedTo?: string | null }> };
+    // The RPC does not touch `notes`; persist it best-effort post-commit.
+    if (args.notes != null) await sb.from('hr_timesheets').update({ notes: args.notes }).eq('id', args.timesheetId);
+    // Notify the resolved approver, if the department_manager assignee resolved (a
+    // no-department timesheet leaves the task unassigned → nobody to notify here).
+    const assignedTo = result.firstTasks?.[0]?.assignedTo ?? null;
+    if (assignedTo) void notify({
+      userId: assignedTo, type: 'hr.timesheet.submitted',
+      title: `Timesheet ${ts.timesheetNo} awaiting your review`,
+      body: 'A timesheet has been submitted for your approval.',
+      module: 'hr_attendance', severity: 'warning', sourceType: 'timesheet', sourceId: args.timesheetId,
+      actionRequired: true, dedupeKey: `timesheet.in_review.${args.timesheetId}`,
+    });
   } else {
-    // No binding -> direct approve (graceful fallback)
-    const approveNow = new Date().toISOString();
-    await sb.from('hr_timesheets').update({
-      status: 'approved', approved_by: actorId, approved_at: approveNow,
+    // No binding -> direct auto-approve (graceful fallback; no workflow, no strand).
+    if (!['draft', 'reopened'].includes(ts.status)) throw err(409, 'Timesheet cannot be submitted in current status.');
+    const now = new Date().toISOString();
+    const { error: updErr } = await sb.from('hr_timesheets').update({
+      status: 'approved', submitted_by: actorId, submitted_at: now,
+      approved_by: actorId, approved_at: now, notes: args.notes ?? ts.notes,
     }).eq('id', args.timesheetId);
+    if (updErr) throw err(500, 'Failed to submit timesheet: ' + updErr.message);
     await writeHrAudit({
       submoduleKey: 'hr_attendance', recordId: args.timesheetId, actorId,
-      action: 'timesheet.auto_approved', previousState: { status: 'submitted' }, newState: { status: 'approved' },
+      action: 'timesheet.auto_approved', previousState: { status: ts.status }, newState: { status: 'approved' },
       reason: 'No active workflow binding; auto-approved.',
     });
+    emitAppEvent({ eventType: 'hr.timesheet.submitted', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: args.timesheetId, actorUserId: actorId, severity: 'info', payload: {} });
     emitAppEvent({ eventType: 'hr.timesheet.approved', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: args.timesheetId, actorUserId: actorId, severity: 'success', payload: { auto: true } });
   }
 
-  emitAppEvent({ eventType: 'hr.timesheet.submitted', sourceModule: 'hr_attendance', sourceEntityType: 'timesheet', sourceEntityId: args.timesheetId, actorUserId: actorId, severity: 'info', payload: {} });
   return getTimesheet(args.timesheetId);
 }
 

@@ -173,6 +173,7 @@ export interface BuildTimesheetArgs {
 export interface SubmitTimesheetArgs {
   timesheetId: string;
   notes?: string | null;
+  idempotencyKey: string;
 }
 
 export interface WaiveExceptionArgs {

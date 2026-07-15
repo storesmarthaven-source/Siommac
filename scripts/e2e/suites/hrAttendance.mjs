@@ -13,11 +13,13 @@
  *                mutations (correct, compute.run, exceptions.manage, timesheets.approve, reports.view)
  *   EVENTS:      assert app_events + hr_audit_log on every mutation
  *
- * The `hr_timesheet_approval` workflow binding assigns to `department_manager`,
- * which this suite's fixtures don't populate (no departmentManagerId in the
- * submitTimesheet context) — so the created task has assigned_to=null,
- * assigned_role=null. /api/workflows/decision does not check task assignment
- * (only requires `workflow.approve`), so admin can still decide it directly.
+ * The `hr_timesheet_approval` workflow binding assigns to `department_manager`.
+ * submitTimesheet now resolves the employee's active dept manager (finding #3/A10),
+ * so this suite gives emp1 a department whose manager is `mgr`; the review task is
+ * assigned to `mgr`, who decides it. (A no-department employee leaves the task
+ * unassigned via mig 219, decidable only by an elevated actor.) The finding-#1 decide
+ * guard now enforces task assignment on /api/workflows/decision, so the assigned
+ * reviewer — not the plain admin — must decide.
  */
 
 export const title = 'HR Attendance & Timekeeping';
@@ -65,6 +67,10 @@ export default async function run(h) {
       const auditIds = [...recordIds];
       if (auditIds.length) await sb.from('hr_audit_log').delete().eq('submodule_key', 'hr_attendance').in('record_id', auditIds);
     } catch {}
+    // Restore emp1's original department, then drop the E2E department (FK order).
+    try { if (ctx.grantedApprove && mgrId) await sb.from('user_permissions').delete().eq('user_id', mgrId).eq('permission', 'workflow.approve'); } catch {}
+    try { if (ctx.deptId && emp1Id) await sb.from('app_users').update({ department_id: ctx.emp1OrigDept ?? null }).eq('id', emp1Id); } catch {}
+    try { if (ctx.deptId) await sb.from('departments').delete().eq('id', ctx.deptId); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -84,6 +90,22 @@ export default async function run(h) {
     emp2Token  = mint({ id: emp2Id,  username: emp2.username, role: 'employee',   department_id: emp2.department_id ?? null });
     staffToken = mint({ id: staffId, username: staff.username, role: 'hr_staff',   department_id: staff.department_id ?? null });
     mgrToken   = mint({ id: mgrId,   username: mgr.username, role: 'hr_manager', department_id: mgr.department_id ?? null });
+
+    // Route emp1's timesheet approval to a known reviewer: put emp1 in a department whose
+    // manager is `mgr`, so the department_manager first step assigns the review task to a
+    // real approver (finding #3 / A10). Original department restored in cleanup.
+    ctx.deptId = `DEPT-E2E-${TAG.slice(-8)}`;
+    ctx.emp1OrigDept = emp1.department_id ?? null;
+    await sb.from('departments').insert({ id: ctx.deptId, name: `E2E Attendance Dept ${TAG}`, manager_id: mgrId });
+    await sb.from('app_users').update({ department_id: ctx.deptId }).eq('id', emp1Id);
+    // The reviewer must be able to approve: /workflows/decision requires workflow.approve,
+    // which hr_manager lacks by role. Grant it to the dept manager for the review decision
+    // (only if not already held, so cleanup never revokes a real grant).
+    const { data: hasApprove } = await sb.from('user_permissions').select('user_id').eq('user_id', mgrId).eq('permission', 'workflow.approve').maybeSingle();
+    if (!hasApprove) {
+      await sb.from('user_permissions').insert({ user_id: mgrId, permission: 'workflow.approve', granted: true, set_by: mgrId });
+      ctx.grantedApprove = true;
+    }
   });
 
   h.section('HR Attendance > Policy & Stats');
@@ -344,34 +366,42 @@ export default async function run(h) {
   });
 
   await test('timesheets/submit (emp2, not the owner) → 403 self-scope denied', async () => {
-    fails(await api('hr/attendance/timesheets/submit', emp2Token, { timesheetId: ctx.timesheetId }), 'expected self-scope denial submitting another employee\'s timesheet');
+    fails(await api('hr/attendance/timesheets/submit', emp2Token, { timesheetId: ctx.timesheetId , idempotencyKey: `ts-submit-1-${TAG}` }), 'expected self-scope denial submitting another employee\'s timesheet');
   });
 
-  await test('timesheets/submit (emp1, own) → in_review or approved + audit + app_event', async () => {
-    const r = await api('hr/attendance/timesheets/submit', emp1Token, { timesheetId: ctx.timesheetId });
+  await test('timesheets/submit (emp1, own) → ATOMIC in_review + workflow_id + submitted_by/at + exact side-effects, idempotent (finding #3)', async () => {
+    const key = `ts-submit-2-${TAG}`;
+    const r = await api('hr/attendance/timesheets/submit', emp1Token, { timesheetId: ctx.timesheetId, idempotencyKey: key });
     ok(r, `submit failed: ${r.body.message}`);
-    expect(['in_review', 'approved'].includes(r.body.data.status), `expected in_review/approved, got ${r.body.data.status}`);
+    expect(r.body.data.status === 'in_review', `expected in_review, got ${r.body.data.status}`);
     ctx.workflowId = r.body.data.workflowId;
-    const { data: aud } = await sb.from('hr_audit_log').select('id')
-      .eq('record_id', ctx.timesheetId).eq('action', 'timesheet.submitted').maybeSingle();
-    expect(!!aud, 'submit audit written');
-    const gotEvent = await waitFor(async () => {
-      const { data } = await sb.from('app_events').select('id')
-        .eq('source_module', 'hr_attendance').eq('event_type', 'hr.timesheet.submitted')
-        .eq('source_entity_id', ctx.timesheetId).limit(1);
-      return (data ?? []).length > 0;
-    });
-    expect(gotEvent, 'timesheet.submitted app_event written');
+    // Atomic: status + workflow_id + submitted_by + submitted_at all committed together.
+    const { data: row } = await sb.from('hr_timesheets').select('workflow_id, submitted_by, submitted_at').eq('id', ctx.timesheetId).maybeSingle();
+    expect(row?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    expect(row?.submitted_by === emp1Id, `submitted_by should be emp1, got ${row?.submitted_by}`);
+    expect(!!row?.submitted_at, 'submitted_at must be set');
+    // The department_manager first step resolved to emp1's dept manager (mgr).
+    const { data: task } = await sb.from('workflow_tasks').select('assigned_to').eq('workflow_id', ctx.workflowId).limit(1).maybeSingle();
+    expect(task?.assigned_to === mgrId, `first task should be assigned to the dept manager, got ${task?.assigned_to}`);
+    // Exactly one submitted event + audit (no dup from the cutover).
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true }).eq('record_id', ctx.timesheetId).eq('action', 'timesheet.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one submitted audit, got ${auc}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', ctx.timesheetId).eq('event_type', 'hr.timesheet.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    // Idempotent retry (same key) → succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('hr/attendance/timesheets/submit', emp1Token, { timesheetId: ctx.timesheetId, idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.timesheetId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
 
   await test('timesheets/submit already-submitted → fails', async () => {
-    fails(await api('hr/attendance/timesheets/submit', emp1Token, { timesheetId: ctx.timesheetId }), 'expected re-submit to fail');
+    fails(await api('hr/attendance/timesheets/submit', emp1Token, { timesheetId: ctx.timesheetId , idempotencyKey: `ts-submit-3-${TAG}` }), 'expected re-submit to fail');
   });
 
-  await test('workflow approval (admin, via /api/workflows/decision) drives timesheet to approved', async () => {
+  await test('workflow approval by the department manager drives timesheet to approved', async () => {
     const { data: ts } = await sb.from('hr_timesheets').select('status, workflow_id').eq('id', ctx.timesheetId).maybeSingle();
     if (ts?.status === 'approved') {
-      // Auto-approved (no active binding) — nothing further to do.
+      // Auto-approved (no active binding in this env) — nothing further to do.
       expect(true, 'already approved (fallback path)');
       return;
     }
@@ -380,7 +410,9 @@ export default async function run(h) {
     const { data: task } = await sb.from('workflow_tasks').select('id')
       .eq('workflow_id', ctx.workflowId).in('status', ['pending', 'open', 'in_progress']).limit(1).maybeSingle();
     expect(!!task, 'a pending workflow task exists for the submitted timesheet');
-    const r = await api('workflows/decision', A, { taskId: task.id, decision: 'approved', note: 'E2E approval' });
+    // The assigned reviewer (emp1's dept manager) decides — finding #1's guard requires the
+    // actor to match the task assignment (or be elevated); admin is neither for this task.
+    const r = await api('workflows/decision', mgrToken, { taskId: task.id, decision: 'approved', note: 'E2E approval' });
     ok(r, `workflow decision failed: ${r.body.message}`);
     const settled = await waitFor(async () => {
       const { data } = await sb.from('hr_timesheets').select('status').eq('id', ctx.timesheetId).maybeSingle();

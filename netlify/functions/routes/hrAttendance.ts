@@ -265,6 +265,7 @@ router.post('/attendance/timesheets/submit', async c => {
   const v = zv(c, z.object({
     timesheetId: z.string().uuid(),
     notes:       z.string().max(500).nullable().optional(),
+    idempotencyKey: z.string().min(1).max(200),
   }), body(c));
   if (!v.ok) return v.response;
   const ts0 = await getTimesheet(v.data.timesheetId);

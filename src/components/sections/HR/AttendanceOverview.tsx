@@ -8,7 +8,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { PageHeader, EmptyState } from '@ui';
@@ -72,6 +72,8 @@ export function AttendanceOverview(): VNode {
   const waiveMut   = useWaiveException();
   const resolveMut = useResolveException();
   const submitMut  = useSubmitTimesheet();
+  // Idempotency: one stable key per submit ATTEMPT (per id), reused on retry, cleared on success.
+  const submitKeys = useRef<Map<string, string>>(new Map());
   const reopenMut  = useReopenTimesheet();
 
   const canManageExc = can('hr.attendance.exceptions.manage');
@@ -197,7 +199,7 @@ export function AttendanceOverview(): VNode {
                       <td class="obx-meta" style={{ textAlign: 'center' }}>{t.openExceptionCount}</td>
                       <td><span class={`obx-pill ${tsTone(t.status)}`}>{humanize(t.status)}</span></td>
                       <td>
-                        {canSubmit && <button class="obx-mini" onClick={() => void run(submitMut.mutateAsync({ timesheetId: t.id }), 'Timesheet submitted.')}>Submit</button>}
+                        {canSubmit && <button class="obx-mini" onClick={() => { const key = submitKeys.current.get(t.id) ?? crypto.randomUUID(); submitKeys.current.set(t.id, key); void run(submitMut.mutateAsync({ timesheetId: t.id, idempotencyKey: key }).then(r => { submitKeys.current.delete(t.id); return r; }), 'Timesheet submitted.'); }}>Submit</button>}
                         {canReopen && <button class="obx-mini" onClick={() => void run(reopenMut.mutateAsync({ timesheetId: t.id }), 'Timesheet reopened.')}>Reopen</button>}
                         {!canSubmit && !canReopen && <span class="obx-meta">—</span>}
                       </td>
