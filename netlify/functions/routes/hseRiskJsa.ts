@@ -41,9 +41,10 @@ import { z, zv }             from '../lib/validate';
 import { requirePermission } from '../lib/auth';
 import { sb }                from '../lib/db';
 import { nextRef }           from '../lib/refGenerator';
-import { emitAppEvent }      from '../lib/appEvents';
+import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
 import { runModuleMutation } from '../lib/moduleServiceAdapter';
-import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
+import { decideTask, rpcHttpError } from '../lib/workflow/service';
+import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
 import { createAttachmentUploadUrl } from '../lib/upload';
 import { getSignedUrl }     from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
@@ -52,12 +53,67 @@ const ATTACH_BUCKET = 'hse-attachments';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
-// Start (or restart) the approval workflow on submit: true if there's no workflow
-// yet, or the prior one is terminal (re-submit after return/reject → fresh workflow).
-async function shouldStartWorkflow(workflowId: string | null): Promise<boolean> {
-  if (!workflowId) return true;
-  const { data } = await sb.from('workflow_instances').select('status').eq('id', workflowId).maybeSingle<{ status: string }>();
-  return !data || ['returned', 'rejected', 'approved', 'completed', 'cancelled'].includes(data.status);
+// ── Atomic submit for Risk/JSA records (finding #3) ──────────────────────────
+// One shared path for hazard / risk-assessment / JSA submit: the status transition
+// (→ under_review) + workflow_id + the whole workflow + business event + audit_logs
+// commit in ONE txn via workflow_submit_for_record_tx; the broadcast "submitted for
+// review" notification is delivered post-commit via deliverEventNotifications.
+// Required idempotency key. No strand, no crash-window, no compensating rollback.
+type RiskJsaEntity = 'hazard' | 'risk_assessment' | 'jsa';
+const RISK_JSA_SUBMIT = {
+  hazard: {
+    table: 'hse_hazards', moduleKey: 'hse_hazards', workflowType: 'hazard_review',
+    trigger: 'hazard.submitted', eventType: 'hse.hazard.submitted', label: 'Hazard',
+  },
+  risk_assessment: {
+    table: 'hse_risk_assessments', moduleKey: 'hse_risk_assessments', workflowType: 'risk_assessment_review',
+    trigger: 'risk_assessment.submitted', eventType: 'hse.risk_assessment.submitted', label: 'Risk Assessment',
+  },
+  jsa: {
+    table: 'hse_jsa', moduleKey: 'hse_jsa', workflowType: 'jsa_review',
+    trigger: 'jsa.submitted', eventType: 'hse.jsa.submitted', label: 'JSA',
+  },
+} as const;
+
+async function submitRiskJsaRecord(
+  entity: RiskJsaEntity, id: string, actorId: string, note: string | null, idempotencyKey: string,
+): Promise<{ workflowId: string | null; status: string }> {
+  const cfg = RISK_JSA_SUBMIT[entity];
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit for review.'), { status: 400 });
+
+  const { data: rec } = await sb.from(cfg.table)
+    .select('id, ref, title, status, risk_level, workflow_id, owner_user_id')
+    .eq('id', id).maybeSingle<{ id: string; ref: string; title: string; status: string; risk_level: string; workflow_id: string | null; owner_user_id: string | null }>();
+  if (!rec) throw Object.assign(new Error(`${cfg.label} not found.`), { status: 404 });
+
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: cfg.moduleKey, workflowType: cfg.workflowType, triggerEvent: cfg.trigger,
+    sourceRecordId: id, requestedBy: actorId, recordData: {},
+  });
+  if (!binding) throw Object.assign(new Error(`No review workflow is configured for ${cfg.label.toLowerCase()}s.`), { status: 422 });
+
+  const priority = rec.risk_level === 'critical' ? 'critical' : rec.risk_level === 'high' ? 'high' : 'medium';
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: cfg.table, p_source_id: id, p_actor_id: actorId, p_binding_id: binding.id, p_request_key: requestKey,
+    p_business: { title: rec.title, note: note ?? null, priority, ownerId: rec.owner_user_id ?? actorId },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null; status?: string; businessEventId?: string | null };
+
+  // Broadcast "submitted for review" notification (post-commit, best-effort). The
+  // dedupeKey carries the workflow id so an idempotent retry does not re-notify.
+  void deliverEventNotifications({
+    eventType: cfg.eventType, sourceModule: 'hse', sourceEntityType: entity, sourceEntityId: rec.ref,
+    actorUserId: actorId, severity: 'info', payload: { title: rec.title, note: note ?? undefined },
+    dedupeKey: `${cfg.eventType}.${rec.ref}.${result.workflowId ?? ''}`,
+    notification: {
+      title: `${cfg.label} submitted for review: ${rec.ref}`, body: rec.title,
+      actionRoute: 'hse/risk-jsa', type: cfg.eventType, actionRequired: true,
+    },
+  }, result.businessEventId ?? null);
+
+  return { workflowId: result.workflowId ?? null, status: result.status ?? 'under_review' };
 }
 
 // ── Risk level helper ─────────────────────────────────────────────────────────
@@ -722,73 +778,20 @@ router.post('/risk-jsa/assessments/detail', async c => {
 
 // ── POST /api/hse/risk-jsa/assessments/submit ────────────────────────────────
 
+const AssessmentSubmitSchema = z.object({
+  assessmentId:   z.string().uuid(),
+  note:           z.string().max(2000).nullable().optional(),
+  idempotencyKey: z.string().min(1).max(200),
+});
 router.post('/risk-jsa/assessments/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
   const body = c.get('body') as Record<string, unknown>;
-  const args = body.args as { assessmentId: string; note?: string } | undefined;
-  if (!args?.assessmentId) return c.json({ success: false, message: 'assessmentId required' }, 400 as 200);
-
-  const raRes = await sb.from('hse_risk_assessments')
-    .select('id, ref, title, status, risk_level, workflow_id, owner_user_id')
-    .eq('id', args.assessmentId).maybeSingle<{
-      id: string; ref: string; title: string; status: string;
-      risk_level: string; workflow_id: string | null; owner_user_id: string | null;
-    }>();
-
-  if (!raRes.data) return c.json({ success: false, message: 'Assessment not found' }, 404 as 200);
-  const ra = raRes.data;
-
-  if (!['draft','returned'].includes(ra.status)) {
-    return c.json({ success: false, message: `Cannot submit from status: ${ra.status}` }, 400 as 200);
-  }
-
-  await sb.from('hse_risk_assessments')
-    .update({ status: 'submitted', updated_at: new Date().toISOString() })
-    .eq('id', ra.id);
-
-  // Create or advance workflow
-  let workflowId = ra.workflow_id;
-  if (await shouldStartWorkflow(workflowId)) {
-    const wf = await startWorkflowForRecord({
-      actor: { id: user.id },
-      context: {
-        moduleKey:       'hse_risk_assessments',
-        workflowType:    'risk_assessment_review',
-        triggerEvent:    'risk_assessment.submitted',
-        sourceRecordId:  ra.id,
-        sourceRecordRef: ra.ref,
-        siteId:          null,
-        departmentId:    null,
-        requestedBy:     user.id,
-        ownerId:         ra.owner_user_id ?? user.id,
-        priority:        ra.risk_level === 'critical' ? 'critical' : ra.risk_level === 'high' ? 'high' : 'medium',
-        recordData:      { submittedBy: user.id, note: args.note, ownerId: ra.owner_user_id ?? user.id },
-      },
-    });
-    workflowId = wf?.id ?? null;
-    if (workflowId) {
-      await sb.from('hse_risk_assessments').update({ workflow_id: workflowId }).eq('id', ra.id);
-    }
-  }
-
-  void emitAppEvent({
-    eventType:        'hse.risk_assessment.submitted',
-    sourceModule:     'hse',
-    sourceEntityType: 'risk_assessment',
-    sourceEntityId:   ra.ref,
-    actorUserId:      user.id,
-    severity:         'info',
-    payload:          { title: ra.title, note: args.note },
-    notification: {
-      title: `Risk Assessment submitted for review: ${ra.ref}`,
-      body:  ra.title,
-      actionRoute: 'hse/risk-jsa',
-      type:  'hse.risk_assessment.submitted',
-      actionRequired: true,
-    },
-  });
-
-  return c.json({ success: true, workflowId });
+  const v = zv(c, AssessmentSubmitSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const r = await submitRiskJsaRecord('risk_assessment', v.data.assessmentId, user.id, v.data.note ?? null, v.data.idempotencyKey);
+    return c.json({ success: true, workflowId: r.workflowId, status: r.status });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 
 // ── POST /api/hse/risk-jsa/jsa/list ──────────────────────────────────────────
@@ -1189,68 +1192,20 @@ router.post('/risk-jsa/jsa/detail', async c => {
 
 // ── POST /api/hse/risk-jsa/jsa/submit ────────────────────────────────────────
 
+const JsaSubmitSchema = z.object({
+  jsaId:          z.string().uuid(),
+  note:           z.string().max(2000).nullable().optional(),
+  idempotencyKey: z.string().min(1).max(200),
+});
 router.post('/risk-jsa/jsa/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
   const body = c.get('body') as Record<string, unknown>;
-  const args = body.args as { jsaId: string; note?: string } | undefined;
-  if (!args?.jsaId) return c.json({ success: false, message: 'jsaId required' }, 400 as 200);
-
-  const jsaRes = await sb.from('hse_jsa')
-    .select('id, ref, title, status, risk_level, workflow_id, owner_user_id')
-    .eq('id', args.jsaId)
-    .maybeSingle<{ id: string; ref: string; title: string; status: string; risk_level: string; workflow_id: string | null; owner_user_id: string | null }>();
-
-  if (!jsaRes.data) return c.json({ success: false, message: 'JSA not found' }, 404 as 200);
-  const jsa = jsaRes.data;
-
-  if (!['draft','returned'].includes(jsa.status)) {
-    return c.json({ success: false, message: `Cannot submit from status: ${jsa.status}` }, 400 as 200);
-  }
-
-  await sb.from('hse_jsa').update({ status: 'submitted', updated_at: new Date().toISOString() }).eq('id', jsa.id);
-
-  let workflowId = jsa.workflow_id;
-  if (await shouldStartWorkflow(workflowId)) {
-    const wf = await startWorkflowForRecord({
-      actor: { id: user.id },
-      context: {
-        moduleKey:       'hse_jsa',
-        workflowType:    'jsa_review',
-        triggerEvent:    'jsa.submitted',
-        sourceRecordId:  jsa.id,
-        sourceRecordRef: jsa.ref,
-        siteId:          null,
-        departmentId:    null,
-        requestedBy:     user.id,
-        ownerId:         jsa.owner_user_id ?? user.id,
-        priority:        jsa.risk_level === 'critical' ? 'critical' : jsa.risk_level === 'high' ? 'high' : 'medium',
-        recordData:      { submittedBy: user.id, note: args.note, ownerId: jsa.owner_user_id ?? user.id },
-      },
-    });
-    workflowId = wf?.id ?? null;
-    if (workflowId) {
-      await sb.from('hse_jsa').update({ workflow_id: workflowId }).eq('id', jsa.id);
-    }
-  }
-
-  void emitAppEvent({
-    eventType:        'hse.jsa.submitted',
-    sourceModule:     'hse',
-    sourceEntityType: 'jsa',
-    sourceEntityId:   jsa.ref,
-    actorUserId:      user.id,
-    severity:         'info',
-    payload:          { title: jsa.title, note: args.note },
-    notification: {
-      title: `JSA submitted for review: ${jsa.ref}`,
-      body:  jsa.title,
-      actionRoute: 'hse/risk-jsa',
-      type:  'hse.jsa.submitted',
-      actionRequired: true,
-    },
-  });
-
-  return c.json({ success: true, workflowId });
+  const v = zv(c, JsaSubmitSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const r = await submitRiskJsaRecord('jsa', v.data.jsaId, user.id, v.data.note ?? null, v.data.idempotencyKey);
+    return c.json({ success: true, workflowId: r.workflowId, status: r.status });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 
 // ── POST /api/hse/risk-jsa/controls/create ───────────────────────────────────
@@ -1825,72 +1780,20 @@ router.post('/risk-jsa/attachments/delete', async c => {
 // ── POST /api/hse/risk-jsa/hazards/submit ────────────────────────────────────
 // Submit a hazard for review → status under_review + (create) hazard-review workflow.
 
+const HazardSubmitSchema = z.object({
+  hazardId:       z.string().uuid(),
+  note:           z.string().max(2000).nullable().optional(),
+  idempotencyKey: z.string().min(1).max(200),
+});
 router.post('/risk-jsa/hazards/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
   const body = c.get('body') as Record<string, unknown>;
-  const args = body.args as { hazardId: string; note?: string } | undefined;
-  if (!args?.hazardId) return c.json({ success: false, message: 'hazardId required' }, 400 as 200);
-
-  const hzRes = await sb.from('hse_hazards')
-    .select('id, ref, title, status, risk_level, workflow_id, owner_user_id')
-    .eq('id', args.hazardId).maybeSingle<{
-      id: string; ref: string; title: string; status: string;
-      risk_level: string; workflow_id: string | null; owner_user_id: string | null;
-    }>();
-
-  if (!hzRes.data) return c.json({ success: false, message: 'Hazard not found' }, 404 as 200);
-  const hz = hzRes.data;
-
-  if (['under_review','approved','archived'].includes(hz.status)) {
-    return c.json({ success: false, message: `Cannot submit from status: ${hz.status}` }, 400 as 200);
-  }
-
-  await sb.from('hse_hazards')
-    .update({ status: 'under_review', updated_at: new Date().toISOString() })
-    .eq('id', hz.id);
-
-  let workflowId = hz.workflow_id;
-  if (await shouldStartWorkflow(workflowId)) {
-    const wf = await startWorkflowForRecord({
-      actor: { id: user.id },
-      context: {
-        moduleKey:       'hse_hazards',
-        workflowType:    'hazard_review',
-        triggerEvent:    'hazard.submitted',
-        sourceRecordId:  hz.id,
-        sourceRecordRef: hz.ref,
-        siteId:          null,
-        departmentId:    null,
-        requestedBy:     user.id,
-        ownerId:         hz.owner_user_id ?? user.id,
-        priority:        hz.risk_level === 'critical' ? 'critical' : hz.risk_level === 'high' ? 'high' : 'medium',
-        recordData:      { submittedBy: user.id, note: args.note, ownerId: hz.owner_user_id ?? user.id },
-      },
-    });
-    workflowId = wf?.id ?? null;
-    if (workflowId) {
-      await sb.from('hse_hazards').update({ workflow_id: workflowId }).eq('id', hz.id);
-    }
-  }
-
-  void emitAppEvent({
-    eventType:        'hse.hazard.submitted',
-    sourceModule:     'hse',
-    sourceEntityType: 'hazard',
-    sourceEntityId:   hz.ref,
-    actorUserId:      user.id,
-    severity:         'info',
-    payload:          { title: hz.title, note: args.note },
-    notification: {
-      title: `Hazard submitted for review: ${hz.ref}`,
-      body:  hz.title,
-      actionRoute: 'hse/risk-jsa',
-      type:  'hse.hazard.submitted',
-      actionRequired: true,
-    },
-  });
-
-  return c.json({ success: true, workflowId });
+  const v = zv(c, HazardSubmitSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  try {
+    const r = await submitRiskJsaRecord('hazard', v.data.hazardId, user.id, v.data.note ?? null, v.data.idempotencyKey);
+    return c.json({ success: true, workflowId: r.workflowId, status: r.status });
+  } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
 
 // ── POST /api/hse/risk-jsa/controls/verify ───────────────────────────────────

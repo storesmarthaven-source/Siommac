@@ -6,7 +6,7 @@
  * creates (or advances) the review workflow.
  */
 
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { type VNode } from 'preact';
 import { Modal, FormGrid, Field, TextareaInput } from '@ui';
 import { useSubmitHazard, useSubmitAssessment, useSubmitJsa } from '@api/hse/riskJsa';
@@ -33,20 +33,25 @@ export function SubmitForReviewDialog({
 }: SubmitForReviewDialogProps): VNode | null {
   const [note,  setNote]  = useState('');
   const [error, setError] = useState('');
+  // Idempotency: one stable key per dialog session, reused across retries so a lost
+  // response recovers via the RPC receipt; cleared on close (success or cancel).
+  const keyRef = useRef<string>('');
 
   const submitHazard     = useSubmitHazard();
   const submitAssessment = useSubmitAssessment();
   const submitJsa        = useSubmitJsa();
   const pending = submitHazard.isPending || submitAssessment.isPending || submitJsa.isPending;
 
-  function handleClose() { setNote(''); setError(''); onClose(); }
+  function handleClose() { setNote(''); setError(''); keyRef.current = ''; onClose(); }
 
   async function handleSubmit() {
     setError('');
+    if (!keyRef.current) keyRef.current = crypto.randomUUID();
+    const idempotencyKey = keyRef.current;
     try {
-      if (entityType === 'hazard')          await submitHazard.mutateAsync({ hazardId: entityId, note: note || undefined });
-      else if (entityType === 'assessment') await submitAssessment.mutateAsync({ assessmentId: entityId, note: note || undefined });
-      else                                  await submitJsa.mutateAsync({ jsaId: entityId, note: note || undefined });
+      if (entityType === 'hazard')          await submitHazard.mutateAsync({ hazardId: entityId, note: note || undefined, idempotencyKey });
+      else if (entityType === 'assessment') await submitAssessment.mutateAsync({ assessmentId: entityId, note: note || undefined, idempotencyKey });
+      else                                  await submitJsa.mutateAsync({ jsaId: entityId, note: note || undefined, idempotencyKey });
       handleClose();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to submit. Please try again.');

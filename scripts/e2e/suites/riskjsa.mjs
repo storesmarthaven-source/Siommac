@@ -29,6 +29,13 @@ export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
   const { admin, b, c } = h.users;
   const T = { admin: mint(admin), b: mint(b), c: mint(c) };
+  // Decide-path actor: finding #1's decide guard requires the actor to match the
+  // task's assigned role (or be elevated). HSE review/approval steps are assigned to
+  // role 'manager', and the harness admin (USR-001) is a plain 'admin' with no
+  // override — so provision a real active manager to drive the approve/reject/review
+  // decisions (creator=admin ≠ approver=manager keeps SoD satisfied).
+  const { data: _mgr } = await sb.from('app_users').select('id, username').eq('role', 'manager').eq('status', 'active').limit(1).maybeSingle();
+  const managerTok = _mgr ? mint({ id: _mgr.id, username: _mgr.username, role: 'manager', department_id: null }) : T.admin;
 
   const ctx = {
     hazardIds:     [],
@@ -343,10 +350,21 @@ export default async function run(h) {
   // ── Hazards › Submit & Lifecycle ────────────────────────────────────────────
   h.section('Risk & JSA › Hazards — Submit & lifecycle');
 
-  await test('hazards/submit: move to under_review', async () => {
-    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: ctx.hazardId, note: 'E2E submit test' }));
-    const { data } = await sb.from('hse_hazards').select('status').eq('id', ctx.hazardId).single();
+  await test('hazards/submit: ATOMIC → under_review + workflow_id + exact side-effects, idempotent (finding #3)', async () => {
+    const key = `e2e-rj-1-${TAG}`;
+    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: ctx.hazardId, note: 'E2E submit test', idempotencyKey: key }));
+    const { data } = await sb.from('hse_hazards').select('status, ref, workflow_id').eq('id', ctx.hazardId).single();
     expect(data?.status === 'under_review', `expected under_review, got ${data?.status}`);
+    expect(data?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    // HSE writes public.audit_logs keyed by REF (not hr_audit_log); exactly one each.
+    const auc = (await sb.from('audit_logs').select('id', { count: 'exact', head: true }).eq('record_id', data.ref).eq('action', 'hse.hazard.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit_logs row, got ${auc}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', data.ref).eq('event_type', 'hse.hazard.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    // Idempotent retry (same key) → succeeds via the receipt, creates no 2nd workflow.
+    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: ctx.hazardId, note: 'E2E submit test', idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.hazardId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
   await test('SIDE-EFFECT: hse.hazard.submitted event emitted', async () => {
     const found = await waitFor(async () => {
@@ -357,7 +375,7 @@ export default async function run(h) {
     expect(found, 'hse.hazard.submitted event not emitted');
   });
   await test('approve hazard → status=approved', async () => {
-    ok(await api('hse/risk-jsa/approve', T.admin, {
+    ok(await api('hse/risk-jsa/approve', managerTok, {
       entityType: 'hazard', entityId: ctx.hazardId, note: 'E2E approved',
     }));
     const { data } = await sb.from('hse_hazards').select('status').eq('id', ctx.hazardId).single();
@@ -581,10 +599,19 @@ export default async function run(h) {
   await test('VALIDATION: assessments/update non-UUID assessmentId → rejected', async () => {
     fails(await api('hse/risk-jsa/assessments/update', T.admin, { assessmentId: 'not-a-uuid' }));
   });
-  await test('assessments/submit: draft → submitted', async () => {
-    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: ctx.assessmentId, note: 'E2E submit' }));
-    const { data } = await sb.from('hse_risk_assessments').select('status').eq('id', ctx.assessmentId).single();
-    expect(data?.status === 'submitted', `expected submitted, got ${data?.status}`);
+  await test('assessments/submit: ATOMIC → under_review + workflow_id + exact side-effects, idempotent (finding #3)', async () => {
+    const key = `e2e-rj-2-${TAG}`;
+    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: ctx.assessmentId, note: 'E2E submit', idempotencyKey: key }));
+    const { data } = await sb.from('hse_risk_assessments').select('status, ref, workflow_id').eq('id', ctx.assessmentId).single();
+    expect(data?.status === 'under_review', `expected under_review, got ${data?.status}`);
+    expect(data?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    const auc = (await sb.from('audit_logs').select('id', { count: 'exact', head: true }).eq('record_id', data.ref).eq('action', 'hse.risk_assessment.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit_logs row, got ${auc}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', data.ref).eq('event_type', 'hse.risk_assessment.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: ctx.assessmentId, note: 'E2E submit', idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.assessmentId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
   await test('SIDE-EFFECT: hse.risk_assessment.submitted event + notification', async () => {
     const found = await waitFor(async () => {
@@ -595,7 +622,7 @@ export default async function run(h) {
     expect(found, 'hse.risk_assessment.submitted event not emitted');
   });
   await test('approve assessment → status=approved', async () => {
-    ok(await api('hse/risk-jsa/approve', T.admin, {
+    ok(await api('hse/risk-jsa/approve', managerTok, {
       entityType: 'assessment', entityId: ctx.assessmentId,
     }));
     const { data } = await sb.from('hse_risk_assessments').select('status').eq('id', ctx.assessmentId).single();
@@ -606,8 +633,8 @@ export default async function run(h) {
       assessmentType: 'task', title: `${TAG} RA Reject`,
     });
     ok(ra); const raId = ra.body.data.id; ctx.assessmentIds.push(raId);
-    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: raId }));
-    ok(await api('hse/risk-jsa/reject', T.admin, { entityType: 'assessment', entityId: raId, note: 'does not meet requirements' }));
+    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: raId , idempotencyKey: `e2e-rj-3-${TAG}` }));
+    ok(await api('hse/risk-jsa/reject', managerTok, { entityType: 'assessment', entityId: raId, note: 'does not meet requirements' }));
     const { data } = await sb.from('hse_risk_assessments').select('status').eq('id', raId).single();
     expect(data?.status === 'rejected', `expected rejected, got ${data?.status}`);
   });
@@ -624,8 +651,8 @@ export default async function run(h) {
       assessmentType: 'general', title: `${TAG} RA Changes`,
     });
     ok(ra); const raId = ra.body.data.id; ctx.assessmentIds.push(raId);
-    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: raId }));
-    ok(await api('hse/risk-jsa/request-changes', T.admin, { entityType: 'assessment', entityId: raId, note: 'need more hazards' }));
+    ok(await api('hse/risk-jsa/assessments/submit', T.admin, { assessmentId: raId , idempotencyKey: `e2e-rj-4-${TAG}` }));
+    ok(await api('hse/risk-jsa/request-changes', managerTok, { entityType: 'assessment', entityId: raId, note: 'need more hazards' }));
     const { data } = await sb.from('hse_risk_assessments').select('status').eq('id', raId).single();
     // M2b: request-changes is a workflow "return" decision → status 'returned'
     // (the engine consolidates request-changes into the single returned outcome).
@@ -787,10 +814,19 @@ export default async function run(h) {
   });
 
   // Submit before activate.
-  await test('jsa/submit: draft → submitted', async () => {
-    ok(await api('hse/risk-jsa/jsa/submit', T.admin, { jsaId: ctx.jsaId, note: 'E2E submit' }));
-    const { data } = await sb.from('hse_jsa').select('status').eq('id', ctx.jsaId).single();
-    expect(data?.status === 'submitted', `expected submitted, got ${data?.status}`);
+  await test('jsa/submit: ATOMIC → under_review + workflow_id + exact side-effects, idempotent (finding #3)', async () => {
+    const key = `e2e-rj-5-${TAG}`;
+    ok(await api('hse/risk-jsa/jsa/submit', T.admin, { jsaId: ctx.jsaId, note: 'E2E submit', idempotencyKey: key }));
+    const { data } = await sb.from('hse_jsa').select('status, ref, workflow_id').eq('id', ctx.jsaId).single();
+    expect(data?.status === 'under_review', `expected under_review, got ${data?.status}`);
+    expect(data?.workflow_id, 'workflow_id must be stamped in the same commit (no strand)');
+    const auc = (await sb.from('audit_logs').select('id', { count: 'exact', head: true }).eq('record_id', data.ref).eq('action', 'hse.jsa.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit_logs row, got ${auc}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('source_entity_id', data.ref).eq('event_type', 'hse.jsa.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    ok(await api('hse/risk-jsa/jsa/submit', T.admin, { jsaId: ctx.jsaId, note: 'E2E submit', idempotencyKey: key }), 'idempotent retry should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', ctx.jsaId);
+    expect((wfs ?? []).length === 1, `exactly one workflow after retry, got ${(wfs ?? []).length}`);
   });
   await test('SIDE-EFFECT: hse.jsa.submitted event + notification emitted', async () => {
     const found = await waitFor(async () => {
@@ -801,7 +837,7 @@ export default async function run(h) {
     expect(found, 'hse.jsa.submitted event not emitted');
   });
   await test('approve JSA → status=approved', async () => {
-    ok(await api('hse/risk-jsa/approve', T.admin, { entityType: 'jsa', entityId: ctx.jsaId }));
+    ok(await api('hse/risk-jsa/approve', managerTok, { entityType: 'jsa', entityId: ctx.jsaId }));
     const { data } = await sb.from('hse_jsa').select('status').eq('id', ctx.jsaId).single();
     expect(data?.status === 'approved', `expected approved, got ${data?.status}`);
   });
@@ -817,8 +853,8 @@ export default async function run(h) {
     });
     ok(r); const unackId = r.body.data.id; ctx.jsaIds.push(unackId);
     // Submit and approve so we can attempt activation.
-    ok(await api('hse/risk-jsa/jsa/submit', T.admin, { jsaId: unackId }));
-    ok(await api('hse/risk-jsa/approve', T.admin, { entityType: 'jsa', entityId: unackId }));
+    ok(await api('hse/risk-jsa/jsa/submit', T.admin, { jsaId: unackId , idempotencyKey: `e2e-rj-6-${TAG}` }));
+    ok(await api('hse/risk-jsa/approve', managerTok, { entityType: 'jsa', entityId: unackId }));
     // Activation should be blocked: crew has not acknowledged.
     const actR = await api('hse/risk-jsa/activate', T.admin, { entityType: 'jsa', entityId: unackId, override: false });
     fails(actR, 'activation should be blocked when required crew has not acknowledged');
@@ -978,8 +1014,8 @@ export default async function run(h) {
       ...baseHazard(), title: `${TAG} Legacy Review`,
     });
     ok(hz); ctx.hazardIds.push(hz.body.data.id);
-    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: hz.body.data.id }));
-    ok(await api('hse/risk-jsa/review', T.admin, {
+    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: hz.body.data.id , idempotencyKey: `e2e-rj-7-${TAG}` }));
+    ok(await api('hse/risk-jsa/review', managerTok, {
       entityType: 'hazard', entityId: hz.body.data.id, outcome: 'approve',
     }));
     const { data } = await sb.from('hse_hazards').select('status').eq('id', hz.body.data.id).single();
@@ -990,8 +1026,8 @@ export default async function run(h) {
       ...baseHazard(), title: `${TAG} Legacy Return`,
     });
     ok(hz); ctx.hazardIds.push(hz.body.data.id);
-    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: hz.body.data.id }));
-    ok(await api('hse/risk-jsa/review', T.admin, {
+    ok(await api('hse/risk-jsa/hazards/submit', T.admin, { hazardId: hz.body.data.id , idempotencyKey: `e2e-rj-8-${TAG}` }));
+    ok(await api('hse/risk-jsa/review', managerTok, {
       entityType: 'hazard', entityId: hz.body.data.id, outcome: 'return', note: 'needs more detail',
     }));
     const { data } = await sb.from('hse_hazards').select('status').eq('id', hz.body.data.id).single();

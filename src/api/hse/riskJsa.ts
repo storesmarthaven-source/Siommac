@@ -35,7 +35,7 @@ export type AssessmentStatus =
   | 'changes_requested' | 'rejected' | 'closed';
 
 export type JsaStatus =
-  | 'draft' | 'submitted' | 'hse_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived'
+  | 'draft' | 'submitted' | 'under_review' | 'hse_review' | 'returned' | 'approved' | 'active' | 'expired' | 'archived'
   | 'changes_requested' | 'rejected' | 'closed';
 
 /** A row in the cross-entity Pending Approval / Archive queue. */
@@ -338,7 +338,7 @@ export function useCreateAssessment() {
 export function useSubmitAssessment() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { assessmentId: string; note?: string }) =>
+    mutationFn: (args: { assessmentId: string; note?: string; idempotencyKey: string }) =>
       apiPost<{ success: boolean; workflowId: string | null }>('hse/risk-jsa/assessments/submit', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });
@@ -445,7 +445,7 @@ export function useCreateJsa() {
 export function useSubmitJsa() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { jsaId: string; note?: string }) =>
+    mutationFn: (args: { jsaId: string; note?: string; idempotencyKey: string }) =>
       apiPost<{ success: boolean; workflowId: string | null }>('hse/risk-jsa/jsa/submit', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });
@@ -573,7 +573,7 @@ export function useRiskJsaQueue(scope: 'pending' | 'archived') {
 export function useSubmitHazard() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { hazardId: string; note?: string }) =>
+    mutationFn: (args: { hazardId: string; note?: string; idempotencyKey: string }) =>
       apiPost<{ success: boolean; workflowId: string | null }>('hse/risk-jsa/hazards/submit', args),
     onSuccess: () => qc.invalidateQueries({ queryKey: hseRiskJsaKeys.all }),
   });

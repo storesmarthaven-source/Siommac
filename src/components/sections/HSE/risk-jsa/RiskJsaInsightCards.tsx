@@ -263,7 +263,7 @@ function JsaCards(): VNode {
   const j = data?.data ?? [];
   const total = j.length;
   const active = j.filter(x => x.status === 'active' || x.status === 'approved').length;
-  const inReview = j.filter(x => x.status === 'submitted' || x.status === 'hse_review').length;
+  const inReview = j.filter(x => x.status === 'submitted' || x.status === 'under_review' || x.status === 'hse_review').length;
   const by = (l: RiskLevel) => j.filter(x => x.risk_level === l).length;
   const low = by('low'), medium = by('medium'), high = by('high'), critical = by('critical');
   const highRisk = high + critical;
