@@ -141,17 +141,23 @@ export class Harness {
     }
   }
 
-  /** Pick 1 admin + 2 non-admin active users for participant / non-participant tests. */
+  /** Pick 1 admin + 2 non-privileged (employee) active users for participant /
+   *  non-participant + access-denial tests. */
   async pickUsers() {
     const { data: admins } = await this.sb.from('app_users')
       .select('id, username, role, department_id').eq('status', 'active')
       .in('role', ['admin', 'superadmin']).limit(1);
+    // b/c must be GENUINELY non-privileged. A roster-random non-admin can be a MANAGER
+    // (e.g. a seed user promoted by seed-managers.sql), which HOLDS the manage/approve
+    // permissions the "B should not …" access tests assert are absent → spurious failures
+    // across HSE/orchestration/transfers. Pick `employee`s; suites needing a specific
+    // privileged role use acquireActors(role) instead, so restricting b/c here is safe.
     const { data: others } = await this.sb.from('app_users')
       .select('id, username, role, department_id').eq('status', 'active')
-      .not('role', 'in', '("admin","superadmin")').limit(2);
+      .eq('role', 'employee').limit(2);
     const admin = admins?.[0], b = others?.[0], c = others?.[1];
     if (!admin || !b || !c) {
-      console.error('\nNeed >=1 admin + 2 non-admin active users. Found:', { admin: !!admin, b: !!b, c: !!c });
+      console.error('\nNeed >=1 admin + 2 active employees. Found:', { admin: !!admin, b: !!b, c: !!c });
       process.exit(2);
     }
     this.users = { admin, b, c };

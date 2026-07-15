@@ -457,22 +457,27 @@ export default async function run(h) {
     // arrives — they'd only refresh on the slow poll. (Needs communication_signals
     // in the supabase_realtime publication + anon SELECT RLS — mig 20260628100000.)
     const anon = h.anonClient();
-    const chan = `e2e-rt-${Date.now()}`;
-    let received = false;
+    const chan = crypto.randomUUID();   // channel_key is a UUID column — a non-UUID string
+                                        // silently fails the insert, so nothing is delivered.
+    let received = false, subscribed = false;
     const ch = anon.channel(`probe-${chan}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'communication_signals', filter: `channel_key=eq.${chan}` },
         () => { received = true; })
-      .subscribe();
+      .subscribe((status) => { if (status === 'SUBSCRIBED') subscribed = true; });
     try {
-      await new Promise(r => setTimeout(r, 2500));                 // let it SUBSCRIBE
-      await sb.from('communication_signals').insert({ channel_key: chan, domain: 'messages' });
+      // Wait for the subscription to actually establish (not a fixed sleep) before inserting.
+      const s0 = Date.now();
+      while (Date.now() - s0 < 8000 && !subscribed) await new Promise(r => setTimeout(r, 120));
+      expect(subscribed, 'anon realtime channel never reached SUBSCRIBED');
+      const { error: insErr } = await sb.from('communication_signals').insert({ channel_key: chan, domain: 'messages' });
+      expect(!insErr, `signal insert failed: ${insErr?.message}`);
       const t0 = Date.now();
-      while (Date.now() - t0 < 5000 && !received) await new Promise(r => setTimeout(r, 120));
+      while (Date.now() - t0 < 7000 && !received) await new Promise(r => setTimeout(r, 120));
     } finally {
       await sb.from('communication_signals').delete().eq('channel_key', chan);
       await anon.removeChannel(ch);
     }
-    expect(received, 'anon realtime never received the signal — communication_signals not published for realtime or RLS blocks anon SELECT (run mig 20260628100000)');
+    expect(received, 'anon realtime never received the signal — communication_signals not published for realtime or RLS blocks anon SELECT (mig 20260628100000)');
   });
 
   await test('latency: summary endpoint responds quickly', async () => {

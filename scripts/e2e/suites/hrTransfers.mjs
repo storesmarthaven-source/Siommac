@@ -28,6 +28,18 @@ export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
   const { admin } = h.users;
   const A = mint(admin);
+  // The hr_change_approval task is role-assigned to `hr_manager`, so the CHECKER must BE an
+  // hr_manager (role holds hr.transfers.approve in role_permissions). Approving as admin only
+  // worked before because admin was wrongly treated as elevated via workflow.instances.reassign
+  // — closed by the decide-RPC fix. Acquire (create) a real hr_manager to decide. Submitting
+  // stays as admin, so creator≠approver (SoD) holds.
+  const { actors: [hrm], createdIds: hrmCreatedIds } = await h.acquireActors('hr_manager', 1);
+  const HM = mint(hrm);
+  // A genuine employee for the access-denial test — NOT the empId fixture, which the approve
+  // test promotes to manager (auth resolves role from app_users, so a promoted empId would no
+  // longer be denied).
+  const { actors: [denyEmp], createdIds: denyCreatedIds } = await h.acquireActors('employee', 1);
+  const DENY = mint(denyEmp);
 
   // ── Test fixtures ──────────────────────────────────────────────────────────
   // All IDs tagged so cleanup is safe even on partial failure.
@@ -58,6 +70,7 @@ export default async function run(h) {
     try { if (ctx.crId3) await sb.from('hr_employee_change_requests').delete().eq('id', ctx.crId3); } catch {}
     try { await sb.from('hr_employee_change_requests').delete().eq('employee_id', empId).eq('change_type', 'transfer_promotion'); }  catch {}
     try { await sb.from('hr_employee_change_requests').delete().eq('employee_id', empId2).eq('change_type', 'transfer_promotion'); } catch {}
+    try { const ids = [...(hrmCreatedIds ?? []), ...(denyCreatedIds ?? [])]; if (ids.length) await sb.from('app_users').delete().in('id', ids); } catch {}
     // Remove assignment rows created for the test employees.
     try { await sb.from('hr_employee_assignments').delete().eq('employee_id', empId); }  catch {}
     try { await sb.from('hr_employee_assignments').delete().eq('employee_id', empId2); } catch {}
@@ -68,6 +81,8 @@ export default async function run(h) {
     try { await sb.from('app_events').delete().eq('source_module', 'hr').in('source_entity_id', [empId, empId2]); } catch {}
     // Seed users last
     try { await sb.from('app_users').delete().in('id', [empId, empId2, staffId]); } catch {}
+    // Dept fixture last of all (after the users that referenced it via department_id are gone).
+    try { if (ctx.deptId) await sb.from('departments').delete().eq('id', ctx.deptId); } catch {}
   });
 
   // ── Setup ──────────────────────────────────────────────────────────────────
@@ -119,7 +134,7 @@ export default async function run(h) {
       .maybeSingle();
     expect(!!cr,                                       'CR row not found');
     expect(cr.change_type === 'transfer_promotion',    `wrong change_type: ${cr.change_type}`);
-    expect(cr.status === 'submitted',                  `wrong status: ${cr.status}`);
+    expect(cr.status === 'in_review',                  `wrong status: ${cr.status}`);   // workflow starts on submit → in_review
     expect(cr.requested_value?.role === 'manager',     'role not in requested_value');
     expect(cr.requested_value?.monthlySalary === 8000, 'monthlySalary not in requested_value');
     expect(cr.requested_value?.effectiveDate === '2026-08-01', 'effectiveDate not in requested_value');
@@ -134,7 +149,7 @@ export default async function run(h) {
     const row = r.body.data.find(x => x.id === ctx.crId);
     expect(!!row,                              'CR not in list');
     expect(row.changeNo === r.body.data.find(x => x.id === ctx.crId).changeNo, 'changeNo mismatch');
-    expect(row.status === 'submitted',         `wrong status in list: ${row.status}`);
+    expect(row.status === 'in_review',         `wrong status in list: ${row.status}`);
     expect(row.employeeName !== undefined,     'employeeName not enriched');
     expect(row.requestedByName !== undefined,  'requestedByName not enriched');
     expect(row.effectiveDate === '2026-08-01', `effectiveDate missing: ${row.effectiveDate}`);
@@ -165,7 +180,7 @@ export default async function run(h) {
   h.section('Transfers › Approve');
 
   await test('approve via generic decide → app_users updated + assignment row + CR applied', async () => {
-    const r = await api('hr/employee-change-requests/decide', A, {
+    const r = await api('hr/employee-change-requests/decide', HM, {
       requestId: ctx.crId,
       decision:  'approve',
     });
@@ -227,10 +242,16 @@ export default async function run(h) {
   h.section('Transfers › Assignment history on org change');
 
   await test('submit a dept + effectiveDate request → approve → assignment history row stamped', async () => {
+    // app_users.department_id has an FK to departments — a placeholder id can never apply, so
+    // create a REAL department for the transfer to land on.
+    const { data: dept, error: dErr } = await sb.from('departments')
+      .insert({ name: `TRF Dept ${TAG}`, code: `${TAG}-D`, org_unit_type: 'department' }).select('id').single();
+    expect(!dErr, `dept fixture create failed: ${dErr?.message}`);
+    ctx.deptId = dept.id;
     // Submit a bundled request that includes a department change (triggers assignment row)
     const submitR = await api('hr/transfers/request', A, {
       employeeId:    empId2,
-      departmentId:  'dept-test-placeholder',
+      departmentId:  ctx.deptId,
       effectiveDate: '2026-09-01',
       reason:        'Org restructure',
     });
@@ -238,7 +259,7 @@ export default async function run(h) {
     ctx.crId2 = submitR.body.data.id;
 
     // Approve
-    const approveR = await api('hr/employee-change-requests/decide', A, {
+    const approveR = await api('hr/employee-change-requests/decide', HM, {
       requestId: ctx.crId2,
       decision:  'approve',
     });
@@ -249,7 +270,7 @@ export default async function run(h) {
       .select('department_id')
       .eq('id', empId2)
       .maybeSingle();
-    expect(emp.department_id === 'dept-test-placeholder', `department not updated: ${emp.department_id}`);
+    expect(emp.department_id === ctx.deptId, `department not updated: ${emp.department_id}`);
 
     // Assignment history row stamped with effectiveDate
     const { data: assignments } = await sb.from('hr_employee_assignments')
@@ -259,7 +280,7 @@ export default async function run(h) {
       .limit(1);
     expect((assignments ?? []).length > 0,                'no is_current assignment row');
     expect(assignments[0].effective_from === '2026-09-01', `effective_from wrong: ${assignments[0].effective_from}`);
-    expect(assignments[0].department_id === 'dept-test-placeholder', 'dept not on assignment row');
+    expect(assignments[0].department_id === ctx.deptId, 'dept not on assignment row');
   });
 
   // ── Reject ─────────────────────────────────────────────────────────────────
@@ -274,7 +295,7 @@ export default async function run(h) {
     ok(submitR, `submit (reject test) failed: ${submitR.body.message}`);
     ctx.crId3 = submitR.body.data.id;
 
-    const rejectR = await api('hr/employee-change-requests/decide', A, {
+    const rejectR = await api('hr/employee-change-requests/decide', HM, {
       requestId: ctx.crId3,
       decision:  'reject',
       comment:   'Not approved',
@@ -299,9 +320,8 @@ export default async function run(h) {
   h.section('Transfers › Access control');
 
   await test('employee user denied /transfers/request (no hr.transfers.request)', async () => {
-    // Provision a real employee token — auth resolves role from app_users, NOT the JWT
-    const empT = mint({ id: empId, username: `${TAG}_trfemp`, role: 'employee', department_id: null });
-    const r = await api('hr/transfers/request', empT, {
+    // DENY is a genuine, never-promoted employee (auth resolves role from app_users).
+    const r = await api('hr/transfers/request', DENY, {
       employeeId:    empId2,
       role:          'manager',
       effectiveDate: '2026-08-01',
