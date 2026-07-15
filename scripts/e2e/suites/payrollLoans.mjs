@@ -111,7 +111,7 @@ export default async function run(h) {
   h.section('Loans › Submit + workflow approval (SoD)');
 
   await test('finance_staff submits the loan → pending_approval + workflow', async () => {
-    const r = await api('finance/payroll/loans/submit', staffToken, { id: ctx.loanId });
+    const r = await api('finance/payroll/loans/submit', staffToken, { id: ctx.loanId, idempotencyKey: `loan-submit-main-${TAG}` });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'pending_approval', `expected pending_approval, got ${r.body.data.status}`);
     const got = await waitFor(async () => {
@@ -144,6 +144,130 @@ export default async function run(h) {
     expect(gotEvent, 'finance.loan.activated app_event not found');
     const { data: audit } = await sb.from('hr_audit_log').select('id').eq('submodule_key', 'finance_loan').eq('action', 'loan.approved').eq('record_id', ctx.loanId).limit(1);
     expect((audit ?? []).length > 0, 'loan.approved audit not found');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Loans › Atomic submit (finding #3, slice A4)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // Submit now commits status(draft/rejected->pending_approval) + workflow_id + the
+  // whole workflow + business event/audit in ONE txn (workflow_submit_for_record_tx,
+  // finance_employee_loans branch), with request-key idempotency and NO handoff.
+  // Isolated draft loans (self-cleaned below) so the main lifecycle is untouched.
+
+  const atomCtx = { loanIds: [] };
+  const { data: _loanBinding } = await sb.from('module_workflow_bindings')
+    .select('id').eq('module_key', 'finance_loan').eq('workflow_type', 'finance_loan_approval')
+    .eq('trigger_event', 'finance.loan.submitted').eq('is_active', true).limit(1).maybeSingle();
+  const atomBindingId = _loanBinding?.id;
+
+  const seedDraftLoan = async (salt) => {
+    const { data, error } = await sb.from('finance_employee_loans').insert({
+      reference: `LOAN-E2E-A4-${salt}-${TAG.slice(-6)}`, employee_id: empId, loan_type: 'loan',
+      principal: 900, interest_amount: 0, total_repayable: 900, installment_amount: 300,
+      balance: 900, status: 'draft', created_by: staffId,
+    }).select('id').single();
+    if (error) throw new Error(`seedDraftLoan(${salt}): ${error.message}`);
+    atomCtx.loanIds.push(data.id);
+    return data.id;
+  };
+
+  await test('A4 atomic: retry same key returns original workflow (no double-create, exact counts, no strand)', async () => {
+    const id = await seedDraftLoan(1);
+    const key = `a4-idem-${TAG}-${id}`;
+    const r1 = await api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: key });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wf1 = r1.body.data.workflowId;
+    expect(wf1, 'first submit returns a workflowId');
+    expect(r1.body.data.status === 'pending_approval', `status should be pending_approval, got ${r1.body.data.status}`);
+    const r2 = await api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: key });
+    ok(r2, `idempotent retry failed: ${r2.body.message}`);
+    expect(r2.body.data.workflowId === wf1, `retry should return ${wf1}, got ${r2.body.data.workflowId}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', id).eq('event_type', 'finance.loan.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted event, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true })
+      .eq('record_id', id).eq('action', 'loan.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one audit row, got ${auc}`);
+    const { data: tsk } = await sb.from('workflow_tasks').select('id').eq('workflow_id', wf1);
+    expect((tsk ?? []).length === 1, `exactly one workflow task, got ${(tsk ?? []).length}`);
+    // No handoff for loans (unlike payroll runs).
+    const hoc = (await sb.from('handoff_outbox').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', id)).count ?? 0;
+    expect(hoc === 0, `loans emit no handoff, got ${hoc}`);
+  });
+
+  await test('A4 atomic: a rejected submit leaves the loan UNCHANGED (no strand, no orphan workflow)', async () => {
+    const id = await seedDraftLoan(2);
+    // Flip to a non-submittable status (active) so the RPC rejects at the status guard.
+    await sb.from('finance_employee_loans').update({ status: 'active' }).eq('id', id);
+    const r = await api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: `a4-str-${id}` });
+    fails(r, 'submitting an active loan should be rejected');
+    const { data: after } = await sb.from('finance_employee_loans').select('status, workflow_id').eq('id', id).single();
+    expect(after.status === 'active', `loan should stay active, got ${after.status}`);
+    expect(after.workflow_id === null, `no workflow_id should be stamped, got ${after.workflow_id}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 0, `no workflow should exist for a rejected submit, got ${(wfs ?? []).length}`);
+  });
+
+  await test('A4 atomic: same key + different payload is rejected WF409 (direct RPC)', async () => {
+    const id = await seedDraftLoan(3);
+    const key = `a4-hash-${TAG}-${id}`;
+    expect(atomBindingId, 'finance_loan binding not found');
+    const { error: e1 } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'finance_employee_loans', p_source_id: id, p_actor_id: staffId,
+      p_binding_id: atomBindingId, p_request_key: key, p_business: { probe: 'A' } });
+    expect(!e1, `first direct submit failed: ${e1?.message}`);
+    const { error: e2 } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'finance_employee_loans', p_source_id: id, p_actor_id: staffId,
+      p_binding_id: atomBindingId, p_request_key: key, p_business: { probe: 'B' } });
+    expect(e2 && e2.code === 'WF409', `different-payload retry should be WF409, got ${e2?.code} ${e2?.message}`);
+  });
+
+  await test('A4 atomic: concurrent submits — exactly one succeeds, one workflow', async () => {
+    const id = await seedDraftLoan(4);
+    const [a, b2] = await Promise.all([
+      api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: `a4-c1-${id}` }),
+      api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: `a4-c2-${id}` }),
+    ]);
+    expect([a, b2].filter(x => x.body.success).length === 1, 'exactly one concurrent submit should succeed');
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs ?? []).length === 1, `exactly one workflow, got ${(wfs ?? []).length}`);
+  });
+
+  await test('A4 atomic: a rejected loan resubmits with a fresh workflow linked via supersedes', async () => {
+    const id = await seedDraftLoan(5);
+    const r1 = await api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: `a4-sup1-${id}` });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wfA = r1.body.data.workflowId;
+    // Simulate the approval workflow REJECTING the loan (terminal 'rejected' + loan rejected).
+    await sb.from('workflow_instances').update({ status: 'rejected' }).eq('id', wfA);
+    await sb.from('finance_employee_loans').update({ status: 'rejected' }).eq('id', id);
+    const r2 = await api('finance/payroll/loans/submit', staffToken, { id, idempotencyKey: `a4-sup2-${id}` });
+    ok(r2, `resubmit failed: ${r2.body.message}`);
+    const wfB = r2.body.data.workflowId;
+    expect(wfB && wfB !== wfA, `resubmit should create a NEW workflow, got ${wfB} vs ${wfA}`);
+    const { data: wfBrow } = await sb.from('workflow_instances').select('supersedes_workflow_id').eq('id', wfB).single();
+    expect(wfBrow?.supersedes_workflow_id === wfA, `new workflow should supersede ${wfA}, got ${wfBrow?.supersedes_workflow_id}`);
+  });
+
+  await test('A4 atomic: a submit without an idempotency key is rejected', async () => {
+    const id = await seedDraftLoan(6);
+    const r = await api('finance/payroll/loans/submit', staffToken, { id });
+    fails(r, 'submit without an idempotency key should be rejected');
+    const { data: loan } = await sb.from('finance_employee_loans').select('status').eq('id', id).single();
+    expect(loan.status === 'draft', `loan should stay draft, got ${loan.status}`);
+  });
+
+  await test('A4 atomic: cleanup seeded loans', async () => {
+    for (const lid of atomCtx.loanIds) {
+      try { await sb.from('workflow_instances').delete().eq('source_record_id', lid); } catch {}
+      try { await sb.from('app_events').delete().eq('source_entity_id', lid); } catch {}
+      try { await sb.from('hr_audit_log').delete().eq('record_id', lid); } catch {}
+      try { await sb.from('finance_employee_loans').delete().eq('id', lid); } catch {}
+    }
+    expect(true, 'cleanup complete');
   });
 
   h.section('Loans › Payroll deduction (lock records ledger, reopen reverses)');
@@ -185,7 +309,7 @@ export default async function run(h) {
   await test('calculate + lock → ledger row written, balance decremented to 700', async () => {
     ok(await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId }), 'calculate failed');
     // Drive to approved via the run workflow, then lock.
-    ok(await api('finance/payroll/runs/submit', staffToken, { id: ctx.runId }), 'run submit failed');
+    ok(await api('finance/payroll/runs/submit', staffToken, { id: ctx.runId, idempotencyKey: `loan-runsubmit-${TAG}` }), 'run submit failed');
     const { data: run } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
     const { data: tasks } = await sb.from('workflow_tasks').select('id').eq('workflow_id', run.workflow_id).in('status', ['pending', 'open', 'in_progress']).limit(1);
     ok(await api('workflow-engine/decide', fmgrToken, { workflowId: run.workflow_id, taskId: tasks[0].id, decision: 'approved' }), 'run approve failed');
@@ -255,7 +379,7 @@ export default async function run(h) {
     });
     ok(cr, `create for cancel-pending failed: ${cr.body.message}`);
     ctx.cancelLoanId = cr.body.data.id;
-    const sr = await api('finance/payroll/loans/submit', staffToken, { id: ctx.cancelLoanId });
+    const sr = await api('finance/payroll/loans/submit', staffToken, { id: ctx.cancelLoanId, idempotencyKey: `loan-submit-cancelpending-${TAG}` });
     ok(sr, `submit for cancel-pending failed: ${sr.body.message}`);
     const { data: pending } = await sb.from('finance_employee_loans')
       .select('status, workflow_id').eq('id', ctx.cancelLoanId).maybeSingle();

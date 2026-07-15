@@ -14,9 +14,10 @@ import { sb } from '../db';
 import { nextRef } from '../refGenerator';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
-import { startWorkflowForRecord, cancelWorkflow } from '../workflow/service';
+import { cancelWorkflow, rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from './financeEvents';
 import { notify } from '../notify';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 const round2 = (n: number): number => Math.round(n * 100) / 100;
 const err = (status: number, msg: string): Error => Object.assign(new Error(msg), { status });
@@ -139,46 +140,58 @@ export async function createLoan(input: CreateLoanInput, actorId: string): Promi
 
 // ── Submit for approval (draft → pending_approval + workflow) ─────────────────
 
-export async function submitLoan(id: string, actorId: string): Promise<LoanDto> {
+export async function submitLoan(id: string, actorId: string, idempotencyKey: string): Promise<LoanDto> {
+  // ATOMIC (finding #3): the source status flip (draft/rejected -> pending_approval),
+  // workflow_id, the whole workflow, the business event and hr_audit_log are ALL
+  // committed in ONE transaction by workflow_submit_for_record_tx
+  // (finance_employee_loans branch) — no strand, no crash-window, no compensating
+  // rollback, no double-start. The RPC owns idempotency; only the assignee
+  // notification stays here (best-effort, post-commit — it replaces the fan-out
+  // startWorkflowForRecord used to do via notifyTaskAssigned).
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw err(400, 'An idempotency key is required to submit a loan.');
+
   const loan = await getLoan(id);
   if (!loan) throw err(404, 'Loan not found.');
-  if (!['draft', 'rejected'].includes(loan.status)) {
-    throw err(422, `Only draft or rejected loans can be submitted (loan is '${loan.status}').`);
-  }
 
-  const { error } = await sb.from('finance_employee_loans').update({ status: 'pending_approval' }).eq('id', id);
-  if (error) throw err(500, 'submitLoan: ' + error.message);
-
-  const ctx: ModuleWorkflowContext = {
-    moduleKey: 'finance_loan',
-    workflowType: 'finance_loan_approval',
-    triggerEvent: 'finance.loan.submitted',
-    sourceRecordId: loan.id,
-    sourceRecordRef: loan.reference,
-    requestedBy: actorId,
-    priority: 'normal',
-    recordData: { employeeId: loan.employeeId, loanType: loan.loanType, principal: loan.principal, totalRepayable: loan.totalRepayable, installmentAmount: loan.installmentAmount },
-  };
-
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-    if (wf?.id) await sb.from('finance_employee_loans').update({ workflow_id: wf.id }).eq('id', id);
-  } catch (wfErr) {
-    // Compensating rollback — return the loan to draft so it can be re-submitted.
-    await sb.from('finance_employee_loans').update({ status: 'draft' }).eq('id', id);
-    throw err(500, 'Workflow start failed — loan returned to draft: ' + String(wfErr));
-  }
-
-  await writeHrAudit({
-    submoduleKey: 'finance_loan', recordId: id, actorId,
-    action: 'loan.submitted', previousState: { status: loan.status }, newState: { status: 'pending_approval' },
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_loan',
+    workflowType:   'finance_loan_approval',
+    triggerEvent:   'finance.loan.submitted',
+    sourceRecordId: id,
+    requestedBy:    actorId,
+    recordData:     {},
   });
-  void emitAppEvent({
-    eventType: 'finance.loan.submitted', sourceModule: 'finance_loan',
-    sourceEntityType: 'employee_loan', sourceEntityId: id, actorUserId: actorId, severity: 'info',
-    payload: { reference: loan.reference, employeeId: loan.employeeId },
+  if (!binding) throw err(422, 'No approval workflow is configured for employee loans.');
+
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_employee_loans',
+    p_source_id:    id,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { employeeId: loan.employeeId, loanType: loan.loanType, principal: loan.principal, totalRepayable: loan.totalRepayable, installmentAmount: loan.installmentAmount },
   });
-  return (await getLoan(id))!;
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { workflowId?: string | null };
+
+  // Notify the finance_manager assignees (best-effort, post-commit). Workflow id in
+  // the dedupe key so a RESUBMIT notifies afresh.
+  void notifyUsersByRole('finance_manager', {
+    type:           'finance.loan.pending_approval',
+    title:          `Loan ${loan.reference} submitted for approval`,
+    body:           `A ${loan.loanType === 'advance' ? 'salary advance' : 'loan'} of ${loan.totalRepayable.toFixed(2)} is awaiting your approval.`,
+    module:         'finance_loan',
+    severity:       'warning',
+    sourceType:     'employee_loan',
+    sourceId:       id,
+    actionRequired: true,
+    dedupeKey:      `loan.pending_approval.${id}.${result.workflowId ?? ''}`,
+  });
+
+  const updated = await getLoan(id);
+  if (!updated) throw err(503, 'Loan submitted but could not be reloaded — retry to fetch the result.');
+  return updated;
 }
 
 // ── Approval side-effects (called by the workflow adapter) ────────────────────

@@ -18,7 +18,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
@@ -178,6 +178,17 @@ function LoansPanel(): VNode {
     try { await p; toast(ok); } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
   };
 
+  // Idempotency: one stable key per submit ATTEMPT (per id), held across retries so a
+  // lost response recovers via the RPC receipt; cleared only on definitive success.
+  const submitKeys = useRef<Map<string, string>>(new Map());
+  const doSubmitLoan = async (id: string): Promise<void> => {
+    const keys = submitKeys.current;
+    const key = keys.get(id) ?? crypto.randomUUID();
+    keys.set(id, key);
+    try { await submitMut.mutateAsync({ id, idempotencyKey: key }); keys.delete(id); toast('Loan submitted for approval.'); }
+    catch (e) { void dialog.error(e instanceof Error ? e.message : 'Action failed.'); }
+  };
+
   const quickActions = [
     ...(canManage ? [{ key: 'new', label: 'New Loan', icon: 'plus' as const, variant: 'primary' as const, onClick: () => setShowNew(true) }] : []),
     { key: 'refresh', label: 'Refresh', icon: 'refresh' as const, onClick: () => { void loansQ.refetch(); } },
@@ -197,7 +208,7 @@ function LoansPanel(): VNode {
     if (!canManage) return [];
     const items: RowActionItem[] = [];
     if (l.status === 'draft' || l.status === 'rejected') {
-      items.push({ key: 'submit', label: 'Submit for approval', icon: 'check', onClick: () => void run(submitMut.mutateAsync({ id: l.id }), 'Loan submitted for approval.') });
+      items.push({ key: 'submit', label: 'Submit for approval', icon: 'check', onClick: () => void doSubmitLoan(l.id) });
     }
     if (l.status === 'active') {
       items.push({ key: 'settle', label: 'Settle (mark paid off)', icon: 'check', onClick: () => { void (async () => {

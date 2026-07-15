@@ -400,7 +400,7 @@ export const financePayrollApi = {
   listLoans:   (a: { employeeId?: string; status?: string } = {}) => call<EmployeeLoan[]>('finance/payroll/loans/list', a),
   getLoan:     (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/get', a),
   createLoan:  (a: { employeeId: string; loanType: LoanType; principal: number; interestAmount?: number; installmentAmount: number; startPeriod?: string | null; reason?: string | null; notes?: string | null }) => call<EmployeeLoan>('finance/payroll/loans/create', a),
-  submitLoan:  (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/submit', a),
+  submitLoan:  (a: { id: string; idempotencyKey: string }) => call<EmployeeLoan>('finance/payroll/loans/submit', a),
   settleLoan:  (a: { id: string })                     => call<EmployeeLoan>('finance/payroll/loans/settle', a),
   cancelLoan:  (a: { id: string; reason?: string })    => call<EmployeeLoan>('finance/payroll/loans/cancel', a),
 

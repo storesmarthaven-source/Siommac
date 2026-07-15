@@ -540,13 +540,13 @@ router.post('/payroll/loans/create', async c => {
   } catch (e) { return routeErr(c, e); }
 });
 
-// POST /api/finance/payroll/loans/submit  — draft → pending_approval (workflow).
+// POST /api/finance/payroll/loans/submit  — draft/rejected → pending_approval (workflow).
 router.post('/payroll/loans/submit', async c => {
   const actor = await requirePermission(c, 'finance.payroll.loans.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await submitLoan(v.data.id, actor.id);
+    const data = await submitLoan(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
