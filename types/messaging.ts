@@ -95,6 +95,11 @@ export interface MessagePost {
   } | null;
   deliveryStatus?:  'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   readByCount?:     number;
+  // ── P0 hardening (populated by messaging_send_message_tx) ──
+  /** Per-thread monotonic sequence number. null for legacy posts. */
+  sequence?:              number | null;
+  /** Client-generated UUID used for idempotent retry. */
+  clientIdempotencyKey?:  string | null;
 }
 
 export interface MessageThread {
@@ -125,6 +130,9 @@ export interface MessageThread {
   hasAttachments?:     boolean;
   actionRequired?:     boolean;
   priority?:           MessagePriority;
+  // ── P0 hardening ──
+  /** Thread version, bumped on every post/pin/membership change. Used for If-Match. */
+  version?:            number;
   archivedAt?:         string | null;
 }
 

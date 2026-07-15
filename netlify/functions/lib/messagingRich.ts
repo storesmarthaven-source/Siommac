@@ -14,10 +14,11 @@
  *   • Result shape: { ok: boolean; message?: string; ... }.
  */
 
-import { sb }            from './db';
-import { emitAppEvent }  from './appEvents';
-import { userCan }       from './auth';
-import { emitSignal }    from './communications';
+import { sb }                              from './db';
+import { emitAppEvent }                    from './appEvents';
+import { userCan }                         from './auth';
+import { emitSignal }                      from './communications';
+import { pinTx }                           from './messaging/messagingRpc';
 import type { MessagePin, PresenceStatus } from '../../../types/messaging';
 
 // Online if the user pinged presence within this window (covers tab-away gaps).
@@ -59,16 +60,17 @@ async function displayName(userId: string): Promise<string> {
 // ── Pins ───────────────────────────────────────────────────────────────────────
 
 export interface PinMessageInput {
-  currentUserId: string;
+  currentUserId:   string;
   currentUserRole: string;
-  threadId:      string;
-  postId?:       string | null;
-  pinType:       'thread' | 'post';
-  visibility:    'thread' | 'personal';
-  note?:         string | null;
+  threadId:        string;
+  postId?:         string | null;
+  pinType:         'thread' | 'post';
+  visibility:      'thread' | 'personal';
+  note?:           string | null;
+  expectedVersion?: number | null;
 }
 
-export interface PinResult { ok: boolean; message?: string; pin?: MessagePin }
+export interface PinResult { ok: boolean; message?: string; pin?: MessagePin; status?: number }
 
 type PinRow = {
   id: string; thread_id: string; post_id: string | null;
@@ -91,59 +93,44 @@ function mapPin(row: PinRow, pinnerName: string, postPreview?: MessagePin['postP
 }
 
 export async function pinMessage(input: PinMessageInput): Promise<PinResult> {
+  // ── Atomic RPC path ──
+  // The RPC: locks thread → participant check → post-belongs-to-thread check →
+  // visibility auth (owner/pin_thread perm) → duplicate-pin guard → INSERT message_pins
+  // → bump thread.version → INSERT app_events. All in one transaction.
+  // Post-commit: deliverEventNotifications + emitSignal to active participants.
   try {
-    const role = await participantRole(input.threadId, input.currentUserId);
-    if (!role) return { ok: false, message: 'Not an active participant in this thread' };
-
-    if (input.pinType === 'post') {
-      if (!input.postId) return { ok: false, message: 'postId is required to pin a post' };
-      const { data: post } = await sb
-        .from('message_posts')
-        .select('id')
-        .eq('id', input.postId)
-        .eq('thread_id', input.threadId)
-        .maybeSingle<{ id: string }>();
-      if (!post) return { ok: false, message: 'Post does not belong to this thread' };
-    }
-
-    // Thread-visible pins are a shared act → owner or a moderator/admin only.
-    if (input.visibility === 'thread') {
-      const canPinForThread = role === 'owner'
-        || await userCan({ id: input.currentUserId, role: input.currentUserRole }, 'communications.messages.pin_thread');
-      if (!canPinForThread) return { ok: false, message: 'Only the thread owner can pin for everyone' };
-    }
-
-    const { data: row, error } = await sb
-      .from('message_pins')
-      .insert({
-        thread_id:  input.threadId,
-        post_id:    input.pinType === 'post' ? input.postId : null,
-        pin_type:   input.pinType,
-        visibility: input.visibility,
-        pinned_by:  input.currentUserId,
-        note:       input.note ?? null,
-      })
-      .select('id, thread_id, post_id, pin_type, visibility, pinned_by, pinned_at, note')
-      .single<PinRow>();
-
-    if (error || !row) return { ok: false, message: error?.message ?? 'Failed to pin' };
-
-    const reason = input.pinType === 'thread' ? 'thread_pinned' : 'post_pinned';
-    if (input.visibility === 'thread') void emitSignal(await threadParticipantIds(input.threadId), 'messages');
-    void emitAppEvent({
-      eventType:        'communications.message_pinned',
-      sourceModule:     'communications',
-      sourceEntityType: 'message_pin',
-      sourceEntityId:   row.id,
-      actorUserId:      input.currentUserId,
-      severity:         'info',
-      payload: { threadId: input.threadId, postId: row.post_id, pinType: row.pin_type, visibility: row.visibility, reason },
+    const result = await pinTx({
+      action:          'pin',
+      threadId:        input.threadId,
+      actorId:         input.currentUserId,
+      postId:          input.postId ?? null,
+      pinType:         input.pinType,
+      visibility:      input.visibility,
+      note:            input.note ?? null,
+      expectedVersion: input.expectedVersion ?? null,
     });
 
+    // Post-commit: signal active participants so the UI can refresh the pin list.
+    // (The RPC already inserted the app_events row in-txn; pin events have no
+    //  notification rule so deliverEventNotifications would be a no-op.)
+    if (input.visibility === 'thread') {
+      void emitSignal(await threadParticipantIds(input.threadId), 'messages');
+    }
+
+    // Fetch the pin row so the route can return the full MessagePin DTO.
+    const { data: row } = await sb
+      .from('message_pins')
+      .select('id, thread_id, post_id, pin_type, visibility, pinned_by, pinned_at, note')
+      .eq('id', result.pinId)
+      .maybeSingle<PinRow>();
+
+    if (!row) return { ok: false, message: 'Pin row not found after creation' };
     return { ok: true, pin: mapPin(row, await displayName(input.currentUserId)) };
-  } catch (e) {
-    console.error('[messagingRich] pinMessage failed:', e);
-    return { ok: false, message: 'Internal error' };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[messagingRich] pinMessage RPC failed:', err.message ?? e);
+    // Surface the HTTP status from MSG* SQLSTATEs so the route can set it.
+    return { ok: false, message: err.message ?? 'Internal error', status: err.status };
   }
 }
 

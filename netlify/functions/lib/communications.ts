@@ -15,11 +15,15 @@
  */
 
 import { sb }          from './db';
-import { emitAppEvent } from './appEvents';
+import { emitAppEvent, deliverEventNotifications } from './appEvents';
 import { getSignedUrl }  from './photos';
 import { createAttachmentUploadUrl } from './upload';
 import { userCan }       from './auth';
 import { classifyAttachment, fileExtension, assertAttachmentAllowed } from './attachmentClassifier';
+import {
+  createThreadTx, sendMessageTx, addParticipantsTx, removeParticipantTx, markReadTx,
+  msgRpcHttpError,
+} from './messaging/messagingRpc';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
   MessageRecipient, ComplianceThread,
@@ -718,8 +722,11 @@ export interface CreateThreadInput {
   sourceEntityId?:    string | null;
   createdBy:          string;
   participantUserIds: string[];
-  body:               string;
+  /** First-post body; null/omitted is allowed when at least one attachment is present. */
+  body?:              string | null;
   attachmentIds?:     string[];
+  /** Client-generated idempotency key; dedupes retries of this create/get-or-create. */
+  idempotencyKey?:    string | null;
 }
 
 export interface CreateThreadResult {
@@ -727,127 +734,87 @@ export interface CreateThreadResult {
   message?: string;
   threadId?: string;
   postId?:   string;
+  /** true = a new thread was created; false = an existing direct thread was reused (get-or-create). */
+  created?:  boolean;
+  status?:   number;
 }
 
 export async function createMessageThread(input: CreateThreadInput): Promise<CreateThreadResult> {
+  // ── Atomic RPC path (replacing the non-atomic multi-step insert + compensating-delete) ──
+  // The RPC commits thread + participants + first-post + attachment-link + outbox + app_event
+  // in ONE transaction.  Post-commit delivery (notifications + Realtime signal) runs here,
+  // keyed by the eventId the RPC returned — we call deliverEventNotifications (DELIVERY ONLY,
+  // no re-insert) to avoid a duplicate app_events row.
   try {
-    const now = new Date().toISOString();
-    const preview = input.body.slice(0, 140);
+    const result = await createThreadTx({
+      threadType:        input.threadType,
+      subject:           input.subject ?? null,
+      sourceModule:      input.sourceModule ?? null,
+      sourceEntityType:  input.sourceEntityType ?? null,
+      sourceEntityId:    input.sourceEntityId ?? null,
+      createdBy:         input.createdBy,
+      participantIds:    input.participantUserIds ?? [],
+      body:              input.body,
+      priority:          'normal',
+      attachmentIds:     input.attachmentIds ?? [],
+      requestKey:        input.idempotencyKey ?? null,
+      clientMsgKey:      null,
+    });
 
-    // Resolve + VALIDATE participants BEFORE creating anything (creator is owner).
-    // A single bad FK fails the whole participant batch insert — author included —
-    // so an unchecked insert leaves an orphaned, participant-less thread that
-    // nobody can see. Reject unknown/inactive recipients up-front instead.
-    const participantIds = [...new Set([input.createdBy, ...input.participantUserIds])];
-    const { data: validUsers } = await sb
-      .from('app_users')
-      .select('id')
-      .in('id', participantIds)
-      .eq('status', 'active') as { data: Array<{ id: string }> | null };
-    const validSet = new Set((validUsers ?? []).map(u => u.id));
-    const missing  = participantIds.filter(id => !validSet.has(id));
-    if (missing.length > 0) {
-      return { ok: false, message: `Unknown or inactive recipient(s): ${missing.join(', ')}` };
-    }
-
-    const { data: thread, error: threadErr } = await sb
-      .from('message_threads')
-      .insert({
-        thread_type:        input.threadType,
-        subject:            input.subject ?? null,
-        source_module:      input.sourceModule ?? null,
-        source_entity_type: input.sourceEntityType ?? null,
-        source_entity_id:   input.sourceEntityId ?? null,
-        created_by:         input.createdBy,
-        last_post_at:       now,
-        last_post_preview:  preview,
-      })
-      .select('id')
-      .single<{ id: string }>();
-
-    if (threadErr || !thread) {
-      console.error('[communications] createThread failed:', threadErr?.message);
-      return { ok: false, message: 'Failed to create thread' };
-    }
-
-    const threadId = thread.id;
-
-    // Participants — CHECK the result; a failure must not leave an orphan thread.
-    const { error: partErr } = await sb.from('message_participants').insert(
-      participantIds.map(uid => ({
-        thread_id:  threadId,
-        user_id:    uid,
-        role:       uid === input.createdBy ? 'owner' : 'participant',
-        joined_at:  now,
-      })),
-    );
-    if (partErr) {
-      await sb.from('message_threads').delete().eq('id', threadId);
-      console.error('[communications] createThread participants failed:', partErr.message);
-      return { ok: false, message: 'Failed to add participants' };
-    }
-
-    // First post is required — clean up the thread + participants if it fails.
-    const attachmentCount = (input.attachmentIds ?? []).length;
-    const { data: post, error: postErr } = await sb
-      .from('message_posts')
-      .insert({
-        thread_id:        threadId,
-        author_user_id:   input.createdBy,
-        body:             input.body,
-        attachment_count: attachmentCount,
-      })
-      .select('id')
-      .single<{ id: string }>();
-
-    if (postErr || !post) {
-      await sb.from('message_participants').delete().eq('thread_id', threadId);
-      await sb.from('message_threads').delete().eq('id', threadId);
-      console.error('[communications] createThread first post failed:', postErr?.message);
-      return { ok: false, message: 'Failed to create the first message' };
-    }
-
-    // Link any pre-uploaded attachments
-    if (input.attachmentIds && input.attachmentIds.length > 0) {
-      await sb.from('message_attachments')
-        .update({ post_id: post.id })
-        .in('id', input.attachmentIds);
-    }
-
-    // Fetch author display name for notification body
-    const { data: actor } = await sb
-      .from('app_users')
-      .select('full_name, email')
-      .eq('id', input.createdBy)
-      .maybeSingle<{ full_name: string | null; email: string }>();
-    const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
-
-    // Signal + notify other participants
-    const others = participantIds.filter(uid => uid !== input.createdBy);
+    // Post-commit: signal + deliver notifications to others. When an existing direct
+    // thread was reused (created=false), the RPC appended the initial message and wrote
+    // a message.received event — so notify like a new message, not a new conversation.
+    const others = result.activeParticipantIds.filter(uid => uid !== input.createdBy);
     if (others.length > 0) {
+      const { data: actor } = await sb
+        .from('app_users')
+        .select('full_name, email')
+        .eq('id', input.createdBy)
+        .maybeSingle<{ full_name: string | null; email: string }>();
+      const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
+
       void emitSignal(others, 'messages');
-      void emitAppEvent({
-        eventType:          'communications.thread.created',
-        sourceModule:       'communications',
-        sourceEntityType:   'message_thread',
-        sourceEntityId:     threadId,
-        actorUserId:        input.createdBy,
-        severity:           'info',
-        explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
-        notification: {
-          title:       'New conversation',
-          body:        input.subject
-            ? `${actorName} started a conversation: ${input.subject}`
-            : `${actorName} started a conversation`,
-          actionRoute: 's-messages',
-        },
-      });
+      if (result.created) {
+        void deliverEventNotifications({
+          eventType:          'communications.thread.created',
+          sourceModule:       'communications',
+          sourceEntityType:   'message_thread',
+          sourceEntityId:     result.threadId,
+          actorUserId:        input.createdBy,
+          severity:           'info',
+          explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+          notification: {
+            title:       'New conversation',
+            body:        input.subject
+              ? `${actorName} started a conversation: ${input.subject}`
+              : `${actorName} started a conversation`,
+            actionRoute: 's-messages',
+          },
+        }, result.eventId ?? null);
+      } else {
+        void deliverEventNotifications({
+          eventType:          'communications.message.received',
+          sourceModule:       'communications',
+          sourceEntityType:   'message_thread',
+          sourceEntityId:     result.threadId,
+          actorUserId:        input.createdBy,
+          severity:           'info',
+          dedupeKey:          `msg:${result.threadId}:${result.postId}`,
+          explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+          notification: {
+            title:       'New message',
+            body:        `${actorName} sent a message…`,
+            actionRoute: 's-messages',
+          },
+        }, result.eventId ?? null);
+      }
     }
 
-    return { ok: true, threadId, postId: post.id };
-  } catch (e) {
-    console.error('[communications] createMessageThread failed:', e);
-    return { ok: false, message: 'Internal error creating thread' };
+    return { ok: true, threadId: result.threadId, postId: result.postId, created: result.created };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[communications] createMessageThread RPC failed:', err.message ?? e);
+    return { ok: false, message: err.message ?? 'Internal error creating thread' };
   }
 }
 
@@ -868,89 +835,37 @@ export interface PostMessageResult {
   threadId?:  string;
   createdAt?: string;
   message?:   string;
+  /** HTTP status derived from the RPC's MG SQLSTATE (403/404/409/422/…). */
+  status?:    number;
 }
 
 export async function postMessage(input: PostMessageInput): Promise<PostMessageResult> {
+  // ── Atomic RPC path (replacing the non-atomic insert sequence) ──
+  // The RPC: locks thread → validates membership → idempotency check → validates reply
+  // target → locks+verifies attachments → increments seq+version → inserts post →
+  // links attachments → updates thread summary → delivery receipts → outbox + app_event.
+  // Post-commit: TS wrapper does notification delivery + Realtime signal.
   try {
-    // Validate the user is an active participant (removed_at null)
-    const { data: part } = await sb
-      .from('message_participants')
-      .select('role')
-      .eq('thread_id', input.threadId)
-      .eq('user_id', input.currentUserId)
-      .is('removed_at', null)
-      .maybeSingle<{ role: string }>();
+    const result = await sendMessageTx({
+      threadId:       input.threadId,
+      actorId:        input.currentUserId,
+      body:           input.body,
+      priority:       input.priority ?? 'normal',
+      replyToPostId:  input.replyToPostId ?? null,
+      attachmentIds:  input.attachmentIds ?? [],
+      clientMsgKey:   null,  // TODO: accept from route when client sends Idempotency-Key header
+    });
 
-    if (!part) return { ok: false, message: 'Not an active participant in this thread' };
-
-    // Reply target (if any) must belong to the same thread.
-    if (input.replyToPostId) {
-      const { data: replyTarget } = await sb
-        .from('message_posts')
-        .select('id')
-        .eq('id', input.replyToPostId)
-        .eq('thread_id', input.threadId)
-        .maybeSingle<{ id: string }>();
-      if (!replyTarget) return { ok: false, message: 'Reply target does not belong to this thread' };
+    // Idempotent replay: the post already exists; return early without re-signalling.
+    if (result.duplicate) {
+      return { ok: true, postId: result.postId, threadId: input.threadId, createdAt: new Date().toISOString() };
     }
 
-    const now = new Date().toISOString();
-    const attachmentCount = (input.attachmentIds ?? []).length;
-    const priority = input.priority ?? 'normal';
-
-    const { data: post, error: postErr } = await sb
-      .from('message_posts')
-      .insert({
-        thread_id:        input.threadId,
-        author_user_id:   input.currentUserId,
-        body:             input.body,
-        attachment_count: attachmentCount,
-        post_type:        'message',
-        priority,
-        reply_to_post_id: input.replyToPostId ?? null,
-        delivery_status:  'sent',
-      })
-      .select('id, created_at')
-      .single<{ id: string; created_at: string }>();
-
-    if (postErr || !post) {
-      return { ok: false, message: postErr?.message ?? 'Failed to insert post' };
-    }
-
-    // Link any pre-uploaded attachments
-    if (input.attachmentIds && input.attachmentIds.length > 0) {
-      await sb.from('message_attachments')
-        .update({ post_id: post.id })
-        .in('id', input.attachmentIds);
-    }
-
-    // Update thread last_post summary. An action_required post raises the thread
-    // flag so the Action-Required chip shows in the list/header.
-    const preview = input.body.slice(0, 140) || (attachmentCount > 0 ? `📎 ${attachmentCount} attachment${attachmentCount > 1 ? 's' : ''}` : '');
-    const threadPatch: Record<string, unknown> = { last_post_at: now, last_post_preview: preview };
-    if (priority === 'action_required') threadPatch.action_required = true;
-    await sb.from('message_threads').update(threadPatch).eq('id', input.threadId);
-
-    // Fetch other active participants to notify
-    const { data: othersData } = await sb
-      .from('message_participants')
-      .select('user_id')
-      .eq('thread_id', input.threadId)
-      .neq('user_id', input.currentUserId)
-      .is('removed_at', null) as { data: Array<{ user_id: string }> | null };
-
-    const others = (othersData ?? []).map(o => o.user_id);
-
-    // Delivery receipts: one row per other participant (delivered now, unread).
-    // read_at is stamped later by markThreadRead. Powers "Read by N" + delivery state.
-    if (others.length > 0) {
-      await sb.from('message_post_receipts').insert(
-        others.map(uid => ({ post_id: post.id, user_id: uid, delivered_at: now })),
-      );
-    }
+    // Post-commit: signal ALL participants + deliver notifications to others.
+    const others = result.activeParticipantIds.filter(uid => uid !== input.currentUserId);
+    void emitSignal(result.activeParticipantIds, 'messages');
 
     if (others.length > 0) {
-      // Fetch author name
       const { data: actor } = await sb
         .from('app_users')
         .select('full_name, email')
@@ -958,31 +873,34 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
         .maybeSingle<{ full_name: string | null; email: string }>();
       const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
-      void emitSignal(others, 'messages');
-      void emitAppEvent({
+      // Delivery-only (the RPC already wrote the app_events row in-txn).
+      void deliverEventNotifications({
         eventType:          'communications.message.received',
         sourceModule:       'communications',
-        // Point at the navigable record (the THREAD), not the post — so the
-        // notification can deep-link the conversation open. Per-message dedup
-        // still uses the post id below.
         sourceEntityType:   'message_thread',
         sourceEntityId:     input.threadId,
         actorUserId:        input.currentUserId,
         severity:           'info',
-        dedupeKey:          `msg:${input.threadId}:${post.id}`,
+        dedupeKey:          `msg:${input.threadId}:${result.postId}`,
         explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
         notification: {
           title:       'New message',
           body:        `${actorName} sent a message…`,
           actionRoute: 's-messages',
         },
-      });
+      }, result.eventId ?? null);
     }
 
-    return { ok: true, postId: post.id, threadId: input.threadId, createdAt: post.created_at };
-  } catch (e) {
-    console.error('[communications] postMessage failed:', e);
-    return { ok: false, message: 'Internal error' };
+    return { ok: true, postId: result.postId, threadId: input.threadId, createdAt: new Date().toISOString() };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    // Surface clean error codes to the route (403 → forbidden, 404 → not found, etc.)
+    const status = (err as { status?: number }).status;
+    console.error('[communications] postMessage RPC failed:', err.message ?? e);
+    return Object.assign(
+      { ok: false, message: err.message ?? 'Internal error' },
+      status ? { status } : {},
+    );
   }
 }
 
@@ -1384,6 +1302,8 @@ export async function getThreadPosts(
       priority:             string | null;
       reply_to_post_id:     string | null;
       delivery_status:      string | null;
+      sequence:             number | null;
+      client_idempotency_key: string | null;
       app_users: {
         full_name: string | null; email: string; role: string | null;
         profile_image_url: string | null; profile_image_thumb_url: string | null;
@@ -1393,7 +1313,7 @@ export async function getThreadPosts(
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
+      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
       .limit(limit);
@@ -1491,6 +1411,8 @@ export async function getThreadPosts(
         replyToPost:        p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null,
         deliveryStatus:     (p.delivery_status ?? undefined) as PostRow['deliveryStatus'],
         readByCount:        readCountMap.get(p.id) ?? 0,
+        sequence:           p.sequence ?? null,
+        clientIdempotencyKey: p.client_idempotency_key ?? null,
       };
     });
 
@@ -1617,23 +1539,22 @@ export async function getAttachmentUrl(
 
 // ── markThreadRead ─────────────────────────────────────────────────────────────
 
-export async function markThreadRead(threadId: string, userId: string): Promise<void> {
-  const nowIso = new Date().toISOString();
-  await sb.from('message_participants')
-    .update({ last_read_at: nowIso })
-    .eq('thread_id', threadId)
-    .eq('user_id', userId)
-    .is('removed_at', null);
-
-  // Stamp read receipts for this user's delivered-but-unread posts in the thread
-  // (powers each post's "Read by N"). Best-effort.
-  const { data: tp } = await sb.from('message_posts').select('id').eq('thread_id', threadId) as { data: Array<{ id: string }> | null };
-  const ids = (tp ?? []).map(r => r.id);
-  if (ids.length > 0) {
-    await sb.from('message_post_receipts').update({ read_at: nowIso }).eq('user_id', userId).is('read_at', null).in('post_id', ids);
+export async function markThreadRead(threadId: string, userId: string, upToSequence?: number): Promise<void> {
+  // ── Atomic RPC path ──
+  // The RPC: verifies participant → monotonic cursor update (greatest(current, requested))
+  // → set-based receipt update bounded by sequence. No unbounded IN-list.
+  // Post-commit: emitSignal to refresh badge counts.
+  try {
+    // When upToSequence is not provided (legacy callers), use a very large number
+    // so the cursor advances to cover all existing posts (safe because greatest() is monotonic).
+    const seq = upToSequence ?? Number.MAX_SAFE_INTEGER;
+    await markReadTx({ threadId, actorId: userId, upToSequence: seq });
+    void emitSignal([userId], 'summary');
+  } catch (e: unknown) {
+    // markThreadRead is fire-and-forget in most callers; log but don't throw.
+    const err = e as { message?: string };
+    console.error('[communications] markThreadRead RPC failed:', err.message ?? e);
   }
-
-  void emitSignal([userId], 'summary');
 }
 
 // ── archiveThread ──────────────────────────────────────────────────────────────
@@ -1668,89 +1589,52 @@ export async function addThreadParticipants(
   actorUserId:  string,
   userIds:      string[],
   actorRole?:   string,
-): Promise<{ ok: boolean; message?: string }> {
+): Promise<{ ok: boolean; message?: string; status?: number }> {
+  // ── Atomic RPC path ──
+  // The RPC: locks thread → DM immutability check → author check → UPSERT participants
+  // (fixes the removed-participant re-entry PK conflict) → system post → outbox + app_event.
+  // Post-commit: signal ALL active participants (fixing the bug where only actor+new were signalled).
   try {
-    // Actor must be owner or admin
-    const { data: actorPart } = await sb
-      .from('message_participants')
-      .select('role')
-      .eq('thread_id', threadId)
-      .eq('user_id', actorUserId)
-      .is('removed_at', null)
-      .maybeSingle<{ role: string }>();
+    const result = await addParticipantsTx({
+      threadId,
+      actorId:   actorUserId,
+      userIds,
+      actorRole,
+    });
 
-    // Owner of the thread, or a messaging admin (communications.admin) — no blanket role bypass.
-    const canManage = actorPart?.role === 'owner'
-      || await userCan({ id: actorUserId, role: actorRole }, 'communications.admin');
-    if (!canManage) {
-      return { ok: false, message: 'Only the thread owner or a messaging admin can add participants' };
+    // Signal ALL active participants (not just actor+new — fixing finding #3).
+    void emitSignal(result.activeParticipantIds, 'messages');
+
+    // Deliver notifications only to newly-added users.
+    if (result.addedUserIds.length > 0) {
+      const { data: actor } = await sb
+        .from('app_users')
+        .select('full_name, email')
+        .eq('id', actorUserId)
+        .maybeSingle<{ full_name: string | null; email: string }>();
+      const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
+
+      void deliverEventNotifications({
+        eventType:          'communications.participant.added',
+        sourceModule:       'communications',
+        sourceEntityType:   'message_thread',
+        sourceEntityId:     threadId,
+        actorUserId,
+        severity:           'info',
+        explicitRecipients: result.addedUserIds.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+        notification: {
+          title:       'Added to conversation',
+          body:        `${actorName} added you to a conversation.`,
+          actionRoute: 's-messages',
+        },
+      }, result.eventId ?? null);
     }
 
-    // Deduplicate and skip existing active participants
-    const { data: existing } = await sb
-      .from('message_participants')
-      .select('user_id')
-      .eq('thread_id', threadId)
-      .in('user_id', userIds)
-      .is('removed_at', null) as { data: Array<{ user_id: string }> | null };
-
-    const existingSet = new Set((existing ?? []).map(e => e.user_id));
-    const toAdd = [...new Set(userIds)].filter(uid => !existingSet.has(uid));
-    if (toAdd.length === 0) return { ok: true };
-
-    const now = new Date().toISOString();
-    await sb.from('message_participants').insert(
-      toAdd.map(uid => ({ thread_id: threadId, user_id: uid, role: 'participant', joined_at: now })),
-    );
-
-    // Fetch actor name for system post
-    const { data: actor } = await sb
-      .from('app_users')
-      .select('full_name, email')
-      .eq('id', actorUserId)
-      .maybeSingle<{ full_name: string | null; email: string }>();
-    const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
-
-    // Fetch added user names
-    const { data: addedUsers } = await sb
-      .from('app_users')
-      .select('id, full_name, email')
-      .in('id', toAdd) as { data: Array<{ id: string; full_name: string | null; email: string }> | null };
-    const addedNames = (addedUsers ?? []).map(u => u.full_name ?? u.email).join(', ');
-
-    // System-event post — rendered as a centered timeline announcement (ThreadEvent),
-    // not a message bubble. body kept as a plain-text fallback for legacy renderers.
-    await sb.from('message_posts').insert({
-      thread_id:            threadId,
-      author_user_id:       null,
-      body:                 `${actorName} added ${addedNames} to the conversation.`,
-      is_system:            true,
-      post_type:            'system_event',
-      system_event_type:    'participant_added',
-      system_event_payload: { actorUserId, actorName, addedUserIds: toAdd, addedUserName: addedNames },
-    });
-
-    // Signal all current participants so everyone's timeline + notify added ones.
-    void emitSignal([actorUserId, ...toAdd], 'messages');
-    void emitAppEvent({
-      eventType:          'communications.thread.created',
-      sourceModule:       'communications',
-      sourceEntityType:   'message_thread',
-      sourceEntityId:     threadId,
-      actorUserId:        actorUserId,
-      severity:           'info',
-      explicitRecipients: toAdd.map(uid => ({ userId: uid, reason: 'explicit' as const })),
-      notification: {
-        title:       'Added to conversation',
-        body:        `${actorName} added you to a conversation.`,
-        actionRoute: 's-messages',
-      },
-    });
-
     return { ok: true };
-  } catch (e) {
-    console.error('[communications] addThreadParticipants failed:', e);
-    return { ok: false, message: 'Internal error' };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[communications] addThreadParticipants RPC failed:', err.message ?? e);
+    return Object.assign({ ok: false, message: err.message ?? 'Internal error' }, err.status ? { status: err.status } : {});
   }
 }
 
@@ -1761,59 +1645,27 @@ export async function removeThreadParticipant(
   actorUserId: string,
   userId:      string,
   actorRole?:  string,
-): Promise<{ ok: boolean; message?: string }> {
+): Promise<{ ok: boolean; message?: string; status?: number }> {
+  // ── Atomic RPC path ──
+  // The RPC: locks thread → DM immutability check → auth → last-owner guard →
+  // marks removed_at → system post → outbox + app_event.
+  // Post-commit: signal remaining participants.
   try {
-    const { data: actorPart } = await sb
-      .from('message_participants')
-      .select('role')
-      .eq('thread_id', threadId)
-      .eq('user_id', actorUserId)
-      .is('removed_at', null)
-      .maybeSingle<{ role: string }>();
-
-    const canManage = actorPart?.role === 'owner'
-      || await userCan({ id: actorUserId, role: actorRole }, 'communications.admin');
-    if (!canManage) {
-      return { ok: false, message: 'Only the thread owner or a messaging admin can remove participants' };
-    }
-
-    await sb.from('message_participants')
-      .update({ removed_at: new Date().toISOString() })
-      .eq('thread_id', threadId)
-      .eq('user_id', userId);
-
-    // Fetch names for system post
-    const [actorRes, removedRes] = await Promise.all([
-      sb.from('app_users').select('full_name, email').eq('id', actorUserId).maybeSingle<{ full_name: string | null; email: string }>(),
-      sb.from('app_users').select('full_name, email').eq('id', userId).maybeSingle<{ full_name: string | null; email: string }>(),
-    ]);
-    const actorName   = actorRes.data?.full_name   ?? actorRes.data?.email   ?? 'Someone';
-    const removedName = removedRes.data?.full_name ?? removedRes.data?.email ?? 'a member';
-
-    // Self-removal reads as "left"; removing someone else reads as "removed".
-    const left = actorUserId === userId;
-    await sb.from('message_posts').insert({
-      thread_id:            threadId,
-      author_user_id:       null,
-      body:                 left ? `${removedName} left the conversation.` : `${actorName} removed ${removedName} from the conversation.`,
-      is_system:            true,
-      post_type:            'system_event',
-      system_event_type:    left ? 'participant_left' : 'participant_removed',
-      system_event_payload: left
-        ? { userId, userName: removedName }
-        : { actorUserId, actorName, removedUserId: userId, removedUserName: removedName },
+    const result = await removeParticipantTx({
+      threadId,
+      actorId:      actorUserId,
+      targetUserId: userId,
+      actorRole,
     });
 
-    // Refresh everyone still in the thread.
-    void emitSignal(await (async () => {
-      const { data } = await sb.from('message_participants').select('user_id').eq('thread_id', threadId).is('removed_at', null) as { data: Array<{ user_id: string }> | null };
-      return (data ?? []).map(r => r.user_id);
-    })(), 'messages');
-
+    if (!result.alreadyRemoved) {
+      void emitSignal(result.remainingParticipantIds, 'messages');
+    }
     return { ok: true };
-  } catch (e) {
-    console.error('[communications] removeThreadParticipant failed:', e);
-    return { ok: false, message: 'Internal error' };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[communications] removeThreadParticipant RPC failed:', err.message ?? e);
+    return Object.assign({ ok: false, message: err.message ?? 'Internal error' }, err.status ? { status: err.status } : {});
   }
 }
 

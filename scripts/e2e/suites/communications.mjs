@@ -39,6 +39,41 @@ export default async function run(h) {
     await sb.from('notifications').delete().ilike('title', `${TAG}%`);
   });
 
+  // ── Isolation for the one-direct-thread-per-pair invariant ──
+  // Direct threads are get-or-create (canonical per pair), so a suite cannot spin up
+  // many independent direct threads for the same members. Clean any legacy/duplicate
+  // direct threads among the test users up-front so each createThread here starts from
+  // a known slate. Tests that genuinely need multiple independent threads for the same
+  // members use GROUP threads (which are not deduped).
+  async function clearDirectThreadsAmong(userIds) {
+    const setU = new Set(userIds);
+    const { data: dirs } = await sb.from('message_threads').select('id').eq('thread_type', 'direct');
+    const ids = (dirs || []).map(t => t.id);
+    if (!ids.length) return;
+    const { data: parts } = await sb.from('message_participants').select('thread_id, user_id').in('thread_id', ids);
+    const byThread = {};
+    for (const p of parts || []) (byThread[p.thread_id] = byThread[p.thread_id] || []).push(p.user_id);
+    const victims = ids.filter(id => {
+      const u = byThread[id] || [];
+      return u.length > 0 && u.every(x => setU.has(x));
+    });
+    if (!victims.length) return;
+    const postIds = ((await sb.from('message_posts').select('id').in('thread_id', victims)).data ?? []).map(p => p.id);
+    if (postIds.length) {
+      await sb.from('message_post_receipts').delete().in('post_id', postIds);
+      await sb.from('message_attachments').delete().in('post_id', postIds);
+    }
+    await sb.from('message_pins').delete().in('thread_id', victims);
+    await sb.from('message_event_outbox').delete().in('thread_id', victims);
+    await sb.from('message_posts').delete().in('thread_id', victims);
+    await sb.from('message_participants').delete().in('thread_id', victims);
+    await sb.from('message_thread_access_grants').delete().in('thread_id', victims);
+    await sb.from('notifications').delete().in('source_id', victims);
+    await sb.from('app_events').delete().in('source_entity_id', victims);
+    await sb.from('message_threads').delete().in('id', victims);
+  }
+  await clearDirectThreadsAmong([admin.id, b.id, c.id]);
+
   // ───────────────────────── NOTIFICATIONS ─────────────────────────
   h.section('Communications › Notifications');
 
@@ -148,8 +183,10 @@ export default async function run(h) {
   h.section('Communications › Messages');
 
   await test('createThread (admin → B)', async () => {
+    // group: this is the primary multi-participant thread (adds/removes C below) —
+    // direct threads are immutable per the DM invariant, so participant edits need a group.
     const r = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} thread`, participantUserIds: [b.id], body: 'first message',
+      threadType: 'group', subject: `${TAG} thread`, participantUserIds: [b.id], body: 'first message',
     });
     ok(r); expect(r.body.threadId, 'no threadId');
     ctx.threadId = r.body.threadId; ctx.threadIds.push(r.body.threadId);
@@ -274,6 +311,84 @@ export default async function run(h) {
     fails(r, 'thread with a non-existent recipient should be rejected');
   });
 
+  // ──────────── DIRECT THREAD GET-OR-CREATE (one canonical thread per pair) ────────────
+  h.section('Communications › Direct thread get-or-create');
+
+  const goc = {};
+  const gocPairKey = [admin.id, c.id].sort().join('|');
+  await clearDirectThreadsAmong([admin.id, c.id]);   // clean slate for the admin↔C direct pair
+
+  await test('GOC 1: first call CREATES the direct thread (created=true)', async () => {
+    const r = await api('communications/messages/createThread', T.admin, {
+      threadType: 'direct', subject: `${TAG} goc`, participantUserIds: [c.id], body: 'first' });
+    ok(r); expect(r.body.threadId, 'no threadId');
+    expect(r.body.created === true, `expected created=true, got ${r.body.created}`);
+    goc.threadId = r.body.threadId; goc.firstPostId = r.body.postId; ctx.threadIds.push(goc.threadId);
+  });
+
+  await test('GOC 2: second call returns the SAME threadId (created=false)', async () => {
+    const r = await api('communications/messages/createThread', T.admin, {
+      threadType: 'direct', subject: `${TAG} goc again`, participantUserIds: [c.id], body: 'second' });
+    ok(r);
+    expect(r.body.threadId === goc.threadId, `expected same thread ${goc.threadId}, got ${r.body.threadId}`);
+    expect(r.body.created === false, `expected created=false, got ${r.body.created}`);
+    goc.secondPostId = r.body.postId;
+  });
+
+  await test('GOC 3: the reuse created a NEW post, not another thread', async () => {
+    const { data: threads } = await sb.from('message_threads').select('id').eq('direct_pair_key', gocPairKey);
+    expect((threads || []).length === 1, `expected 1 canonical direct thread, got ${(threads || []).length}`);
+    expect(goc.secondPostId && goc.secondPostId !== goc.firstPostId, 'reuse did not create a distinct post');
+    const { data: post } = await sb.from('message_posts').select('thread_id, body').eq('id', goc.secondPostId).single();
+    expect(post?.thread_id === goc.threadId, 'appended post is not in the canonical thread');
+    expect((post?.body || '').includes('second'), 'appended post body missing');
+  });
+
+  await test('GOC 4: concurrent create calls resolve to ONE thread', async () => {
+    await clearDirectThreadsAmong([admin.id, c.id]);
+    const N = 6;
+    const res = await Promise.all(Array.from({ length: N }, (_, i) =>
+      api('communications/messages/createThread', T.admin, {
+        threadType: 'direct', participantUserIds: [c.id], body: `concurrent ${i}` })));
+    res.forEach((r, i) => ok(r, `concurrent create ${i} failed`));
+    const tids = new Set(res.map(r => r.body.threadId));
+    expect(tids.size === 1, `expected 1 thread from ${N} concurrent creates, got ${tids.size}`);
+    const creates = res.filter(r => r.body.created === true).length;
+    expect(creates === 1, `expected exactly 1 create + ${N - 1} reuse, got ${creates} creates`);
+    const { data: threads } = await sb.from('message_threads').select('id').eq('direct_pair_key', gocPairKey);
+    expect((threads || []).length === 1, `expected 1 canonical thread persisted, got ${(threads || []).length}`);
+    goc.threadId = [...tids][0]; ctx.threadIds.push(goc.threadId);
+  });
+
+  await test('GOC 5: attachment-only create reuses the thread and appends', async () => {
+    const { data: att } = await sb.from('message_attachments').insert({
+      post_id: null, file_name: `${TAG}-goc.pdf`, file_path: `test/${TAG}/goc.pdf`,
+      uploaded_by: admin.id, scan_status: 'clean', upload_status: 'uploaded',
+    }).select('id').single();
+    expect(att, 'failed to seed clean attachment');
+    const r = await api('communications/messages/createThread', T.admin, {
+      threadType: 'direct', participantUserIds: [c.id], body: null, attachmentIds: [att.id] });
+    ok(r, 'attachment-only reuse failed');
+    expect(r.body.threadId === goc.threadId, 'reused the wrong thread');
+    expect(r.body.created === false, 'expected reuse, not create');
+    const { data: post } = await sb.from('message_posts').select('attachment_count').eq('id', r.body.postId).single();
+    expect(post?.attachment_count === 1, `expected 1 attachment on the post, got ${post?.attachment_count}`);
+  });
+
+  await test('GOC 6: idempotent retry does NOT duplicate the post', async () => {
+    const key = `${TAG}-goc-idem`;
+    const r1 = await api('communications/messages/createThread', T.admin, {
+      threadType: 'direct', participantUserIds: [c.id], body: 'idem once', idempotencyKey: key });
+    ok(r1, 'first idempotent create failed');
+    const r2 = await api('communications/messages/createThread', T.admin, {
+      threadType: 'direct', participantUserIds: [c.id], body: 'idem once', idempotencyKey: key });
+    ok(r2, 'idempotent retry failed');
+    expect(r1.body.postId === r2.body.postId, `retry made a new post (${r1.body.postId} vs ${r2.body.postId})`);
+    const { data: posts } = await sb.from('message_posts')
+      .select('id').eq('thread_id', goc.threadId).eq('body', 'idem once');
+    expect((posts || []).length === 1, `idempotent retry duplicated the post (${(posts || []).length} copies)`);
+  });
+
   // ──────────── FILES, STATUS & CONCURRENCY ────────────
   h.section('Communications › Messages: files, status & concurrency');
 
@@ -299,6 +414,10 @@ export default async function run(h) {
     const cr = await api('communications/messages/attachments/create', T.admin, { fileName: `${TAG}.png`, filePath: path, contentType: 'image/png', sizeBytes: PNG.length });
     ok(cr, 'attachment create failed'); expect(cr.body.id, 'no attachment id');
 
+    // Simulate the malware/DLP scan completing (no scanner in dev) so the P0 attachment
+    // quarantine guard (scan_status must be 'clean' to send/pin/download) is satisfied.
+    await sb.from('message_attachments').update({ scan_status: 'clean' }).eq('id', cr.body.id);
+
     const pm = await api('communications/messages/post', T.admin, { threadId: ctx.threadId, body: `${TAG} file-msg`, attachmentIds: [cr.body.id] });
     ok(pm, 'post with attachment failed');
 
@@ -322,7 +441,8 @@ export default async function run(h) {
   });
 
   await test('status: recipient unreadCount rises on new msg, resets on read', async () => {
-    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'direct', subject: `${TAG} status-thread`, participantUserIds: [b.id], body: 'hi' });
+    // group = an independent thread (direct is get-or-create/unique-per-pair)
+    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'group', subject: `${TAG} status-thread`, participantUserIds: [b.id], body: 'hi' });
     ok(ct); ctx.threadIds.push(ct.body.threadId); const id = ct.body.threadId;
     const inB = async () => (await api('communications/messages/threads', T.b, { tab: 'inbox', limit: 100 })).body.data?.find(t => t.id === id);
     const t1 = await inB();
@@ -333,7 +453,7 @@ export default async function run(h) {
   });
 
   await test('status: archive removes from inbox → archived tab, isArchived flips, unarchive reverses', async () => {
-    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'direct', subject: `${TAG} arch-thread`, participantUserIds: [b.id], body: 'hi' });
+    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'group', subject: `${TAG} arch-thread`, participantUserIds: [b.id], body: 'hi' });
     ok(ct); ctx.threadIds.push(ct.body.threadId); const id = ct.body.threadId;
     ok(await api('communications/messages/archive', T.admin, { threadId: id, archived: true }));
     const inbox = (await api('communications/messages/threads', T.admin, { tab: 'inbox', limit: 100 })).body.data || [];
@@ -347,7 +467,7 @@ export default async function run(h) {
   });
 
   await test('concurrency: 8 messages posted at once all land, no loss, no dupes, in order', async () => {
-    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'direct', subject: `${TAG} bulk-thread`, participantUserIds: [b.id], body: 'seed' });
+    const ct = await api('communications/messages/createThread', T.admin, { threadType: 'group', subject: `${TAG} bulk-thread`, participantUserIds: [b.id], body: 'seed' });
     ok(ct); ctx.threadIds.push(ct.body.threadId); const id = ct.body.threadId;
     const N = 8;
     const res = await Promise.all(Array.from({ length: N }, (_, i) => api('communications/messages/post', T.admin, { threadId: id, body: `${TAG} bulk ${i}` })));
@@ -412,7 +532,7 @@ export default async function run(h) {
   await test('message badge: unread +1 on new message, −1 on read (recipient B)', async () => {
     const before = await sumM(T.b);
     const ct = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} badge-thread`, participantUserIds: [b.id], body: 'badge msg' });
+      threadType: 'group', subject: `${TAG} badge-thread`, participantUserIds: [b.id], body: 'badge msg' });
     ok(ct, 'createThread failed'); ctx.threadIds.push(ct.body.threadId);
     const mid = await sumM(T.b);
     expect(mid >= before + 1, `B unread expected to rise from ${before}, got ${mid}`);
@@ -431,7 +551,7 @@ export default async function run(h) {
     const chan = (await api('communications/summary', T.b)).body.data?.realtimeChannelKey;
     expect(chan, 'no realtimeChannelKey for B'); touchedChannels.add(chan);
     const ct = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} signal-thread`, participantUserIds: [b.id], body: 'x' });
+      threadType: 'group', subject: `${TAG} signal-thread`, participantUserIds: [b.id], body: 'x' });
     ok(ct); ctx.threadIds.push(ct.body.threadId);
     await sb.from('communication_signals').delete().eq('channel_key', chan);   // isolate the reply signal
     ok(await api('communications/messages/post', T.admin, { threadId: ct.body.threadId, body: 'reply' }));
@@ -500,7 +620,7 @@ export default async function run(h) {
   await test('employee → admin: admin badge + thread unread rise, reset on read', async () => {
     const before = await unreadOf(T.admin);
     const ct = await api('communications/messages/createThread', T.b, {
-      threadType: 'direct', subject: `${TAG} emp2admin`, participantUserIds: [admin.id], body: 'hi boss' });
+      threadType: 'group', subject: `${TAG} emp2admin`, participantUserIds: [admin.id], body: 'hi boss' });
     ok(ct, 'employee could not message admin'); ctx.threadIds.push(ct.body.threadId);
     expect(await unreadOf(T.admin) === before + 1, 'admin badge (messagesUnread) did not rise');
     expect(await threadUnread(T.admin, ct.body.threadId) === 1, 'admin thread unreadCount != 1');
@@ -512,7 +632,7 @@ export default async function run(h) {
   await test('admin → employee: employee badge + thread unread rise, reset on read', async () => {
     const before = await unreadOf(T.b);
     const ct = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} admin2emp`, participantUserIds: [b.id], body: 'hi team' });
+      threadType: 'group', subject: `${TAG} admin2emp`, participantUserIds: [b.id], body: 'hi team' });
     ok(ct); ctx.threadIds.push(ct.body.threadId);
     expect(await unreadOf(T.b) === before + 1, 'employee badge did not rise');
     expect(await threadUnread(T.b, ct.body.threadId) === 1, 'employee thread unreadCount != 1');
@@ -547,7 +667,7 @@ export default async function run(h) {
     // while the Unread tab (others-only) was empty.
     const before = await unreadOf(T.admin);
     const ct = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} selfbadge`, participantUserIds: [b.id], body: 'hi' });
+      threadType: 'group', subject: `${TAG} selfbadge`, participantUserIds: [b.id], body: 'hi' });
     ok(ct); const id = ct.body.threadId; ctx.threadIds.push(id);
     ok(await api('communications/messages/post', T.admin, { threadId: id, body: 'second own message' }));
     const after = await unreadOf(T.admin);
@@ -559,7 +679,7 @@ export default async function run(h) {
     // The exact invariant the dropdown relies on: messagesUnread === #(threads in
     // the Unread tab). Uses the recipient (B) with a fresh unread thread.
     const ct = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', subject: `${TAG} invariant`, participantUserIds: [b.id], body: 'unread for B' });
+      threadType: 'group', subject: `${TAG} invariant`, participantUserIds: [b.id], body: 'unread for B' });
     ok(ct); ctx.threadIds.push(ct.body.threadId);
     const badge   = await unreadOf(T.b);
     const threads = (await api('communications/messages/threads', T.b, { tab: 'inbox', limit: 100 })).body.data || [];
@@ -587,7 +707,7 @@ export default async function run(h) {
   const pdp = {};
   await test('setup: thread (admin → B) for pins/drafts', async () => {
     const r = await api('communications/messages/createThread', T.admin, {
-      threadType: 'direct', participantUserIds: [admin.id, b.id], body: `${TAG} pin/draft seed`,
+      threadType: 'group', participantUserIds: [admin.id, b.id], body: `${TAG} pin/draft seed`,
     });
     ok(r); pdp.threadId = r.body.threadId; pdp.postId = r.body.postId; ctx.threadIds.push(r.body.threadId);
     expect(pdp.postId, 'no seed postId from createThread');
@@ -612,9 +732,10 @@ export default async function run(h) {
     ok(r); expect(!(r.body.data || []).some(x => x.id === pdp.personalPinId), 'personal pin leaked to other user');
   });
   await test('SIDE-EFFECT: pin wrote app_events communications.message_pinned', async () => {
-    const { data } = await sb.from('app_events').select('id')
-      .eq('event_type', 'communications.message_pinned').eq('source_entity_id', pdp.personalPinId).limit(1);
-    expect((data || []).length === 1, 'message_pinned app_event not written');
+    // The pin event is keyed by the THREAD; the pin id rides in the payload.
+    const { data } = await sb.from('app_events').select('payload')
+      .eq('event_type', 'communications.message_pinned').eq('source_entity_id', pdp.threadId).limit(10);
+    expect((data || []).some(r => r.payload?.pinId === pdp.personalPinId), 'message_pinned app_event not written');
   });
   await test('owner can thread-pin; visible to participant B', async () => {
     const r = await api('communications/messages/pins/pin', T.admin, {

@@ -504,8 +504,11 @@ const CreateThreadSchema = z.object({
   sourceEntityType:   z.string().nullable().optional(),
   sourceEntityId:     z.string().nullable().optional(),
   participantUserIds: z.array(z.string().min(1)).min(1),
-  body:               z.string().min(1).max(10000),
+  // Body OR at least one attachment required (enforced in the handler) — allow an
+  // empty/null body for attachment-only messages.
+  body:               z.string().max(10000).nullable().optional(),
   attachmentIds:      z.array(z.string().uuid()).optional(),
+  idempotencyKey:     z.string().min(1).max(200).optional(),
 });
 
 router.post('/communications/messages/createThread', async c => {
@@ -522,18 +525,22 @@ router.post('/communications/messages/createThread', async c => {
   if (v.data.threadType === 'record' && (!v.data.sourceModule || !v.data.sourceEntityType || !v.data.sourceEntityId)) {
     return c.json({ success: false, message: 'Record threads require sourceModule, sourceEntityType, and sourceEntityId' }, 400 as 200);
   }
+  // Body OR at least one attachment is required.
+  if (!(v.data.body ?? '').trim() && (v.data.attachmentIds?.length ?? 0) === 0) {
+    return c.json({ success: false, message: 'A message requires text or at least one attachment' }, 400 as 200);
+  }
 
   const result = await createMessageThread({ ...v.data, createdBy: user.id });
   if (!result.ok) return c.json({ success: false, message: result.message ?? 'Failed to create thread' }, 400 as 200);
-  return c.json({ success: true, threadId: result.threadId, postId: result.postId });
+  return c.json({ success: true, threadId: result.threadId, postId: result.postId, created: result.created });
 });
 
 // POST /api/communications/messages/post
 const PostMessageSchema = z.object({
   threadId:      z.string().uuid(),
-  // Body OR at least one attachment required (enforced below) — allow empty body
-  // when sending an attachment-only message.
-  body:          z.string().max(10000).optional(),
+  // Body OR at least one attachment required (enforced below) — allow empty/null
+  // body when sending an attachment-only message.
+  body:          z.string().max(10000).nullable().optional(),
   attachmentIds: z.array(z.string().uuid()).optional(),
   replyToPostId: z.string().uuid().nullable().optional(),
   priority:      z.enum(['normal','important','urgent','action_required']).optional(),
@@ -559,7 +566,8 @@ router.post('/communications/messages/post', async c => {
     priority:      v.data.priority,
   });
   if (!result.ok) {
-    const status = /participant|belong/.test(result.message ?? '') ? 403 as 200 : 500 as 200;
+    // Status is derived from the RPC's MG SQLSTATE (403/404/409/422); fall back to 500.
+    const status = (result.status ?? 500) as 200;
     return c.json({ success: false, message: result.message ?? 'Failed' }, status);
   }
   return c.json({ success: true, postId: result.postId, threadId: result.threadId, createdAt: result.createdAt });
@@ -616,7 +624,8 @@ router.post('/communications/messages/attachments/create', async c => {
 
 // POST /api/communications/messages/markRead
 const MarkReadSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId:     z.string().uuid(),
+  upToSequence: z.number().int().nonnegative().optional(),
 });
 
 router.post('/communications/messages/markRead', async c => {
@@ -625,7 +634,7 @@ router.post('/communications/messages/markRead', async c => {
   const v = zv(c, MarkReadSchema, body.args);
   if (!v.ok) return v.response;
 
-  await markThreadRead(v.data.threadId, user.id);
+  await markThreadRead(v.data.threadId, user.id, v.data.upToSequence);
   return c.json({ success: true });
 });
 
@@ -674,7 +683,7 @@ router.post('/communications/messages/participants/add', async c => {
 
   const result = await addThreadParticipants(v.data.threadId, user.id, v.data.userIds, user.role);
   if (!result.ok) {
-    const status = result.message?.includes('thread owner') ? 403 as 200 : 500 as 200;
+    const status = (result.status ?? 500) as 200;
     return c.json({ success: false, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true });
@@ -710,7 +719,7 @@ router.post('/communications/messages/participants/remove', async c => {
 
   const result = await removeThreadParticipant(v.data.threadId, user.id, v.data.userId, user.role);
   if (!result.ok) {
-    const status = result.message?.includes('thread owner') ? 403 as 200 : 500 as 200;
+    const status = (result.status ?? 500) as 200;
     return c.json({ success: false, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true });
@@ -774,11 +783,12 @@ router.post('/communications/messages/attachments/get-url', async c => {
 // owner/admin only (enforced in the lib).
 
 const PinSchema = z.object({
-  threadId:   z.string().uuid(),
-  postId:     z.string().uuid().nullable().optional(),
-  pinType:    z.enum(['thread','post']),
-  visibility: z.enum(['thread','personal']).default('thread'),
-  note:       z.string().max(500).nullable().optional(),
+  threadId:        z.string().uuid(),
+  postId:          z.string().uuid().nullable().optional(),
+  pinType:         z.enum(['thread','post']),
+  visibility:      z.enum(['thread','personal']).default('thread'),
+  note:            z.string().max(500).nullable().optional(),
+  expectedVersion: z.number().int().nonnegative().nullable().optional(),
 });
 
 router.post('/communications/messages/pins/pin', async c => {
@@ -795,9 +805,12 @@ router.post('/communications/messages/pins/pin', async c => {
     pinType:         v.data.pinType,
     visibility:      v.data.visibility,
     note:            v.data.note ?? null,
+    expectedVersion: v.data.expectedVersion ?? null,
   });
   if (!result.ok) {
-    const status = /participant|owner/.test(result.message ?? '') ? 403 as 200 : 400 as 200;
+    const status = result.status === 409 ? 409 as 200
+                 : /participant|owner/.test(result.message ?? '') ? 403 as 200
+                 : 400 as 200;
     return c.json({ success: false, message: result.message ?? 'Failed to pin' }, status);
   }
   return c.json({ success: true, data: result.pin });
