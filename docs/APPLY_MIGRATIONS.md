@@ -118,7 +118,30 @@ select proname from pg_proc where proname = 'hr_position_apply_reports_to_tx';  
 select indexname from pg_indexes where indexname = 'hr_org_change_requests_one_active_per_position_uidx';  -- 1 row
 ```
 
-## After all seven succeed
+### 8. `211` — atomic workflow-creation primitive (finding #3)  ·  APPLY  ⚠ needs `210` first
+The `wf_internal._create_instance` primitive + `_claim_request`/`_record_request` idempotency ledger.
+Depends on `210` (the `wf_internal` schema + `service_role` grants). Pure new functions — nothing calls
+them yet (the first caller is migration `212` / the payroll wrapper), so this is safe to apply ahead of
+its wiring; it does NOT gate any live code.
+```bash
+psql "$PGURL" -v ON_ERROR_STOP=1 -f supabase/migrations/20260919000211_workflow_creation_primitive.sql
+```
+Verify — `wf_internal` is **off the PostgREST surface** (by design), so the app-side probe cannot reach
+these; check the catalog directly instead (psql or a plain SQL Editor tab):
+```sql
+-- all three helper functions must exist in wf_internal:
+select proname from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+ where n.nspname = 'wf_internal'
+ order by proname;   -- expect: _claim_request, _create_instance, _record_request
+-- and service_role must hold EXECUTE on the primitive:
+select has_function_privilege('service_role',
+  'wf_internal._create_instance(uuid,uuid,uuid,text,text,text,text,text,text,text,text,text,text,jsonb,jsonb,uuid)',
+  'EXECUTE');        -- expect: t
+```
+Full behavioral verification arrives with migration `212` (the payroll-run submit wrapper + its E2E),
+which is the first public RPC to call the primitive.
+
+## After all succeed
 ```sql
 NOTIFY pgrst, 'reload schema';
 ```

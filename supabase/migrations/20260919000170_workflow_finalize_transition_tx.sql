@@ -134,8 +134,13 @@ begin
 end
 $fn$;
 
--- ── workflow_outbox_complete — fenced: mark the delivery done (worker calls AFTER
---    notification delivery, so a notify failure retries instead of being lost) ──
+-- ── workflow_outbox_complete — fenced: mark the outbox job done. The worker calls
+--    this AFTER deliverEventNotifications, but that delivery is BEST-EFFORT
+--    (appEvents.deliverEventNotifications swallows its own failures) and the worker
+--    then completes the job unconditionally — so a notification-delivery failure is
+--    currently LOST, not retried. Making external notification delivery durable
+--    (retry/lease/dead-letter) is the tracked notification_deliveries worker track,
+--    engine-wide; it is NOT provided by this outbox. ──
 create or replace function public.workflow_outbox_complete(
   p_transition_id uuid,
   p_lease_token   uuid
