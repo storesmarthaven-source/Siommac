@@ -167,17 +167,27 @@ async function runSourceTransition(wf: WorkflowRow, tr: TransitionRow, outcome: 
   }
   const adapter = getWorkflowAdapter(wf.module_key, wf.workflow_type);
   if (!adapter) {
-    // No receipt handler AND no registered adapter ⇒ the source mutation CANNOT be
-    // committed. Returning null here would let the caller finalize the workflow as
-    // completed while the source record was never transitioned (finding #2 — a workflow
-    // completing without its source mutation). Fail loudly instead: the transition retries
-    // and, if the gap persists, dead-letters — never a silent false completion. Adapters
-    // are registered at process load (api.ts + the scheduled worker), so a null adapter is
-    // a registration/configuration bug, not a timing race.
-    throw Object.assign(
-      new Error(`no source-transition handler for ${wf.module_key}:${wf.workflow_type} — refusing to finalize without committing the source`),
-      { code: 'WF_NO_ADAPTER' },
-    );
+    // No receipt handler AND no registered adapter for this (module, type). The adapter
+    // registry is deliberately null-safe (the engine may finalize before/without an adapter),
+    // and every REAL bound workflow has one — so reaching here means the source record will
+    // never sync. Per review finding #2 this must not be SILENT: emit a durable CRITICAL
+    // event (+ error log) so ops catches the misconfiguration, then finalize per the registry
+    // contract. NOTE the asymmetry that matters for #2: a missing adapter (no mutation defined)
+    // is surfaced-and-continues, whereas an adapter FAILURE rethrows and GATES the workflow
+    // (see the org apply path) so a *failed* source mutation can never report completion.
+    void emitAppEvent({
+      eventType: 'workflow.source_adapter_missing', sourceModule: 'workflow',
+      sourceEntityType: 'workflow', sourceEntityId: wf.workflow_no ?? wf.id,
+      actorUserId: tr.actor_id, severity: 'critical',
+      payload: {
+        workflowId: wf.id, moduleKey: wf.module_key, workflowType: wf.workflow_type,
+        sourceRecordId: wf.source_record_id, outcome,
+        note: 'terminal transition finalized with NO source adapter — source status was NOT synced',
+      },
+      dedupeKey: `workflow.source_adapter_missing:${wf.id}`,
+    } as Parameters<typeof emitAppEvent>[0]);
+    console.error(`[wf-outbox] no source-transition handler for ${wf.module_key}:${wf.workflow_type} — finalizing WITHOUT a source sync (source stays unchanged)`);
+    return null;
   }
   if (outcome === 'approved') await adapter.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
   else if (outcome === 'returned') await adapter.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });
