@@ -55,8 +55,13 @@ export default async function run(h) {
       await sb.from('app_events').delete().eq('event_type', 'onboarding.custom_action_template.created').eq('payload->>actionName', ctx.tplName);
       await sb.from('hr_onboarding_action_templates').delete().eq('id', ctx.templateId);
     }
-    if (ctx.empId) { try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${ctx.empId}%`); } catch { /* optional */ } }
-    if (ctx.empId2) { try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${ctx.empId2}%`); } catch { /* optional */ } }
+    for (const id of [ctx.empId, ctx.empId2].filter(Boolean)) {
+      // (employeeId, packageKey)-keyed artifacts: the mutation-run idempotency ledger AND the
+      // derived onboarding.started event dedupe_key. Both must be cleared or a re-run of the
+      // same employee+package dedupes the start's case/event. Mirror this in setup too.
+      try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
+      try { await sb.from('app_events').delete().ilike('dedupe_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
+    }
     // Remove the global setting overrides this suite set (revert to catalog defaults).
     for (const k of (ctx.settingKeys ?? [])) {
       try { await sb.from('app_setting_values').delete().eq('setting_key', k).eq('scope_type', 'global').is('scope_id', null); } catch { /* optional */ }
@@ -108,6 +113,21 @@ export default async function run(h) {
     }
   });
 
+  await test('setup: clear leftover state for the shared test employees', async () => {
+    // ctx.empId / empId2 are STABLE roster employees (not per-run), so a prior INTERRUPTED
+    // run can leak state keyed by (employeeId, packageKey) that poisons this run:
+    //   • an active case → trips the "one active case per employee" gate on the first start;
+    //   • a completed module_mutation_run → the start dedupes and returns the OLD caseId;
+    //   • the derived onboarding.started app_event dedupe_key → the start emits NO fresh event
+    //     (emitAppEvent dedupes), so the source_entity_id=caseId assertion finds nothing.
+    // Clear all three defensively so every start below is fresh and deterministic.
+    for (const id of [ctx.empId, ctx.empId2].filter(Boolean)) {
+      await closeActiveCasesFor(id);
+      try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
+      try { await sb.from('app_events').delete().ilike('dedupe_key', `hr.onboarding.start:${id}%`); } catch { /* optional */ }
+    }
+  });
+
   // ── preview ───────────────────────────────────────────────────────────────────
   await test('preview-package (admin) → tasks + handoffs', async () => {
     const r = await api('hr/onboarding/preview-package', A, { packageKey: 'contractor_worker' });
@@ -134,8 +154,14 @@ export default async function run(h) {
     expect(/^ONB-/.test(r.body.data.caseNo), `caseNo format — got ${r.body.data.caseNo}`);
     expect(r.body.data.taskCount > 0, 'tasks created');
     ctx.caseId = r.body.data.caseId;
-    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.started').eq('source_entity_id', ctx.caseId).limit(1);
-    expect(ev && ev.length === 1, 'onboarding.started event');
+    // onboarding.started is emitted through runModuleMutation (written just after the HTTP
+    // response resolves), so poll rather than querying once — matches the suite's other
+    // event assertions and removes a load-sensitive race.
+    const gotStartedEvent = await waitFor(async () => {
+      const { data } = await sb.from('app_events').select('id').eq('event_type', 'onboarding.started').eq('source_entity_id', ctx.caseId).limit(1);
+      return (data ?? []).length === 1;
+    });
+    expect(gotStartedEvent, 'onboarding.started event');
     const { data: hos } = await sb.from('hr_onboarding_handoffs').select('status').eq('case_id', ctx.caseId);
     expect((hos ?? []).length >= 1 && hos.every(x => x.status === 'pending'), 'handoff intents pending');
   });
@@ -781,6 +807,10 @@ export default async function run(h) {
     const r = await api('hr/onboarding/start', A, {
       employeeId: probEmpId,
       packageKey: 'contractor_worker',
+      // contractor_worker is a contractor-only package: the case type must be 'contractor'
+      // and the contractor required fields must be supplied (validateWorkerTypeAndPackage).
+      workerType: 'contractor',
+      workerTypeDetails: { contractorCompany: 'E2E Agency', contractStartDate: '2027-02-01', contractEndDate: '2027-08-01' },
       targetStartDate: '2027-02-01',
     });
     ok(r, 'start with contractor package succeeds');

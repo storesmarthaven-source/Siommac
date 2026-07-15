@@ -10,7 +10,7 @@
 import { sb }           from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { httpError, normalizeCode } from './organizationCore';
+import { httpError, normalizeCode, assertNoPositionCycle } from './organizationCore';
 
 function nowISO(): string { return new Date().toISOString(); }
 function fail(e: { message?: string } | null): Error { return httpError(500, e?.message ?? 'Database error.'); }
@@ -50,16 +50,30 @@ export async function applyOrgUnitChange(actorId: string, unitId: string, action
   await writeHrAudit({ submoduleKey: 'organization', recordId: unitId, actorId, action: UNIT_AUDIT[action], previousState, newState });
 }
 
-export async function applyOrgUnitDelete(actorId: string, unitId: string, previousState: State, changeRequestId?: string | null): Promise<void> {
-  // Re-check the guard at apply time (state may have changed since the request was raised).
-  const [{ count: children }, { count: employees }, { count: positions }] = await Promise.all([
-    sb.from('departments').select('id', { count: 'exact', head: true }).eq('parent_id', unitId),
+/**
+ * Guard shared by submission (deleteOrgUnit) and apply time (applyOrgUnitDelete): a unit
+ * may be hard-deleted only when nothing live depends on it. ACTIVE child units, assigned
+ * employees, or linked positions each block. ARCHIVED (is_active=false) child units are
+ * logically removed and do NOT block — the departments.parent_id FK (on delete set null)
+ * reparents them to top level on delete, so blocking on them would trap otherwise-empty
+ * parents forever. Count errors are surfaced, never swallowed as 0 (a silent 0 would
+ * bypass the guard entirely — the exact failure mode that let a bad build slip through).
+ */
+export async function assertUnitDeletable(unitId: string): Promise<void> {
+  const [childRes, empRes, posRes] = await Promise.all([
+    sb.from('departments').select('id', { count: 'exact', head: true }).eq('parent_id', unitId).eq('is_active', true),
     sb.from('app_users').select('id', { count: 'exact', head: true }).eq('department_id', unitId),
     sb.from('hr_positions').select('id', { count: 'exact', head: true }).eq('department_id', unitId),
   ]);
-  if ((children ?? 0) > 0)  throw httpError(409, `Cannot delete: ${children} child unit(s) exist.`);
-  if ((employees ?? 0) > 0) throw httpError(409, `Cannot delete: ${employees} employee(s) are assigned.`);
-  if ((positions ?? 0) > 0) throw httpError(409, `Cannot delete: ${positions} position(s) are linked.`);
+  for (const r of [childRes, empRes, posRes]) if (r.error) throw fail(r.error);
+  if ((childRes.count ?? 0) > 0) throw httpError(409, `Cannot delete: ${childRes.count} active child unit(s) exist. Move, delete or deactivate them first, or deactivate this unit instead.`);
+  if ((empRes.count ?? 0) > 0)   throw httpError(409, `Cannot delete: ${empRes.count} employee(s) are assigned. Reassign them first, or deactivate this unit instead.`);
+  if ((posRes.count ?? 0) > 0)   throw httpError(409, `Cannot delete: ${posRes.count} position(s) are linked. Reassign them first, or deactivate this unit instead.`);
+}
+
+export async function applyOrgUnitDelete(actorId: string, unitId: string, previousState: State, changeRequestId?: string | null): Promise<void> {
+  // Re-check the guard at apply time (state may have changed since the request was raised).
+  await assertUnitDeletable(unitId);
   const { error } = await sb.from('departments').delete().eq('id', unitId);
   if (error) throw fail(error);
   void emitAppEvent({ eventType: 'org.unit.deleted', sourceModule: 'hr', sourceEntityType: 'org_unit', sourceEntityId: unitId, actorUserId: actorId, severity: 'warning', payload: { changeRequestId: changeRequestId ?? null } });
@@ -67,6 +81,17 @@ export async function applyOrgUnitDelete(actorId: string, unitId: string, previo
 }
 
 export async function applyPositionChange(actorId: string, positionId: string, action: PosAction, newState: State, previousState: State, changeRequestId?: string | null): Promise<void> {
+  // Apply-time backstop: a reports-to change approved AFTER a conflicting change already
+  // landed must not create a hierarchy cycle in committed state (submission-time overlay
+  // catches concurrent in-flight requests; this catches sequential approvals).
+  if (action === 'update' && newState['reportsToPositionId']) {
+    const { data: positions, error: posErr } = await sb.from('hr_positions').select('id, reports_to_position_id');
+    if (posErr) throw fail(posErr);
+    assertNoPositionCycle(
+      ((positions ?? []) as { id: string; reports_to_position_id: string | null }[]).map(p => ({ id: p.id, reportsToPositionId: p.reports_to_position_id })),
+      positionId, newState['reportsToPositionId'] as string,
+    );
+  }
   const { error } = await sb.from('hr_positions').update(toPatch(newState, POS_COLS)).eq('id', positionId);
   if (error) throw fail(error);
   void emitAppEvent({ eventType: action === 'retire' ? 'org.position.retired' : 'org.position.updated', sourceModule: 'hr', sourceEntityType: 'position', sourceEntityId: positionId, actorUserId: actorId, severity: 'info', payload: { ...newState, changeRequestId: changeRequestId ?? null } });

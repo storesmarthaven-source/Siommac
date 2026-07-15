@@ -51,20 +51,27 @@ real items (367 passed · 8 failed across the residual suites). Root-caused:
 | # | suite | root cause | category | status |
 |---|---|---|---|---|
 | 1 | communications | `realtime DELIVERY (anon)` — `communication_signals` not published for realtime / anon SELECT | A (mig `20260628100000` not applied / verify) | operator |
-| 2 | financeBudgets | variance-breach `notifications` rows not written for recipients | D (recipient logic) | TODO |
-| 3 | financePayComponents | duplicate code accepted — optimistic check hit `finance_pay_components` (empty until approval), missed a pending CREATE CR | D | **FIXED** (pending-CR check; verifying) |
+| 2 | financeBudgets | variance-breach notifications DO write — the TEST selected a non-existent column `recipient_user_id` (it's `user_id`) so the query errored to 0 rows | E (test, mis-diagnosed as recipient logic) | **FIXED** (suite: `user_id` + scoped to the finance_manager recipient + `waitFor` + notif cleanup) |
+| 3 | financePayComponents | duplicate code accepted — optimistic check hit `finance_pay_components` (empty until approval), missed a pending CREATE CR | D | **FIXED** (pending-CR check) |
 | 4 | hrDocuments | duplicate requirement accepted — code maps 23505→409 but the UNIQUE constraint was never created | A/D | **FIXED** (mig `20260919000250` — operator applies) |
-| 5 | hrOnboarding | "Contractor Worker package not available for employee onboarding" — test uses an incompatible package/case-type combo | E (test) | TODO (test) |
-| 6 | hrOrganization | position reports-to CYCLE accepted — no cycle detection in the org-change path | D (feature gap) | TODO (feature) |
-| 7 | hrOrganization | delete-unit counts an ARCHIVED child as blocking | D (count should exclude archived) | TODO |
-| 8 | hrRoster | min-rest not enforced — test scenario is actually 32h rest (test bug) AND the rest formula is wrong for crosses-midnight adjacents (code bug) | D+E | TODO (datetime math + test) |
+| 5 | hrOnboarding | probation test started `contractor_worker` (contractor-only) as the default employee type → correctly rejected; AND a stale `(employee,package)`-keyed `onboarding.started` dedupe_key from interrupted runs deduped the event | E (test) | **FIXED** (suite: pass `workerType:'contractor'`+fields; `waitFor` on the event; defensive setup+cleanup clears leaked cases/mutation_runs/event dedupe_keys for the STABLE test employees) |
+| 6 | hrOrganization | position reports-to cycle check reads only committed `hr_positions`; a high-risk reports-to change is GATED as a pending CR, so two in-flight changes jointly forming a cycle both pass | D (feature gap) | **FIXED** (code: submission overlays pending CRs onto the graph → 409; `applyPositionChange` re-checks committed state as the apply-time backstop) |
+| 7 | hrOrganization | delete-unit counted an ARCHIVED child as blocking. NB the "delete live-child → 409" test failing in the earlier run was a STALE-DIST artifact (an uncommitted `.neq('status','inactive')` on a non-existent column erroring to 0); committed source counts children correctly | D (count should exclude archived) | **FIXED** (code: shared `assertUnitDeletable` counts only `is_active=true` children, checks query errors instead of swallowing them; used at submission + apply time) |
+| 8 | hrRoster | min-rest: the test scenario was 32h rest (correctly allowed — TEST bug), AND the rest formula added a whole day back for crosses-midnight adjacents (CODE bug: reported 24h for a real 0h gap) | D+E | **FIXED** (code: rest = later-start − earlier-end, both from the earlier day's midnight; test: genuine NIGHT→morning-DAY 0h rejection + a 16h positive guard) |
 
-Fixed this pass: #3 (code) + #4 (constraint migration). Remaining #2/#6/#7/#8 are genuine feature-
-logic fixes best done as focused commits with their own verifying tests (esp. #6 cycle detection and
-#8 crosses-midnight rest math); #1 is an operator migration; #5 is a test-fixture combo.
+Fixed this pass: #3, #4, plus #2/#5/#6/#7/#8 (this session). Only #1 remains — an operator
+migration (`20260628100000`) to publish `communication_signals` for realtime + anon SELECT.
+
+**Operational note (stale dist):** the running `dev:netlify` `dist/` had DIVERGED from committed
+source — an uncommitted `.neq('status','inactive')` in `deleteOrgUnit` had been compiled into dist but
+never committed (git showed no source diff). It erroring to a 0 child-count is what made the "delete
+live-child → 409" test fail and mis-pointed the #7 diagnosis. Re-verify by rebuilding from committed
+source (`npm run build:backend`) + restarting the dev server BEFORE trusting any run — a passing test
+against a divergent dist is a false result (see the netlify-dev-stale-dist rule).
 
 ## Bottom line
-The pre-release triage took the non-workflow suites from ~102 failures to **8 real, precisely-scoped
-items** — the rest were unapplied operator migrations (applied) + the agent's committed fixes + the
-`change_type`/roster fixes + #3/#4 here. NONE are regressions from the finding #1/#2 workflow changes
-or the RLS security fix (all those suites are green + verified).
+The pre-release triage took the non-workflow suites from ~102 failures to a precisely-scoped set;
+this session fixed #2/#5/#6/#7/#8 (2 code, 3 test/robustness), each verified against a rebuilt server:
+hrOrganization 34/34 · hrRoster 41/41 · financeBudgets 50/50 · hrOnboarding 105/105. Only the #1
+operator migration remains. NONE are regressions from the finding #1/#2 workflow changes or the RLS
+security fix (those suites are green + verified).

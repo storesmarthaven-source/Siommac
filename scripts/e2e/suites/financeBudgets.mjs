@@ -64,6 +64,7 @@ export default async function run(h) {
     try { if (ctx.ccId) await sb.from('finance_cost_centers').delete().eq('id', ctx.ccId); } catch {}
     try { await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_budgets').in('actor_id', [fmgrId, fstaffId].filter(Boolean)); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_budgets').in('actor_user_id', [fmgrId, fstaffId, empId].filter(Boolean)); } catch {}
+    try { await sb.from('notifications').delete().eq('module', 'finance_budgets').in('user_id', [fmgrId, fstaffId, empId].filter(Boolean)); } catch {}
     try { if (ctx.createdUserIds.length) await sb.from('app_users').delete().in('id', ctx.createdUserIds); } catch {}
   });
 
@@ -276,12 +277,18 @@ export default async function run(h) {
       return (data ?? []).length > 0;
     });
     expect(gotBreachEvent, 'finance.budget.variance.threshold_breached app_event not found after over-budget bulk-upsert');
-    // Notifications must have been written for finance_manager / finance_lead recipients
-    const { data: breachNotifs } = await sb.from('notifications').select('id, recipient_user_id')
-      .eq('source_type', 'budget_line_batch')
-      .eq('module', 'finance_budgets')
-      .limit(20);
-    expect((breachNotifs ?? []).length > 0, 'no notifications written for variance breach recipients');
+    // A breach notification must be written for the finance_manager recipient. fmgrId is an
+    // active finance_manager, hence a recipient. NB: the recipient column is `user_id`
+    // (there is no `recipient_user_id` on notifications — selecting it errors to zero rows).
+    const gotBreachNotif = await waitFor(async () => {
+      const { data } = await sb.from('notifications').select('id')
+        .eq('source_type', 'budget_line_batch')
+        .eq('module', 'finance_budgets')
+        .eq('user_id', fmgrId)
+        .limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(gotBreachNotif, 'no variance-breach notification written for the finance_manager recipient');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

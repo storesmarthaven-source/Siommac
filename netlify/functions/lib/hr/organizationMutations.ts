@@ -17,7 +17,7 @@ import {
 import { previewOrgChangeImpact } from './organizationImpact';
 import { classifyOrgChangeRisk, requiresApproval } from './organizationRiskPolicy';
 import { submitOrgChangeForApproval } from './organizationChangeRequests';
-import { applyOrgUnitChange, applyOrgUnitDelete, applyPositionChange, applyCostCenterChange } from './organizationApply';
+import { applyOrgUnitChange, applyOrgUnitDelete, applyPositionChange, applyCostCenterChange, assertUnitDeletable } from './organizationApply';
 import type {
   CreateOrgUnitArgs, UpdateOrgUnitArgs, MoveOrgUnitArgs, ArchiveOrgUnitArgs, DeleteOrgUnitArgs,
   CreatePositionArgs, UpdatePositionArgs, RetirePositionArgs,
@@ -125,14 +125,7 @@ export async function archiveOrgUnit(actor: OrgActor, args: ArchiveOrgUnitArgs):
 
 export async function deleteOrgUnit(actor: OrgActor, args: DeleteOrgUnitArgs): Promise<OrgMutationResult> {
   const current = await loadUnit(args.unitId);
-  const [{ count: children }, { count: employees }, { count: positions }] = await Promise.all([
-    sb.from('departments').select('id', { count: 'exact', head: true }).eq('parent_id', args.unitId),
-    sb.from('app_users').select('id', { count: 'exact', head: true }).eq('department_id', args.unitId),
-    sb.from('hr_positions').select('id', { count: 'exact', head: true }).eq('department_id', args.unitId),
-  ]);
-  if ((children ?? 0) > 0) throw httpError(409, `Cannot delete: ${children} child unit(s) exist. Move or delete them first, or deactivate this unit instead.`);
-  if ((employees ?? 0) > 0) throw httpError(409, `Cannot delete: ${employees} employee(s) are assigned. Reassign them first, or deactivate this unit instead.`);
-  if ((positions ?? 0) > 0) throw httpError(409, `Cannot delete: ${positions} position(s) are linked. Reassign them first, or deactivate this unit instead.`);
+  await assertUnitDeletable(args.unitId);
 
   const oldState: State = { name: current.name, code: current.code, parentId: current.parent_id, orgUnitType: current.org_unit_type };
   const impact = await previewOrgChangeImpact({ entityType: 'org_unit', entityId: args.unitId, action: 'delete' });
@@ -168,12 +161,43 @@ async function loadPosition(positionId: string): Promise<{ title: string; grade:
   return data as never;
 }
 
+/**
+ * Reports-to cycle check that also accounts for IN-FLIGHT (gated, not-yet-applied)
+ * position change requests. A high-risk reports-to change routes to approval and sits
+ * as a pending CR, so the committed hr_positions graph alone cannot see a cycle that two
+ * in-flight changes would jointly form. Overlay each pending/approved/scheduled position
+ * 'update' CR's proposed reportsToPositionId onto the graph, then run the pure assertion.
+ * Conservative by design: a submission that would close a cycle against an in-flight
+ * change is rejected up front (409). applyPositionChange re-checks committed state as the
+ * apply-time backstop for sequential approvals.
+ */
+async function assertNoPositionReportsToCycle(positionId: string, reportsToPositionId: string): Promise<void> {
+  const [posRes, crRes] = await Promise.all([
+    sb.from('hr_positions').select('id, reports_to_position_id'),
+    sb.from('hr_org_change_requests').select('entity_id, new_state')
+      .eq('entity_type', 'position').eq('action', 'update')
+      .in('status', ['pending_approval', 'approved', 'scheduled']),
+  ]);
+  if (posRes.error) throw pgError(posRes.error);
+  if (crRes.error) throw pgError(crRes.error);
+  const effective = new Map<string, string | null>();
+  for (const p of (posRes.data ?? []) as { id: string; reports_to_position_id: string | null }[]) {
+    effective.set(p.id, p.reports_to_position_id);
+  }
+  for (const cr of (crRes.data ?? []) as { entity_id: string; new_state: Record<string, unknown> | null }[]) {
+    if (cr.new_state && Object.prototype.hasOwnProperty.call(cr.new_state, 'reportsToPositionId')) {
+      effective.set(cr.entity_id, (cr.new_state['reportsToPositionId'] as string | null) ?? null);
+    }
+  }
+  const graph = Array.from(effective, ([id, reportsTo]) => ({ id, reportsToPositionId: reportsTo }));
+  assertNoPositionCycle(graph, positionId, reportsToPositionId);
+}
+
 export async function updatePosition(actor: OrgActor, args: UpdatePositionArgs): Promise<OrgMutationResult> {
   const current = await loadPosition(args.positionId);
   assertExpectedUpdatedAt(current.updated_at, args.expectedUpdatedAt);
   if (args.reportsToPositionId !== undefined && args.reportsToPositionId) {
-    const { data: positions } = await sb.from('hr_positions').select('id, reports_to_position_id');
-    assertNoPositionCycle(((positions ?? []) as { id: string; reports_to_position_id: string | null }[]).map(p => ({ id: p.id, reportsToPositionId: p.reports_to_position_id })), args.positionId, args.reportsToPositionId);
+    await assertNoPositionReportsToCycle(args.positionId, args.reportsToPositionId);
   }
   const newState: State = {}, oldState: State = {};
   const set = (k: string, provided: unknown, isSet: boolean, old: unknown): void => { if (isSet) { newState[k] = provided; oldState[k] = old; } };

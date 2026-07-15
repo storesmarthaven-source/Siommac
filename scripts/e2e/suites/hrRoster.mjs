@@ -312,17 +312,30 @@ export default async function run(h) {
     await sb.from('app_users').delete().eq('id', outsideEmpId);
   });
 
-  await test('min-rest violation between consecutive shifts is rejected', async () => {
-    // Day 1 empA already has a DAY shift (07:00-15:00). A NIGHT shift (23:00-07:00)
-    // on the same day or previous day should violate the 11h rest rule.
-    // Day 2 with NIGHT: rest = 23:00 - 15:00 = 8h < 11h → rejected.
-    const day2 = '2026-09-02';
+  await test('min-rest violation across midnight is rejected (NIGHT → next-morning DAY = 0h)', async () => {
+    // A NIGHT shift (23:00→07:00) on day 5 ends at 07:00 on day 6; a DAY shift (07:00-15:00)
+    // starting 07:00 on day 6 leaves 0h rest — below the 11h minimum → the day-6 assignment
+    // must be rejected. Exercises the crosses-midnight rest math specifically: a naive
+    // same-day subtraction (or the earlier +1440 bug) reports 24h and wrongly allows it.
+    const night = '2026-09-05', morning = '2026-09-06';
+    const n = await api('hr/roster/assignments/upsert', A, {
+      rosterId: ctx.rosterId, employeeId: empAId, workDate: night, shiftTemplateId: ctx.nightTmplId, kind: 'shift',
+    });
+    ok(n, `night setup assignment failed: ${n.body?.message}`);
     const r = await api('hr/roster/assignments/upsert', A, {
-      rosterId: ctx.rosterId, employeeId: empAId,
-      workDate: day2, shiftTemplateId: ctx.nightTmplId, kind: 'shift',
+      rosterId: ctx.rosterId, employeeId: empAId, workDate: morning, shiftTemplateId: ctx.templateId, kind: 'shift',
     });
     fails(r, 'should reject assignment violating minimum rest hours');
     expect(r.body?.message?.toLowerCase().includes('rest'), `expected rest-violation message, got: ${r.body?.message}`);
+  });
+
+  await test('sufficient rest across midnight is allowed (NIGHT → next-night NIGHT = 16h)', async () => {
+    // NIGHT on day 5 ends 07:00 day 6; a NIGHT on day 6 starts 23:00 → 16h rest (> 11h).
+    // Guards against the fix over-rejecting legitimately-spaced crosses-midnight shifts.
+    const r = await api('hr/roster/assignments/upsert', A, {
+      rosterId: ctx.rosterId, employeeId: empAId, workDate: '2026-09-06', shiftTemplateId: ctx.nightTmplId, kind: 'shift',
+    });
+    ok(r, `well-rested crosses-midnight assignment should be allowed: ${r.body?.message}`);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

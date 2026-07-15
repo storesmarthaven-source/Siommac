@@ -273,15 +273,21 @@ export async function saveAssignment(actorId: string, args: UpsertAssignmentArgs
         const adjStart = toHHMM(adjT.starts_at);
         const adjEnd   = toHHMM(adjT.ends_at);
 
+        // Rest = the gap between the EARLIER shift's end and the LATER shift's start,
+        // both measured from the earlier day's midnight (adjacents are exactly one day
+        // apart, so the later day starts at +1440). A shift that crosses midnight ends on
+        // the following day (+1440), which SHORTENS the rest window — the previous formula
+        // wrongly added a whole day back, reporting 24h where a NIGHT→morning-DAY pair
+        // actually has 0h rest.
         let restMinutes: number;
         if (adj.work_date < args.workDate) {
-          // adj is previous day; rest = new start - adj end (accounting for midnight cross)
-          const adjEndAbs = adjT.crosses_midnight ? adjEnd + 1440 : adjEnd;
-          restMinutes = newStart + (1440 - adjEndAbs % 1440);
+          // adj is the earlier (previous) day; the new shift is the later one.
+          const adjEndAbs = adjEnd + (adjT.crosses_midnight ? 1440 : 0);
+          restMinutes = (newStart + 1440) - adjEndAbs;
         } else {
-          // adj is next day; rest = adj start - new end
-          const newEndAbs = tmpl.crosses_midnight ? newEnd + 1440 : newEnd;
-          restMinutes = adjStart + (1440 - newEndAbs % 1440);
+          // adj is the later (next) day; the new shift is the earlier one.
+          const newEndAbs = newEnd + (tmpl.crosses_midnight ? 1440 : 0);
+          restMinutes = (adjStart + 1440) - newEndAbs;
         }
         const restHours = restMinutes / 60;
         if (restHours < MIN_REST_HOURS) {
