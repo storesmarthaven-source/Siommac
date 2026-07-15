@@ -254,8 +254,10 @@ export async function startWorkflowByTemplate(params: { templateKey: string; con
 
 const WF_SQLSTATE_HTTP: Record<string, number> = { WF400: 400, WF403: 403, WF404: 404, WF409: 409, WF422: 422 };
 
-/** Convert a supabase-js RPC error into a status-tagged Error the routes honor. */
-function rpcHttpError(error: { code?: string | null; message: string }): Error & { status?: number } {
+/** Convert a supabase-js RPC error into a status-tagged Error the routes honor.
+ *  Shared by every WF*-SQLSTATE RPC caller (decideTask + the Shape-A/B submit
+ *  wrappers) — maps WF400/403/404/409/422 → HTTP and strips the plpgsql prefix. */
+export function rpcHttpError(error: { code?: string | null; message: string }): Error & { status?: number } {
   const status = error.code ? WF_SQLSTATE_HTTP[error.code] : undefined;
   // Strip the plpgsql function prefix ('workflow_decide: …') for user-facing text.
   const message = error.message.replace(/^workflow_[a-z_]+:\s*/i, '');

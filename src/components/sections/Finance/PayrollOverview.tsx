@@ -16,7 +16,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
@@ -308,6 +308,18 @@ export function PayrollOverview(): VNode {
     catch (e) { toast(e instanceof Error ? e.message : 'Action failed.'); }
   }
 
+  // Idempotency: ONE stable key per submit ATTEMPT, held across retries so a lost
+  // response can recover the original result via the RPC receipt. Cleared only on a
+  // definitive SUCCESS; retained on any error so a re-click reuses the same key.
+  const submitKeys = useRef<Map<string, string>>(new Map());
+  function submitRunStable(runId: string): Promise<unknown> {
+    const keys = submitKeys.current;
+    const key = keys.get(runId) ?? crypto.randomUUID();
+    keys.set(runId, key);
+    return submitMut.mutateAsync({ id: runId, idempotencyKey: key })
+      .then(r => { keys.delete(runId); return r; });   // clear only on success
+  }
+
   // KPIs
   const totalNet        = runs.reduce((s, r) => s + (r.netTotal || 0), 0);
   const totalGross      = runs.reduce((s, r) => s + (r.grossTotal || 0), 0);
@@ -440,7 +452,7 @@ export function PayrollOverview(): VNode {
   const drawerActions: PayRunDrawerActions = {
     onLockInputs:  run => void runAction(lockInputsMut.mutateAsync({ id: run.id }), 'Inputs locked.'),
     onCalculate:   run => void runAction(calcMut.mutateAsync({ id: run.id }),        'Run calculated.'),
-    onSubmit:      run => void runAction(submitMut.mutateAsync({ id: run.id }),       'Submitted for approval.'),
+    onSubmit:      run => void runAction(submitRunStable(run.id),                     'Submitted for approval.'),
     onApprove:     run => { void (async () => {
       const confirmed = await dialog.confirm({
         title: `Approve run ${run.runNo}?`,

@@ -352,7 +352,10 @@ export const financePayrollApi = {
   createRun:   (a: CreateRunArgs)                       => call<PayrollRun>('finance/payroll/runs/create', a),
   lockInputs:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/lock-inputs', a),
   calculate:   (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/calculate', a),
-  submitRun:   (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/submit', a),
+  // idempotencyKey is REQUIRED and must be stable across retries of one submit attempt
+  // (the caller generates it once and reuses it) — a per-call key can't recover a lost
+  // response. See PayrollOverview submit handler.
+  submitRun:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/submit', a),
   approveRun:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/approve', a),
   rejectRun:   (a: { id: string; reason: string })     => call<PayrollRun>('finance/payroll/runs/reject', a),
   lockRun:     (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/lock', a),

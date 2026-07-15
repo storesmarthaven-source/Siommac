@@ -298,7 +298,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('finance_staff can submit the run for approval', async () => {
-    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId, idempotencyKey: `submit-main-${TAG}` });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.status === 'pending_approval',
       `status should be pending_approval, got ${r.body.data.status}`);
@@ -310,7 +310,7 @@ export default async function run(h) {
     ok(cr, 'could not create a secondary draft run for deny test');
     const draftId = cr.body.data.id;
 
-    const r = await api('finance/payroll/runs/submit', emp1Token, { id: draftId });
+    const r = await api('finance/payroll/runs/submit', emp1Token, { id: draftId, idempotencyKey: `submit-deny-${TAG}` });
     fails(r, 'employee should be denied run submit');
 
     // Cleanup secondary run
@@ -318,7 +318,9 @@ export default async function run(h) {
   });
 
   await test('a pending_approval run cannot be submitted again', async () => {
-    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
+    // DIFFERENT key than the first submit — a same-key retry would idempotently return
+    // the original result; a fresh key must hit the status guard (WF409).
+    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId, idempotencyKey: `submit-resubmit-deny-${TAG}` });
     expect(!r.body.success, 're-submitting a pending_approval run should fail');
   });
 
@@ -353,6 +355,154 @@ export default async function run(h) {
       return (data ?? []).length > 0;
     });
     expect(gotHandoff, 'handoff_outbox payroll_approval row not found within 8s after submit');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Payroll › Atomic submit (finding #3 — workflow_submit_for_record_tx)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // The submit path now commits status + workflow_id + the whole workflow + business
+  // event/audit/handoff in ONE transaction (no strand), with request-key idempotency.
+
+  // A minimal 'calculated' run we can submit WITHOUT the full calc pipeline (the RPC
+  // only gates on status, not run_lines). period_month is TAG+salt-unique so a leaked
+  // row can't collide with real data. Cleaned up at the end of this section.
+  const atomRunIds = [];
+  const { data: _mainRun } = await sb.from('finance_payroll_runs')
+    .select('statutory_version_id').eq('id', ctx.runId).single();
+  const atomStatVer = _mainRun?.statutory_version_id;
+  const { data: _binding } = await sb.from('module_workflow_bindings')
+    .select('id').eq('module_key', 'finance_payroll').eq('workflow_type', 'finance_payroll_approval')
+    .eq('trigger_event', 'finance.payroll.run.submitted').eq('is_active', true).limit(1).maybeSingle();
+  const atomBindingId = _binding?.id;
+
+  const seedRun = async (salt, status = 'calculated') => {
+    const { data, error } = await sb.from('finance_payroll_runs').insert({
+      run_no: `${TAG}-ATOM-${salt}`, period_month: seedDateFromTag(TAG, salt),
+      status, statutory_version_id: atomStatVer, created_by: fstaff1Id,
+    }).select('id').single();
+    if (error) throw new Error(`seedRun(${salt}): ${error.message}`);
+    atomRunIds.push(data.id);
+    return data.id;
+  };
+
+  await test('atomic submit: retry with the same idempotency key returns the original workflow (no double-create)', async () => {
+    const runId = await seedRun(60);
+    const key = `atom-idem-${TAG}-${runId}`;
+    const r1 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: key });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wf1 = r1.body.data.workflowId;
+    expect(wf1, 'first submit should return a workflowId');
+    // Same key — the run is now pending_approval, but the receipt short-circuits BEFORE
+    // the status guard and returns the original result (no WF409, no second workflow).
+    const r2 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: key });
+    ok(r2, `idempotent retry failed: ${r2.body.message}`);
+    expect(r2.body.data.workflowId === wf1, `retry should return workflow ${wf1}, got ${r2.body.data.workflowId}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', runId);
+    expect((wfs ?? []).length === 1, `exactly one workflow should exist, got ${(wfs ?? []).length}`);
+    // EXACT side-effect counts after the retry — proves the ownership cutover created NO
+    // duplicates (each written exactly once, in one txn; the retry short-circuited).
+    const evc = (await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', runId).eq('event_type', 'finance.payroll.run.submitted')).count ?? 0;
+    expect(evc === 1, `exactly one submitted app_event expected, got ${evc}`);
+    const auc = (await sb.from('hr_audit_log').select('id', { count: 'exact', head: true })
+      .eq('record_id', runId).eq('action', 'payroll_run.submitted')).count ?? 0;
+    expect(auc === 1, `exactly one hr_audit_log row expected, got ${auc}`);
+    const hoc = (await sb.from('handoff_outbox').select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', runId).eq('target_entity_type', 'payroll_approval')).count ?? 0;
+    expect(hoc === 1, `exactly one handoff_outbox row expected, got ${hoc}`);
+    const { data: tsk } = await sb.from('workflow_tasks').select('id').eq('workflow_id', wf1);
+    expect((tsk ?? []).length === 1, `exactly one workflow task expected, got ${(tsk ?? []).length}`);
+  });
+
+  await test('atomic submit: a rejected submit leaves the run UNCHANGED (no strand, no orphan workflow)', async () => {
+    const runId = await seedRun(61, 'draft');   // draft is not a legal from-status
+    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-str-${runId}` });
+    fails(r, 'submitting a draft run should be rejected');
+    const { data: after } = await sb.from('finance_payroll_runs').select('status, workflow_id').eq('id', runId).single();
+    expect(after.status === 'draft', `run should stay draft, got ${after.status}`);
+    expect(after.workflow_id === null, `no workflow_id should be stamped, got ${after.workflow_id}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', runId);
+    expect((wfs ?? []).length === 0, `no workflow should exist for a rejected submit, got ${(wfs ?? []).length}`);
+  });
+
+  await test('atomic submit: same key + different payload is rejected WF409 (direct RPC)', async () => {
+    const runId = await seedRun(62);
+    const key = `atom-hash-${TAG}-${runId}`;
+    const { error: e1 } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'finance_payroll_runs', p_source_id: runId, p_actor_id: fstaff1Id,
+      p_binding_id: atomBindingId, p_request_key: key, p_business: { probe: 'A' } });
+    expect(!e1, `first direct submit failed: ${e1?.message}`);
+    const { error: e2 } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'finance_payroll_runs', p_source_id: runId, p_actor_id: fstaff1Id,
+      p_binding_id: atomBindingId, p_request_key: key, p_business: { probe: 'B' } });
+    expect(e2 && e2.code === 'WF409', `different-payload retry should be WF409, got ${e2?.code} ${e2?.message}`);
+  });
+
+  await test('atomic submit: concurrent submits — exactly one succeeds, exactly one workflow', async () => {
+    const runId = await seedRun(63);
+    const [a, b2] = await Promise.all([
+      api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-c1-${runId}` }),
+      api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-c2-${runId}` }),
+    ]);
+    const successes = [a, b2].filter(x => x.body.success).length;
+    expect(successes === 1, `exactly one concurrent submit should succeed, got ${successes}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', runId);
+    expect((wfs ?? []).length === 1, `exactly one workflow should exist, got ${(wfs ?? []).length}`);
+  });
+
+  await test('atomic submit: a returned run resubmits with a fresh workflow linked via supersedes', async () => {
+    const runId = await seedRun(64);
+    const r1 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-sup1-${runId}` });
+    ok(r1, `first submit failed: ${r1.body.message}`);
+    const wfA = r1.body.data.workflowId;
+    // Simulate the approval workflow RETURNING the run (terminal 'returned' + run returned).
+    await sb.from('workflow_instances').update({ status: 'returned' }).eq('id', wfA);
+    await sb.from('finance_payroll_runs').update({ status: 'returned' }).eq('id', runId);
+    const r2 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-sup2-${runId}` });
+    ok(r2, `resubmit failed: ${r2.body.message}`);
+    const wfB = r2.body.data.workflowId;
+    expect(wfB && wfB !== wfA, `resubmit should create a NEW workflow, got ${wfB} vs ${wfA}`);
+    const { data: wfBrow } = await sb.from('workflow_instances').select('supersedes_workflow_id').eq('id', wfB).single();
+    expect(wfBrow?.supersedes_workflow_id === wfA, `new workflow should supersede ${wfA}, got ${wfBrow?.supersedes_workflow_id}`);
+  });
+
+  await test('atomic submit: primitive wrote the workflow instance + first task + workflow.started audit', async () => {
+    const { data: wf } = await sb.from('workflow_instances')
+      .select('id, status, workflow_no').eq('source_record_id', ctx.runId)
+      .order('created_at', { ascending: false }).limit(1).maybeSingle();
+    expect(wf && wf.status === 'in_progress', `workflow should be in_progress, got ${wf?.status}`);
+    expect(/^WF-\d{4}-\d{4}$/.test(wf.workflow_no ?? ''), `workflow_no should be WF-YYYY-NNNN, got ${wf?.workflow_no}`);
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('status, assigned_role, step_key').eq('workflow_id', wf.id);
+    expect((tasks ?? []).length === 1, `expected one first task, got ${(tasks ?? []).length}`);
+    expect(tasks[0].assigned_role === 'finance_manager' && tasks[0].status === 'pending',
+      `first task should be pending/finance_manager, got ${tasks[0]?.status}/${tasks[0]?.assigned_role}`);
+    const { data: audit } = await sb.from('workflow_audit_log')
+      .select('id').eq('workflow_id', wf.id).eq('action', 'workflow.started').limit(1);
+    expect((audit ?? []).length > 0, 'workflow.started workflow_audit_log row missing');
+  });
+
+  await test('atomic submit: a submit without an idempotency key is rejected', async () => {
+    const runId = await seedRun(65);
+    const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId });
+    fails(r, 'submit without an idempotency key should be rejected');
+    const { data: after } = await sb.from('finance_payroll_runs').select('status').eq('id', runId).single();
+    expect(after.status === 'calculated', `run should be unchanged, got ${after.status}`);
+  });
+
+  await test('atomic submit: cleanup seeded runs', async () => {
+    for (const rid of atomRunIds) {
+      try { await sb.from('workflow_tasks').delete().in('workflow_id',
+        ((await sb.from('workflow_instances').select('id').eq('source_record_id', rid)).data ?? []).map(w => w.id)); } catch {}
+      try { await sb.from('workflow_instances').delete().eq('source_record_id', rid); } catch {}
+      try { await sb.from('handoff_outbox').delete().eq('source_entity_id', rid); } catch {}
+      try { await sb.from('app_events').delete().eq('source_entity_id', rid); } catch {}
+      try { await sb.from('hr_audit_log').delete().eq('record_id', rid); } catch {}
+      try { await sb.from('finance_payroll_runs').delete().eq('id', rid); } catch {}
+    }
+    // NOTE: wf_internal.workflow_request_receipts rows leak (schema is off PostgREST so
+    // the service-role client can't reach it) — harmless: keys are TAG-scoped.
+    expect(true, 'cleanup complete');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -641,7 +791,7 @@ export default async function run(h) {
     // Run is now draft (reopened) — take it back to pending_approval.
     await api('finance/payroll/runs/lock-inputs', fmgr1Token, { id: ctx.runId });
     await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
-    const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
+    const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId, idempotencyKey: `submit-relock-${TAG}` });
     ok(sr, `re-submit failed: ${sr.body.message}`);
     const { data: runRow } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
     expect(runRow?.workflow_id, 'resubmitted run should have a workflow_id');
@@ -677,7 +827,7 @@ export default async function run(h) {
     // Recalculate from 'returned' (preparer revises), then resubmit — a NEW workflow starts.
     const rc = await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
     ok(rc, `recalculate from returned failed: ${rc.body.message}`);
-    const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId });
+    const sr = await api('finance/payroll/runs/submit', fstaff1Token, { id: ctx.runId, idempotencyKey: `submit-fromreturned-${TAG}` });
     ok(sr, `resubmit after return failed: ${sr.body.message}`);
     const { data: runRow } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
     expect(runRow?.workflow_id, 'resubmitted run should carry a fresh workflow_id');

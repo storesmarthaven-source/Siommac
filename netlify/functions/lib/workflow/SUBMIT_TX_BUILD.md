@@ -29,12 +29,17 @@
   EXISTENCE and caller access in-tx, enforces module permission, and rejects template/source mismatch.
 
 ## Idempotency (codex #1) — claim-first, not SELECT-then-INSERT
-Every mutation RPC, at transaction start: `pg_advisory_xact_lock(hashtext(key))` where
-`key = org|actor|operation_family|request_key`, THEN upsert a claim row in
-`wf_internal.workflow_request_receipts`. Compute `request_hash = sha256(<all behaviorally-relevant
-inputs>)` INSIDE the RPC. Same key+hash ⇒ return the stored result (200); same key different hash ⇒
-**WF409**. Explicit starts are idempotent too. This serializes concurrent duplicates and preserves the
-guarantee `module_mutation_runs` gives today.
+Every mutation RPC, at transaction start: `pg_advisory_xact_lock(hashtextextended(key, 0))` (64-bit)
+where `key = actor|operation|source_table|request_key` (the receipt key is SCOPED so two actors
+reusing the same client key never collide), THEN upsert a claim row in
+`wf_internal.workflow_request_receipts`. Compute `request_hash = md5((canonical jsonb of all
+behaviorally-relevant inputs)::text)` INSIDE the RPC. **md5, not sha256 (REQUIRED decision):** md5 is a
+`pg_catalog` builtin that always resolves under `set search_path=public`, matches the applied decide
+RPC (`20260919000160`), and needs no pgcrypto (`extensions.digest` would risk a runtime resolution
+failure). It is a non-adversarial idempotency fingerprint, NOT a security primitive — collision needs
+two *different* payloads sharing both md5 AND the scoped key, which is not a threat here. Same key+hash
+⇒ return the stored result (200); same key different hash ⇒ **WF409**. Explicit starts are idempotent
+too. This serializes concurrent duplicates and preserves the guarantee `module_mutation_runs` gives today.
 
 ## Notification durability (codex #6) — SQL enqueue + delivery worker
 `wf_internal._enqueue_notification(...)` applies canonical recipients + preferences + mutes and writes

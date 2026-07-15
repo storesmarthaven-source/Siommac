@@ -36,7 +36,7 @@ revoke usage on schema wf_internal from public;
 -- ── workflow_request_receipts — request-key idempotency ledger ────────────────
 create table if not exists wf_internal.workflow_request_receipts (
   request_key   text primary key,          -- org|actor|operation_family|client-key (built by the RPC)
-  request_hash  text not null,             -- sha256 over all behaviorally-relevant inputs (computed in-RPC)
+  request_hash  text not null,             -- md5 over a canonical jsonb of all behaviorally-relevant inputs (computed in-RPC; md5 is a pg_catalog builtin — non-adversarial idempotency fingerprint, not a security primitive)
   operation     text not null,             -- submit | create_and_start | start_bound | start_template
   module_key    text not null,
   source_id     text,                      -- business/source record id (text — source ids vary)

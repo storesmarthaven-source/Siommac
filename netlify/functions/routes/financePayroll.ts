@@ -241,10 +241,10 @@ router.post('/payroll/runs/audit/list', async c => {
 // Permission: finance.payroll.run.manage (finance_staff or finance_manager).
 router.post('/payroll/runs/submit', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await submitRun(v.data.id, actor.id);
+    const data = await submitRun(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

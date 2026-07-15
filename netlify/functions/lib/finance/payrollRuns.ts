@@ -32,7 +32,8 @@ import { resolveSettingValue } from '../settings/resolveSetting';
 /** Supported scale ceiling for a single run's calc/lock (500–1k target, ~2k headroom).
  *  Beyond this, the pipeline is rejected rather than silently truncating. */
 export const MAX_RUN_EMPLOYEES = 2000;
-import { startWorkflowForRecord, decideTask } from '../workflow/service';
+import { decideTask, rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
 import { notifyUsersByRole } from './financeEvents';
 import { notify } from '../notify';
 import { createHandoff } from '../handoffBus';
@@ -1376,115 +1377,72 @@ export async function downloadRunExport(
 
 /**
  * Submit a calculated run for approval via the central workflow engine.
- * Transitions: calculated → pending_approval.
- * On success: sets workflow_id on the run and starts the approval workflow.
- * Compensating rollback: if startWorkflowForRecord fails, status is reverted to 'calculated'.
+ * Transitions: calculated|returned → pending_approval.
+ *
+ * ATOMIC (finding #3): the source status flip, the workflow_id link, the whole
+ * workflow (instance + tasks + workflow audit/events), the business event, the
+ * hr_audit_log row and the approval handoff are ALL committed in ONE transaction by
+ * workflow_submit_for_record_tx. A null/failed workflow leaves the run UNCHANGED —
+ * no strand, no crash-window, no compensating-rollback dance. The RPC also owns
+ * idempotency (request-key receipt), so a retried submit returns the original result.
+ * Only the notification fan-out stays here (best-effort, post-commit) — the engine's
+ * established delivery model; it must NOT re-emit the events the RPC already wrote.
  */
-export async function submitRun(runId: string, actorId: string): Promise<PayrollRunDto> {
+export async function submitRun(runId: string, actorId: string, idempotencyKey: string): Promise<PayrollRunDto> {
+  // REQUIRED, no fallback: a server-generated key can't protect a client retry (it
+  // changes after the network boundary). The FE generates one stable key per submit
+  // attempt and reuses it on retry so the RPC receipt returns the original result.
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a run.'), { status: 400 });
+
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  // 'returned' = rejected/returned by the approval workflow; the preparer may
-  // resubmit (a fresh workflow instance is started and stamped below).
-  if (!['calculated', 'returned'].includes(run.status)) {
-    throw Object.assign(
-      new Error(`Cannot submit: run is in status '${run.status}'. Only 'calculated' or 'returned' runs can be submitted.`),
-      { status: 422 },
-    );
-  }
 
-  // Set to pending_approval first (workflow will manage the status from here)
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({ status: 'pending_approval' })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('submitRun/update: ' + updErr.message), { status: 500 });
-
-  let workflowInstance: { id: string } | null = null;
-  try {
-    workflowInstance = await startWorkflowForRecord({
-      context: {
-        moduleKey:      'finance_payroll',
-        workflowType:   'finance_payroll_approval',
-        triggerEvent:   'finance.payroll.run.submitted',
-        sourceRecordId: runId,
-        requestedBy:    actorId,
-        recordData:     {
-          runNo:       run.runNo,
-          periodMonth: run.periodMonth,
-          sourceType:  'payroll_run',
-          submittedBy: actorId,
-        },
-      },
-      actor: { id: actorId },
-    });
-  } catch (wfErr) {
-    // Compensating rollback: revert to the pre-submit status ('calculated' or 'returned')
-    await sb.from('finance_payroll_runs')
-      .update({ status: run.status })
-      .eq('id', runId);
-    throw Object.assign(
-      new Error('submitRun/workflow: ' + (wfErr as Error).message),
-      { status: 500 },
-    );
-  }
-
-  // Stamp workflow_id if one was created
-  if (workflowInstance) {
-    await sb.from('finance_payroll_runs')
-      .update({ workflow_id: workflowInstance.id })
-      .eq('id', runId);
-  }
-
-  const updatedRun = toRunDto(updated);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.submitted',
-    previousState: { status: 'calculated' },
-    newState: { status: 'pending_approval', workflowId: workflowInstance?.id ?? null },
+  // Resolve the active binding (the RPC re-selects + re-validates it under lock; this
+  // is the existing selection logic, passed in as an id).
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey:      'finance_payroll',
+    workflowType:   'finance_payroll_approval',
+    triggerEvent:   'finance.payroll.run.submitted',
+    sourceRecordId: runId,
+    requestedBy:    actorId,
+    recordData:     {},
   });
+  if (!binding) throw Object.assign(new Error('No approval workflow is configured for payroll runs.'), { status: 422 });
 
-  void emitAppEvent({
-    eventType:        'finance.payroll.run.submitted',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    actorUserId:      actorId,
-    severity:         'info',
-    payload:          { runNo: updatedRun.runNo, workflowId: workflowInstance?.id ?? null },
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'finance_payroll_runs',
+    p_source_id:    runId,
+    p_actor_id:     actorId,
+    p_binding_id:   binding.id,
+    p_request_key:  requestKey,
+    p_business:     { runNo: run.runNo, periodMonth: run.periodMonth, sourceType: 'payroll_run', submittedBy: actorId },
   });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
 
-  // §8.1 — notify Finance Managers that a run is awaiting approval
+  const result = (data ?? {}) as { workflowId?: string | null; workflowNo?: string | null };
+
+  // Notify Finance Managers (the step's assignees) that a run awaits approval. The
+  // workflow id is in the dedupe key so a RESUBMIT (new workflow) notifies afresh
+  // instead of being suppressed by the prior submission's notification.
   void notifyUsersByRole('finance_manager', {
     type:           'finance.payroll.run.pending_approval',
-    title:          `Payroll run ${updatedRun.runNo} submitted for approval`,
-    body:           `Period ${updatedRun.periodMonth.slice(0, 7)} payroll run is awaiting your approval.`,
+    title:          `Payroll run ${run.runNo} submitted for approval`,
+    body:           `Period ${run.periodMonth.slice(0, 7)} payroll run is awaiting your approval.`,
     module:         'finance_payroll',
     severity:       'warning',
     sourceType:     'payroll_run',
     sourceId:       runId,
     actionRequired: true,
-    dedupeKey:      `payroll_run.pending_approval.${runId}`,
+    dedupeKey:      `payroll_run.pending_approval.${runId}.${result.workflowId ?? ''}`,
   });
 
-  // §8.1 — handoff to approval workflow
-  void createHandoff({
-    sourceModule:     'finance_payroll',
-    targetModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    targetEntityType: 'payroll_approval',
-    payload: {
-      runNo:       updatedRun.runNo,
-      periodMonth: updatedRun.periodMonth,
-      workflowId:  workflowInstance?.id ?? null,
-      submittedBy: actorId,
-    },
-    createdBy: actorId,
-  });
-
-  return { ...updatedRun, status: 'pending_approval', workflowId: workflowInstance?.id ?? null };
+  // Refetch to return the canonical PayrollRunDto the FE consumes. Do NOT fabricate a
+  // response: if the reload fails after a committed submit, surface it — a same-key
+  // retry returns the original result from the RPC's idempotency receipt.
+  const updatedRun = await getPayrollRun(runId);
+  if (!updatedRun) throw Object.assign(new Error('Run submitted but could not be reloaded — retry to fetch the result.'), { status: 503 });
+  return updatedRun;
 }
 
 // ── Decide Run Approval (the ONLY approve/reject path — delegates to the engine) ──
