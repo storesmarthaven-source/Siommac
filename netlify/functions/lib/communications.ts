@@ -23,11 +23,10 @@ import { mintRealtimeToken } from './realtimeAuth';
 import { classifyAttachment, fileExtension, assertAttachmentAllowed } from './attachmentClassifier';
 import {
   createThreadTx, sendMessageTx, addParticipantsTx, removeParticipantTx, markReadTx,
-  msgRpcHttpError,
 } from './messaging/messagingRpc';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
-  MessageRecipient, ComplianceThread,
+  MessageRecipient, ComplianceThread, ThreadActivityEntry, ThreadSourceRecord,
 } from '../../../types/messaging';
 
 // ── Messaging attachments bucket ───────────────────────────────────────────────
@@ -147,7 +146,7 @@ export async function resolveThreadReadAccess(
     .eq('id', threadId)
     .maybeSingle<{ source_module: string | null; source_entity_type: string | null }>();
 
-  const principal = { id: user.id, role: (user.role ?? 'employee') as string };
+  const principal = { id: user.id, role: (user.role ?? 'employee') };
 
   if (thread?.source_module) {
     const recordPerm = recordViewPermissionKey(thread.source_module, thread.source_entity_type);
@@ -325,10 +324,10 @@ export async function searchThreadsForCompliance(input: {
       .select('id, thread_type, subject, last_post_at, source_module, source_entity_type, source_entity_id')
       .order('last_post_at', { ascending: false, nullsFirst: false })
       .limit(COMPLIANCE_CANDIDATE_CAP) as {
-        data: Array<{
+        data: {
           id: string; thread_type: string; subject: string; last_post_at: string | null;
           source_module: string | null; source_entity_type: string | null; source_entity_id: string | null;
-        }> | null;
+        }[] | null;
       };
     if (!threads || threads.length === 0) return { rows: [] };
 
@@ -338,7 +337,7 @@ export async function searchThreadsForCompliance(input: {
       .select('thread_id, user_id, app_users!inner(full_name, email)')
       .in('thread_id', ids)
       .is('removed_at', null) as {
-        data: Array<{ thread_id: string; user_id: string; app_users: { full_name: string | null; email: string } }> | null;
+        data: { thread_id: string; user_id: string; app_users: { full_name: string | null; email: string } }[] | null;
       };
 
     const byThread = new Map<string, { names: string[]; emails: string[]; userIds: Set<string> }>();
@@ -447,7 +446,7 @@ export async function resolveRecordThread(input: ResolveRecordThreadInput): Prom
         })
         .select('id')
         .single<{ id: string }>();
-      if (error || !t) return { ok: false, message: error?.message ?? 'Could not start discussion' };
+      if (error) return { ok: false, message: error.message };
       threadId = t.id;
       created  = true;
 
@@ -494,7 +493,7 @@ export async function resolveRecordThread(input: ResolveRecordThreadInput): Prom
     }
 
     void emitSignal([input.actorUserId], 'messages');
-    return { ok: true, threadId: threadId ?? undefined, created };
+    return { ok: true, threadId, created };
   } catch (e) {
     console.error('[communications] resolveRecordThread failed:', e);
     return { ok: false, message: 'Internal error' };
@@ -520,7 +519,7 @@ export async function emitSignal(
       .select('user_id, channel_key')
       .in('user_id', userIds)
       .gt('expires_at', new Date().toISOString()) as {
-        data: Array<{ user_id: string; channel_key: string }> | null
+        data: { user_id: string; channel_key: string }[] | null
       };
 
     if (!channels || channels.length === 0) return;
@@ -608,7 +607,7 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
   ]);
 
   // Derive the four active-notification counts from the single fetch.
-  type NotifFlags = { is_read: boolean; action_required: boolean; action_status: string; severity: string };
+  interface NotifFlags { is_read: boolean; action_required: boolean; action_status: string; severity: string }
   const activeNotifs: NotifFlags[] = activeNotifsRes.status === 'fulfilled'
     ? ((activeNotifsRes.value as { data?: NotifFlags[] | null }).data ?? [])
     : [];
@@ -622,9 +621,9 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     messagesUnread:      _countFromSettled(msgRes),
     ticketsOpen:         _countFromSettled(ticketRes),
     ticketsUnread:       0, // TODO: per-ticket unread tracking
-    workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value as number) : 0,
+    workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
-    realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value as string | null) : null,
+    realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value) : null,
     realtimeToken:          realtimeToken?.token ?? null,
     realtimeTokenExpiresAt: realtimeToken?.expiresAt ?? null,
   };
@@ -667,7 +666,7 @@ async function _ensureRealtimeChannel(userId: string): Promise<string | null> {
   // subscribe to a channel nothing publishes to and silently receive nothing.
   // Null tells the client to skip realtime (the 30s poll still works) and the
   // next summary call retries the upsert.
-  if (error || !data?.channel_key) {
+  if (error || !data.channel_key) {
     console.error('[communications] realtime channel upsert failed:', error?.message ?? 'no row');
     return null;
   }
@@ -709,7 +708,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
     .select('thread_id, last_read_at')
     .eq('user_id', userId)
     .is('removed_at', null) as {
-      data: Array<{ thread_id: string; last_read_at: string | null }> | null;
+      data: { thread_id: string; last_read_at: string | null }[] | null;
       error: { message: string } | null;
     };
   if (error || !parts || parts.length === 0) return { count: 0 };
@@ -722,7 +721,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
     .select('thread_id, created_at')
     .in('thread_id', threadIds)
     .neq('author_user_id', userId)
-    .is('deleted_at', null) as { data: Array<{ thread_id: string; created_at: string }> | null };
+    .is('deleted_at', null) as { data: { thread_id: string; created_at: string }[] | null };
 
   const unreadThreads = new Set<string>();
   for (const p of posts ?? []) {
@@ -772,7 +771,7 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
       sourceEntityType:  input.sourceEntityType ?? null,
       sourceEntityId:    input.sourceEntityId ?? null,
       createdBy:         input.createdBy,
-      participantIds:    input.participantUserIds ?? [],
+      participantIds:    input.participantUserIds,
       body:              input.body,
       priority:          'normal',
       attachmentIds:     input.attachmentIds ?? [],
@@ -809,7 +808,7 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
               : `${actorName} started a conversation`,
             actionRoute: 's-messages',
           },
-        }, result.eventId ?? null);
+        }, result.eventId);
       } else {
         void deliverEventNotifications({
           eventType:          'communications.message.received',
@@ -825,7 +824,7 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
             body:        `${actorName} sent a message…`,
             actionRoute: 's-messages',
           },
-        }, result.eventId ?? null);
+        }, result.eventId);
       }
     }
 
@@ -910,7 +909,7 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
           body:        `${actorName} sent a message…`,
           actionRoute: 's-messages',
         },
-      }, result.eventId ?? null);
+      }, result.eventId);
     }
 
     return { ok: true, postId: result.postId, threadId: input.threadId, createdAt: new Date().toISOString() };
@@ -949,11 +948,10 @@ export interface ListThreadsResult {
 
 export async function listThreadsForUser(input: ListThreadsInput): Promise<ListThreadsResult> {
   const { userId, tab = 'inbox', search, limit = 30, cursor } = input;
-  const epoch = new Date(0).toISOString();
 
   try {
     // Fetch participant rows for the user with thread data
-    type ParticipantWithThread = {
+    interface ParticipantWithThread {
       thread_id:           string;
       role:                string;
       last_read_at:        string | null;
@@ -973,7 +971,7 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         priority:           string | null;
         action_required:    boolean | null;
       };
-    };
+    }
 
     let q = sb
       .from('message_participants')
@@ -1007,7 +1005,7 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         .select('thread_id')
         .in('thread_id', threadIds)
         .eq('author_user_id', userId)
-        .is('deleted_at', null) as { data: Array<{ thread_id: string }> | null };
+        .is('deleted_at', null) as { data: { thread_id: string }[] | null };
       const sentSet = new Set((sentPosts ?? []).map(p => p.thread_id));
       filtered = rows.filter(r => sentSet.has(r.thread_id));
     }
@@ -1043,12 +1041,12 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
           .select('thread_id, user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at, profile_image_url, profile_image_thumb_url, profile_image)')
           .in('thread_id', threadIdSet)
           .is('removed_at', null) as {
-            data: Array<{
+            data: {
               thread_id: string;
               user_id:   string;
               role:      string;
               app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
-            }> | null;
+            }[] | null;
           }
       : { data: null };
 
@@ -1085,7 +1083,7 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         .select('thread_id, author_user_id, attachment_count, delivery_status, created_at')
         .in('thread_id', threadIdSet)
         .is('deleted_at', null) as {
-          data: Array<{ thread_id: string; author_user_id: string | null; attachment_count: number | null; delivery_status: string | null; created_at: string }> | null;
+          data: { thread_id: string; author_user_id: string | null; attachment_count: number | null; delivery_status: string | null; created_at: string }[] | null;
         };
 
       for (const p of posts ?? []) {
@@ -1112,13 +1110,13 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         sb.from('message_thread_drafts').select('thread_id, body').eq('user_id', userId).in('thread_id', threadIdSet),
         sb.from('message_thread_favourites').select('thread_id').eq('user_id', userId).in('thread_id', threadIdSet),
       ]);
-      for (const p of ((pinsRes as { data: Array<{ thread_id: string; visibility: string; pinned_by: string }> | null }).data) ?? []) {
+      for (const p of ((pinsRes as { data: { thread_id: string; visibility: string; pinned_by: string }[] | null }).data) ?? []) {
         if (p.visibility === 'thread' || p.pinned_by === userId) pinnedSet.add(p.thread_id);
       }
-      for (const d of ((draftsRes as { data: Array<{ thread_id: string; body: string | null }> | null }).data) ?? []) {
-        if (d.body && d.body.trim()) draftMap.set(d.thread_id, d.body);
+      for (const d of ((draftsRes as { data: { thread_id: string; body: string | null }[] | null }).data) ?? []) {
+        if (d.body?.trim()) draftMap.set(d.thread_id, d.body);
       }
-      for (const f of ((favsRes as { data: Array<{ thread_id: string }> | null }).data) ?? []) {
+      for (const f of ((favsRes as { data: { thread_id: string }[] | null }).data) ?? []) {
         favouriteSet.add(f.thread_id);
       }
     }
@@ -1128,6 +1126,13 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     for (const list of participantMap.values()) {
       for (const pp of list) nameMap.set(pp.userId, pp.displayName ?? pp.email);
     }
+
+    // Resolve source records for record threads in the page (one query per module).
+    const resolvedSources = await resolveSourceRecords(page.map(r => ({
+      sourceModule: r.message_threads.source_module,
+      sourceEntityType: r.message_threads.source_entity_type,
+      sourceEntityId: r.message_threads.source_entity_id,
+    })));
 
     const resultRows: ThreadRow[] = page.map(r => {
       const mt           = r.message_threads;
@@ -1165,12 +1170,13 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         hasAttachments:     hasAttachMap.get(r.thread_id) ?? false,
         actionRequired:     mt.action_required === true,
         priority:           (mt.priority ?? 'normal') as MessageThread['priority'],
+        sourceRecord:       sourceRecordFor(resolvedSources, { sourceModule: mt.source_module, sourceEntityType: mt.source_entity_type, sourceEntityId: mt.source_entity_id }),
         archivedAt:         r.archived_at,
       };
     });
 
     const lastRow    = page[page.length - 1];
-    const nextCursor = page.length === limit && lastRow
+    const nextCursor = page.length === limit
       ? (lastRow.message_threads.last_post_at ?? null)
       : null;
 
@@ -1237,11 +1243,11 @@ export async function getThread(threadId: string, userId: string, userRole?: str
       .select('user_id, role, app_users!inner(full_name, email, signed_url, signed_url_expires_at, profile_image_url, profile_image_thumb_url, profile_image)')
       .eq('thread_id', threadId)
       .is('removed_at', null) as {
-        data: Array<{
+        data: {
           user_id:   string;
           role:      string;
           app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
-        }> | null;
+        }[] | null;
       };
 
     const profiledParticipants: ParticipantProfile[] = (participants ?? []).map(p => ({
@@ -1251,6 +1257,10 @@ export async function getThread(threadId: string, userId: string, userRole?: str
       role:         p.role,
       profileImage: cachedProfileUrl(p.app_users),
     }));
+
+    const detailSource = await resolveSourceRecords([{
+      sourceModule: thread.source_module, sourceEntityType: thread.source_entity_type, sourceEntityId: thread.source_entity_id,
+    }]);
 
     return {
       ok: true,
@@ -1271,6 +1281,7 @@ export async function getThread(threadId: string, userId: string, userRole?: str
         participants:     profiledParticipants,
         isArchived:       part?.archived_at != null,
         myRole:           part?.role ?? 'viewer',
+        sourceRecord:     sourceRecordFor(detailSource, { sourceModule: thread.source_module, sourceEntityType: thread.source_entity_type, sourceEntityId: thread.source_entity_id }),
       },
       participants:  profiledParticipants,
       myRole:        part?.role,
@@ -1314,7 +1325,7 @@ export async function getThreadPosts(
 
     const limit = opts.limit ?? 50;
 
-    type RawPost = {
+    interface RawPost {
       id:               string;
       thread_id:        string;
       author_user_id:   string | null;
@@ -1338,7 +1349,7 @@ export async function getThreadPosts(
         profile_image_url: string | null; profile_image_thumb_url: string | null;
         profile_image: string | null; profile_image_version: number | null;
       } | null;
-    };
+    }
 
     let q = sb
       .from('message_posts')
@@ -1360,10 +1371,10 @@ export async function getThreadPosts(
           .from('message_attachments')
           .select('id, post_id, file_name, file_path, content_type, size_bytes')
           .in('post_id', postIds) as {
-            data: Array<{
+            data: {
               id: string; post_id: string; file_name: string;
               file_path: string; content_type: string | null; size_bytes: number | null;
-            }> | null;
+            }[] | null;
           }
       : { data: null };
 
@@ -1377,7 +1388,7 @@ export async function getThreadPosts(
 
     const attachMap = new Map<string, AttachmentRow[]>();
     for (let i = 0; i < attachList.length; i++) {
-      const a   = attachList[i]!;
+      const a   = attachList[i];
       const url = signedUrls[i] ?? null;
       const list = attachMap.get(a.post_id) ?? [];
       list.push({ id: a.id, fileName: a.file_name, filePath: a.file_path, contentType: a.content_type, sizeBytes: a.size_bytes, url: url || null });
@@ -1392,7 +1403,7 @@ export async function getThreadPosts(
       const { data: rp } = await sb
         .from('message_posts')
         .select('id, body, app_users!author_user_id(full_name, email)')
-        .in('id', replyIds) as { data: Array<{ id: string; body: string | null; app_users: { full_name: string | null; email: string } | null }> | null };
+        .in('id', replyIds) as { data: { id: string; body: string | null; app_users: { full_name: string | null; email: string } | null }[] | null };
       for (const r of rp ?? []) replyMap.set(r.id, { id: r.id, authorName: r.app_users?.full_name ?? null, preview: (r.body ?? '').slice(0, 120) });
     }
 
@@ -1405,13 +1416,13 @@ export async function getThreadPosts(
         sb.from('message_pins').select('post_id').eq('pin_type', 'post').is('unpinned_at', null).in('post_id', postIds),
         sb.from('message_post_reactions').select('post_id, user_id, emoji').in('post_id', postIds).order('created_at', { ascending: true }),
       ]);
-      for (const r of ((receiptsRes as { data: Array<{ post_id: string; read_at: string | null }> | null }).data) ?? []) {
+      for (const r of ((receiptsRes as { data: { post_id: string; read_at: string | null }[] | null }).data) ?? []) {
         if (r.read_at) readCountMap.set(r.post_id, (readCountMap.get(r.post_id) ?? 0) + 1);
       }
-      for (const pin of ((pinsRes as { data: Array<{ post_id: string | null }> | null }).data) ?? []) {
+      for (const pin of ((pinsRes as { data: { post_id: string | null }[] | null }).data) ?? []) {
         if (pin.post_id) pinnedPosts.add(pin.post_id);
       }
-      for (const rx of ((reactionsRes as { data: Array<{ post_id: string; user_id: string; emoji: string }> | null }).data) ?? []) {
+      for (const rx of ((reactionsRes as { data: { post_id: string; user_id: string; emoji: string }[] | null }).data) ?? []) {
         const perPost = reactionsMap.get(rx.post_id) ?? new Map<string, string[]>();
         const users = perPost.get(rx.emoji) ?? [];
         users.push(rx.user_id);
@@ -1457,12 +1468,190 @@ export async function getThreadPosts(
     });
 
     const lastPost = resultPosts[resultPosts.length - 1];
-    const nextCursor = resultPosts.length === limit && lastPost ? lastPost.createdAt : null;
+    const nextCursor = resultPosts.length === limit ? lastPost.createdAt : null;
 
     return { ok: true, posts: resultPosts, nextCursor };
   } catch (e) {
     console.error('[communications] getThreadPosts failed:', e);
     return { ok: false, message: 'Internal error' };
+  }
+}
+
+// ── Source-record resolution (collaboration cards) ───────────────────────────
+//
+// Record threads carry (source_module, source_entity_id). Each module with a
+// record-thread producer registers HOW to resolve the LIVE ref/title/status
+// from its own table + the FE section id for drill-through. Modules without a
+// resolver (or deleted records) yield null — the FE shows a plain thread, it
+// never fabricates a card.
+
+interface SourceRecordResolver {
+  table:     string;
+  columns:   string;                                        // must include id
+  sectionId: string;
+  toRef(row: Record<string, unknown>): { ref: string; title: string; status: string };
+}
+
+const s = (v: unknown): string =>
+  typeof v === 'string' ? v
+  : (typeof v === 'number' || typeof v === 'bigint' || typeof v === 'boolean') ? String(v)
+  : '';
+
+const SOURCE_RECORD_RESOLVERS: Record<string, SourceRecordResolver | undefined> = {
+  finance_expenses: {
+    table: 'finance_expense_claims', columns: 'id, claim_no, purpose, status', sectionId: 's-finance-expenses',
+    toRef: r => ({ ref: s(r.claim_no), title: s(r.purpose) || s(r.claim_no), status: s(r.status) }),
+  },
+  finance_budgets: {
+    table: 'finance_budget_lines', columns: 'id, category, fiscal_year, label, status', sectionId: 's-finance-budgets',
+    toRef: r => ({ ref: `${s(r.category)} FY${s(r.fiscal_year)}`, title: s(r.label) || `${s(r.category)} FY${s(r.fiscal_year)}`, status: s(r.status) }),
+  },
+  finance_disbursements: {
+    table: 'finance_payroll_runs', columns: 'id, run_no, period_month, status', sectionId: 's-finance-disbursements',
+    toRef: r => ({ ref: s(r.run_no), title: `Payroll run ${s(r.run_no)} (${s(r.period_month)})`, status: s(r.status) }),
+  },
+  finance_remittances: {
+    table: 'finance_remittances', columns: 'id, remittance_no, status', sectionId: 's-finance-remittances',
+    toRef: r => ({ ref: s(r.remittance_no), title: `Remittance ${s(r.remittance_no)}`, status: s(r.status) }),
+  },
+  finance_statutory: {
+    table: 'finance_statutory_versions', columns: 'id, label, status', sectionId: 's-finance-statutory',
+    toRef: r => ({ ref: s(r.label), title: s(r.label), status: s(r.status) }),
+  },
+  hse: {
+    table: 'hse_permits', columns: 'id, permit_number, title, status', sectionId: 's-hse-permits',
+    toRef: r => ({ ref: s(r.permit_number), title: s(r.title) || s(r.permit_number), status: s(r.status) }),
+  },
+};
+
+/** Batch-resolve source records for a set of threads: ONE query per module. */
+async function resolveSourceRecords(
+  threads: { sourceModule: string | null; sourceEntityType: string | null; sourceEntityId: string | null }[],
+): Promise<Map<string, ThreadSourceRecord>> {
+  const byModule = new Map<string, Set<string>>();
+  for (const t of threads) {
+    if (!t.sourceModule || !t.sourceEntityId || !SOURCE_RECORD_RESOLVERS[t.sourceModule]) continue;
+    const set = byModule.get(t.sourceModule) ?? new Set<string>();
+    set.add(t.sourceEntityId);
+    byModule.set(t.sourceModule, set);
+  }
+  const out = new Map<string, ThreadSourceRecord>();
+  await Promise.all([...byModule.entries()].map(async ([module, ids]) => {
+    const resolver = SOURCE_RECORD_RESOLVERS[module];
+    if (!resolver) return;
+    const { data, error } = await sb.from(resolver.table).select(resolver.columns).in('id', [...ids]);
+    if (error) { console.warn(`[communications] source-record resolve failed for ${module}:`, error.message); return; }
+    for (const row of data as unknown as Record<string, unknown>[]) {
+      const { ref, title, status } = resolver.toRef(row);
+      const entityId = s(row.id);
+      // entityType is echoed from the thread later; store the resolved core.
+      out.set(`${module}:${entityId}`, { module, entityType: '', entityId, ref, title, status, sectionId: resolver.sectionId });
+    }
+  }));
+  return out;
+}
+
+/** The thread's resolved source record, or null (echoing its entityType). */
+function sourceRecordFor(
+  resolved: Map<string, ThreadSourceRecord>,
+  t: { sourceModule: string | null; sourceEntityType: string | null; sourceEntityId: string | null },
+): ThreadSourceRecord | null {
+  if (!t.sourceModule || !t.sourceEntityId) return null;
+  const hit = resolved.get(`${t.sourceModule}:${t.sourceEntityId}`);
+  return hit ? { ...hit, entityType: t.sourceEntityType ?? '' } : null;
+}
+
+// ── Thread activity ───────────────────────────────────────────────────────────
+
+export interface ListThreadActivityResult {
+  ok:       boolean;
+  code?:    'forbidden' | 'compliance_required' | 'error';
+  message?: string;
+  entries?: ThreadActivityEntry[];
+}
+
+/**
+ * A thread's activity history for the details/activity panel — DERIVED from
+ * the real rows (posts, pins incl. unpins, membership joins, read state); no
+ * separate activity table exists and none is fabricated. Same read-gate as
+ * posts (participant / record-inherited / compliance grant).
+ */
+export async function listThreadActivity(
+  threadId: string,
+  userId:   string,
+  userRole?: string,
+): Promise<ListThreadActivityResult> {
+  try {
+    const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
+    if (!access.allowed) {
+      return access.needsCompliance
+        ? { ok: false, code: 'compliance_required', message: 'Compliance access required to view this thread' }
+        : { ok: false, code: 'forbidden', message: 'Not a participant in this thread' };
+    }
+
+    interface PostSlim { id: string; author_user_id: string | null; is_system: boolean; system_event_type: string | null; attachment_count: number; deleted_at: string | null; created_at: string }
+    interface PinSlim { id: string; pinned_by: string | null; pinned_at: string; unpinned_at: string | null; unpinned_by: string | null }
+    interface PartSlim { user_id: string; joined_at: string | null; last_read_at: string | null; muted_until: string | null }
+
+    const [postsRes, pinsRes, partsRes] = await Promise.all([
+      sb.from('message_posts')
+        .select('id, author_user_id, is_system, system_event_type, attachment_count, deleted_at, created_at')
+        .eq('thread_id', threadId).order('created_at', { ascending: false }).limit(120),
+      sb.from('message_pins')
+        .select('id, pinned_by, pinned_at, unpinned_at, unpinned_by')
+        .eq('thread_id', threadId).order('pinned_at', { ascending: false }).limit(60),
+      sb.from('message_participants')
+        .select('user_id, joined_at, last_read_at, muted_until')
+        .eq('thread_id', threadId),
+    ]);
+    if (postsRes.error) throw postsRes.error;
+    if (pinsRes.error)  throw pinsRes.error;
+    if (partsRes.error) throw partsRes.error;
+
+    const entries: ThreadActivityEntry[] = [];
+
+    const SYSTEM_DESCRIPTIONS: Record<string, { type: ThreadActivityEntry['type']; text: string }> = {
+      thread_created:           { type: 'message', text: 'Started the conversation' },
+      participant_added:        { type: 'invite',  text: 'Added a participant' },
+      participant_removed:      { type: 'invite',  text: 'Removed a participant' },
+      participant_left:         { type: 'join',    text: 'Left the conversation' },
+      participant_role_changed: { type: 'invite',  text: 'Changed a participant role' },
+      thread_archived:          { type: 'mute',    text: 'Archived the thread' },
+      thread_reopened:          { type: 'mute',    text: 'Reopened the thread' },
+      thread_muted:             { type: 'mute',    text: 'Muted notifications' },
+      thread_unmuted:           { type: 'mute',    text: 'Unmuted notifications' },
+    };
+
+    for (const p of postsRes.data as PostSlim[]) {
+      if (p.deleted_at) continue;                                    // removed content stays out of the log
+      if (p.is_system) {
+        const mapped = p.system_event_type ? SYSTEM_DESCRIPTIONS[p.system_event_type] : undefined;
+        if (!mapped) continue;                                        // unknown system rows are skipped, not guessed
+        entries.push({ id: `post-${p.id}`, threadId, actorId: p.author_user_id ?? '', type: mapped.type, description: mapped.text, createdAt: p.created_at });
+        continue;
+      }
+      entries.push(p.attachment_count > 0
+        ? { id: `post-${p.id}`, threadId, actorId: p.author_user_id ?? '', type: 'upload', description: p.attachment_count === 1 ? 'Shared an attachment' : `Shared ${p.attachment_count} attachments`, createdAt: p.created_at }
+        : { id: `post-${p.id}`, threadId, actorId: p.author_user_id ?? '', type: 'message', description: 'Sent a message', createdAt: p.created_at });
+    }
+
+    for (const pin of pinsRes.data as PinSlim[]) {
+      entries.push({ id: `pin-${pin.id}`, threadId, actorId: pin.pinned_by ?? '', type: 'pin', description: 'Pinned an item', createdAt: pin.pinned_at });
+      if (pin.unpinned_at) {
+        entries.push({ id: `unpin-${pin.id}`, threadId, actorId: pin.unpinned_by ?? '', type: 'unpin', description: 'Unpinned an item', createdAt: pin.unpinned_at });
+      }
+    }
+
+    for (const part of partsRes.data as PartSlim[]) {
+      if (part.joined_at) entries.push({ id: `join-${part.user_id}`, threadId, actorId: part.user_id, type: 'join', description: 'Joined the conversation', createdAt: part.joined_at });
+      if (part.last_read_at) entries.push({ id: `read-${part.user_id}`, threadId, actorId: part.user_id, type: 'read', description: 'Read the conversation', createdAt: part.last_read_at });
+    }
+
+    entries.sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return { ok: true, entries: entries.slice(0, 100) };
+  } catch (e) {
+    console.error('[communications] listThreadActivity failed:', e);
+    return { ok: false, code: 'error', message: 'Internal error' };
   }
 }
 
@@ -1526,9 +1715,9 @@ export async function createMessageAttachmentRecord(
     // post_id intentionally NULL — linked on send
   }).select('id').single<{ id: string }>();
 
-  if (error || !data) {
-    console.error('[communications] createMessageAttachmentRecord failed:', error?.message);
-    return { ok: false, message: error?.message ?? 'Failed to create attachment record' };
+  if (error) {
+    console.error('[communications] createMessageAttachmentRecord failed:', error.message);
+    return { ok: false, message: error.message };
   }
   return { ok: true, id: data.id };
 }
@@ -1759,19 +1948,19 @@ export async function searchMessages(userId: string, query: string, limit = 20):
       .from('message_participants')
       .select('thread_id')
       .eq('user_id', userId)
-      .is('removed_at', null) as { data: Array<{ thread_id: string }> | null };
+      .is('removed_at', null) as { data: { thread_id: string }[] | null };
 
     const threadIds = (parts ?? []).map(p => p.thread_id);
     if (threadIds.length === 0) return [];
 
-    type PostWithAuthorAndThread = {
+    interface PostWithAuthorAndThread {
       id:             string;
       thread_id:      string;
       body:           string;
       created_at:     string;
       app_users:      { full_name: string | null; email: string } | null;
       message_threads: { subject: string } | null;
-    };
+    }
 
     const { data: posts } = await sb
       .from('message_posts')
@@ -1803,7 +1992,7 @@ export type RecipientProfile = MessageRecipient;
 
 export async function getMessageRecipients(userId: string, query?: string | null): Promise<RecipientProfile[]> {
   try {
-    type UserRow = { id: string; full_name: string | null; email: string; department_id: string | null; role: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null };
+    interface UserRow { id: string; full_name: string | null; email: string; department_id: string | null; role: string; signed_url: string | null; signed_url_expires_at: string | null; profile_image_url: string | null; profile_image_thumb_url: string | null; profile_image: string | null }
 
     // Build query without complex cast — cast only the awaited result.
     const baseQ = sb
@@ -1857,7 +2046,8 @@ export interface CreateTicketResult {
 export async function createTicket(input: CreateTicketInput): Promise<CreateTicketResult> {
   try {
     const year = new Date().getFullYear();
-    const { data: counter } = await sb.rpc('increment_ref_counter', { p_prefix: 'TKT', p_year: year });
+    const counterRes = await sb.rpc('increment_ref_counter', { p_prefix: 'TKT', p_year: year });
+    const counter = counterRes.data as number | null;
     const ticketNumber = `TKT-${year}-${String(counter ?? Date.now()).padStart(4, '0')}`;
 
     // SLA: critical = 4h, high = 8h, medium = 24h, low = 72h
@@ -1870,7 +2060,7 @@ export async function createTicket(input: CreateTicketInput): Promise<CreateTick
         ticket_number:      ticketNumber,
         category:           input.category,
         priority:           input.priority ?? 'medium',
-        subject:            input.subject ?? null,
+        subject:            input.subject,
         description:        input.description,
         requester_user_id:  input.requesterUserId,
         source_module:      input.sourceModule ?? null,
@@ -1882,8 +2072,8 @@ export async function createTicket(input: CreateTicketInput): Promise<CreateTick
       .select('id')
       .single<{ id: string }>();
 
-    if (error || !ticket) {
-      console.error('[communications] createTicket failed:', error?.message);
+    if (error) {
+      console.error('[communications] createTicket failed:', error.message);
       return { ok: false };
     }
 

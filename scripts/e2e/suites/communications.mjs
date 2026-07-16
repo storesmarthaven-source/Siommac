@@ -833,6 +833,71 @@ export default async function run(h) {
     expect((r.body.data || []).some(u => u.userId === b.id), 'freshly-online peer B missing');
   });
 
+  // ─────────────── THREAD ACTIVITY & RECORD CARDS (messenger square-off) ───────────────
+  h.section('Communications › Thread activity & source records');
+
+  await test('activity: participant gets REAL derived entries (message + pin + join)', async () => {
+    // pdp.threadId has posts + a pin from the section above.
+    const r = await api('communications/messages/activity', T.admin, { threadId: pdp.threadId });
+    ok(r, `activity failed: ${r.body.message}`);
+    const entries = r.body.data || [];
+    expect(entries.length > 0, 'no activity entries for an active thread');
+    for (const e of entries.slice(0, 5)) {
+      expect(e.id && e.threadId === pdp.threadId && e.type && e.description && e.createdAt,
+        `bad entry shape: ${JSON.stringify(e)}`);
+    }
+    const types = new Set(entries.map(e => e.type));
+    expect(types.has('message'), 'no message entry');
+    expect(types.has('pin'),     'no pin entry (a pin exists above)');
+    expect(types.has('join'),    'no join entries (participants have joined_at)');
+  });
+
+  await test('activity: NON-PARTICIPANT is denied (403)', async () => {
+    const r = await api('communications/messages/activity', T.c, { threadId: pdp.threadId });
+    fails(r, 'non-participant should be denied activity');
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('record thread: threads list resolves the LIVE source record (collaboration card)', async () => {
+    // Link a record thread to a REAL statutory version (live table, always seeded).
+    const { data: version } = await sb.from('finance_statutory_versions').select('id, label, status').limit(1).maybeSingle();
+    expect(version, 'no statutory version available to link');
+    const cr = await api('communications/messages/createThread', T.admin, {
+      threadType: 'record', subject: `${TAG} record card`,
+      sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: version.id,
+      participantUserIds: [b.id], body: 'record thread seed',
+    });
+    ok(cr, `record createThread failed: ${cr.body.message}`);
+    ctx.threadIds.push(cr.body.threadId);
+
+    const r = await api('communications/messages/threads', T.admin, { tab: 'all', limit: 100 });
+    ok(r);
+    const row = (r.body.data || []).find(t => t.id === cr.body.threadId);
+    expect(row, 'record thread missing from list');
+    expect(row.sourceRecord, 'sourceRecord not resolved on the list DTO');
+    expect(row.sourceRecord.ref === version.label, `ref mismatch: ${row.sourceRecord?.ref} vs ${version.label}`);
+    expect(row.sourceRecord.status === version.status, `status mismatch: ${row.sourceRecord?.status}`);
+    expect(row.sourceRecord.sectionId === 's-finance-statutory', `sectionId wrong: ${row.sourceRecord?.sectionId}`);
+
+    // Detail carries it too (drives the in-thread collaboration card).
+    const d = await api('communications/messages/thread', T.admin, { threadId: cr.body.threadId });
+    ok(d);
+    expect(d.body.data?.thread?.sourceRecord?.ref === version.label, 'detail sourceRecord missing/mismatched');
+  });
+
+  await test('record thread with an UNKNOWN module resolves to null (no fabricated card)', async () => {
+    const cr = await api('communications/messages/createThread', T.admin, {
+      threadType: 'record', subject: `${TAG} unresolvable record`,
+      sourceModule: 'module_without_resolver', sourceEntityType: 'thing', sourceEntityId: crypto.randomUUID(),
+      participantUserIds: [b.id], body: 'unresolvable record seed',
+    });
+    ok(cr);
+    ctx.threadIds.push(cr.body.threadId);
+    const r = await api('communications/messages/threads', T.admin, { tab: 'all', limit: 100 });
+    const row = (r.body.data || []).find(t => t.id === cr.body.threadId);
+    expect(row && row.sourceRecord == null, 'unknown module must yield sourceRecord=null');
+  });
+
   // ───────────────────────── TICKETS ─────────────────────────
   h.section('Communications › Tickets');
 

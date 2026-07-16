@@ -10,6 +10,7 @@ import type { ComponentChildren } from "preact";
 import { useState } from "preact/hooks";
 import { useMessaging } from "../../app/MessagingProvider";
 import { messagesForThread, userById } from "../../app/selectors";
+import { openAppSection } from "./MessageCards";
 import type { Attachment, Message, Thread } from "../../domain/models";
 import { formatFileSize, formatTime } from "../../domain/format";
 import { Avatar } from "./Avatar";
@@ -17,10 +18,10 @@ import { Avatar } from "./Avatar";
 interface DetailsPanelProps {
   thread: Thread;
   infoOpen: boolean;
-  onCloseInfo(): void;
-  onInvite(): void;
-  onPreview(attachment: Attachment): void;
-  onJump(messageId: string): void;
+  onCloseInfo: () => void;
+  onInvite: () => void;
+  onPreview: (attachment: Attachment) => void;
+  onJump: (messageId: string) => void;
 }
 
 export function DetailsPanel({ thread, infoOpen, onCloseInfo, onInvite, onPreview, onJump }: DetailsPanelProps) {
@@ -149,13 +150,21 @@ function SummaryMetric({ icon, value, label }: { icon: ComponentChildren; value:
   return <div><span>{icon}</span><p><strong>{label}</strong><small>{value} {value === 1 ? "item" : "items"}</small></p></div>;
 }
 
-function PinnedMessage({ message, onJump, onUnpin }: { message: Message; onJump(messageId: string): void; onUnpin(): void }) {
+function PinnedMessage({ message, onJump, onUnpin }: { message: Message; onJump: (messageId: string) => void; onUnpin: () => void }) {
   return <article className="sm-pinned-item"><button type="button" onClick={() => onJump(message.id)}><strong>Pinned message</strong><span>{message.body}</span></button><button className="sm-icon-button" type="button" aria-label="Unpin message" onClick={onUnpin}><X /></button></article>;
 }
 
 function RelatedRecordSection({ thread }: { thread: Thread }) {
-  if (!thread.relatedRecord) return null;
-  return <PanelSection icon={<ExternalLink />} title="Related Record"><a className="sm-related-record" href={thread.relatedRecord.href}><small>{thread.relatedRecord.type} · {thread.relatedRecord.id}</small><strong>{thread.relatedRecord.title}</strong><ExternalLink /></a></PanelSection>;
+  const record = thread.relatedRecord;
+  if (!record) return null;
+  // Drill-through via the app's section navigation (record.href is a section
+  // id, not a URL); no resolver → informational display, no dead link.
+  const body = <><small>{record.type} · {record.id}{record.status ? ` · ${record.status}` : ''}</small><strong>{record.title}</strong>{record.href ? <ExternalLink /> : null}</>;
+  return <PanelSection icon={<ExternalLink />} title="Related Record">
+    {record.href
+      ? <button type="button" className="sm-related-record" onClick={() => openAppSection(record.href)}>{body}</button>
+      : <span className="sm-related-record">{body}</span>}
+  </PanelSection>;
 }
 
 function fileLabel(attachment: Attachment): string {

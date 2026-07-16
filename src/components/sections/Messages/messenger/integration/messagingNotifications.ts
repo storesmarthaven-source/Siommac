@@ -4,7 +4,7 @@
 import type { CollaborationCard, Thread } from "../domain/models";
 import { toast } from "@ui/toast";
 
-interface OpenAction { onOpen(): void }
+interface OpenAction { onOpen: () => void }
 
 export function notifyChatParticipantAdded(thread: Thread, personName: string, { onOpen }: OpenAction) {
   return toast.action({
@@ -33,7 +33,7 @@ export function notifyCollaborationStarted(card: CollaborationCard, { onOpen }: 
     description: `${card.title} is now available for collaborative follow-up.`,
     moduleLabel: card.record.type, statusLabel: card.status,
     details: [{ label: "Related record", value: `${card.record.type} · ${card.record.id}` }, { label: "Collaborators", value: String(card.collaboratorIds.length) }],
-    file: { name: card.title, type: card.type === "worksheet" ? "xlsx" : "file", subtitle: card.subtitle, meta: [{ label: "Status", value: card.status }, { label: "Owner", value: "Assigned" }, { label: "Team", value: `${card.collaboratorIds.length} people` }] },
+    file: { name: card.title, type: card.type === "budget_line" || card.type === "payroll_run" ? "xlsx" : "file", subtitle: card.subtitle, meta: [{ label: "Status", value: card.status }, { label: "Owner", value: "Assigned" }, { label: "Team", value: `${card.collaboratorIds.length} people` }] },
     note: "Actions remain governed by the linked module's access policy.",
     actions: [{ label: "Dismiss" }, { label: "View collaboration", tone: "primary", onClick: onOpen }],
   });

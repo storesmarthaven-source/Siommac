@@ -22,11 +22,12 @@ export function attachmentIcon(kind: Attachment["kind"]) {
 
 function FileGlyph({ attachment }: { attachment: Attachment }) {
   const Icon = attachmentIcon(attachment.kind);
+  // eslint-disable-next-line react-hooks/static-components -- Icon is a lookup of statically-defined components, not a new component per render
   return <span className={`sm-file-glyph sm-file-glyph--${attachment.kind}`}><Icon /><b>{attachment.kind.toUpperCase()}</b></span>;
 }
 
 type AttachmentCardProps =
-  | { attachment: Attachment; interactive?: true; liked: boolean; onPreview(): void; onOpen(): void; onPin(): void; onLike(): void }
+  | { attachment: Attachment; interactive?: true; liked: boolean; onPreview: () => void; onOpen: () => void; onPin: () => void; onLike: () => void }
   | { attachment: Attachment; interactive: false };
 
 export function AttachmentCard(props: AttachmentCardProps) {
@@ -68,28 +69,42 @@ export function LinkCard({ link }: { link: LinkPreview }) {
 }
 
 export const cardTone: Record<CollaborationCard["type"], string> = {
-  worksheet: "green", capa: "violet", "incident-report": "red", "controlled-document": "blue",
-  "evidence-bundle": "amber", permit: "teal",
+  expense_claim: "amber", budget_line: "violet", payroll_run: "green",
+  remittance: "blue", statutory_version: "blue", permit: "teal", record: "blue",
 };
 
 export const cardIcon: Record<CollaborationCard["type"], typeof FileSpreadsheet> = {
-  worksheet: FileSpreadsheet, capa: ShieldCheck, "incident-report": FileText,
-  "controlled-document": FileText, "evidence-bundle": FileArchive, permit: ShieldCheck,
+  expense_claim: FileText, budget_line: FileSpreadsheet, payroll_run: FileSpreadsheet,
+  remittance: FileArchive, statutory_version: ShieldCheck, permit: ShieldCheck, record: FileText,
 };
 
 export const cardModule: Record<CollaborationCard["type"], string> = {
-  worksheet: "HSE Collaboration", capa: "CAPA Collaboration", "incident-report": "Incident Collaboration",
-  "controlled-document": "Document Collaboration", "evidence-bundle": "Evidence Collaboration", permit: "Permit Collaboration",
+  expense_claim: "Expense Claim", budget_line: "Budget Line", payroll_run: "Payroll Run",
+  remittance: "Remittance", statutory_version: "Statutory Version", permit: "Permit (PTW)", record: "Linked Record",
+};
+
+/** Normalise a thread's source entity type to a card type (unknown → record). */
+export function cardTypeFor(entityType: string): CollaborationCard["type"] {
+  const known: CollaborationCard["type"][] = ["expense_claim", "budget_line", "payroll_run", "remittance", "statutory_version", "permit"];
+  if ((known as string[]).includes(entityType)) return entityType as CollaborationCard["type"];
+  if (entityType === "budget_line_batch") return "budget_line";
+  return "record";
+}
+
+/** Navigate the ERP shell to a section (the app's canonical nav event). */
+export const openAppSection = (sectionId: string): void => {
+  window.dispatchEvent(new CustomEvent('siomac:section', { detail: sectionId }));
 };
 
 export function CollaborationRecordCard({ card, owner, collaborators, onOpen, onComment, onActivity, onPin }: {
   card: CollaborationCard;
   owner: User;
   collaborators: User[];
-  onOpen(): void;
-  onComment(): void;
-  onActivity(): void;
-  onPin(): void;
+  onOpen: () => void;
+  /** Optional — omitted actions render no button (no dead controls). */
+  onComment?: () => void;
+  onActivity?: () => void;
+  onPin?: () => void;
 }) {
   const tone = cardTone[card.type];
   const CardIcon = cardIcon[card.type];
@@ -102,7 +117,9 @@ export function CollaborationRecordCard({ card, owner, collaborators, onOpen, on
           <span><strong>{card.title}</strong><small>{card.subtitle}</small></span>
         </header>
         <dl className="sm-record-card__details">
-          <div><dt>Related record</dt><dd><a href={card.record.href}>{card.record.type} · {card.record.id}</a></dd></div>
+          <div><dt>Related record</dt><dd>{card.record.href
+            ? <button type="button" className="sm-record-card__link" onClick={() => openAppSection(card.record.href)}>{card.record.type} · {card.record.id}</button>
+            : <span>{card.record.type} · {card.record.id}</span>}</dd></div>
           <div><dt>Status</dt><dd><span className="sm-status-pill">{card.status}</span></dd></div>
           <div><dt>Owner</dt><dd>{owner.name}</dd></div>
           <div><dt>Updated</dt><dd>{formatTime(card.updatedAt)}</dd></div>
@@ -111,9 +128,9 @@ export function CollaborationRecordCard({ card, owner, collaborators, onOpen, on
       </div>
       <footer className="sm-record-card__actions">
         <button type="button" onClick={onOpen}><ExternalLink />Open</button>
-        <button type="button" onClick={onComment}><MessageCircle />Comment</button>
-        <button type="button" onClick={onActivity}><Activity />View activity</button>
-        <button type="button" onClick={onPin}><Pin />Pin</button>
+        {onComment ? <button type="button" onClick={onComment}><MessageCircle />Comment</button> : null}
+        {onActivity ? <button type="button" onClick={onActivity}><Activity />View activity</button> : null}
+        {onPin ? <button type="button" onClick={onPin}><Pin />Pin</button> : null}
       </footer>
     </article>
   );

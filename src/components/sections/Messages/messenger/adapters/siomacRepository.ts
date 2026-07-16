@@ -13,7 +13,7 @@
 import { apiPost } from '@lib/api';
 import type {
   MessageThread as ThreadDTO, MessagePost as PostDTO,
-  MessageParticipant as ParticipantDTO, MessagePin as PinDTO,
+  MessagePin as PinDTO,
   MessageRecipient as RecipientDTO,
 } from '../../../../../../types/messaging';
 import type { OnlineUser } from '@api/communications';
@@ -50,7 +50,7 @@ export class SiomacMessagingRepository implements MessagingRepository {
     const sentIds = new Set(sentDtos.map(t => t.id));
     const users = new Map<string, User>();
     for (const t of threadDtos) {
-      for (const p of t.participants ?? []) users.set(p.userId, mapParticipantToUser(p as ParticipantDTO));
+      for (const p of t.participants) users.set(p.userId, mapParticipantToUser(p));
     }
     for (const o of online) users.set(o.userId, { ...mapOnlineToUser(o), ...(users.has(o.userId) ? { title: users.get(o.userId)!.title } : {}) });
 
@@ -92,15 +92,16 @@ export class SiomacMessagingRepository implements MessagingRepository {
     return (await this.loadThreadDetail(threadId)).messages;
   }
 
-  async loadPreferences(userId: string): Promise<ChatPreferences> {
+  loadPreferences(userId: string): Promise<ChatPreferences> {
     try {
       const raw = localStorage.getItem(PREFS_KEY(userId));
-      return raw ? { ...defaultChatPreferences, ...JSON.parse(raw) as Partial<ChatPreferences> } : defaultChatPreferences;
-    } catch { return defaultChatPreferences; }
+      return Promise.resolve(raw ? { ...defaultChatPreferences, ...JSON.parse(raw) as Partial<ChatPreferences> } : defaultChatPreferences);
+    } catch { return Promise.resolve(defaultChatPreferences); }
   }
 
-  async savePreferences(userId: string, preferences: ChatPreferences): Promise<void> {
+  savePreferences(userId: string, preferences: ChatPreferences): Promise<void> {
     try { localStorage.setItem(PREFS_KEY(userId), JSON.stringify(preferences)); } catch { /* storage disabled — ignore */ }
+    return Promise.resolve();
   }
 
   async send(threadId: string, authorId: string, draft: MessageDraft): Promise<Message> {
@@ -192,15 +193,16 @@ export class SiomacMessagingRepository implements MessagingRepository {
     await post('communications/messages/participants/remove', { threadId, userId: participantId });
   }
 
-  // No dedicated activity-log endpoint yet; the details panel derives history from
-  // posts/pins for now. Returns [] rather than a fake row.
-  async listActivity(_threadId: string): Promise<ActivityEntry[]> {
-    return [];
+  /** Thread activity history — server-derived from posts/pins/membership/read
+   *  state (communications/messages/activity, posts-equivalent read gate). */
+  async listActivity(threadId: string): Promise<ActivityEntry[]> {
+    const rows = await post<ActivityEntry[]>('communications/messages/activity', { threadId });
+    return rows;   // the DTO IS the domain shape (id/threadId/actorId/type/description/createdAt)
   }
 
   /** Employee directory for invites / group creation (server-side search). */
   async listRecipients(query?: string): Promise<User[]> {
-    const rows = await post<RecipientDTO[]>('communications/messages/recipients', { query: query || undefined });
+    const rows = await post<RecipientDTO[]>('communications/messages/recipients', { query: query?.length ? query : undefined });
     return rows.map(r => ({
       id: r.userId,
       name: r.displayName ?? r.username ?? r.userId,

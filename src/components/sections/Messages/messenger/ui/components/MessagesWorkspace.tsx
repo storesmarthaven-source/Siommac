@@ -44,7 +44,7 @@ export function MessagesWorkspace() {
     }
     function onOpenRecord(e: Event) {
       const d = (e as CustomEvent<{ sourceType?: string; sourceId?: string }>).detail;
-      if (d?.sourceType === "message_thread" && d.sourceId) { setPendingThreadId(d.sourceId); void actions.reload(); }
+      if (d.sourceType === "message_thread" && d.sourceId) { setPendingThreadId(d.sourceId); void actions.reload(); }
     }
     window.addEventListener("siomac:openThread", onOpenThread);
     window.addEventListener("siomac:openRecord", onOpenRecord);
@@ -128,7 +128,15 @@ export function MessagesWorkspace() {
     </main>;
   }
   const activeThread = active;
-  function openActivity() { setActivity(readySnapshot.activity.filter((entry) => entry.threadId === activeThread.id)); setActivityOpen(true); }
+  function openActivity() {
+    // Open immediately (the dialog has its own empty state) and fill from the
+    // server-derived history; a failed fetch just leaves the empty state.
+    setActivity([]);
+    setActivityOpen(true);
+    void actions.listActivity(activeThread.id)
+      .then(setActivity)
+      .catch((cause: unknown) => console.warn('[messenger] activity load failed:', cause));
+  }
 
   return <main className="sm-workspace" style={appearanceStyle} data-high-contrast={preferences.highContrast || undefined} data-reduced-motion={preferences.reducedMotion || undefined} data-enhanced-focus={preferences.enhancedFocus || undefined}>
     <QueueHeader queue={queue} canCompliance={canCompliance} onQueue={selectQueue} onCompose={() => setComposeOpen(true)} />
@@ -142,7 +150,7 @@ export function MessagesWorkspace() {
     <PreviewDialog attachment={preview} onClose={() => setPreview(null)} />
     <ActivityDialog open={activityOpen} thread={active} entries={activity} onClose={() => setActivityOpen(false)} />
     <CollaborationDialog card={collaboration} onClose={() => setCollaboration(null)} />
-    <AppearanceDialog open={appearanceOpen} value={preferences} onSave={actions.savePreferences} onClose={() => setAppearanceOpen(false)} />
+    <AppearanceDialog open={appearanceOpen} value={preferences} onSave={(prefs) => actions.savePreferences(prefs)} onClose={() => setAppearanceOpen(false)} />
     {composeDialog}
   </main>;
 }

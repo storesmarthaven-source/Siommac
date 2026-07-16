@@ -38,7 +38,7 @@ export function mapAttachment(a: AttachmentDTO): Attachment {
   const previewUrl = a.previewUrl ?? a.thumbnailUrl ?? undefined;
   return {
     id: a.id,
-    kind: ATTACHMENT_KIND[a.attachmentType ?? 'other'] ?? 'generic',
+    kind: (ATTACHMENT_KIND as Record<string, AttachmentKind | undefined>)[a.attachmentType ?? 'other'] ?? 'generic',
     name: a.fileName,
     mimeType: a.contentType ?? '',
     sizeBytes: a.sizeBytes ?? 0,
@@ -71,8 +71,13 @@ function mapDelivery(status: PostDTO['deliveryStatus']): DeliveryState {
 // separate link field; the composer persists attached links into the body).
 const BODY_URL = /(?:https?:\/\/)[^\s<]+/i;
 
+function subjectUserIdOf(payload: Record<string, unknown> | undefined): string {
+  const v = payload?.userId;
+  return typeof v === 'string' ? v : '';
+}
+
 function linkFromBody(body: string): LinkPreview | undefined {
-  const url = body.match(BODY_URL)?.[0];
+  const url = BODY_URL.exec(body)?.[0];
   if (!url) return undefined;
   try { return linkPreviewFromUrl(url); } catch { return undefined; }
 }
@@ -94,14 +99,14 @@ export function mapPost(p: PostDTO): Message {
     html: p.body ?? '',                       // backend already sanitizes; escape/markup is a Phase-3 render concern
     createdAt: p.createdAt,
     ...(p.editedAt ? { editedAt: p.editedAt } : {}),
-    ...(p.replyToPost?.id ? { replyToId: p.replyToPost.id } : {}),
-    attachments: (p.attachments ?? []).map(mapAttachment),
+    ...(p.replyToPost ? { replyToId: p.replyToPost.id } : {}),
+    attachments: p.attachments.map(mapAttachment),
     ...(link ? { link } : {}),
     reactions: (p.reactions ?? []).map(r => ({ emoji: r.emoji, userIds: r.userIds })),
     delivery: mapDelivery(p.deliveryStatus),
     pinned: p.isPinned ?? false,
     deleted: p.deletedAt != null,
-    ...(sysEvent ? { system: { event: sysEvent, subjectUserId: String((p.systemEventPayload ?? {})['userId'] ?? '') } } : {}),
+    ...(sysEvent ? { system: { event: sysEvent, subjectUserId: subjectUserIdOf(p.systemEventPayload) } } : {}),
   };
 }
 
@@ -114,7 +119,7 @@ export function mapParticipantToUser(p: ParticipantDTO): User {
   return {
     id: p.userId,
     name: p.displayName ?? p.username ?? p.userId,
-    title: p.role ?? '',
+    title: p.role,
     avatarUrl: p.profileImage ?? '',
     presence: toPresence(p.status),
   };
@@ -154,17 +159,22 @@ export function mapThread(t: ThreadDTO, currentUserId: string, authoredByMe = fa
     avatarUrl: isDirect ? (other?.profileImage ?? '') : '',
     participantIds: t.participants.map(p => p.userId),
     queue,
-    unreadCount: t.unreadCount ?? 0,
+    unreadCount: t.unreadCount,
     muted: t.isMuted ?? false,
     favourite: t.isFavourite ?? false,
     authoredByMe,
     complianceControlled: t.threadType === 'record' || t.threadType === 'system',
-    ...(t.sourceModule && t.sourceEntityId ? {
+    ...(t.createdBy ? { createdBy: t.createdBy } : {}),
+    // Server-resolved source record (collaboration cards): live ref/title/
+    // status from the owning module + the FE section for drill-through. A
+    // record thread whose module has no resolver stays a plain thread.
+    ...(t.sourceRecord ? {
       relatedRecord: {
-        id: t.sourceEntityId,
-        type: 'Document' as const,             // refined per-module in Phase 3 (collaboration cards)
-        title: t.subject ?? '',
-        href: '',
+        id:     t.sourceRecord.ref || t.sourceRecord.entityId,
+        type:   t.sourceRecord.entityType || 'record',
+        title:  t.sourceRecord.title || (t.subject ?? ''),
+        href:   t.sourceRecord.sectionId ?? '',
+        status: t.sourceRecord.status,
       },
     } : {}),
     lastActivityAt: t.lastPostAt ?? t.createdAt,

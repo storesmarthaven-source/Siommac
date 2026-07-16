@@ -14,7 +14,7 @@
 import { createContext } from "preact";
 import type { ComponentChildren } from "preact";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
-import type { Attachment, Message, MessageDraft, MessageId, Thread, ThreadId, User, UserId, WorkspaceSnapshot } from "../domain/models";
+import type { ActivityEntry, Attachment, Message, MessageDraft, MessageId, Thread, ThreadId, User, UserId, WorkspaceSnapshot } from "../domain/models";
 import type { AttachmentService } from "../domain/ports";
 import type { SiomacRepository, SiomacRealtimeGateway } from "../adapters";
 import { TYPING_TTL_MS } from "../adapters/siomacRealtime";
@@ -39,6 +39,8 @@ interface MessagingActions {
   listRecipients(query?: string): Promise<User[]>;
   /** Uncached read for the compliance surface (threads outside the snapshot). */
   loadThreadDetail(threadId: ThreadId): Promise<{ messages: Message[]; authors: User[] }>;
+  /** Server-derived thread activity history (posts/pins/membership/reads). */
+  listActivity(threadId: ThreadId): Promise<ActivityEntry[]>;
   upload(file: File, onProgress: (attachment: Attachment) => void, signal: AbortSignal): Promise<Attachment>;
   download(attachment: Attachment): Promise<void>;
   savePreferences(preferences: ChatPreferences): Promise<void>;
@@ -217,6 +219,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     removeParticipant: (threadId, participantId) => mutate(() => repository.removeParticipant(threadId, participantId, currentUserId)),
     listRecipients: (query) => repository.listRecipients(query),
     loadThreadDetail: (threadId) => repository.loadThreadDetail(threadId),
+    listActivity: (threadId) => repository.listActivity(threadId),
     upload: (file, onProgress, signal) => attachments.upload(file, onProgress, signal),
     download: (attachment) => attachments.download(attachment),
     savePreferences: async (nextPreferences) => {
@@ -254,7 +257,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       const ids = typingUserIds(typing, threadId, now, currentUserId);
       if (ids.length) next.set(threadId, ids);
     }
-    return next as ReadonlyMap<ThreadId, UserId[]>;
+    return next;
   }, [currentUserId, typing]);
 
   const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread }), [actions, error, loading, preferences, snapshot, typingByThread]);

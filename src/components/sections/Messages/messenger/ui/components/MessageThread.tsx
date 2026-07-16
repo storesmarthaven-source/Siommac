@@ -16,25 +16,28 @@ import type { Attachment, CollaborationCard, Message, Thread } from "../../domai
 import { formatTime } from "../../domain/format";
 import { Avatar, GroupAvatarStack } from "./Avatar";
 import { Composer } from "./Composer";
-import { AttachmentCard, CollaborationRecordCard, LinkCard, attachmentIcon, cardIcon, cardModule, cardTone } from "./MessageCards";
+import { AttachmentCard, CollaborationRecordCard, LinkCard, attachmentIcon, cardIcon, cardModule, cardTone, cardTypeFor } from "./MessageCards";
 
 const emojiOnly = /^[\p{Extended_Pictographic}\p{Emoji_Presentation}️‍\s]+$/u;
 const documentKinds = new Set<Attachment["kind"]>(["pdf", "word", "excel", "powerpoint", "text"]);
 
 export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvite, onPreview, onActivity, onOpenCollaboration }: {
   thread: Thread;
-  onOpenDetails(): void;
-  onOpenAppearance(): void;
-  onInvite(): void;
-  onPreview(attachment: Attachment): void;
-  onActivity(): void;
-  onOpenCollaboration(card: CollaborationCard): void;
+  onOpenDetails: () => void;
+  onOpenAppearance: () => void;
+  onInvite: () => void;
+  onPreview: (attachment: Attachment) => void;
+  onActivity: () => void;
+  onOpenCollaboration: (card: CollaborationCard) => void;
 }) {
   const { snapshot, actions, typingByThread } = useMessaging();
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [activePinIndex, setActivePinIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const shouldStick = useRef(true);
+  // Render mirror of shouldStick (refs must not be read during render); only
+  // updated when the threshold flips, so scrolling doesn't re-render per event.
+  const [atBottom, setAtBottom] = useState(true);
   // Hooks below must run on EVERY render (no early return above them) — an
   // early bail here changes the hook count between renders and corrupts state.
   const messages = snapshot ? messagesForThread(snapshot, thread.id) : [];
@@ -53,6 +56,20 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
   const currentUser = userById(snapshot, snapshot.currentUserId);
   const participants = thread.participantIds.map((id) => userById(snapshot, id));
   const typingNames = (typingByThread.get(thread.id) ?? []).map((id) => userById(snapshot, id).name);
+  // Record threads render a live collaboration card built from the resolved
+  // source record (real ref/status; owner = thread creator; drill-through via
+  // the app's section navigation).
+  const recordCard: CollaborationCard | null = thread.relatedRecord ? {
+    id: `record-${thread.id}`,
+    type: cardTypeFor(thread.relatedRecord.type),
+    title: thread.relatedRecord.title,
+    subtitle: thread.relatedRecord.id,
+    status: thread.relatedRecord.status ?? "—",
+    ownerId: thread.createdBy ?? thread.participantIds[0] ?? currentUser.id,
+    collaboratorIds: thread.participantIds,
+    record: thread.relatedRecord,
+    updatedAt: thread.lastActivityAt,
+  } : null;
   const counterpart = participants.find((participant) => participant.id !== currentUser.id) ?? currentUser;
   const pinned = messages.filter((message) => message.pinned && !message.deleted);
   const activePin = pinned.length ? pinned[activePinIndex % pinned.length] : undefined;
@@ -60,6 +77,7 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
   const activePinAttachment = activePin?.attachments[0];
   const activePinType = activePinAttachment?.kind.toUpperCase() ?? (activePin?.card ? "Record" : activePin?.link ? "Link" : "Message");
   const activePinTitle = activePin?.attachments[0]?.name ?? activePin?.card?.title ?? activePin?.link?.title ?? activePin?.body;
+  // eslint-disable-next-line react-hooks/static-components -- lookup of statically-defined icon components, not a new component per render
   const ActivePinIcon = activePinAttachment ? attachmentIcon(activePinAttachment.kind)
     : activePin?.card ? cardIcon[activePin.card.type]
     : activePin?.link ? Globe2 : MessageSquareText;
@@ -70,6 +88,14 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
     ? `Pinned ${activePinAttachment.kind.toUpperCase()} ${documentKinds.has(activePinAttachment.kind) ? "document" : "file"}`
     : activePin?.card ? `Pinned ${cardModule[activePin.card.type]}`
     : activePin?.link ? "Pinned link" : "Pinned message";
+
+  function handleListScroll(event: Event) {
+    const element = event.currentTarget as HTMLDivElement;
+    const stick = element.scrollHeight - element.scrollTop - element.clientHeight < 100;
+    // eslint-disable-next-line react-hooks/immutability -- writing a useRef .current inside an event handler is legal; the render path reads the atBottom state mirror
+    shouldStick.current = stick;
+    setAtBottom(stick);
+  }
 
   function jumpTo(messageId: string) {
     document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
@@ -90,6 +116,7 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
 
       {activePin ? <section className={`sm-pinned-banner sm-pinned-banner--contextual sm-pinned-banner--${activePinTone} ${thread.complianceControlled ? "is-compliance" : ""}`} aria-label="Pinned item">
         <header className="sm-pinned-context__band">
+          {/* eslint-disable-next-line react-hooks/static-components -- ActivePinIcon is a lookup of statically-defined components */}
           <span><ActivePinIcon />{activePinHeader}</span>
           <span><em>{(activePinIndex % pinned.length) + 1} of {pinned.length}</em><b>{activePinType}</b></span>
         </header>
@@ -109,13 +136,22 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
         </div>
       </section> : null}
 
-      <div ref={listRef} className="sm-message-list" aria-live="polite" onScroll={(event) => { const element = event.currentTarget; shouldStick.current = element.scrollHeight - element.scrollTop - element.clientHeight < 100; }}>
+      <div ref={listRef} className="sm-message-list" aria-live="polite" onScroll={handleListScroll}>
+        {recordCard ? (
+          <CollaborationRecordCard
+            card={recordCard}
+            owner={userById(snapshot, recordCard.ownerId)}
+            collaborators={recordCard.collaboratorIds.map((id) => userById(snapshot, id))}
+            onOpen={() => onOpenCollaboration(recordCard)}
+            onActivity={onActivity}
+          />
+        ) : null}
         {messages.map((message) => message.system ? <SystemEvent key={message.id} message={message} /> : (
           <MessageRow key={message.id} message={message} currentUserId={currentUser.id} onReply={() => setReplyTo(message)} onPreview={onPreview} onActivity={onActivity} onOpenCollaboration={onOpenCollaboration} onJump={jumpTo} />
         ))}
       </div>
 
-      {!shouldStick.current ? <button className="sm-scroll-latest" type="button" aria-label="Scroll to latest message" onClick={() => scrollToBottom()}><ChevronDown /></button> : null}
+      {!atBottom ? <button className="sm-scroll-latest" type="button" aria-label="Scroll to latest message" onClick={() => scrollToBottom()}><ChevronDown /></button> : null}
       {typingNames.length ? (
         <div className="sm-typing-indicator" aria-live="polite">
           <span className="sm-typing-dots" aria-hidden="true"><i /><i /><i /></span>
@@ -132,7 +168,7 @@ function SystemEvent({ message }: { message: Message }) {
 }
 
 function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, onOpenCollaboration, onJump }: {
-  message: Message; currentUserId: string; onReply(): void; onPreview(attachment: Attachment): void; onActivity(): void; onOpenCollaboration(card: CollaborationCard): void; onJump(id: string): void;
+  message: Message; currentUserId: string; onReply: () => void; onPreview: (attachment: Attachment) => void; onActivity: () => void; onOpenCollaboration: (card: CollaborationCard) => void; onJump: (id: string) => void;
 }) {
   const { snapshot, actions } = useMessaging();
   const [menuOpen, setMenuOpen] = useState(false);
@@ -140,7 +176,7 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
   const author = userById(snapshot, message.authorId);
   const isSelf = message.authorId === currentUserId;
   const replySource = message.replyToId ? messageById(snapshot, message.replyToId) : undefined;
-  const canPin = Boolean(message.body.trim()) && !emojiOnly.test(message.body.trim()) || message.attachments.length > 0 || Boolean(message.card || message.link);
+  const canPin = (Boolean(message.body.trim()) && !emojiOnly.test(message.body.trim())) || message.attachments.length > 0 || Boolean(message.card ?? message.link);
   const liked = message.reactions.some((reaction) => reaction.emoji === "👍" && reaction.userIds.includes(currentUserId));
 
   if (message.deleted) return <article id={`message-${message.id}`} className={`sm-message ${isSelf ? "is-self" : ""}`}><Avatar user={author} size="medium" /><div className="sm-message__main"><div className="sm-deleted-message">This message was deleted.</div></div></article>;

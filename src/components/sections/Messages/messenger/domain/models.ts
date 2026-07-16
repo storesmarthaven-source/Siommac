@@ -21,10 +21,14 @@ export interface User {
 }
 
 export interface RelatedRecord {
-  id: string;
-  type: "Incident" | "CAPA" | "Inspection" | "Attendance" | "Document";
+  id: string;                 // human ref (claim no / permit no / version label)
+  type: string;               // source entity type (expense_claim, permit, …)
   title: string;
+  /** FE section id for drill-through (dispatched as a `siomac:section` event);
+   *  '' when the source module has no registered resolver. */
   href: string;
+  /** Live status of the source record (resolved server-side). */
+  status?: string;
 }
 
 export interface Attachment {
@@ -48,7 +52,9 @@ export interface LinkPreview {
 
 export interface CollaborationCard {
   id: string;
-  type: "worksheet" | "capa" | "incident-report" | "controlled-document" | "evidence-bundle" | "permit";
+  /** REAL SIOMAC record-thread entity types (source_entity_type), plus a
+   *  generic fallback for modules without a specific presentation. */
+  type: "expense_claim" | "budget_line" | "payroll_run" | "remittance" | "statutory_version" | "permit" | "record";
   title: string;
   subtitle: string;
   status: string;
@@ -93,6 +99,8 @@ export interface Thread {
   muted: boolean;
   favourite: boolean;
   complianceControlled: boolean;
+  /** SIOMAC extension: thread creator (record-card owner attribution). */
+  createdBy?: UserId;
   /** SIOMAC extension: the signed-in user authored ≥1 post (drives the Sent
    *  queue — server-derived from the /threads tab=sent filter). */
   authoredByMe?: boolean;

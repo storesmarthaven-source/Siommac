@@ -35,7 +35,7 @@
 
 import { Hono }              from 'hono';
 import { z, zv }             from '../lib/validate';
-import { requirePermission, requireUser, userCan } from '../lib/auth';
+import { requirePermission, userCan } from '../lib/auth';
 import { sb }                from '../lib/db';
 import { assertCanRemoveParticipant, DeliveryProtectionError } from '../lib/deliveryProtection';
 import {
@@ -47,6 +47,7 @@ import {
   listThreadsForUser,
   getThread,
   getThreadPosts,
+  listThreadActivity,
   markThreadRead,
   archiveThread,
   muteThread,
@@ -105,7 +106,7 @@ const NotifListSchema = z.object({
 
 router.post('/communications/notifications/list', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, NotifListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -131,14 +132,14 @@ router.post('/communications/notifications/list', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  const rows = data ?? [];
-  const nextCursor = rows.length === v.data.limit ? (rows[rows.length - 1]!.created_at as string) : null;
+  const rows = data;
+  const nextCursor = rows.length === v.data.limit ? (rows[rows.length - 1].created_at as string) : null;
   return c.json({ success: true, data: rows, nextCursor });
 });
 
 router.post('/communications/notifications/markRead', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { notificationId: string } | undefined;
   if (!args?.notificationId) return c.json({ success: false, message: 'notificationId required' }, 400 as 200);
 
@@ -152,7 +153,7 @@ router.post('/communications/notifications/markRead', async c => {
 
 router.post('/communications/notifications/markAllRead', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const args = (c.get('body') as Record<string, unknown>).args as { module?: string } | undefined;
+  const args = (c.get('body')).args as { module?: string } | undefined;
 
   let q = sb.from('notifications')
     .update({ is_read: true, read_at: new Date().toISOString() })
@@ -166,7 +167,7 @@ router.post('/communications/notifications/markAllRead', async c => {
 
 router.post('/communications/notifications/archive', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { notificationId?: string; all?: boolean } | undefined;
 
   if (args?.notificationId) {
@@ -198,7 +199,7 @@ router.post('/communications/notifications/preferences/get', async c => {
       .eq('scope', 'all')
       .maybeSingle(),
   ]) as [
-    { error: { message: string } | null; data: Array<{ event_type: string; in_app: boolean; email: boolean; whatsapp: boolean }> | null },
+    { error: { message: string } | null; data: { event_type: string; in_app: boolean; email: boolean; whatsapp: boolean }[] | null },
     { data: { muted_until: string | null } | null },
   ];
   if (prefsRes.error) return c.json({ success: false, message: prefsRes.error.message }, 500 as 200);
@@ -225,7 +226,7 @@ const PrefSetSchema = z.object({
 
 router.post('/communications/notifications/preferences/set', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PrefSetSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -251,7 +252,7 @@ const MuteSchema = z.object({
 
 router.post('/communications/notifications/mute', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, MuteSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -285,13 +286,13 @@ const BroadcastSchema = z.object({
 
 router.post('/communications/notifications/broadcast', async c => {
   const user = await requirePermission(c, 'communications.admin');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, BroadcastSchema, body.args);
   if (!v.ok) return v.response;
 
   // Resolve the audience to a concrete user-id list.
   const a = v.data.audience;
-  let userIds: string[] = [];
+  let userIds: string[];
   if (a.type === 'users') {
     userIds = a.userIds ?? [];
   } else if (a.type === 'site') {
@@ -340,7 +341,7 @@ const ThreadsListSchema = z.object({
 
 router.post('/communications/messages/threads', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ThreadsListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -356,12 +357,12 @@ router.post('/communications/messages/threads', async c => {
 
 // POST /api/communications/messages/thread
 const ThreadGetSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId: z.uuid(),
 });
 
 router.post('/communications/messages/thread', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ThreadGetSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -380,14 +381,14 @@ router.post('/communications/messages/thread', async c => {
 
 // POST /api/communications/messages/posts  (no auto mark-read)
 const PostsSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId: z.uuid(),
   limit:    z.number().int().min(1).max(100).default(50),
   cursor:   z.string().nullable().optional(),
 });
 
 router.post('/communications/messages/posts', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PostsSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -402,11 +403,30 @@ router.post('/communications/messages/posts', async c => {
   return c.json({ success: true, data: result.posts ?? [], nextCursor: result.nextCursor });
 });
 
+// POST /api/communications/messages/activity — thread activity history
+// (derived from posts/pins/membership/read state; posts-equivalent read gate).
+router.post('/communications/messages/activity', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, z.object({ threadId: z.uuid() }), body.args);
+  if (!v.ok) return v.response;
+
+  const result = await listThreadActivity(v.data.threadId, user.id, user.role);
+  if (!result.ok) {
+    if (result.code === 'compliance_required') {
+      return c.json({ success: false, code: 'compliance_required', message: result.message }, 403 as 200);
+    }
+    const status = result.code === 'forbidden' ? 403 as 200 : 500 as 200;
+    return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
+  }
+  return c.json({ success: true, data: result.entries ?? [] });
+});
+
 // POST /api/communications/messages/requestThreadAccess
 // Controlled, AUDITED compliance access to a private thread. Requires
 // communications.compliance_read. Creates a time-boxed grant + audit record.
 const RequestAccessSchema = z.object({
-  threadId:      z.string().uuid(),
+  threadId:      z.uuid(),
   reason:        z.enum(COMPLIANCE_REASONS),
   caseRef:       z.string().max(120).nullable().optional(),
   notes:         z.string().max(2000).nullable().optional(),
@@ -415,7 +435,7 @@ const RequestAccessSchema = z.object({
 
 router.post('/communications/messages/requestThreadAccess', async c => {
   const user = await requirePermission(c, 'communications.compliance_read');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RequestAccessSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -434,11 +454,11 @@ router.post('/communications/messages/requestThreadAccess', async c => {
 // POST /api/communications/messages/recordExport
 // Stamp that message history was exported under an active compliance grant.
 // Requires communications.compliance_export. Audited.
-const RecordExportSchema = z.object({ threadId: z.string().uuid() });
+const RecordExportSchema = z.object({ threadId: z.uuid() });
 
 router.post('/communications/messages/recordExport', async c => {
   const user = await requirePermission(c, 'communications.compliance_export');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RecordExportSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -457,7 +477,7 @@ const ComplianceSearchSchema = z.object({
 
 router.post('/communications/messages/compliance/search', async c => {
   const user = await requirePermission(c, 'communications.compliance_read');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ComplianceSearchSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -478,7 +498,7 @@ const RecordThreadSchema = z.object({
 
 router.post('/communications/messages/recordThread', async c => {
   const user = await requirePermission(c, 'communications.thread_create');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RecordThreadSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -510,13 +530,13 @@ const CreateThreadSchema = z.object({
   // Body OR at least one attachment required (enforced in the handler) — allow an
   // empty/null body for attachment-only messages.
   body:               z.string().max(10000).nullable().optional(),
-  attachmentIds:      z.array(z.string().uuid()).optional(),
+  attachmentIds:      z.array(z.uuid()).optional(),
   idempotencyKey:     z.string().min(1).max(200).optional(),
 });
 
 router.post('/communications/messages/createThread', async c => {
   const user = await requirePermission(c, 'communications.thread_create');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, CreateThreadSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -540,21 +560,21 @@ router.post('/communications/messages/createThread', async c => {
 
 // POST /api/communications/messages/post
 const PostMessageSchema = z.object({
-  threadId:      z.string().uuid(),
+  threadId:      z.uuid(),
   // Body OR at least one attachment required (enforced below) — allow empty/null
   // body when sending an attachment-only message.
   body:          z.string().max(10000).nullable().optional(),
-  attachmentIds: z.array(z.string().uuid()).optional(),
-  replyToPostId: z.string().uuid().nullable().optional(),
+  attachmentIds: z.array(z.uuid()).optional(),
+  replyToPostId: z.uuid().nullable().optional(),
   priority:      z.enum(['normal','important','urgent','action_required']).optional(),
   // Client-generated UUID for idempotent retry (audit F9) — optional so
   // non-interactive callers keep working; the Messenger always sends one.
-  clientIdempotencyKey: z.string().uuid().nullable().optional(),
+  clientIdempotencyKey: z.uuid().nullable().optional(),
 });
 
 router.post('/communications/messages/post', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PostMessageSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -589,7 +609,7 @@ const AttachUploadUrlSchema = z.object({
 
 router.post('/communications/messages/attachments/upload-url', async c => {
   await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, AttachUploadUrlSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -613,7 +633,7 @@ const AttachCreateSchema = z.object({
 
 router.post('/communications/messages/attachments/create', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, AttachCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -631,13 +651,13 @@ router.post('/communications/messages/attachments/create', async c => {
 
 // POST /api/communications/messages/markRead
 const MarkReadSchema = z.object({
-  threadId:     z.string().uuid(),
+  threadId:     z.uuid(),
   upToSequence: z.number().int().nonnegative().optional(),
 });
 
 router.post('/communications/messages/markRead', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, MarkReadSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -647,13 +667,13 @@ router.post('/communications/messages/markRead', async c => {
 
 // POST /api/communications/messages/archive
 const ArchiveSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId: z.uuid(),
   archived: z.boolean(),
 });
 
 router.post('/communications/messages/archive', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ArchiveSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -663,11 +683,11 @@ router.post('/communications/messages/archive', async c => {
 });
 
 // POST /api/communications/messages/mute  — mute/unmute thread notifications (per-user)
-const MuteThreadSchema = z.object({ threadId: z.string().uuid(), muted: z.boolean() });
+const MuteThreadSchema = z.object({ threadId: z.uuid(), muted: z.boolean() });
 
 router.post('/communications/messages/mute', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, MuteThreadSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -678,13 +698,13 @@ router.post('/communications/messages/mute', async c => {
 
 // POST /api/communications/messages/favourites/set — per-user favourite flag
 const FavouriteThreadSchema = z.object({
-  threadId:  z.string().uuid(),
+  threadId:  z.uuid(),
   favourite: z.boolean(),
 });
 
 router.post('/communications/messages/favourites/set', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, FavouriteThreadSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -698,13 +718,13 @@ router.post('/communications/messages/favourites/set', async c => {
 
 // POST /api/communications/messages/participants/add
 const ParticipantsAddSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId: z.uuid(),
   userIds:  z.array(z.string().min(1)).min(1),
 });
 
 router.post('/communications/messages/participants/add', async c => {
   const user = await requirePermission(c, 'communications.thread_manage_own');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ParticipantsAddSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -718,13 +738,13 @@ router.post('/communications/messages/participants/add', async c => {
 
 // POST /api/communications/messages/participants/remove
 const ParticipantsRemoveSchema = z.object({
-  threadId: z.string().uuid(),
+  threadId: z.uuid(),
   userId:   z.string().min(1),
 });
 
 router.post('/communications/messages/participants/remove', async c => {
   const user = await requirePermission(c, 'communications.thread_manage_own');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ParticipantsRemoveSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -760,7 +780,7 @@ const SearchSchema = z.object({
 
 router.post('/communications/messages/search', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, SearchSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -775,7 +795,7 @@ const RecipientsSchema = z.object({
 
 router.post('/communications/messages/recipients', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RecipientsSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -786,13 +806,13 @@ router.post('/communications/messages/recipients', async c => {
 // POST /api/communications/messages/attachments/get-url
 // Permission-checked signed URL for a stored attachment, by purpose.
 const AttachUrlSchema = z.object({
-  attachmentId: z.string().uuid(),
+  attachmentId: z.uuid(),
   purpose:      z.enum(['thumbnail','preview','download']).default('download'),
 });
 
 router.post('/communications/messages/attachments/get-url', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, AttachUrlSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -810,8 +830,8 @@ router.post('/communications/messages/attachments/get-url', async c => {
 // owner/admin only (enforced in the lib).
 
 const PinSchema = z.object({
-  threadId:        z.string().uuid(),
-  postId:          z.string().uuid().nullable().optional(),
+  threadId:        z.uuid(),
+  postId:          z.uuid().nullable().optional(),
   pinType:         z.enum(['thread','post']),
   visibility:      z.enum(['thread','personal']).default('thread'),
   note:            z.string().max(500).nullable().optional(),
@@ -820,7 +840,7 @@ const PinSchema = z.object({
 
 router.post('/communications/messages/pins/pin', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PinSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -843,11 +863,11 @@ router.post('/communications/messages/pins/pin', async c => {
   return c.json({ success: true, data: result.pin });
 });
 
-const UnpinSchema = z.object({ pinId: z.string().uuid() });
+const UnpinSchema = z.object({ pinId: z.uuid() });
 
 router.post('/communications/messages/pins/unpin', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, UnpinSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -861,13 +881,13 @@ router.post('/communications/messages/pins/unpin', async c => {
 
 // POST /api/communications/messages/delete — soft-delete a message
 const DeleteMessageSchema = z.object({
-  postId: z.string().uuid(),
+  postId: z.uuid(),
   reason: z.string().max(500).nullable().optional(),
 });
 
 router.post('/communications/messages/delete', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, DeleteMessageSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -889,13 +909,13 @@ router.post('/communications/messages/delete', async c => {
 
 // POST /api/communications/messages/reactions/toggle — add/remove an emoji reaction
 const ToggleReactionSchema = z.object({
-  postId: z.string().uuid(),
+  postId: z.uuid(),
   emoji:  z.string().trim().min(1).max(16),
 });
 
 router.post('/communications/messages/reactions/toggle', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ToggleReactionSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -908,11 +928,11 @@ router.post('/communications/messages/reactions/toggle', async c => {
   return c.json({ success: true, postId: v.data.postId, action: result.action, count: result.count });
 });
 
-const PinsListSchema = z.object({ threadId: z.string().uuid() });
+const PinsListSchema = z.object({ threadId: z.uuid() });
 
 router.post('/communications/messages/pins/list', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PinsListSchema, body.args);
   if (!v.ok) return v.response;
   const pins = await listPins(v.data.threadId, user.id);
@@ -929,14 +949,14 @@ router.post('/communications/messages/pins/pinned-summary', async c => {
 // Per-thread, per-user composer draft. Empty body deletes the draft.
 
 const DraftSaveSchema = z.object({
-  threadId:      z.string().uuid(),
+  threadId:      z.uuid(),
   body:          z.string().max(10000).nullable().optional(),
-  replyToPostId: z.string().uuid().nullable().optional(),
+  replyToPostId: z.uuid().nullable().optional(),
 });
 
 router.post('/communications/messages/draft/save', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, DraftSaveSchema, body.args);
   if (!v.ok) return v.response;
   const result = await saveDraft(v.data.threadId, user.id, v.data.body ?? null, v.data.replyToPostId ?? null);
@@ -944,11 +964,11 @@ router.post('/communications/messages/draft/save', async c => {
   return c.json({ success: true });
 });
 
-const DraftGetSchema = z.object({ threadId: z.string().uuid() });
+const DraftGetSchema = z.object({ threadId: z.uuid() });
 
 router.post('/communications/messages/draft/get', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, DraftGetSchema, body.args);
   if (!v.ok) return v.response;
   const draft = await getDraft(v.data.threadId, user.id);
@@ -957,7 +977,7 @@ router.post('/communications/messages/draft/get', async c => {
 
 router.post('/communications/messages/draft/delete', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, DraftGetSchema, body.args);
   if (!v.ok) return v.response;
   const result = await deleteDraft(v.data.threadId, user.id);
@@ -971,12 +991,12 @@ router.post('/communications/messages/draft/delete', async c => {
 
 const PresenceSchema = z.object({
   status:         z.enum(['online','away','offline']).default('online'),
-  activeThreadId: z.string().uuid().nullable().optional(),
+  activeThreadId: z.uuid().nullable().optional(),
 });
 
 router.post('/communications/messages/presence/update', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, PresenceSchema, body.args ?? {});
   if (!v.ok) return v.response;
   const result = await updatePresence(user.id, v.data.status, v.data.activeThreadId ?? null);
@@ -1006,7 +1026,7 @@ const CreateTicketSchema = z.object({
 
 router.post('/communications/tickets/create', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, CreateTicketSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1024,7 +1044,7 @@ const TicketListSchema = z.object({
 
 router.post('/communications/tickets/list', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, TicketListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -1040,17 +1060,17 @@ router.post('/communications/tickets/list', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 router.post('/communications/tickets/get', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { ticketId: string } | undefined;
   if (!args?.ticketId) return c.json({ success: false, message: 'ticketId required' }, 400 as 200);
 
   const [ticketRes, commentsRes] = await Promise.all([
-    sb.from('tickets').select('*').eq('id', args.ticketId).maybeSingle(),
+    sb.from('tickets').select('*').eq('id', args.ticketId).maybeSingle<{ requester_user_id: string | null } & Record<string, unknown>>(),
     sb.from('ticket_comments').select('*').eq('ticket_id', args.ticketId).order('created_at'),
   ]);
 
@@ -1065,14 +1085,14 @@ router.post('/communications/tickets/get', async c => {
 });
 
 const CommentSchema = z.object({
-  ticketId:   z.string().uuid(),
+  ticketId:   z.uuid(),
   body:       z.string().min(1).max(5000),
   isInternal: z.boolean().default(false),
 });
 
 router.post('/communications/tickets/comment', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, CommentSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1107,15 +1127,15 @@ router.post('/communications/tickets/comment', async c => {
 });
 
 const UpdateTicketSchema = z.object({
-  ticketId:   z.string().uuid(),
+  ticketId:   z.uuid(),
   status:     z.string().optional(),
   assigneeId: z.string().nullable().optional(),
   priority:   z.string().optional(),
 });
 
 router.post('/communications/tickets/update', async c => {
-  const user = await requirePermission(c, 'tickets.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  await requirePermission(c, 'tickets.manage');
+  const body = c.get('body');
   const v = zv(c, UpdateTicketSchema, body.args);
   if (!v.ok) return v.response;
 

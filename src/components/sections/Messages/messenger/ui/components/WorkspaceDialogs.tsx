@@ -8,13 +8,14 @@ import { Activity, Check, CheckCircle2, Download, FileText, Search, UserPlus, Us
 import { useEffect, useMemo, useState } from "preact/hooks";
 import { useMessaging } from "../../app/MessagingProvider";
 import { userById } from "../../app/selectors";
+import { openAppSection } from "./MessageCards";
 import type { ActivityEntry, Attachment, CollaborationCard, Thread, User } from "../../domain/models";
 import { formatTime } from "../../domain/format";
 import { Avatar } from "./Avatar";
 import { Dialog } from "./Dialog";
 import { notifyChatParticipantAdded, notifyGroupChatStarted } from "../../integration/messagingNotifications";
 
-export function InviteDialog({ open, thread, onClose, onGroupCreated }: { open: boolean; thread: Thread; onClose(): void; onGroupCreated(thread: Thread): void }) {
+export function InviteDialog({ open, thread, onClose, onGroupCreated }: { open: boolean; thread: Thread; onClose: () => void; onGroupCreated: (thread: Thread) => void }) {
   const { snapshot, actions } = useMessaging();
   const [mode, setMode] = useState<"invite" | "group">("invite");
   const [name, setName] = useState("");
@@ -31,7 +32,7 @@ export function InviteDialog({ open, thread, onClose, onGroupCreated }: { open: 
     setDirectoryLoading(true);
     actions.listRecipients()
       .then(setDirectory)
-      .catch((cause) => setFormError(cause instanceof Error ? cause.message : "Unable to load the employee directory"))
+      .catch((cause: unknown) => setFormError(cause instanceof Error ? cause.message : "Unable to load the employee directory"))
       .finally(() => setDirectoryLoading(false));
   }, [actions, open]);
 
@@ -64,12 +65,12 @@ export function InviteDialog({ open, thread, onClose, onGroupCreated }: { open: 
     {mode === "invite" ? <>
       <label className="sm-dialog-search"><Search /><input type="search" value={query} onInput={(event) => setQuery(event.currentTarget.value)} placeholder="Search employees..." /></label>
       {formError ? <p className="sm-group-error" role="alert">{formError}</p> : null}
-      <div className="sm-invite-list">{directoryLoading ? <p className="sm-invite-empty">Loading employees...</p> : candidates.length ? candidates.map((user) => <button type="button" key={user.id} onClick={async () => {
+      <div className="sm-invite-list">{directoryLoading ? <p className="sm-invite-empty">Loading employees...</p> : candidates.length ? candidates.map((user) => <button type="button" key={user.id} onClick={() => { void (async () => {
         try {
           await actions.invite(thread.id, user.id); onClose();
           notifyChatParticipantAdded({ ...thread, kind: "group", participantIds: [...thread.participantIds, user.id] }, user.name, { onOpen: onClose });
         } catch (cause) { setFormError(cause instanceof Error ? cause.message : "Unable to add the participant"); }
-      }}><Avatar user={user} size="medium" /><span><strong>{user.name}</strong><small>{user.title}</small></span><UserPlus /></button>) : <p className="sm-invite-empty">Everyone available is already in this conversation.</p>}</div>
+      })(); }}><Avatar user={user} size="medium" /><span><strong>{user.name}</strong><small>{user.title}</small></span><UserPlus /></button>) : <p className="sm-invite-empty">Everyone available is already in this conversation.</p>}</div>
     </> : <div className="sm-group-form">
       <label><span>Group name</span><input value={name} maxLength={80} placeholder="Enter group name" onInput={(event) => setName(event.currentTarget.value)} /></label>
       <label><span>First message</span><input value={firstMessage} maxLength={2000} placeholder="Start the conversation..." onInput={(event) => setFirstMessage(event.currentTarget.value)} /></label>
@@ -85,7 +86,7 @@ export function InviteDialog({ open, thread, onClose, onGroupCreated }: { open: 
   </Dialog>;
 }
 
-export function PreviewDialog({ attachment, onClose }: { attachment: Attachment | null; onClose(): void }) {
+export function PreviewDialog({ attachment, onClose }: { attachment: Attachment | null; onClose: () => void }) {
   const { actions } = useMessaging();
   const preview = useMemo(() => {
     if (!attachment) return null;
@@ -98,7 +99,7 @@ export function PreviewDialog({ attachment, onClose }: { attachment: Attachment 
   return <Dialog open={Boolean(attachment)} title={attachment?.name ?? "File preview"} {...(attachment ? { description: `${attachment.kind.toUpperCase()} file` } : {})} icon={<FileText />} onClose={onClose} size="large"><div className="sm-preview">{preview}</div>{attachment ? <footer className="sm-dialog-footer"><button type="button" onClick={() => void actions.download(attachment)}><Download />Download</button></footer> : null}</Dialog>;
 }
 
-export function ActivityDialog({ open, thread, entries, onClose }: { open: boolean; thread: Thread; entries: ActivityEntry[]; onClose(): void }) {
+export function ActivityDialog({ open, thread, entries, onClose }: { open: boolean; thread: Thread; entries: ActivityEntry[]; onClose: () => void }) {
   const { snapshot } = useMessaging();
   if (!snapshot) return null;
   return <Dialog open={open} title="Thread activity" description={`Delivery, membership, and record activity for ${thread.name}.`} icon={<Activity />} onClose={onClose}>
@@ -106,7 +107,7 @@ export function ActivityDialog({ open, thread, entries, onClose }: { open: boole
   </Dialog>;
 }
 
-export function CollaborationDialog({ card, onClose }: { card: CollaborationCard | null; onClose(): void }) {
+export function CollaborationDialog({ card, onClose }: { card: CollaborationCard | null; onClose: () => void }) {
   const { snapshot } = useMessaging();
   if (!snapshot) return null;
   const owner = card ? userById(snapshot, card.ownerId) : null;
@@ -115,7 +116,9 @@ export function CollaborationDialog({ card, onClose }: { card: CollaborationCard
     {card && owner ? <div className="sm-collaboration-dialog">
       <dl><div><dt>Status</dt><dd>{card.status}</dd></div><div><dt>Owner</dt><dd>{owner.name}</dd></div><div><dt>Related record</dt><dd>{card.record.type} / {card.record.id}</dd></div><div><dt>Updated</dt><dd>{formatTime(card.updatedAt)}</dd></div></dl>
       <section><h3>Collaborators</h3><div>{collaborators.map((user) => <span key={user.id}><Avatar user={user} size="medium" showPresence /><em><strong>{user.name}</strong><small>{user.title}</small></em></span>)}</div></section>
-      <footer><a href={card.record.href}><FileText />Open related record</a></footer>
+      <footer>{card.record.href
+        ? <button type="button" onClick={() => { openAppSection(card.record.href); onClose(); }}><FileText />Open related record</button>
+        : null}</footer>
     </div> : null}
   </Dialog>;
 }

@@ -142,10 +142,38 @@ export interface MessageThread {
   hasAttachments?:     boolean;
   actionRequired?:     boolean;
   priority?:           MessagePriority;
+  /** Resolved source record for record threads (collaboration cards): the
+   *  LIVE ref/title/status from the owning module's table + the FE section id
+   *  for drill-through. Null when the module has no resolver or the record
+   *  no longer exists. */
+  sourceRecord?:       ThreadSourceRecord | null;
   // ── P0 hardening ──
   /** Thread version, bumped on every post/pin/membership change. Used for If-Match. */
   version?:            number;
   archivedAt?:         string | null;
+}
+
+/** A record thread's resolved source record (live, from the owning module). */
+export interface ThreadSourceRecord {
+  module:      string;                     // source_module (e.g. finance_expenses)
+  entityType:  string;                     // source_entity_type (e.g. expense_claim)
+  entityId:    string;
+  ref:         string;                     // human ref (claim no / permit no / label)
+  title:       string;                     // display title (falls back to the ref)
+  status:      string;
+  sectionId:   string | null;              // FE nav section for drill-through
+}
+
+/** One row of a thread's activity history (derived from posts, pins,
+ *  membership and read state — no separate activity table). `actorId` is ''
+ *  when the actor is unknown (e.g. system rows without an author). */
+export interface ThreadActivityEntry {
+  id:          string;
+  threadId:    string;
+  actorId:     string;
+  type:        'message' | 'upload' | 'pin' | 'unpin' | 'invite' | 'join' | 'mute' | 'read';
+  description: string;
+  createdAt:   string;
 }
 
 /** A pinned thread or pinned post (visibility: shared with thread, or personal). */

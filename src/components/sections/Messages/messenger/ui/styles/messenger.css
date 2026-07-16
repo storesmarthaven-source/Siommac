@@ -189,6 +189,9 @@
 .sm-record-card__details dt svg { font-size: 13px; }
 .sm-record-card__details dd { margin: 0; color: #263a52; font-size: 12px; }
 .sm-record-card__details a { color: #145aa3; }
+.sm-record-card__link { padding: 0; border: 0; background: none; color: #145aa3; font: inherit; cursor: pointer; text-decoration: underline; text-underline-offset: 2px; }
+/* The message-list record card sits above the conversation */
+.sm-message-list > .sm-record-card { max-width: 560px; margin: 0 auto 18px; }
 .sm-record-card__collaborators { grid-column: 1 / 3; }
 .sm-record-card__collaborators dd { display: flex; align-items: center; gap: 9px; }
 .sm-record-card__collaborators em { color: #61738a; font-size: 10px; font-style: normal; }
@@ -280,7 +283,8 @@
 .sm-file-chip { width: 32px; height: 38px; border-radius: 4px; display: grid; place-items: center; color: #fff; background: #68798e; font-size: 8px; font-weight: 600; }
 .sm-file-chip--pdf { background: #c63f45; }.sm-file-chip--zip { background: #b98000; }.sm-file-chip--word { background: #2772b7; }.sm-file-chip--excel { background: #167a55; }.sm-file-chip--image { background: #7356cd; }.sm-file-chip--video { background: #c92b78; }.sm-file-chip--html { background: #ce5a27; }.sm-file-chip--css { background: #2d70af; }
 .sm-media-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }.sm-media-grid button { aspect-ratio: 1; padding: 0; border: 1px solid rgba(255,255,255,.14); border-radius: 5px; overflow: hidden; background: transparent; cursor: pointer; }.sm-media-grid img { width: 100%; height: 100%; object-fit: cover; }
-.sm-related-record { position: relative; padding: 9px 28px 9px 9px; border: 1px solid rgba(255,255,255,.13); border-radius: 6px; display: grid; gap: 4px; color: #fff; background: rgba(255,255,255,.07); text-decoration: none; }.sm-related-record small { color: #b6c8dc; font-size: 9px; }.sm-related-record strong { font-size: 11px; font-weight: 500; }.sm-related-record svg { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); }
+.sm-related-record { position: relative; width: 100%; padding: 9px 28px 9px 9px; border: 1px solid rgba(255,255,255,.13); border-radius: 6px; display: grid; gap: 4px; color: #fff; background: rgba(255,255,255,.07); text-decoration: none; text-align: left; font: inherit; }
+button.sm-related-record { cursor: pointer; }.sm-related-record small { color: #b6c8dc; font-size: 9px; }.sm-related-record strong { font-size: 11px; font-weight: 500; }.sm-related-record svg { position: absolute; right: 9px; top: 50%; transform: translateY(-50%); }
 .sm-details-panel__takeover { min-height: 70px; padding: 12px; display: flex; align-items: center; gap: 9px; border-bottom: 1px solid rgba(255,255,255,.12); }.sm-details-panel__takeover .sm-icon-button { color: #dceaff; }.sm-details-panel__takeover > span { display: grid; gap: 3px; }.sm-details-panel__takeover strong { font-size: 13px; font-weight: 600; }.sm-details-panel__takeover small { color: #b3c5da; font-size: 10px; }
 .sm-info-list { margin: 0; display: grid; }.sm-info-list > div { padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,.09); display: flex; justify-content: space-between; gap: 10px; }.sm-info-list > div:last-child { border-bottom: 0; }.sm-info-list dt, .sm-info-list dd { margin: 0; font-size: 10px; }.sm-info-list dt { color: #adbed2; }.sm-info-list dd { text-align: right; }
 
