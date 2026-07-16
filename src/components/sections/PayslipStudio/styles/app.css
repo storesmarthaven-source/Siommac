@@ -471,12 +471,24 @@ table.pay-tbl tr.pt-spacer td { height: 100%; padding: 0; border: none; backgrou
 .statusbar b { color: #ffffff; font-weight: 600; }
 
 /* ---------------- Print ---------------- */
-#print-root { display: none; }
 }
 
+/* #print-root is PORTALLED to document.body (see PrintView.tsx) so the ERP
+   shell's overflow/height containers can never clip it — this screen-hide
+   rule must therefore live OUTSIDE the .payslip-studio-root nesting scope
+   (the portal root carries the scope class itself, so nested .page/.el
+   styles still apply to its contents). */
+#print-root { display: none; }
+
+/* Print rules are gated on body:has(#print-root) — the print copy exists only
+   while the studio is mounted, so the ERP's other print flows (leave docs,
+   payroll docs in assets/styles/print.css) are completely unaffected. */
 @media print {
-  html, body { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
-  .app, .toast, .color-pop { display: none !important; }
+  html:has(#print-root), body:has(#print-root) { background: #fff !important; margin: 0 !important; padding: 0 !important; height: auto !important; overflow: visible !important; }
+  /* Hide EVERYTHING else at the root — the ERP shell, the studio UI, toasts,
+     dialogs — regardless of host structure. display:none (not visibility)
+     frees the page flow so the design prints at the page origin. */
+  body:has(#print-root) > *:not(#print-root) { display: none !important; }
   #print-root { display: block !important; }
   #print-root, #print-root * { -webkit-print-color-adjust: exact !important; print-color-adjust: exact !important; color-adjust: exact !important; }
   #print-root .page { box-shadow: none !important; margin: 0 auto !important; overflow: hidden !important; }

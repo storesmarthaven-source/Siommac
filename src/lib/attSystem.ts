@@ -321,106 +321,9 @@ export function readPhone(idOrEl: string | HTMLInputElement): string {
   document.addEventListener('blur',    onBlur,    true);
 })();
 
-// ── _buildPayslipHtml ─────────────────────────────────────────────────────────
-
-export function _buildPayslipHtml(d: Record<string, unknown>): string {
-  const fmt = (n: unknown): string => Number(n ?? 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-  const cycleLabel: Record<string, string> = { daily: 'Daily', weekly: 'Weekly', fortnightly: 'Fortnightly', monthly: 'Monthly' };
-  const sv = _SettingsView();
-  const ci = (sv?.getCompanyInfo ? sv.getCompanyInfo() : {}) as Record<string, string> | null ?? {};
-  const sr = (sv?.getStatutoryRates ? sv.getStatutoryRates() : { allowanceAnnual: 90000, nisRate: 6 }) as Record<string, number>;
-  const rateStr = d.pay_basis === 'hourly'
-    ? `TTD ${fmt(d.hourly_rate)} / hr`
-    : `TTD ${fmt(d.monthly_salary)} / month`;
-  // d fields come from Record<string,unknown> but are number|string from the payroll API at
-  // runtime — cast the access to that type so String() is safe (no base-to-string on unknown).
-  const _hoursWorkedMeta = String((d.hours_worked ?? d.hoursWorked ?? 0) as string | number);
-  const _daysWorked = String((d.days_worked ?? d.daysWorked ?? '—') as string | number);
-  const _hoursWorkedTable = String((d.hours_worked ?? d.hoursWorked ?? '—') as string | number);
-  return `
-    <div class="pr-payslip">
-      <div class="pr-payslip-header">
-        <div class="pr-payslip-header-icon"><i class="fas fa-file-invoice-dollar"></i></div>
-        <div class="pr-payslip-header-info">
-          <div class="pr-payslip-subtitle">${escapeHtml(d.name ?? '—')}</div>
-          <div class="pr-payslip-period">${escapeHtml(d.position ?? '—')} &bull; ${escapeHtml(d.department ?? '—')}</div>
-        </div>
-        <button class="pr-payslip-print-btn no-print" onclick="window._printPayslip()"><i class="fas fa-print"></i> Print</button>
-        <button class="pr-payslip-close-btn no-print" onclick="cpop.close()"><i class="fas fa-times"></i></button>
-      </div>
-      <div class="pr-payslip-brand">
-        ${ci.logoUrl ? `<img src="${escapeHtml(ci.logoUrl)}" alt="Logo" class="pr-payslip-brand-logo">` : ''}
-        <div class="pr-payslip-brand-contact">
-          <div class="pr-payslip-brand-name">${escapeHtml(ci.name ?? 'My Company')}</div>
-          ${ci.address ? `<div class="pr-payslip-brand-detail">${escapeHtml(ci.address)}</div>` : ''}
-          ${ci.phone   ? `<div class="pr-payslip-brand-detail"><i class="fas fa-phone"></i> ${escapeHtml(ci.phone)}</div>` : ''}
-          ${ci.email   ? `<div class="pr-payslip-brand-detail"><i class="fas fa-envelope"></i> ${escapeHtml(ci.email)}</div>` : ''}
-          <div class="pr-payslip-brand-detail">NIS Reg: ${escapeHtml(ci.nis ?? '1234567')}</div>
-          <div class="pr-payslip-brand-detail">BIR File: ${escapeHtml(ci.bir ?? '100123456')}</div>
-        </div>
-      </div>
-      <div class="pr-payslip-meta">
-        <div class="pr-payslip-meta-col">
-          <div class="pr-payslip-meta-row"><span>Pay Period</span><strong>${escapeHtml(d.date_from)} — ${escapeHtml(d.date_to)}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Pay Cycle</span><strong>${
-            // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- defensive: cycleLabel may not contain this pay_cycle value at runtime
-            cycleLabel[d.pay_cycle as string] ?? (d.pay_cycle as string) ?? '—'
-          }</strong></div>
-          <div class="pr-payslip-meta-row"><span>Pay Date</span><strong>${escapeHtml(d.pay_date ?? '—')}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Payroll Type</span><strong>Normal</strong></div>
-        </div>
-        <div class="pr-payslip-meta-col">
-          <div class="pr-payslip-meta-row"><span>Rate</span><strong>${rateStr}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Hours Worked</span><strong>${_hoursWorkedMeta}h</strong></div>
-          <div class="pr-payslip-meta-row"><span>Days Worked</span><strong>${_daysWorked}</strong></div>
-          <div class="pr-payslip-meta-row"><span>Personal Allowance</span><strong>TTD ${fmt(sr.allowanceAnnual)} / yr</strong></div>
-          <div class="pr-payslip-meta-row pr-payslip-meta-row--sep"><span>NIS Reg</span><strong>${escapeHtml(ci.nis ?? '1234567')}</strong></div>
-          <div class="pr-payslip-meta-row"><span>BIR File</span><strong>${escapeHtml(ci.bir ?? '100123456')}</strong></div>
-        </div>
-      </div>
-      <div class="pr-payslip-tables">
-        <div class="pr-payslip-table-col">
-          <div class="pr-payslip-section-title"><i class="fas fa-plus-circle"></i> Earnings</div>
-          <table class="pr-payslip-tbl">
-            <thead><tr><th>Description</th><th>Rate</th><th>Units</th><th>Amount</th></tr></thead>
-            <tbody>
-              <tr>
-                <td>${d.pay_basis === 'hourly' ? 'Straight Time' : 'Monthly Salary'}</td>
-                <td>${d.pay_basis === 'hourly' ? fmt(d.hourly_rate ?? d.hourlyRate) : '—'}</td>
-                <td>${_hoursWorkedTable}</td>
-                <td>TTD ${fmt(d.gross_pay ?? d.grossPay)}</td>
-              </tr>
-            </tbody>
-          </table>
-          <div class="pr-payslip-subtotal"><span>Gross Pay</span><span>TTD ${fmt(d.gross_pay ?? d.grossPay)}</span></div>
-        </div>
-        <div class="pr-payslip-table-col">
-          <div class="pr-payslip-section-title"><i class="fas fa-minus-circle"></i> Deductions</div>
-          <table class="pr-payslip-tbl">
-            <thead><tr><th>Description</th><th>Amount</th></tr></thead>
-            <tbody>
-              <tr><td>Health Surcharge</td><td>${Number(d.health_surcharge ?? d.healthSurcharge ?? 0) > 0 ? 'TTD ' + fmt(d.health_surcharge ?? d.healthSurcharge) : 'N/A'}</td></tr>
-              <tr><td>NIS (${sr.nisRate ?? 6}%)</td><td>${Number(d.nis ?? 0) > 0 ? 'TTD ' + fmt(d.nis) : 'N/A'}</td></tr>
-              <tr><td>PAYE</td><td>TTD ${fmt(d.paye)}</td></tr>
-            </tbody>
-          </table>
-          <div class="pr-payslip-subtotal pr-payslip-subtotal--ded"><span>Total Deductions</span><span>TTD ${fmt(d.total_deductions ?? d.totalDeductions)}</span></div>
-        </div>
-      </div>
-      <div class="pr-payslip-net"><span>Net Pay</span><span>TTD ${fmt(d.net_pay ?? d.netPay)}</span></div>
-      <div class="pr-payslip-ytd">
-        <div class="pr-payslip-section-title"><i class="fas fa-calendar-alt"></i> Year to Date</div>
-        <div class="pr-payslip-ytd-row">
-          <div class="pr-payslip-ytd-item"><span>Earnings</span><strong>TTD ${fmt(d.gross_pay ?? d.grossPay)}</strong></div>
-          <div class="pr-payslip-ytd-item"><span>Gross</span><strong>TTD ${fmt(d.gross_pay ?? d.grossPay)}</strong></div>
-          <div class="pr-payslip-ytd-item"><span>PAYE</span><strong>TTD ${fmt(d.paye)}</strong></div>
-          <div class="pr-payslip-ytd-item"><span>NIS</span><strong>TTD ${fmt(d.nis)}</strong></div>
-          <div class="pr-payslip-ytd-item"><span>HS</span><strong>TTD ${fmt(d.health_surcharge ?? d.healthSurcharge)}</strong></div>
-        </div>
-      </div>
-      <div class="pr-payslip-footer">This is a computer-generated payslip &mdash; Trinidad &amp; Tobago</div>
-    </div>`;
-}
+// _buildPayslipHtml DELETED (dead code): zero callers, and its Print button
+// invoked window._printPayslip() which was never defined. Live payslips are
+// server-rendered PDFs (finance payroll) and the Payslip Studio print view.
 
 // ── Session management ────────────────────────────────────────────────────────
 
@@ -1415,7 +1318,6 @@ export const AttendanceSystem = {
     if (btn) { btn.click(); return; }
     _Nav()?.showSection?.(sectionId);
   },
-  _buildPayslipHtml,
   _completeLogin,
   // Exported for legacy callers
   setPhone,
@@ -1440,7 +1342,8 @@ export const AttendanceSystem = {
 
 const _w = w() as Record<string, unknown>;
 _w.AttendanceSystem  = AttendanceSystem;
-_w._buildPayslipHtml = _buildPayslipHtml;   // kept for payroll.js / employees.js
+// _buildPayslipHtml window bridge removed — the legacy payroll.js/employees.js
+// it served no longer exist and the function was deleted (dead print flow).
 _w.setPhone          = setPhone;
 _w.readPhone         = readPhone;
 _w.showSpinner       = showSpinner;

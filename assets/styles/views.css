@@ -4154,17 +4154,12 @@ body[data-theme="dark"] .dash-overview-panel .dash-layout-btn-primary:hover {
 .emp-toggle-label input:checked + .emp-toggle-switch::before { background: #47904a; }
 .emp-toggle-label input:checked + .emp-toggle-switch::after { transform: translateX(16px); }
 
-/* Print — hide non-payslip content */
-@media print {
-  body > *:not(.swal2-container) { display: none !important; }
-  .swal2-container { position: static !important; overflow: visible !important; }
-  .swal2-popup { box-shadow: none !important; }
-  .no-print { display: none !important; }
-  .pr-payslip-brand { display: flex !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-  .pr-payslip-brand-logo { filter: none !important; }
-  .pr-payslip-meta-row--sep,
-  .pr-payslip-meta-row--sep + .pr-payslip-meta-row { display: none !important; }
-}
+/* Legacy swal2-payslip print block DELETED — it globally hid every body child
+   except .swal2-container when printing, which blanked ALL other print flows
+   (it made the embedded Payslip Studio print empty PDFs). Its flow was dead:
+   window._printPayslip was never defined and _buildPayslipHtml had no callers.
+   .no-print in print is covered by print.css; live print flows are the leave/
+   payroll docs (print.css) and the Studio's #print-root (its own scoped CSS). */
 
 /* ─── Payroll Settings Modal (prs-*) ─── */
 .prs-overlay {
