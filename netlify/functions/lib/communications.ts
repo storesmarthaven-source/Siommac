@@ -550,8 +550,8 @@ export interface CommsSummary {
   /** Null when the channel registration failed (client skips realtime and
    *  falls back to polling; the next summary call retries). */
   realtimeChannelKey:  string | null;
-  /** Server-issued Supabase Realtime JWT (finding #5) — null until
-   *  SUPABASE_JWT_SECRET is configured. See lib/REALTIME_AUTH_CONTRACT.md. */
+  /** Server-issued Supabase Realtime JWT (finding #5) — null until the ES256
+   *  signing key (SUPABASE_JWT_ES256_*) is configured. See lib/REALTIME_AUTH_CONTRACT.md. */
   realtimeToken:          string | null;
   realtimeTokenExpiresAt: string | null;
 }
@@ -562,7 +562,7 @@ export interface CommsSummary {
  */
 export async function getCommsSummary(userId: string, role: string): Promise<CommsSummary> {
   const nowIso = new Date().toISOString();
-  // Synchronous HS256 mint (finding #5); null until SUPABASE_JWT_SECRET is set.
+  // Synchronous ES256 mint (finding #5); null until SUPABASE_JWT_ES256_* is set.
   const realtimeToken = mintRealtimeToken(userId);
 
   // ── Everything runs in ONE parallel batch (no serial prefix) ───────────────

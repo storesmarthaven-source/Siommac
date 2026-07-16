@@ -5,7 +5,9 @@
 -- policy used auth.uid() whose UUID cast explodes on TEXT app_users ids.
 --
 -- PREREQUISITES (RUNBOOK_REALTIME_AUTH.md — do NOT apply before these):
---   1. SUPABASE_JWT_SECRET configured in the server env (dashboard JWT secret).
+--   1. ES256 signing key configured: SUPABASE_JWT_ES256_PRIVATE_KEY/_KID in the
+--      server env, JWK imported in the dashboard (JWT Keys) AND rotated to
+--      CURRENT (standby keys do not verify). NOT the legacy HS256 secret.
 --   2. Server + frontend deployed with the realtime-token flow
 --      (lib/realtimeAuth.ts + summary realtimeToken + useRealtimeSignals setAuth).
 --   3. node scripts/verify-realtime-auth.mjs phase A green.

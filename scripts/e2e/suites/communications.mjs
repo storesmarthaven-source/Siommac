@@ -571,16 +571,23 @@ export default async function run(h) {
     console.log(`\n      ⏱  notification→signal: ${dt}ms`);
   });
 
-  await test('realtime DELIVERY: the browser (anon) actually receives the signal', async () => {
-    // Replicates exactly what useRealtimeSignals does in the browser. If this
-    // fails, the badge + thread highlight will NOT update when a message/notif
-    // arrives — they'd only refresh on the slow poll. (Needs communication_signals
-    // in the supabase_realtime publication + anon SELECT RLS — mig 20260628100000.)
-    const anon = h.anonClient();
-    const chan = crypto.randomUUID();   // channel_key is a UUID column — a non-UUID string
-                                        // silently fails the insert, so nothing is delivered.
+  await test('realtime DELIVERY: an AUTHENTICATED subscription receives the signal (mig 351)', async () => {
+    // Replicates exactly what useRealtimeSignals does in the browser post-
+    // realtime-auth: the summary hands back realtimeChannelKey + an ES256
+    // realtimeToken; the client setAuth()s BEFORE subscribing and RLS scopes
+    // delivery to the user's own registered channel. If this fails, the badge
+    // + thread highlight will NOT update when a message/notif arrives.
+    const summary = (await api('communications/summary', T.b)).body.data ?? {};
+    const chan  = summary.realtimeChannelKey;
+    const token = summary.realtimeToken;
+    expect(chan,  'summary returned no realtimeChannelKey for B');
+    expect(token, 'summary returned no realtimeToken — SUPABASE_JWT_ES256_* env not configured on the server');
+    touchedChannels.add(chan);
+
+    const authed = h.anonClient();
+    authed.realtime.setAuth(token);
     let received = false, subscribed = false;
-    const ch = anon.channel(`probe-${chan}`)
+    const ch = authed.channel(`probe-authed-${chan}`)
       .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'communication_signals', filter: `channel_key=eq.${chan}` },
         () => { received = true; })
       .subscribe((status) => { if (status === 'SUBSCRIBED') subscribed = true; });
@@ -588,16 +595,43 @@ export default async function run(h) {
       // Wait for the subscription to actually establish (not a fixed sleep) before inserting.
       const s0 = Date.now();
       while (Date.now() - s0 < 8000 && !subscribed) await new Promise(r => setTimeout(r, 120));
-      expect(subscribed, 'anon realtime channel never reached SUBSCRIBED');
+      expect(subscribed, 'authenticated realtime channel never reached SUBSCRIBED');
       const { error: insErr } = await sb.from('communication_signals').insert({ channel_key: chan, domain: 'messages' });
       expect(!insErr, `signal insert failed: ${insErr?.message}`);
       const t0 = Date.now();
       while (Date.now() - t0 < 7000 && !received) await new Promise(r => setTimeout(r, 120));
     } finally {
-      await sb.from('communication_signals').delete().eq('channel_key', chan);
+      await authed.removeChannel(ch);
+    }
+    expect(received, 'authenticated realtime never received the signal — check the imported ES256 key is CURRENT and mig 351 policy scopes to user_realtime_channels');
+  });
+
+  await test('realtime DENIAL: an ANONYMOUS subscription receives nothing (mig 351 RLS)', async () => {
+    // The pre-351 permissive policy let ANY anon subscriber read every signal
+    // (cross-user metadata leak). Post-351 an anon connection must go dark.
+    const summary = (await api('communications/summary', T.b)).body.data ?? {};
+    const chan = summary.realtimeChannelKey;
+    expect(chan, 'summary returned no realtimeChannelKey for B');
+    touchedChannels.add(chan);
+
+    const anon = h.anonClient();   // no setAuth — anon token only
+    let received = false, subscribed = false;
+    const ch = anon.channel(`probe-anon-${chan}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'communication_signals', filter: `channel_key=eq.${chan}` },
+        () => { received = true; })
+      .subscribe((status) => { if (status === 'SUBSCRIBED') subscribed = true; });
+    try {
+      const s0 = Date.now();
+      while (Date.now() - s0 < 8000 && !subscribed) await new Promise(r => setTimeout(r, 120));
+      // Anon may still reach SUBSCRIBED (the topic join is not the enforcement
+      // point) — the assertion is on DELIVERY.
+      const { error: insErr } = await sb.from('communication_signals').insert({ channel_key: chan, domain: 'messages' });
+      expect(!insErr, `signal insert failed: ${insErr?.message}`);
+      await new Promise(r => setTimeout(r, 4000));
+    } finally {
       await anon.removeChannel(ch);
     }
-    expect(received, 'anon realtime never received the signal — communication_signals not published for realtime or RLS blocks anon SELECT (mig 20260628100000)');
+    expect(!received, 'ANON subscription received a signal — mig 351 RLS is not enforced (permissive policy still active?)');
   });
 
   await test('latency: summary endpoint responds quickly', async () => {

@@ -4,9 +4,11 @@
  * Live verification of the authenticated-realtime slice (finding #5).
  * Standalone on purpose — no E2E-harness dependency.
  *
- *   Phase A: mint a realtime JWT (SUPABASE_JWT_SECRET) for a real user,
+ *   Phase A: mint a realtime JWT (ES256, SIOMAC-controlled imported signing
+ *            key — SUPABASE_JWT_ES256_PRIVATE_KEY/_KID) for a real user,
  *            setAuth + subscribe to their channel_key, insert a signal via the
- *            service role, assert delivery.
+ *            service role, assert delivery. The key must be imported AND
+ *            rotated to CURRENT in the dashboard (standby keys do not verify).
  *   Phase B: subscribe ANONYMOUSLY the same way and assert NO delivery.
  *            Before migration 351 is applied this phase only WARNS (the
  *            permissive policy still allows anon); after 351 it must PASS.
@@ -18,14 +20,21 @@ import { createClient } from '@supabase/supabase-js';
 import jwt from 'jsonwebtoken';
 import { randomUUID } from 'node:crypto';
 
-const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY, SUPABASE_JWT_SECRET } = process.env;
+const { SUPABASE_URL, SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY,
+        SUPABASE_JWT_ES256_PRIVATE_KEY, SUPABASE_JWT_ES256_KID } = process.env;
 if (!SUPABASE_URL || !SUPABASE_ANON_KEY || !SUPABASE_SERVICE_ROLE_KEY) {
   console.error('Missing SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY in .env');
   process.exit(1);
 }
-if (!SUPABASE_JWT_SECRET) {
-  console.error('SUPABASE_JWT_SECRET is not configured — add the project JWT secret');
-  console.error('(Supabase dashboard → Project Settings → API → JWT Secret) to .env first.');
+if (!SUPABASE_JWT_ES256_PRIVATE_KEY || !SUPABASE_JWT_ES256_KID) {
+  console.error('SUPABASE_JWT_ES256_PRIVATE_KEY / SUPABASE_JWT_ES256_KID are not configured.');
+  console.error('Generate the keypair, import the JWK into Supabase (JWT Keys → import),');
+  console.error('rotate it to CURRENT, and put the base64 PKCS8 PEM + kid in .env first.');
+  process.exit(1);
+}
+const ES256_PEM = Buffer.from(SUPABASE_JWT_ES256_PRIVATE_KEY, 'base64').toString('utf8');
+if (!ES256_PEM.includes('BEGIN PRIVATE KEY')) {
+  console.error('SUPABASE_JWT_ES256_PRIVATE_KEY does not decode to a PKCS8 PEM private key.');
   process.exit(1);
 }
 
@@ -70,7 +79,7 @@ async function main() {
   const nowSec = Math.floor(Date.now() / 1000);
   const token = jwt.sign(
     { sub: USER_ID, role: 'authenticated', aud: 'authenticated', iss: 'siomac-realtime', iat: nowSec, exp: nowSec + 300 },
-    SUPABASE_JWT_SECRET, { algorithm: 'HS256' },
+    ES256_PEM, { algorithm: 'ES256', keyid: SUPABASE_JWT_ES256_KID },
   );
   const authed = realtimeClient();
   authed.realtime.setAuth(token);

@@ -8,11 +8,19 @@
 ## Architecture
 
 1. **Server-issued realtime token.** `lib/realtimeAuth.ts` mints a short-lived
-   (55 min) HS256 JWT signed with `SUPABASE_JWT_SECRET` (the project JWT secret
-   — NEW env var, operator-supplied). Claims: `sub` = app_users.id (TEXT),
-   `role` = `authenticated`, `aud` = `authenticated`. Supabase Realtime accepts
-   any JWT signed with the project secret; RLS then evaluates policies with
-   `auth.jwt()->>'sub'` = our user id.
+   (55 min) **ES256** JWT signed with a **SIOMAC-generated-and-controlled**
+   signing key that was imported into Supabase (dashboard → JWT Keys → import
+   JWK) and **rotated to CURRENT** — standby keys are NOT used for verification,
+   so the rotation step is mandatory. Env: `SUPABASE_JWT_ES256_PRIVATE_KEY`
+   (base64 PKCS8 PEM) + `SUPABASE_JWT_ES256_KID` (must match the imported kid;
+   sent as the JWT `kid` header). Claims: `sub` = app_users.id (TEXT),
+   `role` = `authenticated`, `aud` = `authenticated`. RLS then evaluates
+   policies with `auth.jwt()->>'sub'` = our user id.
+   *Why not the legacy HS256 shared secret:* it couples signing authority to an
+   extractable symmetric secret, complicates rotation, and Supabase marks it
+   not-recommended for production. The legacy secret is NOT used by this slice
+   and may be revoked once nothing else depends on it. Never expose either env
+   var through `VITE_`/`PUBLIC_`/frontend variables.
 2. **Delivery piggybacks the summary.** `getCommsSummary` returns
    `realtimeToken` + `realtimeTokenExpiresAt` beside `realtimeChannelKey`
    (one round-trip; the 30s summary poll keeps the token fresh long before the
@@ -30,7 +38,7 @@
 ## REQUIRED
 | # | Requirement |
 |---|-------------|
-| R1 | Token mint refuses silently → `null` (no fabricated token) when `SUPABASE_JWT_SECRET` is absent; the FE then runs exactly today's anon path. The migration runbook REQUIRES the env before apply — the RLS flip is the single enforcement point. |
+| R1 | Token mint refuses silently → `null` (no fabricated token) when `SUPABASE_JWT_ES256_PRIVATE_KEY`/`_KID` are absent or the key does not decode to a PKCS8 PEM; the FE then runs exactly today's anon path. The migration runbook REQUIRES the env + dashboard import/rotation before apply — the RLS flip is the single enforcement point. |
 | R2 | `sub` claim is the TEXT app user id; policy uses `auth.jwt()->>'sub'`, NEVER `auth.uid()`. |
 | R3 | Token rotation must NOT resubscribe the channel (badge realtime would flap): setAuth-only effect. |
 | R4 | Standalone verify script `scripts/verify-realtime-auth.mjs` (no E2E-harness dependency — the harness is owned by the concurrently-running E2E-hygiene session): phase A = authed subscribe receives a signal; phase B = anon subscribe receives NOTHING (post-351; pre-351 it warns that enforcement is pending). |
@@ -46,7 +54,13 @@
 - E2E suite conversion of anon realtime tests to authed (after the hygiene session merges; noted in RUNBOOK_REALTIME_AUTH.md).
 
 ## Operator sequence (RUNBOOK_REALTIME_AUTH.md)
-1. Add `SUPABASE_JWT_SECRET=<dashboard → Settings → API → JWT Secret>` to `.env` → restart dev server.
-2. `node scripts/verify-realtime-auth.mjs` → phase A green.
-3. Apply `_apply_20260919000351_*_clean.sql` + NOTIFY → re-run verify → A green + B green.
-4. After the E2E-hygiene session lands: update the realtime E2E tests to authed connections, full realtime-suite re-run.
+1. Generate the ES256 keypair (done via session script): `SUPABASE_JWT_ES256_KID` +
+   `SUPABASE_JWT_ES256_PRIVATE_KEY` (base64 PKCS8 PEM) in `.env`; import JWK at
+   `supabase-es256-import.jwk.json` (git-ignored).
+2. Dashboard → JWT Keys → **Import** the JWK (arrives as standby) → **Rotate**
+   it to CURRENT (safe: SIOMAC uses custom auth + `sb_*` API keys — nothing
+   consumes Supabase-Auth-signed tokens).
+3. Restart dev server → `node scripts/verify-realtime-auth.mjs` → phase A green.
+4. Apply `_apply_20260919000351_*_clean.sql` + NOTIFY → re-run verify → A green + B green.
+5. After the E2E-hygiene session lands: update the realtime E2E tests to authed connections, full realtime-suite re-run.
+6. Optionally revoke the legacy HS256 secret in the dashboard (nothing uses it).
