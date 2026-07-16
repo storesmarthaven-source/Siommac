@@ -17,7 +17,7 @@ import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { applyApprovedChange, markChangeRequestStatus } from '../hr/changeApproval';
 import { applyApprovedOrgChange, setOrgChangeStatus } from '../hr/organizationChangeRequests';
-import { applyApprovedLeave, setLeaveRequestStatus } from '../hr/leaveCore';
+import { applyApprovedLeave, setLeaveRequestStatus, rejectLeaveRequest, cancelLeaveRequest } from '../hr/leaveCore';
 import { writeHrAudit } from '../hr/employeeCore';
 import { emitAppEvent } from '../appEvents';
 
@@ -61,6 +61,12 @@ const hrOrgStructureAdapter: ModuleWorkflowAdapter = {
 };
 
 
+// The engine owns the leave-approval lifecycle; this adapter applies the source
+// mutation for each decision. Reject/Cancel MUST release the pending-reserve
+// ledger (not just flip status) — else the reserved balance leaks. So they route
+// through the core functions that release the reserve + emit event/audit, exactly
+// as a direct decision would. onWorkflowCompleted applies the deduction
+// (applyApprovedLeave); onWorkflowReturned keeps the reserve (still pending).
 const hrLeaveAdapter: ModuleWorkflowAdapter = {
   moduleKey: 'hr_leave',
   async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
@@ -70,8 +76,8 @@ const hrLeaveAdapter: ModuleWorkflowAdapter = {
   onWorkflowStepCompleted: async () => {},
   onWorkflowCompleted:     async ({ workflowId, sourceRecordId }) => { await applyApprovedLeave(sourceRecordId, await decidedBy(workflowId)); },
   onWorkflowReturned:      async ({ workflowId, sourceRecordId, comment }) => { await setLeaveRequestStatus(sourceRecordId, 'pending_approval', await decidedBy(workflowId), comment); },
-  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await setLeaveRequestStatus(sourceRecordId, 'rejected', await decidedBy(workflowId), comment); },
-  onWorkflowCancelled:     async ({ sourceRecordId, reason }) => { await setLeaveRequestStatus(sourceRecordId, 'cancelled', null, reason); },
+  onWorkflowRejected:      async ({ workflowId, sourceRecordId, comment }) => { await rejectLeaveRequest(sourceRecordId, await decidedBy(workflowId), comment); },
+  onWorkflowCancelled:     async ({ sourceRecordId, reason, actorId }) => { await cancelLeaveRequest(actorId ?? null, sourceRecordId, reason); },
 };
 
 // Transfer & Promotion approval. The envelope (hr_employee_change_requests with

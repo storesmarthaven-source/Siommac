@@ -18,19 +18,29 @@
 export const title = 'HR Leave & Absence';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
+  // The workflow-native decide finalizes via the transactional outbox (inline, but
+  // allow a brief window for the adapter callback to apply the source mutation).
+  const waitFor = async (check, ms = 6000) => {
+    const t0 = Date.now();
+    while (Date.now() - t0 < ms) { if (await check()) return true; await new Promise(r => setTimeout(r, 300)); }
+    return false;
+  };
+
   // Test context
   const ctx = {
-    leaveTypeId: null, requestId: null, cancelRequestId: null,
+    leaveTypeId: null, requestId: null, cancelRequestId: null, rejectRequestId: null,
     adjustAuditId: null, exportAuditId: null, empId: null, empTok: null,
-    submitKey: TAG + '-lv1', cancelKey: TAG + '-lv2', workflowId: null, rpcRequestId: null,
+    submitKey: TAG + '-lv1', cancelKey: TAG + '-lv2', rejectKey: TAG + '-lv3',
+    workflowId: null, rpcRequestId: null,
+    mgrId: null, mgrTok: null, mgrCreatedIds: [],
   };
 
   h.onCleanup(async () => {
-    const reqIds = [ctx.requestId, ctx.cancelRequestId, ctx.rpcRequestId].filter(Boolean);
+    const reqIds = [ctx.requestId, ctx.cancelRequestId, ctx.rejectRequestId, ctx.rpcRequestId].filter(Boolean);
     // Capture the started workflows before deleting the requests (FK SET NULL on delete).
     let wfIds = [];
     if (reqIds.length) {
@@ -59,6 +69,7 @@ export default async function run(h) {
       await sb.from('hr_leave_balances').delete().eq('employee_id', ctx.empId);
       await sb.from('hr_leave_accruals').delete().eq('employee_id', ctx.empId);
     }
+    if (ctx.mgrCreatedIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.mgrCreatedIds); } catch {} }
     // Revert min_notice_days to 0 so it does not affect other suites
     await sb.from('app_setting_values').delete()
       .eq('setting_key', 'hr_leave.min_notice_days')
@@ -72,6 +83,16 @@ export default async function run(h) {
       .select('id').eq('role', 'employee').eq('status', 'active').limit(1).maybeSingle();
     if (emp) { ctx.empId = emp.id; ctx.empTok = mint(emp); }
     else ctx.empId = admin.id;
+  }
+
+  // Provision a real `manager` — leave approval is workflow-native and decideTask
+  // enforces the finding-#1 assignment guard, so the manager-role task must be
+  // decided by a manager (the admin harness is not assigned → would be denied).
+  {
+    const mgrR = await acquireActors('manager', 1);
+    const [mgr] = mgrR.actors;
+    ctx.mgrId = mgr.id; ctx.mgrCreatedIds = mgrR.createdIds;
+    ctx.mgrTok = mint({ id: mgr.id, username: mgr.username, role: 'manager', department_id: mgr.department_id ?? null });
   }
 
   // ── Settings gate: pin min_notice_days = 0 so dates in the past work ──────
@@ -244,25 +265,62 @@ export default async function run(h) {
     expect(r.body.data.status === 'pending_approval' || r.body.data.status === 'approved', 'status valid');
   });
 
-  await test('request/approve → approved + deduction ledger + audit', async () => {
-    // Re-check status in case workflow auto-approved it
-    const { data: req } = await sb.from('hr_leave_requests')
-      .select('status').eq('id', ctx.requestId).maybeSingle();
-    if (req && req.status === 'pending_approval') {
-      const r = await api('hr/leave/request/approve', A, {
-        requestId: ctx.requestId, reviewNotes: 'E2E approval',
-      });
-      ok(r, 'approve ok');
-      const { data: aud } = await sb.from('hr_audit_log')
-        .select('id').eq('record_id', ctx.requestId)
-        .eq('action', 'hr.leave.approved').maybeSingle();
-      expect(!!aud, 'approve audit written');
-    } else {
-      // Already approved by workflow — verify deduction exists
-      const { data: ded } = await sb.from('hr_leave_accruals')
-        .select('id').eq('source_request_id', ctx.requestId)
-        .eq('kind', 'deduction').maybeSingle();
-      expect(!!ded, 'deduction ledger row exists');
+  await test('request/approve (workflow-native, manager) → completed + deduction + task decided', async () => {
+    // A manager decides the manager-role task through the engine (admin is not
+    // assigned → the finding-#1 guard would deny it).
+    const r = await api('hr/leave/request/approve', ctx.mgrTok, {
+      requestId: ctx.requestId, reviewNotes: 'E2E approval',
+    });
+    ok(r, `approve ok: ${r.body.message}`);
+    // The adapter (onWorkflowCompleted → applyApprovedLeave) applies the deduction.
+    const approved = await waitFor(async () => {
+      const { data } = await sb.from('hr_leave_requests').select('status').eq('id', ctx.requestId).maybeSingle();
+      return data?.status === 'approved';
+    });
+    expect(approved, 'request not approved within timeout');
+    const { data: ded } = await sb.from('hr_leave_accruals')
+      .select('id').eq('source_request_id', ctx.requestId).eq('kind', 'deduction').maybeSingle();
+    expect(!!ded, 'deduction ledger row applied on approve');
+    const { data: aud } = await sb.from('hr_audit_log')
+      .select('id').eq('record_id', ctx.requestId).eq('action', 'hr.leave.approved').maybeSingle();
+    expect(!!aud, 'approve audit written');
+    // Workflow reached a terminal state and no manager task is left dangling.
+    if (ctx.workflowId) {
+      const { data: inst } = await sb.from('workflow_instances').select('status').eq('id', ctx.workflowId).maybeSingle();
+      expect(inst && ['completed', 'approved'].includes(inst.status), `workflow terminal after approve, got ${inst?.status}`);
+      const { data: open } = await sb.from('workflow_tasks').select('id').eq('workflow_id', ctx.workflowId).in('status', ['pending', 'open', 'in_progress']);
+      expect((open ?? []).length === 0, `no dangling task after approve, got ${(open ?? []).length}`);
+    }
+  });
+
+  await test('request/reject (workflow-native, manager) → rejected + reserve RELEASED + task decided', async () => {
+    // Fresh request to reject (rejecting must release the pending reserve — the bug
+    // this slice fixes was reject only flipping status and leaking the reserve).
+    const sub = await api('hr/leave/request/submit', A, {
+      employeeId: ctx.empId, leaveTypeId: ctx.leaveTypeId,
+      fromDate: '2027-04-05', toDate: '2027-04-06', days: 2, idempotencyKey: ctx.rejectKey,
+    });
+    ok(sub, `reject-setup submit ok: ${sub.body.message}`);
+    ctx.rejectRequestId = sub.body.data.requestId;
+    const { data: rq } = await sb.from('hr_leave_requests').select('workflow_id').eq('id', ctx.rejectRequestId).single();
+
+    const r = await api('hr/leave/request/reject', ctx.mgrTok, { requestId: ctx.rejectRequestId, reviewNotes: 'Not this period.' });
+    ok(r, `reject ok: ${r.body.message}`);
+    const rejected = await waitFor(async () => {
+      const { data } = await sb.from('hr_leave_requests').select('status').eq('id', ctx.rejectRequestId).maybeSingle();
+      return data?.status === 'rejected';
+    });
+    expect(rejected, 'request not rejected within timeout');
+    // Reserve released (a 'release' ledger row) and NO deduction (leave not taken).
+    const { data: rel } = await sb.from('hr_leave_accruals').select('id').eq('source_request_id', ctx.rejectRequestId).eq('kind', 'release').maybeSingle();
+    expect(!!rel, 'pending reserve released on reject (no balance leak)');
+    const { data: ded } = await sb.from('hr_leave_accruals').select('id').eq('source_request_id', ctx.rejectRequestId).eq('kind', 'deduction').maybeSingle();
+    expect(!ded, 'no deduction on reject');
+    if (rq?.workflow_id) {
+      const { data: inst } = await sb.from('workflow_instances').select('status').eq('id', rq.workflow_id).maybeSingle();
+      expect(inst && ['rejected', 'completed'].includes(inst.status), `workflow terminal after reject, got ${inst?.status}`);
+      const { data: open } = await sb.from('workflow_tasks').select('id').eq('workflow_id', rq.workflow_id).in('status', ['pending', 'open', 'in_progress']);
+      expect((open ?? []).length === 0, `no dangling task after reject, got ${(open ?? []).length}`);
     }
   });
 
@@ -280,16 +338,29 @@ export default async function run(h) {
     ctx.cancelRequestId = r.body.data.requestId;
   });
 
-  await test('request/cancel → cancelled + release ledger', async () => {
+  await test('request/cancel (workflow-native) → cancelled + reserve released + task decided', async () => {
+    const { data: rq } = await sb.from('hr_leave_requests').select('workflow_id').eq('id', ctx.cancelRequestId).single();
     const r = await api('hr/leave/request/cancel', A, {
       requestId: ctx.cancelRequestId,
       reason: 'Plans changed — E2E cancel',
     });
-    ok(r, 'cancel ok');
+    ok(r, `cancel ok: ${r.body.message}`);
+    const cancelled = await waitFor(async () => {
+      const { data } = await sb.from('hr_leave_requests').select('status').eq('id', ctx.cancelRequestId).maybeSingle();
+      return data?.status === 'cancelled';
+    });
+    expect(cancelled, 'request not cancelled within timeout');
     const { data: rel } = await sb.from('hr_leave_accruals')
       .select('id').eq('source_request_id', ctx.cancelRequestId)
       .eq('kind', 'release').maybeSingle();
-    expect(!!rel, 'release ledger row after cancel');
+    expect(!!rel, 'release ledger row after cancel (reserve released via adapter)');
+    // Running workflow closed through the engine — no dangling task/instance.
+    if (rq?.workflow_id) {
+      const { data: inst } = await sb.from('workflow_instances').select('status').eq('id', rq.workflow_id).maybeSingle();
+      expect(inst?.status === 'cancelled', `workflow cancelled, got ${inst?.status}`);
+      const { data: open } = await sb.from('workflow_tasks').select('id').eq('workflow_id', rq.workflow_id).in('status', ['pending', 'open', 'in_progress']);
+      expect((open ?? []).length === 0, `no dangling task after cancel, got ${(open ?? []).length}`);
+    }
   });
 
   await test('request/cancel already-cancelled → fails', async () => {

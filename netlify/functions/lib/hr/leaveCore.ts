@@ -345,7 +345,7 @@ export async function rejectLeaveRequest(
 }
 
 export async function cancelLeaveRequest(
-  actorId: string, requestId: string, reason?: string | null,
+  actorId: string | null, requestId: string, reason?: string | null,
 ): Promise<void> {
   const { data: req } = await sb.from('hr_leave_requests')
     .select('employee_id, leave_type_id, days, from_date, status').eq('id', requestId).maybeSingle();
@@ -383,6 +383,6 @@ export async function cancelLeaveRequest(
   }).eq('id', requestId);
   if (error) throw err(500, `Failed to cancel leave request: ${error.message}`);
 
-  void emitAppEvent({ eventType: 'hr.leave.cancelled', sourceModule: 'hr', sourceEntityType: 'leave_request', sourceEntityId: requestId, actorUserId: actorId, severity: 'info', payload: { reason } });
+  void emitAppEvent({ eventType: 'hr.leave.cancelled', sourceModule: 'hr', sourceEntityType: 'leave_request', sourceEntityId: requestId, actorUserId: actorId ?? 'system', severity: 'info', payload: { reason } });
   await writeHrAudit({ employeeId: empId, submoduleKey: 'leave', recordId: requestId, actorId, action: 'hr.leave.cancelled', newState: { status: 'cancelled', reason } });
 }
