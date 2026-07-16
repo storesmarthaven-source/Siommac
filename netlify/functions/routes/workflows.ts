@@ -13,16 +13,23 @@
  * POST /api/workflows/audit    → workflow_events feed
  */
 
-import { Hono }              from 'hono';
-import { z, zv }             from '../lib/validate';
-import { requirePermission } from '../lib/auth';
-import { sb }                from '../lib/db';
-import { startWorkflowByTemplate, decideTask } from '../lib/workflow/service';
+import { Hono }                       from 'hono';
+import { z, zv }                      from '../lib/validate';
+import { requirePermission, userCan } from '../lib/auth';
+import { sb }                         from '../lib/db';
+import {
+  startWorkflowByTemplate,
+  decideTask,
+  getModuleStartPermission,
+  validateModuleSourceExists,
+} from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
 
 // ── POST /api/workflows/create ────────────────────────────────────────────────
+// Auth fix (finding #3 §7): enforce module-specific permission + source-
+// existence in addition to the platform-level workflow.view gate.
 
 const CreateWorkflowSchema = z.object({
   templateKey:        z.string().min(1),
@@ -33,6 +40,7 @@ const CreateWorkflowSchema = z.object({
   ownerUserId:        z.string().optional().nullable(),
   reason:             z.string().optional(),
   metadata:           z.record(z.string(), z.unknown()).optional(),
+  idempotencyKey:     z.string().uuid(),
 });
 
 router.post('/workflows/create', async c => {
@@ -41,11 +49,24 @@ router.post('/workflows/create', async c => {
   const v = zv(c, CreateWorkflowSchema, body.args);
   if (!v.ok) return v.response;
 
-  // Explicit start by template ref (key or id) on the central engine.
+  // Gate 2: module-specific permission (unknown module -> 403, safe default).
+  const modulePerm = getModuleStartPermission(v.data.sourceModule);
+  if (!modulePerm || !(await userCan(user, modulePerm))) {
+    return c.json({ success: false, message: 'Forbidden: insufficient module access' }, 403 as 200);
+  }
+
+  // Gate 3: source record must exist (UUID-format IDs only; text refs skip).
+  const sourceExists = await validateModuleSourceExists(v.data.sourceModule, v.data.sourceEntityId);
+  if (!sourceExists) {
+    return c.json({ success: false, message: 'Source record not found' }, 404 as 200);
+  }
+
+  // Explicit start via the atomic workflow_start_instance_tx RPC.
   try {
     const wf = await startWorkflowByTemplate({
-      templateKey: v.data.templateKey,
-      actor: { id: user.id, role: user.role },
+      templateKey:    v.data.templateKey,
+      actor:          { id: user.id, role: user.role },
+      idempotencyKey: v.data.idempotencyKey,
       context: {
         moduleKey:      v.data.sourceModule,
         workflowType:   v.data.sourceEntityType,
@@ -59,7 +80,8 @@ router.post('/workflows/create', async c => {
     });
     return c.json({ success: true, workflowId: wf.id, ref: wf.workflow_no });
   } catch (err) {
-    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to create workflow' }, 500 as 200);
+    const status = (err as { status?: number }).status ?? 500;
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Failed to create workflow' }, status as 200);
   }
 });
 

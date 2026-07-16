@@ -48,6 +48,7 @@ export default async function run(h) {
   };
 
   let tplId = null;
+  let verId = null;
   h.onCleanup(async () => {
     try { await sb.from('workflow_audit_log').delete().eq('source_record_id', recordId); } catch {}
     try { await sb.from('workflow_instances').delete().eq('source_record_id', recordId); } catch {}
@@ -68,6 +69,7 @@ export default async function run(h) {
       template_id: tplId, version_no: 1, version_status: 'published', definition: DEF, published_at: new Date().toISOString(),
     }).select('id').single();
     expect(!e2 && !!ver, `version insert failed: ${e2?.message}`);
+    verId = ver.id;
     const { error: e3 } = await sb.from('module_workflow_bindings').insert({
       module_key: 'ptw', workflow_type: 'permit_approval', trigger_event: trigger,
       template_id: tplId, template_version_id: ver.id, scope_type: 'global', is_active: true, priority: 100,
@@ -88,6 +90,7 @@ export default async function run(h) {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
       sourceRecordId: recordId, recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     ok(r, 'start failed');
     workflowId = r.body.data?.id ?? null;
@@ -182,6 +185,7 @@ export default async function run(h) {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
       sourceRecordId: bypassRecordId, recordData: { supervisorId: supervisor.id },
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     ok(r, 'bypass workflow start failed');
     bypassWfId = r.body.data?.id ?? null;
@@ -268,7 +272,7 @@ export default async function run(h) {
   const parTrigger  = `ptw.par.e2e.${TAG}`;
   const finTplKey   = `e2e_wffin_${TAG}`;
   const finTrigger  = `fin.e2e.${TAG}`;
-  let parTplId = null, finTplId = null;
+  let parTplId = null, parVerId = null, finTplId = null, finVerId = null;
 
   h.onCleanup(async () => {
     for (const rec of [atomRecord, concRecord, rejRecord, dlRecord]) {
@@ -289,7 +293,7 @@ export default async function run(h) {
     try { if (finTplId) await sb.from('workflow_templates').delete().eq('id', finTplId); } catch {}
   });
 
-  const seedTemplate = async (key, moduleKey, wfType, trigger, definition) => {
+  const seedTemplate = async (key, moduleKey, wfType, triggerEvt, definition) => {
     const { data: tpl, error: e1 } = await sb.from('workflow_templates').insert({
       name: `E2E ${key}`, definition: {}, template_key: key, module_key: moduleKey, workflow_type: wfType, status: 'active',
     }).select('id').single();
@@ -299,16 +303,20 @@ export default async function run(h) {
     }).select('id').single();
     expect(!e2 && !!ver, `version ${key} insert failed: ${e2?.message}`);
     const { error: e3 } = await sb.from('module_workflow_bindings').insert({
-      module_key: moduleKey, workflow_type: wfType, trigger_event: trigger,
+      module_key: moduleKey, workflow_type: wfType, trigger_event: triggerEvt,
       template_id: tpl.id, template_version_id: ver.id, scope_type: 'global', is_active: true, priority: 100,
     });
     expect(!e3, `binding ${key} insert failed: ${e3?.message}`);
-    return tpl.id;
+    return { tplId: tpl.id, verId: ver.id };
   };
 
-  const startWf = async (trigger, moduleKey, wfType, recordId, recordData) => {
+  // templateVerId is REQUIRED by the new /start route (explicit, not binding-based).
+  // assignees optional: { stepKey: { userId?, roleKey? } } pre-resolved map.
+  const startWf = async (triggerEvt, moduleKey, wfType, recordId, recordData, templateVerId, assignees = undefined) => {
     const r = await api('workflow-engine/start', T.admin, {
-      moduleKey, workflowType: wfType, triggerEvent: trigger, sourceRecordId: recordId, recordData,
+      moduleKey, workflowType: wfType, triggerEvent: triggerEvt, sourceRecordId: recordId, recordData,
+      templateVersionId: templateVerId, idempotencyKey: crypto.randomUUID(),
+      ...(assignees ? { assignees } : {}),
     });
     ok(r, `start ${recordId} failed`);
     return r.body.data.id;
@@ -317,7 +325,7 @@ export default async function run(h) {
   let atomWfId = null, atomTaskId = null;
 
   await test('decide commits transition + outbox + §2 rows atomically', async () => {
-    atomWfId = await startWf(trigger, 'ptw', 'permit_approval', atomRecord, { supervisorId: bypass.supervisor.id });
+    atomWfId = await startWf(trigger, 'ptw', 'permit_approval', atomRecord, { supervisorId: bypass.supervisor.id }, verId);
     const task = await openTask(atomWfId);
     atomTaskId = task.id;
     const r = await api('workflow-engine/decide', tSup, { workflowId: atomWfId, taskId: task.id, decision: 'approved', comment: 'atomic ok' });
@@ -358,7 +366,7 @@ export default async function run(h) {
 
   await test('CONCURRENCY: two simultaneous decides → one success + one 409, one decision row', async () => {
     // Linear DEF (supervisor → hse); both racers hit the supervisor task.
-    const wfId = await startWf(trigger, 'ptw', 'permit_approval', concRecord, { supervisorId: bypass.supervisor.id });
+    const wfId = await startWf(trigger, 'ptw', 'permit_approval', concRecord, { supervisorId: bypass.supervisor.id }, verId);
     const task = await openTask(wfId);
     const [r1, r2] = await Promise.all([
       api('workflow-engine/decide', tSup, { workflowId: wfId, taskId: task.id, decision: 'approved', comment: 'racer one' }),
@@ -376,7 +384,7 @@ export default async function run(h) {
 
   await test('TERMINAL: rejection closes open siblings atomically', async () => {
     // Parallel first steps a + b (both sequenceNo 1 → firstSteps returns both).
-    parTplId = await seedTemplate(parTplKey, 'ptw', 'permit_approval', parTrigger, {
+    const parSeed = await seedTemplate(parTplKey, 'ptw', 'permit_approval', parTrigger, {
       ...DEF,
       steps: [
         { ...DEF.steps[0], stepKey: 'a', stepName: 'A', assignment: { type: 'supervisor' } },
@@ -387,7 +395,8 @@ export default async function run(h) {
         { fromStep: 'b', onDecision: 'approved', completeWorkflow: true },
       ],
     });
-    const rejWfId = await startWf(parTrigger, 'ptw', 'permit_approval', rejRecord, { supervisorId: bypass.supervisor.id });
+    parTplId = parSeed.tplId; parVerId = parSeed.verId;
+    const rejWfId = await startWf(parTrigger, 'ptw', 'permit_approval', rejRecord, { supervisorId: bypass.supervisor.id }, parVerId);
     const { data: aTask } = await sb.from('workflow_tasks').select('id').eq('workflow_id', rejWfId).eq('step_key', 'a').single();
     const r = await api('workflow-engine/decide', tSup, { workflowId: rejWfId, taskId: aTask.id, decision: 'rejected', comment: 'not acceptable' });
     ok(r, 'reject failed');
@@ -403,12 +412,13 @@ export default async function run(h) {
   let dlWfId = null, dlTransitionId = null;
 
   await test('FAILURE: source-RPC failure leaves instance GATED, never completed (202)', async () => {
-    finTplId = await seedTemplate(finTplKey, 'finance_payroll', 'finance_payroll_approval', finTrigger, {
+    const finSeed = await seedTemplate(finTplKey, 'finance_payroll', 'finance_payroll_approval', finTrigger, {
       ...DEF,
       steps: [{ ...DEF.steps[0], stepKey: 'approve', stepName: 'Approve', assignment: { type: 'supervisor' } }],
       transitions: [{ fromStep: 'approve', onDecision: 'approved', completeWorkflow: true }],
     });
-    dlWfId = await startWf(finTrigger, 'finance_payroll', 'finance_payroll_approval', dlRecord, { supervisorId: bypass.supervisor.id });
+    finTplId = finSeed.tplId; finVerId = finSeed.verId;
+    dlWfId = await startWf(finTrigger, 'finance_payroll', 'finance_payroll_approval', dlRecord, { supervisorId: bypass.supervisor.id }, finVerId);
     const task = await openTask(dlWfId);
     const r = await api('workflow-engine/decide', tSup, { workflowId: dlWfId, taskId: task.id, decision: 'approved', comment: 'approve missing run' });
     expect(r.body.success === true, `decision should commit even when finalization fails — got ${JSON.stringify(r.body).slice(0, 200)}`);
@@ -464,5 +474,115 @@ export default async function run(h) {
     // Source still missing → it fails again, but the job is back in the retry loop (not lost).
     const { data: ob } = await sb.from('workflow_outbox').select('status, attempts, max_attempts').eq('transition_id', dlTransitionId).single();
     expect(['pending','processing','dead_letter'].includes(ob.status), `job should be cycling, got ${ob.status}`);
+  });
+
+  // ── Explicit-start auth gates (finding #3 §7) ─────────────────────────────────
+  // E1/E2 gate tests: Gate 2 (module-authz) + Gate 3 (source-existence).
+  // Uses /workflow-engine/start (E2) as the surface; /workflows/create (E1) has
+  // identical gate logic and is exercised by the onboarding/HR module suites.
+  h.section('Workflow › Explicit-start auth');
+
+  const authSourceId = crypto.randomUUID();  // UUID format -> triggers existence check
+  let authWfId = null;
+
+  h.onCleanup(async () => {
+    try { if (authWfId) await sb.from('workflow_instances').delete().eq('id', authWfId); } catch {}
+  });
+
+  // Gate 2 — unknown module key maps to null permission -> deny regardless of user.
+  await test('DENY: unknown moduleKey → 403 (no permission mapping)', async () => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'unknown_module_xyz', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: recordId, recordData: {},
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
+    });
+    fails(r, 'unknown module should be denied');
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  // Gate 3 — known module with a UUID sourceRecordId that does not exist in its table.
+  // hse_incidents is in MODULE_SOURCE_TABLE -> UUID-format id triggers existence check.
+  await test('DENY: UUID sourceRecordId not in table → 404', async () => {
+    const nonExistentId = crypto.randomUUID();
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'hse_incidents', workflowType: 'incident_review', triggerEvent: 'incident.submitted',
+      sourceRecordId: nonExistentId, recordData: {},
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
+    });
+    fails(r, 'non-existent UUID source should be denied');
+    expect(r.status === 404, `expected 404, got ${r.status}`);
+  });
+
+  // Gate 3 skip — text-ref sourceRecordId (non-UUID) must NOT be existence-checked.
+  // ptw module has no source table entry, so check is always skipped for ptw.
+  // But even for a module WITH a table entry, a text ref must bypass existence.
+  await test('ALLOW: text-ref sourceRecordId skips existence check', async () => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: `PTW-AUTH-SKIP-${TAG}`, recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
+    });
+    ok(r, 'text-ref start should be allowed');
+    authWfId = r.body.data?.id ?? null;
+    expect(!!authWfId, 'no workflowId returned from text-ref start');
+  });
+
+  // Happy path — UUID sourceRecordId for ptw (no table entry, check skipped → allowed).
+  // Also confirms assignees pre-resolved path works end-to-end.
+  let authHappyWfId = null;
+  h.onCleanup(async () => {
+    try { if (authHappyWfId) await sb.from('workflow_instances').delete().eq('id', authHappyWfId); } catch {}
+  });
+
+  await test('ALLOW: valid module + pre-resolved assignees → workflow created + task assigned', async () => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: authSourceId, recordData: {},
+      templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
+      assignees: { supervisor: { userId: supEmp.id } },
+    });
+    ok(r, 'happy-path explicit start failed');
+    authHappyWfId = r.body.data?.id ?? null;
+    expect(!!authHappyWfId, 'no workflowId returned');
+    const task = await openTask(authHappyWfId);
+    expect(task && task.step_key === 'supervisor', `first task not supervisor: ${task?.step_key}`);
+    expect(task.assigned_to === supEmp.id, 'pre-resolved assignee not set on task');
+  });
+
+  // §2 side-effects: workflow.started app_event + audit row.
+  await test('§2: workflow.started app_event + audit row emitted by primitive', async () => {
+    const { data: wfRow } = await sb.from('workflow_instances').select('workflow_no').eq('id', authHappyWfId).single();
+    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'workflow.started').eq('source_entity_id', wfRow.workflow_no);
+    expect((ev?.length ?? 0) > 0, 'workflow.started app_event missing after explicit start');
+    const { data: audit } = await sb.from('workflow_audit_log').select('id').eq('workflow_id', authHappyWfId).eq('action', 'workflow.started');
+    expect((audit?.length ?? 0) > 0, 'workflow.started audit row missing after explicit start');
+  });
+
+  // Idempotency — re-submitting the SAME idempotencyKey must return the stored workflowId.
+  await test('IDEMPOTENCY: duplicate explicit start (same key) returns original workflowId', async () => {
+    const idemKey = crypto.randomUUID();
+    const src = crypto.randomUUID();
+    const r1 = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: src, recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId, idempotencyKey: idemKey,
+    });
+    ok(r1, 'first explicit start failed');
+    const wfId1 = r1.body.data?.id ?? null;
+    expect(!!wfId1, 'no workflowId on first call');
+
+    const r2 = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: src, recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId, idempotencyKey: idemKey,
+    });
+    ok(r2, 'idempotent retry should succeed');
+    const wfId2 = r2.body.data?.id ?? null;
+    expect(wfId2 === wfId1, `idempotent retry returned different workflowId: ${wfId1} vs ${wfId2}`);
+
+    // Only ONE workflow_instances row for this source.
+    const { data: instances } = await sb.from('workflow_instances').select('id').eq('source_record_id', src);
+    expect((instances?.length ?? 0) === 1, `expected 1 instance for idempotent start, got ${instances?.length}`);
+    h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', src); } catch {} });
   });
 }

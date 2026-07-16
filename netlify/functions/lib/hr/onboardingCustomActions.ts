@@ -130,6 +130,7 @@ async function instantiate(actorId: string, kase: CaseRow, spec: ActionSpec): Pr
       if (!spec.workflowTemplateId) throw err(400, 'A workflow template is required for a custom approval action.');
       const wf = await startWorkflowByTemplate({
         templateKey: spec.workflowTemplateId,
+        idempotencyKey: crypto.randomUUID(),
         context: {
           moduleKey: 'hr_onboarding', workflowType: 'onboarding_custom_approval', triggerEvent: 'onboarding.custom_action.approval',
           sourceRecordId: kase.id, sourceRecordRef: kase.case_no, requestedBy: actorId, ownerId: assignee, priority: spec.priority,

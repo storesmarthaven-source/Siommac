@@ -9,8 +9,12 @@ import { Hono }       from 'hono';
 import { sb }         from '../lib/db';
 import { requireUser, requirePermission, userCan } from '../lib/auth';
 import { z, zv }      from '../lib/validate';
-import { nextRef }    from '../lib/refGenerator';
-import { startWorkflowForRecord, decideTask, delegateTask, reassignTask, cancelWorkflow } from '../lib/workflow/service';
+import {
+  decideTask, delegateTask, reassignTask, cancelWorkflow,
+  startWorkflowExplicit,
+  getModuleStartPermission,
+  validateModuleSourceExists,
+} from '../lib/workflow/service';
 import { validateWorkflowDefinition } from '../lib/workflow/validateDefinition';
 import type { WorkflowTemplateDefinition } from '../lib/workflow/definitionTypes';
 import type { HonoVariables } from '../../../types/api';
@@ -21,25 +25,66 @@ const actorOf = (u: { id: string; role?: string }) => ({ id: u.id, role: u.role 
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
-// POST /api/workflow-engine/start — usually called by a module adapter
+// POST /api/workflow-engine/start — explicit template start (no binding).
+// Auth fix (finding #3 §7): Gate 2 module-authz + Gate 3 source-existence added.
+// templateVersionId + idempotencyKey REQUIRED; assignees optional (resolved from
+// recordData when omitted). Legacy startWorkflowForRecord call REMOVED.
 router.post('/start', async c => {
   const user = await requirePermission(c, 'workflow.submit');
   const v = zv(c, z.object({
-    moduleKey: z.string().min(1), workflowType: z.string().min(1), triggerEvent: z.string().min(1),
-    sourceRecordId: z.string().min(1), sourceRecordRef: z.string().optional(),
-    siteId: z.string().nullable().optional(), departmentId: z.string().nullable().optional(),
-    ownerId: z.string().nullable().optional(), priority: z.enum(['low','normal','medium','high','critical']).optional(),
-    recordData: z.record(z.string(), z.unknown()).default({}),
+    moduleKey:         z.string().min(1),
+    workflowType:      z.string().min(1),
+    triggerEvent:      z.string().min(1),
+    sourceRecordId:    z.string().min(1),
+    sourceRecordRef:   z.string().optional(),
+    templateVersionId: z.string().uuid(),
+    idempotencyKey:    z.string().uuid(),
+    siteId:            z.string().nullable().optional(),
+    departmentId:      z.string().nullable().optional(),
+    ownerId:           z.string().nullable().optional(),
+    priority:          z.enum(['low','normal','medium','high','critical']).optional(),
+    recordData:        z.record(z.string(), z.unknown()).default({}),
+    assignees:         z.record(z.string(), z.object({ userId: z.string().optional(), roleKey: z.string().optional() })).optional(),
   }), body(c));
   if (!v.ok) return v.response;
+
+  // Gate 2: module-specific permission (unknown module -> 403, safe default).
+  const modulePerm = getModuleStartPermission(v.data.moduleKey);
+  if (!modulePerm || !(await userCan(user, modulePerm))) {
+    return c.json({ success: false, message: 'Forbidden: insufficient module access' }, 403 as 200);
+  }
+
+  // Gate 3: source record must exist (UUID-format IDs only; text refs skip).
+  const sourceExists = await validateModuleSourceExists(v.data.moduleKey, v.data.sourceRecordId);
+  if (!sourceExists) {
+    return c.json({ success: false, message: 'Source record not found' }, 404 as 200);
+  }
+
   try {
-    const wf = await startWorkflowForRecord({
-      actor: actorOf(user as { id: string; role?: string }),
-      context: { ...v.data, requestedBy: (user as { id: string }).id, actorRoleIds: [(user as { role?: string }).role ?? ''] },
+    const wf = await startWorkflowExplicit({
+      versionId:      v.data.templateVersionId,
+      actor:          actorOf(user as { id: string; role?: string }),
+      idempotencyKey: v.data.idempotencyKey,
+      context: {
+        moduleKey:      v.data.moduleKey,
+        workflowType:   v.data.workflowType,
+        triggerEvent:   v.data.triggerEvent,
+        sourceRecordId: v.data.sourceRecordId,
+        sourceRecordRef: v.data.sourceRecordRef,
+        requestedBy:    (user as { id: string }).id,
+        ownerId:        v.data.ownerId,
+        siteId:         v.data.siteId,
+        departmentId:   v.data.departmentId,
+        priority:       v.data.priority ?? 'medium',
+        recordData:     v.data.recordData,
+      },
+      preResolvedAssignees: v.data.assignees,
     });
-    if (!wf) return c.json({ success: true, data: null, message: 'No active workflow binding — record proceeds without a workflow.' });
     return c.json({ success: true, data: wf });
-  } catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Start failed' }, 400 as 200); }
+  } catch (err) {
+    const status = (err as { status?: number }).status ?? 500;
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Start failed' }, status as 200);
+  }
 });
 
 // POST /api/workflow-engine/decide — approve | return | reject (assignee or elevated)
