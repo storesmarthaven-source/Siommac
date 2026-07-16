@@ -589,6 +589,19 @@ export default async function run(h) {
 
   // --- Reject path ---
   await test('reject flow: draft → pending_approval → reject → back to draft', async () => {
+    // Pre-clean: a PRIOR run that failed mid-test can leak its reject-test row
+    // (cleanup registers after the asserts) — and the fixed effective date would
+    // collide. Remove stale copies (and their workflow rows) before creating.
+    const { data: stale } = await sb.from('finance_statutory_versions')
+      .select('id').ilike('label', 'E2E Reject Test TEST-E2E-%').eq('effective_from', '2029-01-01');
+    for (const row of stale ?? []) {
+      const { data: wfRows } = await sb.from('workflow_instances').select('id').eq('source_record_id', row.id);
+      const wfIds = (wfRows ?? []).map(w => w.id);
+      if (wfIds.length) await sb.from('workflow_tasks').delete().in('workflow_id', wfIds);
+      if (wfIds.length) await sb.from('workflow_instances').delete().in('id', wfIds);
+      await sb.from('finance_statutory_versions').delete().eq('id', row.id);
+    }
+
     // Create a new draft by fmgr1
     const c = await api('finance/statutory/versions/create', fmgr1Token, {
       effectiveFrom: '2029-01-01',
@@ -600,6 +613,18 @@ export default async function run(h) {
     });
     ok(c, `create for reject test failed: ${c.body.message}`);
     const rejectId = c.body.data.id;
+
+    // Register cleanup IMMEDIATELY (not after the asserts) so a mid-test failure
+    // cannot leak the row into the next run.
+    h.onCleanup(async () => {
+      try {
+        const { data: wfRows } = await sb.from('workflow_instances').select('id').eq('source_record_id', rejectId);
+        const wfIds = (wfRows ?? []).map(w => w.id);
+        if (wfIds.length) await sb.from('workflow_tasks').delete().in('workflow_id', wfIds);
+        if (wfIds.length) await sb.from('workflow_instances').delete().in('id', wfIds);
+      } catch {}
+      try { await sb.from('finance_statutory_versions').delete().eq('id', rejectId); } catch {}
+    });
 
     // Submit it (creator: fmgr1)
     const s = await api('finance/statutory/versions/submit', fmgr1Token, { id: rejectId, idempotencyKey: `e2e-submit-3-${TAG}` });
@@ -641,11 +666,6 @@ export default async function run(h) {
       return (data ?? []).length > 0;
     }, 8000);
     expect(gotRejectThread, 'message thread for version.rejected not found');
-
-    // Cleanup this extra version
-    h.onCleanup(async () => {
-      try { await sb.from('finance_statutory_versions').delete().eq('id', rejectId); } catch {}
-    });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1121,22 +1141,32 @@ export default async function run(h) {
       'expected exactly 1 hr_audit_log statutory_version.reopened_by_edit row');
   });
 
-  await test('Shape-C: idempotent retry with same key returns same workflow, no new workflow started', async () => {
-    // The RPC receipt mechanism (_claim_request) short-circuits on the same key+hash.
-    // Sending the same idempotencyKey again must NOT start a second workflow.
+  await test('Shape-C: retry after re-approval is cleanly rejected, no second workflow', async () => {
+    // Same lesson as the leave slice: the endpoint has a STATEFUL pre-check
+    // (NIS classes are only editable on draft/approved versions) that runs
+    // BEFORE the RPC receipt. After the first upsert flipped sv4 to
+    // pending_approval, a sequential retry — same key or not — is CORRECTLY
+    // rejected by that gate (a pending version must not be edited again).
+    // The receipt protects the concurrent race inside the RPC, which the
+    // shared _claim_request tests already cover.
     const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
       statutoryVersionId: sv4Id,
       idempotencyKey: reapprovalKey,
       classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
     });
-    ok(r, `idempotent retry should succeed (receipt short-circuits): ${r.body.message}`);
+    fails(r, 'retry on a pending_approval version must be rejected by the edit gate');
+    expect(r.body.message?.toLowerCase().includes('draft or approved'),
+      `expected the edit-gate message, got: ${r.body.message}`);
 
+    // The invariant that matters: the retry changed NOTHING — same workflow,
+    // no duplicate instance.
     const { data: sv4Row2 } = await sb.from('finance_statutory_versions')
-      .select('workflow_id').eq('id', sv4Id).single();
+      .select('workflow_id, status').eq('id', sv4Id).single();
     expect(sv4Row2.workflow_id === reapprovalWfId,
       `workflow_id must not change on retry: expected ${reapprovalWfId}, got ${sv4Row2.workflow_id}`);
+    expect(sv4Row2.status === 'pending_approval',
+      `status must remain pending_approval, got ${sv4Row2.status}`);
 
-    // No duplicate workflow instances for this source record
     const { data: allWfs } = await sb.from('workflow_instances')
       .select('id').eq('source_record_id', sv4Id).eq('status', 'in_progress');
     expect((allWfs ?? []).length === 1,

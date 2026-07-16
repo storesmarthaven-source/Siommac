@@ -15,7 +15,7 @@
 
 import { sb } from '../db';
 import { writeHrAudit } from '../hr/employeeCore';
-import { rpcHttpError } from '../workflow/service';
+import { rpcHttpError, decideTask } from '../workflow/service';
 import { selectWorkflowBinding } from '../workflow/bindingResolver';
 import { notifyUsersByRole } from './financeEvents';
 import { emitFinanceMutationBackbone } from './backbone';
@@ -468,10 +468,79 @@ export async function submitStatutoryVersion(
 }
 
 // ── Approve (workflow adapter calls this; also direct route for tests) ────────
-// The workflow adapter (financeStatutoryAdapter.ts) calls approveStatutoryVersion
-// after the central engine makes the decision. Route-level approve just delegates.
+// Approval is WORKFLOW-NATIVE (same model as leave): when the version has an
+// active submit workflow, the route-facing approve/reject DECIDE the engine task
+// and the adapter (financeAdapters.ts) applies the source mutation on the
+// engine's completion/rejection callback. The direct apply* functions below are
+// what the ADAPTER calls (and the no-workflow fallback). A direct route-level
+// flip would leave the workflow instance dangling in_progress — which the shared
+// submit RPC (and mig-397 unique index) correctly rejects on re-approval.
+
+/** Resolve and decide the single open approval task of a version's workflow. */
+async function decideOpenStatutoryTask(
+  workflowId: string, actorId: string,
+  decision: 'approved' | 'rejected', comment?: string,
+): Promise<void> {
+  const { data: task, error } = await sb.from('workflow_tasks')
+    .select('id')
+    .eq('workflow_id', workflowId)
+    .in('status', ['pending', 'open', 'in_progress'])
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle();
+  if (error) throw Object.assign(new Error(`Failed to resolve approval task: ${error.message}`), { status: 500 });
+  if (!task) throw Object.assign(new Error('No open approval task for this statutory version.'), { status: 409 });
+  await decideTask({ workflowId, taskId: (task as { id: string }).id, actor: { id: actorId }, decision, comment });
+}
 
 export async function approveStatutoryVersion(
+  id: string,
+  actorId: string,
+): Promise<StatutoryVersionDto> {
+  const existing = await getStatutoryVersion(id);
+  if (!existing) throw Object.assign(new Error('Statutory version not found.'), { status: 404 });
+  if (existing.status !== 'pending_approval') {
+    throw Object.assign(new Error('Only pending_approval statutory versions can be approved.'), { status: 422 });
+  }
+  // Fail fast on SoD at the route boundary (the apply path re-checks it).
+  assertDifferentApprover({ actorId, createdBy: existing.createdBy, action: 'approve a statutory version they created' });
+
+  if (existing.workflowId) {
+    // Workflow-native: decide the engine task; onWorkflowCompleted →
+    // applyApprovedStatutoryVersion performs the flip + backbone side-effects.
+    await decideOpenStatutoryTask(existing.workflowId, actorId, 'approved');
+    const refreshed = await getStatutoryVersion(id);
+    if (!refreshed) throw Object.assign(new Error('Statutory version not found after approval.'), { status: 503 });
+    return refreshed;
+  }
+  // No workflow bound (binding absent) — direct approve.
+  return applyApprovedStatutoryVersion(id, actorId);
+}
+
+export async function rejectStatutoryVersion(
+  id: string,
+  actorId: string,
+  reason?: string,
+): Promise<StatutoryVersionDto> {
+  const existing = await getStatutoryVersion(id);
+  if (!existing) throw Object.assign(new Error('Statutory version not found.'), { status: 404 });
+  if (existing.status !== 'pending_approval') {
+    throw Object.assign(new Error('Only pending_approval statutory versions can be rejected.'), { status: 422 });
+  }
+  assertDifferentApprover({ actorId, createdBy: existing.createdBy, action: 'reject a statutory version they created' });
+
+  if (existing.workflowId) {
+    // Workflow-native: the engine rejects the task; onWorkflowRejected rolls the
+    // version back to draft (adapter owns the source mutation + audit + event).
+    await decideOpenStatutoryTask(existing.workflowId, actorId, 'rejected', reason);
+    const refreshed = await getStatutoryVersion(id);
+    if (!refreshed) throw Object.assign(new Error('Statutory version not found after rejection.'), { status: 503 });
+    return refreshed;
+  }
+  return applyRejectedStatutoryVersion(id, actorId, reason);
+}
+
+export async function applyApprovedStatutoryVersion(
   id: string,
   actorId: string,
 ): Promise<StatutoryVersionDto> {
@@ -548,9 +617,9 @@ export async function approveStatutoryVersion(
   return row;
 }
 
-// ── Reject ────────────────────────────────────────────────────────────────────
+// ── Reject (direct apply — adapter callback / no-workflow fallback) ───────────
 
-export async function rejectStatutoryVersion(
+export async function applyRejectedStatutoryVersion(
   id: string,
   actorId: string,
   reason?: string,

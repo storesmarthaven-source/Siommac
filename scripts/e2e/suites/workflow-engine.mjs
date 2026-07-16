@@ -418,7 +418,24 @@ export default async function run(h) {
       transitions: [{ fromStep: 'approve', onDecision: 'approved', completeWorkflow: true }],
     });
     finTplId = finSeed.tplId; finVerId = finSeed.verId;
-    dlWfId = await startWf(finTrigger, 'finance_payroll', 'finance_payroll_approval', dlRecord, { supervisorId: bypass.supervisor.id }, finVerId);
+    // Start DIRECTLY via the service-role RPC: the HTTP route now (correctly)
+    // enforces module-authz + source-existence, and this scenario NEEDS a
+    // workflow whose source run does not exist (that is what makes the finalize
+    // source-RPC fail repeatably). The test exercises outbox mechanics, not
+    // route auth — which has its own explicit-start auth tests above.
+    const { data: startRes, error: startErr } = await sb.rpc('workflow_start_instance_tx', {
+      p_template_version_id: finVerId,
+      p_module_key: 'finance_payroll',
+      p_workflow_type: 'finance_payroll_approval',
+      p_source_record_id: dlRecord,
+      p_trigger_event: finTrigger,
+      p_requested_by: bypass.supervisor.id,
+      p_source_snapshot: { supervisorId: bypass.supervisor.id },
+      p_assignees: { approve: { userId: bypass.supervisor.id } },
+      p_request_key: crypto.randomUUID(),
+    });
+    expect(!startErr, `direct RPC start failed: ${startErr?.message}`);
+    dlWfId = startRes.workflowId;
     const task = await openTask(dlWfId);
     const r = await api('workflow-engine/decide', tSup, { workflowId: dlWfId, taskId: task.id, decision: 'approved', comment: 'approve missing run' });
     expect(r.body.success === true, `decision should commit even when finalization fails — got ${JSON.stringify(r.body).slice(0, 200)}`);

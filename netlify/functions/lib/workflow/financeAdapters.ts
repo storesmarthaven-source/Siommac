@@ -4,7 +4,7 @@
 // Adapter for the `finance_statutory_approval` workflow (Phase 1).
 // The workflow adapter drives the statutory version lifecycle on engine events:
 //   onWorkflowStarted   → keep status pending_approval (already set at submit)
-//   onWorkflowCompleted → call approveStatutoryVersion (which enforces SoD)
+//   onWorkflowCompleted → call applyApprovedStatutoryVersion (which enforces SoD)
 //   onWorkflowReturned  → roll back to draft for corrections
 //   onWorkflowRejected  → roll back to draft (no separate rejected status)
 //   onWorkflowCancelled → roll back to draft
@@ -16,7 +16,7 @@
 import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
 import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
-import { approveStatutoryVersion, rejectStatutoryVersion } from '../finance/statutoryConfig';
+import { applyApprovedStatutoryVersion, applyRejectedStatutoryVersion } from '../finance/statutoryConfig';
 import { writeHrAudit } from '../hr/employeeCore';
 import { emitAppEvent } from '../appEvents';
 
@@ -74,8 +74,8 @@ const financeStatutoryAdapter: ModuleWorkflowAdapter = {
 
   onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
     const actor = await decidedBy(workflowId);
-    // approveStatutoryVersion enforces SoD (creator ≠ approver) and writes audit + event.
-    await approveStatutoryVersion(sourceRecordId, actor ?? 'workflow');
+    // applyApprovedStatutoryVersion enforces SoD (creator ≠ approver) and writes audit + event.
+    await applyApprovedStatutoryVersion(sourceRecordId, actor ?? 'workflow');
   },
 
   onWorkflowReturned: async ({ workflowId, sourceRecordId, comment }) => {
@@ -85,7 +85,10 @@ const financeStatutoryAdapter: ModuleWorkflowAdapter = {
 
   onWorkflowRejected: async ({ workflowId, sourceRecordId, comment }) => {
     const actor = await decidedBy(workflowId);
-    await rollBackToDraft(sourceRecordId, actor, 'statutory_version.rejected_by_workflow', comment);
+    // Full reject contract (status→draft + audit statutory_version.rejected +
+    // finance.statutory.version.rejected event + creator notification + config
+    // thread) — same §2 parity as onWorkflowCompleted → applyApproved.
+    await applyRejectedStatutoryVersion(sourceRecordId, actor ?? 'workflow', comment ?? undefined);
   },
 
   onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
