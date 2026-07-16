@@ -17,6 +17,9 @@ export interface CommunicationCounts {
   handoffFailures:     number;
   /** Realtime channel key — pass to useRealtimeSignals */
   channelKey:          string | null;
+  /** Server-issued realtime JWT (authenticated realtime, finding #5) — pass to
+   *  useRealtimeSignals; null until the server env is configured. */
+  realtimeToken:       string | null;
   isLoading:           boolean;
 }
 
@@ -31,6 +34,7 @@ export function useCommunicationSummary(): CommunicationCounts {
     workflowTasks:       d?.workflowTasks        ?? 0,
     handoffFailures:     d?.handoffFailures      ?? 0,
     channelKey:          d?.realtimeChannelKey   ?? null,
+    realtimeToken:       d?.realtimeToken        ?? null,
     isLoading:           q.isLoading,
   };
 }

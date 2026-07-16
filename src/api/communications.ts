@@ -51,6 +51,10 @@ export interface CommsSummary {
   workflowTasks:       number;
   handoffFailures:     number;
   realtimeChannelKey:  string;
+  /** Server-issued Supabase Realtime JWT — null until the server is configured
+   *  with SUPABASE_JWT_SECRET (see lib/REALTIME_AUTH_CONTRACT.md). */
+  realtimeToken:          string | null;
+  realtimeTokenExpiresAt: string | null;
 }
 
 export interface CanonicalNotification {

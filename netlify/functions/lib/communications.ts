@@ -19,6 +19,7 @@ import { emitAppEvent, deliverEventNotifications } from './appEvents';
 import { getSignedUrl }  from './photos';
 import { createAttachmentUploadUrl } from './upload';
 import { userCan }       from './auth';
+import { mintRealtimeToken } from './realtimeAuth';
 import { classifyAttachment, fileExtension, assertAttachmentAllowed } from './attachmentClassifier';
 import {
   createThreadTx, sendMessageTx, addParticipantsTx, removeParticipantTx, markReadTx,
@@ -547,6 +548,10 @@ export interface CommsSummary {
   workflowTasks:       number;
   handoffFailures:     number;
   realtimeChannelKey:  string;
+  /** Server-issued Supabase Realtime JWT (finding #5) — null until
+   *  SUPABASE_JWT_SECRET is configured. See lib/REALTIME_AUTH_CONTRACT.md. */
+  realtimeToken:          string | null;
+  realtimeTokenExpiresAt: string | null;
 }
 
 /**
@@ -555,6 +560,8 @@ export interface CommsSummary {
  */
 export async function getCommsSummary(userId: string, role: string): Promise<CommsSummary> {
   const nowIso = new Date().toISOString();
+  // Synchronous HS256 mint (finding #5); null until SUPABASE_JWT_SECRET is set.
+  const realtimeToken = mintRealtimeToken(userId);
 
   // ── Everything runs in ONE parallel batch (no serial prefix) ───────────────
   // The 5 notification counts collapse into a single fetch of the active rows'
@@ -616,6 +623,8 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value as number) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
     realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value as string) : crypto.randomUUID(),
+    realtimeToken:          realtimeToken?.token ?? null,
+    realtimeTokenExpiresAt: realtimeToken?.expiresAt ?? null,
   };
 }
 

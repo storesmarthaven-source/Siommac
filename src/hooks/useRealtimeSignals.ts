@@ -29,10 +29,21 @@ import { emitMessagesSignal } from '@components/sections/Messages/messenger/inte
 type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
 
-export function useRealtimeSignals(channelKey: string | null): void {
+export function useRealtimeSignals(channelKey: string | null, realtimeToken: string | null = null): void {
   const qc           = useQueryClient();
   const clientRef    = useRef<SupabaseClient | null>(null);
   const channelRef   = useRef<SupabaseChannel | null>(null);
+  const tokenRef     = useRef<string | null>(realtimeToken);
+  tokenRef.current   = realtimeToken;
+
+  // Token rotation: re-authorize the LIVE connection without resubscribing
+  // (the summary poll re-mints the token; churning the channel would drop
+  // signal delivery windows). Channel lifecycle stays keyed on channelKey.
+  useEffect(() => {
+    if (realtimeToken && clientRef.current) {
+      (clientRef.current as unknown as { realtime: { setAuth(t: string): void } }).realtime.setAuth(realtimeToken);
+    }
+  }, [realtimeToken]);
 
   useEffect(() => {
     if (!channelKey) return;
@@ -49,6 +60,14 @@ export function useRealtimeSignals(channelKey: string | null): void {
       realtime: { params: { eventsPerSecond: 10 } },
     });
     clientRef.current = client as unknown as SupabaseClient;
+
+    // Authenticated realtime (finding #5): present the server-issued JWT so
+    // the communication_signals RLS (mig 351) authorizes this connection.
+    // Without a token (server env not configured yet) the connection stays
+    // anonymous — which only works until the RLS migration is applied.
+    if (tokenRef.current) {
+      (client as unknown as { realtime: { setAuth(t: string): void } }).realtime.setAuth(tokenRef.current);
+    }
 
     const channel = client
       .channel(`comms-signals-${channelKey}`)

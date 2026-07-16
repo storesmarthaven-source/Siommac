@@ -46,8 +46,8 @@ import { ActionModalHost }               from '@/components/common/actions';
 // Split into Inner/Outer so hooks only mount when authenticated.
 
 function CommsBridgeInner() {
-  const { channelKey } = useCommunicationSummary();
-  useRealtimeSignals(channelKey);
+  const { channelKey, realtimeToken } = useCommunicationSummary();
+  useRealtimeSignals(channelKey, realtimeToken);
   return null;
 }
 
