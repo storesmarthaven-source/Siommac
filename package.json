@@ -24,7 +24,10 @@
     "test:e2e": "node scripts/e2e/run.mjs",
     "test:e2e:coverage": "node scripts/e2e/coverage-gate.mjs",
     "test:e2e:sweep": "node scripts/e2e/sweep-orphans.mjs --apply",
-    "gen:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase-generated.ts"
+    "gen:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase-generated.ts",
+    "prepare": "husky",
+    "lint:backend": "eslint netlify/functions --ext .ts",
+    "lint": "npm run lint:frontend && npm run lint:backend"
   },
   "jest": {
     "testEnvironment": "node",
@@ -106,8 +109,10 @@
     "cross-env": "^10.1.0",
     "eslint": "^10.4.0",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
     "jsdom": "^29.1.1",
+    "lint-staged": "^16.4.0",
     "ts-jest": "^29.4.11",
     "typescript": "^5.7.0",
     "vite": "^8.0.13",
@@ -116,5 +121,9 @@
   },
   "overrides": {
     "ws": "^8.21.0"
+  },
+  "lint-staged": {
+    "src/**/*.{ts,tsx}": "eslint --quiet --no-warn-ignored",
+    "netlify/functions/**/*.ts": "eslint --quiet --no-warn-ignored"
   }
 }

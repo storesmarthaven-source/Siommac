@@ -1,9 +1,11 @@
 /**
  * eslint.config.mjs  —  Flat config (ESLint 9+)
  *
- * Covers src/ only (the Preact frontend).
- * The netlify/functions backend has its own separate tsconfig and is not
- * linted here — it would need @typescript-eslint with the backend tsconfig.
+ * Covers src/ (Preact frontend) AND netlify/functions/ (backend — its own
+ * tsconfig-typed block at the bottom, no Preact/hooks rules).
+ * Enforcement is a RATCHET: the pre-commit hook (husky + lint-staged) blocks
+ * ERRORS on STAGED files only (eslint --quiet); the legacy debt is burned
+ * down file-by-file as code gets touched. `npm run lint` = whole repo.
  *
  * Rules enforced:
  *   - TypeScript strict: no-any, no floating promises, no misused promises
@@ -23,7 +25,6 @@ export default [
     ignores: [
       'dist/**',
       'node_modules/**',
-      'netlify/**',
       'assets/**',          // legacy JS — not linted until ported
       '*.config.{js,ts,mjs}',
     ],
@@ -127,6 +128,46 @@ export default [
       'eqeqeq':                   ['error', 'always', { 'null': 'ignore' }],
       'prefer-const':             'error',
       'no-var':                   'error',
+    },
+  },
+
+  // ── Backend (Netlify Functions) ────────────────────────────────────────────
+  // Same strict TS profile against the backend tsconfig; no Preact/hooks rules.
+  // Server code logs deliberately (structured console), so no-console is off.
+  {
+    files: ['netlify/functions/**/*.ts'],
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+    },
+    languageOptions: {
+      parser:        tsParser,
+      parserOptions: {
+        project:         './netlify/functions/tsconfig.json',
+        tsconfigRootDir: import.meta.dirname,
+        ecmaVersion:     2022,
+        sourceType:      'module',
+      },
+    },
+    rules: {
+      ...tsPlugin.configs['strict-type-checked'].rules,
+      ...tsPlugin.configs['stylistic-type-checked'].rules,
+      'no-undef': 'off',
+      '@typescript-eslint/restrict-template-expressions': ['error', {
+        allowNumber: true, allowBoolean: true, allowNullish: true,
+        allowRegExp: false, allowNever: false,
+      }],
+      '@typescript-eslint/no-unused-vars': ['error', {
+        varsIgnorePattern: '^_', argsIgnorePattern: '^_',
+        caughtErrorsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_',
+        ignoreRestSiblings: true,
+      }],
+      '@typescript-eslint/no-confusing-void-expression': 'off',
+      '@typescript-eslint/no-unused-expressions': ['error', { allowShortCircuit: true, allowTernary: true }],
+      '@typescript-eslint/no-non-null-assertion': 'warn',
+      '@typescript-eslint/explicit-module-boundary-types': 'warn',
+      'eqeqeq':       ['error', 'always', { 'null': 'ignore' }],
+      'prefer-const': 'error',
+      'no-var':       'error',
     },
   },
 ];
