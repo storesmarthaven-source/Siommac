@@ -857,7 +857,7 @@ function orgErr(c: Context<{ Variables: HonoVariables }>, e: unknown): Response 
 }
 const ORG_UNIT_TYPES = ['company', 'division', 'department', 'team', 'crew', 'site_department'] as const;
 // Optional fields on every gated mutation: a reason + an effective date (Phase B).
-const GATED = { reason: z.string().max(500).nullable().optional(), effectiveFrom: z.string().nullable().optional() };
+const GATED = { reason: z.string().max(500).nullable().optional(), effectiveFrom: z.string().nullable().optional(), idempotencyKey: z.string().min(1).max(200).optional() };
 
 // POST /api/hr/organization/tree — enriched flat list; frontend builds the tree
 router.post('/organization/tree', async c => {

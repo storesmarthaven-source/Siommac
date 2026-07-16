@@ -36,7 +36,7 @@ function nowISO(): string { return new Date().toISOString(); }
 /** LOW/MEDIUM → apply directly; HIGH/CRITICAL → approval workflow (unless override / no binding). */
 async function gateOrApply(
   actor: OrgActor,
-  p: { entityType: OrgEntityType; entityId: string; action: OrgChangeAction; oldState: State; newState: State; impact: OrgChangeImpactSummary; effectiveFrom?: string | null; reason?: string | null },
+  p: { entityType: OrgEntityType; entityId: string; action: OrgChangeAction; oldState: State; newState: State; impact: OrgChangeImpactSummary; effectiveFrom?: string | null; reason?: string | null; idempotencyKey?: string },
   applyFn: () => Promise<void>,
 ): Promise<OrgMutationResult> {
   const risk = classifyOrgChangeRisk({ entityType: p.entityType, action: p.action, changedFields: changedFields(p.oldState, p.newState), impact: p.impact });
@@ -46,6 +46,7 @@ async function gateOrApply(
       const pending = await submitOrgChangeForApproval(actor.id, {
         entityType: p.entityType, entityId: p.entityId, action: p.action, riskLevel: risk,
         oldState: p.oldState, newState: p.newState, impactSummary: p.impact, effectiveFrom: p.effectiveFrom, reason: p.reason,
+        idempotencyKey: p.idempotencyKey,
       });
       if (pending) return pending;                     // workflow started → held for approval
       // no binding configured → fall through to a direct (audited) apply
@@ -99,7 +100,7 @@ export async function updateOrgUnit(actor: OrgActor, args: UpdateOrgUnitArgs): P
   set('sortOrder', args.sortOrder, args.sortOrder !== undefined, current.sort_order);
 
   const impact = await previewOrgChangeImpact({ entityType: 'org_unit', entityId: args.unitId, action: 'update' });
-  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyOrgUnitChange(actor.id, args.unitId, 'update', newState, oldState));
 }
 
@@ -111,7 +112,7 @@ export async function moveOrgUnit(actor: OrgActor, args: MoveOrgUnitArgs): Promi
 
   const newState: State = { parentId: args.newParentId }, oldState: State = { parentId: current.parent_id };
   const impact = await previewOrgChangeImpact({ entityType: 'org_unit', entityId: args.unitId, action: 'move', newParentId: args.newParentId });
-  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'move', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'move', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyOrgUnitChange(actor.id, args.unitId, 'move', newState, oldState));
 }
 
@@ -119,7 +120,7 @@ export async function archiveOrgUnit(actor: OrgActor, args: ArchiveOrgUnitArgs):
   const current = await loadUnit(args.unitId);
   const newState: State = { isActive: false }, oldState: State = { isActive: current.is_active };
   const impact = await previewOrgChangeImpact({ entityType: 'org_unit', entityId: args.unitId, action: 'archive' });
-  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'archive', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'archive', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyOrgUnitChange(actor.id, args.unitId, 'archive', newState, oldState));
 }
 
@@ -129,7 +130,7 @@ export async function deleteOrgUnit(actor: OrgActor, args: DeleteOrgUnitArgs): P
 
   const oldState: State = { name: current.name, code: current.code, parentId: current.parent_id, orgUnitType: current.org_unit_type };
   const impact = await previewOrgChangeImpact({ entityType: 'org_unit', entityId: args.unitId, action: 'delete' });
-  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'delete', oldState, newState: {}, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'org_unit', entityId: args.unitId, action: 'delete', oldState, newState: {}, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyOrgUnitDelete(actor.id, args.unitId, oldState));
 }
 
@@ -212,7 +213,7 @@ export async function updatePosition(actor: OrgActor, args: UpdatePositionArgs):
   set('isActive', args.isActive, args.isActive !== undefined, current.is_active);
 
   const impact = await previewOrgChangeImpact({ entityType: 'position', entityId: args.positionId, action: 'update' });
-  return gateOrApply(actor, { entityType: 'position', entityId: args.positionId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'position', entityId: args.positionId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyPositionChange(actor.id, args.positionId, 'update', newState, oldState));
 }
 
@@ -220,7 +221,7 @@ export async function retirePosition(actor: OrgActor, args: RetirePositionArgs):
   const current = await loadPosition(args.positionId);
   const newState: State = { isActive: false }, oldState: State = { isActive: current.is_active };
   const impact = await previewOrgChangeImpact({ entityType: 'position', entityId: args.positionId, action: 'retire' });
-  return gateOrApply(actor, { entityType: 'position', entityId: args.positionId, action: 'retire', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'position', entityId: args.positionId, action: 'retire', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyPositionChange(actor.id, args.positionId, 'retire', newState, oldState));
 }
 
@@ -265,7 +266,7 @@ export async function updateCostCenter(actor: OrgActor, args: UpdateCostCenterAr
   set('isActive', args.isActive, args.isActive !== undefined, current.is_active);
 
   const impact = await previewOrgChangeImpact({ entityType: 'cost_center', entityId: args.costCenterId, action: 'update' });
-  return gateOrApply(actor, { entityType: 'cost_center', entityId: args.costCenterId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'cost_center', entityId: args.costCenterId, action: 'update', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyCostCenterChange(actor.id, args.costCenterId, 'update', newState, oldState));
 }
 
@@ -273,6 +274,6 @@ export async function retireCostCenter(actor: OrgActor, args: RetireCostCenterAr
   const current = await loadCostCenter(args.costCenterId);
   const newState: State = { isActive: false }, oldState: State = { isActive: current.is_active };
   const impact = await previewOrgChangeImpact({ entityType: 'cost_center', entityId: args.costCenterId, action: 'retire' });
-  return gateOrApply(actor, { entityType: 'cost_center', entityId: args.costCenterId, action: 'retire', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason },
+  return gateOrApply(actor, { entityType: 'cost_center', entityId: args.costCenterId, action: 'retire', oldState, newState, impact, effectiveFrom: args.effectiveFrom, reason: args.reason, idempotencyKey: args.idempotencyKey },
     () => applyCostCenterChange(actor.id, args.costCenterId, 'retire', newState, oldState));
 }

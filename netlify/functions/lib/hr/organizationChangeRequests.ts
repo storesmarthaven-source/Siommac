@@ -8,11 +8,11 @@
 // happen in the engine; this module only records + applies.
 
 import { sb }           from '../db';
-import { nextRef }      from '../refGenerator';
-import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
 import { httpError }    from './organizationCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError }          from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole }     from '../finance/financeEvents';
 import { applyOrgUnitChange, applyOrgUnitDelete, applyPositionChange, applyCostCenterChange } from './organizationApply';
 import type {
   OrgChangeRequest, OrgChangeRiskLevel, OrgEntityType, OrgChangeImpactSummary,
@@ -31,6 +31,12 @@ export interface SubmitOrgChangeInput {
   impactSummary: OrgChangeImpactSummary;
   effectiveFrom?: string | null;
   reason?: string | null;
+  /** Per-attempt idempotency key — required when a binding exists (atomic create-and-start). */
+  idempotencyKey?: string;
+}
+
+function riskPriority(risk: OrgChangeRiskLevel): 'critical' | 'high' | 'normal' {
+  return risk === 'critical' ? 'critical' : risk === 'high' ? 'high' : 'normal';
 }
 
 function nowISO(): string { return new Date().toISOString(); }
@@ -41,45 +47,48 @@ function nowISO(): string { return new Date().toISOString(); }
  * configured (the caller then applies directly — approval is opt-in via binding).
  */
 export async function submitOrgChangeForApproval(actorId: string, input: SubmitOrgChangeInput): Promise<Extract<OrgMutationResult, { mode: 'pendingApproval' }> | null> {
-  const changeNo = await nextRef('ORC');
-  const { data: cr, error } = await sb.from('hr_org_change_requests').insert({
-    change_no: changeNo, entity_type: input.entityType, entity_id: input.entityId, action: input.action,
-    risk_level: input.riskLevel, status: 'draft', effective_from: input.effectiveFrom ?? nowISO(),
-    reason: input.reason ?? null, old_state: input.oldState, new_state: input.newState, impact_summary: input.impactSummary,
-    requested_by: actorId, requested_at: nowISO(),
-  }).select('id').single<{ id: string }>();
-  if (error) throw httpError(500, error.message);
+  // Resolve the approval binding FIRST — no binding means approval is not enforced
+  // for this trigger, so the caller applies the change directly (audited). Returning
+  // null (without persisting anything) replaces the old insert-a-draft-then-delete
+  // dance. When a binding exists, the envelope insert + workflow start + workflow_id
+  // link + business event + hr_audit_log all commit in ONE transaction via
+  // workflow_create_and_start_tx (hr_org_change_requests branch) — fixing the
+  // insert -> startWorkflowForRecord -> update/compensating-delete strand.
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'hr_org_structure', workflowType: 'hr_org_change_approval',
+    triggerEvent: `hr.org.${input.entityType}.${input.action}`,
+    sourceRecordId: '', requestedBy: actorId, priority: riskPriority(input.riskLevel), recordData: {},
+  });
+  if (!binding) return null;
 
-  const wf = await startWorkflowForRecord({
-    context: {
-      moduleKey: 'hr_org_structure', workflowType: 'hr_org_change_approval',
-      triggerEvent: `hr.org.${input.entityType}.${input.action}`,
-      sourceRecordId: cr.id, sourceRecordRef: changeNo, requestedBy: actorId,
-      priority: input.riskLevel === 'critical' ? 'critical' : input.riskLevel === 'high' ? 'high' : 'normal',
-      recordData: {
-        entityType: input.entityType, entityId: input.entityId, action: input.action,
-        riskLevel: input.riskLevel, oldState: input.oldState, newState: input.newState, impactSummary: input.impactSummary,
-      },
+  const requestKey = input.idempotencyKey?.trim();
+  if (!requestKey) throw httpError(400, 'An idempotency key is required to submit an org change for approval.');
+
+  const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+    p_source_table: 'hr_org_change_requests', p_actor_id: actorId,
+    p_binding_id: binding.id, p_request_key: requestKey,
+    p_business: {
+      entityType: input.entityType, entityId: input.entityId, action: input.action,
+      riskLevel: input.riskLevel, oldState: input.oldState, newState: input.newState,
+      impactSummary: input.impactSummary, effectiveFrom: input.effectiveFrom ?? null,
+      reason: input.reason ?? null, priority: riskPriority(input.riskLevel),
     },
-    actor: { id: actorId },
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string };
+
+  // First step routes to the hr_manager role — notify them post-commit so the approval
+  // is actioned (replaces the fan-out startWorkflowForRecord.notifyTaskAssigned did).
+  void notifyUsersByRole('hr_manager', {
+    type: 'org.change.requested',
+    title: `Org change ${rpc.ref ?? ''} awaiting your approval`.trim(),
+    body: `A ${input.riskLevel}-risk ${input.entityType} ${input.action} change needs approval.`,
+    module: 'hr', severity: input.riskLevel === 'critical' ? 'warning' : 'info',
+    sourceType: 'org_change_request', sourceId: rpc.recordId ?? '', actionRequired: true,
+    dedupeKey: `org.change.requested.${rpc.recordId}`,
   });
 
-  if (!wf) {
-    // No approval binding configured for this change → approval is not enforced.
-    // Drop the draft envelope; the caller applies the change directly (audited).
-    await sb.from('hr_org_change_requests').delete().eq('id', cr.id);
-    return null;
-  }
-
-  await sb.from('hr_org_change_requests').update({ status: 'pending_approval', workflow_id: wf.id, updated_at: nowISO() }).eq('id', cr.id);
-  void emitAppEvent({
-    eventType: 'org.change.requested', sourceModule: 'hr', sourceEntityType: 'org_change_request', sourceEntityId: cr.id,
-    actorUserId: actorId, severity: input.riskLevel === 'critical' ? 'warning' : 'info',
-    payload: { entityType: input.entityType, entityId: input.entityId, action: input.action, riskLevel: input.riskLevel, workflowId: wf.id },
-  });
-  await writeHrAudit({ submoduleKey: 'organization', recordId: cr.id, actorId, action: 'hr.org_change.requested', newState: { changeNo, ...input } });
-
-  return { mode: 'pendingApproval', changeRequestId: cr.id, changeNo, workflowId: wf.id, riskLevel: input.riskLevel, impactSummary: input.impactSummary };
+  return { mode: 'pendingApproval', changeRequestId: rpc.recordId ?? '', changeNo: rpc.ref ?? '', workflowId: rpc.workflowId ?? '', riskLevel: input.riskLevel, impactSummary: input.impactSummary };
 }
 
 interface CrRow {
@@ -157,7 +166,9 @@ export async function setOrgChangeStatus(changeRequestId: string, status: string
 export async function cancelOrgChangeRequest(actorId: string, args: { changeRequestId: string; reason?: string | null }): Promise<{ id: string }> {
   const { data: cr } = await sb.from('hr_org_change_requests').select('status, requested_by').eq('id', args.changeRequestId).maybeSingle<{ status: string; requested_by: string | null }>();
   if (!cr) throw httpError(404, 'Change request not found.');
-  if (!['draft', 'pending_approval', 'scheduled', 'approved'].includes(cr.status)) throw httpError(400, `Cannot cancel a ${cr.status} change request.`);
+  // No 'draft': change requests are now persisted directly as pending_approval by the
+  // atomic create-and-start RPC (the old insert-a-draft-then-promote path is gone).
+  if (!['pending_approval', 'scheduled', 'approved'].includes(cr.status)) throw httpError(400, `Cannot cancel a ${cr.status} change request.`);
   await sb.from('hr_org_change_requests').update({ status: 'cancelled', rejection_reason: args.reason ?? null, updated_at: nowISO() }).eq('id', args.changeRequestId);
   await writeHrAudit({ submoduleKey: 'organization', recordId: args.changeRequestId, actorId, action: 'hr.org_change.cancelled', reason: args.reason ?? null });
   return { id: args.changeRequestId };

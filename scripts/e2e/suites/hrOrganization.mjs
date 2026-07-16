@@ -28,7 +28,7 @@ export default async function run(h) {
   const ccCode      = `${TAG}-CC`;
   const posKey1     = `${TAG}-POS1`;
   const posKey2     = `${TAG}-POS2`;
-  const ctx = { ccId: null, rootId: null, childId: null, posId1: null, posId2: null, empT: null, staffT: null, mgrT: null, pbRoot: null, pbChild: null, createdUserIds: [] };
+  const ctx = { ccId: null, rootId: null, childId: null, posId1: null, posId2: null, empT: null, staffT: null, mgrT: null, pbRoot: null, pbChild: null, pbCrId: null, orgKey: TAG + '-orgmove', createdUserIds: [] };
 
   const waitFor = async (check, ms = 6000) => {
     const t0 = Date.now();
@@ -186,12 +186,12 @@ export default async function run(h) {
   });
 
   await test('positions/update sets reports-to (pos1 → pos2)', async () => {
-    const r = await api('hr/positions/update', A, { positionId: ctx.posId1, reportsToPositionId: ctx.posId2 });
+    const r = await api('hr/positions/update', A, { positionId: ctx.posId1, reportsToPositionId: ctx.posId2, idempotencyKey: TAG + '-posupd1' });
     ok(r, `update pos failed: ${r.body.message}`);
   });
 
   await test('HIERARCHY: position reports-to cycle → 409', async () => {
-    const r = await api('hr/positions/update', A, { positionId: ctx.posId2, reportsToPositionId: ctx.posId1 });
+    const r = await api('hr/positions/update', A, { positionId: ctx.posId2, reportsToPositionId: ctx.posId1, idempotencyKey: TAG + '-posupd2' });
     fails(r, 'position reports-to cycle should be rejected');
     expect(r.status === 409, `expected 409, got ${r.status}`);
   });
@@ -267,18 +267,39 @@ export default async function run(h) {
   });
 
   if (approvalOn) {
-    await test('hr_manager high-risk move → pendingApproval + CR + workflow (not applied yet)', async () => {
-      const r = await api('hr/organization/unit/move', ctx.mgrT, { unitId: ctx.pbChild, newParentId: null });
+    await test('hr_manager high-risk move → pendingApproval + CR + workflow linked in-commit', async () => {
+      const r = await api('hr/organization/unit/move', ctx.mgrT, { unitId: ctx.pbChild, newParentId: null, idempotencyKey: ctx.orgKey });
       ok(r, `move failed: ${r.body.message}`);
       expect(r.body.data?.mode === 'pendingApproval', `expected pendingApproval, got ${JSON.stringify(r.body.data)}`);
       ctx.pbCrId = r.body.data.changeRequestId;
       const { data: cr } = await sb.from('hr_org_change_requests').select('status, workflow_id').eq('id', ctx.pbCrId).maybeSingle();
       expect(cr?.status === 'pending_approval', `CR status ${cr?.status}`);
-      expect(!!cr?.workflow_id, 'workflow_id not set on CR');
-      const { data: wf } = await sb.from('workflow_instances').select('module_key').eq('id', cr.workflow_id).maybeSingle();
+      expect(!!cr?.workflow_id, 'workflow_id not stamped atomically at submit');
+      // Finding #3 atomic create-and-start: instance in_progress, first task → hr_manager
+      const { data: wf } = await sb.from('workflow_instances').select('module_key, status').eq('id', cr.workflow_id).maybeSingle();
       expect(wf?.module_key === 'hr_org_structure', 'workflow instance not created for hr_org_structure');
+      expect(wf?.status === 'in_progress', `workflow instance not in_progress: ${wf?.status}`);
+      const { data: tasks } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', cr.workflow_id);
+      expect((tasks ?? []).some(t => t.assigned_role === 'hr_manager'), `first task → hr_manager: ${JSON.stringify(tasks)}`);
+      // exactly one business event + one audit
+      const { data: ev } = await sb.from('app_events').select('id')
+        .eq('source_module', 'hr').eq('event_type', 'org.change.requested').eq('source_entity_id', ctx.pbCrId);
+      expect((ev ?? []).length === 1, `exactly 1 org.change.requested event, got ${(ev ?? []).length}`);
+      const { data: aud } = await sb.from('hr_audit_log').select('id')
+        .eq('submodule_key', 'organization').eq('action', 'hr.org_change.requested').eq('record_id', ctx.pbCrId);
+      expect((aud ?? []).length === 1, `exactly 1 org_change audit, got ${(aud ?? []).length}`);
       const { data: unit } = await sb.from('departments').select('parent_id').eq('id', ctx.pbChild).maybeSingle();
       expect(unit?.parent_id === ctx.pbRoot, 'move applied before approval (should be held)');
+    });
+
+    await test('same-key retry → same CR, no duplicate workflow (idempotent)', async () => {
+      const r = await api('hr/organization/unit/move', ctx.mgrT, { unitId: ctx.pbChild, newParentId: null, idempotencyKey: ctx.orgKey });
+      ok(r, `retry failed: ${r.body.message}`);
+      expect(r.body.data?.changeRequestId === ctx.pbCrId, `retry created a new CR (${r.body.data?.changeRequestId} vs ${ctx.pbCrId})`);
+      const { data: crs } = await sb.from('hr_org_change_requests').select('id')
+        .eq('entity_type', 'org_unit').eq('entity_id', ctx.pbChild).eq('action', 'move')
+        .in('status', ['pending_approval', 'approved', 'scheduled']);
+      expect((crs ?? []).length === 1, `retry duplicated the CR (${(crs ?? []).length})`);
     });
 
     await test('changes/list + change/get include the pending request', async () => {
@@ -334,9 +355,9 @@ export default async function run(h) {
     ctx.posId1 = null; ctx.posId2 = null;
     const arch = await api('hr/organization/unit/archive', A, { unitId: ctx.childId });
     ok(arch, 'archive child failed');
-    const delChild = await api('hr/organization/unit/delete', A, { unitId: ctx.childId });
+    const delChild = await api('hr/organization/unit/delete', A, { unitId: ctx.childId, idempotencyKey: TAG + '-delchild' });
     ok(delChild, `delete child failed: ${delChild.body.message}`);
-    const delRoot = await api('hr/organization/unit/delete', A, { unitId: ctx.rootId });
+    const delRoot = await api('hr/organization/unit/delete', A, { unitId: ctx.rootId, idempotencyKey: TAG + '-delroot' });
     ok(delRoot, `delete root failed: ${delRoot.body.message}`);
     ctx.childId = null; ctx.rootId = null;
   });

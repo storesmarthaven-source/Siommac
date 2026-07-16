@@ -25,6 +25,16 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
   return res.data;
 }
 
+/**
+ * Attach a per-attempt idempotency key to a gated mutation. The backend requires it
+ * only when the change routes to approval (atomic create-and-start), but every gated
+ * mutation might, so we always send one — a caller-provided key wins so a deliberate
+ * retry can dedupe.
+ */
+function keyed<T extends { idempotencyKey?: string }>(a: T): T {
+  return { ...a, idempotencyKey: a.idempotencyKey ?? crypto.randomUUID() };
+}
+
 export const hrOrganizationApi = {
   listOrgUnits:   ()                        => call<OrgUnit[]>('hr/organization/tree', {}),
   getOrgUnit:     (unitId: string)          => call<OrgUnitDetail>('hr/organization/unit/get', { unitId }),
@@ -33,21 +43,21 @@ export const hrOrganizationApi = {
   previewChange:  (a: PreviewOrgChangeArgs) => call<OrgChangeImpactSummary>('hr/organization/change/preview', a),
 
   createOrgUnit:  (a: CreateOrgUnitArgs)   => call<{ id: string }>('hr/organization/unit/create', a),
-  updateOrgUnit:  (a: UpdateOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/update', a),
-  moveOrgUnit:    (a: MoveOrgUnitArgs)     => call<OrgMutationResult>('hr/organization/unit/move', a),
-  archiveOrgUnit: (a: ArchiveOrgUnitArgs)  => call<OrgMutationResult>('hr/organization/unit/archive', a),
-  deleteOrgUnit:  (a: DeleteOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/delete', a),
+  updateOrgUnit:  (a: UpdateOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/update', keyed(a)),
+  moveOrgUnit:    (a: MoveOrgUnitArgs)     => call<OrgMutationResult>('hr/organization/unit/move', keyed(a)),
+  archiveOrgUnit: (a: ArchiveOrgUnitArgs)  => call<OrgMutationResult>('hr/organization/unit/archive', keyed(a)),
+  deleteOrgUnit:  (a: DeleteOrgUnitArgs)   => call<OrgMutationResult>('hr/organization/unit/delete', keyed(a)),
 
   listPositions:  ()                       => call<Position[]>('hr/positions/list', {}),
   getPosition:    (positionId: string)     => call<PositionDetail>('hr/positions/get', { positionId }),
   createPosition: (a: CreatePositionArgs)  => call<{ id: string }>('hr/positions/create', a),
-  updatePosition: (a: UpdatePositionArgs)  => call<OrgMutationResult>('hr/positions/update', a),
-  retirePosition: (a: RetirePositionArgs)  => call<OrgMutationResult>('hr/positions/retire', a),
+  updatePosition: (a: UpdatePositionArgs)  => call<OrgMutationResult>('hr/positions/update', keyed(a)),
+  retirePosition: (a: RetirePositionArgs)  => call<OrgMutationResult>('hr/positions/retire', keyed(a)),
 
   listCostCenters: ()                        => call<CostCenter[]>('hr/cost-centers/list', {}),
   createCostCenter: (a: CreateCostCenterArgs) => call<{ id: string }>('hr/cost-centers/create', a),
-  updateCostCenter: (a: UpdateCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/update', a),
-  retireCostCenter: (a: RetireCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/retire', a),
+  updateCostCenter: (a: UpdateCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/update', keyed(a)),
+  retireCostCenter: (a: RetireCostCenterArgs) => call<OrgMutationResult>('hr/cost-centers/retire', keyed(a)),
 
   listChangeRequests: (a: OrgChangeListArgs = {}) => call<OrgChangeRequest[]>('hr/organization/changes/list', a),
   getChangeRequest:   (changeRequestId: string)   => call<OrgChangeRequest>('hr/organization/change/get', { changeRequestId }),

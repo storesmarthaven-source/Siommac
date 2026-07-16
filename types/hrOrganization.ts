@@ -166,6 +166,8 @@ export interface UpdateOrgUnitArgs {
   sortOrder?: number;
   reason?: string | null;
   effectiveFrom?: string | null;
+  /** Per-attempt idempotency key — required when the change routes to approval. */
+  idempotencyKey?: string;
 }
 
 export interface MoveOrgUnitArgs {
@@ -174,10 +176,12 @@ export interface MoveOrgUnitArgs {
   expectedUpdatedAt?: string | null;
   reason?: string | null;
   effectiveFrom?: string | null;
+  /** Per-attempt idempotency key — required when the change routes to approval. */
+  idempotencyKey?: string;
 }
 
-export interface ArchiveOrgUnitArgs { unitId: string; reason?: string | null; effectiveFrom?: string | null; }
-export interface DeleteOrgUnitArgs { unitId: string; reason?: string | null; effectiveFrom?: string | null; }
+export interface ArchiveOrgUnitArgs { unitId: string; reason?: string | null; effectiveFrom?: string | null; idempotencyKey?: string; }
+export interface DeleteOrgUnitArgs { unitId: string; reason?: string | null; effectiveFrom?: string | null; idempotencyKey?: string; }
 
 export interface CreatePositionArgs {
   positionKey: string;
@@ -205,9 +209,11 @@ export interface UpdatePositionArgs {
   isActive?: boolean;
   reason?: string | null;
   effectiveFrom?: string | null;
+  /** Per-attempt idempotency key — required when the change routes to approval. */
+  idempotencyKey?: string;
 }
 
-export interface RetirePositionArgs { positionId: string; reason?: string | null; effectiveFrom?: string | null; }
+export interface RetirePositionArgs { positionId: string; reason?: string | null; effectiveFrom?: string | null; idempotencyKey?: string; }
 
 export interface CreateCostCenterArgs {
   code?: string | null;
@@ -230,9 +236,11 @@ export interface UpdateCostCenterArgs {
   isActive?: boolean;
   reason?: string | null;
   effectiveFrom?: string | null;
+  /** Per-attempt idempotency key — required when the change routes to approval. */
+  idempotencyKey?: string;
 }
 
-export interface RetireCostCenterArgs { costCenterId: string; reason?: string | null; effectiveFrom?: string | null; }
+export interface RetireCostCenterArgs { costCenterId: string; reason?: string | null; effectiveFrom?: string | null; idempotencyKey?: string; }
 
 export type OrgEntityType = 'org_unit' | 'position' | 'cost_center';
 export type OrgChangeAction = 'move' | 'archive' | 'delete' | 'retire' | 'update';
@@ -245,7 +253,7 @@ export interface PreviewOrgChangeArgs {
 }
 
 // Also allow reason/effectiveFrom on org-unit + position edits (they can be gated).
-export interface UpdateOrgUnitPhaseB { reason?: string | null; effectiveFrom?: string | null; }
+export interface UpdateOrgUnitPhaseB { reason?: string | null; effectiveFrom?: string | null; idempotencyKey?: string; }
 
 // ── Phase B — change-request envelope + gated mutation results ────────────────────
 
