@@ -358,6 +358,74 @@ export default async function run(h) {
     ok(r);
   });
 
+  // ─────────────────── § 6b  SOFT-DELETE (atomic via deleteMessageTx) ───────────
+  h.section('Messaging › Soft-delete');
+
+  let delPostId, modPostId;
+
+  await test('author soft-deletes own message within the 15-min window', async () => {
+    const p = await api('communications/messages/post', T.b, { threadId, body: `${TAG} to-delete` });
+    ok(p, `seed post failed: ${p.body.message}`);
+    delPostId = p.body.postId; ctx.postIds.push(delPostId);
+    const r = await api('communications/messages/delete', T.b, { postId: delPostId });
+    ok(r, `delete failed: ${r.body.message}`);
+    const { data } = await sb.from('message_posts').select('deleted_at, deleted_by').eq('id', delPostId).single();
+    expect(data?.deleted_at != null, 'deleted_at not set');
+    expect(data?.deleted_by === b.id, `deleted_by should be the author, got ${data?.deleted_by}`);
+  });
+
+  await test('SIDE-EFFECT: communications.message.deleted app_event written', async () => {
+    const { data: ev } = await sb.from('app_events').select('id, payload')
+      .eq('event_type', 'communications.message.deleted').eq('source_entity_id', threadId);
+    expect((ev ?? []).some(e => e.payload?.postId === delPostId), 'no message.deleted event for the post');
+  });
+
+  await test('idempotent: deleting an already-deleted message still succeeds', async () => {
+    const r = await api('communications/messages/delete', T.b, { postId: delPostId });
+    ok(r, `idempotent re-delete failed: ${r.body.message}`);
+  });
+
+  await test('moderation delete WITHOUT a reason is rejected (400)', async () => {
+    const p = await api('communications/messages/post', T.b, { threadId, body: `${TAG} mod-target` });
+    ok(p); modPostId = p.body.postId; ctx.postIds.push(modPostId);
+    const r = await api('communications/messages/delete', T.admin, { postId: modPostId });
+    fails(r, 'moderator delete without a reason should be rejected');
+  });
+
+  await test('moderator (delete_any) soft-deletes any message WITH a reason', async () => {
+    const r = await api('communications/messages/delete', T.admin, { postId: modPostId, reason: 'Policy violation' });
+    ok(r, `moderator delete failed: ${r.body.message}`);
+    const { data } = await sb.from('message_posts').select('deleted_at, deleted_by').eq('id', modPostId).single();
+    expect(data?.deleted_at != null && data?.deleted_by === admin.id, 'moderator delete did not stamp deleted_by=admin');
+  });
+
+  await test('ACCESS: a non-author without delete_any is denied (403)', async () => {
+    const p = await api('communications/messages/post', T.b, { threadId, body: `${TAG} c-cannot-delete` });
+    ok(p); ctx.postIds.push(p.body.postId);
+    const r = await api('communications/messages/delete', T.c, { postId: p.body.postId });
+    fails(r, 'a non-author non-moderator must be denied');
+    expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('GUARD: an own post older than 15 minutes cannot be deleted (403)', async () => {
+    const old = new Date(Date.now() - 20 * 60 * 1000).toISOString();
+    const { data: seeded } = await sb.from('message_posts').insert({
+      thread_id: threadId, author_user_id: b.id, body: `${TAG} old`, post_type: 'message', created_at: old,
+    }).select('id').single();
+    ctx.postIds.push(seeded.id);
+    const r = await api('communications/messages/delete', T.b, { postId: seeded.id });
+    fails(r, 'own post older than the 15-minute window must not be deletable');
+  });
+
+  await test('GUARD: system messages cannot be deleted, even by a moderator (403)', async () => {
+    const { data: sys } = await sb.from('message_posts').insert({
+      thread_id: threadId, author_user_id: null, body: `${TAG} sys`, is_system: true, post_type: 'system_event',
+    }).select('id').single();
+    ctx.postIds.push(sys.id);
+    const r = await api('communications/messages/delete', T.admin, { postId: sys.id, reason: 'x' });
+    fails(r, 'system messages must never be deletable');
+  });
+
   // ─────────────────── § 7  ATTACHMENT GUARDS ──────────────────────────────────
   h.section('Messaging › Attachment Guards');
 

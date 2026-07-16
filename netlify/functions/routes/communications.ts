@@ -66,6 +66,7 @@ import {
 import {
   pinMessage,
   unpinMessage,
+  softDeleteMessage,
   listPins,
   pinnedThreadSummary,
   saveDraft,
@@ -830,6 +831,34 @@ router.post('/communications/messages/pins/unpin', async c => {
     return c.json({ success: false, message: result.message ?? 'Failed to unpin' }, status);
   }
   return c.json({ success: true });
+});
+
+// POST /api/communications/messages/delete — soft-delete a message
+const DeleteMessageSchema = z.object({
+  postId: z.string().uuid(),
+  reason: z.string().max(500).nullable().optional(),
+});
+
+router.post('/communications/messages/delete', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, DeleteMessageSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Moderators (communications.messages.delete_any) may delete any message WITH a reason;
+  // everyone else may only soft-delete their OWN message inside the 15-minute window (RPC-enforced).
+  const isModerator = await userCan(user, 'communications.messages.delete_any');
+  const result = await softDeleteMessage({
+    postId:      v.data.postId,
+    actorId:     user.id,
+    reason:      v.data.reason ?? null,
+    isModerator,
+  });
+  if (!result.ok) {
+    const status = (result.status ?? 400) as 200;
+    return c.json({ success: false, message: result.message ?? 'Failed to delete message' }, status);
+  }
+  return c.json({ success: true, postId: result.postId, deletedAt: result.deletedAt });
 });
 
 const PinsListSchema = z.object({ threadId: z.string().uuid() });

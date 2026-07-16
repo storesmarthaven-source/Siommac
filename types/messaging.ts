@@ -76,6 +76,7 @@ export interface MessagePost {
   attachmentCount: number;
   editedAt:        string | null;   // null ⇒ not edited
   deletedAt:       string | null;   // null ⇒ not deleted
+  deletedBy?:      string | null;   // who soft-deleted it (author or a moderator)
   createdAt:       string;
   attachments:     MessageAttachment[];
   // ── Rich Add-On (optional until the post pipeline populates them) ──

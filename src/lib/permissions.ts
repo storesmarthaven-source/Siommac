@@ -281,6 +281,7 @@ export const PERMISSION_KEYS = [
   'communications.messages.pin_thread',           // pin for everyone in the thread
   'communications.messages.unpin_own',            // remove your own pins
   'communications.messages.unpin_any',            // remove anyone's pins (moderation)
+  'communications.messages.delete_any',           // soft-delete anyone's message (moderation; requires a reason)
   'communications.participants.add',              // add participants to a thread you can manage
   'communications.participants.remove',           // remove participants from a thread you can manage
   'communications.participants.change_role',      // change a participant's role
@@ -817,7 +818,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.messages.post', 'communications.messages.attach',
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.pin_thread',
-    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any', 'communications.messages.delete_any',
     'communications.participants.add', 'communications.participants.remove',
     'communications.participants.change_role',
     'auth.security.view',
@@ -957,7 +958,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.messages.post', 'communications.messages.attach',
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.pin_thread',
-    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any', 'communications.messages.delete_any',
     'communications.participants.add', 'communications.participants.remove',
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',
@@ -1167,7 +1168,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.messages.post', 'communications.messages.attach',
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.pin_thread',
-    'communications.messages.unpin_own', 'communications.messages.unpin_any',
+    'communications.messages.unpin_own', 'communications.messages.unpin_any', 'communications.messages.delete_any',
     'communications.participants.add', 'communications.participants.remove',
     'communications.participants.change_role',
     'auth.security.view', 'auth.security.manage_policy',

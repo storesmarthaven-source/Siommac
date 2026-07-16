@@ -18,7 +18,7 @@ import { sb }                              from './db';
 import { emitAppEvent }                    from './appEvents';
 import { userCan }                         from './auth';
 import { emitSignal }                      from './communications';
-import { pinTx }                           from './messaging/messagingRpc';
+import { pinTx, deleteMessageTx }          from './messaging/messagingRpc';
 import type { MessagePin, PresenceStatus } from '../../../types/messaging';
 
 // Online if the user pinged presence within this window (covers tab-away gaps).
@@ -171,6 +171,35 @@ export async function unpinMessage(pinId: string, userId: string, userRole: stri
   } catch (e) {
     console.error('[messagingRich] unpinMessage failed:', e);
     return { ok: false, message: 'Internal error' };
+  }
+}
+
+// ── Soft-delete a message ─────────────────────────────────────────────────────
+// Atomic via messaging_delete_message_tx: 15-minute window for the author; a
+// moderation delete (isModerator = communications.messages.delete_any) needs a
+// reason. Blocked on system posts / legal-hold / system threads. Post-commit,
+// signal the thread's participants so their UI drops the message.
+export async function softDeleteMessage(input: {
+  postId:      string;
+  actorId:     string;
+  reason?:     string | null;
+  isModerator: boolean;
+}): Promise<{ ok: boolean; message?: string; status?: number; postId?: string; deletedAt?: string }> {
+  try {
+    const result = await deleteMessageTx({
+      postId:      input.postId,
+      actorId:     input.actorId,
+      reason:      input.reason ?? null,
+      isModerator: input.isModerator,
+    });
+    const { data: post } = await sb.from('message_posts').select('thread_id')
+      .eq('id', input.postId).maybeSingle<{ thread_id: string }>();
+    if (post?.thread_id) void emitSignal(await threadParticipantIds(post.thread_id), 'messages');
+    return { ok: true, postId: result.postId, deletedAt: result.deletedAt };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[messagingRich] softDeleteMessage failed:', err.message ?? e);
+    return Object.assign({ ok: false, message: err.message ?? 'Internal error' }, err.status ? { status: err.status } : {});
   }
 }
 

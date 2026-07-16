@@ -547,6 +547,21 @@ export function useUnpinMessage() {
   });
 }
 
+// Soft-delete a message (own within 15 min, or moderation with a reason via delete_any).
+export function useDeleteMessage() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ postId, reason }: { postId: string; threadId: string; reason?: string | null }) =>
+      apiPost<{ success: boolean; message?: string; postId?: string; deletedAt?: string }>(
+        'communications/messages/delete', { postId, reason: reason ?? null }, { retryable: false })
+        .then(r => { if (!r.success) throw new Error(r.message ?? 'Failed to delete message'); return r; }),
+    onSuccess: (_r, v) => {
+      void qc.invalidateQueries({ queryKey: messageKeys.posts(v.threadId) });
+      void qc.invalidateQueries({ queryKey: messageKeys.thread(v.threadId) });
+    },
+  });
+}
+
 /** Online-now users (also a presence heartbeat for the caller). */
 export function useOnlineUsers() {
   return useQuery({

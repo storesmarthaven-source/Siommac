@@ -1295,6 +1295,7 @@ export async function getThreadPosts(
       attachment_count: number;
       edited_at:        string | null;
       deleted_at:       string | null;
+      deleted_by:       string | null;
       created_at:       string;
       post_type:            string | null;
       system_event_type:    string | null;
@@ -1313,7 +1314,7 @@ export async function getThreadPosts(
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
+      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, deleted_by, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
       .eq('thread_id', threadId)
       .order('created_at', { ascending: true })
       .limit(limit);
@@ -1396,6 +1397,7 @@ export async function getThreadPosts(
         attachmentCount: p.attachment_count,
         editedAt:        p.edited_at,
         deletedAt:       p.deleted_at,
+        deletedBy:       p.deleted_by,
         createdAt:       p.created_at,
         attachments:     attachMap.get(p.id) ?? [],
         // ── Rich Add-On ──

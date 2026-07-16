@@ -821,6 +821,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Remove pins created by anyone (moderation).',
     risk: 'medium',
   },
+  'communications.messages.delete_any': {
+    module: 'Communications', group: 'Moderation',
+    label: 'Delete Any Message',
+    description: 'Soft-delete a message posted by anyone (moderation); requires a reason and is audited.',
+    risk: 'high',
+  },
   'communications.participants.add': {
     module: 'Communications', group: 'Messaging',
     label: 'Add Participants',

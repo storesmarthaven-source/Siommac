@@ -217,3 +217,30 @@ export async function markReadTx(params: {
   if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
   return data as MarkReadRpcResult;
 }
+
+// ── deleteMessageTx ───────────────────────────────────────────────────────────
+
+export interface DeleteMessageRpcResult {
+  postId:          string;
+  deletedAt:       string;
+  threadVersion?:  number;
+  byModerator?:    boolean;
+  /** Present when the post was already soft-deleted (idempotent replay). */
+  alreadyDeleted?: boolean;
+}
+
+export async function deleteMessageTx(params: {
+  postId:      string;
+  actorId:     string;
+  reason?:     string | null;
+  isModerator: boolean;
+}): Promise<DeleteMessageRpcResult> {
+  const { data, error } = await sb.rpc('messaging_delete_message_tx', {
+    p_post_id:      params.postId,
+    p_actor_id:     params.actorId,
+    p_reason:       params.reason ?? null,
+    p_is_moderator: params.isModerator,
+  });
+  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
+  return data as DeleteMessageRpcResult;
+}
