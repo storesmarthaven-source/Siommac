@@ -26,16 +26,28 @@ export default async function run(h) {
   const ctx = {
     leaveTypeId: null, requestId: null, cancelRequestId: null,
     adjustAuditId: null, exportAuditId: null, empId: null, empTok: null,
+    submitKey: TAG + '-lv1', cancelKey: TAG + '-lv2', workflowId: null, rpcRequestId: null,
   };
 
   h.onCleanup(async () => {
-    const reqIds = [ctx.requestId, ctx.cancelRequestId].filter(Boolean);
+    const reqIds = [ctx.requestId, ctx.cancelRequestId, ctx.rpcRequestId].filter(Boolean);
+    // Capture the started workflows before deleting the requests (FK SET NULL on delete).
+    let wfIds = [];
+    if (reqIds.length) {
+      const { data: wfRows } = await sb.from('hr_leave_requests').select('workflow_id').in('id', reqIds);
+      wfIds = (wfRows ?? []).map(w => w.workflow_id).filter(Boolean);
+    }
     for (const id of reqIds) {
       await sb.from('hr_leave_accruals').delete().eq('source_request_id', id);
       await sb.from('app_events').delete().eq('source_entity_id', id);
       await sb.from('hr_audit_log').delete().eq('record_id', id);
     }
     if (reqIds.length) await sb.from('hr_leave_requests').delete().in('id', reqIds);
+    // Best-effort: remove the create-and-start workflow rows this run created.
+    if (wfIds.length) {
+      try { await sb.from('workflow_tasks').delete().in('workflow_id', wfIds); } catch {}
+      try { await sb.from('workflow_instances').delete().in('id', wfIds); } catch {}
+    }
     if (ctx.leaveTypeId) {
       await sb.from('app_events').delete().eq('source_entity_id', ctx.leaveTypeId);
       await sb.from('hr_audit_log').delete().eq('record_id', ctx.leaveTypeId);
@@ -118,8 +130,8 @@ export default async function run(h) {
 
   // ── Leave Requests ────────────────────────────────────────────────────────────
 
-  await test('request/submit → pending + ledger row + events', async () => {
-    const yr = new Date().getFullYear();
+  await test('request/submit → pending + ledger + workflow linked in-commit + events', async () => {
+    const yr = 2027; // the request's fromDate year — the balance/ledger key
     // Seed a balance so balance check passes
     await sb.from('hr_leave_accruals').insert({
       employee_id: ctx.empId, leave_type_id: ctx.leaveTypeId,
@@ -138,21 +150,77 @@ export default async function run(h) {
       fromDate: '2027-02-01',
       toDate: '2027-02-03',
       days: 3,
+      idempotencyKey: ctx.submitKey,
     });
     ok(r, 'submit ok');
     ctx.requestId = r.body.data.requestId;
     expect(typeof ctx.requestId === 'string', 'requestId is string');
-    expect(r.body.data.caseNo?.startsWith('LV-'), 'caseNo prefixed LV');
-    // assert pending_reserve ledger row
+    expect(r.body.data.caseNo?.startsWith('LVR-'), `caseNo prefixed LVR, got ${r.body.data.caseNo}`);
+    expect(r.body.data.status === 'pending_approval', 'status pending_approval (binding active)');
+
+    // Satellite: pending_reserve ledger row committed atomically with the request
     const { data: ledger } = await sb.from('hr_leave_accruals')
-      .select('id').eq('source_request_id', ctx.requestId)
+      .select('id, delta').eq('source_request_id', ctx.requestId)
       .eq('kind', 'pending_reserve').maybeSingle();
     expect(!!ledger, 'pending_reserve ledger row exists');
-    // assert app_event
-    const { data: ev } = await sb.from('app_events')
-      .select('id').eq('source_entity_id', ctx.requestId)
-      .eq('event_type', 'hr.leave.submitted').maybeSingle();
-    expect(!!ev, 'app_event written');
+    expect(Number(ledger.delta) === -3, `pending_reserve delta -3, got ${ledger.delta}`);
+
+    // Finding #3 atomic create-and-start: workflow started + linked in the same commit
+    const { data: row } = await sb.from('hr_leave_requests')
+      .select('workflow_id').eq('id', ctx.requestId).single();
+    expect(row?.workflow_id != null, 'workflow_id stamped atomically at submit');
+    ctx.workflowId = row.workflow_id;
+    const { data: inst } = await sb.from('workflow_instances')
+      .select('status').eq('id', row.workflow_id).maybeSingle();
+    expect(inst && inst.status === 'in_progress', `workflow instance in_progress: ${JSON.stringify(inst)}`);
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('assigned_role').eq('workflow_id', row.workflow_id);
+    expect((tasks ?? []).some(t => t.assigned_role === 'manager'), `first task → manager role: ${JSON.stringify(tasks)}`);
+
+    // Exactly one submitted event + one audit (no double-emit)
+    const { data: ev } = await sb.from('app_events').select('id')
+      .eq('source_module', 'hr').eq('event_type', 'hr.leave.submitted').eq('source_entity_id', ctx.requestId);
+    expect((ev ?? []).length === 1, `exactly 1 submitted event, got ${(ev ?? []).length}`);
+    const { data: aud } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'leave').eq('action', 'hr.leave.submitted').eq('record_id', ctx.requestId);
+    expect((aud ?? []).length === 1, `exactly 1 submitted audit, got ${(aud ?? []).length}`);
+  });
+
+  // A same-dates HTTP retry is (correctly) rejected by the overlap gate — no duplicate
+  // leave for the same period. The RPC receipt is what protects the concurrent race,
+  // so idempotency is proven at the RPC boundary directly (fresh key + non-overlapping
+  // dates): a same-key second create_and_start returns the SAME record, no duplicate.
+  await test('RPC receipt idempotency → same key returns same record, no duplicate', async () => {
+    const { data: binding } = await sb.from('module_workflow_bindings')
+      .select('id').eq('module_key', 'hr_leave').eq('workflow_type', 'hr_leave_approval')
+      .eq('is_active', true).limit(1).maybeSingle();
+    expect(!!binding, 'active hr_leave binding exists');
+    const key = ctx.submitKey + '-rpc';
+    const biz = {
+      employeeId: ctx.empId, leaveTypeId: ctx.leaveTypeId,
+      fromDate: '2027-06-01', toDate: '2027-06-02', unit: 'days',
+      days: 1, hours: null, halfDay: false, reason: null, departmentId: null,
+    };
+    const r1 = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'hr_leave_requests', p_actor_id: admin.id,
+      p_binding_id: binding.id, p_request_key: key, p_business: biz,
+    });
+    expect(!r1.error, `first RPC ok: ${r1.error?.message}`);
+    ctx.rpcRequestId = r1.data?.recordId;
+    expect(!!ctx.rpcRequestId, 'first RPC returned a recordId');
+    const r2 = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'hr_leave_requests', p_actor_id: admin.id,
+      p_binding_id: binding.id, p_request_key: key, p_business: biz,
+    });
+    expect(!r2.error, `retry RPC ok: ${r2.error?.message}`);
+    expect(r2.data?.recordId === ctx.rpcRequestId, `receipt dedup returns same record (${r2.data?.recordId} vs ${ctx.rpcRequestId})`);
+    // Exactly one request + one reservation despite two identical calls.
+    const { data: reqs } = await sb.from('hr_leave_requests').select('id')
+      .eq('employee_id', ctx.empId).eq('from_date', '2027-06-01').eq('to_date', '2027-06-02');
+    expect((reqs ?? []).length === 1, `receipt prevented duplicate request (${(reqs ?? []).length})`);
+    const { data: res } = await sb.from('hr_leave_accruals').select('id')
+      .eq('source_request_id', ctx.rpcRequestId).eq('kind', 'pending_reserve');
+    expect((res ?? []).length === 1, `receipt prevented duplicate reservation (${(res ?? []).length})`);
   });
 
   await test('request/list → my requests', async () => {
@@ -206,6 +274,7 @@ export default async function run(h) {
       fromDate: '2027-03-10',
       toDate: '2027-03-11',
       days: 2,
+      idempotencyKey: ctx.cancelKey,
     });
     ok(r, 'second submit ok');
     ctx.cancelRequestId = r.body.data.requestId;

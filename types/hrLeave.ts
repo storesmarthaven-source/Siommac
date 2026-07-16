@@ -147,6 +147,8 @@ export interface SubmitLeaveRequestArgs {
   halfDay?:     boolean;
   reason?:      string | null;
   departmentId?: string | null;
+  /** Required when an approval binding exists (atomic create-and-start idempotency). */
+  idempotencyKey?: string;
 }
 
 export interface UpdateLeaveRequestArgs {

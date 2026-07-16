@@ -12,7 +12,9 @@ import { nextRef }            from '../refGenerator';
 import { runModuleMutation }  from '../moduleServiceAdapter';
 import { resolveSettingValue } from '../settings/resolveSetting';
 import { writeHrAudit }       from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError }          from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole }     from '../finance/financeEvents';
 import type {
   LeaveStatus, SubmitLeaveRequestArgs, SubmitLeaveResult,
 } from '../../../../types/hrLeave';
@@ -136,7 +138,48 @@ export async function submitLeaveRequest(
     throw err(409, 'An overlapping leave request already exists for this period.');
   }
 
-  // 5. runModuleMutation — insert request + pending_reserve ledger + audit
+  // 5. ATOMIC create-and-start (finding #3, Shape B) — when an approval binding
+  //    exists, the request insert (pending_approval) + pending_reserve ledger +
+  //    balance recompute + workflow start + workflow_id link + business event +
+  //    hr_audit_log all commit in ONE transaction (workflow_create_and_start_tx,
+  //    hr_leave_requests branch). Replaces the create-then-startWorkflowForRecord
+  //    strand (accept-null wf, unchecked workflow_id link, compensating delete).
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'hr_leave', workflowType: 'hr_leave_approval',
+    triggerEvent: 'hr.leave.requested', sourceRecordId: '', requestedBy: actorId,
+    departmentId: args.departmentId ?? null, recordData: {},
+  });
+  if (binding) {
+    const requestKey = args.idempotencyKey?.trim();
+    if (!requestKey) throw err(400, 'An idempotency key is required to submit a leave request.');
+    const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'hr_leave_requests', p_actor_id: actorId,
+      p_binding_id: binding.id, p_request_key: requestKey,
+      p_business: {
+        employeeId: args.employeeId, leaveTypeId: args.leaveTypeId,
+        fromDate: args.fromDate, toDate: args.toDate,
+        unit: args.unit ?? 'days', days, hours: args.hours ?? null,
+        halfDay: args.halfDay ?? false, reason: args.reason ?? null,
+        departmentId: args.departmentId ?? null,
+      },
+    });
+    if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+    const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string };
+    // First step routes to the manager role — notify them post-commit so the approval
+    // is actioned (replaces the fan-out startWorkflowForRecord.notifyTaskAssigned did).
+    void notifyUsersByRole('manager', {
+      type: 'hr.leave.submitted',
+      title: `Leave ${rpc.ref ?? ''} awaiting your approval`.trim(),
+      body: 'A leave request has been submitted for your approval.',
+      module: 'hr', severity: 'warning', sourceType: 'leave_request',
+      sourceId: rpc.recordId ?? '', actionRequired: true,
+      dedupeKey: `hr.leave.submitted.${rpc.recordId}`,
+    });
+    return { requestId: rpc.recordId ?? '', caseNo: rpc.ref ?? '', status: 'pending_approval' };
+  }
+
+  // 6. No approval binding configured → create-only (record + pending_reserve ledger +
+  //    audit), then direct-approve (opt-in approval). No strand — nothing to link.
   const result = await runModuleMutation<{ id: string; caseNo: string }>({
     context: { actorUserId: actorId },
     options: {
@@ -202,41 +245,11 @@ export async function submitLeaveRequest(
   const requestId = result.record.id;
   const caseNo    = result.record.caseNo;
 
-  // 6. Start workflow (or direct-approve if no binding)
-  let finalStatus: LeaveStatus = 'pending_approval';
-  try {
-    const wf = await startWorkflowForRecord({
-      context: {
-        moduleKey: 'hr_leave', workflowType: 'hr_leave_approval',
-        triggerEvent: 'hr.leave.requested',
-        sourceRecordId: requestId, sourceRecordRef: caseNo,
-        requestedBy: actorId,
-        departmentId: args.departmentId ?? null,
-        recordData: { employeeId: args.employeeId, leaveTypeId: args.leaveTypeId, days, fromDate: args.fromDate, toDate: args.toDate, reason: args.reason },
-      },
-      actor: { id: actorId },
-    });
-    if (!wf) {
-      // No binding — direct approve
-      await applyApprovedLeave(requestId, actorId);
-      finalStatus = 'approved';
-    } else {
-      // Save workflow_id on the request
-      await sb.from('hr_leave_requests').update({ workflow_id: (wf as unknown as Record<string, unknown>).id }).eq('id', requestId);
-    }
-  } catch (_wfErr) {
-    // Workflow start failure is non-fatal — request stays pending_approval
-  }
+  // Direct-approve: the record + pending_reserve + audit committed atomically in the
+  // runModuleMutation above; approval applies the deduction and releases the reserve.
+  await applyApprovedLeave(requestId, actorId);
 
-  // 7. Fire-and-forget app_event
-  void emitAppEvent({
-    eventType: 'hr.leave.submitted', sourceModule: 'hr',
-    sourceEntityType: 'leave_request', sourceEntityId: requestId,
-    actorUserId: actorId, severity: 'info',
-    payload: { caseNo, employeeId: args.employeeId, leaveTypeId: args.leaveTypeId, days },
-  });
-
-  return { requestId, caseNo, status: finalStatus };
+  return { requestId, caseNo, status: 'approved' };
 }
 
 // ── Status transitions ────────────────────────────────────────────────────────────────────

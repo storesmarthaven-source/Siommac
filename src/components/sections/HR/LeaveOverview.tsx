@@ -6,7 +6,7 @@
  * Approve / Reject / Cancel inline. Gated by hr.leave.* permissions.
  */
 import { type VNode } from 'preact';
-import { useState, useMemo } from 'preact/hooks';
+import { useState, useMemo, useRef } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import { toast } from '@store';
@@ -63,6 +63,8 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
   const [fromDate,    setFromDate]    = useState('');
   const [toDate,      setToDate]      = useState('');
   const [reason,      setReason]      = useState('');
+  // Stable per-attempt idempotency key — reused on retry, regenerated after success.
+  const submitKeyRef = useRef<string | null>(null);
   const types = typesQ.data ?? [];
 
   const days      = workingDays(fromDate, toDate);
@@ -76,8 +78,13 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
 
   async function handleSubmit() {
     if (!canSubmitForm) return;
+    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
     try {
-      await submit.mutateAsync({ employeeId: myId, leaveTypeId, fromDate, toDate, reason: reason || null });
+      await submit.mutateAsync({
+        employeeId: myId, leaveTypeId, fromDate, toDate, reason: reason || null,
+        idempotencyKey: submitKeyRef.current,
+      });
+      submitKeyRef.current = null;
       toast('Leave request submitted.');
       onClose();
     } catch (e) { toast((e as Error).message); }
