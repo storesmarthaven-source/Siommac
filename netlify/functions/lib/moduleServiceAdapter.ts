@@ -182,6 +182,17 @@ export async function runModuleMutation<TRecord>(args: {
     });
 
     // Stage 3: create workflow (if requested and condition not false)
+    //
+    // PRE-MIGRATION LEGACY PATH — do NOT delete until these callers are
+    // converted to the direct-RPC pattern (workflow_create_and_start_tx /
+    // workflow_submit_for_record_tx) and options.workflow is removed from
+    // ModuleMutationOptions.  Active callers as of migration 397:
+    //   routes/hseCapa.ts         -- capa_closure workflow
+    //   routes/hseIncidents.ts    -- incident_investigation workflow
+    //   routes/hseRiskJsa.ts      -- hazard_review workflow (conditional)
+    // This block and the ModuleWorkflowRequest type are waivered in the
+    // workflow.startForRecord.guard.test.ts grep gate.  See
+    // FINAL_CUTOVER_CONTRACT.md section 5 and deferred item D1.
     let workflowId: string | undefined;
 
     if (options.workflow && options.workflow.condition !== false) {

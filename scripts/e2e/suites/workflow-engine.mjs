@@ -585,4 +585,92 @@ export default async function run(h) {
     expect((instances?.length ?? 0) === 1, `expected 1 instance for idempotent start, got ${instances?.length}`);
     h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', src); } catch {} });
   });
+
+  // ── Active-workflow unique index (migration 397) ─────────────────────────────
+  // Requires migration 20260919000397 applied.
+  // Verifies that uq_wf_one_active_per_record enforces at most one active
+  // workflow per (module_key, workflow_type, source_record_id) triplet AND
+  // that a new start is allowed after the first reaches a terminal status.
+  //
+  // IMPORTANT: this section calls workflow-engine/start which routes through
+  // startWorkflowExplicit -> workflow_start_instance_tx -> _create_instance.
+  // The unique constraint fires inside _create_instance; migration 397 maps
+  // the resulting unique_violation (23505) to WF409 so the route returns 409.
+  h.section('Workflow › Active-workflow uniqueness (mig 397)');
+
+  const uniqSrc = `PTW-E2E-UNIQ-${TAG}`;
+  let uniqWfId1 = null;
+  h.onCleanup(async () => {
+    try { await sb.from('workflow_instances').delete().eq('source_record_id', uniqSrc); } catch {}
+    try { await sb.from('workflow_audit_log').delete().eq('source_record_id', uniqSrc); } catch {}
+  });
+
+  await test('UNIQUE: first start on a fresh source record succeeds', async () => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: uniqSrc,
+      recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId,
+      idempotencyKey: crypto.randomUUID(),
+    });
+    ok(r, 'first start failed');
+    uniqWfId1 = r.body.data?.id ?? null;
+    expect(!!uniqWfId1, 'no workflowId on first start');
+    const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', uniqWfId1).single();
+    expect(wf?.status === 'in_progress', `expected in_progress, got ${wf?.status}`);
+  });
+
+  await test('UNIQUE: second start on the SAME active source record is rejected with 409', async () => {
+    // Attempt to open a second workflow for the identical (module, type, source).
+    // _create_instance should hit uq_wf_one_active_per_record and raise WF409,
+    // which the route maps to HTTP 409.
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: uniqSrc,
+      recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId,
+      idempotencyKey: crypto.randomUUID(),
+    });
+    fails(r, 'second active start should be rejected');
+    expect(r.status === 409, `expected 409, got ${r.status}`);
+    // Confirm there is still only ONE active instance for this source.
+    const { data: rows } = await sb.from('workflow_instances')
+      .select('id, status')
+      .eq('source_record_id', uniqSrc)
+      .not('status', 'in', '(completed,approved,returned,rejected,cancelled,closed)');
+    expect((rows?.length ?? 0) === 1, `expected exactly 1 active instance, found ${rows?.length}`);
+  });
+
+  await test('UNIQUE: cancelling the first workflow reaches terminal status', async () => {
+    expect(!!uniqWfId1, 'prerequisite: first workflow must exist');
+    const r = await api('workflow-engine/cancel', T.admin, {
+      workflowId: uniqWfId1,
+      reason: 'E2E uniqueness test — forcing terminal state',
+    });
+    ok(r, 'cancel first workflow failed');
+    const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', uniqWfId1).single();
+    expect(wf?.status === 'cancelled', `expected cancelled, got ${wf?.status}`);
+  });
+
+  await test('UNIQUE: new start is allowed after first workflow is cancelled', async () => {
+    // Now that uniqWfId1 is cancelled (terminal), the unique index no longer
+    // blocks a new active workflow on the same source record.
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
+      sourceRecordId: uniqSrc,
+      recordData: { supervisorId: supEmp.id },
+      templateVersionId: verId,
+      idempotencyKey: crypto.randomUUID(),
+    });
+    ok(r, 'start after terminal state failed');
+    const newWfId = r.body.data?.id ?? null;
+    expect(!!newWfId, 'no workflowId on post-terminal start');
+    expect(newWfId !== uniqWfId1, 'post-terminal start returned the cancelled workflow id');
+    const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', newWfId).single();
+    expect(wf?.status === 'in_progress', `expected in_progress, got ${wf?.status}`);
+    // Clean up the second active instance explicitly so the onCleanup range
+    // delete also catches it (the onCleanup above deletes by source_record_id,
+    // so this is belt-and-braces; keep for clarity).
+    h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('id', newWfId); } catch {} });
+  });
 }
