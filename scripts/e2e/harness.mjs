@@ -23,6 +23,9 @@ import jwt from 'jsonwebtoken';
 import { createClient } from '@supabase/supabase-js';
 
 const REQUIRED_ENV = ['JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY', 'SUPABASE_ANON_KEY'];
+// Present in .env only once their slice is configured — suites that need them
+// guard explicitly (e.g. messagingTypingPresence requires the ES256 realtime key).
+const OPTIONAL_ENV = ['SUPABASE_JWT_ES256_PRIVATE_KEY', 'SUPABASE_JWT_ES256_KID'];
 
 /** Parse only the single-line keys we need from .env (ignores multiline PEM blocks). */
 function loadEnv() {
@@ -32,7 +35,9 @@ function loadEnv() {
   const out = {};
   for (const line of txt.split(/\r?\n/)) {
     const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (m && REQUIRED_ENV.includes(m[1])) out[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
+    if (m && (REQUIRED_ENV.includes(m[1]) || OPTIONAL_ENV.includes(m[1]))) {
+      out[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
+    }
   }
   for (const k of REQUIRED_ENV) if (!out[k]) { console.error(`Missing ${k} in .env`); process.exit(2); }
   return out;

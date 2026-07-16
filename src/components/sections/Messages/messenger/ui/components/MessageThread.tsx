@@ -30,7 +30,7 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
   onActivity(): void;
   onOpenCollaboration(card: CollaborationCard): void;
 }) {
-  const { snapshot, actions } = useMessaging();
+  const { snapshot, actions, typingByThread } = useMessaging();
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [activePinIndex, setActivePinIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
@@ -52,6 +52,7 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
   if (!snapshot) return null;
   const currentUser = userById(snapshot, snapshot.currentUserId);
   const participants = thread.participantIds.map((id) => userById(snapshot, id));
+  const typingNames = (typingByThread.get(thread.id) ?? []).map((id) => userById(snapshot, id).name);
   const counterpart = participants.find((participant) => participant.id !== currentUser.id) ?? currentUser;
   const pinned = messages.filter((message) => message.pinned && !message.deleted);
   const activePin = pinned.length ? pinned[activePinIndex % pinned.length] : undefined;
@@ -115,6 +116,12 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
       </div>
 
       {!shouldStick.current ? <button className="sm-scroll-latest" type="button" aria-label="Scroll to latest message" onClick={() => scrollToBottom()}><ChevronDown /></button> : null}
+      {typingNames.length ? (
+        <div className="sm-typing-indicator" aria-live="polite">
+          <span className="sm-typing-dots" aria-hidden="true"><i /><i /><i /></span>
+          {typingNames.length === 1 ? `${typingNames[0]} is typing…` : `${typingNames.join(", ")} are typing…`}
+        </div>
+      ) : null}
       <Composer threadId={thread.id} replyTo={replyTo} onClearReply={() => setReplyTo(null)} onSent={() => scrollToBottom()} />
     </section>
   );

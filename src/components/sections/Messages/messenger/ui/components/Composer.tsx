@@ -1,5 +1,6 @@
 // Ported from the bundle (ui/components/Composer.tsx). SIOMAC deltas:
-//   • typing indicators removed (hidden feature — nothing is published);
+//   • typing is LIVE: input publishes a throttled typing=true broadcast on the
+//     active thread (participant-gated private channel); send/clear stops it;
 //   • the attach dialog is upload-only: the bundle's "Document Vault" and
 //     "Shared media" tabs fabricated demo files and are NOT ported (a real
 //     vault picker is its own future slice).
@@ -7,6 +8,7 @@ import { CheckCircle2, FileUp, Link, Send, Smile, Trash2, UploadCloud, X } from 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
 import { linkPreviewFromUrl, sanitizeComposerHtml } from "../../domain/format";
+import { TYPING_REFRESH_MS } from "../../adapters/siomacRealtime";
 import { useMessaging } from "../../app/MessagingProvider";
 import { AttachmentCard, LinkCard } from "./MessageCards";
 import { Dialog } from "./Dialog";
@@ -42,6 +44,26 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
 
   useEffect(() => () => { uploads.current.forEach((controller) => controller.abort()); }, []);
 
+  // Typing broadcast: at most one typing=true per TYPING_REFRESH_MS while the
+  // user keeps writing (receivers TTL past the last refresh); a stop is sent on
+  // clear/send/unmount/thread-switch so the indicator drops promptly.
+  const lastTypingSent = useRef(0);
+  const typingActive = useRef(false);
+  function publishTyping() {
+    const now = Date.now();
+    if (now - lastTypingSent.current < TYPING_REFRESH_MS) return;
+    lastTypingSent.current = now;
+    typingActive.current = true;
+    actions.setTyping(threadId, true);
+  }
+  function stopTyping() {
+    if (!typingActive.current) return;
+    typingActive.current = false;
+    lastTypingSent.current = 0;
+    actions.setTyping(threadId, false);
+  }
+  useEffect(() => stopTyping, [threadId]);   // stop on unmount / thread switch
+
   useEffect(() => {
     const update = () => {
       const selection = window.getSelection();
@@ -59,6 +81,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
     const cleanHtml = sanitizeComposerHtml(editor.innerHTML).replace(/​/g, "");
     const text = (editor.innerText ?? editor.textContent ?? "").replace(/ /g, " ").replace(/​/g, "");
     setBody(text); setHtml(cleanHtml);
+    if (text.trim()) publishTyping(); else stopTyping();
     const pastedUrl = text.match(urlPattern)?.[0];
     if (pastedUrl && !link) { try { setLink(linkPreviewFromUrl(pastedUrl)); } catch { /* Invalid URLs remain plain text. */ } }
   }
@@ -154,6 +177,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
       body: body.trim(), html: html || body.trim(), attachments,
       ...(replyTo ? { replyToId: replyTo.id } : {}), ...(link ? { link } : {}),
     };
+    stopTyping();
     try {
       await actions.send(threadId, draft);
       setBody(""); setHtml(""); setAttachments([]); setLink(undefined);

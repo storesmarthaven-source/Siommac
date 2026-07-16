@@ -8,6 +8,7 @@
 // (Phase 4); reaching parity retires the legacy center.
 import { useEffect, useMemo } from "preact/hooks";
 import { useSessionStore } from "@/store/session";
+import { useCommsSummary } from "@api/communications";
 import { createSiomacMessagingAdapters } from "./adapters";
 import { MessagingProvider } from "./app/MessagingProvider";
 import { MessagesWorkspace } from "./ui/components/MessagesWorkspace";
@@ -24,6 +25,14 @@ export function MessengerWorkspace() {
     });
     return () => { unsubscribe(); adapters.realtime.close(); };
   }, [adapters]);
+
+  // Feed the server-issued realtime token into the gateway so the private
+  // typing/presence channels can join; the 30s summary poll rotates it.
+  const { data: summary } = useCommsSummary();
+  const realtimeToken = summary?.realtimeToken ?? null;
+  useEffect(() => {
+    if (userId && realtimeToken) adapters.realtime.setAuth(realtimeToken, userId);
+  }, [adapters, realtimeToken, userId]);
 
   if (!userId) {
     return <div className="sm-workspace"><div className="sm-error"><strong>Messages are unavailable</strong><span>Sign in to view your conversations.</span></div></div>;

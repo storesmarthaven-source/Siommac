@@ -6,8 +6,9 @@
 //   • Realtime is refetch-only — a `snapshot-changed` event reloads the base
 //     snapshot and refreshes the ACTIVE thread's messages; other cached threads
 //     are dropped so reopening them refetches fresh data.
-//   • Hidden features removed, not stubbed: reactions, favourites, typing and
-//     presence publishing render no controls and have no actions here.
+//   • Typing/presence are LIVE (their slice): typing events feed a TTL-pruned
+//     per-thread map exposed as `typingByThread`; presence events override the
+//     roster's presence once the shared channel has synced.
 //   • markRead is optimistic (clears the unread badge locally) — the periodic
 //     realtime signal reconciles the authoritative count.
 import { createContext } from "preact";
@@ -16,7 +17,9 @@ import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "p
 import type { Attachment, Message, MessageDraft, MessageId, Thread, ThreadId, User, UserId, WorkspaceSnapshot } from "../domain/models";
 import type { AttachmentService } from "../domain/ports";
 import type { SiomacRepository, SiomacRealtimeGateway } from "../adapters";
+import { TYPING_TTL_MS } from "../adapters/siomacRealtime";
 import { defaultChatPreferences, type ChatPreferences } from "../domain/preferences";
+import { applyTyping, emptyTypingState, hasTyping, pruneTyping, typingUserIds, type TypingState } from "./typingState";
 
 interface MessagingActions {
   reload(): Promise<void>;
@@ -39,6 +42,9 @@ interface MessagingActions {
   upload(file: File, onProgress: (attachment: Attachment) => void, signal: AbortSignal): Promise<Attachment>;
   download(attachment: Attachment): Promise<void>;
   savePreferences(preferences: ChatPreferences): Promise<void>;
+  /** Broadcast the signed-in user's typing state on the ACTIVE thread
+   *  (ephemeral — nothing persisted; participant-gated by realtime RLS). */
+  setTyping(threadId: ThreadId, active: boolean): void;
 }
 
 interface MessagingContextValue {
@@ -47,6 +53,8 @@ interface MessagingContextValue {
   error: string | null;
   preferences: ChatPreferences;
   actions: MessagingActions;
+  /** Users currently typing per thread (self excluded, TTL-pruned). */
+  typingByThread: ReadonlyMap<ThreadId, UserId[]>;
 }
 
 const MessagingContext = createContext<MessagingContextValue | null>(null);
@@ -109,10 +117,32 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
 
   useEffect(() => { void reload(); }, [reload]);
 
+  // Live typing (per-thread broadcast) + presence (shared channel) state.
+  const [typing, setTyping] = useState<TypingState>(emptyTypingState);
+  const [online, setOnline] = useState<ReadonlySet<UserId>>(new Set());
+
   useEffect(() => realtime.subscribe((event) => {
     if (event.sourceId === sourceId.current) return;
-    if (event.type === "snapshot-changed") void reload();
+    if (event.type === "snapshot-changed") { void reload(); return; }
+    if (event.type === "typing") {
+      setTyping((current) => applyTyping(current, event.threadId, event.userId, event.active, Date.now(), TYPING_TTL_MS));
+      return;
+    }
+    // presence
+    setOnline((current) => {
+      if (event.presence === "online" ? current.has(event.userId) : !current.has(event.userId)) return current;
+      const next = new Set(current);
+      if (event.presence === "online") next.add(event.userId); else next.delete(event.userId);
+      return next;
+    });
   }), [realtime, reload]);
+
+  // TTL sweep — a dropped stop-broadcast must not strand a stuck indicator.
+  useEffect(() => {
+    if (!hasTyping(typing)) return;
+    const timer = setInterval(() => setTyping((current) => pruneTyping(current, Date.now())), 1000);
+    return () => clearInterval(timer);
+  }, [typing]);
 
   const mutate = useCallback(async (operation: () => Promise<void>) => {
     try {
@@ -129,6 +159,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     reload,
     selectThread: async (threadId) => {
       activeThreadId.current = threadId;
+      realtime.setActiveThread(threadId);   // follow the thread's typing channel
       if (!messagesByThread.has(threadId)) {
         try { await loadThreadMessages(threadId); }
         catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load the conversation"); }
@@ -193,16 +224,40 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       try { await repository.savePreferences(currentUserId, nextPreferences); }
       catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save chat preferences"); throw cause; }
     },
+    setTyping: (threadId, active) => {
+      realtime.publish({ type: "typing", sourceId: sourceId.current, threadId, userId: currentUserId, active });
+    },
   }), [attachments, base, currentUserId, loadThreadMessages, messagesByThread, mutate, realtime, reload, repository]);
 
   // The UI consumes the port's WorkspaceSnapshot shape; messages are the union
   // of the lazily-loaded threads.
   const snapshot = useMemo<WorkspaceSnapshot | null>(() => {
     if (!base) return null;
-    return { ...base, messages: Array.from(messagesByThread.values()).flat() };
-  }, [base, messagesByThread]);
+    // Live presence override: once the presence channel has synced (the set
+    // then contains at least the signed-in user), presence is authoritative —
+    // online means "has the app open", not "account is active". Before the
+    // first sync (or with realtime-auth unconfigured) the roster value stands.
+    const users = online.size
+      ? base.users.map((user) => {
+          const presence = online.has(user.id) ? "online" as const : "offline" as const;
+          return user.presence === presence ? user : { ...user, presence };
+        })
+      : base.users;
+    return { ...base, users, messages: Array.from(messagesByThread.values()).flat() };
+  }, [base, messagesByThread, online]);
 
-  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions }), [actions, error, loading, preferences, snapshot]);
+  // Typing users per thread (self excluded) for the UI indicator.
+  const typingByThread = useMemo(() => {
+    const now = Date.now();
+    const next = new Map<ThreadId, UserId[]>();
+    for (const [threadId] of typing) {
+      const ids = typingUserIds(typing, threadId, now, currentUserId);
+      if (ids.length) next.set(threadId, ids);
+    }
+    return next as ReadonlyMap<ThreadId, UserId[]>;
+  }, [currentUserId, typing]);
+
+  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread }), [actions, error, loading, preferences, snapshot, typingByThread]);
   return <MessagingContext.Provider value={value}>{children}</MessagingContext.Provider>;
 }
 
