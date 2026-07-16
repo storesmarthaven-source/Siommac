@@ -12,10 +12,11 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from '../finance/financeEvents';
 import { getOvertimeEntry, type OvertimeEntryDto, type DbOvertimeRow } from './overtimeQueries';
 import { toOvertimeDto, type OvertimeType } from './overtimeCore';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export { getOvertimeEntry };
 
@@ -29,13 +30,54 @@ export interface SubmitOvertimeInput {
   otType?: OvertimeType | null;
   reason?: string | null;
   actorId: string;
+  idempotencyKey: string;
 }
 
 export async function submitOvertimeEntry(input: SubmitOvertimeInput): Promise<OvertimeEntryDto> {
   if (input.hours <= 0) {
     throw Object.assign(new Error('Hours must be positive.'), { status: 422 });
   }
+  const requestKey = input.idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit overtime.'), { status: 400 });
 
+  // ATOMIC (finding #3, Shape B): when an approval binding exists, the entry INSERT +
+  // workflow start + workflow_id link + business event + hr_audit_log all commit in ONE
+  // transaction via workflow_create_and_start_tx (hr_overtime_entries branch), with
+  // request-key idempotency. When NO binding is configured, approval is not enforced —
+  // fall back to a plain insert (submitted, no workflow); a single write cannot strand.
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'hr_overtime', workflowType: 'hr_overtime_approval',
+    triggerEvent: 'hr.overtime.submitted', sourceRecordId: '', requestedBy: input.actorId, recordData: {},
+  });
+
+  if (binding) {
+    const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'hr_overtime_entries', p_actor_id: input.actorId,
+      p_binding_id: binding.id, p_request_key: requestKey,
+      p_business: {
+        employeeId: input.employeeId, workDate: input.workDate, hours: input.hours,
+        multiplier: input.multiplier ?? 1.5, otType: input.otType ?? null, reason: input.reason ?? null,
+      },
+    });
+    if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+    const result = (data ?? {}) as { recordId?: string; ref?: string };
+    // The first step routes to the 'manager' role. Notify that role post-commit so approval
+    // gets actioned (preserving the fan-out startWorkflowForRecord.notifyTaskAssigned did).
+    void notifyUsersByRole('manager', {
+      type: 'hr.overtime.submitted',
+      title: `Overtime ${result.ref ?? ''} awaiting your approval`.trim(),
+      body: 'An overtime entry has been submitted for your approval.',
+      module: 'hr_overtime', severity: 'warning', sourceType: 'overtime_entry',
+      sourceId: result.recordId ?? '', actionRequired: true,
+      dedupeKey: `hr.overtime.submitted.${result.recordId}`,
+    });
+    const row = await getOvertimeEntry(result.recordId!);
+    if (!row) throw Object.assign(new Error('Overtime entry not found after submit.'), { status: 503 });
+    return row;
+  }
+
+  // No approval binding — approval is opt-in; a plain insert (submitted, no workflow) is
+  // a single write that cannot strand. Keep the audit + event.
   const { data, error } = await sb.from('hr_overtime_entries').insert({
     employee_id: input.employeeId,
     work_date: input.workDate,
@@ -55,33 +97,6 @@ export async function submitOvertimeEntry(input: SubmitOvertimeInput): Promise<O
     action: 'overtime.submitted',
     previousState: null, newState: { status: 'submitted', employeeId: row.employeeId, workDate: row.workDate, hours: row.hours },
   });
-
-  // Start workflow immediately on submission (OT starts in 'submitted', not draft)
-  const ctx: ModuleWorkflowContext = {
-    moduleKey: 'hr_overtime',
-    workflowType: 'hr_overtime_approval',
-    triggerEvent: 'hr.overtime.submitted',
-    sourceRecordId: row.id,
-    sourceRecordRef: row.overtimeNo ?? `OVT-${row.id.slice(0, 8).toUpperCase()}`,
-    requestedBy: input.actorId,
-    priority: 'normal',
-    recordData: { employeeId: row.employeeId, workDate: row.workDate, hours: row.hours, multiplier: row.multiplier, otType: row.otType },
-  };
-
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: input.actorId } });
-    if (wf?.id) {
-      await sb.from('hr_overtime_entries').update({ workflow_id: wf.id }).eq('id', row.id);
-    }
-  } catch (wfErr) {
-    // Compensating rollback — delete the entry so the user can re-submit
-    await sb.from('hr_overtime_entries').delete().eq('id', row.id);
-    throw Object.assign(
-      new Error('Workflow start failed — overtime entry rolled back: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
-
   void emitAppEvent({
     eventType: 'hr.overtime.submitted',
     sourceModule: 'hr_overtime', sourceEntityType: 'overtime_entry', sourceEntityId: row.id,

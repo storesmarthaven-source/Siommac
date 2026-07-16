@@ -68,6 +68,7 @@ router.post('/overtime/submit', async c => {
     multiplier: z.number().positive().optional(),
     otType: z.enum(['regular_overtime', 'public_holiday', 'rest_day', 'callout', 'night_shift']).nullable().optional(),
     reason: z.string().max(500).nullable().optional(),
+    idempotencyKey: z.string().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
   try {

@@ -41,6 +41,8 @@ export interface SubmitOvertimeArgs {
   multiplier?: number;
   otType?: OvertimeType | null;
   reason?: string | null;
+  /** Client-generated, stable-per-attempt; required for the atomic create-and-start RPC. */
+  idempotencyKey: string;
 }
 
 async function call<T>(path: string, args: object = {}): Promise<T> {

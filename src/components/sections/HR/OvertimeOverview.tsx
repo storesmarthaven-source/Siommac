@@ -9,7 +9,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useMemo, useState } from 'preact/hooks';
+import { useMemo, useRef, useState } from 'preact/hooks';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
 import { PageHeader, EmptyState } from '@ui';
@@ -160,16 +160,23 @@ function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
   const hoursNum = Number(f.hours);
   const dateInFuture = !!f.workDate && f.workDate > today;
 
+  // Stable-per-attempt idempotency key: generated once, reused on retry, cleared on success —
+  // so a retry after a transient failure dedupes against the same create-and-start receipt.
+  const submitKeyRef = useRef<string | null>(null);
+
   const submit = async (): Promise<void> => {
     if (!f.workDate || !(hoursNum > 0)) { void dialog.error('Work date and a positive number of hours are required.'); return; }
     if (dateInFuture) { void dialog.error('Overtime cannot be logged for a future date.'); return; }
+    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
     try {
       // The stored multiplier is the type's indicative fallback; the payroll overtime rule
       // for this type is authoritative and re-resolves at lock-inputs time.
       await submitMut.mutateAsync({
         workDate: f.workDate, hours: hoursNum, otType: f.otType,
         multiplier: otDef.indicative, reason: f.reason.trim() || null,
+        idempotencyKey: submitKeyRef.current,
       });
+      submitKeyRef.current = null;
       void dialog.success('Overtime submitted for approval.');
       onDone();
     } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to submit overtime.'); }
