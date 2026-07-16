@@ -106,6 +106,8 @@ export interface UpsertNisClassArgs {
   employeeWeekly: number;
   employerWeekly: number;
   classZWeekly?: number | null;
+  /** Required when the version is in 'approved' status (Shape-C re-approval path). */
+  idempotencyKey?: string;
 }
 
 export interface NisClassImportRow {
@@ -206,6 +208,7 @@ export const financeStatutoryApi = {
   upsertNisClass:    async (a: UpsertNisClassArgs): Promise<NisClass> => {
     const rows = await call<NisClass[]>('finance/statutory/nis-classes/upsert', {
       statutoryVersionId: a.statutoryVersionId,
+      ...(a.idempotencyKey != null ? { idempotencyKey: a.idempotencyKey } : {}),
       classes: [{
         classNo: a.classNo,
         weeklyMin: a.weeklyMin,

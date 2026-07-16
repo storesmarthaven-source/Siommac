@@ -19,7 +19,7 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useRef } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
@@ -110,6 +110,11 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
   const upsertMut = useStatutoryMutation(financeStatutoryApi.upsertNisClass);
   const deleteMut = useStatutoryMutation(financeStatutoryApi.deleteNisClass);
 
+  // Stable per-attempt idempotency key for the Shape-C re-approval path.
+  // Generated once when the user first saves an approved version; cleared on success so
+  // a subsequent save (e.g. after an error) gets a fresh key.
+  const reapprovalKeyRef = useRef<string | null>(null);
+
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [f, setF] = useState({
     classNo:        edit ? String(edit.classNo) : '',
@@ -189,6 +194,15 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
   const save = async (): Promise<void> => {
     setSubmitAttempted(true);
     if (hasErrors || readOnly) return;
+
+    // Shape-C re-approval: generate a stable per-attempt idempotency key so the
+    // backend RPC can deduplicate retries. The key is cleared on success; if the
+    // user retries after a network error the SAME key re-uses the existing workflow.
+    const isReapprovalPath = version?.status === 'approved';
+    if (isReapprovalPath && reapprovalKeyRef.current === null) {
+      reapprovalKeyRef.current = crypto.randomUUID();
+    }
+
     try {
       await upsertMut.mutateAsync({
         statutoryVersionId: versionId,
@@ -197,7 +211,11 @@ export function StatNisBandPage({ versionId, edit, onClose, onViewVersion }: {
         weeklyMax: maxNum, // null = open-ended
         employeeWeekly: empNum!,
         employerWeekly: erNum!,
+        ...(isReapprovalPath && reapprovalKeyRef.current != null
+          ? { idempotencyKey: reapprovalKeyRef.current }
+          : {}),
       });
+      reapprovalKeyRef.current = null; // clear so next save gets a fresh key
       toast(edit ? `NIS Contribution Band ${classNoNum} updated.` : `NIS Contribution Band ${classNoNum} added.`);
       onClose();
     } catch (e) { toast.error((e as Error).message); }

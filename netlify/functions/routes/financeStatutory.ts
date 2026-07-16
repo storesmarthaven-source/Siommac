@@ -204,6 +204,7 @@ router.post('/statutory/nis-classes/upsert', async c => {
   const actor = await requirePermission(c, 'finance.statutory.manage');
   const v = zv(c, z.object({
     statutoryVersionId: z.string().uuid(),
+    idempotencyKey: z.string().min(1).max(200).optional(),
     classes: z.array(z.object({
       classNo: z.number().int().positive(),
       weeklyMin: z.number().nonnegative(),
@@ -220,6 +221,7 @@ router.post('/statutory/nis-classes/upsert', async c => {
       v.data.statutoryVersionId,
       v.data.classes as UpsertNisClassInput[],
       actor.id,
+      v.data.idempotencyKey,
     );
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
