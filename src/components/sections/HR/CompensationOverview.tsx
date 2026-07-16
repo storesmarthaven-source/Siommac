@@ -263,9 +263,16 @@ function StatutorySurface({ emps, nameOf }: { emps: HrEmployeeRow[]; nameOf: (id
       setEditOpen(false);
     } catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to save profile.'); }
   };
+  // Stable-per-attempt idempotency key (generated once, reused on retry, cleared on success).
+  const profileSubmitKeyRef = useRef<string | null>(null);
   const submit = async (): Promise<void> => {
     if (!profile?.id) { void dialog.error('Save the profile before submitting.'); return; }
-    try { await submitMut.mutateAsync({ id: profile.id }); void dialog.success('Submitted to Finance for verification.'); }
+    if (!profileSubmitKeyRef.current) profileSubmitKeyRef.current = crypto.randomUUID();
+    try {
+      await submitMut.mutateAsync({ id: profile.id, idempotencyKey: profileSubmitKeyRef.current });
+      profileSubmitKeyRef.current = null;
+      void dialog.success('Submitted to Finance for verification.');
+    }
     catch (e) { void dialog.error(e instanceof Error ? e.message : 'Failed to submit.'); }
   };
 

@@ -197,7 +197,7 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
 
   await test('hr_staff can submit the profile for Finance verification', async () => {
-    const r = await api('hr/employee-statutory/submit', hrStaffToken, { id: ctx.profile1Id });
+    const r = await api('hr/employee-statutory/submit', hrStaffToken, { id: ctx.profile1Id, idempotencyKey: `${TAG}-sub1` });
     ok(r, `submit failed: ${r.body.message}`);
     expect(r.body.data.id === ctx.profile1Id, 'id mismatch after submit');
     // After submit the workflow engine may change the status or set workflow_id
@@ -217,8 +217,69 @@ export default async function run(h) {
     expect(ok2, 'workflow_id not set after submit');
   });
 
+  // ── Finding #3: atomic submit-on-existing (workflow_submit_for_record_tx) ──────
+  const nisBindingId = async () =>
+    (await sb.from('module_workflow_bindings').select('id')
+      .eq('workflow_type', 'finance_nis_profile_verification').eq('is_active', true).limit(1)).data?.[0]?.id;
+
+  await test('ATOMIC submit: workflow linked in-commit + finance_staff task + exactly-one event/audit', async () => {
+    const { data: row } = await sb.from('hr_employee_statutory_profiles')
+      .select('nis_status, workflow_id').eq('id', ctx.profile1Id).single();
+    expect(row?.workflow_id != null, 'workflow_id not stamped atomically at submit');
+    expect(row?.nis_status !== 'verified', 'HR submit must not verify');
+    const { data: inst } = await sb.from('workflow_instances').select('status').eq('id', row.workflow_id).maybeSingle();
+    expect(inst && inst.status === 'in_progress', `workflow instance missing/not in_progress: ${JSON.stringify(inst)}`);
+    const { data: tasks } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', row.workflow_id);
+    expect((tasks ?? []).some(t => t.assigned_role === 'finance_staff'), `no finance_staff first task: ${JSON.stringify(tasks)}`);
+    const { data: evs } = await sb.from('app_events').select('id')
+      .eq('event_type', 'finance.nis.profile.submitted').eq('source_entity_id', ctx.profile1Id);
+    expect((evs ?? []).length === 1, `expected exactly 1 submitted event, got ${(evs ?? []).length}`);
+    const { data: aud } = await sb.from('hr_audit_log').select('id')
+      .eq('action', 'statutory_profile.submitted').eq('record_id', ctx.profile1Id);
+    expect((aud ?? []).length === 1, `expected exactly 1 submitted audit, got ${(aud ?? []).length}`);
+  });
+
+  await test('ATOMIC idempotent replay: same key → no 2nd workflow or event', async () => {
+    const { data: before } = await sb.from('hr_employee_statutory_profiles').select('workflow_id').eq('id', ctx.profile1Id).single();
+    const r = await api('hr/employee-statutory/submit', hrStaffToken, { id: ctx.profile1Id, idempotencyKey: `${TAG}-sub1` });
+    ok(r, `replay failed: ${r.body.message}`);
+    const { data: after } = await sb.from('hr_employee_statutory_profiles').select('workflow_id').eq('id', ctx.profile1Id).single();
+    expect(after.workflow_id === before.workflow_id, `replay changed workflow_id (${before.workflow_id} -> ${after.workflow_id})`);
+    const { data: evs } = await sb.from('app_events').select('id')
+      .eq('event_type', 'finance.nis.profile.submitted').eq('source_entity_id', ctx.profile1Id);
+    expect((evs ?? []).length === 1, `replay emitted a 2nd event (${(evs ?? []).length})`);
+  });
+
+  await test('CHANGED-PAYLOAD guard: same key + divergent payload → WF409', async () => {
+    const { error } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'hr_employee_statutory_profiles', p_source_id: ctx.profile1Id, p_actor_id: hrStaffId,
+      p_binding_id: await nisBindingId(), p_request_key: `${TAG}-sub1`, p_business: { changed: true },
+    });
+    expect(error && error.code === 'WF409', `expected WF409 on divergent payload, got ${JSON.stringify(error)}`);
+  });
+
+  await test('CONCURRENT submit: same key resolves to exactly one workflow', async () => {
+    // Throwaway employee + profile so concurrency is isolated from the verify/reject flows.
+    const concEmp = `NSP-CONC-${TAG}`;
+    await sb.from('app_users').insert({ id: concEmp, username: `${TAG}_nsp_conc`, full_name: 'Conc (NSP E2E)', role: 'employee', status: 'active', employment_type: 'employee' });
+    const { data: p } = await sb.from('hr_employee_statutory_profiles')
+      .insert({ employee_id: concEmp, jurisdiction: 'TT', nis_status: 'pending_verification', created_by: hrStaffId })
+      .select('id').single();
+    const bindingId = await nisBindingId();
+    const key = `${TAG}-conc`;
+    const res = await Promise.all(Array.from({ length: 5 }, () => sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'hr_employee_statutory_profiles', p_source_id: p.id, p_actor_id: hrStaffId,
+      p_binding_id: bindingId, p_request_key: key, p_business: {},
+    })));
+    const wfIds = new Set(res.map(r => r.data?.workflowId).filter(Boolean));
+    expect(wfIds.size === 1, `expected 1 workflow from 5 concurrent submits, got ${wfIds.size} (errors: ${JSON.stringify(res.map(r => r.error?.code).filter(Boolean))})`);
+    // cleanup throwaway
+    await sb.from('hr_employee_statutory_profiles').delete().eq('id', p.id);
+    await sb.from('app_users').delete().eq('id', concEmp);
+  });
+
   await test('employee is DENIED submitting a statutory profile', async () => {
-    const r = await api('hr/employee-statutory/submit', empToken, { id: ctx.profile1Id });
+    const r = await api('hr/employee-statutory/submit', empToken, { id: ctx.profile1Id, idempotencyKey: `${TAG}-subDenied` });
     fails(r, 'employee should be denied submit');
   });
 

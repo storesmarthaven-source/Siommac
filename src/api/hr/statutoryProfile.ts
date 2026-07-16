@@ -58,7 +58,7 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 export const hrStatutoryProfileApi = {
   get:     (a: { employeeId: string })          => call<StatutoryProfile | null>('hr/employee-statutory/get', a),
   capture: (a: CaptureStatutoryProfileArgs)     => call<StatutoryProfile>('hr/employee-statutory/capture', a),
-  submit:  (a: { id: string })                  => call<StatutoryProfile>('hr/employee-statutory/submit', a),
+  submit:  (a: { id: string; idempotencyKey: string }) => call<StatutoryProfile>('hr/employee-statutory/submit', a),
 };
 
 export const hrStatutoryProfileKeys = {

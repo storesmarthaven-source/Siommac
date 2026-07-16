@@ -17,7 +17,9 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole } from '../finance/financeEvents';
 import {
   getStatutoryProfileByEmployee,
   getStatutoryProfileById,
@@ -25,7 +27,6 @@ import {
   type StatutoryProfileDto,
   type DbStatutoryProfileRow,
 } from './statutoryProfileCore';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 export { getStatutoryProfileByEmployee, getStatutoryProfileById };
 
@@ -140,10 +141,18 @@ export async function captureStatutoryProfile(
 export async function submitStatutoryProfile(
   id: string,
   actorId: string,
+  idempotencyKey: string,
 ): Promise<StatutoryProfileDto> {
+  // ATOMIC (finding #3): the workflow start + workflow_id link + business event +
+  // hr_audit_log commit in ONE transaction via workflow_submit_for_record_tx
+  // (hr_employee_statutory_profiles branch), with request-key idempotency. This is a
+  // submit-on-existing record (the profile is created separately by captureStatutoryProfile);
+  // nis_status is unchanged — the workflow_id link IS the "submitted for verification" marker.
+  const requestKey = idempotencyKey?.trim();
+  if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a statutory profile.'), { status: 400 });
+
   const existing = await getStatutoryProfileById(id);
   if (!existing) throw Object.assign(new Error('Statutory profile not found.'), { status: 404 });
-
   if (!['pending_verification', 'not_available'].includes(existing.nisStatus)) {
     throw Object.assign(
       new Error('Only pending_verification or not_available profiles can be submitted for Finance review.'),
@@ -151,63 +160,32 @@ export async function submitStatutoryProfile(
     );
   }
 
-  // Build workflow context
-  const ctx: ModuleWorkflowContext = {
-    moduleKey:       'finance_payroll',
-    workflowType:    'finance_nis_profile_verification',
-    triggerEvent:    'finance.nis.profile.submitted',
-    sourceRecordId:  id,
-    sourceRecordRef: `NIS-${id.slice(0, 8).toUpperCase()}`,
-    requestedBy:     actorId,
-    priority:        'normal',
-    recordData: {
-      employeeId:   existing.employeeId,
-      jurisdiction: existing.jurisdiction,
-      nisNumber:    existing.nisNumber,
-      nisApplicable: existing.nisApplicable,
-    },
-  };
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'finance_payroll', workflowType: 'finance_nis_profile_verification',
+    triggerEvent: 'finance.nis.profile.submitted', sourceRecordId: id, requestedBy: actorId, recordData: {},
+  });
+  // Statutory (NIS) verification is compliance-mandatory — a profile cannot be submitted
+  // for review without an active verification workflow (no silent approval bypass).
+  if (!binding) throw Object.assign(new Error('No active NIS verification workflow is configured.'), { status: 422 });
 
-  let wf: { id?: string } | null = null;
+  const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
+    p_source_table: 'hr_employee_statutory_profiles', p_source_id: id, p_actor_id: actorId,
+    p_binding_id: binding.id, p_request_key: requestKey, p_business: {},
+  });
+  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  const result = (data ?? {}) as { firstTasks?: Array<{ assignedTo?: string | null }> };
 
-  try {
-    wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-  } catch (wfErr) {
-    // Compensating rollback: profile stays in its current state (no status change was done)
-    throw Object.assign(
-      new Error('Workflow start failed — profile not submitted: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
-
-  // Update workflow_id link if the engine returned an instance id
-  const { data, error } = await sb
-    .from('hr_employee_statutory_profiles')
-    .update({ workflow_id: wf?.id ?? null, updated_by: actorId })
-    .eq('id', id)
-    .select()
-    .single<DbStatutoryProfileRow>();
-  if (error) throw Object.assign(new Error('submitStatutoryProfile update: ' + error.message), { status: 500 });
-  const row = toStatutoryProfileDto(data);
-
-  await writeHrAudit({
-    submoduleKey: 'hr_statutory',
-    recordId:     id,
-    actorId,
-    action:       'statutory_profile.submitted',
-    previousState: { nisStatus: existing.nisStatus },
-    newState: { nisStatus: row.nisStatus, workflowId: row.workflowId },
+  // The first step routes to the finance_staff role — notify them post-commit so the
+  // verification task is actioned (preserving the fan-out startWorkflowForRecord did).
+  void notifyUsersByRole('finance_staff', {
+    type: 'finance.nis.profile.submitted',
+    title: `NIS profile NIS-${id.slice(0, 8).toUpperCase()} awaiting verification`,
+    body: 'A statutory (NIS) profile has been submitted for Finance verification.',
+    module: 'finance_payroll', severity: 'warning', sourceType: 'statutory_profile',
+    sourceId: id, actionRequired: true, dedupeKey: `finance.nis.profile.submitted.${id}`,
   });
 
-  void emitAppEvent({
-    eventType:       'finance.nis.profile.submitted',
-    sourceModule:    'finance_payroll',
-    sourceEntityType: 'statutory_profile',
-    sourceEntityId:  id,
-    actorUserId:     actorId,
-    severity:        'info',
-    payload: { employeeId: existing.employeeId, jurisdiction: existing.jurisdiction },
-  });
-
+  const row = await getStatutoryProfileById(id);
+  if (!row) throw Object.assign(new Error('Statutory profile not found after submit.'), { status: 503 });
   return row;
 }

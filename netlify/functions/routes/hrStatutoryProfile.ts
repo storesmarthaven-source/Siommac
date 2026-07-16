@@ -72,10 +72,10 @@ router.post('/employee-statutory/capture', async c => {
 // POST /api/hr/employee-statutory/submit
 router.post('/employee-statutory/submit', async c => {
   const actor = await requirePermission(c, 'hr.employee.statutory.capture');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await submitStatutoryProfile(v.data.id, actor.id);
+    const data = await submitStatutoryProfile(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) {
     const er = e as { status?: number; message?: string };
