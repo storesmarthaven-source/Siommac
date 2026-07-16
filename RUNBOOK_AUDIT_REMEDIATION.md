@@ -63,3 +63,19 @@ claims were factually wrong — see "Audit errors" at the bottom.
 - `node --check` on `run.mjs` + `workflow-engine.mjs` — clean.
 - Full E2E deliberately **not run yet** — blocked on operator applies (steps 1–4);
   run step 5 immediately after.
+
+## Post-apply E2E gate — RUN & GREEN (2026-07-16)
+
+Operator applied 399/400/364; live-verified (statutory RPC answers WF404 probe,
+favourites table present, PIN E2E proves 399). Backend rebuilt + dev server
+restarted. Gate result:
+
+- First run: **475/479** — the new PIN tests passed; the only 4 failures were a
+  STALE pay-component section in `financeStatutory.mjs` still asserting the
+  pre-maker-checker direct-create DTO (the parked "financeStatutory DTO fix"
+  from 2026-07-10, NOT a regression — the 398→399 RPC diff is byte-clean).
+- Fix: deleted the superseded section (mutations are covered end-to-end by the
+  dedicated `financePayComponents` suite; read paths + permission negatives stay).
+- Re-run: `financeStatutory` + `financePayComponents` — **105/105 green**,
+  which also independently confirms mig 399's redefined
+  `workflow_create_and_start_tx` pay-component branch.

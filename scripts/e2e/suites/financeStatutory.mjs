@@ -36,8 +36,6 @@ export default async function run(h) {
   let fmgr1Id, fmgr2Id, fstaff1Id, empId;
 
   const ctx = {
-    compId: null,
-    comp2Id: null,
     sv1Id: null,  // first statutory version (to be activated, then superseded)
     sv2Id: null,  // second statutory version (to replace sv1 on activation)
     nisVersionId: null,
@@ -75,8 +73,6 @@ export default async function run(h) {
           .eq('id', ctx.seededActiveId);
       }
     } catch {}
-    try { if (ctx.compId) await sb.from('finance_pay_components').delete().eq('id', ctx.compId); } catch {}
-    try { if (ctx.comp2Id) await sb.from('finance_pay_components').delete().eq('id', ctx.comp2Id); } catch {}
     try { await sb.from('hr_audit_log').delete().in('actor_id', [fmgr1Id, fmgr2Id, fstaff1Id]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_statutory').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'finance_payroll_components').in('actor_user_id', [fmgr1Id, fmgr2Id, fstaff1Id, empId]); } catch {}
@@ -133,29 +129,11 @@ export default async function run(h) {
     fails(r, 'employee should be denied component list');
   });
 
-  await test('finance_manager can create a pay component', async () => {
-    const r = await api('finance/payroll/components/create', fmgr1Token, {
-      code: `TEST_${TAG.slice(-6)}`,
-      name: `Test Allowance ${TAG}`,
-      kind: 'earning',
-      isStatutory: false,
-      isTaxable: true,
-      reducesChargeable: false,
-      glAccountCode: null,
-      costAllocationRequired: false,
-    });
-    ok(r, `create component failed: ${r.body.message}`);
-    const d = r.body.data;
-    // Response shape assertions
-    expect(d.id,         'missing id');
-    expect(d.code,       'missing code');
-    expect(d.name,       'missing name');
-    expect(d.kind === 'earning', 'kind mismatch');
-    expect(d.isActive === true,  'new component should be active');
-    expect(d.createdBy === fmgr1Id, 'createdBy mismatch');
-    ctx.compId = d.id;
-  });
-
+  // Pay-component MUTATIONS are maker-checker since 8ba408d7: create/update/retire
+  // return a pending CHANGE REQUEST, not a component. The full CR lifecycle
+  // (submit → SoD → approve/reject → §2 events → atomic binding path) is covered
+  // by the dedicated financePayComponents suite — only the read paths and the
+  // permission negatives live here.
   await test('employee is DENIED creating a pay component', async () => {
     const r = await api('finance/payroll/components/create', empToken, {
       code: `EMP_${TAG.slice(-6)}`, name: 'Should fail', kind: 'earning',
@@ -168,56 +146,6 @@ export default async function run(h) {
       code: `STF_${TAG.slice(-6)}`, name: 'Should fail', kind: 'deduction',
     });
     fails(r, 'finance_staff should be denied component create');
-  });
-
-  await test('finance_manager can update a pay component name', async () => {
-    const r = await api('finance/payroll/components/update', fmgr1Token, {
-      id: ctx.compId,
-      name: `Updated Allowance ${TAG}`,
-    });
-    ok(r, `update component failed: ${r.body.message}`);
-    expect(r.body.data.name.startsWith('Updated'), 'name not updated');
-  });
-
-  await test('§2 side-effects: pay_component.created event + hr_audit_log row', async () => {
-    const gotEvent = await waitFor(async () => {
-      const { data } = await sb.from('app_events')
-        .select('id').eq('source_module', 'finance_payroll_components')
-        .eq('event_type', 'finance.payroll.component.created')
-        .eq('source_entity_id', ctx.compId).limit(1);
-      return (data ?? []).length > 0;
-    });
-    expect(gotEvent, 'finance.payroll.component.created app_event not found');
-
-    const { data: audit } = await sb.from('hr_audit_log')
-      .select('id').eq('submodule_key', 'finance_payroll_components')
-      .eq('action', 'pay_component.created')
-      .eq('record_id', ctx.compId).limit(1);
-    expect((audit ?? []).length > 0, 'hr_audit_log pay_component.created not found');
-  });
-
-  await test('finance_manager can retire a pay component', async () => {
-    // Create a separate component to retire so compId stays available
-    const rc = await api('finance/payroll/components/create', fmgr1Token, {
-      code: `RET_${TAG.slice(-6)}`,
-      name: `Retire Test ${TAG}`,
-      kind: 'deduction',
-    });
-    ok(rc, `create for retire failed: ${rc.body.message}`);
-    ctx.comp2Id = rc.body.data.id;
-
-    const r = await api('finance/payroll/components/retire', fmgr1Token, { id: ctx.comp2Id });
-    ok(r, `retire failed: ${r.body.message}`);
-
-    // Verify it is now inactive
-    const { data: dbRow } = await sb.from('finance_pay_components').select('is_active').eq('id', ctx.comp2Id).single();
-    expect(dbRow.is_active === false, 'component should be is_active=false after retire');
-  });
-
-  await test('retired component does not appear in activeOnly list', async () => {
-    const r = await api('finance/payroll/components/list', fmgr1Token, { activeOnly: true });
-    ok(r, 'list failed');
-    expect(!r.body.data.some(x => x.id === ctx.comp2Id), 'retired component should not appear in activeOnly list');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
