@@ -159,7 +159,7 @@ function MessageStatus({ message }: { message: Message }) {
   return <span className={`sm-delivery ${message.delivery === "read" ? "is-read" : ""}`}><CheckCheck /></span>;
 }
 
-function RichMessage({ html }: { html: string }) {
+export function RichMessage({ html }: { html: string }) {
   const documentNode = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
   const root = documentNode.body.firstElementChild;
   return <>{root ? Array.from(root.childNodes).map((node, index) => renderRichNode(node, index)) : null}</>;

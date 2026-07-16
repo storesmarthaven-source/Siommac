@@ -1,8 +1,12 @@
 # SIOMAC Messenger — port (Track-2)
 
-Porting the clean-architecture Messenger (bundle at `Downloads/messenger-port2/`)
-onto the existing SIOMAC messaging backbone. It will be feature-flag mounted
-alongside `MessageCenter.tsx`, reach parity, then cut over.
+The clean-architecture Messenger (from `Downloads/messenger-port2/`) ported onto
+the existing SIOMAC messaging backbone. **CUT OVER: this IS the Messages
+section** — the legacy `MessageCenter.tsx` and the feature-flag switch are
+deleted; `mount.ts` renders `MessengerWorkspace` directly. The standalone legacy
+pieces it REUSES: `ComposeThreadDialog` (New Message), `ComplianceBrowser` +
+`AccessThreadDialog` (the audited compliance surface), `MessageDropdown`
+(header dropdown, unchanged).
 
 ## What's here (Phase 2 — adapters, DONE)
 
@@ -65,11 +69,29 @@ gateway ignores typing/presence publishes.
   dividers are a polish follow-up.
 - Reactions / favourites / typing / presence-publishing remain hidden.
 
-## Remaining before cutover (Phase 4 tail)
+## Parity pass + cutover (DONE)
 
-- Parity pass vs MessageCenter (compliance browser, drafts, pins browser, etc.),
-  then delete `MessageCenter.tsx` + `MessagesSection` switch + legacy CSS.
-- Direct-thread creation from the Messenger (today the legacy compose dialog /
-  dropdown owns it; the get-or-create backend path is live).
+- **Sent queue restored, server-derived**: `load()` also fetches
+  `/threads tab=sent` (threads where I authored ≥1 post — legacy semantics) →
+  `Thread.authoredByMe`; `load()` now uses `tab=all` so the Archived queue is
+  real (the old default-inbox load left it empty).
+- **Queue model matches legacy**: every participant thread lives in
+  Inbox/Archived (record/system threads keep the shield badge); the
+  **Compliance tab** (gated by `communications.compliance_read`, hidden
+  otherwise) is the audited browser surface: `ComplianceView` = legacy
+  `ComplianceBrowser` + a READ-ONLY sm- conversation + `AccessThreadDialog`
+  on read-gate denial (compliance access is read access).
+- **New Message** in the queue header opens the legacy `ComposeThreadDialog`
+  (direct get-or-create + group + recipients picker); created thread is
+  auto-selected via the pending-thread mechanism.
+- **Shell deep-links honored**: `siomac:openThread` / `siomac:openRecord`
+  (header dropdown + notification clicks) reload and select the target thread.
+- **Post authors surfaced**: `loadThreadDetail` returns messages + author
+  identities (name/avatar from the post DTO) merged into the roster, so
+  departed participants and compliance reads render real names.
+
+## Still deferred (unchanged)
+
 - `listActivity` returns `[]` (no dedicated activity-log endpoint yet).
 - `relatedRecord.type` mapped to `Document` pending per-module collaboration cards.
+- Real date dividers in the thread view (polish).

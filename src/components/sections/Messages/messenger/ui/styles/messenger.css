@@ -888,3 +888,25 @@
   .sm-pinned-context__body { grid-template-columns: minmax(0,1fr) auto; }
   .sm-pinned-context__policy { display: none; }
 }
+
+/* Legacy-parity additions: compose action + the compliance browser surface */
+.sm-compose-button { min-height: 38px; margin-left: 10px; padding: 0 13px; border: 1px solid var(--sm-navy); border-radius: 6px; display: inline-flex; align-items: center; gap: 7px; color: #fff; background: var(--sm-navy); cursor: pointer; font-size: 13px; font-weight: 600; }
+.sm-compose-button:hover { filter: brightness(1.08); }
+.sm-compose-button svg { font-size: 15px; }
+
+.sm-compliance { grid-template-columns: minmax(320px, 24vw) minmax(0, 1fr); }
+.sm-compliance__browser { min-width: 0; overflow: hidden; border-right: 1px solid var(--sm-line); background: #fff; display: flex; flex-direction: column; }
+.sm-compliance__browser > * { flex: 1; min-height: 0; }
+.sm-compliance__thread { grid-template-rows: auto minmax(0, 1fr) auto; }
+.sm-compliance__badge { width: 42px; height: 42px; border-radius: 8px; display: grid; place-items: center; color: #147a78; background: rgba(20, 122, 120, .1); }
+.sm-compliance__badge svg { font-size: 20px; }
+.sm-compliance__policy { display: inline-flex; align-items: center; gap: 6px; padding: 6px 10px; border: 1px solid var(--sm-line); border-radius: 6px; color: #5e7287; font-size: 11px; }
+.sm-compliance__empty { margin: auto; max-width: 420px; }
+.sm-compliance__empty svg { font-size: 30px; color: #147a78; }
+.sm-compliance__denied { margin: 40px auto; max-width: 420px; }
+.sm-compliance__denied svg { font-size: 26px; color: #b57c00; }
+.sm-compliance__denied button { margin-top: 6px; padding: 8px 14px; border: 0; border-radius: 6px; color: #fff; background: var(--sm-navy); cursor: pointer; font-size: 12px; font-weight: 600; }
+.sm-compliance__attachment { margin-top: 7px; padding: 7px 9px; border: 1px solid var(--sm-line); border-radius: 6px; display: inline-flex; align-items: center; gap: 8px; background: #fff; font-size: 12px; }
+.sm-compliance__attachment .sm-file-chip { width: 28px; height: 32px; font-size: 7px; }
+.sm-compliance__footer { padding: 10px 16px; border-top: 1px solid var(--sm-line); display: flex; align-items: center; gap: 7px; color: #6b7d92; background: #f7fafd; font-size: 11px; }
+.sm-compliance__footer svg { font-size: 13px; }

@@ -9,7 +9,7 @@
 import { h, render }           from 'preact';
 import { QueryClientProvider } from '@tanstack/preact-query';
 import type { QueryClient }    from '@tanstack/query-core';
-import { MessagesSection }     from './MessagesSection';
+import { MessengerWorkspace }  from './messenger/MessengerWorkspace';
 import { MessageDropdown }     from './MessageDropdown';
 
 export function mountMessageCenterSection(
@@ -18,7 +18,7 @@ export function mountMessageCenterSection(
 ): void {
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(MessagesSection, null),
+      h(MessengerWorkspace, null),
     ),
     container,
   );

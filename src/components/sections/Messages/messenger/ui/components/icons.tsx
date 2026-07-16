@@ -54,6 +54,7 @@ export const MessageSquare = make("MessageSquare");
 export const MessageSquareText = make("MessageSquareText");
 export const MoreHorizontal = make("MoreHorizontal");
 export const Palette = make("Palette");
+export const PenSquare = make("PenSquare");
 export const Paperclip = make("Paperclip");
 export const Pin = make("Pin");
 export const PinOff = make("PinOff");

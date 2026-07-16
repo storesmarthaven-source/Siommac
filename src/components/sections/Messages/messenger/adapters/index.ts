@@ -16,6 +16,10 @@ export * from './mappers';
  *  with the required first message. */
 export type SiomacRepository = MessagingRepository & {
   loadThread(threadId: string): Promise<import('../domain/models').Message[]>;
+  loadThreadDetail(threadId: string): Promise<{
+    messages: import('../domain/models').Message[];
+    authors: import('../domain/models').User[];
+  }>;
   listRecipients(query?: string): Promise<import('../domain/models').User[]>;
   createGroup(
     name: string, participantIds: string[], actorId: string, firstMessage?: string,

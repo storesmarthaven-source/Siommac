@@ -32,6 +32,8 @@ interface MessagingActions {
   invite(threadId: ThreadId, participantId: UserId): Promise<void>;
   removeParticipant(threadId: ThreadId, participantId: UserId): Promise<void>;
   listRecipients(query?: string): Promise<User[]>;
+  /** Uncached read for the compliance surface (threads outside the snapshot). */
+  loadThreadDetail(threadId: ThreadId): Promise<{ messages: Message[]; authors: User[] }>;
   upload(file: File, onProgress: (attachment: Attachment) => void, signal: AbortSignal): Promise<Attachment>;
   download(attachment: Attachment): Promise<void>;
   savePreferences(preferences: ChatPreferences): Promise<void>;
@@ -65,11 +67,20 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   const activeThreadId = useRef<ThreadId | null>(null);
 
   const loadThreadMessages = useCallback(async (threadId: ThreadId) => {
-    const messages = await repository.loadThread(threadId);
+    const { messages, authors } = await repository.loadThreadDetail(threadId);
     setMessagesByThread((current) => {
       const next = new Map(current);
       next.set(threadId, messages);
       return next;
+    });
+    // Merge post authors the roster does not know (departed participants) so
+    // names/avatars render instead of raw ids. Known users keep their entry
+    // (participant/online data carries live presence).
+    setBase((current) => {
+      if (!current) return current;
+      const known = new Set(current.users.map((user) => user.id));
+      const missing = authors.filter((author) => !known.has(author.id));
+      return missing.length ? { ...current, users: [...current.users, ...missing] } : current;
     });
   }, [repository]);
 
@@ -162,6 +173,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     invite: (threadId, participantId) => mutate(() => repository.invite(threadId, participantId, currentUserId)),
     removeParticipant: (threadId, participantId) => mutate(() => repository.removeParticipant(threadId, participantId, currentUserId)),
     listRecipients: (query) => repository.listRecipients(query),
+    loadThreadDetail: (threadId) => repository.loadThreadDetail(threadId),
     upload: (file, onProgress, signal) => attachments.upload(file, onProgress, signal),
     download: (attachment) => attachments.download(attachment),
     savePreferences: async (nextPreferences) => {

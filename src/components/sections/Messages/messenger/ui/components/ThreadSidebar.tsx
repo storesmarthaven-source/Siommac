@@ -1,10 +1,12 @@
 // Ported from the bundle (ui/components/ThreadSidebar.tsx). SIOMAC deltas:
 //   • the "Favourites" filter and favourite star are removed (hidden feature);
-//   • the "Sent" queue is deferred — with lazy per-thread loading its counts
-//     would be dishonest (they only reflect already-opened threads), so the
-//     queues are Inbox / Archived / Compliance until the backend exposes an
-//     authored-by-me thread flag.
-import { Archive, BellOff, CheckCircle2, Inbox, Search, ShieldCheck } from "./icons";
+//   • the Sent queue is SERVER-derived (thread.authoredByMe from the /threads
+//     tab=sent filter — legacy MessageCenter parity), so its counts are honest;
+//   • the Compliance tab is the audited compliance BROWSER surface (legacy
+//     parity, permission-gated by the workspace) — participant record threads
+//     live in Inbox with the shield badge;
+//   • QueueHeader exposes the New Message action (legacy parity).
+import { Archive, BellOff, CheckCircle2, Inbox, PenSquare, Search, Send, ShieldCheck } from "./icons";
 import { useMemo, useState } from "preact/hooks";
 import { useMessaging } from "../../app/MessagingProvider";
 import { lastMessage, userById } from "../../app/selectors";
@@ -14,24 +16,39 @@ import { Avatar, GroupAvatarStack } from "./Avatar";
 
 const tabs: Array<{ queue: Queue; label: string; icon: typeof Inbox }> = [
   { queue: "inbox", label: "Inbox", icon: Inbox },
+  { queue: "sent", label: "Sent", icon: Send },
   { queue: "archived", label: "Archived", icon: Archive },
-  { queue: "compliance", label: "Compliance", icon: ShieldCheck },
 ];
 
-function threadInQueue(thread: Thread, queue: Queue): boolean {
-  return queue === "compliance" ? thread.complianceControlled : thread.queue === queue;
+export function threadInQueue(thread: Thread, queue: Queue): boolean {
+  if (queue === "sent") return thread.authoredByMe === true;
+  if (queue === "compliance") return false;   // compliance is the browser surface, not a thread queue
+  return thread.queue === queue;
 }
 
-export function QueueHeader({ queue, onQueue }: { queue: Queue; onQueue(queue: Queue): void }) {
+export function QueueHeader({ queue, canCompliance, onQueue, onCompose }: {
+  queue: Queue;
+  canCompliance: boolean;
+  onQueue(queue: Queue): void;
+  onCompose(): void;
+}) {
   const { snapshot } = useMessaging();
   if (!snapshot) return null;
+  const tabList = canCompliance
+    ? [...tabs, { queue: "compliance" as Queue, label: "Compliance", icon: ShieldCheck }]
+    : tabs;
   return (
     <section className="sm-queue-header">
-      <div><h1>Message Queues</h1><p>Inbox, archived, and compliance conversations.</p></div>
-      <nav aria-label="Message queues">{tabs.map(({ queue: value, label, icon: Icon }) => {
-        const count = snapshot.threads.filter((thread) => threadInQueue(thread, value)).length;
-        return <button className={queue === value ? "is-active" : ""} type="button" key={value} onClick={() => onQueue(value)}><Icon />{label}<b>{count}</b></button>;
-      })}</nav>
+      <div><h1>Message Queues</h1><p>Inbox, sent, archived, and compliance conversations.</p></div>
+      <nav aria-label="Message queues">
+        {tabList.map(({ queue: value, label, icon: Icon }) => {
+          const count = value === "compliance"
+            ? null
+            : snapshot.threads.filter((thread) => threadInQueue(thread, value)).length;
+          return <button className={queue === value ? "is-active" : ""} type="button" key={value} onClick={() => onQueue(value)}><Icon />{label}{count !== null ? <b>{count}</b> : null}</button>;
+        })}
+        <button className="sm-compose-button" type="button" onClick={onCompose}><PenSquare />New Message</button>
+      </nav>
     </section>
   );
 }

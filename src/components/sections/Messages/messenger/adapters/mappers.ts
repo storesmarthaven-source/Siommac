@@ -134,12 +134,13 @@ function directCounterpart(t: ThreadDTO, currentUserId: string): ParticipantDTO 
   return t.participants.find(p => p.userId !== currentUserId) ?? t.participants[0];
 }
 
-export function mapThread(t: ThreadDTO, currentUserId: string): Thread {
+export function mapThread(t: ThreadDTO, currentUserId: string, authoredByMe = false): Thread {
   const isDirect = t.threadType === 'direct';
   const other = isDirect ? directCounterpart(t, currentUserId) : undefined;
-  const queue = t.isArchived
-    ? 'archived'
-    : (t.threadType === 'record' || t.threadType === 'system' ? 'compliance' : 'inbox');
+  // Legacy-parity queue model: every participant thread lives in Inbox (or
+  // Archived) — record/system threads included, with the compliance shield as
+  // a badge. The Compliance TAB is the separate audited browser surface.
+  const queue = t.isArchived ? 'archived' : 'inbox';
   return {
     id: t.id,
     kind: mapKind(t.threadType),
@@ -150,6 +151,7 @@ export function mapThread(t: ThreadDTO, currentUserId: string): Thread {
     unreadCount: t.unreadCount ?? 0,
     muted: t.isMuted ?? false,
     favourite: false,                          // favourites hidden until its own backend slice
+    authoredByMe,
     complianceControlled: t.threadType === 'record' || t.threadType === 'system',
     ...(t.sourceModule && t.sourceEntityId ? {
       relatedRecord: {

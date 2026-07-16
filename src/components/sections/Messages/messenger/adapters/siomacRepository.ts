@@ -40,10 +40,14 @@ export class SiomacMessagingRepository implements MessagingRepository {
   private readonly pinOfPost    = new Map<string, string>();
 
   async load(currentUserId: string): Promise<WorkspaceSnapshot> {
-    const [threadDtos, online] = await Promise.all([
-      post<ThreadDTO[]>('communications/messages/threads', { limit: 50 }),
+    const [threadDtos, sentDtos, online] = await Promise.all([
+      post<ThreadDTO[]>('communications/messages/threads', { tab: 'all', limit: 100 }),
+      // Server-derived Sent membership (threads where I authored ≥1 post) —
+      // powers the Sent queue without loading every thread's messages.
+      post<ThreadDTO[]>('communications/messages/threads', { tab: 'sent', limit: 100 }),
       apiPost<{ success: boolean; data: OnlineUser[] }>('communications/messages/online', {}).then(r => (r.success ? r.data : [])),
     ]);
+    const sentIds = new Set(sentDtos.map(t => t.id));
     const users = new Map<string, User>();
     for (const t of threadDtos) {
       for (const p of t.participants ?? []) users.set(p.userId, mapParticipantToUser(p as ParticipantDTO));
@@ -53,21 +57,39 @@ export class SiomacMessagingRepository implements MessagingRepository {
     return {
       currentUserId,
       users: Array.from(users.values()),
-      threads: threadDtos.map(t => mapThread(t, currentUserId)),
+      threads: threadDtos.map(t => mapThread(t, currentUserId, sentIds.has(t.id))),
       messages: [],   // lazy per-thread; see loadThread()
       activity: [],
     };
   }
 
-  /** Load one thread's messages (called by the app layer on thread select). */
-  async loadThread(threadId: string): Promise<Message[]> {
+  /** Load one thread's messages + the post AUTHORS (who may not be current
+   *  participants — departed members, compliance reads). */
+  async loadThreadDetail(threadId: string): Promise<{ messages: Message[]; authors: User[] }> {
     const [posts, pins] = await Promise.all([
       post<PostDTO[]>('communications/messages/posts', { threadId, limit: 100 }),
       apiPost<{ success: boolean; data: PinDTO[] }>('communications/messages/pins/list', { threadId }).then(r => (r.success ? r.data : [])),
     ]);
     for (const pin of pins) { if (pin.postId) this.pinOfPost.set(pin.postId, pin.id); }
-    for (const p of posts) this.threadOfPost.set(p.id, threadId);
-    return posts.map(mapPost);
+    const authors = new Map<string, User>();
+    for (const p of posts) {
+      this.threadOfPost.set(p.id, threadId);
+      if (p.authorUserId) {
+        authors.set(p.authorUserId, {
+          id: p.authorUserId,
+          name: p.authorName ?? p.authorUserId,
+          title: p.authorRoleKey ?? '',
+          avatarUrl: p.authorProfileImage ?? '',
+          presence: 'offline',
+        });
+      }
+    }
+    return { messages: posts.map(mapPost), authors: Array.from(authors.values()) };
+  }
+
+  /** Load one thread's messages (called by the app layer on thread select). */
+  async loadThread(threadId: string): Promise<Message[]> {
+    return (await this.loadThreadDetail(threadId)).messages;
   }
 
   async loadPreferences(userId: string): Promise<ChatPreferences> {

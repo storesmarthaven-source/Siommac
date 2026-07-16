@@ -4,6 +4,6 @@
  * Public surface for the canonical Messages section.
  */
 
-export { MessageCenter }  from './MessageCenter';
+export { MessengerWorkspace } from './messenger/MessengerWorkspace';
 export { MessageDropdown } from './MessageDropdown';
 export { mountMessageCenterSection, unmountMessageCenterSection, mountMessageDropdown } from './mount';

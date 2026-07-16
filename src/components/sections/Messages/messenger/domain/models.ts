@@ -93,6 +93,9 @@ export interface Thread {
   muted: boolean;
   favourite: boolean;
   complianceControlled: boolean;
+  /** SIOMAC extension: the signed-in user authored ≥1 post (drives the Sent
+   *  queue — server-derived from the /threads tab=sent filter). */
+  authoredByMe?: boolean;
   relatedRecord?: RelatedRecord;
   lastActivityAt: string;
 }
