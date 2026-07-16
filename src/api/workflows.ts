@@ -177,6 +177,8 @@ export interface CreateWorkflowArgs extends Record<string, unknown> {
   priority?:        'low' | 'medium' | 'high' | 'critical';
   reason?:          string;
   ownerUserId?:     string | null;
+  /** Per-attempt idempotency key. Auto-generated via crypto.randomUUID() if not supplied. */
+  idempotencyKey?:  string;
 }
 
 export function useCreateWorkflow() {
@@ -184,7 +186,9 @@ export function useCreateWorkflow() {
   return useMutation({
     mutationFn: (args: CreateWorkflowArgs) =>
       apiPost<{ success: boolean; workflowId: string; ref: string }>(
-        'workflows/create', args, { retryable: false },
+        'workflows/create',
+        { ...args, idempotencyKey: args.idempotencyKey ?? crypto.randomUUID() },
+        { retryable: false },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: workflowKeys.all });
