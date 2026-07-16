@@ -112,7 +112,7 @@ export default async function run(h) {
   // ── Submit ─────────────────────────────────────────────────────────────────
   h.section('Transfers › Submit');
 
-  await test('submit → CR row with correct shape + workflow_id set', async () => {
+  await test('submit → CR row (Shape-B atomic): status in_review + workflow_id in-commit', async () => {
     const r = await api('hr/transfers/request', A, {
       employeeId:    empId,
       role:          'manager',
@@ -126,7 +126,8 @@ export default async function run(h) {
     expect(/^HRC-/.test(r.body.data.changeNo), `changeNo bad format: ${r.body.data.changeNo}`);
     ctx.crId = r.body.data.id;
 
-    // Assert DB row shape
+    // Shape-B atomic: INSERT + workflow_id link + app_event + hr_audit_log in ONE commit.
+    // status must be 'in_review' immediately (committed by RPC, not by adapter callback).
     const { data: cr } = await sb
       .from('hr_employee_change_requests')
       .select('id, change_type, status, requested_value, previous_value, workflow_id')
@@ -134,12 +135,45 @@ export default async function run(h) {
       .maybeSingle();
     expect(!!cr,                                       'CR row not found');
     expect(cr.change_type === 'transfer_promotion',    `wrong change_type: ${cr.change_type}`);
-    expect(cr.status === 'in_review',                  `wrong status: ${cr.status}`);   // workflow starts on submit → in_review
+    expect(cr.status === 'in_review',                  `status must be in_review immediately (atomic) — got: ${cr.status}`);
     expect(cr.requested_value?.role === 'manager',     'role not in requested_value');
     expect(cr.requested_value?.monthlySalary === 8000, 'monthlySalary not in requested_value');
     expect(cr.requested_value?.effectiveDate === '2026-08-01', 'effectiveDate not in requested_value');
-    // workflow_id set (binding 20260719000001 must be applied)
-    expect(!!cr.workflow_id, 'workflow_id not set — check binding migration applied');
+    expect(!!cr.workflow_id, 'workflow_id must be set in-commit (atomic)');
+
+    // workflow_instance in_progress + first task assigned to hr_manager
+    const { data: wfi } = await sb.from('workflow_instances')
+      .select('id, status').eq('id', cr.workflow_id).maybeSingle();
+    expect(wfi && wfi.status === 'in_progress', `workflow_instance not in_progress — got ${wfi?.status}`);
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('id, assigned_role').eq('workflow_id', cr.workflow_id).limit(5);
+    expect(tasks && tasks.length > 0, 'no workflow_tasks for transfer_promotion');
+    expect(tasks.some(t => t.assigned_role === 'hr_manager'), `first task not assigned to hr_manager — got ${JSON.stringify(tasks?.map(t => t.assigned_role))}`);
+
+    // app_event + hr_audit_log committed in the same transaction (no polling needed)
+    const { data: ev } = await sb.from('app_events').select('id')
+      .eq('event_type', 'hr.employee.change_requested').eq('source_entity_id', ctx.crId).limit(1);
+    expect(ev && ev.length === 1, 'change_requested app_event not written in-commit');
+
+    const { data: audit } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'employees').eq('action', 'hr.employee.change_requested')
+      .eq('record_id', ctx.crId).limit(1);
+    expect(audit && audit.length > 0, 'hr_audit_log not written in-commit');
+  });
+
+  await test('idempotent retry: same transfer request returns same CR, no duplicate', async () => {
+    const r2 = await api('hr/transfers/request', A, {
+      employeeId:    empId,
+      role:          'manager',
+      monthlySalary: 8000,
+      effectiveDate: '2026-08-01',
+      reason:        'Promotion to team lead',
+    });
+    ok(r2, `idempotent retry failed: ${r2.body.message}`);
+    expect(r2.body.data.id === ctx.crId, `idempotent retry returned different id — got ${r2.body.data.id}`);
+    const { count } = await sb.from('hr_employee_change_requests')
+      .select('id', { count: 'exact', head: true }).eq('employee_id', empId).eq('change_type', 'transfer_promotion');
+    expect((count ?? 0) === 1, `duplicate CR on retry — count: ${count}`);
   });
 
   await test('/transfers/list returns the submitted CR', async () => {
@@ -148,14 +182,15 @@ export default async function run(h) {
     expect(Array.isArray(r.body.data), 'data not array');
     const row = r.body.data.find(x => x.id === ctx.crId);
     expect(!!row,                              'CR not in list');
-    expect(row.changeNo === r.body.data.find(x => x.id === ctx.crId).changeNo, 'changeNo mismatch');
     expect(row.status === 'in_review',         `wrong status in list: ${row.status}`);
     expect(row.employeeName !== undefined,     'employeeName not enriched');
     expect(row.requestedByName !== undefined,  'requestedByName not enriched');
     expect(row.effectiveDate === '2026-08-01', `effectiveDate missing: ${row.effectiveDate}`);
   });
 
-  await test('side-effect: hr.employee.change_requested event + hr_audit_log row', async () => {
+  await test('side-effect: hr.employee.change_requested event + hr_audit_log row (polling assertion)', async () => {
+    // These are already asserted in the submit test as in-commit; this poll confirms
+    // the rows remain committed and queryable after the transaction closes.
     const gotEvent = await waitFor(async () => {
       const { data } = await sb.from('app_events')
         .select('id')
@@ -165,7 +200,7 @@ export default async function run(h) {
         .limit(1);
       return (data ?? []).length > 0;
     });
-    expect(gotEvent, 'hr.employee.change_requested app_event not found (after submit)');
+    expect(gotEvent, 'hr.employee.change_requested app_event not found after submit');
 
     const { data: audit } = await sb.from('hr_audit_log')
       .select('id')

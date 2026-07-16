@@ -35,7 +35,7 @@
 export const title = 'HR Employee Master';
 
 export default async function run(h) {
-  const { api, test, expect, ok, fails, mint, sb, TAG } = h;
+  const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
   const { admin } = h.users;
   const A = mint(admin);
 
@@ -44,6 +44,7 @@ export default async function run(h) {
     changeReqIds: [],    // contact change requests
     emp1: null, emp1No: null, emp1User: null, emp2: null,
     mgrTok: null, empTok: null,
+    hrMgrTok: null, hrMgrCreatedIds: [],   // real hr_manager to decide the engine-driven change request
     siteId: null, siteName: null, supName: null, createdSiteId: null,
   };
 
@@ -64,6 +65,9 @@ export default async function run(h) {
       }
     }
     if (ctx.createdSiteId) { try { await sb.from('project_sites').delete().eq('id', ctx.createdSiteId); } catch { /* ignore */ } }
+    // Best-effort: remove the provisioned hr_manager (may be FK-pinned by the workflow
+    // decision it made — the orphan sweeper mops up any remainder).
+    if (ctx.hrMgrCreatedIds?.length) { try { await sb.from('app_users').delete().in('id', ctx.hrMgrCreatedIds); } catch { /* ignore */ } }
   });
 
   // ── identities: REAL active users of each role (permissions come from the genuine
@@ -73,6 +77,14 @@ export default async function run(h) {
       .select('id, username, role, department_id').eq('role', 'manager').eq('status', 'active')
       .neq('id', admin.id).limit(1).maybeSingle();
     if (mgr) ctx.mgrTok = mint(mgr); else console.error('⚠ no active manager — manager-tier tests will misreport');
+
+    // A real hr_manager to decide the change request: it's engine-driven (a workflow
+    // is started at submit) and its approval task is assigned to the hr_manager ROLE,
+    // so the finding-#1 assignment guard denies the admin harness. Provision one.
+    const hrMgrR = await acquireActors('hr_manager', 1);
+    const hrMgr = hrMgrR.actors[0];
+    ctx.hrMgrCreatedIds = hrMgrR.createdIds;
+    ctx.hrMgrTok = mint({ id: hrMgr.id, username: hrMgr.username, role: 'hr_manager', department_id: hrMgr.department_id ?? null });
 
     const { data: emp } = await sb.from('app_users')
       .select('id, username, role, department_id').eq('role', 'employee').eq('status', 'active')
@@ -356,23 +368,58 @@ export default async function run(h) {
     fails(r, 'manager cannot direct-update restricted contact');
   });
 
-  await test('contact/update REQUEST mode (manager maker) → change request created', async () => {
+  await test('contact/update REQUEST mode (manager maker) → change request created (Shape-B atomic)', async () => {
     const r = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'request', personal: { personalEmail: `e2e-${TAG}@personal.test` }, reason: 'employee requested email change' });
     ok(r, 'contact request mode');
     expect(r.body.data.mode === 'request' && !!r.body.data.requestId, 'requestId returned');
     ctx.changeReqIds.push(r.body.data.requestId);
-    // Engine-wired (Spec §14): createChangeRequest starts a workflow_instance and the
-    // hr_employee_master adapter moves the request to in_review on start.
-    const { data: cr } = await sb.from('hr_employee_change_requests').select('change_type, status, workflow_id').eq('id', r.body.data.requestId).maybeSingle();
-    expect(cr && cr.change_type === 'contact_update' && ['submitted', 'in_review'].includes(cr.status), `change request row (contact_update) — got ${cr?.status}`);
-    expect(!!cr.workflow_id, 'change request linked to a workflow_instance (central engine)');
-    const { data: ev } = await sb.from('app_events').select('id').eq('event_type', 'hr.employee.change_requested').eq('source_entity_id', r.body.data.requestId).limit(1);
-    expect(ev && ev.length === 1, 'change_requested event');
+    // Shape-B atomic: workflow_create_and_start_tx commits the CR row, workflow_id link,
+    // app_event and hr_audit_log in ONE transaction. status must be 'in_review' immediately
+    // (not 'submitted'); workflow_id must be set on the same committed row.
+    const { data: cr } = await sb.from('hr_employee_change_requests')
+      .select('change_type, status, workflow_id').eq('id', r.body.data.requestId).maybeSingle();
+    expect(cr && cr.change_type === 'contact_update', `change_type wrong — got ${cr?.change_type}`);
+    expect(cr.status === 'in_review', `status must be in_review immediately (atomic) — got ${cr?.status}`);
+    expect(!!cr.workflow_id, 'workflow_id must be set in-commit (atomic)');
+
+    // workflow_instance created and in_progress
+    const { data: wfi } = await sb.from('workflow_instances')
+      .select('id, status').eq('id', cr.workflow_id).maybeSingle();
+    expect(wfi && wfi.status === 'in_progress', `workflow_instance not in_progress — got ${wfi?.status}`);
+
+    // first task assigned to hr_manager role
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('id, assigned_role, status').eq('workflow_id', cr.workflow_id).limit(5);
+    expect(tasks && tasks.length > 0, 'no workflow_tasks created');
+    expect(tasks.some(t => t.assigned_role === 'hr_manager'), `no task assigned to hr_manager — got ${JSON.stringify(tasks?.map(t => t.assigned_role))}`);
+
+    // app_event committed in the same transaction
+    const { data: ev } = await sb.from('app_events').select('id')
+      .eq('event_type', 'hr.employee.change_requested').eq('source_entity_id', r.body.data.requestId).limit(1);
+    expect(ev && ev.length === 1, 'change_requested app_event not written (should be in-commit)');
+
+    // hr_audit_log written in-commit
+    const { data: audit } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'employees').eq('action', 'hr.employee.change_requested')
+      .eq('record_id', r.body.data.requestId).limit(1);
+    expect(audit && audit.length > 0, 'hr_audit_log for change_requested not written (should be in-commit)');
+
+    // Idempotent retry — same key must return same record, no duplicate
+    const r2 = await api('hr/employees/contact/update', ctx.mgrTok, { employeeId: ctx.emp1, mode: 'request', personal: { personalEmail: `e2e-${TAG}@personal.test` }, reason: 'employee requested email change' });
+    ok(r2, 'idempotent retry ok');
+    expect(r2.body.data.requestId === r.body.data.requestId, `idempotent retry must return same requestId — got ${r2.body.data.requestId}`);
+    const { count: crCount } = await sb.from('hr_employee_change_requests')
+      .select('id', { count: 'exact', head: true })
+      .eq('employee_id', ctx.emp1).eq('change_type', 'contact_update');
+    expect((crCount ?? 0) === 1, `duplicate CR created on retry — count: ${crCount}`);
   });
 
-  await test('change-request decide approve (admin) → applies contact_update', async () => {
-    const r = await api('hr/employee-change-requests/decide', A, { requestId: ctx.changeReqIds[0], decision: 'approve' });
-    ok(r, 'decide approve');
+  await test('change-request decide approve (hr_manager) → applies contact_update', async () => {
+    // Decided by a real hr_manager (assigned to the role task) — the engine-driven
+    // change request routes through decideTask, whose finding-#1 guard denies the
+    // non-assigned admin. Single-step approval completes inline → 'applied'.
+    const r = await api('hr/employee-change-requests/decide', ctx.hrMgrTok, { requestId: ctx.changeReqIds[0], decision: 'approve' });
+    ok(r, `decide approve — got ${r.body.message ?? ''}`);
     expect(r.body.data.status === 'applied', `applied — got ${r.body.data.status}`);
     const { data: u } = await sb.from('app_users').select('personal_email').eq('id', ctx.emp1).maybeSingle();
     expect(u && u.personal_email === `e2e-${TAG}@personal.test`, 'personal_email applied to record');

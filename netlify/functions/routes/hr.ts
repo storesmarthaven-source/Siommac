@@ -23,7 +23,9 @@ import {
 } from '../lib/hr/employeeCore';
 import { startOnboardingCase } from '../lib/hr/onboardingCore';
 import { CHANGE_TYPES, type ChangeType, CONTACT_COLS, applyApprovedChange, markChangeRequestStatus } from '../lib/hr/changeApproval';
-import { startWorkflowForRecord, decideTask } from '../lib/workflow/service';
+import { decideTask, rpcHttpError } from '../lib/workflow/service';
+import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
+import { notifyUsersByRole } from '../lib/finance/financeEvents';
 import { listOrgUnits, getOrgUnit, listPositions, getPosition, listCostCenters, getOrgStats } from '../lib/hr/organizationQueries';
 import { getOrgHealthSummary } from '../lib/hr/organizationHealth';
 import { previewOrgChangeImpact } from '../lib/hr/organizationImpact';
@@ -1164,28 +1166,70 @@ function snapshotForChange(t: ChangeType, emp: EmpRow): Record<string, unknown> 
   }
 }
 /**
- * Create a maker-checker change request via the standard module-create path
- * (record → event → idempotency). Shared by /employees/change-request and the
- * /employees/contact/update request mode so both emit one consistent event +
- * hr_audit_log entry. Returns the new request id + change_no.
+ * Create a maker-checker change request. ATOMIC (finding #3, Shape B): when an
+ * active hr_change_approval binding exists for the change type, the envelope INSERT +
+ * workflow start + workflow_id link + app_event + hr_audit_log all commit in ONE
+ * transaction via workflow_create_and_start_tx (hr_employee_change_requests branch),
+ * with content-hash idempotency. No binding → plain runModuleMutation create-only
+ * path (submitted status, no workflow started). Shared by /employees/change-request
+ * and /employees/contact/update (request mode) and /transfers/request.
  */
 async function createChangeRequest(actor: { id: string }, p: {
   employeeId: string; changeType: ChangeType;
   previousValue: Record<string, unknown>; requestedValue: Record<string, unknown>; reason?: string | null;
 }): Promise<{ id: string; changeNo: string }> {
+  // Content-derived so an accidental double-submit of the SAME change dedupes.
+  const idempotencyKey = `hr.change_request:${actor.id}:${p.employeeId}:${p.changeType}:${JSON.stringify(p.requestedValue)}`;
+
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'hr_employee_master', workflowType: 'hr_change_approval',
+    triggerEvent: `hr.employee.${p.changeType}`,
+    sourceRecordId: '', requestedBy: actor.id, recordData: {},
+  });
+
+  if (binding) {
+    // ATOMIC path: INSERT + workflow start + link + event + audit in one commit.
+    const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'hr_employee_change_requests',
+      p_actor_id:     actor.id,
+      p_binding_id:   binding.id,
+      p_request_key:  idempotencyKey,
+      p_business: {
+        employeeId:     p.employeeId,
+        changeType:     p.changeType,
+        previousValue:  p.previousValue,
+        requestedValue: p.requestedValue,
+        reason:         p.reason ?? null,
+      },
+    });
+    if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+    const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string };
+    // First workflow step is assigned to hr_manager — notify them post-commit.
+    void notifyUsersByRole('hr_manager', {
+      type:            'hr.employee.change_requested',
+      title:           `Change request ${rpc.ref ?? ''} awaiting your approval`.trim(),
+      body:            `A ${p.changeType} change request for employee has been submitted for approval.`,
+      module:          'hr',
+      severity:        'warning',
+      sourceType:      'employee_change',
+      sourceId:        rpc.recordId ?? '',
+      actionRequired:  true,
+      dedupeKey:       `hr.employee.change_requested.${rpc.recordId}`,
+    });
+    return { id: rpc.recordId ?? '', changeNo: rpc.ref ?? '' };
+  }
+
+  // No approval binding → create-only (record stays 'submitted', no workflow).
   const result = await runModuleMutation<{ id: string; changeNo: string }>({
     context: { actorUserId: actor.id },
     options: {
       module: 'hr', operation: 'create', entityType: 'employee_change',
-      // Content-derived so an accidental double-submit of the SAME change dedupes,
-      // while distinct changes for the same employee remain separate requests.
-      idempotencyKey: `hr.change_request:${actor.id}:${p.employeeId}:${p.changeType}:${JSON.stringify(p.requestedValue)}`,
+      idempotencyKey,
       eventType: 'hr.employee.change_requested', eventSeverity: 'info',
       getEntityIdentity: (r) => ({ id: r.id, ref: r.changeNo }),
       buildEventPayload: () => ({ employeeId: p.employeeId, changeType: p.changeType }),
     },
     writeRecord: async () => {
-      // Reference is consumed only on a real write — deduped retries don't burn a ref.
       const changeNo = await nextRef('HRC');
       const { data, error } = await sb.from('hr_employee_change_requests').insert({
         change_no: changeNo, employee_id: p.employeeId, change_type: p.changeType, requested_by: actor.id,
@@ -1198,29 +1242,7 @@ async function createChangeRequest(actor: { id: string }, p: {
       return { id: data.id, changeNo: data.change_no };
     },
   });
-  const id = result.entityId;
-  // Route the sensitive change through the central engine. Guard on workflow_id so
-  // a deduped retry of the same request doesn't start a second workflow. No binding
-  // (startWorkflowForRecord → null) leaves it as a direct maker-checker request.
-  const { data: crRow } = await sb.from('hr_employee_change_requests')
-    .select('workflow_id').eq('id', id).maybeSingle<{ workflow_id: string | null }>();
-  if (crRow && !crRow.workflow_id) {
-    const { data: emp } = await sb.from('app_users')
-      .select('department_id, site_id').eq('id', p.employeeId)
-      .maybeSingle<{ department_id: string | null; site_id: string | null }>();
-    const wf = await startWorkflowForRecord({
-      context: {
-        moduleKey: 'hr_employee_master', workflowType: 'hr_change_approval',
-        triggerEvent: `hr.employee.${p.changeType}`, sourceRecordId: id,
-        sourceRecordRef: result.record.changeNo, requestedBy: actor.id,
-        departmentId: emp?.department_id ?? null, siteId: emp?.site_id ?? null,
-        recordData: { employeeId: p.employeeId, changeType: p.changeType, requestedValue: p.requestedValue, previousValue: p.previousValue },
-      },
-      actor: { id: actor.id },
-    });
-    if (wf) await sb.from('hr_employee_change_requests').update({ workflow_id: wf.id }).eq('id', id);
-  }
-  return { id, changeNo: result.record.changeNo };
+  return { id: result.entityId, changeNo: result.record.changeNo };
 }
 
 // POST /api/hr/employees/change-request — create (maker)
