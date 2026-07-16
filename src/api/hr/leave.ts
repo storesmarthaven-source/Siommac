@@ -82,7 +82,9 @@ export function useSubmitLeave() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (a: SubmitLeaveRequestArgs) => hrLeaveApi.submitRequest(a),
-    onSuccess:  () => { void qc.invalidateQueries({ queryKey: ['hr-leave-my'] }); void qc.invalidateQueries({ queryKey: ['hr-leave-all'] }); void qc.invalidateQueries({ queryKey: ['hr-leave-stats'] }); },
+    // Submit now reserves the balance (pending_reserve) — invalidate balances too
+    // so the held amount is reflected immediately.
+    onSuccess:  () => { void qc.invalidateQueries({ queryKey: ['hr-leave-my'] }); void qc.invalidateQueries({ queryKey: ['hr-leave-all'] }); void qc.invalidateQueries({ queryKey: ['hr-leave-stats'] }); void qc.invalidateQueries({ queryKey: ['hr-leave-balances'] }); },
   });
 }
 

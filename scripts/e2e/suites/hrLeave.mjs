@@ -75,6 +75,11 @@ export default async function run(h) {
       .eq('setting_key', 'hr_leave.min_notice_days')
       .eq('scope_type', 'global')
       .is('scope_id', null);
+    // Clear the allow_negative_balance override set by the balance-enforcement test
+    await sb.from('app_setting_values').delete()
+      .eq('setting_key', 'hr_leave.allow_negative_balance')
+      .eq('scope_type', 'global')
+      .is('scope_id', null);
   });
 
   // Resolve a real employee for leave submission tests
@@ -366,6 +371,53 @@ export default async function run(h) {
   await test('request/cancel already-cancelled → fails', async () => {
     const r = await api('hr/leave/request/cancel', A, { requestId: ctx.cancelRequestId, reason: 'retry cancel' });
     expect(!r.ok || !r.body.success, 'double cancel rejected');
+  });
+
+  // ── Submit validation: days required + must reserve a positive balance ────────
+  // These run while ctx.leaveTypeId is still active (before types/retire). They
+  // create no request rows (rejected before insert), so they need no cleanup. The
+  // days/balance guards fire before the binding/idempotencyKey check, so no key.
+
+  await test('request/submit without days → rejected (no silent zero-reservation)', async () => {
+    const r = await api('hr/leave/request/submit', A, {
+      employeeId: ctx.empId, leaveTypeId: ctx.leaveTypeId,
+      fromDate: '2030-04-01', toDate: '2030-04-03',
+    });
+    expect(!r.ok || !r.body.success, 'submit without days rejected');
+    expect((r.body.message || '').toLowerCase().includes('working day'), `clear days-required message, got: ${r.body.message}`);
+  });
+
+  await test('request/submit with days=0 (weekend-only) → rejected', async () => {
+    const r = await api('hr/leave/request/submit', A, {
+      employeeId: ctx.empId, leaveTypeId: ctx.leaveTypeId,
+      fromDate: '2030-05-04', toDate: '2030-05-05', unit: 'days', days: 0,
+    });
+    expect(!r.ok || !r.body.success, 'zero-day submit rejected');
+  });
+
+  await test('request/submit exceeding available → rejected (balance enforced)', async () => {
+    // Pin allow_negative_balance = false so the balance check is authoritative.
+    ok(await api('settings/values/set', A, {
+      settingKey: 'hr_leave.allow_negative_balance', scopeType: 'global', scopeId: null, value: false,
+    }), 'set allow_negative_balance=false');
+    // Seed a small balance in an isolated year so the check fires (no row → skipped).
+    await sb.from('hr_leave_accruals').insert({
+      employee_id: ctx.empId, leave_type_id: ctx.leaveTypeId,
+      year: 2029, delta: 2, kind: 'accrual',
+      idempotency_key: 'e2e.seed.accrual.low:' + ctx.empId + ':' + ctx.leaveTypeId,
+      created_by: admin.id,
+    });
+    await sb.from('hr_leave_balances').upsert({
+      employee_id: ctx.empId, leave_type_id: ctx.leaveTypeId,
+      year: 2029, entitled: 0, accrued: 2, taken: 0, pending: 0, adjustment: 0,
+    }, { onConflict: 'employee_id,leave_type_id,year' });
+
+    const r = await api('hr/leave/request/submit', A, {
+      employeeId: ctx.empId, leaveTypeId: ctx.leaveTypeId,
+      fromDate: '2029-06-04', toDate: '2029-06-15', unit: 'days', days: 8,
+    });
+    expect(!r.ok || !r.body.success, 'over-balance submit rejected');
+    expect((r.body.message || '').toLowerCase().includes('balance'), `balance error message, got: ${r.body.message}`);
   });
 
   // ── Balances ─────────────────────────────────────────────────────────────────

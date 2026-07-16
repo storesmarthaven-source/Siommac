@@ -71,17 +71,26 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
   const typeLabel = types.find(t => t.id === leaveTypeId)?.label ?? 'Leave';
   const bal       = (balQ.data ?? []).find(b => b.leaveTypeId === leaveTypeId);
   const dateError = !!(fromDate && toDate && toDate < fromDate);
+  // A valid (non-reversed) range landing only on weekends reserves 0 days — block
+  // it here rather than submit a request that holds no balance.
+  const noWorkingDays = !!(fromDate && toDate && !dateError && days === 0);
+  // Exceeding available is a *warning*, not a hard block: whether it is actually
+  // allowed depends on the server-side hr_leave.allow_negative_balance setting the
+  // client can't see — the backend is the single enforcement point (submitLeaveRequest
+  // throws on days > available when negatives are disallowed).
   const exceeds   = !!(bal && days > bal.available);
   const overlaps  = (myReqQ.data?.rows ?? []).filter(r =>
     (r.status === 'pending_approval' || r.status === 'approved') && !!fromDate && !!toDate && r.fromDate <= toDate && r.toDate >= fromDate);
-  const canSubmitForm = !!(leaveTypeId && fromDate && toDate) && !dateError;
+  const canSubmitForm = !!(leaveTypeId && fromDate && toDate) && !dateError && days > 0;
 
   async function handleSubmit() {
     if (!canSubmitForm) return;
     if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
     try {
+      // Send the computed working-day count so the backend reserves the balance
+      // (this module's ledger is day-denominated; seeded leave types are unit:'days').
       await submit.mutateAsync({
-        employeeId: myId, leaveTypeId, fromDate, toDate, reason: reason || null,
+        employeeId: myId, leaveTypeId, fromDate, toDate, unit: 'days', days, reason: reason || null,
         idempotencyKey: submitKeyRef.current,
       });
       submitKeyRef.current = null;
@@ -103,6 +112,7 @@ function SubmitLeaveDialog({ onClose }: SubmitDialogProps): VNode {
     ] : [{ label: 'Requested', value: days, tone: 'info' }],
     validation: [
       ...(dateError ? [{ message: 'End date is before the start date.', tone: 'danger' as const }] : []),
+      ...(noWorkingDays ? [{ message: 'The selected range has no working days (weekend only) — adjust the dates.', tone: 'danger' as const }] : []),
       ...(exceeds ? [{ message: `Requested ${days} day(s) exceeds your available ${bal.available}.`, tone: 'warning' as const }] : []),
       ...(overlaps.length ? [{ message: `Overlaps ${overlaps.length} existing request(s) in this range.`, tone: 'warning' as const }] : []),
     ],

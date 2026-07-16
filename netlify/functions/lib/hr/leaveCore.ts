@@ -108,11 +108,20 @@ export async function submitLeaveRequest(
   if (!lt || !(lt as Record<string, unknown>).is_active) throw err(400, 'Invalid or inactive leave type.');
 
   const year  = new Date(args.fromDate).getFullYear();
-  const days  = args.days ?? null;
+
+  // A leave request must reserve a positive number of days against the balance.
+  // Accepting days == null / <= 0 would create a request that never holds any
+  // balance (accept-and-drop) — e.g. a weekend-only range computes to 0 working
+  // days. This module's ledger is day-denominated, so `days` is required and must
+  // be positive; the caller (dialog/API) computes it.
+  const days = args.days ?? null;
+  if (days == null || days <= 0) {
+    throw err(400, 'Leave must cover at least one working day.');
+  }
 
   // 3. Balance check
   const allowNeg = await resolveSettingValue<unknown>(sb, 'hr_leave.allow_negative_balance', sScope, false);
-  if (allowNeg !== true && allowNeg !== 'true' && days != null) {
+  if (allowNeg !== true && allowNeg !== 'true') {
     const { data: bal } = await sb.from('hr_leave_balances')
       .select('accrued, taken, pending, adjustment')
       .eq('employee_id', args.employeeId)
