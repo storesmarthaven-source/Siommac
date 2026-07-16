@@ -57,29 +57,9 @@ export async function getPayrollEntries(runId: string, signal?: AbortSignal) {
   return data as unknown as PayrollEntry[];
 }
 
-/** Get the current employee's payslip history */
-export async function getMyPayslips(username: string, signal?: AbortSignal) {
-  const query = supabase
-    .from('payroll_entries')
-    .select(`
-      *,
-      payroll_runs!payroll_entries_payroll_run_id_fkey(period_start, period_end, status)
-    `)
-    .eq('username', username)
-    .order('created_at', { ascending: false });
-
-  if (signal) query.abortSignal(signal);
-
-  const { data, error } = await query;
-
-  if (error) {
-    logger.error('[api/payroll] getMyPayslips failed', { username, error });
-    throw new Error(error.message);
-  }
-
-  // payroll_runs join adds period_start/period_end/status to each entry
-  return data as unknown as Array<PayrollEntry & { payroll_runs: Pick<PayrollRun, 'period_start' | 'period_end' | 'status'> | null }>;
-}
+// Legacy my-payslips client REMOVED — a zero-caller direct-browser Supabase read of
+// legacy payroll_entries (spec §2 violation). Canonical: financePayrollApi
+// .myPayslips → POST /api/finance/payroll/payslips/my (self-scope server-side).
 
 export async function createPayrollRun(payload: CreatePayrollRunPayload): Promise<void> {
   const { apiPost } = await import('@lib/api');

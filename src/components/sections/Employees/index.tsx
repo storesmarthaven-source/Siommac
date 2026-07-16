@@ -32,7 +32,10 @@ import { DepartmentsSection }       from './DepartmentsSection';
 // LeaveSection REMOVED — legacy leave section retired. ESS employee leave and
 // manager leave are now served by HR/LeaveOverview via the canonical hr/leave/* API.
 import { HistorySection }           from './HistorySection';
-import { PayslipsSection }          from './PayslipsSection';
+// Legacy PayslipsSection RETIRED — ESS payslips are served by the canonical
+// Finance MyPayslipsOverview (self-scoped /api/finance/payroll/payslips/my +
+// audited signed-URL downloads). The 'payslips' section id is unchanged.
+import { MyPayslipsOverview }       from '../Finance/MyPayslipsOverview';
 import { ManagerDashboard }         from './ManagerDashboard';
 
 // ── Section IDs ───────────────────────────────────────────────────────────────
@@ -95,7 +98,7 @@ function SectionRouter({
       return <HistorySection />;
 
     case 'payslips':
-      return <PayslipsSection />;
+      return <MyPayslipsOverview />;
 
     case 'manager-overview':
     case 'manager-employees':
@@ -138,7 +141,6 @@ export {
   EmployeesSection,
   DepartmentsSection,
   HistorySection,
-  PayslipsSection,
   ManagerDashboard,
 };
 

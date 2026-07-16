@@ -37,10 +37,8 @@ export const historyKeys = {
   mine:  (days: number) => [...historyKeys.all, 'mine', days] as const,
 } as const;
 
-export const payslipKeys = {
-  all:   ['payslips']                                  as const,
-  mine:  () => [...payslipKeys.all, 'mine']            as const,
-} as const;
+// payslipKeys REMOVED — the legacy ESS payslips query is retired; the canonical
+// Finance my-payslips query owns its own key (['finance','payroll','payslips','my']).
 
 export const dashboardKeys = {
   adminStats:       ['dashboard', 'admin-stats']       as const,

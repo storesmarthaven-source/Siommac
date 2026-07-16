@@ -121,7 +121,8 @@ const ROUTE_MATRIX: RouteSpec[] = [
   { route: 'POST /getPayroll',                 guard: ['admin', 'manager']    },
   { route: 'POST /listPayrollRun',             guard: ['admin', 'manager']    },
   { route: 'POST /approvePayroll',             guard: ['admin', 'manager']    },
-  { route: 'POST /getMyPayslips',              guard: 'user'                  },
+  // legacy my-payslips guard row removed — route deleted; canonical replacement is
+  // POST /api/finance/payroll/payslips/my (requirePermission, not this table).
   { route: 'POST /getPayrollConstants',        guard: ['admin']               },
   { route: 'POST /savePayrollConstants',       guard: ['admin']               },
   { route: 'POST /updateEmployeePayroll',      guard: ['admin']               },

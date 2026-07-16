@@ -11,22 +11,8 @@
 
 import type { TodayStatus, AttendanceStatus } from './types';
 
-// ── Currency formatting ───────────────────────────────────────────────────────
-
-/**
- * Format a number as TTD currency string.
- * @example fmtTTD(1234.5) → 'TTD 1,234.50'
- */
-export function fmtTTD(n: number | null | undefined): string {
-  return 'TTD ' + (n ?? 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
-
-/**
- * Format a number with commas and 2 decimal places (no currency prefix).
- */
-export function fmtAmount(n: number | null | undefined): string {
-  return (n ?? 0).toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
-}
+// fmtTTD / fmtAmount REMOVED — only the retired legacy PayslipsSection used them
+// (the canonical Finance pages format currency via financeShared helpers).
 
 // ── Date / time formatting ────────────────────────────────────────────────────
 
@@ -104,13 +90,7 @@ export const ATTENDANCE_STATUS_COLOR: Record<AttendanceStatus, { bg: string; tex
   absent:  { bg: '#fee2e2', text: '#991b1b' },
 };
 
-export const PAY_CYCLE_LABEL: Record<string, string> = {
-  daily:        'Daily',
-  weekly:       'Weekly',
-  fortnightly:  'Fortnightly',
-  biweekly:     'Bi-Weekly',
-  monthly:      'Monthly',
-};
+// PAY_CYCLE_LABEL REMOVED with the legacy PayslipsSection (its only consumer).
 
 // ── CSV export ────────────────────────────────────────────────────────────────
 
@@ -165,34 +145,5 @@ export function initials(name: string): string {
     .join('');
 }
 
-// ── Payslip print ─────────────────────────────────────────────────────────────
-
-/**
- * Open a new window and print the payslip HTML.
- * Mirrors the legacy window._printPayslip() function.
- */
-export function printPayslipHtml(html: string, css: string, headerHtml: string): void {
-  const win = window.open('', '_blank', 'width=1100,height=800');
-  if (!win) return;
-
-  const faUrl = 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css';
-  // eslint-disable-next-line @typescript-eslint/no-deprecated -- document.write on a freshly opened blank popup window is the standard print idiom
-  win.document.write(
-    `<!DOCTYPE html><html><head><meta charset="utf-8"><title>Payslip</title>` +
-    `<link rel="stylesheet" href="${faUrl}">` +
-    `<style>${css}</style></head><body>${headerHtml}${html}</body></html>`,
-  );
-  win.document.close();
-
-  const faLink = win.document.querySelector<HTMLLinkElement>('link[rel="stylesheet"]');
-  let printed  = false;
-  const doPrint = () => { if (!printed) { printed = true; win.focus(); win.print(); } };
-
-  if (faLink) {
-    faLink.onload  = () => setTimeout(doPrint, 200);
-    faLink.onerror = () => setTimeout(doPrint, 200);
-    setTimeout(doPrint, 1500);
-  } else {
-    setTimeout(doPrint, 600);
-  }
-}
+// printPayslipHtml REMOVED — the legacy print-popup died with PayslipsSection;
+// canonical payslips are server-rendered PDFs behind audited signed URLs.

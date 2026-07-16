@@ -27,7 +27,6 @@ import type {
   AddDepartmentPayload,
   UpdateDepartmentPayload,
   HistoryRecord,
-  Payslip,
   DeptStats,
   DeptEmployee,
   AdminStats,
@@ -115,12 +114,9 @@ export async function getMyHistory(days = 30, signal?: AbortSignal): Promise<His
   return unwrap(res);
 }
 
-// ── Payslip endpoint ──────────────────────────────────────────────────────────
-
-export async function getMyPayslips(signal?: AbortSignal): Promise<Payslip[]> {
-  const res = await apiPost<ApiResult<Payslip[]>>('getMyPayslips', {}, signal ? { signal } : undefined);
-  return unwrap(res);
-}
+// Legacy my-payslips client REMOVED — its legacy route no longer exists;
+// ESS payslips go through the canonical /api/finance/payroll/payslips/my
+// (financePayrollApi.myPayslips, rendered by Finance/MyPayslipsOverview).
 
 // ── Manager dashboard endpoints ───────────────────────────────────────────────
 

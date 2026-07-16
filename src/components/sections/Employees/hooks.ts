@@ -26,13 +26,13 @@ import { useSessionStore } from '@store/session';
 import {
   listEmployees, getEmployee, addEmployee, updateEmployee, deleteEmployee,
   listDepartments, listManagers, listAssignableRoles, addDepartment, updateDepartment, deleteDepartment,
-  getMyHistory, getMyPayslips,
+  getMyHistory,
   getDeptStats, getDeptEmployees,
   getAdminStats, getRecentAttendance,
 } from './api';
 import {
   employeeKeys, departmentKeys, historyKeys,
-  payslipKeys, dashboardKeys,
+  dashboardKeys,
 } from './queryKeys';
 
 // ── Employee queries ──────────────────────────────────────────────────────────
@@ -193,17 +193,8 @@ export function useMyHistory(days = 30) {
   });
 }
 
-// ── Payslips query ────────────────────────────────────────────────────────────
-
-export function useMyPayslips() {
-  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
-  return useQuery({
-    queryKey: payslipKeys.mine(),
-    queryFn:  ({ signal }) => getMyPayslips(signal),
-    staleTime: 5 * 60_000,
-    enabled:  isAuthenticated,
-  });
-}
+// Legacy useMyPayslips REMOVED — ESS payslips render the canonical Finance
+// MyPayslipsOverview (its own query against /api/finance/payroll/payslips/my).
 
 // ── Dashboard queries ─────────────────────────────────────────────────────────
 

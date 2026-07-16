@@ -97,12 +97,8 @@ export const payrollKeys = {
   mine:    () => [...payrollKeys.all,  'mine']             as const,
 } as const;
 
-// ── Payslips ──────────────────────────────────────────────────────────────────
-
-export const payslipKeys = {
-  all:    ['payslips']                                     as const,
-  mine:   () => [...payslipKeys.all,  'mine']              as const,
-} as const;
+// payslipKeys REMOVED — legacy ESS payslips retired; the canonical Finance
+// my-payslips query key is ['finance','payroll','payslips','my'].
 
 // ── Hourly Rates ──────────────────────────────────────────────────────────────
 

@@ -152,39 +152,8 @@ export interface HistoryRecord {
   checkOutPhotoUrl:  string | null;
 }
 
-// ── Payslip ───────────────────────────────────────────────────────────────────
-
-export interface Payslip {
-  id:               string;
-  date_from:        string;
-  date_to:          string;
-  pay_date?:        string;
-  pay_cycle:        PayCycle;
-  pay_basis:        PayBasis;
-  hourly_rate?:     number;
-  hourlyRate?:      number;
-  monthly_salary?:  number;
-  monthlySalary?:   number;
-  hours_worked?:    number;
-  hoursWorked?:     number;
-  days_worked?:     number;
-  daysWorked?:      number;
-  gross_pay:        number;
-  grossPay?:        number;
-  paye:             number;
-  nis:              number;
-  health_surcharge: number;
-  healthSurcharge?: number;
-  total_deductions: number;
-  totalDeductions?: number;
-  net_pay:          number;
-  netPay?:          number;
-  approved_at?:     string;
-  // Employee info (joined)
-  name?:       string;
-  position?:   string;
-  department?: string;
-}
+// Legacy Payslip DTO REMOVED — ESS payslips use the canonical Finance
+// Payslip DTO from @api/finance/payroll (rendered by MyPayslipsOverview).
 
 // ── Manager dashboard ─────────────────────────────────────────────────────────
 
@@ -232,19 +201,5 @@ export interface RecentAttendanceRow {
   profileImage?:  string;
 }
 
-// ── Company info (read from settings, used by payslip) ───────────────────────
-
-export interface CompanyInfo {
-  name:    string;
-  address: string;
-  phone:   string;
-  email:   string;
-  nis:     string;
-  bir:     string;
-  logoUrl: string;
-}
-
-export interface StatutoryRates {
-  nisRate:         number;
-  allowanceAnnual: number;
-}
+// CompanyInfo / StatutoryRates REMOVED — they existed solely for the retired
+// legacy payslip print view (company block + rate footnotes).

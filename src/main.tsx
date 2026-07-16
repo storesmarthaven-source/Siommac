@@ -349,7 +349,9 @@ async function bootApp(): Promise<void> {
     // Leave queries now target the canonical HR leave service (hr/leave/*).
     loadLeaveRequests:            () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-my'] }); },
     loadManagerLeaveApplications: () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-all'] }); },
-    loadMyPayslips:               () => { void queryClient.invalidateQueries({ queryKey: ['payslips'] }); },
+    // ESS payslips now render the canonical Finance MyPayslipsOverview — the
+    // nav shim refreshes ITS query key, not the retired legacy ['payslips'].
+    loadMyPayslips:               () => { void queryClient.invalidateQueries({ queryKey: ['finance', 'payroll', 'payslips', 'my'] }); },
     loadHistoryInline:            () => { void queryClient.invalidateQueries({ queryKey: ['attendance', 'history'] }); },
     loadDepartmentData:           () => { void queryClient.invalidateQueries({ queryKey: ['manager', 'overview'] }); },
     loadDepartmentEmployees:      () => { void queryClient.invalidateQueries({ queryKey: ['manager', 'employees'] }); },
