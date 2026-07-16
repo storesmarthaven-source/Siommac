@@ -462,9 +462,12 @@ export default async function run(h) {
   });
 
   // Editability includes APPROVED — mirrors the FE canEdit gate (draft || approved).
+  // Shape-C (mig 20260919000395): an approved version requires an idempotencyKey so the
+  // re-approval RPC can deduplicate retries. The key is stable per save attempt.
   await test('editability: NIS bands ARE upsertable on an APPROVED (not-yet-active) version', async () => {
     const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
       statutoryVersionId: ctx.sv1Id,
+      idempotencyKey: `e2e-reapproval-sv1-${TAG}`,
       classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
     });
     ok(r, `upsert on approved version should be allowed: ${r.body.message}`);
@@ -1005,6 +1008,148 @@ export default async function run(h) {
       report: 'statutory_version_summary',
     });
     fails(r, 'finance_staff should be denied /reports/run (reports.view is manager/admin only)');
+  });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Finance Statutory › Shape-C — NIS Re-approval Atomicity (finding #3)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  //
+  // Verifies that upsertNisClasses on an approved version uses the
+  // workflow_submit_for_record_tx RPC (mig 20260919000395) to atomically:
+  //   status flip (approved -> pending_approval) + approved_by clear +
+  //   workflow instance + tasks + app_events + hr_audit_log in ONE txn.
+  //
+  // Requires mig 20260919000395 applied before running these tests.
+
+  let sv4Id = null;
+  let reapprovalWfId = null;
+  const reapprovalKey = `e2e-sv4-reapproval-${TAG}`;
+
+  await test('Shape-C setup: create sv4 draft and approve it (by separate actors)', async () => {
+    const c = await api('finance/statutory/versions/create', fmgr1Token, {
+      effectiveFrom: '2031-01-01',
+      label: `E2E Shape-C Reapproval ${TAG}`,
+      jurisdiction: 'TT', currency: 'TTD',
+      payePersonalAllowance: 84000, payeBand1Ceiling: 1000000,
+      payeBand1Rate: 0.25, payeBand2Rate: 0.30,
+      hsMonthlyThreshold: 469.99, hsWeeklyHigh: 4.80, hsWeeklyLow: 2.40,
+    });
+    ok(c, `create sv4 failed: ${c.body.message}`);
+    sv4Id = c.body.data.id;
+    expect(c.body.data.status === 'draft', 'sv4 must be draft');
+
+    const s = await api('finance/statutory/versions/submit', fmgr1Token, { id: sv4Id, idempotencyKey: `e2e-sv4-submit-${TAG}` });
+    ok(s, `submit sv4 failed: ${s.body.message}`);
+
+    const ap = await api('finance/statutory/versions/approve', fmgr2Token, { id: sv4Id });
+    ok(ap, `approve sv4 failed: ${ap.body.message}`);
+    expect(ap.body.data.status === 'approved', `sv4 should be approved, got ${ap.body.data.status}`);
+
+    h.onCleanup(async () => {
+      try {
+        const { data: wfRows } = await sb.from('workflow_instances').select('id').eq('source_record_id', sv4Id);
+        const wfIds = (wfRows ?? []).map(w => w.id);
+        if (wfIds.length) await sb.from('workflow_tasks').delete().in('workflow_id', wfIds);
+        if (wfIds.length) await sb.from('workflow_instances').delete().in('id', wfIds);
+      } catch {}
+      try { await sb.from('finance_nis_classes').delete().eq('statutory_version_id', sv4Id); } catch {}
+      try { await sb.from('hr_audit_log').delete().eq('record_id', sv4Id); } catch {}
+      try { await sb.from('app_events').delete().eq('source_entity_id', sv4Id); } catch {}
+      try { await sb.from('finance_statutory_versions').delete().eq('id', sv4Id); } catch {}
+    });
+  });
+
+  await test('Shape-C: missing idempotency key on approved version returns 400', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: sv4Id,
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
+    });
+    fails(r, 'missing idempotencyKey on approved version must return an error');
+    expect(r.status === 400, `expected 400, got ${r.status}`);
+    expect(r.body.message?.toLowerCase().includes('idempotency key'),
+      `expected idempotency-key error, got: ${r.body.message}`);
+  });
+
+  await test('Shape-C: upsert on approved version with key triggers atomic re-approval', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: sv4Id,
+      idempotencyKey: reapprovalKey,
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
+    });
+    ok(r, `re-approval upsert failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'response data must be an array of NIS class rows');
+    expect(r.body.data.length >= 1, 'expected ≥1 NIS class row in response');
+
+    // Version must now be pending_approval with cleared approved_by and new workflow_id
+    const { data: sv4Row } = await sb.from('finance_statutory_versions')
+      .select('status, workflow_id, approved_by').eq('id', sv4Id).single();
+    expect(sv4Row.status === 'pending_approval',
+      `expected pending_approval after re-approval, got ${sv4Row.status}`);
+    expect(sv4Row.workflow_id != null, 'workflow_id must be set after re-approval');
+    expect(sv4Row.approved_by == null, 'approved_by must be cleared (void prior approval)');
+    reapprovalWfId = sv4Row.workflow_id;
+
+    // Workflow instance must exist and be in_progress
+    const { data: wfRow } = await sb.from('workflow_instances')
+      .select('status, module_key, workflow_type').eq('id', reapprovalWfId).maybeSingle();
+    expect(wfRow != null, 'workflow_instances row not found for re-approval workflow');
+    expect(wfRow.status === 'in_progress',
+      `expected in_progress workflow, got ${wfRow.status}`);
+    expect(wfRow.module_key === 'finance_statutory',
+      `expected finance_statutory module, got ${wfRow.module_key}`);
+    expect(wfRow.workflow_type === 'finance_statutory_approval',
+      `expected finance_statutory_approval type, got ${wfRow.workflow_type}`);
+
+    // At least one pending workflow task must be created for the first step
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('id, status').eq('workflow_id', reapprovalWfId).eq('status', 'pending').limit(5);
+    expect((tasks ?? []).length >= 1, 'expected ≥1 pending workflow_task for re-approval');
+
+    // Exactly one app_event with the submitted event type for this version by this actor
+    const { data: events } = await sb.from('app_events')
+      .select('id, event_type').eq('source_entity_id', sv4Id)
+      .eq('event_type', 'finance.statutory.version.submitted')
+      .eq('actor_user_id', fmgr1Id);
+    expect((events ?? []).length >= 1,
+      'expected app_event finance.statutory.version.submitted for re-approval');
+
+    // hr_audit_log must have the re-approval (not the fresh-submit) action
+    const { data: auditRows } = await sb.from('hr_audit_log')
+      .select('action').eq('record_id', sv4Id)
+      .eq('action', 'statutory_version.reopened_by_edit').limit(5);
+    expect((auditRows ?? []).length === 1,
+      'expected exactly 1 hr_audit_log statutory_version.reopened_by_edit row');
+  });
+
+  await test('Shape-C: idempotent retry with same key returns same workflow, no new workflow started', async () => {
+    // The RPC receipt mechanism (_claim_request) short-circuits on the same key+hash.
+    // Sending the same idempotencyKey again must NOT start a second workflow.
+    const r = await api('finance/statutory/nis-classes/upsert', fmgr1Token, {
+      statutoryVersionId: sv4Id,
+      idempotencyKey: reapprovalKey,
+      classes: [{ classNo: 1, weeklyMin: 0, weeklyMax: 299.99, employeeWeekly: 13.50, employerWeekly: 20.00 }],
+    });
+    ok(r, `idempotent retry should succeed (receipt short-circuits): ${r.body.message}`);
+
+    const { data: sv4Row2 } = await sb.from('finance_statutory_versions')
+      .select('workflow_id').eq('id', sv4Id).single();
+    expect(sv4Row2.workflow_id === reapprovalWfId,
+      `workflow_id must not change on retry: expected ${reapprovalWfId}, got ${sv4Row2.workflow_id}`);
+
+    // No duplicate workflow instances for this source record
+    const { data: allWfs } = await sb.from('workflow_instances')
+      .select('id').eq('source_record_id', sv4Id).eq('status', 'in_progress');
+    expect((allWfs ?? []).length === 1,
+      `expected exactly 1 in_progress workflow for sv4, got ${(allWfs ?? []).length}`);
+  });
+
+  await test('Shape-C: employee is DENIED NIS class upsert (access control)', async () => {
+    const r = await api('finance/statutory/nis-classes/upsert', empToken, {
+      statutoryVersionId: sv4Id,
+      idempotencyKey: `e2e-sv4-unauth-${TAG}`,
+      classes: [{ classNo: 99, weeklyMin: 0, weeklyMax: null, employeeWeekly: 1, employerWeekly: 1 }],
+    });
+    fails(r, 'employee should be denied NIS class upsert (finance.statutory.manage required)');
   });
 
   // ═══════════════════════════════════════════════════════════════════════════

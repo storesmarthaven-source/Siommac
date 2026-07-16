@@ -15,11 +15,10 @@
 
 import { sb } from '../db';
 import { writeHrAudit } from '../hr/employeeCore';
-import { startWorkflowForRecord, rpcHttpError } from '../workflow/service';
+import { rpcHttpError } from '../workflow/service';
 import { selectWorkflowBinding } from '../workflow/bindingResolver';
 import { notifyUsersByRole } from './financeEvents';
 import { emitFinanceMutationBackbone } from './backbone';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 import { resolveSettingValue } from '../settings/resolveSetting';
 
 // ── Segregation of duties helper ─────────────────────────────────────────────
@@ -763,6 +762,7 @@ export async function upsertNisClasses(
   statutoryVersionId: string,
   classes: UpsertNisClassInput[],
   actorId: string,
+  idempotencyKey?: string,
 ): Promise<NisClassRow[]> {
   // Ensure the version exists and is still editable (draft/approved, not active/retired)
   const version = await getStatutoryVersion(statutoryVersionId);
@@ -777,6 +777,36 @@ export async function upsertNisClasses(
   const requireReapproval = version.status === 'approved' && await resolveSettingValue<boolean>(
     sb, 'finance_statutory.require_reapproval_on_edit', { moduleKey: 'finance_statutory' }, true,
   );
+
+  // ATOMIC (finding #3 Shape-C): binding-first + key validation BEFORE any write.
+  // Resolving these before the class upsert means no compensating rollback is needed if
+  // the binding is missing or the key is absent.
+  let reapprovalRequestKey = '';
+  let reapprovalBindingId = '';
+  if (requireReapproval) {
+    reapprovalRequestKey = idempotencyKey?.trim() ?? '';
+    if (!reapprovalRequestKey) {
+      throw Object.assign(
+        new Error('An idempotency key is required to re-submit an approved statutory version for approval.'),
+        { status: 400 },
+      );
+    }
+    const binding = await selectWorkflowBinding(sb, {
+      moduleKey:      'finance_statutory',
+      workflowType:   'finance_statutory_approval',
+      triggerEvent:   'finance.statutory.version.submitted',
+      sourceRecordId: statutoryVersionId,
+      requestedBy:    actorId,
+      recordData:     {},
+    });
+    if (!binding) {
+      throw Object.assign(
+        new Error('No approval workflow is configured for statutory versions.'),
+        { status: 422 },
+      );
+    }
+    reapprovalBindingId = binding.id;
+  }
 
   const classNos = classes.map(c => c.classNo);
 
@@ -813,64 +843,36 @@ export async function upsertNisClasses(
   };
 
   if (requireReapproval) {
-    // approved → pending_approval, clear the approver.
-    const { error: flipErr } = await sb.from('finance_statutory_versions')
-      .update({ status: 'pending_approval', approved_by: null }).eq('id', statutoryVersionId);
-    if (flipErr) { await rollbackClasses(); throw Object.assign(new Error('reopenForReapproval: ' + flipErr.message), { status: 500 }); }
-
-    const restoreApproved = async (): Promise<void> => {
-      try {
-        await sb.from('finance_statutory_versions')
-          .update({ status: 'approved', approved_by: version.approvedBy ?? null }).eq('id', statutoryVersionId);
-      } catch (_) { /* best-effort */ }
-    };
-
-    // Re-enter the central approval workflow (same trigger as a fresh submit).
-    const ctx: ModuleWorkflowContext = {
-      moduleKey: 'finance_statutory',
-      workflowType: 'finance_statutory_approval',
-      triggerEvent: 'finance.statutory.version.submitted',
-      sourceRecordId: statutoryVersionId,
-      sourceRecordRef: `SV-${statutoryVersionId.slice(0, 8).toUpperCase()}`,
-      requestedBy: actorId,
-      priority: 'normal',
-      recordData: { effectiveFrom: version.effectiveFrom, jurisdiction: version.jurisdiction, label: version.label },
-    };
-    try {
-      const wf = await startWorkflowForRecord({ context: ctx, actor: { id: actorId } });
-      if (wf?.id) await sb.from('finance_statutory_versions').update({ workflow_id: wf.id }).eq('id', statutoryVersionId);
-    } catch (wfErr) {
-      await restoreApproved(); await rollbackClasses();
-      throw Object.assign(new Error('Re-approval workflow start failed — version restored to approved: ' + String(wfErr)), { status: 500 });
+    // ATOMIC (Shape-C): status flip (approved -> pending_approval) + approved_by clear +
+    // workflow instance + tasks + app_events + hr_audit_log all commit in ONE txn inside
+    // workflow_submit_for_record_tx (mig 20260919000395). On failure: compensating rollback.
+    const { data: rpcData, error: rpcErr } = await sb.rpc('workflow_submit_for_record_tx', {
+      p_source_table: 'finance_statutory_versions',
+      p_source_id:    statutoryVersionId,
+      p_actor_id:     actorId,
+      p_binding_id:   reapprovalBindingId,
+      p_request_key:  reapprovalRequestKey,
+      p_business:     { effectiveFrom: version.effectiveFrom, jurisdiction: version.jurisdiction, label: version.label },
+    });
+    if (rpcErr) {
+      await rollbackClasses();
+      throw rpcHttpError(rpcErr as { code?: string | null; message: string });
     }
+    const rpcResult = (rpcData ?? {}) as { workflowId?: string | null };
 
-    // Backbone: audit the edit-triggered re-approval + notify the approvers. Roll back both on failure.
-    const approverIds = await resolveStatutoryApproverIds(actorId);
-    try {
-      await emitFinanceMutationBackbone({
-        actorUserId: actorId,
-        module: 'finance_statutory',
-        entityType: 'statutory_version',
-        entityId: statutoryVersionId,
-        eventType: 'finance.statutory.version.submitted',
-        auditAction: 'statutory_version.reopened_by_edit',
-        previousState: { status: 'approved' },
-        newState: { status: 'pending_approval', nisClassesChanged: classes.length },
-        severity: 'info',
-        metadata: { effectiveFrom: version.effectiveFrom, jurisdiction: version.jurisdiction, reason: 'nis_classes_edited' },
-        notification: {
-          title: `Statutory version "${version.label}" re-opened for approval`,
-          body: `Its NIS figures were edited after approval, so it must be re-approved before activation.`,
-          actionRoute: '/finance/statutory',
-          type: 'finance.statutory.version.submitted',
-          severity: 'info',
-          ...(approverIds.length ? { recipientUserIds: approverIds } : {}),
-        },
-      });
-    } catch (backboneErr) {
-      await restoreApproved(); await rollbackClasses();
-      throw backboneErr;
-    }
+    // Notify the finance_manager approvers (best-effort, post-commit). Workflow id in the
+    // dedupe key so a re-save with a new workflow notifies afresh.
+    void notifyUsersByRole('finance_manager', {
+      type:           'finance.statutory.version.submitted',
+      title:          `Statutory version "${version.label}" re-opened for approval`,
+      body:           `Its NIS figures were edited after approval, so it must be re-approved before activation.`,
+      module:         'finance_statutory',
+      severity:       'info',
+      sourceType:     'statutory_version',
+      sourceId:       statutoryVersionId,
+      actionRequired: true,
+      dedupeKey:      `statutory.version.reapproval.${statutoryVersionId}.${rpcResult.workflowId ?? ''}`,
+    });
   } else {
     // Draft edit (or approved with the policy switched off): audit the class edit only.
     try {
