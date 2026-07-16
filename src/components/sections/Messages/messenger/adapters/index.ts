@@ -11,8 +11,19 @@ export { SiomacAttachmentService } from './siomacAttachments';
 export { SiomacRealtimeGateway } from './siomacRealtime';
 export * from './mappers';
 
+/** The repository port plus the SIOMAC-specific extensions the app layer uses:
+ *  lazy per-thread message loading, the employee directory, and group creation
+ *  with the required first message. */
+export type SiomacRepository = MessagingRepository & {
+  loadThread(threadId: string): Promise<import('../domain/models').Message[]>;
+  listRecipients(query?: string): Promise<import('../domain/models').User[]>;
+  createGroup(
+    name: string, participantIds: string[], actorId: string, firstMessage?: string,
+  ): Promise<import('../domain/models').Thread>;
+};
+
 export interface SiomacMessagingAdapters {
-  repository:  MessagingRepository & { loadThread(threadId: string): Promise<import('../domain/models').Message[]> };
+  repository:  SiomacRepository;
   attachments: AttachmentService;
   realtime:    SiomacRealtimeGateway;
 }

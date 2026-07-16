@@ -14,6 +14,7 @@ import { apiPost } from '@lib/api';
 import type {
   MessageThread as ThreadDTO, MessagePost as PostDTO,
   MessageParticipant as ParticipantDTO, MessagePin as PinDTO,
+  MessageRecipient as RecipientDTO,
 } from '../../../../../../types/messaging';
 import type { OnlineUser } from '@api/communications';
 import type { MessagingRepository } from '../domain/ports';
@@ -81,11 +82,16 @@ export class SiomacMessagingRepository implements MessagingRepository {
   }
 
   async send(threadId: string, authorId: string, draft: MessageDraft): Promise<Message> {
+    // A composer-attached link that is not already in the text is appended to the
+    // body so it is actually persisted (the backend has no separate link field).
+    const body = draft.link && !draft.body.includes(draft.link.url)
+      ? (draft.body ? `${draft.body}\n${draft.link.url}` : draft.link.url)
+      : draft.body;
     const res = await apiPost<{ success: boolean; postId?: string; message?: string }>(
       'communications/messages/post',
       {
         threadId,
-        body: draft.body,
+        body,
         attachmentIds: draft.attachments.map(a => a.id),
         replyToPostId: draft.replyToId ?? null,
       },
@@ -96,19 +102,24 @@ export class SiomacMessagingRepository implements MessagingRepository {
     // Optimistic echo — realtime refetch reconciles the authoritative row.
     return {
       id: res.postId, threadId, authorId,
-      body: draft.body, html: draft.html, createdAt: new Date().toISOString(),
+      body, html: draft.html || body, createdAt: new Date().toISOString(),
       ...(draft.replyToId ? { replyToId: draft.replyToId } : {}),
+      ...(draft.link ? { link: draft.link } : {}),
       attachments: draft.attachments, reactions: [], delivery: 'sent', pinned: false, deleted: false,
     };
   }
 
-  async createGroup(name: string, participantIds: string[], actorId: string): Promise<Thread> {
-    // NOTE: createThread requires a body or an attachment; an empty named-group
-    // create sends an empty body and relies on the backend body-or-attachment
-    // guard. Phase 3 decides whether group creation requires a first message.
+  async createGroup(name: string, participantIds: string[], actorId: string, firstMessage?: string): Promise<Thread> {
+    // createThread requires a body or an attachment, so group creation carries a
+    // REQUIRED first message (the group form enforces it — no fabricated body).
+    const body = (firstMessage ?? '').trim();
+    if (!body) throw new Error('A group conversation starts with a first message.');
     const res = await apiPost<{ success: boolean; threadId?: string; message?: string }>(
       'communications/messages/createThread',
-      { threadType: 'group', subject: name, participantUserIds: participantIds, body: '' },
+      {
+        threadType: 'group', subject: name, participantUserIds: participantIds,
+        body, idempotencyKey: crypto.randomUUID(),
+      },
       { retryable: false },
     );
     if (!res.success || !res.threadId) throw new Error(res.message ?? 'Failed to create group.');
@@ -160,6 +171,18 @@ export class SiomacMessagingRepository implements MessagingRepository {
   // posts/pins for now. Returns [] rather than a fake row.
   async listActivity(_threadId: string): Promise<ActivityEntry[]> {
     return [];
+  }
+
+  /** Employee directory for invites / group creation (server-side search). */
+  async listRecipients(query?: string): Promise<User[]> {
+    const rows = await post<RecipientDTO[]>('communications/messages/recipients', { query: query || undefined });
+    return rows.map(r => ({
+      id: r.userId,
+      name: r.displayName ?? r.username ?? r.userId,
+      title: r.role ?? r.department ?? '',
+      avatarUrl: r.profileImage ?? '',
+      presence: 'offline' as const,
+    }));
   }
 
   // ── Hidden features (no control rendered → never called; throw if they are) ──

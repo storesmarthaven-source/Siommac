@@ -12,9 +12,10 @@ import type {
 } from '../../../../../../types/messaging';
 import type { OnlineUser } from '@api/communications';
 import type {
-  Attachment, AttachmentKind, DeliveryState, Message, Thread, ThreadKind,
+  Attachment, AttachmentKind, DeliveryState, LinkPreview, Message, Thread, ThreadKind,
   TransferState, User, Presence,
 } from '../domain/models';
+import { linkPreviewFromUrl } from '../domain/format';
 
 // ── Attachments ────────────────────────────────────────────────────────────────
 const ATTACHMENT_KIND: Record<MessageAttachmentType, AttachmentKind> = {
@@ -66,8 +67,19 @@ function mapDelivery(status: PostDTO['deliveryStatus']): DeliveryState {
   }
 }
 
+// First URL in a message body → a rendered link-preview card (the backend has no
+// separate link field; the composer persists attached links into the body).
+const BODY_URL = /(?:https?:\/\/)[^\s<]+/i;
+
+function linkFromBody(body: string): LinkPreview | undefined {
+  const url = body.match(BODY_URL)?.[0];
+  if (!url) return undefined;
+  try { return linkPreviewFromUrl(url); } catch { return undefined; }
+}
+
 export function mapPost(p: PostDTO): Message {
   const sysEvent = p.postType === 'system_event' && p.systemEventType ? SYSTEM_EVENT[p.systemEventType] : undefined;
+  const link = !sysEvent ? linkFromBody(p.body ?? '') : undefined;
   return {
     id: p.id,
     threadId: p.threadId,
@@ -78,6 +90,7 @@ export function mapPost(p: PostDTO): Message {
     ...(p.editedAt ? { editedAt: p.editedAt } : {}),
     ...(p.replyToPost?.id ? { replyToId: p.replyToPost.id } : {}),
     attachments: (p.attachments ?? []).map(mapAttachment),
+    ...(link ? { link } : {}),
     reactions: [],                            // reactions hidden until its own backend slice
     delivery: mapDelivery(p.deliveryStatus),
     pinned: p.isPinned ?? false,

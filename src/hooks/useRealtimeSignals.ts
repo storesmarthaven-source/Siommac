@@ -24,6 +24,7 @@ import { useQueryClient }     from '@tanstack/preact-query';
 import { SUPABASE_URL, SUPABASE_ANON_KEY } from '@cfg';
 import { communicationKeys, notificationKeys, messageKeys, ticketKeys } from '@api/queryKeys';
 import { scheduleHdrBadgeSync } from '@components/nav';
+import { emitMessagesSignal } from '@components/sections/Messages/messenger/integration/messengerSignalBus';
 
 type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
@@ -69,6 +70,7 @@ export function useRealtimeSignals(channelKey: string | null): void {
             void qc.invalidateQueries({ queryKey: notificationKeys.all });
           } else if (domain === 'messages') {
             void qc.invalidateQueries({ queryKey: messageKeys.all });
+            emitMessagesSignal();   // Messenger workspace refetch bridge (no-op when unmounted)
           } else if (domain === 'tickets') {
             void qc.invalidateQueries({ queryKey: ticketKeys.all });
           }

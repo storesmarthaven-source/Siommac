@@ -30,21 +30,46 @@ Reactions, favourites, and typing are hidden. `toggleReaction`/`setFavourite`
 **throw** if called (they shouldn't be — the UI renders no control). The realtime
 gateway ignores typing/presence publishes.
 
-## Phase 3+ (NOT done)
+## Phase 3 + 4 flag-mount (DONE)
 
-- Port `app/` (`MessagingProvider`/`selectors`) — **replace the eager fixture
-  snapshot with cursor queries**: `load()` currently returns threads + users with an
-  EMPTY message list; the app must call `repository.loadThread(threadId)` on select.
-- Port `ui/components/` + `ui/styles/messenger.css` with SIOMAC-scoped classnames;
-  wire `@ui/toast` + AppShell; drop the DO-NOT-PORT dev/fixture/browser adapters.
-- Bridge SIOMAC realtime → `realtime.publish({ type:'snapshot-changed' })` from the
-  app's realtime hook.
-- Feature-flag mount alongside `MessageCenter`, reach parity, cut over, delete legacy.
+- **`app/`** — `MessagingProvider` reworked for LAZY loading: `load()` returns
+  threads + users only; `actions.selectThread(id)` fetches messages via
+  `repository.loadThread` and caches them; a realtime `snapshot-changed` reload
+  refreshes the base + the ACTIVE thread and drops other cached threads.
+  `markRead` is optimistic (local badge clear; realtime reconciles).
+- **`ui/components/` + `ui/styles/messenger.css`** — ported with the `sm-`
+  scoped classnames; the bundle's GLOBAL preamble (`:root`, element resets,
+  `svg` sizing) is re-scoped under `.sm-workspace`. Icons render through the
+  app-standard `lucide` + `@ui` LucideIcon via `ui/components/icons.tsx`
+  (typed names — no `lucide-preact` dependency). Avatars fall back to initials.
+- **Realtime bridge** — `useRealtimeSignals` (messages domain) →
+  `integration/messengerSignalBus` → gateway `snapshot-changed`.
+- **Toasts** — `integration/messagingNotifications.ts` uses `@ui/toast`.
+- **Flag mount** — `MessagesSection.tsx` switches legacy `MessageCenter` ↔
+  `MessengerWorkspace` per device (`localStorage siomac.messenger.v2`), default
+  legacy. Cutover deletes MessageCenter + the switch.
 
-## Known reconciliation points (documented in the code)
+## Deliberate scope decisions (Phase 3)
 
-- `createGroup` sends an empty `body` (createThread requires body-or-attachment) —
-  decide whether group creation requires a first message.
-- Direct-thread name/avatar derived from the non-self participant.
+- Group creation has a REQUIRED "First message" field (createThread demands
+  body-or-attachment; no fabricated body).
+- Invite/group candidates come from the real `/communications/messages/recipients`
+  directory (server-searchable), not the snapshot users.
+- The **"Sent" queue is deferred** — with lazy loading its counts would only
+  reflect opened threads (dishonest); needs a backend authored-by-me flag.
+- Composer links are appended into the body when missing (persisted for real);
+  link-preview cards are derived from the first URL in a body at map time.
+- The attach dialog is **upload-only** — the bundle's Document Vault / Shared
+  media tabs fabricated demo files and were not ported (future vault slice).
+- The fixture date divider ("Today" regardless of dates) was dropped; real date
+  dividers are a polish follow-up.
+- Reactions / favourites / typing / presence-publishing remain hidden.
+
+## Remaining before cutover (Phase 4 tail)
+
+- Parity pass vs MessageCenter (compliance browser, drafts, pins browser, etc.),
+  then delete `MessageCenter.tsx` + `MessagesSection` switch + legacy CSS.
+- Direct-thread creation from the Messenger (today the legacy compose dialog /
+  dropdown owns it; the get-or-create backend path is live).
 - `listActivity` returns `[]` (no dedicated activity-log endpoint yet).
 - `relatedRecord.type` mapped to `Document` pending per-module collaboration cards.
