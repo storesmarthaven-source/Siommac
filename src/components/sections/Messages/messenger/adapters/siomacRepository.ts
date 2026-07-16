@@ -207,10 +207,12 @@ export class SiomacMessagingRepository implements MessagingRepository {
     }));
   }
 
-  // ── Hidden features (no control rendered → never called; throw if they are) ──
-  async toggleReaction(): Promise<void> {
-    throw new Error('Reactions are not enabled yet.');
+  /** Toggle an emoji reaction (reactions slice — atomic RPC server-side). */
+  async toggleReaction(messageId: string, _userId: string, emoji: string): Promise<void> {
+    await post('communications/messages/reactions/toggle', { postId: messageId, emoji });
   }
+
+  // ── Hidden features (no control rendered → never called; throw if they are) ──
   async setFavourite(): Promise<void> {
     throw new Error('Favourites are not enabled yet.');
   }

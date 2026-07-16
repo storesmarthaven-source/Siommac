@@ -6,7 +6,7 @@
 //     bubble (is-self + is-admin classes drive the ported CSS unchanged).
 import {
   Archive, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, LockKeyhole, MessageSquareText, MoreHorizontal, Pin, PinOff,
-  Reply, Settings2, Trash2, UserPlus, Users,
+  Reply, Settings2, SmilePlus, Trash2, UserPlus, Users,
 } from "./icons";
 import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
@@ -130,6 +130,7 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
   const isSelf = message.authorId === currentUserId;
   const replySource = message.replyToId ? messageById(snapshot, message.replyToId) : undefined;
   const canPin = Boolean(message.body.trim()) && !emojiOnly.test(message.body.trim()) || message.attachments.length > 0 || Boolean(message.card || message.link);
+  const liked = message.reactions.some((reaction) => reaction.emoji === "👍" && reaction.userIds.includes(currentUserId));
 
   if (message.deleted) return <article id={`message-${message.id}`} className={`sm-message ${isSelf ? "is-self" : ""}`}><Avatar user={author} size="medium" /><div className="sm-message__main"><div className="sm-deleted-message">This message was deleted.</div></div></article>;
 
@@ -140,12 +141,14 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
         <header className="sm-message__meta"><strong>{author.name}</strong><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></header>
         {replySource ? <button className="sm-reply-reference" type="button" onClick={() => onJump(replySource.id)}><Reply /><span><strong>{userById(snapshot, replySource.authorId).name}</strong><em>{replySource.body || replySource.attachments[0]?.name}</em></span></button> : null}
         {message.body ? <div className="sm-bubble"><span><RichMessage html={message.html} /></span><MessageStatus message={message} /></div> : null}
-        {message.attachments.map((attachment) => <AttachmentCard key={attachment.id} attachment={attachment} onPreview={() => onPreview(attachment)} onOpen={() => void actions.download(attachment)} onPin={() => void actions.togglePin(message.id)} />)}
+        {message.attachments.map((attachment) => <AttachmentCard key={attachment.id} attachment={attachment} liked={liked} onPreview={() => onPreview(attachment)} onOpen={() => void actions.download(attachment)} onPin={() => void actions.togglePin(message.id)} onLike={() => void actions.toggleReaction(message.id, "👍")} />)}
         {message.link ? <LinkCard link={message.link} /> : null}
         {message.card ? <CollaborationRecordCard card={message.card} owner={userById(snapshot, message.card.ownerId)} collaborators={message.card.collaboratorIds.map((id) => userById(snapshot, id))} onOpen={() => onOpenCollaboration(message.card!)} onComment={onReply} onActivity={onActivity} onPin={() => void actions.togglePin(message.id)} /> : null}
+        {message.reactions.length > 0 ? <div className="sm-reactions">{message.reactions.map((reaction) => <button type="button" key={reaction.emoji} title={`${reaction.userIds.length} reaction${reaction.userIds.length === 1 ? "" : "s"}`} onClick={() => void actions.toggleReaction(message.id, reaction.emoji)}>{reaction.emoji}<span>{reaction.userIds.length}</span></button>)}</div> : null}
         <div className="sm-message-actions" aria-label="Message actions">
           <button type="button" onClick={onReply}><Reply />Reply</button>
           <button type="button" disabled={!canPin} onClick={() => void actions.togglePin(message.id)}>{message.pinned ? <PinOff /> : <Pin />}{message.pinned ? "Unpin" : "Pin"}</button>
+          <button type="button" onClick={() => void actions.toggleReaction(message.id, "👍")}><SmilePlus />{liked ? "Unlike" : "Like"}</button>
           {isSelf ? <div className="sm-message-menu"><button type="button" aria-label="More message actions" aria-expanded={menuOpen} onClick={() => setMenuOpen((value) => !value)}><MoreHorizontal /></button>{menuOpen ? <div role="menu"><button type="button" role="menuitem" onClick={() => void actions.remove(message.id)}><Trash2 />Delete</button></div> : null}</div> : null}
         </div>
       </div>

@@ -18,7 +18,7 @@ import { sb }                              from './db';
 import { emitAppEvent }                    from './appEvents';
 import { userCan }                         from './auth';
 import { emitSignal }                      from './communications';
-import { pinTx, deleteMessageTx }          from './messaging/messagingRpc';
+import { pinTx, deleteMessageTx, toggleReactionTx } from './messaging/messagingRpc';
 import type { MessagePin, PresenceStatus } from '../../../types/messaging';
 
 // Online if the user pinged presence within this window (covers tab-away gaps).
@@ -347,4 +347,23 @@ function initialsOf(name: string | null | undefined): string {
   if (!name) return '?';
   const parts = name.trim().split(/\s+/);
   return ((parts[0]?.[0] ?? '') + (parts[1]?.[0] ?? '')).toUpperCase() || '?';
+}
+
+/** Toggle a reaction on a post (reactions slice) — RPC-atomic + realtime signal. */
+export async function toggleReaction(input: {
+  postId:  string;
+  actorId: string;
+  emoji:   string;
+}): Promise<{ ok: boolean; message?: string; status?: number; action?: 'added' | 'removed'; count?: number }> {
+  try {
+    const result = await toggleReactionTx(input);
+    const { data: post } = await sb.from('message_posts').select('thread_id')
+      .eq('id', input.postId).maybeSingle<{ thread_id: string }>();
+    if (post?.thread_id) void emitSignal(await threadParticipantIds(post.thread_id), 'messages');
+    return { ok: true, action: result.action, count: result.count };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[messagingRich] toggleReaction failed:', err.message ?? e);
+    return Object.assign({ ok: false, message: err.message ?? 'Internal error' }, err.status ? { status: err.status } : {});
+  }
 }

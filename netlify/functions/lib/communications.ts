@@ -1379,16 +1379,25 @@ export async function getThreadPosts(
 
     const readCountMap = new Map<string, number>();
     const pinnedPosts  = new Set<string>();
+    const reactionsMap = new Map<string, Map<string, string[]>>();   // post → emoji → userIds
     if (postIds.length > 0) {
-      const [receiptsRes, pinsRes] = await Promise.all([
+      const [receiptsRes, pinsRes, reactionsRes] = await Promise.all([
         sb.from('message_post_receipts').select('post_id, read_at').in('post_id', postIds),
         sb.from('message_pins').select('post_id').eq('pin_type', 'post').is('unpinned_at', null).in('post_id', postIds),
+        sb.from('message_post_reactions').select('post_id, user_id, emoji').in('post_id', postIds).order('created_at', { ascending: true }),
       ]);
       for (const r of ((receiptsRes as { data: Array<{ post_id: string; read_at: string | null }> | null }).data) ?? []) {
         if (r.read_at) readCountMap.set(r.post_id, (readCountMap.get(r.post_id) ?? 0) + 1);
       }
       for (const pin of ((pinsRes as { data: Array<{ post_id: string | null }> | null }).data) ?? []) {
         if (pin.post_id) pinnedPosts.add(pin.post_id);
+      }
+      for (const rx of ((reactionsRes as { data: Array<{ post_id: string; user_id: string; emoji: string }> | null }).data) ?? []) {
+        const perPost = reactionsMap.get(rx.post_id) ?? new Map<string, string[]>();
+        const users = perPost.get(rx.emoji) ?? [];
+        users.push(rx.user_id);
+        perPost.set(rx.emoji, users);
+        reactionsMap.set(rx.post_id, perPost);
       }
     }
 
@@ -1422,6 +1431,7 @@ export async function getThreadPosts(
         replyToPost:        p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null,
         deliveryStatus:     (p.delivery_status ?? undefined) as PostRow['deliveryStatus'],
         readByCount:        readCountMap.get(p.id) ?? 0,
+        reactions:          [...(reactionsMap.get(p.id) ?? new Map<string, string[]>())].map(([emoji, userIds]) => ({ emoji, userIds })),
         sequence:           p.sequence ?? null,
         clientIdempotencyKey: p.client_idempotency_key ?? null,
       };

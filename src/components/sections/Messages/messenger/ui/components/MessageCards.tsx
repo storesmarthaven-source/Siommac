@@ -1,9 +1,8 @@
-// Ported from the bundle (ui/components/MessageCards.tsx). SIOMAC deltas:
-// the reaction "Like" control is removed (reactions are a hidden feature —
-// no dead buttons), so AttachmentCard exposes Preview/Open/Pin only.
+// Ported from the bundle (ui/components/MessageCards.tsx). The reaction "Like"
+// action is live (reactions slice — mig 20260919000363).
 import {
   Activity, AudioLines, Clock3, Copy, ExternalLink, Eye, File, FileArchive, FileCode2,
-  FileImage, FileJson, FileSpreadsheet, FileText, FolderOpen, Presentation,
+  FileImage, FileJson, FileSpreadsheet, FileText, FolderOpen, Heart, Presentation,
   ArrowUpRight, Globe2, MessageCircle, Pin, ShieldCheck, Users,
 } from "./icons";
 import type { Attachment, CollaborationCard, LinkPreview, User } from "../../domain/models";
@@ -27,7 +26,7 @@ function FileGlyph({ attachment }: { attachment: Attachment }) {
 }
 
 type AttachmentCardProps =
-  | { attachment: Attachment; interactive?: true; onPreview(): void; onOpen(): void; onPin(): void }
+  | { attachment: Attachment; interactive?: true; liked: boolean; onPreview(): void; onOpen(): void; onPin(): void; onLike(): void }
   | { attachment: Attachment; interactive: false };
 
 export function AttachmentCard(props: AttachmentCardProps) {
@@ -49,6 +48,7 @@ export function AttachmentCard(props: AttachmentCardProps) {
         <button type="button" disabled={!available} onClick={props.onPreview}><Eye />Preview</button>
         <button type="button" disabled={!available} onClick={props.onOpen}><FolderOpen />Open</button>
         <button type="button" disabled={!available} onClick={props.onPin}><Pin />Pin</button>
+        <button type="button" disabled={!available} className={props.liked ? "is-active" : ""} onClick={props.onLike}><Heart />{props.liked ? "Liked" : "Like"}</button>
       </div> : null}
     </article>
   );

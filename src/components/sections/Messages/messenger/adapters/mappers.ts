@@ -91,7 +91,7 @@ export function mapPost(p: PostDTO): Message {
     ...(p.replyToPost?.id ? { replyToId: p.replyToPost.id } : {}),
     attachments: (p.attachments ?? []).map(mapAttachment),
     ...(link ? { link } : {}),
-    reactions: [],                            // reactions hidden until its own backend slice
+    reactions: (p.reactions ?? []).map(r => ({ emoji: r.emoji, userIds: r.userIds })),
     delivery: mapDelivery(p.deliveryStatus),
     pinned: p.isPinned ?? false,
     deleted: p.deletedAt != null,

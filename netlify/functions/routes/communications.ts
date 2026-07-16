@@ -67,6 +67,7 @@ import {
   pinMessage,
   unpinMessage,
   softDeleteMessage,
+  toggleReaction,
   listPins,
   pinnedThreadSummary,
   saveDraft,
@@ -859,6 +860,27 @@ router.post('/communications/messages/delete', async c => {
     return c.json({ success: false, message: result.message ?? 'Failed to delete message' }, status);
   }
   return c.json({ success: true, postId: result.postId, deletedAt: result.deletedAt });
+});
+
+// POST /api/communications/messages/reactions/toggle — add/remove an emoji reaction
+const ToggleReactionSchema = z.object({
+  postId: z.string().uuid(),
+  emoji:  z.string().trim().min(1).max(16),
+});
+
+router.post('/communications/messages/reactions/toggle', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, ToggleReactionSchema, body.args);
+  if (!v.ok) return v.response;
+
+  // Participant/system/legal-hold rules are enforced atomically inside the RPC.
+  const result = await toggleReaction({ postId: v.data.postId, actorId: user.id, emoji: v.data.emoji });
+  if (!result.ok) {
+    const status = (result.status ?? 400) as 200;
+    return c.json({ success: false, message: result.message ?? 'Failed to toggle reaction' }, status);
+  }
+  return c.json({ success: true, postId: v.data.postId, action: result.action, count: result.count });
 });
 
 const PinsListSchema = z.object({ threadId: z.string().uuid() });

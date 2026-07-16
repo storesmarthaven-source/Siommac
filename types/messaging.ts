@@ -65,6 +65,13 @@ export interface MessageAttachment {
   createdAt?:       string;
 }
 
+/** Aggregated per-emoji reaction on a post (reactions slice). */
+export interface MessagePostReaction {
+  emoji:   string;
+  /** Reactor user ids — the client derives counts and own-state from this. */
+  userIds: string[];
+}
+
 export interface MessagePost {
   id:              string;
   threadId:        string;
@@ -96,6 +103,8 @@ export interface MessagePost {
   } | null;
   deliveryStatus?:  'sending' | 'sent' | 'delivered' | 'read' | 'failed';
   readByCount?:     number;
+  /** Aggregated reactions (reactions slice) — absent/empty when none. */
+  reactions?:       MessagePostReaction[];
   // ── P0 hardening (populated by messaging_send_message_tx) ──
   /** Per-thread monotonic sequence number. null for legacy posts. */
   sequence?:              number | null;

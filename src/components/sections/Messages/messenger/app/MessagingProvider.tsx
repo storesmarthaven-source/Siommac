@@ -26,6 +26,7 @@ interface MessagingActions {
   createGroup(name: string, participantIds: UserId[], firstMessage: string): Promise<Thread>;
   remove(messageId: MessageId): Promise<void>;
   togglePin(messageId: MessageId): Promise<void>;
+  toggleReaction(messageId: MessageId, emoji: string): Promise<void>;
   markRead(threadId: ThreadId): Promise<void>;
   setMuted(threadId: ThreadId, muted: boolean): Promise<void>;
   setArchived(threadId: ThreadId, archived: boolean): Promise<void>;
@@ -157,6 +158,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     },
     remove: (messageId) => mutate(() => repository.deleteMessage(messageId)),
     togglePin: (messageId) => mutate(() => repository.togglePin(messageId, currentUserId)),
+    toggleReaction: (messageId, emoji) => mutate(() => repository.toggleReaction(messageId, currentUserId, emoji)),
     markRead: async (threadId) => {
       // Optimistic: clear the local badge; realtime reconciles the true count.
       const thread = base?.threads.find((item) => item.id === threadId);

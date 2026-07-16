@@ -244,3 +244,29 @@ export async function deleteMessageTx(params: {
   if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
   return data as DeleteMessageRpcResult;
 }
+
+// ── Reactions (mig 20260919000363) ────────────────────────────────────────────
+
+export interface ToggleReactionRpcResult {
+  postId:        string;
+  emoji:         string;
+  action:        'added' | 'removed';
+  count:         number;
+  threadVersion: number;
+}
+
+/** Atomic reaction toggle: participant-gated, blocked on system/deleted posts,
+ *  legal-hold and system threads; bumps thread version + outbox in one txn. */
+export async function toggleReactionTx(params: {
+  postId:  string;
+  actorId: string;
+  emoji:   string;
+}): Promise<ToggleReactionRpcResult> {
+  const { data, error } = await sb.rpc('messaging_toggle_reaction_tx', {
+    p_post_id:  params.postId,
+    p_actor_id: params.actorId,
+    p_emoji:    params.emoji,
+  });
+  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
+  return data as ToggleReactionRpcResult;
+}
