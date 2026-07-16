@@ -116,6 +116,9 @@ export class SiomacMessagingRepository implements MessagingRepository {
         body,
         attachmentIds: draft.attachments.map(a => a.id),
         replyToPostId: draft.replyToId ?? null,
+        // One key per send attempt — the server dedupes a retried delivery of
+        // the SAME attempt (messages_send_message_tx client_msg_key).
+        clientIdempotencyKey: crypto.randomUUID(),
       },
       { retryable: false },
     );

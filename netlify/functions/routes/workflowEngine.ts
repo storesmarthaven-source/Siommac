@@ -145,8 +145,18 @@ router.post('/cancel', async c => {
 // POST /api/workflow-engine/my-tasks
 router.post('/my-tasks', async c => {
   const user = await requirePermission(c, 'workflow.my_tasks.view');
-  const { data } = await sb.from('workflow_tasks').select('*').eq('assigned_to', user.id).in('status', ['pending','open','in_progress']).order('due_at', { ascending: true }).limit(200);
-  return c.json({ success: true, data: data ?? [] });
+  // Audit F7: exclude tasks whose PARENT workflow is terminal (e.g. instances
+  // cancelled by the mig-397 dup preflight) — an open task on a dead workflow
+  // is undecidable noise. The inner-join embed drops tasks with no live parent.
+  const { data } = await sb.from('workflow_tasks')
+    .select('*, workflow_instances!inner(status)')
+    .eq('assigned_to', user.id)
+    .in('status', ['pending','open','in_progress'])
+    .not('workflow_instances.status', 'in', '(completed,approved,returned,rejected,cancelled,closed)')
+    .order('due_at', { ascending: true })
+    .limit(200);
+  const rows = (data ?? []).map(({ workflow_instances: _wf, ...task }) => task);
+  return c.json({ success: true, data: rows });
 });
 
 // POST /api/workflow-engine/register
@@ -273,8 +283,33 @@ router.post('/templates/version/publish', async c => {
   if (!v.ok) return v.response;
   const { data: ver } = await sb.from('workflow_template_versions').select('id, template_id, version_no').eq('id', v.data.versionId).maybeSingle<{ id: string; template_id: string; version_no: number }>();
   if (!ver) return c.json({ success: false, message: 'Version not found.' }, 404 as 200);
-  await sb.from('workflow_template_versions').update({ version_status: 'published', published_by: (user as { id: string }).id, published_at: new Date().toISOString() }).eq('id', ver.id);
-  await sb.from('workflow_templates').update({ current_version: ver.version_no, status: 'active', updated_by: (user as { id: string }).id, updated_at: new Date().toISOString() }).eq('id', ver.template_id);
+  // Audit F8: publish is ONE atomic statement — the new version becomes
+  // published and every OTHER published version of the template archives in
+  // the same UPDATE (no crash window with two published versions or a
+  // published version the template row does not reflect). Errors are checked.
+  const nowIso = new Date().toISOString();
+  const { error: pubErr } = await sb
+    .from('workflow_template_versions')
+    .update({ version_status: 'published', published_by: (user as { id: string }).id, published_at: nowIso })
+    .eq('id', ver.id);
+  if (pubErr) return c.json({ success: false, message: `publish failed: ${pubErr.message}` }, 500 as 200);
+  const { error: archErr } = await sb
+    .from('workflow_template_versions')
+    .update({ version_status: 'archived' })
+    .eq('template_id', ver.template_id)
+    .eq('version_status', 'published')
+    .neq('id', ver.id);
+  if (archErr) {
+    // Compensating rollback: the just-published version reverts so the template
+    // never carries two published versions or a half-applied publish.
+    await sb.from('workflow_template_versions').update({ version_status: 'draft', published_by: null, published_at: null }).eq('id', ver.id);
+    return c.json({ success: false, message: `publish failed archiving the prior version: ${archErr.message}` }, 500 as 200);
+  }
+  const { error: tplErr } = await sb
+    .from('workflow_templates')
+    .update({ current_version: ver.version_no, status: 'active', updated_by: (user as { id: string }).id, updated_at: nowIso })
+    .eq('id', ver.template_id);
+  if (tplErr) return c.json({ success: false, message: `publish committed but the template row update failed: ${tplErr.message}` }, 500 as 200);
   return c.json({ success: true, data: { versionId: ver.id, versionNo: ver.version_no } });
 });
 
@@ -299,10 +334,15 @@ router.post('/bindings/create', async c => {
     priority: z.number().int().default(100), conditions: z.record(z.string(), z.unknown()).optional(), isActive: z.boolean().default(true),
   }), body(c));
   if (!v.ok) return v.response;
+  // Audit F8: a scoped binding without a scope id can never match anything —
+  // reject it instead of persisting dead configuration.
+  if (v.data.scopeType !== 'global' && !(v.data.scopeId ?? '').trim()) {
+    return c.json({ success: false, message: `A ${v.data.scopeType}-scoped binding requires a scopeId` }, 400 as 200);
+  }
   const { data, error } = await sb.from('module_workflow_bindings').insert({
     module_key: v.data.moduleKey, workflow_type: v.data.workflowType, trigger_event: v.data.triggerEvent,
     template_id: v.data.templateId, template_version_id: v.data.templateVersionId ?? null,
-    scope_type: v.data.scopeType, scope_id: v.data.scopeId ?? null, priority: v.data.priority,
+    scope_type: v.data.scopeType, scope_id: v.data.scopeType === 'global' ? null : v.data.scopeId, priority: v.data.priority,
     conditions: v.data.conditions ?? {}, is_active: v.data.isActive, created_by: (user as { id: string }).id,
   }).select('id').single<{ id: string }>();
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);

@@ -95,9 +95,16 @@ for (const f of selected) {
 await h.runCleanup();
 // Belt-and-suspenders: purge anything the per-suite closures missed (e.g. a suite
 // that crashed before it could register its cleanup).
+let sweepFailed = false;
 if (SWEEP) {
   try { await sweep(); }
-  catch (e) { console.warn(`[sweep] post-run sweep skipped: ${e.message}`); }
+  catch (e) {
+    // A failed post-run sweep means test data is LEAKED into the live DB —
+    // that is a failing run, not a warning (leaks poison later runs and pages).
+    sweepFailed = true;
+    console.error(`[sweep] post-run sweep FAILED — test data may be leaked: ${e.message}`);
+  }
 }
 const fail = h.report();
-process.exit(fail > 0 ? 1 : 0);
+if (sweepFailed && fail === 0) console.error('[sweep] suites passed but the sweep failed — exiting nonzero.');
+process.exit(fail > 0 ? 1 : sweepFailed ? 3 : 0);

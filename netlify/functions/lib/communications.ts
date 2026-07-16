@@ -547,7 +547,9 @@ export interface CommsSummary {
   ticketsUnread:       number;
   workflowTasks:       number;
   handoffFailures:     number;
-  realtimeChannelKey:  string;
+  /** Null when the channel registration failed (client skips realtime and
+   *  falls back to polling; the next summary call retries). */
+  realtimeChannelKey:  string | null;
   /** Server-issued Supabase Realtime JWT (finding #5) — null until
    *  SUPABASE_JWT_SECRET is configured. See lib/REALTIME_AUTH_CONTRACT.md. */
   realtimeToken:          string | null;
@@ -622,7 +624,7 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     ticketsUnread:       0, // TODO: per-ticket unread tracking
     workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value as number) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
-    realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value as string) : crypto.randomUUID(),
+    realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value as string | null) : null,
     realtimeToken:          realtimeToken?.token ?? null,
     realtimeTokenExpiresAt: realtimeToken?.expiresAt ?? null,
   };
@@ -652,16 +654,24 @@ async function _countWorkflowTasks(userId: string, role: string): Promise<number
 
 // ── Realtime channel management ────────────────────────────────────────────────
 
-async function _ensureRealtimeChannel(userId: string): Promise<string> {
+async function _ensureRealtimeChannel(userId: string): Promise<string | null> {
   const expiresAt = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(); // 2h
 
-  const { data } = await sb
+  const { data, error } = await sb
     .from('user_realtime_channels')
     .upsert({ user_id: userId, expires_at: expiresAt }, { onConflict: 'user_id' })
     .select('channel_key')
     .single<{ channel_key: string }>();
 
-  return data?.channel_key ?? crypto.randomUUID();
+  // Audit P1: NEVER substitute a random unregistered key — the client would
+  // subscribe to a channel nothing publishes to and silently receive nothing.
+  // Null tells the client to skip realtime (the 30s poll still works) and the
+  // next summary call retries the upsert.
+  if (error || !data?.channel_key) {
+    console.error('[communications] realtime channel upsert failed:', error?.message ?? 'no row');
+    return null;
+  }
+  return data.channel_key;
 }
 
 // ── Canonical unread thread count ─────────────────────────────────────────────
@@ -836,6 +846,9 @@ export interface PostMessageInput {
   attachmentIds?: string[];
   replyToPostId?: string | null;
   priority?:      'normal' | 'important' | 'urgent' | 'action_required';
+  /** Client-generated UUID for idempotent retry (audit F9) — sendMessageTx
+   *  dedupes a resend of the same key into the original post. */
+  clientIdempotencyKey?: string | null;
 }
 
 export interface PostMessageResult {
@@ -862,7 +875,7 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
       priority:       input.priority ?? 'normal',
       replyToPostId:  input.replyToPostId ?? null,
       attachmentIds:  input.attachmentIds ?? [],
-      clientMsgKey:   null,  // TODO: accept from route when client sends Idempotency-Key header
+      clientMsgKey:   input.clientIdempotencyKey ?? null,
     });
 
     // Idempotent replay: the post already exists; return early without re-signalling.

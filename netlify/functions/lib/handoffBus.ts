@@ -31,6 +31,8 @@ export interface CreateHandoffInput {
 export interface CreateHandoffResult {
   ok:        boolean;
   handoffId?: string;
+  /** Populated on failure so callers can surface the §2 breach (audit F5). */
+  message?:  string;
 }
 
 export async function createHandoff(input: CreateHandoffInput): Promise<CreateHandoffResult> {
@@ -52,7 +54,7 @@ export async function createHandoff(input: CreateHandoffInput): Promise<CreateHa
 
     if (error || !data) {
       console.error('[handoffBus] insert failed:', error?.message);
-      return { ok: false };
+      return { ok: false, message: error?.message ?? 'handoff insert failed' };
     }
 
     // Emit handoff.created event (best-effort, silent — no notification)
@@ -69,7 +71,7 @@ export async function createHandoff(input: CreateHandoffInput): Promise<CreateHa
     return { ok: true, handoffId: data.id };
   } catch (e) {
     console.error('[handoffBus] createHandoff failed:', e);
-    return { ok: false };
+    return { ok: false, message: e instanceof Error ? e.message : 'createHandoff failed' };
   }
 }
 

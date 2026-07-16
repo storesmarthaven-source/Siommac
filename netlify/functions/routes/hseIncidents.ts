@@ -10,6 +10,7 @@
  */
 
 import { Hono }               from 'hono';
+import { createHash }         from 'crypto';
 import { z, zv }              from '../lib/validate';
 import { requirePermission }  from '../lib/auth';
 import { sb }                 from '../lib/db';
@@ -159,7 +160,8 @@ router.post('/incidents/create', async c => {
   const evSeverity = v.data.severity === 'critical' ? 'critical' as const
     : v.data.severity === 'high' ? 'high' as const : 'info' as const;
 
-  const contentKey = `hse.incident.create:${user.id}:${v.data.incidentDate}:${v.data.title}`;
+  // Content-derived key over the FULL validated payload (audit F6).
+  const contentKey = `hse.incident.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`;
   // The 3 conditional cross-module handoffs (parity with the former Stage-4).
   const buildHandoffs = (entityId: string, entityRef: string, eventId: string | null) => {
     const defs = [
@@ -206,9 +208,16 @@ router.post('/incidents/create', async c => {
     // ONE transaction (hse_incidents branch of workflow_create_and_start_tx).
     // Notifications + cross-module handoffs are post-commit (parity with the
     // former Stage-2/Stage-4 semantics — separate writes then, separate now).
+    // Audit F2: site/department + record data let scoped/conditional bindings match.
     const binding = await selectWorkflowBinding(sb, {
       moduleKey: 'hse_incidents', workflowType: 'incident_investigation',
-      triggerEvent: 'incident.reported', sourceRecordId: '', requestedBy: user.id, recordData: {},
+      triggerEvent: 'incident.reported', sourceRecordId: '', requestedBy: user.id,
+      siteId: v.data.siteId ?? null, departmentId: v.data.departmentId ?? null,
+      recordData: {
+        severity: v.data.severity, incidentType: v.data.incidentType,
+        lostTime: v.data.lostTime, costImpact: v.data.costImpact,
+        equipmentDamage: v.data.equipmentDamage, recordable: v.data.recordable,
+      },
     });
 
     if (binding) {
@@ -258,6 +267,21 @@ router.post('/incidents/create', async c => {
 
       const handoffResults = await Promise.all(buildHandoffs(rpc.recordId ?? '', rpc.ref ?? '', rpc.eventId ?? null));
       const handoffIds = handoffResults.filter(h => h.ok && h.handoffId).map(h => h.handoffId as string);
+      // Audit F5: a failed cross-module handoff is a §2 contract breach — never
+      // silent. The incident is committed, so surface it durably (critical
+      // event → ops alerting) instead of dropping it from the response.
+      const failedHandoffs = handoffResults.filter(h => !h.ok);
+      if (failedHandoffs.length) {
+        console.error(`[hseIncidents] ${failedHandoffs.length} handoff(s) FAILED for incident ${rpc.ref}:`,
+          failedHandoffs.map(h => h.message ?? 'unknown error').join('; '));
+        void emitAppEvent({
+          eventType: 'hse.incident.handoff_failed', sourceModule: 'hse',
+          sourceEntityType: 'incident', sourceEntityId: rpc.recordId ?? '',
+          actorUserId: user.id, severity: 'critical',
+          payload: { ref: rpc.ref, failed: failedHandoffs.length, errors: failedHandoffs.map(h => h.message ?? 'unknown') },
+          dedupeKey: `hse.incident.handoff_failed:${rpc.recordId}`,
+        });
+      }
 
       return c.json({
         success: true,

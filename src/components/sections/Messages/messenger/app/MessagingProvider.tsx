@@ -164,12 +164,20 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       // Optimistic: clear the local badge; realtime reconciles the true count.
       const thread = base?.threads.find((item) => item.id === threadId);
       if (!thread || thread.unreadCount === 0) return;
+      const previousUnread = thread.unreadCount;
       setBase((current) => current ? {
         ...current,
         threads: current.threads.map((item) => item.id === threadId ? { ...item, unreadCount: 0 } : item),
       } : current);
       try { await repository.markRead(threadId, currentUserId); }
-      catch { /* non-fatal — the badge re-appears on the next authoritative reload */ }
+      catch (error) {
+        // Revert — the server still counts these unread, so the badge must too.
+        console.warn('[messenger] markRead failed, restoring unread badge:', error);
+        setBase((current) => current ? {
+          ...current,
+          threads: current.threads.map((item) => item.id === threadId ? { ...item, unreadCount: previousUnread } : item),
+        } : current);
+      }
     },
     setMuted: (threadId, muted) => mutate(() => repository.setMuted(threadId, muted, currentUserId)),
     setArchived: (threadId, archived) => mutate(() => repository.setArchived(threadId, archived)),

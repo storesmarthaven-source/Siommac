@@ -547,6 +547,9 @@ const PostMessageSchema = z.object({
   attachmentIds: z.array(z.string().uuid()).optional(),
   replyToPostId: z.string().uuid().nullable().optional(),
   priority:      z.enum(['normal','important','urgent','action_required']).optional(),
+  // Client-generated UUID for idempotent retry (audit F9) — optional so
+  // non-interactive callers keep working; the Messenger always sends one.
+  clientIdempotencyKey: z.string().uuid().nullable().optional(),
 });
 
 router.post('/communications/messages/post', async c => {
@@ -567,6 +570,7 @@ router.post('/communications/messages/post', async c => {
     attachmentIds: v.data.attachmentIds,
     replyToPostId: v.data.replyToPostId ?? null,
     priority:      v.data.priority,
+    clientIdempotencyKey: v.data.clientIdempotencyKey ?? null,
   });
   if (!result.ok) {
     // Status is derived from the RPC's MG SQLSTATE (403/404/409/422); fall back to 500.

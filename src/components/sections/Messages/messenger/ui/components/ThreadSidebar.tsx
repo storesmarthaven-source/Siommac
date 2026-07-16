@@ -57,13 +57,15 @@ export function ThreadSidebar({ activeThreadId, queue, onSelect }: { activeThrea
   const { snapshot } = useMessaging();
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "unread" | "groups" | "favourites">("all");
-  if (!snapshot) return null;
-  const currentUser = userById(snapshot, snapshot.currentUserId);
-  const visible = useMemo(() => snapshot.threads.filter((thread) => {
+  // No early return above the useMemo — hook count must be stable per render.
+  const threads = snapshot?.threads;
+  const visible = useMemo(() => (threads ?? []).filter((thread) => {
     const queueMatches = threadInQueue(thread, queue);
     const filterMatches = filter === "unread" ? thread.unreadCount > 0 : filter === "groups" ? thread.kind === "group" : filter === "favourites" ? thread.favourite : true;
     return queueMatches && filterMatches && thread.name.toLowerCase().includes(query.trim().toLowerCase());
-  }), [filter, query, queue, snapshot.threads]);
+  }), [filter, query, queue, threads]);
+  if (!snapshot) return null;
+  const currentUser = userById(snapshot, snapshot.currentUserId);
   return (
     <aside className="sm-thread-sidebar">
       <header><Avatar user={currentUser} size="medium" showPresence /><h2>Chats</h2></header>

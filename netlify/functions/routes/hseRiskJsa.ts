@@ -37,6 +37,7 @@
 
 import { Hono }              from 'hono';
 import type { Context }      from 'hono';
+import { createHash }        from 'crypto';
 import { z, zv }             from '../lib/validate';
 import { requirePermission } from '../lib/auth';
 import { sb }                from '../lib/db';
@@ -281,7 +282,8 @@ router.post('/risk-jsa/hazards/create', async c => {
   const level       = riskLevel(score);
   const ownerUserId = v.data.ownerUserId ?? user.id;
   const needsReview = level === 'high' || level === 'critical';
-  const contentKey  = `hse.hazard.create:${user.id}:${v.data.title}:${v.data.category}`;
+  // Content-derived key over the FULL validated payload (audit F6).
+  const contentKey  = `hse.hazard.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`;
 
   try {
     // ATOMIC (finding #3, slice D1): a HIGH/CRITICAL hazard with a review
@@ -290,9 +292,12 @@ router.post('/risk-jsa/hazards/create', async c => {
     // row in ONE transaction (hse_hazards branch of
     // workflow_create_and_start_tx). Low/medium hazards never start a review
     // workflow and keep the create-only module-adapter path.
+    // Audit F2: site/department + record data let scoped/conditional bindings match.
     const binding = needsReview ? await selectWorkflowBinding(sb, {
       moduleKey: 'hse_hazards', workflowType: 'hazard_review',
-      triggerEvent: 'hazard.registered', sourceRecordId: '', requestedBy: user.id, recordData: {},
+      triggerEvent: 'hazard.registered', sourceRecordId: '', requestedBy: user.id,
+      siteId: v.data.siteId ?? null, departmentId: v.data.departmentId ?? null,
+      recordData: { category: v.data.category, riskLevel: level, score, ownerUserId },
     }) : null;
 
     if (binding) {

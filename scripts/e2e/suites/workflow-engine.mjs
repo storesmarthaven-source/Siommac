@@ -603,6 +603,38 @@ export default async function run(h) {
     h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', src); } catch {} });
   });
 
+  // ── Assignee pinning (migration 399 — audit F1 role-redirect injection) ──────
+  // _create_instance pins role/fixed_user assignees to the TEMPLATE resolver
+  // value: a caller-supplied roleKey that differs from the template's role must
+  // raise WF422 → 422 (before 399, a caller could redirect approval to any role).
+  // Uses the parallel template: step a = supervisor (dynamic), step b = role 'admin'.
+  await test('PIN: explicit start with a redirected role assignee → 422 (mig 399)', async () => {
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: parTrigger,
+      sourceRecordId: crypto.randomUUID(), recordData: {},
+      templateVersionId: parVerId, idempotencyKey: crypto.randomUUID(),
+      assignees: { a: { userId: supEmp.id }, b: { roleKey: 'employee' } },  // template says 'admin'
+    });
+    fails(r, 'redirected role assignee must be rejected');
+    expect(r.status === 422, `expected 422 (WF422 pin), got ${r.status}`);
+  });
+
+  await test('PIN: explicit start with the TEMPLATE role assignee is allowed', async () => {
+    const pinSrc = crypto.randomUUID();
+    h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', pinSrc); } catch {} });
+    const r = await api('workflow-engine/start', T.admin, {
+      moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: parTrigger,
+      sourceRecordId: pinSrc, recordData: {},
+      templateVersionId: parVerId, idempotencyKey: crypto.randomUUID(),
+      assignees: { a: { userId: supEmp.id }, b: { roleKey: 'admin' } },     // matches template
+    });
+    ok(r, 'matching-role explicit start should be allowed');
+    const wfId = r.body.data?.id ?? null;
+    expect(!!wfId, 'no workflowId returned');
+    const { data: bTask } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', wfId).eq('step_key', 'b').single();
+    expect(bTask?.assigned_role === 'admin', `step b should be role admin, got ${bTask?.assigned_role}`);
+  });
+
   // ── Active-workflow unique index (migration 397) ─────────────────────────────
   // Requires migration 20260919000397 applied.
   // Verifies that uq_wf_one_active_per_record enforces at most one active

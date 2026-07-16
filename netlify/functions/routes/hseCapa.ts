@@ -8,6 +8,7 @@
  */
 
 import { Hono }               from 'hono';
+import { createHash }         from 'crypto';
 import { z, zv }              from '../lib/validate';
 import { requirePermission }  from '../lib/auth';
 import { sb }                 from '../lib/db';
@@ -100,9 +101,9 @@ router.post('/capa/create', async c => {
   if (!v.ok) return v.response;
 
   const ownerUserId = v.data.ownerUserId ?? user.id;
-  // Content-derived key: a true resubmit of the same CAPA dedupes; used as the
-  // module-mutation receipt key AND the atomic RPC request key.
-  const contentKey  = `hse.capa.create:${user.id}:${v.data.sourceType}:${v.data.sourceId}:${v.data.title}`;
+  // Content-derived key over the FULL validated payload (audit F6): identical
+  // retries dedupe; any differing field produces a distinct record.
+  const contentKey  = `hse.capa.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`;
   const notifyInput = {
     eventType:        'hse.capa.assigned',
     sourceModule:     'hse',
@@ -126,9 +127,11 @@ router.post('/capa/create', async c => {
     // commit in ONE transaction (hse_capa_actions branch of
     // workflow_create_and_start_tx). Notification fan-out is post-commit,
     // notify-only (the RPC owns the app_event).
+    // Audit F2: pass the real record context so scoped/conditional bindings can match.
     const binding = await selectWorkflowBinding(sb, {
       moduleKey: 'hse_capa', workflowType: 'capa_closure',
-      triggerEvent: 'capa.created', sourceRecordId: '', requestedBy: user.id, recordData: {},
+      triggerEvent: 'capa.created', sourceRecordId: '', requestedBy: user.id,
+      recordData: { ownerUserId, sourceType: v.data.sourceType, sourceId: v.data.sourceId, priority: v.data.priority },
     });
 
     if (binding) {

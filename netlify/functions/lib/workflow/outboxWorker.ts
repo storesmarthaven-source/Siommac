@@ -57,7 +57,7 @@ interface SourceTransitionHandler {
   commit(args: { transitionId: string; sourceRecordId: string; actorId: string;
                  outcome: ReceiptOutcome; comment: string | null; inputHash: string }): Promise<void>;
   /** Post-commit, idempotent notification fan-out (dedupe-keyed). */
-  afterCommit?(args: { sourceRecordId: string; actorId: string; outcome: ReceiptOutcome }): Promise<void>;
+  afterCommit?(args: { sourceRecordId: string; actorId: string; outcome: ReceiptOutcome; comment: string | null }): Promise<void>;
 }
 
 const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
@@ -150,6 +150,67 @@ const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
         sourceType: 'employee_loan', sourceId: loan.id,
         dedupeKey: `finance.loan.activated.${loan.id}`,
       });
+    },
+  },
+  // Audit F3 (P0): statutory approvals were adapter-driven (source mutated
+  // BEFORE finalize; a finalize retry re-ran the adapter against the already-
+  // approved row and dead-lettered). Receipt RPC = exactly-once source
+  // transition; the rich notification/thread effects run afterCommit.
+  'finance_statutory:finance_statutory_approval': {
+    async commit({ transitionId, sourceRecordId, actorId, outcome, comment, inputHash }) {
+      const { error } = await sb.rpc('finance_statutory_workflow_transition_tx', {
+        p_transition_id: transitionId, p_version_id: sourceRecordId, p_actor_id: actorId,
+        p_target_status: outcome, p_comment: comment, p_input_hash: inputHash,
+      });
+      if (error) throw Object.assign(new Error(`statutory source transition: ${error.message}`), { code: (error as { code?: string }).code });
+    },
+    async afterCommit({ sourceRecordId, actorId, outcome, comment }) {
+      const [{ getStatutoryVersion }, { notify }, { createMessageThread }] = await Promise.all([
+        import('../finance/statutoryConfig.js'), import('../notify.js'), import('../communications.js'),
+      ]);
+      const row = await getStatutoryVersion(sourceRecordId);
+      if (!row) return;
+      const creator = row.createdBy && row.createdBy !== actorId ? row.createdBy : null;
+
+      if (outcome === 'approved') {
+        if (creator) {
+          await notify({
+            userId: creator, type: 'finance.statutory.version.approved', severity: 'success',
+            title: `Statutory version "${row.label}" approved`,
+            body: `Effective from ${row.effectiveFrom}. Payroll administrators should review configuration before the next pay run.`,
+            actionRoute: '/finance/statutory',
+            sourceType: 'statutory_version', sourceId: sourceRecordId,
+            dedupeKey: `finance.statutory.version.approved.${sourceRecordId}`,
+          });
+        }
+        await createMessageThread({
+          threadType: 'record', sourceModule: 'finance_statutory',
+          sourceEntityType: 'statutory_version', sourceEntityId: sourceRecordId,
+          subject: `Statutory config update: ${row.label}`,
+          participantUserIds: [actorId, ...(creator ? [creator] : [])],
+          body: `Statutory version "${row.label}" (effective ${row.effectiveFrom}, jurisdiction ${row.jurisdiction}) has been approved. Payroll administrators should review the new rate structure before the next pay run.`,
+          createdBy: actorId,
+        });
+      } else if (outcome === 'returned' || outcome === 'rejected') {
+        if (creator) {
+          await notify({
+            userId: creator, type: 'finance.statutory.version.rejected', severity: 'warning',
+            title: `Statutory version "${row.label}" returned to draft`,
+            body: comment ? `Reason: ${comment}` : 'The approving manager has returned this version to draft for revision.',
+            actionRoute: '/finance/statutory',
+            sourceType: 'statutory_version', sourceId: sourceRecordId,
+            dedupeKey: `finance.statutory.version.rejected.${sourceRecordId}`,
+          });
+        }
+        await createMessageThread({
+          threadType: 'record', sourceModule: 'finance_statutory',
+          sourceEntityType: 'statutory_version', sourceEntityId: sourceRecordId,
+          subject: `Statutory version "${row.label}" rejected`,
+          participantUserIds: [actorId, ...(creator ? [creator] : [])],
+          body: `Statutory version "${row.label}" (effective ${row.effectiveFrom}) was returned to draft by the approver.${comment ? `\n\nReason: ${comment}` : ''}`,
+          createdBy: actorId,
+        });
+      }
     },
   },
 };
@@ -256,7 +317,7 @@ async function processTerminal(job: OutboxJob, wf: WorkflowRow, tr: TransitionRo
         ...(t.actionRequired ? { actionRequired: true } : {}),
       },
     } as Parameters<typeof deliverEventNotifications>[0], eventId);
-    await handler?.afterCommit?.({ sourceRecordId: wf.source_record_id, actorId: tr.actor_id ?? 'workflow', outcome: t.outcome });
+    await handler?.afterCommit?.({ sourceRecordId: wf.source_record_id, actorId: tr.actor_id ?? 'workflow', outcome: t.outcome, comment });
   }
 }
 

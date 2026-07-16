@@ -35,8 +35,21 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
   const [activePinIndex, setActivePinIndex] = useState(0);
   const listRef = useRef<HTMLDivElement>(null);
   const shouldStick = useRef(true);
+  // Hooks below must run on EVERY render (no early return above them) — an
+  // early bail here changes the hook count between renders and corrupts state.
+  const messages = snapshot ? messagesForThread(snapshot, thread.id) : [];
+
+  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
+    const list = listRef.current;
+    if (!list) return;
+    if (typeof list.scrollTo === "function") list.scrollTo({ top: list.scrollHeight, behavior });
+    else list.scrollTop = list.scrollHeight;
+  }, []);
+
+  useEffect(() => { void actions.markRead(thread.id); setReplyTo(null); requestAnimationFrame(() => scrollToBottom("auto")); }, [actions, scrollToBottom, thread.id]);
+  useEffect(() => { void actions.markRead(thread.id); if (shouldStick.current) requestAnimationFrame(() => scrollToBottom()); }, [actions, messages.length, scrollToBottom, thread.id]);
+
   if (!snapshot) return null;
-  const messages = messagesForThread(snapshot, thread.id);
   const currentUser = userById(snapshot, snapshot.currentUserId);
   const participants = thread.participantIds.map((id) => userById(snapshot, id));
   const counterpart = participants.find((participant) => participant.id !== currentUser.id) ?? currentUser;
@@ -56,16 +69,6 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
     ? `Pinned ${activePinAttachment.kind.toUpperCase()} ${documentKinds.has(activePinAttachment.kind) ? "document" : "file"}`
     : activePin?.card ? `Pinned ${cardModule[activePin.card.type]}`
     : activePin?.link ? "Pinned link" : "Pinned message";
-
-  const scrollToBottom = useCallback((behavior: ScrollBehavior = "smooth") => {
-    const list = listRef.current;
-    if (!list) return;
-    if (typeof list.scrollTo === "function") list.scrollTo({ top: list.scrollHeight, behavior });
-    else list.scrollTop = list.scrollHeight;
-  }, []);
-
-  useEffect(() => { void actions.markRead(thread.id); setReplyTo(null); requestAnimationFrame(() => scrollToBottom("auto")); }, [actions, scrollToBottom, thread.id]);
-  useEffect(() => { void actions.markRead(thread.id); if (shouldStick.current) requestAnimationFrame(() => scrollToBottom()); }, [actions, messages.length, scrollToBottom, thread.id]);
 
   function jumpTo(messageId: string) {
     document.getElementById(`message-${messageId}`)?.scrollIntoView({ behavior: "smooth", block: "center" });
