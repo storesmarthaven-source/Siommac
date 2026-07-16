@@ -50,6 +50,7 @@ import {
   markThreadRead,
   archiveThread,
   muteThread,
+  setThreadFavourite,
   addThreadParticipants,
   removeThreadParticipant,
   searchMessages,
@@ -669,6 +670,26 @@ router.post('/communications/messages/mute', async c => {
   const result = await muteThread(v.data.threadId, user.id, v.data.muted);
   if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 500 as 200);
   return c.json({ success: true });
+});
+
+// POST /api/communications/messages/favourites/set — per-user favourite flag
+const FavouriteThreadSchema = z.object({
+  threadId:  z.string().uuid(),
+  favourite: z.boolean(),
+});
+
+router.post('/communications/messages/favourites/set', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body') as Record<string, unknown>;
+  const v = zv(c, FavouriteThreadSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await setThreadFavourite(v.data.threadId, user.id, v.data.favourite);
+  if (!result.ok) {
+    const status = (result.status ?? 500) as 200;
+    return c.json({ success: false, message: result.message ?? 'Error' }, status);
+  }
+  return c.json({ success: true, favourite: result.favourite });
 });
 
 // POST /api/communications/messages/participants/add

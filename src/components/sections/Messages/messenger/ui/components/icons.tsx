@@ -68,6 +68,7 @@ export const Settings2 = make("Settings2");
 export const ShieldCheck = make("ShieldCheck");
 export const Smile = make("Smile");
 export const SmilePlus = make("SmilePlus");
+export const Star = make("Star");
 export const Trash2 = make("Trash2");
 export const UploadCloud = make("UploadCloud");
 export const UserMinus = make("UserMinus");

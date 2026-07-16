@@ -1092,16 +1092,21 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     // Pinned threads (thread-pin visible to the caller) + the caller's drafts.
     const pinnedSet = new Set<string>();
     const draftMap  = new Map<string, string>();
+    const favouriteSet = new Set<string>();
     if (threadIdSet.length > 0) {
-      const [pinsRes, draftsRes] = await Promise.all([
+      const [pinsRes, draftsRes, favsRes] = await Promise.all([
         sb.from('message_pins').select('thread_id, visibility, pinned_by').eq('pin_type', 'thread').is('unpinned_at', null).in('thread_id', threadIdSet),
         sb.from('message_thread_drafts').select('thread_id, body').eq('user_id', userId).in('thread_id', threadIdSet),
+        sb.from('message_thread_favourites').select('thread_id').eq('user_id', userId).in('thread_id', threadIdSet),
       ]);
       for (const p of ((pinsRes as { data: Array<{ thread_id: string; visibility: string; pinned_by: string }> | null }).data) ?? []) {
         if (p.visibility === 'thread' || p.pinned_by === userId) pinnedSet.add(p.thread_id);
       }
       for (const d of ((draftsRes as { data: Array<{ thread_id: string; body: string | null }> | null }).data) ?? []) {
         if (d.body && d.body.trim()) draftMap.set(d.thread_id, d.body);
+      }
+      for (const f of ((favsRes as { data: Array<{ thread_id: string }> | null }).data) ?? []) {
+        favouriteSet.add(f.thread_id);
       }
     }
 
@@ -1140,6 +1145,7 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         isUnread:           unread > 0,
         isPinned:           pinnedSet.has(r.thread_id),
         isMuted:            r.notifications_muted === true,
+        isFavourite:        favouriteSet.has(r.thread_id),
         hasDraft:           draftBody != null,
         draftPreview:       draftBody,
         failedSendCount:    failed,
@@ -1601,6 +1607,38 @@ export async function muteThread(threadId: string, userId: string, muted: boolea
   if (error) return { ok: false, message: error.message };
   void emitSignal([userId], 'summary');
   return { ok: true };
+}
+
+// ── setThreadFavourite ────────────────────────────────────────────────────────
+
+/** Set/clear a per-user thread favourite (favourites slice). Personal UI state
+ *  (like drafts): participant-gated, single-row write, NO app_events/audit. */
+export async function setThreadFavourite(
+  threadId: string,
+  userId:   string,
+  favourite: boolean,
+): Promise<{ ok: boolean; message?: string; status?: number; favourite?: boolean }> {
+  const { data: part } = await sb.from('message_participants')
+    .select('user_id')
+    .eq('thread_id', threadId)
+    .eq('user_id', userId)
+    .is('removed_at', null)
+    .maybeSingle();
+  if (!part) return { ok: false, status: 403, message: 'Not a participant in this thread' };
+
+  if (favourite) {
+    const { error } = await sb.from('message_thread_favourites')
+      .upsert({ user_id: userId, thread_id: threadId }, { onConflict: 'user_id,thread_id', ignoreDuplicates: true });
+    if (error) return { ok: false, message: error.message };
+  } else {
+    const { error } = await sb.from('message_thread_favourites')
+      .delete()
+      .eq('user_id', userId)
+      .eq('thread_id', threadId);
+    if (error) return { ok: false, message: error.message };
+  }
+  void emitSignal([userId], 'messages');
+  return { ok: true, favourite };
 }
 
 // ── addThreadParticipants ──────────────────────────────────────────────────────

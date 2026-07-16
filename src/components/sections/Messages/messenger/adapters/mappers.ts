@@ -156,7 +156,7 @@ export function mapThread(t: ThreadDTO, currentUserId: string, authoredByMe = fa
     queue,
     unreadCount: t.unreadCount ?? 0,
     muted: t.isMuted ?? false,
-    favourite: false,                          // favourites hidden until its own backend slice
+    favourite: t.isFavourite ?? false,
     authoredByMe,
     complianceControlled: t.threadType === 'record' || t.threadType === 'system',
     ...(t.sourceModule && t.sourceEntityId ? {

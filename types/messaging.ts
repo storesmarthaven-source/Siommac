@@ -134,6 +134,8 @@ export interface MessageThread {
   isUnread?:           boolean;
   isPinned?:           boolean;
   isMuted?:            boolean;
+  /** Per-user favourite flag (favourites slice). */
+  isFavourite?:        boolean;
   hasDraft?:           boolean;
   draftPreview?:       string | null;
   failedSendCount?:    number;

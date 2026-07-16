@@ -30,6 +30,7 @@ interface MessagingActions {
   markRead(threadId: ThreadId): Promise<void>;
   setMuted(threadId: ThreadId, muted: boolean): Promise<void>;
   setArchived(threadId: ThreadId, archived: boolean): Promise<void>;
+  setFavourite(threadId: ThreadId, favourite: boolean): Promise<void>;
   invite(threadId: ThreadId, participantId: UserId): Promise<void>;
   removeParticipant(threadId: ThreadId, participantId: UserId): Promise<void>;
   listRecipients(query?: string): Promise<User[]>;
@@ -172,6 +173,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     },
     setMuted: (threadId, muted) => mutate(() => repository.setMuted(threadId, muted, currentUserId)),
     setArchived: (threadId, archived) => mutate(() => repository.setArchived(threadId, archived)),
+    setFavourite: (threadId, favourite) => mutate(() => repository.setFavourite(threadId, favourite, currentUserId)),
     invite: (threadId, participantId) => mutate(() => repository.invite(threadId, participantId, currentUserId)),
     removeParticipant: (threadId, participantId) => mutate(() => repository.removeParticipant(threadId, participantId, currentUserId)),
     listRecipients: (query) => repository.listRecipients(query),

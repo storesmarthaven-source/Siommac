@@ -212,9 +212,9 @@ export class SiomacMessagingRepository implements MessagingRepository {
     await post('communications/messages/reactions/toggle', { postId: messageId, emoji });
   }
 
-  // ── Hidden features (no control rendered → never called; throw if they are) ──
-  async setFavourite(): Promise<void> {
-    throw new Error('Favourites are not enabled yet.');
+  /** Per-user thread favourite (favourites slice — personal UI state). */
+  async setFavourite(threadId: string, favourite: boolean, _userId: string): Promise<void> {
+    await apiPost('communications/messages/favourites/set', { threadId, favourite }, { retryable: false });
   }
 }
 

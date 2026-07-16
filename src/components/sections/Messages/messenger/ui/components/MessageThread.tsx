@@ -6,7 +6,7 @@
 //     bubble (is-self + is-admin classes drive the ported CSS unchanged).
 import {
   Archive, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, LockKeyhole, MessageSquareText, MoreHorizontal, Pin, PinOff,
-  Reply, Settings2, SmilePlus, Trash2, UserPlus, Users,
+  Reply, Settings2, SmilePlus, Star, Trash2, UserPlus, Users,
 } from "./icons";
 import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
@@ -76,6 +76,7 @@ export function MessageThread({ thread, onOpenDetails, onOpenAppearance, onInvit
       <header className="sm-thread-header">
         <div className="sm-thread-header__identity">{thread.kind === "group" ? <GroupAvatarStack users={participants} variant="header" /> : <Avatar user={counterpart} size="large" showPresence />}<span><h2>{thread.name}</h2><p>{thread.kind === "group" ? `${participants.length} participants` : counterpart.presence}</p></span></div>
         <nav aria-label="Thread actions">
+          <button className={`sm-icon-button ${thread.favourite ? "is-favourite" : ""}`} type="button" aria-label={thread.favourite ? "Remove from favourites" : "Add to favourites"} onClick={() => void actions.setFavourite(thread.id, !thread.favourite)}><Star /></button>
           {thread.kind === "group" ? <button className="sm-icon-button" type="button" aria-label="Invite participant" onClick={onInvite}><UserPlus /></button> : null}
           <button className="sm-icon-button" type="button" aria-label="Chat appearance" onClick={onOpenAppearance}><Settings2 /></button>
           <button className="sm-icon-button" type="button" aria-label={thread.queue === "archived" ? "Restore thread" : "Archive thread"} onClick={() => void actions.setArchived(thread.id, thread.queue !== "archived")}><Archive /></button>
