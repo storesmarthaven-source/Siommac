@@ -78,7 +78,13 @@ function linkFromBody(body: string): LinkPreview | undefined {
 }
 
 export function mapPost(p: PostDTO): Message {
-  const sysEvent = p.postType === 'system_event' && p.systemEventType ? SYSTEM_EVENT[p.systemEventType] : undefined;
+  // ANY system-generated post renders as a system event (never as a normal
+  // message with actions — the backend rejects reactions/pins/deletes on them).
+  // Unmapped/legacy system events fall back to the generic 'created' rendering.
+  const isSystemPost = p.isSystem || p.postType === 'system_event';
+  const sysEvent = isSystemPost
+    ? ((p.systemEventType ? SYSTEM_EVENT[p.systemEventType] : undefined) ?? 'created')
+    : undefined;
   const link = !sysEvent ? linkFromBody(p.body ?? '') : undefined;
   return {
     id: p.id,

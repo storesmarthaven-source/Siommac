@@ -140,7 +140,9 @@ export default async function run(h) {
   });
 
   await test('DENY: unknown post → 404', async () => {
-    const r = await api('communications/messages/reactions/toggle', T.admin, { postId: '00000000-0000-0000-0000-000000000001', emoji: '👍' });
+    // A well-formed v4 UUID that does not exist (Zod uuid() enforces RFC-4122
+    // version bits, so all-zero fakes fail validation with 400 instead).
+    const r = await api('communications/messages/reactions/toggle', T.admin, { postId: '11111111-1111-4111-8111-111111111111', emoji: '👍' });
     fails(r, 'unknown post must 404');
     expect(r.status === 404, `expected 404, got ${r.status}`);
   });
@@ -151,7 +153,9 @@ export default async function run(h) {
     });
     ok(send, 'post for delete-test failed');
     ctx.deletedPostId = send.body.postId;
-    ok(await api('communications/messages/delete', T.admin, { postId: ctx.deletedPostId }), 'own delete failed');
+    // The harness admin holds communications.messages.delete_any (mig 362), so
+    // the route routes this through the MODERATION path — a reason is required.
+    ok(await api('communications/messages/delete', T.admin, { postId: ctx.deletedPostId, reason: 'reaction-slice test cleanup' }), 'delete failed');
     const r = await api('communications/messages/reactions/toggle', T.admin, { postId: ctx.deletedPostId, emoji: '👍' });
     fails(r, 'deleted post must be rejected');
     expect(r.status === 403, `expected 403, got ${r.status}`);
