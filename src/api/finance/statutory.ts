@@ -231,9 +231,10 @@ export const financeStatutoryApi = {
   // Pay-component catalogue (Finance-owned)
   listComponents:    (a: { activeOnly?: boolean; kind?: 'earning' | 'deduction'; isStatutory?: boolean } = {}) => call<PayComponent[]>('finance/payroll/components/list', a),
   // Mutations now open a change request (maker-checker); the return type is a CR, not the component.
-  createComponent:   (a: CreatePayComponentArgs)                            => call<PayComponentChangeRequest>('finance/payroll/components/create', a),
-  updateComponent:   (a: { id: string } & Partial<CreatePayComponentArgs>) => call<PayComponentChangeRequest>('finance/payroll/components/update', a),
-  retireComponent:   (a: { id: string })                                    => call<PayComponentChangeRequest>('finance/payroll/components/retire', a),
+  // A per-attempt idempotency key makes the atomic create-and-start (maker-checker) exactly-once.
+  createComponent:   (a: CreatePayComponentArgs)                            => call<PayComponentChangeRequest>('finance/payroll/components/create', { ...a, idempotencyKey: crypto.randomUUID() }),
+  updateComponent:   (a: { id: string } & Partial<CreatePayComponentArgs>) => call<PayComponentChangeRequest>('finance/payroll/components/update', { ...a, idempotencyKey: crypto.randomUUID() }),
+  retireComponent:   (a: { id: string })                                    => call<PayComponentChangeRequest>('finance/payroll/components/retire', { ...a, idempotencyKey: crypto.randomUUID() }),
 
   // Change-request approval queue
   listComponentChangeRequests: (a: { status?: PayComponentChangeRequest['status']; componentId?: string } = {}) =>

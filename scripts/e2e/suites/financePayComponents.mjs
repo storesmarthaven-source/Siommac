@@ -518,4 +518,60 @@ export default async function run(h) {
     fails(r, 'approving non-existent CR should fail');
     expect(r.status === 404, `expected 404, got ${r.status}`);
   });
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  h.section('Pay Component CR › Atomic create-and-start (finding #3, Shape B)');
+  // ═══════════════════════════════════════════════════════════════════════════
+  // The finance_pay_component approval binding (mig 20260917000210) is not applied by
+  // default, so the module normally runs create-only. This test SEEDS a temporary
+  // binding, exercises the atomic RPC path end-to-end through the real endpoint + a
+  // direct RPC (receipt idempotency + 23505 TOCTOU backstop), then tears the binding
+  // down — so the atomic path is verified without permanently gating the module.
+  await test('binding path: CR + workflow committed atomically; receipt + 23505 backstop', async () => {
+    const trigger = 'finance.payroll.component.change_submitted';
+    const def = { schemaVersion: 1, steps: [{ stepKey: 'approval', stepName: 'Approve', stepType: 'approval', sequenceNo: 1, assignment: { type: 'role', value: 'finance_manager' }, dueDurationHours: 48, required: true, decisionRules: { canApprove: true, canReturn: true, canReject: true } }], transitions: [], notifications: [], handoffs: [], sourceStatusMap: {}, settings: {} };
+    const seeded = { tplId: null, verId: null, bindId: null, crIds: [], wfIds: [] };
+    try {
+      const { data: tpl, error: te } = await sb.from('workflow_templates').insert({ template_key: `pcatomic_${TAG}`, module_key: 'finance_pay_components', workflow_type: 'finance_pay_component_approval', name: 'PC Atomic Test', description: 't', status: 'active', is_active: true, current_version: 1, definition: {} }).select('id').single();
+      expect(!te, `seed template: ${te?.message}`); seeded.tplId = tpl.id;
+      const { data: ver, error: ve } = await sb.from('workflow_template_versions').insert({ template_id: tpl.id, version_no: 1, version_status: 'published', definition: def, published_at: new Date().toISOString() }).select('id').single();
+      expect(!ve, `seed version: ${ve?.message}`); seeded.verId = ver.id;
+      const { data: bind, error: be } = await sb.from('module_workflow_bindings').insert({ module_key: 'finance_pay_components', workflow_type: 'finance_pay_component_approval', trigger_event: trigger, template_id: tpl.id, template_version_id: ver.id, scope_type: 'global', is_active: true, priority: 100 }).select('id').single();
+      expect(!be, `seed binding: ${be?.message}`); seeded.bindId = bind.id;
+
+      // 1. Endpoint create (atomic path via the real TS wiring).
+      const code = `PCA_${TAG.slice(-6)}`;
+      const r = await api('finance/payroll/components/create', fmgr1Token, { code, name: `Atomic ${TAG}`, kind: 'earning', idempotencyKey: `${TAG}-pcatomic` });
+      ok(r, `atomic create failed: ${r.body.message}`);
+      const cr = r.body.data; seeded.crIds.push(cr.id); if (cr.workflowId) seeded.wfIds.push(cr.workflowId);
+      expect(cr.status === 'pending_approval', `status ${cr.status}`);
+      expect(!!cr.workflowId, 'workflow_id not stamped atomically');
+      const { data: inst } = await sb.from('workflow_instances').select('status, module_key').eq('id', cr.workflowId).maybeSingle();
+      expect(inst?.status === 'in_progress' && inst?.module_key === 'finance_pay_components', `instance ${JSON.stringify(inst)}`);
+      const { data: tasks } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', cr.workflowId);
+      expect((tasks ?? []).some(t => t.assigned_role === 'finance_manager'), `finance_manager task: ${JSON.stringify(tasks)}`);
+      const { data: ev } = await sb.from('app_events').select('id').eq('source_module', 'finance_payroll_components').eq('event_type', trigger).eq('source_entity_id', cr.id);
+      expect((ev ?? []).length === 1, `exactly 1 event, got ${(ev ?? []).length}`);
+      const { data: aud } = await sb.from('hr_audit_log').select('id').eq('submodule_key', 'finance_payroll_components').eq('action', 'pay_component_cr.create_submitted').eq('record_id', cr.id);
+      expect((aud ?? []).length === 1, `exactly 1 audit, got ${(aud ?? []).length}`);
+
+      // 2. Direct-RPC receipt idempotency + 3. 23505 TOCTOU backstop → WF409.
+      const code2 = `PCA2${TAG.slice(-5)}`;
+      const biz = { changeType: 'create', componentId: null, code: code2, payload: { code: code2, name: `A2 ${TAG}`, kind: 'earning' } };
+      const args = { p_source_table: 'finance_pay_component_change_requests', p_actor_id: fmgr1Id, p_binding_id: seeded.bindId, p_business: biz };
+      const r1 = await sb.rpc('workflow_create_and_start_tx', { ...args, p_request_key: `${TAG}-pcrpc` });
+      expect(!r1.error, `rpc1: ${r1.error?.message}`); if (r1.data?.recordId) seeded.crIds.push(r1.data.recordId); if (r1.data?.workflowId) seeded.wfIds.push(r1.data.workflowId);
+      const r2 = await sb.rpc('workflow_create_and_start_tx', { ...args, p_request_key: `${TAG}-pcrpc` });
+      expect(!r2.error && r2.data?.recordId === r1.data?.recordId, `receipt dedup: ${r2.error?.message} / ${r2.data?.recordId}`);
+      const r3 = await sb.rpc('workflow_create_and_start_tx', { ...args, p_request_key: `${TAG}-pcrpc-dup` });
+      expect(r3.error?.code === 'WF409', `expected WF409 on duplicate pending create, got ${r3.error?.code} — ${r3.error?.message}`);
+    } finally {
+      for (const wfId of seeded.wfIds.filter(Boolean)) { try { await sb.from('workflow_tasks').delete().eq('workflow_id', wfId); } catch {} }
+      try { if (seeded.crIds.filter(Boolean).length) await sb.from('finance_pay_component_change_requests').delete().in('id', seeded.crIds.filter(Boolean)); } catch {}
+      for (const wfId of seeded.wfIds.filter(Boolean)) { try { await sb.from('workflow_instances').delete().eq('id', wfId); } catch {} }
+      try { if (seeded.bindId) await sb.from('module_workflow_bindings').delete().eq('id', seeded.bindId); } catch {}
+      try { if (seeded.verId) await sb.from('workflow_template_versions').delete().eq('id', seeded.verId); } catch {}
+      try { if (seeded.tplId) await sb.from('workflow_templates').delete().eq('id', seeded.tplId); } catch {}
+    }
+  });
 }

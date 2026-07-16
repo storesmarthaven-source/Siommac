@@ -18,9 +18,10 @@
 import { sb } from '../db';
 import { emitAppEvent } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError }          from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole }     from './financeEvents';
 import { assertDifferentApprover } from './statutoryConfig';
-import type { ModuleWorkflowContext } from '../workflow/definitionTypes';
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
@@ -144,98 +145,92 @@ export async function listPayComponentChangeRequests(opts: {
 
 // ── Internal: open a change request + emit backbone + start workflow ──────────
 
+async function fetchChangeRequest(id: string): Promise<PayComponentChangeRequest | null> {
+  const { data } = await sb.from('finance_pay_component_change_requests').select('*').eq('id', id).maybeSingle<DbCrRow>();
+  return data ? toCrDto(data) : null;
+}
+
+async function resolveApproverIds(actorId: string): Promise<string[]> {
+  const { data: users } = await sb.from('app_users')
+    .select('id').in('role', ['finance_manager', 'admin']).eq('status', 'active');
+  return ((users ?? []) as Array<{ id: string }>).map(u => u.id).filter(uid => uid !== actorId);
+}
+
 async function openChangeRequest(opts: {
   changeType: 'create' | 'update' | 'retire';
   componentId: string | null;
   payload: Record<string, unknown>;
   actorId: string;
-  ref: string;
-  recordData: Record<string, unknown>;
+  code: string;
+  idempotencyKey?: string;
 }): Promise<PayComponentChangeRequest> {
+  const binding = await selectWorkflowBinding(sb, {
+    moduleKey: 'finance_pay_components', workflowType: 'finance_pay_component_approval',
+    triggerEvent: 'finance.payroll.component.change_submitted',
+    sourceRecordId: '', requestedBy: opts.actorId, recordData: {},
+  });
+
+  if (binding) {
+    // ATOMIC (finding #3, Shape B): the CR insert + workflow start + workflow_id link +
+    // business event + hr_audit_log all commit in ONE transaction via
+    // workflow_create_and_start_tx (finance_pay_component_change_requests branch). The
+    // partial-unique index (20260919000260) TOCTOU loser hits 23505 on the insert, mapped
+    // to WF409 inside the RPC. Replaces the insert -> startWorkflowForRecord ->
+    // update / compensating-delete strand.
+    const requestKey = opts.idempotencyKey?.trim();
+    if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit a pay-component change.'), { status: 400 });
+    const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+      p_source_table: 'finance_pay_component_change_requests', p_actor_id: opts.actorId,
+      p_binding_id: binding.id, p_request_key: requestKey,
+      p_business: { changeType: opts.changeType, componentId: opts.componentId, payload: opts.payload, code: opts.code },
+    });
+    if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+    const rpc = (data ?? {}) as { recordId?: string };
+    // Notify the finance_manager approvers post-commit (the first-step role).
+    void notifyUsersByRole('finance_manager', {
+      type: 'finance.payroll.component.change_submitted',
+      title: `Pay-component ${opts.changeType} PC-${opts.code} awaiting your approval`,
+      body: `A pay-component ${opts.changeType} change was submitted for approval.`,
+      module: 'finance', severity: 'info', sourceType: 'pay_component_cr',
+      sourceId: rpc.recordId ?? '', actionRequired: true,
+      dedupeKey: `finance.payroll.component.change_submitted.${rpc.recordId}`,
+    });
+    const created = await fetchChangeRequest(rpc.recordId ?? '');
+    if (!created) throw Object.assign(new Error('Change request created but could not be retrieved.'), { status: 503 });
+    return created;
+  }
+
+  // No approval binding → create-only (a CR with no workflow, approvable via the direct
+  // /approve route). Keeps the 23505 -> 409 mapping + the backbone audit/event, with a
+  // compensating rollback if the backbone write fails.
   const { data, error } = await sb
     .from('finance_pay_component_change_requests')
-    .insert({
-      change_type:  opts.changeType,
-      component_id: opts.componentId,
-      payload:      opts.payload,
-      status:       'pending_approval',
-      created_by:   opts.actorId,
-    })
-    .select()
-    .single<DbCrRow>();
+    .insert({ change_type: opts.changeType, component_id: opts.componentId, payload: opts.payload, status: 'pending_approval', created_by: opts.actorId })
+    .select().single<DbCrRow>();
   if (error) {
-    // The partial-unique index (20260919000260) closes the pending-create TOCTOU race: the
-    // loser of two concurrent identical submissions hits 23505 here. Map it to the same 409
-    // the precheck returns, instead of a 500.
     if ((error as { code?: string }).code === '23505') {
       throw Object.assign(new Error('A create request for this pay component code is already pending approval.'), { status: 409 });
     }
     throw Object.assign(new Error('openChangeRequest: ' + error.message), { status: 500 });
   }
-
   const cr = toCrDto(data);
-
-  // Start central workflow (non-fatal: log but don't block CR creation).
-  const ctx: ModuleWorkflowContext = {
-    moduleKey:       'finance_pay_components',
-    workflowType:    'finance_pay_component_approval',
-    triggerEvent:    'finance.payroll.component.change_submitted',
-    sourceRecordId:  cr.id,
-    sourceRecordRef: opts.ref,
-    requestedBy:     opts.actorId,
-    priority:        'normal',
-    recordData:      opts.recordData,
-  };
-  try {
-    const wf = await startWorkflowForRecord({ context: ctx, actor: { id: opts.actorId } });
-    if (wf?.id) {
-      await sb.from('finance_pay_component_change_requests')
-        .update({ workflow_id: wf.id })
-        .eq('id', cr.id);
-      cr.workflowId = wf.id;
-    }
-  } catch (wfErr) {
-    // Workflow engine failure: compensating rollback deletes the CR so the user can retry.
-    try { await sb.from('finance_pay_component_change_requests').delete().eq('id', cr.id); } catch (_) { /* best-effort */ }
-    throw Object.assign(
-      new Error('Workflow start failed — change request rolled back: ' + String(wfErr)),
-      { status: 500 },
-    );
-  }
-
-  // Backbone: audit + event. On failure, compensating rollback deletes the CR.
-  const resolveApproverIds = async (): Promise<string[]> => {
-    const { data: users } = await sb.from('app_users')
-      .select('id').in('role', ['finance_manager', 'admin']).eq('status', 'active');
-    return ((users ?? []) as Array<{ id: string }>)
-      .map(u => u.id).filter(uid => uid !== opts.actorId);
-  };
-
-  const approverIds = await resolveApproverIds();
+  const approverIds = await resolveApproverIds(opts.actorId);
   try {
     await writeHrAudit({
-      submoduleKey: 'finance_payroll_components',
-      recordId:     cr.id,
-      actorId:      opts.actorId,
-      action:       `pay_component_cr.${opts.changeType}_submitted`,
-      previousState: null,
-      newState:     { changeType: opts.changeType, componentId: opts.componentId, payload: opts.payload },
+      submoduleKey: 'finance_payroll_components', recordId: cr.id, actorId: opts.actorId,
+      action: `pay_component_cr.${opts.changeType}_submitted`,
+      previousState: null, newState: { changeType: opts.changeType, componentId: opts.componentId, payload: opts.payload },
     });
     void emitAppEvent({
-      eventType:        'finance.payroll.component.change_submitted',
-      sourceModule:     'finance_payroll_components',
-      sourceEntityType: 'pay_component_cr',
-      sourceEntityId:   cr.id,
-      actorUserId:      opts.actorId,
-      severity:         'info',
-      payload:          { changeType: opts.changeType, componentId: opts.componentId, ref: opts.ref,
-                          recipientUserIds: approverIds.length ? approverIds : undefined },
+      eventType: 'finance.payroll.component.change_submitted', sourceModule: 'finance_payroll_components',
+      sourceEntityType: 'pay_component_cr', sourceEntityId: cr.id, actorUserId: opts.actorId, severity: 'info',
+      payload: { changeType: opts.changeType, componentId: opts.componentId, ref: `PC-${opts.code}`,
+                 recipientUserIds: approverIds.length ? approverIds : undefined },
     });
   } catch (bbErr) {
     try { await sb.from('finance_pay_component_change_requests').delete().eq('id', cr.id); } catch (_) { /* best-effort */ }
     throw bbErr;
   }
-
   return cr;
 }
 
@@ -251,6 +246,7 @@ export interface CreatePayComponentInput {
   glAccountCode?: string | null;
   costAllocationRequired?: boolean;
   actorId: string;
+  idempotencyKey?: string;
 }
 
 export async function createPayComponent(
@@ -297,9 +293,9 @@ export async function createPayComponent(
       gl_account_code:         input.glAccountCode ?? null,
       cost_allocation_required: input.costAllocationRequired ?? false,
     },
-    actorId:    input.actorId,
-    ref:        `PC-${code}`,
-    recordData: { code, name, kind: input.kind },
+    actorId:        input.actorId,
+    code,
+    idempotencyKey: input.idempotencyKey,
   });
 }
 
@@ -314,6 +310,7 @@ export interface UpdatePayComponentInput {
   glAccountCode?: string | null;
   costAllocationRequired?: boolean;
   actorId: string;
+  idempotencyKey?: string;
 }
 
 export async function updatePayComponent(
@@ -336,12 +333,12 @@ export async function updatePayComponent(
   }
 
   return openChangeRequest({
-    changeType:  'update',
-    componentId: input.id,
+    changeType:     'update',
+    componentId:    input.id,
     payload,
-    actorId:     input.actorId,
-    ref:         `PC-${existing.code}`,
-    recordData:  { code: existing.code, name: existing.name, kind: existing.kind },
+    actorId:        input.actorId,
+    code:           existing.code,
+    idempotencyKey: input.idempotencyKey,
   });
 }
 
@@ -350,6 +347,7 @@ export async function updatePayComponent(
 export async function retirePayComponent(
   id: string,
   actorId: string,
+  idempotencyKey?: string,
 ): Promise<PayComponentChangeRequest> {
   const existing = await getPayComponent(id);
   if (!existing) throw Object.assign(new Error('Pay component not found.'), { status: 404 });
@@ -360,8 +358,8 @@ export async function retirePayComponent(
     componentId: id,
     payload:     {},
     actorId,
-    ref:         `PC-${existing.code}`,
-    recordData:  { code: existing.code, name: existing.name },
+    code:        existing.code,
+    idempotencyKey,
   });
 }
 

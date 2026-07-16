@@ -348,6 +348,7 @@ router.post('/payroll/components/create', async c => {
     reducesChargeable: z.boolean().optional(),
     glAccountCode: z.string().max(50).nullable().optional(),
     costAllocationRequired: z.boolean().optional(),
+    idempotencyKey: z.string().min(1).max(200).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -367,6 +368,7 @@ router.post('/payroll/components/update', async c => {
     reducesChargeable: z.boolean().optional(),
     glAccountCode: z.string().max(50).nullable().optional(),
     costAllocationRequired: z.boolean().optional(),
+    idempotencyKey: z.string().min(1).max(200).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -378,10 +380,10 @@ router.post('/payroll/components/update', async c => {
 // POST /api/finance/payroll/components/retire
 router.post('/payroll/components/retire', async c => {
   const actor = await requirePermission(c, 'finance.payroll.components.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await retirePayComponent(v.data.id, actor.id);
+    const data = await retirePayComponent(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { const er = e as { status?: number; message?: string }; return c.json({ success: false, message: er.message ?? 'Failed' }, (er.status ?? 500) as 200); }
 });
