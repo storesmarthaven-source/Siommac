@@ -54,43 +54,62 @@ export default async function run(h) {
   };
 
   h.onCleanup(async () => {
-    if (ctx.attachmentIds.length)
-      await sb.from('attachments').delete().in('id', ctx.attachmentIds);
-    if (ctx.controlIds.length)
-      await sb.from('hse_controls').delete().in('id', ctx.controlIds);
-    if (ctx.templateIds.length)
-      await sb.from('workflow_templates').delete().in('id', ctx.templateIds);
-    if (ctx.crewIds.length)
-      await sb.from('hse_jsa_crew_acknowledgements').delete().in('id', ctx.crewIds);
+    const del = h.mustDelete;
+    // Workflow chains for every record this run created. Deleting the instance
+    // cascades tasks/decisions/events/transitions, but workflow_handoffs.workflow_id
+    // has no ON DELETE and blocks the instance delete — clear it first.
+    const recordIds = [...ctx.jsaIds, ...ctx.assessmentIds, ...ctx.hazardIds];
+    if (recordIds.length) {
+      // Pending handoff_outbox rows for a deleted record keep retrying and
+      // RE-CREATE derived records (hazard→assessment) — kill them first.
+      await del('handoff_outbox', q => q.in('source_entity_id', recordIds));
+      await del('handoff_outbox', q => q.in('target_entity_id', recordIds));
+      const { data: wfs, error: wfErr } = await sb.from('workflow_instances')
+        .select('id').in('source_record_id', recordIds);
+      if (wfErr) console.warn(`\n[cleanup] workflow_instances lookup failed — ${wfErr.message}`);
+      const wfIds = (wfs ?? []).map(w => w.id);
+      if (wfIds.length) {
+        await del('workflow_handoffs', q => q.in('workflow_id', wfIds));
+        await del('workflow_instances', q => q.in('id', wfIds));
+      }
+    }
+    if (ctx.attachmentIds.length) await del('attachments', q => q.in('id', ctx.attachmentIds));
+    if (ctx.controlIds.length)    await del('hse_controls', q => q.in('id', ctx.controlIds));
+    if (ctx.templateIds.length)   await del('workflow_templates', q => q.in('id', ctx.templateIds));
+    if (ctx.crewIds.length)       await del('hse_jsa_crew_acknowledgements', q => q.in('id', ctx.crewIds));
     if (ctx.jsaIds.length) {
-      await sb.from('hse_jsa_step_controls').delete().in(
-        'step_hazard_id',
-        (await sb.from('hse_jsa_step_hazards').select('id').in(
-          'step_id', (await sb.from('hse_jsa_steps').select('id').in('jsa_id', ctx.jsaIds)).data?.map(s => s.id) ?? []
-        )).data?.map(h => h.id) ?? []
-      ).catch(() => {});
-      await sb.from('hse_jsa_step_hazards').delete().in(
-        'step_id', (await sb.from('hse_jsa_steps').select('id').in('jsa_id', ctx.jsaIds)).data?.map(s => s.id) ?? []
-      ).catch(() => {});
-      await sb.from('hse_jsa_steps').delete().in('jsa_id', ctx.jsaIds);
-      await sb.from('hse_ppe_requirements').delete().eq('source_type', 'jsa').in('source_id', ctx.jsaIds);
-      await sb.from('hse_training_links').delete().eq('source_type', 'jsa').in('source_id', ctx.jsaIds);
-      await sb.from('hse_jsa_crew_acknowledgements').delete().in('jsa_id', ctx.jsaIds);
-      await sb.from('hse_risk_jsa_links').delete().in('source_id', ctx.jsaIds);
-      await sb.from('hse_jsa').delete().in('id', ctx.jsaIds);
+      const { data: steps } = await sb.from('hse_jsa_steps').select('id').in('jsa_id', ctx.jsaIds);
+      const stepIds = (steps ?? []).map(s => s.id);
+      if (stepIds.length) {
+        const { data: stepHaz } = await sb.from('hse_jsa_step_hazards').select('id').in('step_id', stepIds);
+        const stepHazIds = (stepHaz ?? []).map(x => x.id);
+        if (stepHazIds.length) await del('hse_jsa_step_controls', q => q.in('step_hazard_id', stepHazIds));
+        await del('hse_jsa_step_hazards', q => q.in('step_id', stepIds));
+        await del('hse_jsa_steps', q => q.in('id', stepIds));
+      }
+      await del('hse_ppe_requirements', q => q.eq('source_type', 'jsa').in('source_id', ctx.jsaIds));
+      await del('hse_training_links', q => q.eq('source_type', 'jsa').in('source_id', ctx.jsaIds));
+      await del('hse_jsa_crew_acknowledgements', q => q.in('jsa_id', ctx.jsaIds));
+      await del('hse_risk_jsa_links', q => q.in('source_id', ctx.jsaIds));
+      await del('hse_jsa', q => q.in('id', ctx.jsaIds));
     }
     if (ctx.assessmentIds.length) {
-      await sb.from('hse_risk_assessment_hazards').delete().in('assessment_id', ctx.assessmentIds);
-      await sb.from('hse_controls').delete().eq('source_type','assessment').in('source_id', ctx.assessmentIds);
-      await sb.from('hse_ppe_requirements').delete().eq('source_type','assessment').in('source_id', ctx.assessmentIds);
-      await sb.from('hse_training_links').delete().eq('source_type','assessment').in('source_id', ctx.assessmentIds);
-      await sb.from('hse_risk_assessments').delete().in('id', ctx.assessmentIds);
+      await del('hse_risk_assessment_hazards', q => q.in('assessment_id', ctx.assessmentIds));
+      await del('hse_controls', q => q.eq('source_type','assessment').in('source_id', ctx.assessmentIds));
+      await del('hse_ppe_requirements', q => q.eq('source_type','assessment').in('source_id', ctx.assessmentIds));
+      await del('hse_training_links', q => q.eq('source_type','assessment').in('source_id', ctx.assessmentIds));
+      await del('hse_risk_assessments', q => q.in('id', ctx.assessmentIds));
     }
     if (ctx.hazardIds.length) {
-      await sb.from('hse_controls').delete().eq('source_type','hazard').in('source_id', ctx.hazardIds);
-      await sb.from('hse_hazards').delete().in('id', ctx.hazardIds);
+      // hse_controls.hazard_id AND hse_risk_assessment_hazards.hazard_id both have
+      // no ON DELETE — each silently blocked the hazard delete (this exact chain
+      // accumulated 312 TEST-E2E hazards and broke the hazards/list assertion).
+      await del('hse_controls', q => q.in('hazard_id', ctx.hazardIds));
+      await del('hse_controls', q => q.eq('source_type','hazard').in('source_id', ctx.hazardIds));
+      await del('hse_risk_assessment_hazards', q => q.in('hazard_id', ctx.hazardIds));
+      await del('hse_hazards', q => q.in('id', ctx.hazardIds));
     }
-    await sb.from('notifications').delete().ilike('title', `%${TAG}%`);
+    await del('notifications', q => q.ilike('title', `%${TAG}%`));
   });
 
   const baseHazard = () => ({
@@ -933,7 +952,7 @@ export default async function run(h) {
     ctx.libHazardId = r.body.data.id;
     // Cleanup: remove the library entry.
     h.onCleanup(async () => {
-      if (ctx.libHazardId) await sb.from('hse_hazard_library').delete().eq('id', ctx.libHazardId).catch(() => {});
+      if (ctx.libHazardId) await h.mustDelete('hse_hazard_library', q => q.eq('id', ctx.libHazardId));
     });
   });
   await test('VALIDATION: library hazard empty category → rejected', async () => {
@@ -1066,8 +1085,10 @@ export default async function run(h) {
   const d1WfIds = [];
   h.onCleanup(async () => {
     if (d1WfIds.length) {
-      await sb.from('workflow_tasks').delete().in('workflow_id', d1WfIds);
-      await sb.from('workflow_instances').delete().in('id', d1WfIds);
+      // Tasks/decisions/transitions cascade from the instance; only
+      // workflow_handoffs.workflow_id (no ON DELETE) blocks it.
+      await h.mustDelete('workflow_handoffs', q => q.in('workflow_id', d1WfIds));
+      await h.mustDelete('workflow_instances', q => q.in('id', d1WfIds));
     }
   });
 

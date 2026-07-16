@@ -45,22 +45,37 @@ export default async function run(h) {
 
   // Register teardown up-front so partial runs still clean up.
   h.onCleanup(async () => {
-    if (ctx.capaIds.length)
-      await sb.from('hse_capa_actions').delete().in('id', ctx.capaIds);
-    if (ctx.rootCauseIds.length)
-      await sb.from('hse_root_causes').delete().in('id', ctx.rootCauseIds);
-    if (ctx.evidenceIds.length)
-      await sb.from('hse_investigation_evidence').delete().in('id', ctx.evidenceIds);
-    if (ctx.investigationIds.length)
-      await sb.from('hse_investigations').delete().in('id', ctx.investigationIds);
-    if (ctx.incidentIds.length) {
-      await sb.from('hse_incident_people').delete().in('incident_id', ctx.incidentIds);
-      await sb.from('hse_incidents').delete().in('id', ctx.incidentIds);
+    const del = h.mustDelete;
+    // Workflow chains for every record this run created (incident deletes only
+    // SET NULL their workflow_id — the instances themselves must be removed).
+    // Deleting the instance cascades tasks/decisions/events/transitions, but
+    // workflow_handoffs.workflow_id has no ON DELETE and blocks it — clear first.
+    const recordIds = [...ctx.incidentIds, ...ctx.investigationIds, ...ctx.capaIds];
+    if (recordIds.length) {
+      // Pending handoff_outbox rows for a deleted record keep retrying and
+      // RE-CREATE derived records (incident→investigation/CAPA) — kill them first.
+      await del('handoff_outbox', q => q.in('source_entity_id', recordIds));
+      await del('handoff_outbox', q => q.in('target_entity_id', recordIds));
+      const { data: wfs, error: wfErr } = await sb.from('workflow_instances')
+        .select('id').in('source_record_id', recordIds);
+      if (wfErr) console.warn(`\n[cleanup] workflow_instances lookup failed — ${wfErr.message}`);
+      const wfIds = (wfs ?? []).map(w => w.id);
+      if (wfIds.length) {
+        await del('workflow_handoffs', q => q.in('workflow_id', wfIds));
+        await del('workflow_instances', q => q.in('id', wfIds));
+      }
     }
-    await sb.from('notifications').delete().ilike('title', `%${TAG}%`);
-    // Idempotency ledger rows for this run (own try/catch so a missing table
-    // can never block the real teardown above).
-    try { await sb.from('module_mutation_runs').delete().ilike('idempotency_key', `%${TAG}%`); } catch { /* ignore */ }
+    if (ctx.capaIds.length)          await del('hse_capa_actions', q => q.in('id', ctx.capaIds));
+    if (ctx.rootCauseIds.length)     await del('hse_root_causes', q => q.in('id', ctx.rootCauseIds));
+    if (ctx.evidenceIds.length)      await del('hse_investigation_evidence', q => q.in('id', ctx.evidenceIds));
+    if (ctx.investigationIds.length) await del('hse_investigations', q => q.in('id', ctx.investigationIds));
+    if (ctx.incidentIds.length) {
+      await del('hse_incident_people', q => q.in('incident_id', ctx.incidentIds));
+      await del('hse_incidents', q => q.in('id', ctx.incidentIds));
+    }
+    await del('notifications', q => q.ilike('title', `%${TAG}%`));
+    // Idempotency ledger rows for this run.
+    await del('module_mutation_runs', q => q.ilike('idempotency_key', `%${TAG}%`));
   });
 
   const baseIncident = () => ({
@@ -784,8 +799,10 @@ export default async function run(h) {
   const d1WorkflowIds = [];
   h.onCleanup(async () => {
     if (d1WorkflowIds.length) {
-      await sb.from('workflow_tasks').delete().in('workflow_id', d1WorkflowIds);
-      await sb.from('workflow_instances').delete().in('id', d1WorkflowIds);
+      // Tasks/decisions/transitions cascade from the instance; only
+      // workflow_handoffs.workflow_id (no ON DELETE) blocks it.
+      await h.mustDelete('workflow_handoffs', q => q.in('workflow_id', d1WorkflowIds));
+      await h.mustDelete('workflow_instances', q => q.in('id', d1WorkflowIds));
     }
   });
 

@@ -118,6 +118,34 @@ export class Harness {
   /** Register a cleanup closure; run LIFO after all suites finish. */
   onCleanup = (fn) => { this._cleanups.push(fn); };
 
+  /**
+   * Teardown delete that SURFACES failures instead of swallowing them.
+   * `await sb.from(t).delete().in(...)` returns `{ error }` — a cleanup block that
+   * never reads it lets FK-blocked deletes fail silently, and the leaked rows
+   * accumulate across runs until they break live pages and list assertions (312
+   * TEST-E2E hse_hazards did exactly this). Suites' onCleanup blocks must use this
+   * for every delete:
+   *
+   *     await h.mustDelete('hse_controls', q => q.in('hazard_id', ids));
+   *
+   * `build` receives the started delete builder and applies the filters. Never
+   * throws (teardown must keep going) — logs table + error loudly and returns
+   * false so callers can react if they need to.
+   */
+  mustDelete = async (table, build) => {
+    try {
+      const { error } = await build(this.sb.from(table).delete());
+      if (error) {
+        console.warn(`\n[cleanup] DELETE ${table} FAILED — ${error.message} (rows leak until the orphan sweep)`);
+        return false;
+      }
+      return true;
+    } catch (e) {
+      console.warn(`\n[cleanup] DELETE ${table} threw — ${e.message}`);
+      return false;
+    }
+  };
+
   /** Lightweight liveness probe (no auth, no DB) — true when the server answers. */
   async isServerUp() {
     try {
