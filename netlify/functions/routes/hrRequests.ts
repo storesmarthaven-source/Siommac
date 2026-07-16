@@ -44,6 +44,7 @@ router.post('/requests/submit', async c => {
     details:     z.record(z.string(), z.unknown()).optional(),
     priority:    z.enum(PRIORITIES).optional(),
     employeeId:  z.string().min(1).optional(), // HR-only override
+    idempotencyKey: z.string().min(1).max(200).optional(),
   }), body(c));
   if (!v.ok) return v.response;
 
@@ -63,6 +64,7 @@ router.post('/requests/submit', async c => {
       title:       v.data.title,
       details:     v.data.details,
       priority:    v.data.priority,
+      idempotencyKey: v.data.idempotencyKey,
     });
     return c.json({ success: true, data: result });
   } catch (e) { return fail(c, e); }

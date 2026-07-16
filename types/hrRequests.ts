@@ -118,6 +118,8 @@ export interface SubmitRequestArgs {
   priority?: HrRequestPriority;
   /** HR-only: submit on behalf of another employee (requires hr.requests.manage). */
   employeeId?: string;
+  /** Client-generated, stable-per-attempt; required for the atomic approvable-request path. */
+  idempotencyKey?: string;
 }
 
 export interface DecideRequestArgs {

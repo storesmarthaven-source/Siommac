@@ -9,7 +9,7 @@
  * HR staff sees only Triage (or both if they also have submit_own).
  */
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useRef, useState } from 'preact/hooks';
 import { toast } from '@store';
 import { can } from '@lib/permissions';
 import { PageHeader, Field, FormGrid, SelectInput, TextInput, EmptyState, TableSkeleton } from '@ui';
@@ -54,8 +54,12 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
 
   const selectedType = types.find(t => t.key === requestType);
 
+  // Stable-per-attempt idempotency key (generated once, reused on retry, cleared on success).
+  const submitKeyRef = useRef<string | null>(null);
+
   async function submit(): Promise<void> {
     if (!title.trim()) { toast('Please enter a title.'); return; }
+    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
     setBusy(true);
     try {
       await hrRequestsApi.submit({
@@ -63,7 +67,9 @@ function NewRequestModal({ types, onClose, onSubmitted }: NewRequestModalProps):
         title: title.trim(),
         details: details.trim() ? { body: details.trim() } : {},
         priority: priority as 'low' | 'normal' | 'high',
+        idempotencyKey: submitKeyRef.current,
       });
+      submitKeyRef.current = null;
       toast('Request submitted successfully.');
       onSubmitted();
       onClose();

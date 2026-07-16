@@ -14,7 +14,9 @@ import { sb }                  from '../db';
 import { nextRef }             from '../refGenerator';
 import { runModuleMutation }   from '../moduleServiceAdapter';
 import { writeHrAudit }        from './employeeCore';
-import { startWorkflowForRecord } from '../workflow/service';
+import { rpcHttpError }        from '../workflow/service';
+import { selectWorkflowBinding } from '../workflow/bindingResolver';
+import { notifyUsersByRole }   from '../finance/financeEvents';
 import {
   REQUEST_TYPE_CATALOGUE, getRequestTypeDef,
 } from '../../../../types/hrRequests';
@@ -36,6 +38,45 @@ export async function submitRequest(
   if (!typeDef) throw Object.assign(new Error(`Unknown request type: ${args.requestType}`), { status: 400 });
 
   const details = args.details ?? {};
+
+  // ATOMIC (finding #3, Shape B): an approvable request WITH an active approval binding
+  // creates the request (in_review) + starts the approval workflow + links workflow_id +
+  // business event + hr_audit_log in ONE transaction via workflow_create_and_start_tx
+  // (hr_requests branch), with client-key idempotency. Replaces the create-then-start
+  // strand (record via runModuleMutation, then a separate startWorkflowForRecord +
+  // status/link) — the only path that started a workflow. Non-approvable requests, and
+  // approvable ones with no binding, keep the plain create-only path below (no strand).
+  if (typeDef.requiresApproval) {
+    const binding = await selectWorkflowBinding(sb, {
+      moduleKey: 'hr_requests', workflowType: 'hr_request_approval',
+      triggerEvent: 'hr.request.submitted', sourceRecordId: '', requestedBy: actorId, recordData: {},
+    });
+    if (binding) {
+      const requestKey = args.idempotencyKey?.trim();
+      if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit an approvable request.'), { status: 400 });
+      const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+        p_source_table: 'hr_requests', p_actor_id: actorId, p_binding_id: binding.id, p_request_key: requestKey,
+        p_business: {
+          employeeId: resolvedEmployeeId, requestType: args.requestType, title: args.title,
+          details, priority: args.priority ?? 'normal',
+        },
+      });
+      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+      const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string };
+      // First step routes to the hr_manager role — notify them post-commit so approval is actioned.
+      void notifyUsersByRole('hr_manager', {
+        type: 'hr.request.submitted',
+        title: `Request ${rpc.ref ?? ''} awaiting your approval`.trim(),
+        body: `A ${args.requestType} request has been submitted for approval.`,
+        module: 'hr', severity: 'warning', sourceType: 'hr_request',
+        sourceId: rpc.recordId ?? '', actionRequired: true,
+        dedupeKey: `hr.request.submitted.${rpc.recordId}`,
+      });
+      return { requestId: rpc.recordId ?? '', requestNo: rpc.ref ?? '', workflowId: rpc.workflowId ?? null };
+    }
+    // No approval binding configured → fall through to the plain create (approval opt-in).
+  }
+
   // Content-addressable idempotency key — same employee + type + title ≈ same intent.
   // SHA-256 avoids the prefix-collision risk of a base64-truncated raw-JSON hash: two
   // titles that share a long common prefix (e.g. "Employment letter for visa X" vs "...Y")
@@ -89,50 +130,7 @@ export async function submitRequest(
     },
   });
 
-  const requestId = result.entityId;
-  let workflowId: string | null = null;
-
-  // Start a workflow only for approvable types — non-approvable types stay as plain triage items.
-  if (typeDef.requiresApproval) {
-    try {
-      const { data: req } = await sb.from('hr_requests').select('id, request_no').eq('id', requestId).maybeSingle<{ id: string; request_no: string }>();
-      if (req) {
-        const wf = await startWorkflowForRecord({
-          context: {
-            moduleKey: 'hr_requests',
-            workflowType: 'hr_request_approval',
-            triggerEvent: 'hr.request.submitted',
-            sourceRecordId: req.id,
-            sourceRecordRef: req.request_no,
-            requestedBy: actorId,
-            departmentId: null,
-            siteId: null,
-            priority: args.priority === 'high' ? 'high' : 'normal',
-            recordData: { requestType: args.requestType, title: args.title, employeeId: resolvedEmployeeId },
-          },
-          actor: { id: actorId },
-        });
-        if (wf) {
-          workflowId = wf.id;
-          const { error: wfErr } = await sb.from('hr_requests').update({
-            workflow_id: wf.id,
-            status: 'in_review',
-          }).eq('id', requestId);
-          if (wfErr) {
-            // workflow_id update failure is serious — log but don't swallow silently;
-            // the workflow was created, the request exists: log and surface the error.
-            console.error('[hr.requests] Failed to store workflow_id on request:', wfErr);
-            throw Object.assign(new Error(`Failed to link workflow to request: ${wfErr.message}`), { status: 500 });
-          }
-        }
-      }
-    } catch (e: unknown) {
-      // If we already threw above (wfErr), re-throw. Otherwise: no binding = null path.
-      const err = e as { status?: number; message?: string };
-      if (err.status === 500) throw e;
-      // No binding found → stays submitted (no workflow).
-    }
-  }
-
-  return { requestId, requestNo: result.record.requestNo, workflowId };
+  // This path is create-only (non-approvable, or approvable with no binding): the request
+  // stays 'submitted' with no workflow. The atomic approvable+binding path returned above.
+  return { requestId: result.entityId, requestNo: result.record.requestNo, workflowId: null };
 }

@@ -101,6 +101,7 @@ export default async function run(h) {
       title:       `Employment letter for visa application ${TAG}`,
       details:     { purpose: 'visa' },
       priority:    'normal',
+      idempotencyKey: `${TAG}-reqA`,
     });
     ok(r, `submit failed: ${r.body.message}`);
     expect(/^REQ-/.test(r.body.data.requestNo), `expected REQ- ref, got ${r.body.data.requestNo}`);
@@ -115,6 +116,39 @@ export default async function run(h) {
     expect(data.employee_id === empAId, `employee_id mismatch: expected ${empAId}, got ${data.employee_id}`);
     expect(['submitted', 'in_review'].includes(data.status), `unexpected status: ${data.status}`);
     expect(data.request_type === 'employment_letter', `request_type mismatch: ${data.request_type}`);
+  });
+
+  // ── Finding #3: atomic create-and-start (approvable request + workflow in one txn) ──
+  await test('ATOMIC: approvable request created + workflow linked in-commit + hr_manager task', async () => {
+    const { data: row } = await sb.from('hr_requests').select('status, workflow_id').eq('id', ctx.reqAId).single();
+    expect(row?.status === 'in_review', `expected in_review (binding active), got ${row?.status}`);
+    expect(row?.workflow_id != null, 'workflow_id not stamped atomically at submit');
+    const { data: inst } = await sb.from('workflow_instances').select('status').eq('id', row.workflow_id).maybeSingle();
+    expect(inst && inst.status === 'in_progress', `workflow instance missing/not in_progress: ${JSON.stringify(inst)}`);
+    const { data: tasks } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', row.workflow_id);
+    expect((tasks ?? []).some(t => t.assigned_role === 'hr_manager'), `no hr_manager first task: ${JSON.stringify(tasks)}`);
+    const { data: evs } = await sb.from('app_events').select('id')
+      .eq('source_module', 'hr').eq('event_type', 'hr.request.submitted').eq('source_entity_id', ctx.reqAId);
+    expect((evs ?? []).length === 1, `expected exactly 1 submitted event, got ${(evs ?? []).length}`);
+    const { data: aud } = await sb.from('hr_audit_log').select('id')
+      .eq('submodule_key', 'requests').eq('action', 'hr.request.submitted').eq('record_id', ctx.reqAId);
+    expect((aud ?? []).length === 1, `expected exactly 1 submitted audit, got ${(aud ?? []).length}`);
+  });
+
+  await test('ATOMIC idempotent retry: same key → same request, no duplicate', async () => {
+    const r = await api('hr/requests/submit', ctx.empAToken, {
+      requestType: 'employment_letter',
+      title:       `Employment letter for visa application ${TAG}`,
+      details:     { purpose: 'visa' },
+      priority:    'normal',
+      idempotencyKey: `${TAG}-reqA`,
+    });
+    ok(r, `retry failed: ${r.body.message}`);
+    expect(r.body.data.requestId === ctx.reqAId, `retry created a new request (${r.body.data.requestId} vs ${ctx.reqAId})`);
+    const { data: rows } = await sb.from('hr_requests').select('id')
+      .eq('employee_id', empAId).eq('request_type', 'employment_letter')
+      .eq('title', `Employment letter for visa application ${TAG}`);
+    expect((rows ?? []).length === 1, `idempotent retry duplicated the request (${(rows ?? []).length})`);
   });
 
   await test('employee A submits a non-approvable general_inquiry → no workflow_id', async () => {
@@ -132,6 +166,7 @@ export default async function run(h) {
       requestType: 'document_copy',
       title:       `Copy of employment contract ${TAG}`,
       employeeId:  empBId,
+      idempotencyKey: `${TAG}-reqB`,
     });
     ok(r, `admin-on-behalf submit failed: ${r.body.message}`);
     ctx.reqBId = r.body.data.requestId;
