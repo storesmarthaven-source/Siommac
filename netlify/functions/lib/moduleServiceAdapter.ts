@@ -14,7 +14,6 @@
  */
 
 import { emitAppEvent }       from './appEvents';
-import { startWorkflowForRecord } from './workflow/service';
 import { createHandoff }      from './handoffBus';
 import {
   startMutationRun,
@@ -30,8 +29,6 @@ export type ModuleKey =
   | 'hse' | 'hr' | 'payroll' | 'finance'
   | 'operations' | 'tickets' | 'messages' | 'reports'
   | 'calendar';
-
-export type WorkflowPriority = 'low' | 'medium' | 'high' | 'critical';
 
 export type ModuleMutationOperation =
   | 'create' | 'update' | 'submit' | 'approve' | 'reject'
@@ -56,22 +53,6 @@ export interface ModuleHandoffRequest {
   condition?:        boolean;
 }
 
-export interface ModuleWorkflowRequest {
-  /** Central engine binding selectors. moduleKey = the workflow-owning module
-   *  (e.g. 'hse_incidents'); defaults to the mutation's `module` if omitted. */
-  moduleKey?:     string;
-  workflowType:   string;
-  triggerEvent:   string;
-  priority:       WorkflowPriority;
-  ownerUserId?:   string | null;
-  reason?:        string;
-  /** When false the workflow is skipped. Omit or true to always create. */
-  condition?:     boolean;
-  /** When true, a missing binding FAILS the mutation (no silent approval bypass). */
-  required?:      boolean;
-  metadata?:      Record<string, unknown>;
-}
-
 export interface ModuleMutationOptions<TRecord> {
   module:      ModuleKey;
   operation:   ModuleMutationOperation;
@@ -93,7 +74,6 @@ export interface ModuleMutationOptions<TRecord> {
   };
   explicitRecipients?: Array<{ userId: string; reason: 'assignee' | 'owner' | 'reporter' | 'supervisor' }>;
 
-  workflow?:  ModuleWorkflowRequest;
   handoffs?:  ModuleHandoffRequest[];
 
   getEntityIdentity: (record: TRecord) => ModuleEntityIdentity;
@@ -108,7 +88,6 @@ export interface ModuleMutationResult<TRecord> {
   entityId:    string;
   entityRef?:  string;
   eventId?:    string;
-  workflowId?: string;
   handoffIds:  string[];
 }
 
@@ -131,7 +110,6 @@ export async function runModuleMutation<TRecord>(args: {
     requestPayload: {
       eventType:     options.eventType,
       eventSeverity: options.eventSeverity ?? 'info',
-      workflow:      options.workflow ?? null,
       handoffs:      options.handoffs ?? [],
     },
   });
@@ -181,50 +159,9 @@ export async function runModuleMutation<TRecord>(args: {
       resultPatch: { eventId: eventResult.eventId },
     });
 
-    // Stage 3: create workflow (if requested and condition not false)
-    //
-    // PRE-MIGRATION LEGACY PATH — do NOT delete until these callers are
-    // converted to the direct-RPC pattern (workflow_create_and_start_tx /
-    // workflow_submit_for_record_tx) and options.workflow is removed from
-    // ModuleMutationOptions.  Active callers as of migration 397:
-    //   routes/hseCapa.ts         -- capa_closure workflow
-    //   routes/hseIncidents.ts    -- incident_investigation workflow
-    //   routes/hseRiskJsa.ts      -- hazard_review workflow (conditional)
-    // This block and the ModuleWorkflowRequest type are waivered in the
-    // workflow.startForRecord.guard.test.ts grep gate.  See
-    // FINAL_CUTOVER_CONTRACT.md section 5 and deferred item D1.
-    let workflowId: string | undefined;
-
-    if (options.workflow && options.workflow.condition !== false) {
-      const wf = await startWorkflowForRecord({
-        actor: { id: actorUserId },
-        context: {
-          moduleKey:      options.workflow.moduleKey ?? options.module,
-          workflowType:   options.workflow.workflowType,
-          triggerEvent:   options.workflow.triggerEvent,
-          sourceRecordId: identity.id,
-          sourceRecordRef: identity.ref,
-          siteId:         context.siteId ?? null,
-          departmentId:   context.departmentId ?? null,
-          requestedBy:    actorUserId,
-          ownerId:        options.workflow.ownerUserId ?? null,
-          priority:       options.workflow.priority,
-          recordData:     { ...(options.workflow.metadata ?? {}), ownerId: options.workflow.ownerUserId ?? null },
-        },
-      });
-
-      // null = no active binding. Required workflows MUST NOT silently bypass approval.
-      if (!wf && options.workflow.required) {
-        throw new Error(`Required workflow '${options.workflow.workflowType}' has no active binding for ${options.workflow.moduleKey ?? options.module}.`);
-      }
-      workflowId = wf?.id;
-
-      await markMutationRunStage(options.idempotencyKey, {
-        status:      'workflow_created',
-        stage:       'workflow_created',
-        resultPatch: { workflowId },
-      });
-    }
+    // Stage 3 (workflow creation) is GONE — record+workflow creation is atomic
+    // via workflow_create_and_start_tx / workflow_submit_for_record_tx at the
+    // call sites (finding #3). runModuleMutation is create-only.
 
     // Stage 4: create handoffs (conditional)
     const handoffIds: string[] = [];
@@ -262,7 +199,6 @@ export async function runModuleMutation<TRecord>(args: {
       entityId:   identity.id,
       entityRef:  identity.ref,
       eventId:    eventResult.eventId,
-      workflowId,
       handoffIds,
     };
 

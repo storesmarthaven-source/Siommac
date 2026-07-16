@@ -113,7 +113,7 @@ async function submitRiskJsaRecord(
     },
   }, result.businessEventId ?? null);
 
-  return { workflowId: result.workflowId ?? null, status: result.status ?? 'under_review' };
+  return { workflowId: null, status: result.status ?? 'under_review' };
 }
 
 // ── Risk level helper ─────────────────────────────────────────────────────────
@@ -281,8 +281,72 @@ router.post('/risk-jsa/hazards/create', async c => {
   const level       = riskLevel(score);
   const ownerUserId = v.data.ownerUserId ?? user.id;
   const needsReview = level === 'high' || level === 'critical';
+  const contentKey  = `hse.hazard.create:${user.id}:${v.data.title}:${v.data.category}`;
 
   try {
+    // ATOMIC (finding #3, slice D1): a HIGH/CRITICAL hazard with a review
+    // binding commits the hazard INSERT (status 'assessment_required') +
+    // controls + workflow start + workflow_id link + business event + audit
+    // row in ONE transaction (hse_hazards branch of
+    // workflow_create_and_start_tx). Low/medium hazards never start a review
+    // workflow and keep the create-only module-adapter path.
+    const binding = needsReview ? await selectWorkflowBinding(sb, {
+      moduleKey: 'hse_hazards', workflowType: 'hazard_review',
+      triggerEvent: 'hazard.registered', sourceRecordId: '', requestedBy: user.id, recordData: {},
+    }) : null;
+
+    if (binding) {
+      const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+        p_source_table: 'hse_hazards', p_actor_id: user.id,
+        p_binding_id: binding.id, p_request_key: contentKey,
+        p_business: {
+          title:              v.data.title,
+          description:        v.data.description,
+          category:           v.data.category,
+          siteId:             v.data.siteId ?? null,
+          departmentId:       v.data.departmentId ?? null,
+          locationText:       v.data.locationText ?? null,
+          ownerUserId,
+          initialLikelihood:  v.data.initialLikelihood,
+          initialSeverity:    v.data.initialSeverity,
+          residualLikelihood: v.data.residualLikelihood ?? null,
+          residualSeverity:   v.data.residualSeverity ?? null,
+          riskLevel:          level,
+          reviewDueAt:        v.data.reviewDueAt ?? null,
+          controls:           v.data.controls,
+        },
+      });
+      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+      const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string; eventId?: string };
+
+      void deliverEventNotifications({
+        eventType: 'hse.hazard.registered', sourceModule: 'hse', sourceEntityType: 'hazard',
+        sourceEntityId: rpc.recordId ?? '', actorUserId: user.id,
+        severity: level === 'critical' ? 'critical' : 'high',
+        notification: {
+          title: `High-risk hazard registered: ${v.data.category}`,
+          body:  `${v.data.title} scored ${score} — controls and review required.`,
+          actionRoute: 'hse/risk-jsa',
+          type:  'hse.hazard.registered',
+        },
+        dedupeKey: `${contentKey}:notify`,
+      }, rpc.eventId ?? null);
+
+      return c.json({
+        success: true,
+        data: {
+          id:         rpc.recordId,
+          ref:        rpc.ref,
+          workflowId: rpc.workflowId ?? null,
+          eventId:    rpc.eventId ?? null,
+          riskLevel:  level,
+          score,
+        },
+      });
+    }
+
+    // Low/medium risk (or no review binding) — create-only via the module
+    // adapter: audit + event preserved, caller-supplied status, no workflow.
     const result = await runModuleMutation<{ id: string; ref: string }>({
       context: {
         actorUserId:  user.id,
@@ -293,7 +357,7 @@ router.post('/risk-jsa/hazards/create', async c => {
         module:         'hse',
         operation:      'create',
         entityType:     'hazard',
-        idempotencyKey: `hse.hazard.create:${user.id}:${v.data.title}:${v.data.category}`,
+        idempotencyKey: contentKey,
         eventType:      'hse.hazard.registered',
         eventSeverity:  level === 'critical' ? 'critical' : level === 'high' ? 'high' : 'info',
         eventPayload:   { title: v.data.title, category: v.data.category, score, riskLevel: level },
@@ -303,24 +367,7 @@ router.post('/risk-jsa/hazards/create', async c => {
           actionRoute: 'hse/risk-jsa',
           type:  'hse.hazard.registered',
         } : undefined,
-        workflow: needsReview ? {
-          moduleKey:    'hse_hazards',
-          workflowType: 'hazard_review',
-          triggerEvent: 'hazard.registered',
-          priority:    level === 'critical' ? 'critical' : 'high',
-          ownerUserId,
-          reason:      `High-risk hazard: ${v.data.title} (score ${score})`,
-          condition:   true,
-          metadata:    { category: v.data.category, score, riskLevel: level },
-        } : undefined,
         getEntityIdentity: (r) => ({ id: r.id, ref: r.ref }),
-        afterCommit: async ({ entityId, workflowId }) => {
-          if (workflowId) {
-            await sb.from('hse_hazards')
-              .update({ workflow_id: workflowId, status: 'assessment_required' })
-              .eq('id', entityId);
-          }
-        },
       },
       writeRecord: async () => {
         const ref = await nextRef('HAZ');
@@ -375,7 +422,7 @@ router.post('/risk-jsa/hazards/create', async c => {
       data: {
         id:         result.entityId,
         ref:        result.entityRef,
-        workflowId: result.workflowId  ?? null,
+        workflowId: null,
         eventId:    result.eventId     ?? null,
         riskLevel:  level,
         score,
@@ -656,13 +703,6 @@ router.post('/risk-jsa/assessments/create', async c => {
         eventSeverity:  level === 'critical' ? 'critical' : level === 'high' ? 'high' : 'info',
         eventPayload:   { title: v.data.title, assessmentType: v.data.assessmentType, riskLevel: level, hazardCount: v.data.hazards.length },
         getEntityIdentity: (r) => ({ id: r.id, ref: r.ref }),
-        afterCommit: async ({ entityId, workflowId }) => {
-          if (workflowId) {
-            await sb.from('hse_risk_assessments')
-              .update({ workflow_id: workflowId })
-              .eq('id', entityId);
-          }
-        },
       },
       writeRecord: async () => {
         const ref = await nextRef('RA');
@@ -714,7 +754,7 @@ router.post('/risk-jsa/assessments/create', async c => {
       data: {
         id:         result.entityId,
         ref:        result.entityRef,
-        workflowId: result.workflowId ?? null,
+        workflowId: null,
         eventId:    result.eventId    ?? null,
         riskLevel:  level,
       },
@@ -925,11 +965,6 @@ router.post('/risk-jsa/jsa/create', async c => {
         eventSeverity:  'info',
         eventPayload:   { title: v.data.title, stepCount: v.data.steps.length, riskLevel: level },
         getEntityIdentity: (r) => ({ id: r.id, ref: r.ref }),
-        afterCommit: async ({ entityId, workflowId }) => {
-          if (workflowId) {
-            await sb.from('hse_jsa').update({ workflow_id: workflowId }).eq('id', entityId);
-          }
-        },
       },
       writeRecord: async () => {
         const ref = await nextRef('JSA');
@@ -1057,7 +1092,7 @@ router.post('/risk-jsa/jsa/create', async c => {
       data: {
         id:         result.entityId,
         ref:        result.entityRef,
-        workflowId: result.workflowId ?? null,
+        workflowId: null,
         eventId:    result.eventId    ?? null,
         riskLevel:  level,
       },

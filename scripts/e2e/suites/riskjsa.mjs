@@ -1059,4 +1059,77 @@ export default async function run(h) {
     });
     fails(denied, 'B should not be able to approve hazards');
   });
+
+  // ── Slice D1 — hazard atomic create-and-start (finding #3) ─────────────────
+  h.section('Risk & JSA › D1 atomic hazard registration');
+
+  const d1WfIds = [];
+  h.onCleanup(async () => {
+    if (d1WfIds.length) {
+      await sb.from('workflow_tasks').delete().in('workflow_id', d1WfIds);
+      await sb.from('workflow_instances').delete().in('id', d1WfIds);
+    }
+  });
+
+  await test('D1: HIGH-risk hazard create is ATOMIC — assessment_required + review workflow + controls + 1 event + 1 audit', async () => {
+    const title = `${TAG} D1 Atomic Hazard`;
+    const r = await api('hse/risk-jsa/hazards/create', T.admin, {
+      ...baseHazard(), title, initialLikelihood: 4, initialSeverity: 4,
+      controls: [{ description: `${TAG} D1 barrier`, controlType: 'engineering' }],
+    });
+    ok(r, `create failed: ${r.body.message}`);
+    const id = r.body.data.id;
+    ctx.hazardIds.push(id);
+
+    const { data: row } = await sb.from('hse_hazards')
+      .select('status, workflow_id, ref').eq('id', id).single();
+    expect(row?.status === 'assessment_required', `expected assessment_required in-commit, got ${row?.status}`);
+    expect(row?.workflow_id != null, 'workflow_id must be linked in-commit');
+    expect(r.body.data.workflowId === row.workflow_id, 'response workflowId != row workflow_id');
+    d1WfIds.push(row.workflow_id);
+
+    const { data: wf } = await sb.from('workflow_instances')
+      .select('status, module_key, workflow_type').eq('id', row.workflow_id).single();
+    expect(wf?.status === 'in_progress' && wf?.module_key === 'hse_hazards' && wf?.workflow_type === 'hazard_review',
+      `unexpected workflow ${wf?.module_key}/${wf?.workflow_type}/${wf?.status}`);
+
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('assigned_role, status').eq('workflow_id', row.workflow_id).eq('status', 'pending');
+    expect((tasks?.length ?? 0) >= 1 && tasks?.[0]?.assigned_role === 'manager',
+      `expected pending manager task, got ${JSON.stringify(tasks)}`);
+
+    const { data: controls } = await sb.from('hse_controls').select('id, status').eq('hazard_id', id);
+    expect((controls?.length ?? 0) === 1, `expected 1 atomic control row, got ${controls?.length ?? 0}`);
+
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'hse.hazard.registered').eq('source_entity_id', id);
+    expect((events?.length ?? 0) === 1, `expected exactly 1 app_event, got ${events?.length ?? 0}`);
+
+    const { data: audits } = await sb.from('audit_logs').select('id')
+      .eq('action', 'hse.hazard.registered').eq('record_id', row.ref);
+    expect((audits?.length ?? 0) === 1, `expected exactly 1 audit_logs row, got ${audits?.length ?? 0}`);
+
+    // Idempotent retry — same content key (actor:title:category) → same hazard,
+    // no duplicate workflow.
+    const r2 = await api('hse/risk-jsa/hazards/create', T.admin, {
+      ...baseHazard(), title, initialLikelihood: 4, initialSeverity: 4,
+      controls: [{ description: `${TAG} D1 barrier`, controlType: 'engineering' }],
+    });
+    ok(r2, 'retry should succeed via the RPC receipt');
+    expect(r2.body.data?.id === id, `retry must return the same hazard (got ${r2.body.data?.id})`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id').eq('source_record_id', id);
+    expect((wfs?.length ?? 0) === 1, `expected exactly 1 workflow, got ${wfs?.length ?? 0}`);
+  });
+
+  await test('D1: low-risk hazard starts NO workflow (create-only path)', async () => {
+    const r = await api('hse/risk-jsa/hazards/create', T.admin, {
+      ...baseHazard(), title: `${TAG} D1 Low Hazard`, initialLikelihood: 1, initialSeverity: 2,
+    });
+    ok(r, `create failed: ${r.body.message}`);
+    ctx.hazardIds.push(r.body.data.id);
+    expect(r.body.data.workflowId == null, 'low-risk hazard must not start a review workflow');
+    const { data: wfs } = await sb.from('workflow_instances').select('id')
+      .eq('source_record_id', r.body.data.id);
+    expect((wfs?.length ?? 0) === 0, `expected 0 workflows for a low-risk hazard, got ${wfs?.length ?? 0}`);
+  });
 }

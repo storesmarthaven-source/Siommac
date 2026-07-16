@@ -12,8 +12,10 @@ import { z, zv }              from '../lib/validate';
 import { requirePermission }  from '../lib/auth';
 import { sb }                 from '../lib/db';
 import { nextRef }            from '../lib/refGenerator';
-import { emitAppEvent }       from '../lib/appEvents';
+import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
 import { runModuleMutation }  from '../lib/moduleServiceAdapter';
+import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
+import { rpcHttpError }       from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -98,15 +100,85 @@ router.post('/capa/create', async c => {
   if (!v.ok) return v.response;
 
   const ownerUserId = v.data.ownerUserId ?? user.id;
+  // Content-derived key: a true resubmit of the same CAPA dedupes; used as the
+  // module-mutation receipt key AND the atomic RPC request key.
+  const contentKey  = `hse.capa.create:${user.id}:${v.data.sourceType}:${v.data.sourceId}:${v.data.title}`;
+  const notifyInput = {
+    eventType:        'hse.capa.assigned',
+    sourceModule:     'hse',
+    sourceEntityType: 'capa',
+    sourceEntityId:   '',                          // filled per-path below
+    actorUserId:      user.id,
+    explicitRecipients: [{ userId: ownerUserId, reason: 'assignee' as const }],
+    notification: {
+      title: 'CAPA assigned to you',
+      body:  `${v.data.title} — due ${v.data.dueAt ?? 'TBD'}`,
+      actionRoute: 'hse/capa',
+      type:  'hse.capa.assigned',
+      actionRequired: true,
+      dueAt: v.data.dueAt ?? null,
+    },
+  };
 
   try {
+    // ATOMIC (finding #3, slice D1): with a closure-workflow binding, the CAPA
+    // INSERT + workflow start + workflow_id link + business event + audit row
+    // commit in ONE transaction (hse_capa_actions branch of
+    // workflow_create_and_start_tx). Notification fan-out is post-commit,
+    // notify-only (the RPC owns the app_event).
+    const binding = await selectWorkflowBinding(sb, {
+      moduleKey: 'hse_capa', workflowType: 'capa_closure',
+      triggerEvent: 'capa.created', sourceRecordId: '', requestedBy: user.id, recordData: {},
+    });
+
+    if (binding) {
+      const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+        p_source_table: 'hse_capa_actions', p_actor_id: user.id,
+        p_binding_id: binding.id, p_request_key: contentKey,
+        p_business: {
+          sourceType:  v.data.sourceType,
+          sourceId:    v.data.sourceId,
+          title:       v.data.title,
+          description: v.data.description,
+          ownerUserId,
+          priority:    v.data.priority,
+          dueAt:       v.data.dueAt ?? null,
+          metadata:    v.data.metadata ?? {},
+        },
+      });
+      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+      const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string; eventId?: string };
+
+      void deliverEventNotifications(
+        { ...notifyInput, sourceEntityId: rpc.recordId ?? '', dedupeKey: `${contentKey}:notify` },
+        rpc.eventId ?? null,
+      );
+
+      return c.json({
+        success:    true,
+        capaId:     rpc.recordId,
+        ref:        rpc.ref,
+        workflowId: rpc.workflowId ?? null,
+        data: {
+          id:         rpc.recordId,
+          ref:        rpc.ref,
+          workflowId: rpc.workflowId ?? null,
+          eventId:    rpc.eventId ?? null,
+          handoffIds: [] as string[],
+        },
+      });
+    }
+
+    // No closure-workflow binding — approval is opt-in; create-only via the
+    // module adapter (single write cannot strand; audit + event + notification
+    // preserved, no workflow).
     const result = await runModuleMutation<{ id: string; ref: string }>({
       context: { actorUserId: user.id },
       options: {
         module:         'hse',
         operation:      'create',
         entityType:     'capa',
-        idempotencyKey: `hse.capa.create:${user.id}:${v.data.sourceType}:${v.data.sourceId}:${v.data.title}`,
+        idempotencyKey: contentKey,
         eventType:      'hse.capa.assigned',
         eventSeverity:  v.data.priority === 'critical' ? 'critical' as const : 'info' as const,
         eventPayload:   { ownerUserId, priority: v.data.priority },
@@ -119,24 +191,7 @@ router.post('/capa/create', async c => {
           actionRequired: true,
           dueAt: v.data.dueAt ?? null,
         },
-        workflow: {
-          moduleKey:    'hse_capa',
-          workflowType: 'capa_closure',
-          triggerEvent: 'capa.created',
-          priority:    v.data.priority,
-          ownerUserId,
-          reason:      `CAPA: ${v.data.title}`,
-          condition:   true,
-          metadata:    { ownerUserId, sourceType: v.data.sourceType, sourceId: v.data.sourceId },
-        },
         getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
-        afterCommit: async ({ entityId, workflowId }) => {
-          if (workflowId) {
-            await sb.from('hse_capa_actions')
-              .update({ workflow_id: workflowId })
-              .eq('id', entityId);
-          }
-        },
       },
       writeRecord: async () => {
         const ref = await nextRef('CAPA');
@@ -167,18 +222,19 @@ router.post('/capa/create', async c => {
       success:    true,
       capaId:     result.entityId,
       ref:        result.entityRef,
-      workflowId: result.workflowId ?? null,
+      workflowId: null,
       data: {
         id:         result.entityId,
         ref:        result.entityRef,
-        workflowId: result.workflowId  ?? null,
+        workflowId: null,
         eventId:    result.eventId     ?? null,
         handoffIds: result.handoffIds,
       },
     });
   } catch (err) {
+    const status = (err as { status?: number }).status ?? 500;
     const msg = err instanceof Error ? err.message : 'Create failed';
-    return c.json({ success: false, message: msg }, 500 as 200);
+    return c.json({ success: false, message: msg }, status as 200);
   }
 });
 

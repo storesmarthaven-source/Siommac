@@ -14,8 +14,11 @@ import { z, zv }              from '../lib/validate';
 import { requirePermission }  from '../lib/auth';
 import { sb }                 from '../lib/db';
 import { nextRef }            from '../lib/refGenerator';
-import { emitAppEvent }       from '../lib/appEvents';
+import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
 import { runModuleMutation }  from '../lib/moduleServiceAdapter';
+import { createHandoff }      from '../lib/handoffBus';
+import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
+import { rpcHttpError }       from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -153,12 +156,123 @@ router.post('/incidents/create', async c => {
   if (!v.ok) return v.response;
 
   const injuredEmployeeId = v.data.people.find(p => p.personType === 'injured')?.userId ?? null;
-  const wfPriority = v.data.severity === 'critical' ? 'critical' as const
-    : v.data.severity === 'high' ? 'high' as const : 'medium' as const;
   const evSeverity = v.data.severity === 'critical' ? 'critical' as const
     : v.data.severity === 'high' ? 'high' as const : 'info' as const;
 
+  const contentKey = `hse.incident.create:${user.id}:${v.data.incidentDate}:${v.data.title}`;
+  // The 3 conditional cross-module handoffs (parity with the former Stage-4).
+  const buildHandoffs = (entityId: string, entityRef: string, eventId: string | null) => {
+    const defs = [
+      {
+        targetModule: 'hr', condition: v.data.lostTime,
+        payload: {
+          reason: 'lost_time_incident', severity: v.data.severity,
+          incidentType: v.data.incidentType, employeeId: injuredEmployeeId,
+          lostDays: v.data.lostDays, title: v.data.title,
+        },
+      },
+      {
+        targetModule: 'finance', condition: v.data.costImpact,
+        payload: {
+          reason: 'incident_cost_impact', severity: v.data.severity,
+          incidentType: v.data.incidentType, title: v.data.title,
+          siteId: v.data.siteId ?? null,
+        },
+      },
+      {
+        targetModule: 'operations', condition: v.data.equipmentDamage,
+        payload: {
+          reason: 'equipment_damage', severity: v.data.severity,
+          incidentType: v.data.incidentType,
+          title: `Equipment inspection: ${v.data.title}`,
+          description: 'Equipment damage reported in incident. Immediate inspection and repair assessment required.',
+          siteId: v.data.siteId ?? null,
+          priority: v.data.severity === 'critical' ? 'critical' : 'medium',
+        },
+      },
+    ];
+    return defs.filter(d => d.condition).map(d => createHandoff({
+      sourceModule: 'hse', targetModule: d.targetModule,
+      sourceEntityType: 'incident', sourceEntityId: entityId,
+      payload: { ...d.payload, sourceRef: entityRef, sourceEventId: eventId },
+      createdBy: user.id,
+    }));
+  };
+
   try {
+    // ATOMIC (finding #3, slice D1): with an investigation binding, the incident
+    // INSERT (status 'triage', the former adapter onStarted) + people rows +
+    // workflow start + workflow_id link + business event + audit row commit in
+    // ONE transaction (hse_incidents branch of workflow_create_and_start_tx).
+    // Notifications + cross-module handoffs are post-commit (parity with the
+    // former Stage-2/Stage-4 semantics — separate writes then, separate now).
+    const binding = await selectWorkflowBinding(sb, {
+      moduleKey: 'hse_incidents', workflowType: 'incident_investigation',
+      triggerEvent: 'incident.reported', sourceRecordId: '', requestedBy: user.id, recordData: {},
+    });
+
+    if (binding) {
+      const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
+      const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
+        p_source_table: 'hse_incidents', p_actor_id: user.id,
+        p_binding_id: binding.id, p_request_key: contentKey,
+        p_business: {
+          title:              v.data.title,
+          description:        v.data.description,
+          incidentDate:       v.data.incidentDate,
+          siteId:             v.data.siteId ?? null,
+          departmentId:       v.data.departmentId ?? null,
+          locationText:       v.data.locationText ?? null,
+          incidentType:       v.data.incidentType,
+          severity:           v.data.severity,
+          immediateAction:    v.data.immediateAction ?? null,
+          regulatoryClass:    v.data.regulatoryClass ?? null,
+          oshClassification:  v.data.oshClassification ?? null,
+          injuryType:         v.data.injuryType ?? null,
+          bodyPart:           v.data.bodyPart ?? null,
+          lostDays:           v.data.lostDays,
+          returnToWork:       v.data.returnToWork ?? null,
+          oshNotificationDue: osh_notification_due,
+          oshWrittenDue:      osh_written_due,
+          recordable:         v.data.recordable,
+          lostTime:           v.data.lostTime,
+          metadata:           v.data.metadata ?? {},
+          people:             v.data.people,
+        },
+      });
+      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+      const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string; eventId?: string };
+
+      void deliverEventNotifications({
+        eventType: 'hse.incident.submitted', sourceModule: 'hse', sourceEntityType: 'incident',
+        sourceEntityId: rpc.recordId ?? '', actorUserId: user.id,
+        severity: evSeverity,
+        notification: {
+          title: `New incident reported`,
+          body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
+          actionRoute: 'hse/incidents',
+          type:  'hse.incident.submitted',
+        },
+        dedupeKey: `${contentKey}:notify`,
+      }, rpc.eventId ?? null);
+
+      const handoffResults = await Promise.all(buildHandoffs(rpc.recordId ?? '', rpc.ref ?? '', rpc.eventId ?? null));
+      const handoffIds = handoffResults.filter(h => h.ok && h.handoffId).map(h => h.handoffId as string);
+
+      return c.json({
+        success: true,
+        data: {
+          id:         rpc.recordId,
+          ref:        rpc.ref,
+          workflowId: rpc.workflowId ?? null,
+          eventId:    rpc.eventId ?? null,
+          handoffIds,
+        },
+      });
+    }
+
+    // No investigation binding — create-only via the module adapter (incident
+    // stays 'open'; audit + event + notification + handoffs preserved, no workflow).
     const result = await runModuleMutation<{ id: string; ref: string }>({
       context: {
         actorUserId:  user.id,
@@ -169,7 +283,7 @@ router.post('/incidents/create', async c => {
         module:         'hse',
         operation:      'create',
         entityType:     'incident',
-        idempotencyKey: `hse.incident.create:${user.id}:${v.data.incidentDate}:${v.data.title}`,
+        idempotencyKey: contentKey,
         eventType:      'hse.incident.submitted',
         eventSeverity:  evSeverity,
         eventPayload:   { title: v.data.title, severity: v.data.severity, lostTime: v.data.lostTime },
@@ -178,23 +292,6 @@ router.post('/incidents/create', async c => {
           body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
           actionRoute: 'hse/incidents',
           type:  'hse.incident.submitted',
-        },
-        workflow: {
-          moduleKey:    'hse_incidents',
-          workflowType: 'incident_investigation',
-          triggerEvent: 'incident.reported',
-          priority:    wfPriority,
-          reason:      `Incident reported: ${v.data.title}`,
-          condition:   true,
-          metadata: {
-            lostTime:        v.data.lostTime,
-            costImpact:      v.data.costImpact,
-            equipmentDamage: v.data.equipmentDamage,
-            recordable:      v.data.recordable,
-            severity:        v.data.severity,
-            incidentType:    v.data.incidentType,
-            employeeId:      injuredEmployeeId,
-          },
         },
         handoffs: [
           {
@@ -235,14 +332,6 @@ router.post('/incidents/create', async c => {
           },
         ],
         getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
-        // Status is owned by the workflow adapter (onStarted → 'triage'); the
-        // route only back-links the workflow id.
-        afterCommit: async ({ entityId, workflowId }) => {
-          if (workflowId) {
-            const { error: linkErr } = await sb.from('hse_incidents').update({ workflow_id: workflowId }).eq('id', entityId);
-            if (linkErr) throw linkErr;   // surface the broken back-link, don't drop it
-          }
-        },
       },
       writeRecord: async () => {
         const ref = await nextRef('INC');
@@ -307,14 +396,15 @@ router.post('/incidents/create', async c => {
       data: {
         id:         result.entityId,
         ref:        result.entityRef,
-        workflowId: result.workflowId  ?? null,
+        workflowId: null,
         eventId:    result.eventId     ?? null,
         handoffIds: result.handoffIds,
       },
     });
   } catch (err) {
+    const status = (err as { status?: number }).status ?? 500;
     const msg = err instanceof Error ? err.message : 'Create failed';
-    return c.json({ success: false, message: msg }, 500 as 200);
+    return c.json({ success: false, message: msg }, status as 200);
   }
 });
 

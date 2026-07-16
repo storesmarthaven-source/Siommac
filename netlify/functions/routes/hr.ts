@@ -412,7 +412,7 @@ router.post('/employees/create', async c => {
   return c.json({ success: true, data: {
     employee_id: result.entityId, employee_no: result.entityRef, status: 'active',
     payroll_readiness: result.record.readiness, onboarding_case_id: onboardingCaseId,
-    onboarding_error: onboardingError, workflow_id: result.workflowId ?? null,
+    onboarding_error: onboardingError, workflow_id: null,
   } });
 });
 

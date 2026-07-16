@@ -757,7 +757,12 @@ export default async function run(h) {
   // ── Idempotency ────────────────────────────────────────────────────────────
   h.section('Incidents › Idempotency');
 
-  await test('idempotent create: same key → same id, no duplicate row', async () => {
+  await test('idempotent create: same content key → same id, no duplicate row or workflow', async () => {
+    // With the investigation binding live, create goes through
+    // workflow_create_and_start_tx whose request-key receipt (content-derived
+    // key) dedupes the retry; without a binding the module_mutation_runs ledger
+    // does. Either way the OBSERVABLE invariant is identical: one row, one id,
+    // at most one workflow.
     const payload = { ...baseIncident(), title: `${TAG} Idempotent`, incidentDate: '2026-01-15' };
     const r1 = await api('hse/incidents/create', T.admin, payload);
     const r2 = await api('hse/incidents/create', T.admin, payload);
@@ -766,16 +771,122 @@ export default async function run(h) {
     expect(r1.body.data?.id === r2.body.data?.id, 'idempotent creates returned different IDs — duplicate row created');
     if (r1.body.data?.id) ctx.incidentIds.push(r1.body.data.id);
 
-    // The dedup short-circuit can ONLY work when the module_mutation_runs ledger
-    // is actually written. Assert it directly so a missing/unexposed ledger
-    // table (PGRST205) can never silently regress this into a duplicate-row bug.
-    const idemKey = `hse.incident.create:${admin.id}:${payload.incidentDate}:${payload.title}`;
-    const { data: runs, error: runErr } = await sb
-      .from('module_mutation_runs')
-      .select('id, status')
-      .eq('idempotency_key', idemKey);
-    expect(!runErr, `module_mutation_runs not queryable [${runErr?.code ?? ''}] ${runErr?.message ?? ''} — apply migration 20260629000000_expose_module_mutation_runs.sql`);
-    expect((runs?.length ?? 0) === 1, `expected exactly 1 module_mutation_runs row for the idempotency key, got ${runs?.length ?? 0}`);
-    expect(runs?.[0]?.status === 'completed', `module_mutation_runs row did not reach 'completed' (got '${runs?.[0]?.status ?? 'none'}')`);
+    const { data: rows } = await sb.from('hse_incidents').select('id').eq('title', payload.title);
+    expect((rows?.length ?? 0) === 1, `expected exactly 1 incident row, got ${rows?.length ?? 0}`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id')
+      .eq('source_record_id', r1.body.data.id);
+    expect((wfs?.length ?? 0) <= 1, `expected at most 1 workflow for the incident, got ${wfs?.length ?? 0}`);
+  });
+
+  // ── Slice D1 — atomic create-and-start (finding #3) ────────────────────────
+  h.section('Incidents › D1 atomic create-and-start');
+
+  const d1WorkflowIds = [];
+  h.onCleanup(async () => {
+    if (d1WorkflowIds.length) {
+      await sb.from('workflow_tasks').delete().in('workflow_id', d1WorkflowIds);
+      await sb.from('workflow_instances').delete().in('id', d1WorkflowIds);
+    }
+  });
+
+  await test('D1: incident create is ATOMIC — triage status + workflow + people + 1 event + 1 audit in one commit', async () => {
+    const title = `${TAG} D1 Atomic Incident`;
+    const r = await api('hse/incidents/create', T.admin, {
+      ...baseIncident(), title, severity: 'high',
+      people: [{ personType: 'injured', fullName: `${TAG} D1 Worker`, injuryDescription: 'Bruised arm' }],
+    });
+    ok(r, `create failed: ${r.body.message}`);
+    const id = r.body.data.id;
+    ctx.incidentIds.push(id);
+
+    const { data: row } = await sb.from('hse_incidents')
+      .select('status, workflow_id, ref').eq('id', id).single();
+    expect(row?.status === 'triage', `expected triage (atomic onStarted), got ${row?.status}`);
+    expect(row?.workflow_id != null, 'workflow_id must be linked in-commit');
+    expect(r.body.data.workflowId === row.workflow_id, 'response workflowId != row workflow_id');
+    d1WorkflowIds.push(row.workflow_id);
+
+    const { data: wf } = await sb.from('workflow_instances')
+      .select('status, module_key, workflow_type').eq('id', row.workflow_id).single();
+    expect(wf?.status === 'in_progress', `expected in_progress workflow, got ${wf?.status}`);
+    expect(wf?.module_key === 'hse_incidents' && wf?.workflow_type === 'incident_investigation',
+      `unexpected workflow identity ${wf?.module_key}/${wf?.workflow_type}`);
+
+    const { data: tasks } = await sb.from('workflow_tasks')
+      .select('id, status, assigned_role').eq('workflow_id', row.workflow_id).eq('status', 'pending');
+    expect((tasks?.length ?? 0) >= 1, 'expected a pending first-step task');
+    expect(tasks?.[0]?.assigned_role === 'manager', `expected manager task, got ${tasks?.[0]?.assigned_role}`);
+
+    const { data: people } = await sb.from('hse_incident_people').select('id').eq('incident_id', id);
+    expect((people?.length ?? 0) === 1, `expected 1 person row (atomic satellite), got ${people?.length ?? 0}`);
+
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'hse.incident.submitted').eq('source_entity_id', id);
+    expect((events?.length ?? 0) === 1, `expected exactly 1 app_event, got ${events?.length ?? 0}`);
+
+    const { data: audits } = await sb.from('audit_logs').select('id')
+      .eq('action', 'hse.incident.submitted').eq('record_id', row.ref);
+    expect((audits?.length ?? 0) === 1, `expected exactly 1 audit_logs row keyed by ref, got ${audits?.length ?? 0}`);
+  });
+
+  await test('D1: lost-time incident still raises the HR handoff (post-commit parity)', async () => {
+    const r = await api('hse/incidents/create', T.admin, {
+      ...baseIncident(), title: `${TAG} D1 LostTime`, severity: 'high', lostTime: true, lostDays: 3,
+      people: [{ personType: 'injured', fullName: `${TAG} D1 LT Worker`, userId: admin.id }],
+    });
+    ok(r, `create failed: ${r.body.message}`);
+    ctx.incidentIds.push(r.body.data.id);
+    const { data: rowLt } = await sb.from('hse_incidents').select('workflow_id').eq('id', r.body.data.id).single();
+    if (rowLt?.workflow_id) d1WorkflowIds.push(rowLt.workflow_id);
+    expect((r.body.data.handoffIds?.length ?? 0) >= 1, 'expected at least the HR lost-time handoff id in the response');
+    const found = await waitFor(async () => {
+      const { data } = await sb.from('handoff_outbox').select('id')
+        .eq('source_entity_id', r.body.data.id).eq('target_module', 'hr').limit(1);
+      return (data ?? []).length > 0;
+    });
+    expect(found, 'HR lost-time handoff_outbox row not found');
+  });
+
+  await test('D1: CAPA create is ATOMIC — open status + closure workflow + 1 event + 1 audit', async () => {
+    const title = `${TAG} D1 Atomic CAPA`;
+    const r = await api('hse/capa/create', T.admin, {
+      sourceType: 'incident', sourceId: ctx.incidentRef ?? 'standalone',
+      title, description: 'D1 atomicity check', ownerUserId: admin.id, priority: 'high',
+    });
+    ok(r, `capa create failed: ${r.body.message}`);
+    const id = r.body.capaId ?? r.body.data?.id;
+    ctx.capaIds.push(id);
+
+    const { data: row } = await sb.from('hse_capa_actions')
+      .select('status, workflow_id, ref').eq('id', id).single();
+    expect(row?.status === 'open', `expected open (capa_closure has no onStarted flip), got ${row?.status}`);
+    expect(row?.workflow_id != null, 'workflow_id must be linked in-commit');
+    d1WorkflowIds.push(row.workflow_id);
+
+    const { data: wf } = await sb.from('workflow_instances')
+      .select('status, module_key, workflow_type').eq('id', row.workflow_id).single();
+    expect(wf?.status === 'in_progress' && wf?.module_key === 'hse_capa' && wf?.workflow_type === 'capa_closure',
+      `unexpected workflow ${wf?.module_key}/${wf?.workflow_type}/${wf?.status}`);
+
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'hse.capa.assigned').eq('source_entity_id', id);
+    expect((events?.length ?? 0) === 1, `expected exactly 1 app_event, got ${events?.length ?? 0}`);
+
+    const { data: audits } = await sb.from('audit_logs').select('id')
+      .eq('action', 'hse.capa.assigned').eq('record_id', row.ref);
+    expect((audits?.length ?? 0) === 1, `expected exactly 1 audit_logs row, got ${audits?.length ?? 0}`);
+
+    // Idempotent retry: same content-derived key → same record, no dup workflow.
+    const r2 = await api('hse/capa/create', T.admin, {
+      sourceType: 'incident', sourceId: ctx.incidentRef ?? 'standalone',
+      title, description: 'D1 atomicity check', ownerUserId: admin.id, priority: 'high',
+    });
+    ok(r2, 'retry should succeed via the RPC receipt');
+    const id2 = r2.body.capaId ?? r2.body.data?.id;
+    expect(id2 === id || (r2.body.data?.recordId ?? null) === id,
+      `retry must return the same CAPA (got ${id2})`);
+    const { data: wfs } = await sb.from('workflow_instances').select('id')
+      .eq('source_record_id', id);
+    expect((wfs?.length ?? 0) === 1, `expected exactly 1 workflow for the CAPA, got ${wfs?.length ?? 0}`);
   });
 }

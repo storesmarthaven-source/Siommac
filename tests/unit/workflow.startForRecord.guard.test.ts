@@ -19,15 +19,10 @@
  * Allowlist rationale:
  *   lib/workflow/service.ts
  *     -- Canonical definition and export.  Always allowed.
- *   lib/moduleServiceAdapter.ts
- *     -- Pre-migration legacy path.  Mediates three live HSE callers:
- *        routes/hseCapa.ts (capa_closure), routes/hseIncidents.ts
- *        (incident_investigation), routes/hseRiskJsa.ts (hazard_review).
- *        Waiver dies when those routes are converted to the direct-RPC
- *        pattern and options.workflow is removed from ModuleMutationOptions.
- *        See FINAL_CUTOVER_CONTRACT.md section 5 (D1).
  *   lib/finance/accountsPayable.ts
  *     -- Direct caller; waiver dies with the AP module removal (D2).
+ *   (moduleServiceAdapter.ts waiver REMOVED by slice D1 — the HSE callers now
+ *    go through workflow_create_and_start_tx and the Stage-3 path is deleted.)
  *
  * On failure the error message lists the offending files so the fix is
  * immediately obvious.
@@ -42,8 +37,6 @@ const FUNCS_DIR  = join(ROOT, 'netlify/functions');
 const ALLOWLIST = new Set<string>([
   // Canonical definition -- always allowed.
   'lib/workflow/service.ts',
-  // Pre-migration legacy path (active HSE callers; see comment above).
-  'lib/moduleServiceAdapter.ts',
   // Direct caller; waiver dies with the AP module removal.
   'lib/finance/accountsPayable.ts',
 ]);
