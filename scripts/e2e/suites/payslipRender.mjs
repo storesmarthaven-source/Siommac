@@ -278,7 +278,7 @@ export default async function run(h) {
   });
 
   await test('submit for approval', async () => {
-    const r = await api('finance/payroll/runs/submit', fmgr1Token, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/submit', fmgr1Token, { id: ctx.runId, idempotencyKey: `submit-render-${TAG}` });
     ok(r, 'submit failed: ' + r.body.message);
     expect(r.body.data.status === 'pending_approval',
       'status should be pending_approval, got ' + r.body.data.status);
