@@ -376,4 +376,43 @@ revoke all on function public.finance_payroll_certification_state(uuid, uuid)
 grant execute on function public.finance_payroll_certification_state(uuid, uuid)
   to service_role;
 
+-- Certifications are immutable (a trigger blocks UPDATE), so their stored
+-- state_checksum cannot be re-stamped in place. Any run CERTIFIED between the
+-- 420 apply and this migration therefore keeps the old status-dependent checksum
+-- and will not re-validate at lock/release. Refuse to apply silently while such
+-- in-flight runs exist: an operator must re-certify them; a pre-production/test
+-- database should clean those fixtures before applying this migration.
+do $guard$
+declare
+  v_affected integer;
+begin
+  select count(*)
+    into v_affected
+    from public.finance_payroll_runs run
+    join lateral (
+      select c.state_checksum
+        from public.finance_payroll_certifications c
+       where c.run_id = run.id
+         and c.certification_type = 'processor'
+         and c.calculation_version_id = run.current_calculation_version_id
+       order by c.certified_at desc, c.certification_no desc
+       limit 1
+    ) cert on true
+   where run.status in ('pending_approval','approved','locked')
+     and run.current_calculation_version_id is not null
+     and cert.state_checksum is distinct from (
+       public.finance_payroll_certification_state(
+         run.id, run.current_calculation_version_id
+       ) ->> 'stateChecksum'
+     );
+
+  if v_affected > 0 then
+    raise exception
+      'certification-checksum fix: % in-flight run(s) were certified before this migration and must be re-certified (or their test fixtures cleaned) before it can apply',
+      v_affected
+      using errcode = 'PR409';
+  end if;
+end
+$guard$;
+
 notify pgrst, 'reload schema';

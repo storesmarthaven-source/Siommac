@@ -1164,8 +1164,64 @@ export default async function run(h) {
     return data.id;
   };
 
+  // Build a genuinely calculated + certified run: a real input snapshot, a real
+  // immutable calculation version and its line, totals internally consistent, and
+  // no control findings — so the production submission guard (a current
+  // calculation version + a valid, ready processor certification) is satisfied
+  // HONESTLY. Never a raw row mislabelled 'calculated'. Returns the submittable id.
+  const seedCalculatedRun = async (salt) => {
+    const runId = await seedRun(salt, 'input_locked');
+    const gross = 6000, paye = 1000, nisEe = 200, nisEr = 400, hs = 8.25, vol = 0;
+    const deductions = paye + nisEe + hs + vol; // 1208.25
+    const net = gross - deductions;             // 4791.75
+
+    const { data: snap, error: snapErr } = await sb.from('finance_payroll_input_snapshots')
+      .insert({
+        run_id: runId, snapshot_no: 1, checksum: `atom-snap-${runId}`,
+        employee_count: 1, input_count: 1, source_summary: {}, locked_by: fstaff1Id,
+      }).select('id').single();
+    if (snapErr) throw new Error(`seedCalculatedRun(${salt}) snapshot: ${snapErr.message}`);
+
+    const { error: slErr } = await sb.from('finance_payroll_input_snapshot_lines').insert({
+      input_snapshot_id: snap.id, run_id: runId, input_row_no: 1, employee_id: emp1Id,
+      source_type: 'base_pay', component_code: 'BASE', label: 'Base pay',
+      amount: gross, row_checksum: `atom-snapline-${runId}`,
+    });
+    if (slErr) throw new Error(`seedCalculatedRun(${salt}) snapshot line: ${slErr.message}`);
+
+    const { data: ver, error: verErr } = await sb.from('finance_payroll_calculation_versions')
+      .insert({
+        run_id: runId, input_snapshot_id: snap.id, version_no: 1, checksum: `atom-ver-${runId}`,
+        employee_count: 1, gross_total: gross, deduction_total: deductions, net_total: net,
+        nis_employer_total: nisEr, statutory_version_id: atomStatVer, published_by: fstaff1Id,
+      }).select('id').single();
+    if (verErr) throw new Error(`seedCalculatedRun(${salt}) version: ${verErr.message}`);
+
+    const { error: vlErr } = await sb.from('finance_payroll_calculation_version_lines').insert({
+      calculation_version_id: ver.id, run_id: runId, employee_id: emp1Id,
+      base: gross, taxable_gross: gross, gross, nis_employee: nisEe, nis_employer: nisEr,
+      health_surcharge: hs, chargeable_income: gross, paye, voluntary_deductions: vol, net,
+      breakdown: {},
+    });
+    if (vlErr) throw new Error(`seedCalculatedRun(${salt}) version line: ${vlErr.message}`);
+
+    const { error: upErr } = await sb.from('finance_payroll_runs').update({
+      current_input_snapshot_id: snap.id, current_calculation_version_id: ver.id,
+      employee_count: 1, gross_total: gross, deduction_total: deductions,
+      net_total: net, nis_employer_total: nisEr, status: 'calculated',
+    }).eq('id', runId);
+    if (upErr) throw new Error(`seedCalculatedRun(${salt}) run update: ${upErr.message}`);
+
+    const cert = await api('finance/payroll/runs/certify', fstaff1Token,
+      payrollCertificationCommand(runId, `atom-cert-${TAG}-${salt}`));
+    if (!cert.body.success) {
+      throw new Error(`seedCalculatedRun(${salt}) certify failed: ${cert.body.message}`);
+    }
+    return runId;
+  };
+
   await test('atomic submit: retry with the same idempotency key returns the original workflow (no double-create)', async () => {
-    const runId = await seedRun(60);
+    const runId = await seedCalculatedRun(60);
     const key = `atom-idem-${TAG}-${runId}`;
     const r1 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: key });
     ok(r1, `first submit failed: ${r1.body.message}`);
@@ -1205,7 +1261,7 @@ export default async function run(h) {
   });
 
   await test('atomic submit: same key + different payload is rejected WF409 (direct RPC)', async () => {
-    const runId = await seedRun(62);
+    const runId = await seedCalculatedRun(62);
     const key = `atom-hash-${TAG}-${runId}`;
     const { error: e1 } = await sb.rpc('workflow_submit_for_record_tx', {
       p_source_table: 'finance_payroll_runs', p_source_id: runId, p_actor_id: fstaff1Id,
@@ -1218,7 +1274,7 @@ export default async function run(h) {
   });
 
   await test('atomic submit: concurrent submits — exactly one succeeds, exactly one workflow', async () => {
-    const runId = await seedRun(63);
+    const runId = await seedCalculatedRun(63);
     const [a, b2] = await Promise.all([
       api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-c1-${runId}` }),
       api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-c2-${runId}` }),
@@ -1230,13 +1286,18 @@ export default async function run(h) {
   });
 
   await test('atomic submit: a returned run resubmits with a fresh workflow linked via supersedes', async () => {
-    const runId = await seedRun(64);
+    const runId = await seedCalculatedRun(64);
     const r1 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-sup1-${runId}` });
     ok(r1, `first submit failed: ${r1.body.message}`);
     const wfA = r1.body.data.workflowId;
     // Simulate the approval workflow RETURNING the run (terminal 'returned' + run returned).
     await sb.from('workflow_instances').update({ status: 'returned' }).eq('id', wfA);
     await sb.from('finance_payroll_runs').update({ status: 'returned' }).eq('id', runId);
+    // A returned run must be recertified before it can be resubmitted (the maker
+    // revises, then re-attests) — mirror that here so the resubmit is legitimate.
+    const recert = await api('finance/payroll/runs/certify', fstaff1Token,
+      payrollCertificationCommand(runId, `atom-sup-recert-${runId}`));
+    ok(recert, `recertification after return failed: ${recert.body.message}`);
     const r2 = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId, idempotencyKey: `atom-sup2-${runId}` });
     ok(r2, `resubmit failed: ${r2.body.message}`);
     const wfB = r2.body.data.workflowId;
@@ -1262,7 +1323,7 @@ export default async function run(h) {
   });
 
   await test('atomic submit: a submit without an idempotency key is rejected', async () => {
-    const runId = await seedRun(65);
+    const runId = await seedCalculatedRun(65);
     const r = await api('finance/payroll/runs/submit', fstaff1Token, { id: runId });
     fails(r, 'submit without an idempotency key should be rejected');
     const { data: after } = await sb.from('finance_payroll_runs').select('status').eq('id', runId).single();
