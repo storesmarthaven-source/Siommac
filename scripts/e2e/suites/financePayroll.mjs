@@ -1352,11 +1352,23 @@ export default async function run(h) {
         `atomic-submit cleanup could not delete events for ${rid}`);
       expect(await h.mustDelete('hr_audit_log', q => q.eq('record_id', rid)),
         `atomic-submit cleanup could not delete audit rows for ${rid}`);
-      // seedCalculatedRun attaches a processor certification, and
-      // finance_payroll_certifications.run_id is ON DELETE RESTRICT — delete it
-      // first so the run delete can cascade its snapshot/version evidence.
+      // seedCalculatedRun attaches a processor certification. The run also
+      // back-references it (approval_certification_id, ON DELETE RESTRICT), and
+      // the cert references the run (run_id, ON DELETE RESTRICT) — so null the
+      // run's pointer first, then delete the cert, then the run cascades its
+      // snapshot/version evidence.
+      await sb.from('finance_payroll_runs')
+        .update({ approval_certification_id: null }).eq('id', rid);
+      // seedCalculatedRun certifies, and certify writes its command receipt into
+      // the shared finance_payroll_release_command_receipts table (run_id RESTRICT).
+      await sb.from('finance_payroll_release_command_receipts').delete().eq('run_id', rid);
       expect(await h.mustDelete('finance_payroll_certifications', q => q.eq('run_id', rid)),
         `atomic-submit cleanup could not delete certifications for ${rid}`);
+      // seedCalculatedRun runs also carry calculation-version + snapshot evidence
+      // whose FKs restrict each other (version→snapshot); delete in dependency
+      // order so the run delete isn't blocked. Bare draft runs simply have none.
+      await sb.from('finance_payroll_calculation_versions').delete().eq('run_id', rid);
+      await sb.from('finance_payroll_input_snapshots').delete().eq('run_id', rid);
       expect(await h.mustDelete('finance_payroll_runs', q => q.eq('id', rid)),
         `atomic-submit cleanup could not delete run ${rid}`);
     }
@@ -3248,7 +3260,9 @@ export default async function run(h) {
     ctx.createdUserIds.push(hrly.empAId, hrly.empBId);
 
     const code = ('HG' + TAG.replace(/[^a-z0-9]/gi, '')).slice(0, 18).toUpperCase();
-    const gr = await api('finance/payroll/pay-groups/create', fmgr1Token, { code, name: `Hourly Group ${TAG}`, frequency: 'weekly' });
+    // Monthly group so the run covers the whole March timesheet (the base-pay
+    // assertion is rate × the timesheet's total hours "inside the run month").
+    const gr = await api('finance/payroll/pay-groups/create', fmgr1Token, { code, name: `Hourly Group ${TAG}`, frequency: 'monthly' });
     ok(gr, `create pay group failed: ${gr.body.message}`);
     hrly.groupId = gr.body.data.id;
 
@@ -3266,15 +3280,27 @@ export default async function run(h) {
     }).select('id').single();
     expect(!tsErr, `seed approved timesheet failed: ${tsErr?.message}`);
     hrly.tsId = ts?.id ?? null;
+
+    // lockInputs requires the approved timesheet to be backed by linked daily
+    // attendance records (worked dates drive the NIS contribution weeks). Seed
+    // 10 working days × 480 min = 4800 min, matching the timesheet total.
+    const attDays = ['2031-03-03','2031-03-04','2031-03-05','2031-03-06','2031-03-07',
+                     '2031-03-10','2031-03-11','2031-03-12','2031-03-13','2031-03-14'];
+    const { error: attErr } = await sb.from('hr_attendance_records').insert(
+      attDays.map((d, i) => ({
+        record_no: `${TAG}-ATT-${i}`,
+        employee_id: hrly.empAId, timesheet_id: hrly.tsId, work_date: d,
+        worked_minutes: 480, late_minutes: 0, overtime_minutes: 0,
+        status: 'present', source: 'import',
+      })),
+    );
+    expect(!attErr, `seed attendance records failed: ${attErr?.message}`);
   });
 
   await test('create + lock a pay-group run and hourly base pay = rate × approved hours', async () => {
     const cr = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
       idempotencyKey: `${TAG}:run:hourly:create`,
       periodStart: hrly.period,
-      // The group is weekly; run creation validates that the declared frequency
-      // matches the pay group's, so pass it explicitly.
-      payFrequency: 'weekly',
       payGroupId: hrly.groupId,
     }));
     ok(cr, `create hourly run failed: ${cr.body.message}`);
@@ -3350,6 +3376,8 @@ export default async function run(h) {
         query => query.eq('id', hrly.runId)), 'hourly run cleanup failed');
     }
     if (hrly.tsId) {
+      expect(await h.mustDelete('hr_attendance_records',
+        query => query.eq('timesheet_id', hrly.tsId)), 'hourly attendance cleanup failed');
       expect(await h.mustDelete('hr_timesheets',
         query => query.eq('id', hrly.tsId)), 'hourly timesheet cleanup failed');
     }
