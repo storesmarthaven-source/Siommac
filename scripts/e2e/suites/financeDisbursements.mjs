@@ -102,8 +102,9 @@ export default async function run(h) {
     }).select('id').single();
     expect(!verErr, `seed version failed: ${verErr?.message}`);
     ctx.versionId = ver.id;
-    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
-    // TAG-specific dates (distinct salts from other suites) to avoid colliding.
+    // Run identity is (pay group, period_start, period_end, run_type); the salt-derived
+    // date becomes period_start, so salts must be globally unique across suites
+    // (contract gate enforces it) to avoid scheduled-run identity collisions.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no: `RUN-DSB-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 13),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 2,

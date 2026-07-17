@@ -78,46 +78,50 @@ Still required before production implementation is called complete:
 Do not weaken production idempotency, workflow-assignment or pay-group-overlap controls to make an
 old test pass.
 
-## Operator Migration Apply Order (2026-07-17)
+## Operator Migration Apply Order (2026-07-17, rev 2)
 
-Apply from the MAIN tree flow against the live DB, in this exact order. Every file below is
-idempotent (`if not exists` / `create or replace`) and safe to re-apply over an earlier version.
+There are TWO distinct paths. Choose by target. **Do NOT re-apply the corrected table-definition
+source migrations on an existing database** — they use `create table if not exists`, which no-ops on
+an existing table without adding the new columns, and their subsequent index statements
+(`finance_payroll_runs_period_range_idx` on `period_start, period_end`; the pay-group business-key
+indexes in `20260918000040`) then fail with `column does not exist`. Migration 420 states in its own
+header that IT is the forward upgrade for existing installations, and it retrofits everything the
+corrected sources define: all new run columns, the old month-uniqueness drop, the
+scheduled/sequence business keys, and the one-active disbursement/remittance partial indexes.
 
-**Step 0 — renumbering pre-check (required).** The payroll execution migrations were renumbered
-410–415 → 420–425 (collision with the applied messaging `20260919000410`). Before applying, confirm
-the target DB never received a manual 410–415 apply: the migration history must contain no payroll
-rows numbered `20260919000411`–`415`, and `pg_proc` must not already contain
-`finance_payroll_create_run_tx` / `finance_payroll_finding_command_tx` / `finance_payroll_lock_run_tx`
-from an earlier apply. If any exist, STOP — reconcile deliberately from the 420–425 source (drop and
-re-create) rather than applying on top of drifted identities.
+**Step 0 — renumbering pre-check (required, both paths).** The payroll execution migrations were
+renumbered 410–415 → 420–425 (collision with the applied messaging `20260919000410`). Confirm the
+target DB never received a manual 410–415 apply: the migration history must contain no payroll rows
+numbered `20260919000411`–`415`, and `pg_proc` must not already contain
+`finance_payroll_create_run_tx` / `finance_payroll_finding_command_tx` /
+`finance_payroll_lock_run_tx` from an earlier apply. If any exist, STOP — reconcile deliberately
+from the 420–425 source (drop and re-create) rather than applying on top of drifted identities.
 
-Corrected source migrations first (re-apply even if a prior version ran):
+### Path A — EXISTING database (the live dev DB)
 
-1. `supabase/migrations/20260804000000_finance_payroll_runs.sql`
-2. `supabase/migrations/20260804000002_finance_payslips_exports.sql`
-3. `supabase/migrations/20260805000000_finance_remittances.sql`
-4. `supabase/migrations/20260808000001_finance_disbursements.sql`
-5. `supabase/migrations/20260918000040_finance_pay_groups.sql`
-6. `supabase/migrations/20260918000090_finance_employee_loans.sql` — only if never applied
-   (prerequisite: `finance_loan_deductions` with `unique(loan_id, run_id)`)
-7. `supabase/migrations/20260918000130_finance_loan_ledger_settlement.sql` — VERIFY applied:
-   the reopen RPC in 423 reads `finance_loan_deductions.entry_type`, which this adds
-   (previously flagged unapplied — payrollLoans ran 14/15 because of it)
-8. `supabase/migrations/20260918000140_finance_payroll_gl_atomic.sql`
-9. `supabase/migrations/20260918000141_finance_payroll_gl_reverse_tx.sql`
+1. **Prerequisite check** (schema preflight, do not skip):
+   - `finance_loan_deductions` exists with `unique(loan_id, run_id)` (from `20260918000090`;
+     if the loans tables are missing entirely, apply 090 once — note 090 is NOT generally
+     rerunnable: its trigger is created without a preceding drop).
+   - `finance_loan_deductions.entry_type` exists (from `20260918000130` — previously flagged
+     unapplied; the reopen RPC in 423 reads it; apply 130 if missing, it is idempotent).
+   - `finance_remittances.period_year` / `period_month` exist (original `20260805000000` — live
+     since the remittances build; 420's partial index depends on them).
+2. Apply the execution migrations in strict numeric order:
+   `20260919000420` → `421` → `422` → `423` → `424` → `425`.
+3. Re-apply the two GL command migrations (the handoff UPDATED their RPC bodies; both are
+   `create or replace` + `if not exists` and safe on an existing DB):
+   `20260918000140_finance_payroll_gl_atomic.sql`, then `20260918000141_finance_payroll_gl_reverse_tx.sql`.
+4. `NOTIFY pgrst, 'reload schema';` (425 issues it, but re-run if applying files individually),
+   then `npm run build:backend` and restart `dev:netlify` before trusting any E2E.
 
-Then the execution migrations in strict numeric order (NOT the withdrawn 410–415 numbering — those
-collided with the applied messaging migration `20260919000410`):
+### Path B — CLEAN install / full rebuild
 
-10. `supabase/migrations/20260919000420_finance_payroll_execution_foundation.sql`
-11. `supabase/migrations/20260919000421_finance_payroll_execution_commands.sql`
-12. `supabase/migrations/20260919000422_finance_payroll_finding_commands.sql`
-13. `supabase/migrations/20260919000423_finance_payroll_lock_reopen_tx.sql`
-14. `supabase/migrations/20260919000424_finance_payroll_certification_release_tx.sql`
-15. `supabase/migrations/20260919000425_finance_payroll_export_tx.sql`
-
-After apply: `NOTIFY pgrst, 'reload schema';` (425 issues it, but re-run if applying files
-individually), then `npm run build:backend` and restart `dev:netlify` before trusting any E2E.
+Apply ALL of `supabase/migrations/` in normal timestamp order. The corrected source files
+(`20260804000000`, `20260804000002`, `20260805000000`, `20260808000001`, `20260918000040`,
+`20260918000140`, `20260918000141`) define the corrected schema from scratch; 420–425 then run as
+guarded no-ops for the retrofit parts and create the execution tables/RPCs. No file may be skipped
+or reordered.
 
 ## Viewing
 

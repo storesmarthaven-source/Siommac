@@ -126,8 +126,9 @@ export default async function run(h) {
     ctx.versionId = ver.id;
 
     // approved run (compute requires status in approved/locked/exported)
-    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
-    // TAG-specific dates (distinct salts from other suites) to avoid colliding when
+    // Run identity is (pay group, period_start, period_end, run_type); the salt-derived
+    // date becomes period_start, so salts must be globally unique across suites
+    // (contract gate enforces it) to avoid scheduled-run identity collisions when
     // multiple finance suites seed a run in the same test pass.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no: `RUN-E2E-${TAG.slice(-6)}`,
@@ -169,7 +170,7 @@ export default async function run(h) {
   const atomCtx = { runId: null, remIds: [] };
   await test('A3 atomic setup: seed a fresh approved run', async () => {
     const { data, error } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 21),
+      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 24),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
     })).select('id').single();
     expect(!error, `seed atom run failed: ${error?.message}`);

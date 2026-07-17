@@ -33,8 +33,10 @@ import { payrollRunSeed } from '../helpers/payrollRun.mjs';
 
 export const title = 'Finance — Phase-0 Lookups + Attachments + Bridges';
 
-/** Deterministic-but-unique date from TAG + salt (finance_payroll_runs.period_month is
- *  unique across the WHOLE table — a fixed date would collide with real runs). */
+/** Deterministic-but-unique date from TAG + salt. period_month is only a reporting
+ *  bucket now; run identity is (pay group, period_start, period_end, run_type) —
+ *  the salt must be globally unique across suites (contract gate enforces it) so
+ *  the derived period_start never collides under the shared harness TAG. */
 function seedDateFromTag(tag, salt) {
   let n = salt >>> 0;
   for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
@@ -150,7 +152,7 @@ export default async function run(h) {
     const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no:              `TEST-LOOKUP-${TAG}`,
       status:              'approved',
-      periodMonth:         seedDateFromTag(TAG, 21),
+      periodMonth:         seedDateFromTag(TAG, 23),
       pay_date:            seedDateFromTag(TAG, 22),
       statutory_version_id: versionId,
       net_total:           10000,

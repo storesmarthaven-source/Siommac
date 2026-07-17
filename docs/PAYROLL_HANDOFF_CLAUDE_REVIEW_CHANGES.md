@@ -88,13 +88,11 @@ Each fixture now carries the complete execution identity (`run_type`, `period_st
 
 ---
 
-## 7. Operator apply-order section added
+## 7. Operator apply-order section (REWRITTEN in round 2 — see §11.1)
 
-**File:** `docs/PAYROLL_HANDOFF_README.md` — new section "Operator Migration Apply Order (2026-07-17)".
+**File:** `docs/PAYROLL_HANDOFF_README.md` — "Operator Migration Apply Order (2026-07-17, rev 2)".
 
-Exact per-file sequence: 7 corrected source migrations (20260804000000, 20260804000002, 20260805000000, 20260808000001, 20260918000040, 20260918000140, 20260918000141 — all idempotent/re-applicable), **plus two loan prerequisites flagged**: `20260918000090` (base loans tables) and **`20260918000130`** (`finance_loan_deductions.entry_type` — previously reported unapplied; the 423 reopen RPC reads `entry_type = 'payroll_deduction'`, so 423 breaks at runtime without it). Then 420→425 strictly in order, `NOTIFY pgrst`, `build:backend`, dev-server restart.
-
-**Review ask:** confirm 090/130 are the only pre-420 dependencies the 420-425 bodies read (loan ledger via 423; `increment_ref_counter`, `finance_payroll_exports`, `finance_disbursements`, `finance_remittances`, workflow tables all predate and are live).
+The first revision instructed re-applying the corrected source migrations before 420 on the live DB. Codex round-2 finding P0 proved that wrong: `create table if not exists` no-ops on an existing table (no new columns), and the sources' subsequent index statements on `period_start`/`period_end` then fail. Rev 2 splits the instructions into **Path A (existing DB)** — schema preflight (090 presence / 130 `entry_type` / remittance `period_year`) → 420–425 in order → re-apply 140+141 (updated GL RPC bodies, `create or replace`, safe) → NOTIFY/rebuild/restart — and **Path B (clean install)** — all migrations in plain timestamp order, where 420–425's retrofits run as guarded no-ops. Verified: 420 retrofits every column and index the corrected sources define (run columns at lines 12–20, month-uniqueness drop, scheduled/sequence keys at 228/237, one-active disbursement/remittance indexes at 259/265), and `finance_remittances.period_year`/`period_month` predate the handoff (original 20260805000000 + live remittances lib), so 420's remittance index works on the existing schema.
 
 ---
 
@@ -139,7 +137,64 @@ npm run test:e2e -- financeLookups
 
 Then rerun `financePayroll` and `payslipRender` a **second time** to prove cleanup and fixture isolation (no cross-run pollution, no leaked synthetic users, idempotency receipts scoped per attempt). Only after the targeted suites are green run the complete `npm run test:e2e` regression once.
 
-## 11. Merge notes for main
+## 11. Round 2 — Codex FIX-THEN-SHIP findings, resolved (2026-07-17)
+
+### 11.1 P0 — existing-DB migration procedure (RESOLVED)
+
+Finding: the documented order re-applied `create table if not exists` sources whose index
+statements reference columns the existing table lacks (`20260804000000` lines 80–86 on
+`period_start`/`period_end`; `20260918000040` business keys), so the live upgrade could not run.
+
+Fix: `PAYROLL_HANDOFF_README.md` apply order rewritten into **Path A (existing DB)** and
+**Path B (clean install)** — see §7 above. On an existing database the corrected
+table-definition sources are NOT applied; 420 is the forward upgrade (as its own header states),
+followed by re-apply of only the two function-carrying GL migrations (140/141). `20260918000090`'s
+non-rerunnable trigger is called out; it is applied only when the loans tables are absent.
+
+### 11.2 P1 — deterministic scheduled-run collision across suites (RESOLVED)
+
+Finding: `financeLookups`, `financeRemittances` (A3) and `payrollGl` all used
+`seedDateFromTag(TAG, 21)` with a null pay group and default `scheduled` type. One shared harness
+TAG per `run.mjs` invocation ⇒ identical `period_start`/`period_end`/`run_type` ⇒ unique-index
+violation on migration 420's `finance_payroll_runs_scheduled_key`, with cleanup running only after
+all suites.
+
+Fix (two parts):
+1. **Globally distinct salts assigned.** `financeLookups` 21→23, `financeRemittances` A3 21→24,
+   `payrollGl` 21→25 — and one additional collision Codex's report did not list:
+   `payrollStatutorySnapshot` used salt **61**, which `financePayroll`'s `seedRun(61, 'draft')`
+   also uses (draft status is still covered by the partial index; only `cancelled` is excluded) —
+   reassigned 61→66. Salt-space property: `seedDateFromTag` maps salt N into the disjoint day
+   window `[N*1000, N*1000+999]`, so distinct salts can never produce the same date regardless
+   of TAG. Full salt registry after fix: 11–17 (remittances/disbursements/payslipsEss), 23
+   (lookups), 24 (remittances A3), 25 (GL), 33 (payGroups), 44 (overrides), 51–53 + 60–65
+   (financePayroll), 66 (statutorySnapshot).
+2. **Contract gate extended** (`scripts/e2e/payroll-contract-gate.mjs`): it now extracts every
+   `periodStart|periodMonth: seedDateFromTag(TAG, N)` per suite and FAILS when the same salt
+   appears in more than one file, naming both files. Same-file reuse stays legal (duplicate-key
+   rejection and idempotent-replay tests intentionally reuse a period). Verified: gate passes on
+   the fixed tree and correctly reports both files when a collision is reintroduced.
+
+Residual (noted, not fixed here): the year-hash suites use disjoint year windows
+(statutoryForms 2040–2099, scale 2200–2499, backPay 2500–2899, variance 2900–2989) EXCEPT
+`payslipTemplateApproval`, whose independent char-sum hash also maps into 2200–2499 with a
+June-01 period — a ~1/300-per-run flake overlap with `payrollScale`. Pre-existing pattern; the
+right root fix is the central fixture allocator, deferred to the next test-infrastructure slice.
+
+### 11.3 P2 — obsolete uniqueness comments (RESOLVED)
+
+The `period_month is unique across the WHOLE table` comments in `financeLookups`,
+`financeDisbursements` and `financeRemittances` now state the real model: `period_month` is a
+reporting bucket; identity is (pay group, period_start, period_end, run_type); salts must be
+globally unique and the contract gate enforces it.
+
+### 11.4 Re-verification after round 2
+
+`node --check` clean on the gate + 4 touched suites · contract gate **passed** (and correctly
+fails when a collision is reintroduced — tested both directions) · no TypeScript touched, so the
+earlier backend `tsc` result stands. Live gate (§10) remains the outstanding proof.
+
+## 12. Merge notes for main
 
 - Main holds **uncommitted** triage copies of `payslipRender.mjs`, `payrollGl.mjs`, `payrollScale.mjs`. The handoff versions on this branch **subsume** those fixes (forceSynthetic actors, scoped idempotency keys, seedDateFromTag salts) — on merge, **this branch's versions win**; discard main's uncommitted copies of those three files.
 - Main also holds uncommitted messenger/Codex work — merge coordination required; do not merge without the user's go.

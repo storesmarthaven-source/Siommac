@@ -91,6 +91,7 @@ function lineNumber(source, index) {
 
 export function assertPayrollE2EContracts(suitesDir = defaultSuitesDir) {
   const violations = [];
+  const saltUsage = new Map();
   const files = readdirSync(suitesDir).filter((file) => file.endsWith('.mjs')).sort();
 
   for (const file of files) {
@@ -143,6 +144,32 @@ export function assertPayrollE2EContracts(suitesDir = defaultSuitesDir) {
         line: lineNumber(source, match.index),
         message: 'direct run fixtures must use payrollRunSeed (complete execution identity)',
       });
+    }
+
+    // All suites share one harness TAG per run.mjs invocation, so the same
+    // seedDateFromTag salt in two files produces the SAME period_start — and
+    // the scheduled-run business key (migration 420) makes that a unique
+    // violation at seed time. Salts must be globally unique across suites.
+    // Within one file a repeated salt is legitimate (duplicate-key rejection
+    // and idempotent-replay tests intentionally reuse the same period).
+    const periodSalt = /(?:periodStart|periodMonth)\s*:\s*seedDateFromTag\(\s*TAG\s*,\s*(\d+)\s*\)/g;
+    for (const match of source.matchAll(periodSalt)) {
+      const salt = match[1];
+      saltUsage.set(salt, saltUsage.get(salt) ?? new Map());
+      const files = saltUsage.get(salt);
+      if (!files.has(file)) files.set(file, lineNumber(source, match.index));
+    }
+  }
+
+  for (const [salt, files] of saltUsage) {
+    if (files.size > 1) {
+      for (const [file, line] of files) {
+        violations.push({
+          file,
+          line,
+          message: `payroll period salt ${salt} is used by ${files.size} suites (${[...files.keys()].join(', ')}) — same TAG + same salt = same period_start = scheduled-run identity collision; assign a globally unique salt`,
+        });
+      }
     }
   }
 

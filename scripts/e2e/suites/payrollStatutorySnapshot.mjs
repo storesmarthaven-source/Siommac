@@ -105,7 +105,7 @@ export default async function run(h) {
   await test('create + lock-inputs + calculate a run (snapshots V1)', async () => {
     const cr = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
       idempotencyKey: `${TAG}:statutory-snapshot:run:create`,
-      periodStart: seedDateFromTag(TAG, 61),
+      periodStart: seedDateFromTag(TAG, 66),
       weeksInPeriod: 4.333,
     }));
     ok(cr, `create failed: ${cr.body.message}`);
