@@ -29,6 +29,8 @@
  * metadata flow only — the signed URL is generated from a stored path).
  */
 
+import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+
 export const title = 'Finance — Phase-0 Lookups + Attachments + Bridges';
 
 /** Deterministic-but-unique date from TAG + salt (finance_payroll_runs.period_month is
@@ -145,18 +147,17 @@ export default async function run(h) {
     const versionId = ver?.id ?? (await sb.from('finance_statutory_versions')
       .select('id').eq('effective_from', '1970-01-01').limit(1).single()).data?.id;
 
-    const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert({
+    const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no:              `TEST-LOOKUP-${TAG}`,
       status:              'approved',
-      pay_frequency:       'monthly',
-      period_month:        seedDateFromTag(TAG, 21),
+      periodMonth:         seedDateFromTag(TAG, 21),
       pay_date:            seedDateFromTag(TAG, 22),
       statutory_version_id: versionId,
       net_total:           10000,
       gross_total:         12000,
       employee_count:      1,
       created_by:          fmgrId,
-    }).select('id').single();
+    })).select('id').single();
     expect(!runErr, `seed run failed: ${runErr?.message}`);
     ctx.runId = run.id;
     expect(ctx.runId, 'run seeded');

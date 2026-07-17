@@ -4,7 +4,7 @@
  * Unit tests for the T&T statutory payroll calculators.
  * All test values are derived BY HAND from the seeded TT 2026 statutory schedule
  * (migration 20260802000002_finance_statutory_config.sql):
- *   - NIS: 16-class table, 4.333 weeks/month
+ *   - NIS: 16-class table, multiplied by actual Monday-based contribution weeks
  *   - PAYE: personal allowance TTD 90,000/yr; band1 ceiling TTD 1,000,000/yr @ 25%; band2 @ 30%
  *   - Health Surcharge: threshold TTD 469.99/mo; high TTD 8.25/wk; low TTD 4.80/wk
  *
@@ -22,13 +22,12 @@ import {
   computeRunLine,
   findNisClass,
   payPeriodsForFrequency,
-  weeksInPeriodForFrequency,
 } from '../../netlify/functions/lib/finance/payrollStatutory';
 import type { NisClassRow } from '../../netlify/functions/lib/finance/statutoryConfig';
 
 // ── Test fixtures ──────────────────────────────────────────────────────────────
 
-const WEEKS = 4.333; // standard monthly pay period
+const WEEKS = 4; // sample monthly period containing four contribution Mondays
 
 /**
  * Build a minimal NisClassRow for testing.
@@ -97,9 +96,8 @@ describe('findNisClass', () => {
     expect(findNisClass(150.00, ALL_CLASSES)).toBeNull();
   });
 
-  it('matches class 10 for weekly earnings of 1846.30 (8000 / 4.333)', () => {
-    // monthly gross 8000 / 4.333 ≈ 1846.30 → class 10 (1710–1909.99)
-    const result = findNisClass(8000 / WEEKS, ALL_CLASSES);
+  it('matches class 10 for weekly insurable earnings inside the class band', () => {
+    const result = findNisClass(1846.30, ALL_CLASSES);
     expect(result).not.toBeNull();
     expect(result!.classNo).toBe(10);
     expect(result!.employeeWeekly).toBe(97.70);
@@ -107,7 +105,7 @@ describe('findNisClass', () => {
   });
 
   it('matches class 16 (open-ended) for weekly earnings well above 3138', () => {
-    // monthly gross 100000 / 4.333 ≈ 23079 → class 16 (≥ 3138, no ceiling)
+    // monthly gross 100000 / four contribution weeks = 25000 → class 16
     const result = findNisClass(100000 / WEEKS, ALL_CLASSES);
     expect(result).not.toBeNull();
     expect(result!.classNo).toBe(16);
@@ -125,20 +123,22 @@ describe('computeNis', () => {
   /**
    * Test Case A: Employee in class 10 (mid-table), monthly gross TTD 8,000.
    *
-   * Weekly insurable = 8000 / 4.333 = 1846.30 → class 10 (1710–1909.99)
-   *   NIS employee = 97.70 × 4.333 = 423.33 (rounded to 2dp)
-   *   NIS employer = 195.40 × 4.333 = 846.67 (rounded to 2dp)
+   * Weekly insurable = 1846.30 → class 10 (1710–1909.99)
+   *   NIS employee = 97.70 × 4 = 390.80
+   *   NIS employer = 195.40 × 4 = 781.60
    */
   it('Case A — class 10 (monthly gross 8000): correct employee and employer amounts', () => {
     const result = computeNis({
-      weeklyInsurable: 8000 / WEEKS,
+      weeklyInsurable: 1846.30,
       classes: ALL_CLASSES,
       weeksInPeriod: WEEKS,
       nisApplicable: true,
     });
     expect(result.classNo).toBe(10);
-    expect(result.employee).toBe(423.33);
-    expect(result.employer).toBe(846.67);
+    expect(result.employee).toBe(390.80);
+    expect(result.employer).toBe(781.60);
+    expect(result.employeeWeekly).toBe(97.70);
+    expect(result.employerWeekly).toBe(195.40);
   });
 
   /**
@@ -146,7 +146,7 @@ describe('computeNis', () => {
    */
   it('Case B — NIS not applicable: returns zeros and null class', () => {
     const result = computeNis({
-      weeklyInsurable: 8000 / WEEKS,
+      weeklyInsurable: 1846.30,
       classes: ALL_CLASSES,
       weeksInPeriod: WEEKS,
       nisApplicable: false,
@@ -158,11 +158,11 @@ describe('computeNis', () => {
 
   /**
    * Test Case C: Weekly insurable below class 1 minimum (< 200) → no class found → zeros.
-   * Monthly gross TTD 400 → weekly = 400/4.333 = 92.30 (below 200 min).
+   * Weekly insurable 100 is below the class 1 minimum.
    */
   it('Case C — below class 1 min: returns zeros (class not found)', () => {
     const result = computeNis({
-      weeklyInsurable: 400 / WEEKS,  // 92.30 — below class 1 min of 200
+      weeklyInsurable: 100,
       classes: ALL_CLASSES,
       weeksInPeriod: WEEKS,
       nisApplicable: true,
@@ -175,9 +175,9 @@ describe('computeNis', () => {
   /**
    * Test Case D: Class 16 (open-ended ceiling), monthly gross TTD 100,000.
    *
-   * Weekly insurable = 100000 / 4.333 ≈ 23079 → class 16 (≥ 3138, no ceiling)
-   *   NIS employee = 169.50 × 4.333 = 734.44
-   *   NIS employer = 339.00 × 4.333 = 1468.89
+   * Weekly insurable = 25000 → class 16 (≥ 3138, no ceiling)
+   *   NIS employee = 169.50 × 4 = 678.00
+   *   NIS employer = 339.00 × 4 = 1356.00
    */
   it('Case D — class 16 (monthly gross 100000): open-ended top class', () => {
     const result = computeNis({
@@ -187,8 +187,8 @@ describe('computeNis', () => {
       nisApplicable: true,
     });
     expect(result.classNo).toBe(16);
-    expect(result.employee).toBe(734.44);
-    expect(result.employer).toBe(1468.89);
+    expect(result.employee).toBe(678);
+    expect(result.employer).toBe(1356);
   });
 });
 
@@ -197,7 +197,7 @@ describe('computeNis', () => {
 describe('computeHealthSurcharge', () => {
   /**
    * Income above threshold (469.99): applies high rate (8.25/wk).
-   * 8.25 × 4.333 = 35.75 (rounded to 2dp)
+   * 8.25 × 4 = 33.00
    */
   it('applies high rate when monthly income > threshold', () => {
     const result = computeHealthSurcharge({
@@ -207,12 +207,12 @@ describe('computeHealthSurcharge', () => {
       weeklyLow:     TT_2026_STATUTORY.hsWeeklyLow,
       weeksInPeriod: WEEKS,
     });
-    expect(result).toBe(35.75);
+    expect(result).toBe(33);
   });
 
   /**
    * Income at or below threshold (469.99): applies low rate (4.80/wk).
-   * 4.80 × 4.333 = 20.80 (rounded to 2dp)
+   * 4.80 × 4 = 19.20
    */
   it('applies low rate when monthly income <= threshold', () => {
     const result = computeHealthSurcharge({
@@ -222,7 +222,7 @@ describe('computeHealthSurcharge', () => {
       weeklyLow:     TT_2026_STATUTORY.hsWeeklyLow,
       weeksInPeriod: WEEKS,
     });
-    expect(result).toBe(20.8);
+    expect(result).toBe(19.2);
   });
 
   /**
@@ -236,7 +236,7 @@ describe('computeHealthSurcharge', () => {
       weeklyLow:     4.80,
       weeksInPeriod: WEEKS,
     });
-    expect(result).toBe(20.8);
+    expect(result).toBe(19.2);
   });
 });
 
@@ -304,12 +304,6 @@ describe('pay-frequency helpers', () => {
     expect(payPeriodsForFrequency('off_cycle')).toBe(12); // unknown → monthly annualisation
   });
 
-  it('weeksInPeriodForFrequency maps each frequency to its weeks/period', () => {
-    expect(weeksInPeriodForFrequency('weekly')).toBe(1);
-    expect(weeksInPeriodForFrequency('fortnightly')).toBe(2);
-    expect(weeksInPeriodForFrequency('monthly')).toBeCloseTo(4.3333, 3);
-    expect(weeksInPeriodForFrequency('semi_monthly')).toBeCloseTo(2.1667, 3);
-  });
 });
 
 describe('computePaye — period-correct annualisation', () => {
@@ -353,15 +347,15 @@ describe('computeRunLine', () => {
    *   base          = 8,000.00
    *   taxableGross  = 8,000.00
    *   gross         = 8,000.00
-   *   NIS employee  = 97.70 × 4.333 = 423.33  (class 10)
-   *   NIS employer  = 195.40 × 4.333 = 846.67
-   *   HS            = 8.25 × 4.333 = 35.75  (income > 469.99 → high)
+   *   NIS employee  = 109.40 × 4 = 437.60  (class 11)
+   *   NIS employer  = 218.80 × 4 = 875.20
+   *   HS            = 8.25 × 4 = 33.00  (income > 469.99 → high)
    *   chargeable    = 8000 − (90000/12) = 8000 − 7500 = 500.00
    *   PAYE          = 500 × 0.25 = 125.00  (band1 only)
    *   voluntary     = 0
-   *   net           = 8000 − 423.33 − 35.75 − 125.00 = 7,415.92
+   *   net           = 8000 − 437.60 − 33.00 − 125.00 = 7,404.40
    */
-  it('Case 1 — mid-range salary (8000): correct NIS class 10 + HS high + PAYE band1', () => {
+  it('Case 1 — mid-range salary (8000): correct NIS class 11 + HS high + PAYE band1', () => {
     const result = computeRunLine({
       basePay:                 8000,
       taxableAllowances:       0,
@@ -378,14 +372,16 @@ describe('computeRunLine', () => {
     expect(result.base).toBe(8000);
     expect(result.taxableGross).toBe(8000);
     expect(result.gross).toBe(8000);
-    expect(result.nisClassNo).toBe(10);
-    expect(result.nisEmployee).toBe(423.33);
-    expect(result.nisEmployer).toBe(846.67);
-    expect(result.healthSurcharge).toBe(35.75);
+    expect(result.nisClassNo).toBe(11);
+    expect(result.nisEmployee).toBe(437.60);
+    expect(result.nisEmployer).toBe(875.20);
+    expect(result.nisEmployeeWeekly).toBe(109.40);
+    expect(result.nisEmployerWeekly).toBe(218.80);
+    expect(result.healthSurcharge).toBe(33);
     expect(result.chargeableIncome).toBe(500);
     expect(result.paye).toBe(125);
     expect(result.voluntaryDeductions).toBe(0);
-    expect(result.net).toBe(7415.92);
+    expect(result.net).toBe(7404.40);
   });
 
   /**
@@ -394,10 +390,10 @@ describe('computeRunLine', () => {
    * Expected:
    *   NIS employee  = 0
    *   NIS employer  = 0
-   *   HS            = 8.25 × 4.333 = 35.75  (5000 > 469.99 → high)
+   *   HS            = 8.25 × 4 = 33.00  (5000 > 469.99 → high)
    *   chargeable    = max(0, 5000 − 7500) = 0
    *   PAYE          = 0
-   *   net           = 5000 − 0 − 35.75 − 0 = 4,964.25
+   *   net           = 5000 − 0 − 33.00 − 0 = 4,967.00
    */
   it('Case 2 — NIS not applicable (5000): NIS zero, HS high, PAYE zero (below personal allowance)', () => {
     const result = computeRunLine({
@@ -416,23 +412,23 @@ describe('computeRunLine', () => {
     expect(result.nisEmployee).toBe(0);
     expect(result.nisEmployer).toBe(0);
     expect(result.nisClassNo).toBeNull();
-    expect(result.healthSurcharge).toBe(35.75);
+    expect(result.healthSurcharge).toBe(33);
     expect(result.chargeableIncome).toBe(0);
     expect(result.paye).toBe(0);
-    expect(result.net).toBe(4964.25);
+    expect(result.net).toBe(4967);
   });
 
   /**
    * Test Case 3: Very low income (TTD 400) — below class 1 NIS min, below HS threshold.
    *
-   * Weekly insurable = 400 / 4.333 = 92.30 → below class 1 min (200) → NIS class not found
+   * Weekly insurable = 400 / 4 = 100 → below class 1 min (200) → NIS class not found
    *
    * Expected:
    *   NIS employee  = 0
-   *   HS            = 4.80 × 4.333 = 20.80  (400 <= 469.99 → low rate)
+   *   HS            = 4.80 × 4 = 19.20  (400 <= 469.99 → low rate)
    *   chargeable    = max(0, 400 − 7500) = 0
    *   PAYE          = 0
-   *   net           = 400 − 0 − 20.80 − 0 = 379.20
+   *   net           = 400 − 0 − 19.20 − 0 = 380.80
    */
   it('Case 3 — income below HS threshold (400): NIS zero, HS low rate, PAYE zero', () => {
     const result = computeRunLine({
@@ -450,27 +446,27 @@ describe('computeRunLine', () => {
 
     expect(result.nisEmployee).toBe(0);
     expect(result.nisClassNo).toBeNull();
-    expect(result.healthSurcharge).toBe(20.8);
+    expect(result.healthSurcharge).toBe(19.2);
     expect(result.chargeableIncome).toBe(0);
     expect(result.paye).toBe(0);
-    expect(result.net).toBe(379.20);
+    expect(result.net).toBe(380.80);
   });
 
   /**
    * Test Case 4: High earner crossing band1→band2, monthly gross TTD 100,000.
    *
-   * Weekly insurable = 100000/4.333 ≈ 23079 → class 16 (open-ended ≥ 3138)
+   * Weekly insurable = 100000/4 = 25000 → class 16 (open-ended ≥ 3138)
    *
    * Expected:
-   *   NIS employee  = 169.50 × 4.333 = 734.44  (class 16)
-   *   NIS employer  = 339.00 × 4.333 = 1468.89
-   *   HS            = 8.25 × 4.333 = 35.75
+   *   NIS employee  = 169.50 × 4 = 678.00  (class 16)
+   *   NIS employer  = 339.00 × 4 = 1356.00
+   *   HS            = 8.25 × 4 = 33.00
    *   chargeable    = 100000 − 7500 = 92500
    *   Monthly band1 ceiling = 1,000,000 / 12 = 83,333.33
    *   Band1 PAYE    = 83,333.33 × 0.25 = 20,833.33
    *   Band2 PAYE    = (92,500 − 83,333.33) × 0.30 = 9,166.67 × 0.30 = 2,750.00
    *   PAYE total    = 23,583.33
-   *   net           = 100000 − 734.44 − 35.75 − 23583.33 = 75,646.48
+   *   net           = 100000 − 678.00 − 33.00 − 23583.33 = 75,705.67
    */
   it('Case 4 — band1→band2 PAYE crossing (100000): class 16 NIS + HS high + split PAYE', () => {
     const result = computeRunLine({
@@ -487,12 +483,12 @@ describe('computeRunLine', () => {
     });
 
     expect(result.nisClassNo).toBe(16);
-    expect(result.nisEmployee).toBe(734.44);
-    expect(result.nisEmployer).toBe(1468.89);
-    expect(result.healthSurcharge).toBe(35.75);
+    expect(result.nisEmployee).toBe(678);
+    expect(result.nisEmployer).toBe(1356);
+    expect(result.healthSurcharge).toBe(33);
     expect(result.chargeableIncome).toBe(92500);
     expect(result.paye).toBe(23583.33);
-    expect(result.net).toBe(75646.48);
+    expect(result.net).toBe(75705.67);
   });
 
   /**

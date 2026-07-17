@@ -21,7 +21,7 @@ create table if not exists public.finance_remittances (
   currency            text not null default 'TTD',
   status              text not null default 'draft'
                         check (status in ('draft','submitted','approved','paid','filed','cancelled')),
-  due_date            date,
+  due_date            date not null,
   paid_date           date,
   filed_date          date,
   authority_reference text,           -- receipt / filing reference # from the authority
@@ -32,13 +32,21 @@ create table if not exists public.finance_remittances (
   cancel_reason       text,
   metadata            jsonb not null default '{}'::jsonb,
   created_at          timestamptz not null default now(),
-  updated_at          timestamptz not null default now(),
-  -- One remittance per (run, authority): avoids accidental double-creation
-  unique (payroll_run_id, authority)
+  updated_at          timestamptz not null default now()
 );
 
 create index if not exists finance_remittances_run_idx
   on public.finance_remittances(payroll_run_id);
+-- Cancelled records remain as immutable history. Only one active artifact may
+-- exist for a run, authority and statutory period at a time.
+create unique index if not exists finance_remittances_one_active_period_uidx
+  on public.finance_remittances(
+    payroll_run_id,
+    authority,
+    period_year,
+    period_month
+  )
+  where status <> 'cancelled';
 create index if not exists finance_remittances_status_idx
   on public.finance_remittances(status);
 create index if not exists finance_remittances_period_idx

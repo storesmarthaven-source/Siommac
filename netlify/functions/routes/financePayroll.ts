@@ -26,12 +26,31 @@ import {
   listRunLines,
   listRunWarnings,
   listRunAuditLog,
-  resolveRunWarning,
   getEmployeePopulationPreview,
   downloadRunExport,
   notifyPayslipEmployees,
   setRunTemplate,
 } from '../lib/finance/payrollRuns';
+import {
+  commandPayrollFinding,
+  getPayrollFinding,
+  listPayrollFindings,
+} from '../lib/finance/payroll/findings';
+import {
+  compareCalculationVersions,
+  getCalculationAttempt,
+  getCalculationVersion,
+  listCalculationAttempts,
+  listCalculationVersions,
+} from '../lib/finance/payroll/execution';
+import {
+  certifyPayrollRun,
+  confirmPayrollFunding,
+  getPayrollReleaseCertificate,
+  getPayrollReleasePreflight,
+  releasePayrollRun,
+} from '../lib/finance/payroll/releases';
+import { getPayrollRunWorkspace } from '../lib/finance/payroll/workspace';
 import {
   generatePayslips,
   getMyPayslips,
@@ -137,11 +156,15 @@ router.post('/payroll/runs/get', async c => {
 router.post('/payroll/runs/create', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
   const v = zv(c, z.object({
-    periodMonth:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
-    payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly', 'bi_weekly']).optional(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    runType:        z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']),
+    periodStart:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    periodEnd:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    sequenceNo:     z.number().int().positive().optional(),
+    sourceRunId:    z.string().uuid().optional(),
+    payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly']).optional(),
     weeksInPeriod:  z.number().positive().optional(),
-    payGroup:       z.string().min(1).max(100).optional(),
-    payGroupId:     z.string().uuid().optional(),   // when set, the group drives frequency + population
+    payGroupId:     z.string().uuid().optional(),
     payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
   }), b(c));
@@ -155,10 +178,17 @@ router.post('/payroll/runs/create', async c => {
 // POST /api/finance/payroll/runs/lock-inputs
 router.post('/payroll/runs/lock-inputs', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await lockInputs(v.data.id, actor.id);
+    const data = await lockInputs(
+      v.data.id,
+      actor.id,
+      v.data.idempotencyKey,
+    );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -166,10 +196,13 @@ router.post('/payroll/runs/lock-inputs', async c => {
 // POST /api/finance/payroll/runs/calculate
 router.post('/payroll/runs/calculate', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await calculateRun(v.data.id, actor.id);
+    const data = await calculateRun(v.data.id, actor.id, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -236,6 +269,33 @@ router.post('/payroll/runs/audit/list', async c => {
 // Stage 3 — Run lifecycle: submit, lock, reopen, export
 // ─────────────────────────────────────────────────────────────────────────────
 
+// POST /api/finance/payroll/runs/certify
+// Freezes the processor's evidence against the current calculation version.
+router.post('/payroll/runs/certify', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.certify');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    attestations: z.object({
+      populationReconciled: z.literal(true),
+      inputsReviewed: z.literal(true),
+      statutoryReviewed: z.literal(true),
+      variancesReviewed: z.literal(true),
+      paymentReadinessReviewed: z.literal(true),
+      glReadinessReviewed: z.literal(true),
+    }),
+    note: z.string().trim().max(2000).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await certifyPayrollRun({
+      ...v.data,
+      actorId: actor.id,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
 // POST /api/finance/payroll/runs/submit
 // Submits a calculated run for approval via the central workflow engine.
 // Permission: finance.payroll.run.manage (finance_staff or finance_manager).
@@ -287,10 +347,82 @@ router.post('/payroll/runs/reject', async c => {
 // Permission: finance.payroll.lock (finance_manager / admin only — SoD).
 router.post('/payroll/runs/lock', async c => {
   const actor = await requirePermission(c, 'finance.payroll.lock');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await lockRun(v.data.id, actor.id);
+    const data = await lockRun(v.data.id, actor.id, v.data.idempotencyKey);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/releases/preflight
+// Returns authoritative release blockers for the current locked run version.
+router.post('/payroll/releases/preflight', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollReleasePreflight(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/releases/confirm-funding
+// Records immutable funding evidence. The confirmer must also perform release.
+router.post('/payroll/releases/confirm-funding', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.funding.approve');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    confirmedAmount: z.number().finite().nonnegative(),
+    confirmationReference: z.string().trim().min(1).max(200),
+    accountReference: z.string().trim().min(1).max(100).optional(),
+    note: z.string().trim().max(2000).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await confirmPayrollFunding({
+      ...v.data,
+      actorId: actor.id,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/releases/release
+// Atomically creates the release certificate and downstream payment/remittance drafts.
+router.post('/payroll/releases/release', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.release');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await releasePayrollRun({
+      ...v.data,
+      actorId: actor.id,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/releases/get-certificate
+router.post('/payroll/releases/get-certificate', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollReleaseCertificate(v.data.runId);
+    if (!data) {
+      return c.json(
+        { success: false, message: 'Payroll release certificate not found.' },
+        404 as 200,
+      );
+    }
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -302,12 +434,13 @@ router.post('/payroll/runs/lock', async c => {
 router.post('/payroll/runs/reopen', async c => {
   const actor = await requirePermission(c, 'finance.payroll.lock');
   const v = zv(c, z.object({
-    id:     z.string().uuid(),
-    reason: z.string().min(1, 'Reason is required'),
+    id: z.string().uuid(),
+    reason: z.string().trim().min(1, 'Reason is required'),
+    idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await reopenRun(v.data.id, actor.id, v.data.reason);
+    const data = await reopenRun(v.data.id, actor.id, v.data.reason, v.data.idempotencyKey);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -330,17 +463,23 @@ router.post('/payroll/runs/set-template', async c => {
 });
 
 // POST /api/finance/payroll/runs/export
-// Exports a locked run as an artifact. Re-export adds a new version.
+// Exports a released run as an immutable artifact. Re-export adds a new version.
 // Permission: finance.payroll.export.
 router.post('/payroll/runs/export', async c => {
   const actor = await requirePermission(c, 'finance.payroll.export');
   const v = zv(c, z.object({
-    id:     z.string().uuid(),
-    format: z.enum(['csv', 'json', 'xlsx', 'pdf']).optional(),
+    id: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    format: z.enum(['csv', 'json']).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await exportRun(v.data.id, actor.id, (v.data.format ?? 'csv') as ExportFormat);
+    const data = await exportRun(
+      v.data.id,
+      actor.id,
+      v.data.idempotencyKey,
+      (v.data.format ?? 'csv') as ExportFormat,
+    );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -771,10 +910,17 @@ router.post('/payroll/gl/preview', async c => {
 // Permission: finance.payroll.gl.post.
 router.post('/payroll/gl/post', async c => {
   const actor = await requirePermission(c, 'finance.payroll.gl.post');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await postRunGl(v.data.runId, actor.id);
+    const data = await postRunGl(
+      v.data.runId,
+      actor.id,
+      v.data.idempotencyKey,
+    );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -784,10 +930,19 @@ router.post('/payroll/gl/post', async c => {
 // Permission: finance.payroll.gl.post.
 router.post('/payroll/gl/reverse', async c => {
   const actor = await requirePermission(c, 'finance.payroll.gl.post');
-  const v = zv(c, z.object({ runId: z.string().uuid(), reason: z.string().min(1) }), b(c));
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    reason: z.string().min(1),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await reverseRunGl(v.data.runId, actor.id, v.data.reason);
+    const data = await reverseRunGl(
+      v.data.runId,
+      actor.id,
+      v.data.reason,
+      v.data.idempotencyKey,
+    );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -888,15 +1043,202 @@ router.post('/payroll/reports/run', async c => {
 // Resolve a single run warning. Requires finance.payroll.run.manage.
 // New action key (reported): finance.payroll.warning.resolve
 // Interim enforcement uses finance.payroll.run.manage until key is catalogued.
-router.post('/payroll/warnings/resolve', async c => {
-  const actor = await requirePermission(c, 'finance.payroll.run.manage');
+router.post('/payroll/findings/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    warningId: z.string().uuid(),
-    note:      z.string().max(500).optional(),
+    runId: z.string().uuid(),
+    calculationVersionId: z.string().uuid().optional(),
+    state: z.enum(['open', 'in_progress', 'resolved', 'waived']).optional(),
+    severity: z.enum(['info', 'warning', 'blocker']).optional(),
+    limit: z.number().int().min(1).max(200).optional(),
+    offset: z.number().int().min(0).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await resolveRunWarning(v.data.warningId, actor.id, v.data.note);
+    const data = await listPayrollFindings(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/runs/workspace', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollRunWorkspace(v.data.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/calculations/attempts/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    runId: z.string().uuid(),
+    limit: z.number().int().min(1).max(200).optional(),
+    offset: z.number().int().min(0).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listCalculationAttempts(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/calculations/attempts/get', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getCalculationAttempt(v.data.id);
+    if (!data) {
+      return c.json({ success: false, message: 'Payroll calculation attempt not found.' }, 404 as 200);
+    }
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/calculations/versions/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listCalculationVersions(v.data.runId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/calculations/versions/get', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getCalculationVersion(v.data.id);
+    if (!data) {
+      return c.json({ success: false, message: 'Payroll calculation version not found.' }, 404 as 200);
+    }
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/calculations/compare', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    fromVersionId: z.string().uuid(),
+    toVersionId: z.string().uuid(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await compareCalculationVersions(
+      v.data.fromVersionId,
+      v.data.toVersionId,
+    );
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/findings/get', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollFinding(v.data.id);
+    if (!data) {
+      return c.json({ success: false, message: 'Payroll finding not found.' }, 404 as 200);
+    }
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/findings/assign', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.finding.assign');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    assigneeId: z.string().min(1).max(200),
+    note: z.string().trim().max(1000).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commandPayrollFinding({
+      findingId: v.data.id,
+      actorId: actor.id,
+      expectedVersion: v.data.expectedVersion,
+      command: 'assign',
+      idempotencyKey: v.data.idempotencyKey,
+      assigneeId: v.data.assigneeId,
+      note: v.data.note,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/findings/resolve', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.finding.resolve');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    note: z.string().trim().min(1).max(2000),
+    evidence: z.record(z.string(), z.unknown()),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commandPayrollFinding({
+      findingId: v.data.id,
+      actorId: actor.id,
+      expectedVersion: v.data.expectedVersion,
+      command: 'resolve',
+      idempotencyKey: v.data.idempotencyKey,
+      note: v.data.note,
+      evidence: v.data.evidence,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/findings/waive', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.finding.waive');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    reason: z.string().trim().min(1).max(2000),
+    expiresAt: z.string().datetime().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commandPayrollFinding({
+      findingId: v.data.id,
+      actorId: actor.id,
+      expectedVersion: v.data.expectedVersion,
+      command: 'waive',
+      idempotencyKey: v.data.idempotencyKey,
+      note: v.data.reason,
+      waiverExpiresAt: v.data.expiresAt,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+router.post('/payroll/findings/reopen', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.finding.reopen');
+  const v = zv(c, z.object({
+    id: z.string().uuid(),
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+    reason: z.string().trim().min(1).max(2000),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commandPayrollFinding({
+      findingId: v.data.id,
+      actorId: actor.id,
+      expectedVersion: v.data.expectedVersion,
+      command: 'reopen',
+      idempotencyKey: v.data.idempotencyKey,
+      note: v.data.reason,
+    });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -924,15 +1266,20 @@ router.post('/payroll/runs/population-preview', async c => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // POST /api/finance/payroll/exports/download
-// Regenerate and return export content for browser download.
-// New action key (reported): finance.payroll.export.download
-// Interim enforcement uses finance.payroll.export until key is catalogued.
+// Return the immutable artifact and atomically record the download.
 router.post('/payroll/exports/download', async c => {
   const actor = await requirePermission(c, 'finance.payroll.export');
-  const v = zv(c, z.object({ exportId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({
+    exportId: z.string().uuid(),
+    idempotencyKey: z.string().trim().min(1).max(200),
+  }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await downloadRunExport(v.data.exportId, actor.id);
+    const data = await downloadRunExport(
+      v.data.exportId,
+      actor.id,
+      v.data.idempotencyKey,
+    );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

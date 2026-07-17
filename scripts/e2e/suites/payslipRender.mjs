@@ -133,6 +133,12 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import {
+  payrollCalculationCommand,
+  payrollLockCommand,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
 
@@ -208,7 +214,13 @@ export default async function run(h) {
 
   await test('acquire 2 finance_managers + 1 salaried employee', async () => {
     const mgrR = await acquireActors('finance_manager', 2, { pay_basis: 'salary', monthly_salary: 7000.00 });
-    const empR = await acquireActors('employee',        1, { pay_basis: 'salary', monthly_salary: 5000.00 });
+    const empR = await acquireActors(
+      'employee',
+      1,
+      { pay_basis: 'salary', monthly_salary: 5000.00 },
+      {},
+      { forceSynthetic: true },
+    );
     [fmgr1Id, fmgr2Id] = mgrR.actors.map(a => a.id);
     empId = empR.actors[0].id;
     ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
@@ -247,12 +259,11 @@ export default async function run(h) {
   });
 
   await test('finance_manager creates a payroll run scoped to the pay group', async () => {
-    const r = await api('finance/payroll/runs/create', fmgr1Token, {
-      periodMonth:   testPeriod,
-      payFrequency:  'monthly',
-      weeksInPeriod: 4.333,
+    const r = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
+      idempotencyKey: `${TAG}:payslip-render:run:create`,
+      periodStart:   testPeriod,
       payGroupId:    ctx.payGroupId,   // P2-b: scope to 1 employee; prevents roster-wide timeout
-    });
+    }));
     ok(r, 'create run failed: ' + r.body.message);
     expect(r.body.data.status === 'draft', 'expected draft status');
     // Phase 2: templateId field present in run DTO (null at creation time)
@@ -262,7 +273,10 @@ export default async function run(h) {
   });
 
   await test('lock inputs', async () => {
-    const r = await api('finance/payroll/runs/lock-inputs', fmgr1Token, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/lock-inputs', fmgr1Token, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:payslip-render:run:lock-inputs:1`,
+    });
     ok(r, 'lock-inputs failed: ' + r.body.message);
     expect(r.body.data.status === 'input_locked',
       'status should be input_locked, got ' + r.body.data.status);
@@ -271,7 +285,11 @@ export default async function run(h) {
   });
 
   await test('calculate run', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgr1Token,
+      payrollCalculationCommand(ctx.runId, `${TAG}:payslip-render:run:calculate:1`),
+    );
     ok(r, 'calculate failed: ' + r.body.message);
     expect(r.body.data.status === 'calculated', 'status should be calculated');
     expect(r.body.data.grossTotal > 0, 'grossTotal should be > 0');
@@ -310,7 +328,11 @@ export default async function run(h) {
   });
 
   await test('lock the approved run', async () => {
-    const r = await api('finance/payroll/runs/lock', fmgr2Token, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/lock',
+      fmgr2Token,
+      payrollLockCommand(ctx.runId, `${TAG}:run:payslip-render:lock:1`),
+    );
     ok(r, 'lock run failed: ' + r.body.message);
     expect(r.body.data.status === 'locked', 'status should be locked');
   });

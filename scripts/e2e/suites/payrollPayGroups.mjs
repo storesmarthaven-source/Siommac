@@ -30,6 +30,11 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import {
+  payrollCalculationCommand,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
@@ -157,9 +162,12 @@ export default async function run(h) {
   // ===========================================================================
 
   await test('create a run scoped to the weekly group → weekly frequency', async () => {
-    const r = await api('finance/payroll/runs/create', fmgrToken, {
-      periodMonth: seedDateFromTag(TAG, 33), payGroupId: ctx.groupId,
-    });
+    const r = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
+      idempotencyKey: `${TAG}:pay-groups:run:create`,
+      periodStart: seedDateFromTag(TAG, 33),
+      payFrequency: 'weekly',
+      payGroupId: ctx.groupId,
+    }));
     ok(r, 'create run failed (is an active TT statutory version present?)');
     expect(r.body.data.payGroupId === ctx.groupId, 'run must link the pay group');
     expect(r.body.data.payFrequency === 'weekly', 'frequency must come from the group');
@@ -168,7 +176,10 @@ export default async function run(h) {
   });
 
   await test('lock-inputs populates ONLY the group members (not all active employees)', async () => {
-    const r = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/lock-inputs', fmgrToken, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:pay-groups:run:lock-inputs:1`,
+    });
     ok(r, 'lock-inputs failed');
     expect(r.body.data.employeeCount === 2, 'expected 2 employees populated, got ' + r.body.data.employeeCount);
 
@@ -179,7 +190,11 @@ export default async function run(h) {
   });
 
   await test('calculate applies period-correct (weekly) PAYE — a ~2000/wk earner is taxed', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:pay-groups:run:calculate:1`),
+    );
     ok(r, 'calculate failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('employee_id, base, paye').eq('run_id', ctx.runId);
     expect((lines ?? []).length === 2, 'expected 2 lines, got ' + (lines ?? []).length);

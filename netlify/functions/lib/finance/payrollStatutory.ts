@@ -25,8 +25,8 @@ import type { NisClassRow } from './statutoryConfig';
 // ── Pay-frequency helpers (Wave 3) ──────────────────────────────────────────────
 // PAYE annualises by the number of pay periods in the year, NOT always 12 — dividing
 // the annual personal allowance / band ceiling by 12 for a WEEKLY run would grossly
-// over-tax it. NIS/Health Surcharge stay weekly-based (via weeksInPeriod), which already
-// varies by frequency, so only PAYE's divisor changes.
+// over-tax it. NIS/Health Surcharge use the actual Monday-based contribution weeks
+// frozen on the payroll run; pay frequency cannot safely infer that calendar count.
 
 /** Number of pay periods in a year for a frequency (the PAYE annualisation divisor). */
 export function payPeriodsForFrequency(freq: string): number {
@@ -40,18 +40,6 @@ export function payPeriodsForFrequency(freq: string): number {
   }
 }
 
-/** Weeks in one pay period for a frequency (drives NIS + Health Surcharge). */
-export function weeksInPeriodForFrequency(freq: string): number {
-  switch (freq) {
-    case 'weekly':      return 1;
-    case 'fortnightly': return 2;
-    case 'semi_monthly':
-    case 'bi-monthly':  return 52 / 24;   // ≈ 2.16667
-    case 'monthly':     return 52 / 12;   // ≈ 4.33333
-    default:            return 52 / 12;
-  }
-}
-
 // ── NIS calculator ────────────────────────────────────────────────────────────
 
 export interface ComputeNisInput {
@@ -59,7 +47,7 @@ export interface ComputeNisInput {
   weeklyInsurable: number;
   /** The NIS class table for the active statutory version. */
   classes: NisClassRow[];
-  /** Number of weeks in the pay period (typically 4.333 for monthly). */
+  /** Actual Monday-based NIBTT contribution weeks in the pay period. */
   weeksInPeriod: number;
   /** Whether NIS is applicable for this employee. If false, returns zeros. */
   nisApplicable: boolean;
@@ -70,6 +58,10 @@ export interface ComputeNisResult {
   employee: number;
   /** NIS employer contribution for the period. */
   employer: number;
+  /** Frozen weekly employee contribution from the matched class. */
+  employeeWeekly: number;
+  /** Frozen weekly employer contribution from the matched class. */
+  employerWeekly: number;
   /** The matched NIS class number (or null if not applicable / not found). */
   classNo: number | null;
 }
@@ -99,17 +91,35 @@ export function findNisClass(
 
 export function computeNis(input: ComputeNisInput): ComputeNisResult {
   if (!input.nisApplicable) {
-    return { employee: 0, employer: 0, classNo: null };
+    return {
+      employee: 0,
+      employer: 0,
+      employeeWeekly: 0,
+      employerWeekly: 0,
+      classNo: null,
+    };
   }
 
   const cls = findNisClass(input.weeklyInsurable, input.classes);
   if (!cls) {
-    return { employee: 0, employer: 0, classNo: null };
+    return {
+      employee: 0,
+      employer: 0,
+      employeeWeekly: 0,
+      employerWeekly: 0,
+      classNo: null,
+    };
   }
 
   const employee = round2(cls.employeeWeekly * input.weeksInPeriod);
   const employer = round2(cls.employerWeekly * input.weeksInPeriod);
-  return { employee, employer, classNo: cls.classNo };
+  return {
+    employee,
+    employer,
+    employeeWeekly: cls.employeeWeekly,
+    employerWeekly: cls.employerWeekly,
+    classNo: cls.classNo,
+  };
 }
 
 // ── Health Surcharge calculator ───────────────────────────────────────────────
@@ -123,7 +133,7 @@ export interface ComputeHealthSurchargeInput {
   weeklyHigh: number;
   /** hs_weekly_low from the statutory version (e.g. 4.80). */
   weeklyLow: number;
-  /** Weeks in the pay period (e.g. 4.333). */
+  /** Actual Monday-based contribution weeks in the pay period. */
   weeksInPeriod: number;
 }
 
@@ -222,6 +232,8 @@ export interface ComputeRunLineResult {
   gross: number;
   nisEmployee: number;
   nisEmployer: number;
+  nisEmployeeWeekly: number;
+  nisEmployerWeekly: number;
   nisClassNo: number | null;
   healthSurcharge: number;
   chargeableIncome: number;
@@ -293,6 +305,8 @@ export function computeRunLine(input: ComputeRunLineInput): ComputeRunLineResult
     gross,
     nisEmployee:        nisResult.employee,
     nisEmployer:        nisResult.employer,
+    nisEmployeeWeekly:  nisResult.employeeWeekly,
+    nisEmployerWeekly:  nisResult.employerWeekly,
     nisClassNo:         nisResult.classNo,
     healthSurcharge,
     chargeableIncome,

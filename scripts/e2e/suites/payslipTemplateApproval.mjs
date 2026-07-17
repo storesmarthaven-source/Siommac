@@ -45,6 +45,8 @@ function sampleDesign(tag) {
   };
 }
 
+import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
@@ -446,22 +448,24 @@ export default async function run(h) {
     // Need a payroll run for this test — create one via service-role
     // (we just need a row, not a calculated run)
     const { data: payGroup } = await sb.from('finance_pay_groups').select('id').limit(1).maybeSingle();
-    const { data: ver } = await sb.from('finance_statutory_versions').select('id').eq('is_active', true).limit(1).maybeSingle();
-    // period_month is table-unique — use a far-future, TAG-derived month to avoid collisions.
+    const { data: ver, error: verErr } = await sb.from('finance_statutory_versions')
+      .select('id').eq('is_active', true).limit(1).maybeSingle();
+    expect(
+      !verErr && ver?.id,
+      `render-gate fixture requires an active statutory version: ${verErr?.message ?? 'none found'}`,
+    );
+    // Use a far-future, TAG-derived period to isolate the scheduled-run identity.
     const y = 2200 + (TAG.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 300);
-    const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert({
+    const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no:       TAG + '-PTA-RUN',
-      period_month: `${y}-06-01`,
+      periodStart:  `${y}-06-01`,
       status:       'draft',
-      pay_frequency: 'monthly',
       created_by:   makerId,
-      ...(ver ? { statutory_version_id: ver.id } : {}),
+      statutory_version_id: ver.id,
       ...(payGroup ? { pay_group_id: payGroup.id } : {}),
-    }).select('id').single();
+    })).select('id').single();
     if (runErr) {
-      // If run creation fails (missing FKs in test env), skip this test gracefully
-      console.warn('[payslipTemplateApproval] Render-gate test skipped — could not create test run:', runErr.message);
-      return;
+      throw new Error(`render-gate fixture run failed: ${runErr.message}`);
     }
     ctx.runIds.push(run.id);
 

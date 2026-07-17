@@ -31,6 +31,11 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import {
+  payrollCalculationCommand,
+  payrollRunSeed,
+} from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
@@ -78,11 +83,11 @@ export default async function run(h) {
     expect(!verErr, 'seed version failed: ' + verErr?.message);
     ctx.versionId = ver.id;
 
-    const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: 'RUN-OVR-' + TAG.slice(-6), period_month: seedDateFromTag(TAG, 44),
+    const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: 'RUN-OVR-' + TAG.slice(-6), periodStart: seedDateFromTag(TAG, 44),
       statutory_version_id: ctx.versionId, status: 'input_locked',
-      pay_frequency: 'monthly', weeks_in_period: 4.333, employee_count: 1,
-    }).select('id').single();
+      weeks_in_period: 4.333, employee_count: 1,
+    })).select('id').single();
     expect(!rnErr, 'seed run failed: ' + rnErr?.message);
     ctx.runId = rn.id;
 
@@ -94,7 +99,11 @@ export default async function run(h) {
   });
 
   await test('baseline calculate → emp1 line gross = 5000', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:overrides:run:calculate:1`),
+    );
     ok(r, 'calculate failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('gross').eq('run_id', ctx.runId).eq('employee_id', emp1Id);
     expect(Math.abs(Number((lines ?? [])[0]?.gross) - 5000) < 0.01, 'baseline gross must be 5000, got ' + (lines ?? [])[0]?.gross);
@@ -139,7 +148,11 @@ export default async function run(h) {
   // ===========================================================================
 
   await test('recalculate → emp1 line gross rises to 6000 (override applied)', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:overrides:run:calculate:2`),
+    );
     ok(r, 'recalculate failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('gross, taxable_gross').eq('run_id', ctx.runId).eq('employee_id', emp1Id);
     expect(Math.abs(Number((lines ?? [])[0]?.gross) - 6000) < 0.01, 'gross must be 6000 after +1000 earning override, got ' + (lines ?? [])[0]?.gross);
@@ -148,7 +161,11 @@ export default async function run(h) {
   await test('remove override → recalculate → gross back to 5000', async () => {
     const rm = await api('finance/payroll/overrides/remove', fmgrToken, { overrideId: ctx.overrideId });
     ok(rm, 'remove failed');
-    const rc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const rc = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:overrides:run:calculate:3`),
+    );
     ok(rc, 'recalc after remove failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('gross').eq('run_id', ctx.runId).eq('employee_id', emp1Id);
     expect(Math.abs(Number((lines ?? [])[0]?.gross) - 5000) < 0.01, 'gross must return to 5000 after removal, got ' + (lines ?? [])[0]?.gross);
@@ -192,7 +209,11 @@ export default async function run(h) {
   });
 
   await test('recalculate → both participants gross rises by 500', async () => {
-    const rc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const rc = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:overrides:run:calculate:4`),
+    );
     ok(rc, 'recalc failed');
     const { data: lines } = await sb.from('finance_payroll_run_lines').select('employee_id, gross').eq('run_id', ctx.runId).in('employee_id', [emp1Id, emp2Id]);
     const g1 = Number((lines ?? []).find(l => l.employee_id === emp1Id)?.gross);

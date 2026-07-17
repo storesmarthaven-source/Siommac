@@ -1358,6 +1358,48 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Export a locked payroll run as a CSV/JSON artifact. Re-export creates a new versioned artifact; prior artifacts are marked not-current. Does not disburse funds. Finance Manager or Admin only.',
     risk: 'high',
   },
+  'finance.payroll.certify': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Certify Payroll Evidence',
+    description: 'Certify the immutable calculation, population, statutory, variance, payment, and GL evidence before submission.',
+    risk: 'high',
+  },
+  'finance.payroll.funding.approve': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Confirm Payroll Funding',
+    description: 'Record immutable funding confirmation for an approved payroll run. The confirmer must also perform release under the configured segregation-of-duty rules.',
+    risk: 'high',
+  },
+  'finance.payroll.release': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Release Payroll',
+    description: 'Release a locked and funded payroll, create the immutable release certificate, and create governed downstream disbursement and remittance drafts.',
+    risk: 'high',
+  },
+  'finance.payroll.finding.assign': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Assign Payroll Findings',
+    description: 'Assign an open payroll control finding to an active user for investigation and resolution.',
+    risk: 'medium',
+  },
+  'finance.payroll.finding.resolve': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Resolve Payroll Findings',
+    description: 'Resolve an eligible payroll control finding with required evidence and an audited reason.',
+    risk: 'high',
+  },
+  'finance.payroll.finding.waive': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Waive Payroll Warnings',
+    description: 'Waive an eligible payroll warning with an audited reason and optional expiry. Blockers cannot be waived.',
+    risk: 'high',
+  },
+  'finance.payroll.finding.reopen': {
+    module: 'Finance', group: 'Payroll Controls',
+    label: 'Reopen Payroll Findings',
+    description: 'Reopen a resolved or waived payroll control finding when its evidence is no longer sufficient.',
+    risk: 'high',
+  },
   'finance.payroll.payslips.generate': {
     module: 'Finance', group: 'Payroll Runs',
     label: 'Generate Payslips',

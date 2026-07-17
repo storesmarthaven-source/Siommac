@@ -41,4 +41,28 @@ grant select, insert, update, delete on public.finance_employee_pay_group_assign
 alter table public.finance_payroll_runs
   add column if not exists pay_group_id uuid references public.finance_pay_groups(id) on delete set null;
 
+-- Payroll-run identity. The zero UUID gives unscoped runs an intentional key;
+-- PostgreSQL otherwise treats null pay_group_id values as all distinct.
+create unique index if not exists finance_payroll_runs_scheduled_key
+  on public.finance_payroll_runs(
+    coalesce(pay_group_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    period_start,
+    period_end,
+    run_type
+  )
+  where run_type = 'scheduled' and status <> 'cancelled';
+
+create unique index if not exists finance_payroll_runs_sequence_key
+  on public.finance_payroll_runs(
+    coalesce(pay_group_id, '00000000-0000-0000-0000-000000000000'::uuid),
+    period_start,
+    period_end,
+    run_type,
+    sequence_no
+  )
+  where run_type <> 'scheduled' and status <> 'cancelled';
+
+create index if not exists finance_payroll_runs_group_period_idx
+  on public.finance_payroll_runs(pay_group_id, period_start, period_end);
+
 -- After applying, run: NOTIFY pgrst, 'reload schema';

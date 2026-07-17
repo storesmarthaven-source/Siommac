@@ -17,17 +17,30 @@
 // ============================================================================
 
 import { sb } from '../db';
-import { emitAppEvent, buildEventRow, deliverEventNotifications } from '../appEvents';
-import { writeHrAudit, buildHrAuditRow } from '../hr/employeeCore';
-import { nextRef } from '../refGenerator';
-import { getActiveStatutoryVersion, getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
-import { computeRunLine, payPeriodsForFrequency, weeksInPeriodForFrequency } from './payrollStatutory';
-import { getPayGroup, listGroupMemberIds } from './payGroups';
+import { emitAppEvent, deliverEventNotifications } from '../appEvents';
+import { writeHrAudit } from '../hr/employeeCore';
+import { getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
+import { computeRunLine, payPeriodsForFrequency } from './payrollStatutory';
+import { listGroupMemberIds } from './payGroups';
 import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
-import { loadLoanInstallments, recordLoanDeductionsForRun, reverseLoanDeductionsForRun } from './loans';
+import { loadLoanInstallments } from './loans';
 import { getStatutoryProfilesByEmployees } from '../hr/statutoryProfileCore';
-import { selectAllRows, chunkedInsert, chunk } from '../dbBulk';
+import { selectAllRows, chunk } from '../dbBulk';
 import { resolveSettingValue } from '../settings/resolveSetting';
+import {
+  calculationFailure,
+  createPayrollRunCommand,
+  failCalculationAttempt,
+  getCalculationAttempt,
+  publishCalculationVersion,
+  publishInputSnapshot,
+  replayInputSnapshot,
+  startCalculationAttempt,
+  type PayrollRunStatus,
+  type PayrollRunType,
+} from './payroll/execution';
+import { payrollExportChecksum } from './payroll/exportContent';
+import { payrollRpcHttpError } from './payroll/rpcError';
 
 /** Supported scale ceiling for a single run's calc/lock (500–1k target, ~2k headroom).
  *  Beyond this, the pipeline is rejected rather than silently truncating. */
@@ -39,14 +52,206 @@ import { notify } from '../notify';
 import { createHandoff } from '../handoffBus';
 import type { NisClassRow } from './statutoryConfig';
 
+interface NisContributionPeriod {
+  periodMonth: string;
+  weeks: number;
+  employeeAmount: number;
+  employerAmount: number;
+}
+
+interface NisContributionWeeks {
+  periodMonth: string;
+  weeks: number;
+}
+
+function parseUtcDate(value: string): Date {
+  const parsed = new Date(`${value}T00:00:00.000Z`);
+  if (Number.isNaN(parsed.getTime())) {
+    throw Object.assign(new Error(`Invalid payroll date '${value}'.`), { status: 422 });
+  }
+  return parsed;
+}
+
+function isoMonth(date: Date): string {
+  return `${date.getUTCFullYear()}-${String(date.getUTCMonth() + 1).padStart(2, '0')}-01`;
+}
+
+function mondayOnOrBefore(value: Date): Date {
+  const monday = new Date(value);
+  monday.setUTCDate(monday.getUTCDate() - ((monday.getUTCDay() + 6) % 7));
+  return monday;
+}
+
+function buildEmployeeContributionWeeks(input: {
+  periodStart: string;
+  periodEnd: string;
+  payBasis: string | null;
+  employmentStart: string | null;
+  employmentEnd: string | null;
+  workedDates: string[];
+}): NisContributionWeeks[] {
+  const runStart = parseUtcDate(input.periodStart);
+  const runEnd = parseUtcDate(input.periodEnd);
+  const employmentStart = input.employmentStart
+    ? parseUtcDate(input.employmentStart)
+    : runStart;
+  const employmentEnd = input.employmentEnd
+    ? parseUtcDate(input.employmentEnd)
+    : runEnd;
+  const effectiveStart = new Date(Math.max(runStart.getTime(), employmentStart.getTime()));
+  const effectiveEnd = new Date(Math.min(runEnd.getTime(), employmentEnd.getTime()));
+  if (effectiveEnd < effectiveStart) return [];
+
+  const contributionMondays = new Set<string>();
+  if (input.payBasis === 'hourly') {
+    for (const value of input.workedDates) {
+      const worked = parseUtcDate(value);
+      if (worked < effectiveStart || worked > effectiveEnd) continue;
+      contributionMondays.add(mondayOnOrBefore(worked).toISOString().slice(0, 10));
+    }
+  } else {
+    const coversWholeRun =
+      effectiveStart.getTime() === runStart.getTime()
+      && effectiveEnd.getTime() === runEnd.getTime();
+    if (coversWholeRun) {
+      const cursor = new Date(runStart);
+      while (cursor <= runEnd) {
+        if (cursor.getUTCDay() === 1) {
+          contributionMondays.add(cursor.toISOString().slice(0, 10));
+        }
+        cursor.setUTCDate(cursor.getUTCDate() + 1);
+      }
+      if (contributionMondays.size === 0) {
+        contributionMondays.add(
+          mondayOnOrBefore(runStart).toISOString().slice(0, 10),
+        );
+      }
+    } else {
+      const cursor = mondayOnOrBefore(effectiveStart);
+      while (cursor <= effectiveEnd) {
+        contributionMondays.add(cursor.toISOString().slice(0, 10));
+        cursor.setUTCDate(cursor.getUTCDate() + 7);
+      }
+    }
+  }
+
+  const weeksByMonth = new Map<string, number>();
+  for (const monday of [...contributionMondays].sort()) {
+    const month = isoMonth(parseUtcDate(monday));
+    weeksByMonth.set(month, (weeksByMonth.get(month) ?? 0) + 1);
+  }
+  return [...weeksByMonth.entries()]
+    .sort(([a], [b]) => a.localeCompare(b))
+    .map(([periodMonth, weeks]) => ({ periodMonth, weeks }));
+}
+
+function readFrozenContributionWeeks(value: unknown): NisContributionWeeks[] {
+  if (!Array.isArray(value)) {
+    throw Object.assign(
+      new Error(
+        'The frozen payroll input does not contain employee-specific NIS contribution weeks. Reopen and lock inputs again.',
+      ),
+      { status: 409 },
+    );
+  }
+  const periods = value.map((item, index) => {
+    if (typeof item !== 'object' || item === null || Array.isArray(item)) {
+      throw Object.assign(
+        new Error(`Frozen NIS contribution week ${index + 1} is malformed.`),
+        { status: 409 },
+      );
+    }
+    const row = item as Record<string, unknown>;
+    if (
+      typeof row['periodMonth'] !== 'string'
+      || !/^\d{4}-\d{2}-01$/.test(row['periodMonth'])
+      || typeof row['weeks'] !== 'number'
+      || !Number.isInteger(row['weeks'])
+      || row['weeks'] <= 0
+    ) {
+      throw Object.assign(
+        new Error(`Frozen NIS contribution week ${index + 1} is malformed.`),
+        { status: 409 },
+      );
+    }
+    return {
+      periodMonth: row['periodMonth'],
+      weeks: Number(row['weeks']),
+    };
+  });
+  if (new Set(periods.map(period => period.periodMonth)).size !== periods.length) {
+    throw Object.assign(
+      new Error('Frozen NIS contribution periods contain duplicate months.'),
+      { status: 409 },
+    );
+  }
+  return periods;
+}
+
+/**
+ * NIBTT contribution weeks start on Monday. Freeze the contribution-month
+ * allocation into each calculation line so release never has to infer it from
+ * mutable run dates or current statutory configuration.
+ */
+function buildNisContributionPeriods(input: {
+  contributionWeeks: NisContributionWeeks[];
+  weeksInPeriod: number;
+  employeeWeekly: number;
+  employerWeekly: number;
+  employeeTotal: number;
+  employerTotal: number;
+}): NisContributionPeriod[] {
+  const countedWeeks = input.contributionWeeks
+    .reduce((sum, period) => sum + period.weeks, 0);
+  if (!Number.isInteger(input.weeksInPeriod) || input.weeksInPeriod !== countedWeeks) {
+    throw Object.assign(
+      new Error(
+        `Payroll NIS weeks (${input.weeksInPeriod}) do not match the ${countedWeeks} contribution weeks in the run period. Recreate or correct the run before calculating.`,
+      ),
+      { status: 422 },
+    );
+  }
+
+  const round2 = (value: number): number => Math.round(value * 100) / 100;
+  const periods = input.contributionWeeks
+    .map(({ periodMonth, weeks }) => ({
+      periodMonth,
+      weeks,
+      employeeAmount: round2(input.employeeWeekly * weeks),
+      employerAmount: round2(input.employerWeekly * weeks),
+    }));
+
+  if (periods.length === 0) {
+    if (round2(input.employeeTotal) !== 0 || round2(input.employerTotal) !== 0) {
+      throw Object.assign(
+        new Error('NIS contributions cannot be allocated without a worked contribution week.'),
+        { status: 422 },
+      );
+    }
+    return [];
+  }
+
+  const employeeAllocated = periods.reduce((sum, period) => sum + period.employeeAmount, 0);
+  const employerAllocated = periods.reduce((sum, period) => sum + period.employerAmount, 0);
+  const last = periods[periods.length - 1]!;
+  last.employeeAmount = round2(last.employeeAmount + input.employeeTotal - employeeAllocated);
+  last.employerAmount = round2(last.employerAmount + input.employerTotal - employerAllocated);
+  return periods;
+}
+
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
 export interface PayrollRunDto {
   id: string;
   runNo: string;
+  runType: PayrollRunType;
   periodMonth: string;
+  periodStart: string;
+  periodEnd: string;
+  sequenceNo: number;
+  sourceRunId: string | null;
   payFrequency: string;
-  status: string;
+  status: PayrollRunStatus;
   statutoryVersionId: string;
   weeksInPeriod: number;
   payGroup: string | null;
@@ -59,6 +264,8 @@ export interface PayrollRunDto {
   netTotal: number;
   nisEmployerTotal: number;
   workflowId: string | null;
+  currentInputSnapshotId: string | null;
+  currentCalculationVersionId: string | null;
   inputLockedBy: string | null;
   inputLockedAt: string | null;
   createdBy: string | null;
@@ -68,6 +275,8 @@ export interface PayrollRunDto {
   reopenedBy: string | null;
   reopenedAt: string | null;
   reopenReason: string | null;
+  releasedBy: string | null;
+  releasedAt: string | null;
   exportedAt: string | null;
   templateId: string | null;
   createdAt: string;
@@ -132,17 +341,21 @@ export interface PayrollRunWarningDto {
 // ── DB row shapes ─────────────────────────────────────────────────────────────
 
 interface DbRunRow {
-  id: string; run_no: string; period_month: string; pay_frequency: string;
-  status: string; statutory_version_id: string; weeks_in_period: number;
+  id: string; run_no: string; run_type: PayrollRunType; period_month: string;
+  period_start: string; period_end: string; sequence_no: number; source_run_id: string | null;
+  pay_frequency: string; status: PayrollRunStatus; statutory_version_id: string; weeks_in_period: number;
   pay_group: string | null; pay_group_id: string | null; pay_date: string | null; cut_off_date: string | null;
   employee_count: number; gross_total: number; deduction_total: number;
   net_total: number; nis_employer_total: number;
   workflow_id: string | null;
+  current_input_snapshot_id: string | null;
+  current_calculation_version_id: string | null;
   input_locked_by: string | null; input_locked_at: string | null;
   created_by: string | null; approved_by: string | null;
   locked_by: string | null; locked_at: string | null;
   reopened_by: string | null; reopened_at: string | null;
-  reopen_reason: string | null; exported_at: string | null;
+  reopen_reason: string | null; released_by: string | null; released_at: string | null;
+  exported_at: string | null;
   template_id: string | null;
   created_at: string; updated_at: string;
 }
@@ -176,7 +389,9 @@ interface DbWarningRow {
 
 function toRunDto(r: DbRunRow): PayrollRunDto {
   return {
-    id: r.id, runNo: r.run_no, periodMonth: r.period_month,
+    id: r.id, runNo: r.run_no, runType: r.run_type,
+    periodMonth: r.period_month, periodStart: r.period_start, periodEnd: r.period_end,
+    sequenceNo: Number(r.sequence_no), sourceRunId: r.source_run_id,
     payFrequency: r.pay_frequency, status: r.status,
     statutoryVersionId: r.statutory_version_id,
     weeksInPeriod: Number(r.weeks_in_period),
@@ -185,11 +400,14 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     grossTotal: Number(r.gross_total), deductionTotal: Number(r.deduction_total),
     netTotal: Number(r.net_total), nisEmployerTotal: Number(r.nis_employer_total),
     workflowId: r.workflow_id,
+    currentInputSnapshotId: r.current_input_snapshot_id,
+    currentCalculationVersionId: r.current_calculation_version_id,
     inputLockedBy: r.input_locked_by, inputLockedAt: r.input_locked_at,
     createdBy: r.created_by, approvedBy: r.approved_by,
     lockedBy: r.locked_by, lockedAt: r.locked_at,
     reopenedBy: r.reopened_by, reopenedAt: r.reopened_at,
-    reopenReason: r.reopen_reason, exportedAt: r.exported_at,
+    reopenReason: r.reopen_reason, releasedBy: r.released_by, releasedAt: r.released_at,
+    exportedAt: r.exported_at,
     templateId: r.template_id ?? null,
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
@@ -416,13 +634,14 @@ export async function listRunAuditLog(runId: string): Promise<RunAuditLogEntry[]
 // ── Create Run ────────────────────────────────────────────────────────────────
 
 export interface CreateRunInput {
-  /** First day of the pay month (YYYY-MM-DD, e.g. '2026-07-01'). */
-  periodMonth: string;
-  payFrequency?: string;
+  idempotencyKey: string;
+  runType: PayrollRunType;
+  periodStart: string;
+  periodEnd: string;
+  sequenceNo?: number;
+  sourceRunId?: string;
+  payFrequency?: 'weekly' | 'fortnightly' | 'semi_monthly' | 'monthly';
   weeksInPeriod?: number;
-  payGroup?: string;
-  /** When set, the run is scoped to this pay group: frequency comes from the group and
-   *  only the group's members are populated. */
   payGroupId?: string;
   payDate?: string;
   cutOffDate?: string;
@@ -430,72 +649,25 @@ export interface CreateRunInput {
 }
 
 /**
- * Create a new payroll run in 'draft' status.
- * Resolves the active statutory version for TT; rejects if none is active.
- * Unique constraint on period_month prevents duplicate runs for the same month.
+ * Create a run through the atomic command primitive. The RPC owns run-number
+ * allocation, business-key validation, idempotency, the business event and audit.
  */
 export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRunDto> {
-  // Resolve active statutory version
-  const version = await getActiveStatutoryVersion('TT');
-  if (!version) {
-    throw Object.assign(
-      new Error('No active TT statutory version found. Activate a statutory version before creating a payroll run.'),
-      { status: 422 },
-    );
-  }
-
-  const runNo = await nextRef('PAY');
-  // A pay group (if given) is authoritative for frequency; otherwise use the caller's.
-  // Frequency drives NIS/HS weeks-in-period AND PAYE annualisation (payPeriods).
-  let payGroup: { id: string; code: string; frequency: string } | null = null;
-  if (input.payGroupId) {
-    const g = await getPayGroup(input.payGroupId);
-    if (!g) throw Object.assign(new Error('Pay group not found.'), { status: 404 });
-    payGroup = { id: g.id, code: g.code, frequency: g.frequency };
-  }
-  const payFrequency = payGroup?.frequency ?? input.payFrequency ?? 'monthly';
-
-  const { data, error } = await sb.from('finance_payroll_runs').insert({
-    run_no:               runNo,
-    period_month:         input.periodMonth,
-    pay_frequency:        payFrequency,
-    status:               'draft',
-    statutory_version_id: version.id,
-    weeks_in_period:      input.weeksInPeriod ?? weeksInPeriodForFrequency(payFrequency),
-    pay_group:            input.payGroup ?? payGroup?.code ?? null,
-    pay_group_id:         payGroup?.id ?? null,
-    pay_date:             input.payDate ?? null,
-    cut_off_date:         input.cutOffDate ?? null,
-    created_by:           input.actorId,
-  }).select().single<DbRunRow>();
-
-  if (error) {
-    if (error.code === '23505') {
-      throw Object.assign(
-        new Error(`A payroll run for period ${input.periodMonth} already exists.`),
-        { status: 409 },
-      );
-    }
-    throw Object.assign(new Error('createPayrollRun: ' + error.message), { status: 500 });
-  }
-
-  const run = toRunDto(data);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: run.id, actorId: input.actorId,
-    action: 'payroll_run.created',
-    previousState: null,
-    newState: { status: 'draft', periodMonth: run.periodMonth, runNo: run.runNo, statutoryVersionId: run.statutoryVersionId },
+  const row = await createPayrollRunCommand({
+    actorId: input.actorId,
+    idempotencyKey: input.idempotencyKey,
+    runType: input.runType,
+    periodStart: input.periodStart,
+    periodEnd: input.periodEnd,
+    sequenceNo: input.sequenceNo,
+    sourceRunId: input.sourceRunId,
+    payFrequency: input.payFrequency,
+    weeksInPeriod: input.weeksInPeriod,
+    payGroupId: input.payGroupId,
+    payDate: input.payDate,
+    cutOffDate: input.cutOffDate,
   });
-
-  void emitAppEvent({
-    eventType: 'finance.payroll.run.created',
-    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: run.id,
-    actorUserId: input.actorId, severity: 'info',
-    payload: { runNo: run.runNo, periodMonth: run.periodMonth },
-  });
-
-  return run;
+  return toRunDto(row as unknown as DbRunRow);
 }
 
 // ── Lock Inputs ───────────────────────────────────────────────────────────────
@@ -507,21 +679,34 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
  * 3. Snapshot base pay + active-approved pay items + approved OT into run_inputs.
  * 4. Set status='input_locked'.
  *
- * Idempotency: clears any prior inputs before re-snapshotting (only allowed from 'draft').
+ * Idempotency: an already-committed command replays its durable receipt without
+ * recollecting mutable payroll sources.
  */
-export async function lockInputs(runId: string, actorId: string): Promise<PayrollRunDto> {
+export async function lockInputs(
+  runId: string,
+  actorId: string,
+  idempotencyKey: string,
+): Promise<PayrollRunDto> {
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status !== 'draft') {
+  if (!['draft', 'input_locked'].includes(run.status)) {
     throw Object.assign(
-      new Error(`Cannot lock inputs: run is in status '${run.status}'. Only 'draft' runs can have inputs locked.`),
+      new Error(`Cannot lock inputs: run is in status '${run.status}'. Only draft runs or an identical input-lock retry are accepted.`),
       { status: 422 },
     );
   }
+  if (run.status === 'input_locked') {
+    const replayed = await replayInputSnapshot({
+      runId,
+      actorId,
+      idempotencyKey,
+    });
+    return toRunDto(replayed.run as unknown as DbRunRow);
+  }
 
   // Period boundary: first/last day of the period_month
-  const periodStart = run.periodMonth; // already YYYY-MM-01
-  const periodEnd = lastDayOfMonth(run.periodMonth);
+  const periodStart = run.periodStart;
+  const periodEnd = run.periodEnd;
 
   // ── 1. Collect active employees (scoped to the run's pay group, if any) ────
   // A pay-group run populates ONLY that group's members effective in the period;
@@ -534,25 +719,51 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     }
   }
 
-  const EMP_COLS = 'id, pay_basis, monthly_salary, hourly_rate, department_id';
-  type EmpRow = { id: string; pay_basis: string | null; monthly_salary: number | null; hourly_rate: number | null; department_id: string | null };
+  const EMP_COLS =
+    'id, pay_basis, monthly_salary, hourly_rate, department_id, status, start_date, end_date';
+  type EmpRow = {
+    id: string;
+    pay_basis: string | null;
+    monthly_salary: number | null;
+    hourly_rate: number | null;
+    department_id: string | null;
+    status: string;
+    start_date: string | null;
+    end_date: string | null;
+  };
   let empList: EmpRow[];
   if (memberIds) {
     // Grouped run: fetch by member id in chunks (a large IN() list overflows the URL).
     empList = [];
     for (const ids of chunk(memberIds, 300)) {
-      const { data, error } = await sb.from('app_users').select(EMP_COLS).eq('status', 'active').not('pay_basis', 'is', null).in('id', ids);
+      const { data, error } = await sb.from('app_users')
+        .select(EMP_COLS)
+        .in('status', ['active', 'inactive'])
+        .not('pay_basis', 'is', null)
+        .in('id', ids);
       if (error) throw Object.assign(new Error('lockInputs/employees: ' + error.message), { status: 500 });
       empList.push(...((data ?? []) as EmpRow[]));
     }
   } else {
-    // Ungrouped run: all active employees — paginate past the 1000-row cap.
+    // Ungrouped run: all employees active during any part of the period.
     empList = await selectAllRows<EmpRow>(() =>
-      sb.from('app_users').select(EMP_COLS).eq('status', 'active').not('pay_basis', 'is', null).order('id'));
+      sb.from('app_users')
+        .select(EMP_COLS)
+        .in('status', ['active', 'inactive'])
+        .not('pay_basis', 'is', null)
+        .order('id'));
   }
+  empList = empList.filter(emp =>
+    (emp.start_date === null || emp.start_date <= periodEnd)
+    && (emp.end_date === null || emp.end_date >= periodStart)
+    && (emp.status === 'active' || emp.end_date !== null),
+  );
 
   if (empList.length === 0) {
-    throw Object.assign(new Error('No active employees with pay_basis found.'), { status: 422 });
+    throw Object.assign(
+      new Error('No employees with pay data were active during this payroll period.'),
+      { status: 422 },
+    );
   }
   if (empList.length > MAX_RUN_EMPLOYEES) {
     throw Object.assign(new Error(`This run would populate ${empList.length} employees, above the supported single-run ceiling of ${MAX_RUN_EMPLOYEES}. Split it into multiple pay groups.`), { status: 422 });
@@ -623,20 +834,43 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     cur.ids.push(t.id);
     tsByEmp.set(t.employee_id, cur);
   }
+  const attendanceRows: {
+    employee_id: string;
+    work_date: string;
+    worked_minutes: number;
+  }[] = [];
+  for (const ids of chunk(tsRows.map(row => row.id), 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('hr_attendance_records')
+      .select('employee_id, work_date, worked_minutes')
+      .in('timesheet_id', ids)
+      .gt('worked_minutes', 0)
+      .order('work_date');
+    if (error) {
+      throw Object.assign(
+        new Error('lockInputs/attendance-records: ' + error.message),
+        { status: 500 },
+      );
+    }
+    attendanceRows.push(...((data ?? []) as typeof attendanceRows));
+  }
+  const workedDatesByEmp = new Map<string, string[]>();
+  for (const row of attendanceRows) {
+    const dates = workedDatesByEmp.get(row.employee_id) ?? [];
+    dates.push(row.work_date);
+    workedDatesByEmp.set(row.employee_id, dates);
+  }
 
   // ── 3c. Active loan/advance installments due this period (Wave 5) ──────────
   // A deduction pay item is emitted per active loan; the balance is decremented from
-  // the ledger only when the run is LOCKED (recordLoanDeductionsForRun), so re-lock
+  // the ledger only when the run is locked by finance_payroll_lock_run_tx, so re-lock
   // and recalculate never double-deduct.
   const loanInstallments = await loadLoanInstallments(empList.map(e => e.id), periodStart);
 
   // ── 4. Build input rows ───────────────────────────────────────────────────
-  const now = new Date().toISOString();
   const inputRows: Record<string, unknown>[] = [];
 
   // Delete any prior inputs (allows re-lock from draft — shouldn't happen but safe)
-  await sb.from('finance_payroll_run_inputs').delete().eq('run_id', runId);
-
   for (const emp of empList) {
     // Base pay
     //  • salaried: monthly salary prorated to the run's pay frequency (annual ÷ pay periods).
@@ -646,6 +880,22 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     const workedHours   = ts ? round2(ts.minutes / 60) : 0;
     const hasApprovedTs = !!ts;
     const hourlyRate    = emp.hourly_rate ?? 0;
+    const nisContributionWeeks = buildEmployeeContributionWeeks({
+      periodStart,
+      periodEnd,
+      payBasis: emp.pay_basis,
+      employmentStart: emp.start_date,
+      employmentEnd: emp.end_date,
+      workedDates: workedDatesByEmp.get(emp.id) ?? [],
+    });
+    if (!isSalary && workedHours > 0 && nisContributionWeeks.length === 0) {
+      throw Object.assign(
+        new Error(
+          `Approved timesheet evidence for employee ${emp.id} has worked hours but no linked daily attendance records. Rebuild the timesheet before locking payroll inputs.`,
+        ),
+        { status: 409 },
+      );
+    }
     const basePay       = isSalary
       ? round2(((emp.monthly_salary ?? 0) * 12) / payPeriods)
       : round2(hourlyRate * workedHours);
@@ -665,6 +915,9 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
         pay_periods:            payPeriods,
         has_approved_timesheet: hasApprovedTs,
         timesheet_ids:          ts?.ids ?? [],
+        employment_start:       emp.start_date,
+        employment_end:         emp.end_date,
+        nis_contribution_weeks: nisContributionWeeks,
         ...(isSalary
           ? { monthly_salary: emp.monthly_salary ?? 0 }
           : { hourly_rate: hourlyRate, worked_hours: workedHours }),
@@ -745,7 +998,7 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
     }
 
     // Active-loan installments — a post-tax deduction per active loan (reduces net, NOT
-    // chargeable income). The ledger is written at lock time (recordLoanDeductionsForRun).
+    // chargeable income). The ledger is written atomically by the lock command.
     for (const inst of loanInstallments.get(emp.id) ?? []) {
       inputRows.push({
         run_id:         runId,
@@ -763,38 +1016,33 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
   }
 
   // Batch insert inputs (chunked — a large run's inputs exceed one payload)
-  if (inputRows.length > 0) await chunkedInsert('finance_payroll_run_inputs', inputRows);
+  const loanInstallmentCount = [...loanInstallments.values()]
+    .reduce((total, rows) => total + rows.length, 0);
+  const includedPayItemCount = inputRows
+    .filter(row => row['source_type'] === 'pay_item').length - loanInstallmentCount;
+  const includedOvertimeCount = inputRows
+    .filter(row => row['source_type'] === 'overtime').length;
+  const published = await publishInputSnapshot({
+    runId,
+    actorId,
+    idempotencyKey,
+    inputs: inputRows,
+    employeeCount: empList.length,
+    sourceSummary: {
+      periodStart,
+      periodEnd,
+      payGroupId: run.payGroupId,
+      employeeCount: empList.length,
+      payItemCount: includedPayItemCount,
+      overtimeEntryCount: includedOvertimeCount,
+      approvedTimesheetCount: tsRows.length,
+      attendanceRecordCount: attendanceRows.length,
+      loanInstallmentCount,
+    },
+  });
 
   // ── 5. Update run status ──────────────────────────────────────────────────
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({
-      status:          'input_locked',
-      employee_count:  empList.length,
-      input_locked_by: actorId,
-      input_locked_at: now,
-    })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('lockInputs/update: ' + updErr.message), { status: 500 });
-
-  const updatedRun = toRunDto(updated);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.inputs_locked',
-    previousState: { status: 'draft' },
-    newState: { status: 'input_locked', employeeCount: empList.length, inputCount: inputRows.length },
-  });
-
-  void emitAppEvent({
-    eventType: 'finance.payroll.run.inputs_locked',
-    sourceModule: 'finance_payroll', sourceEntityType: 'payroll_run', sourceEntityId: runId,
-    actorUserId: actorId, severity: 'info',
-    payload: { runNo: updatedRun.runNo, employeeCount: empList.length },
-  });
-
-  return updatedRun;
+  return toRunDto(published.run as unknown as DbRunRow);
 }
 
 // ── Calculate ─────────────────────────────────────────────────────────────────
@@ -806,15 +1054,21 @@ export async function lockInputs(runId: string, actorId: string): Promise<Payrol
  *   2. computeRunLine() → write finance_payroll_run_lines (incl. NIS snapshot)
  * 3. Roll up run totals → set status='calculated'
  */
-export async function calculateRun(runId: string, actorId: string): Promise<PayrollRunDto> {
+export async function calculateRun(
+  runId: string,
+  actorId: string,
+  idempotencyKey: string,
+): Promise<PayrollRunDto> {
   const run = await getPayrollRun(runId);
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
   // Allow recalculation of an already-'calculated' run too, so worksheet overrides can be
   // applied and recomputed before submission. 'returned' (rejected/returned by the approval
   // workflow) is likewise revisable — the preparer corrects and re-calculates.
-  if (!['input_locked', 'calculated', 'returned'].includes(run.status)) {
+  if (!['input_locked', 'calculation_failed', 'calculated', 'returned'].includes(run.status)) {
     throw Object.assign(
-      new Error(`Cannot calculate: run is in status '${run.status}'. Only 'input_locked', 'calculated' or 'returned' runs can be calculated.`),
+      new Error(
+        `Cannot calculate: run is in status '${run.status}'. Only input-locked, failed, calculated or returned runs can be calculated.`,
+      ),
       { status: 422 },
     );
   }
@@ -825,6 +1079,35 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
   // an existing run's figures or split its rate sources (PAYE/HS from one version, NIS
   // classes from another). listNisClasses(run.statutoryVersionId) already uses the
   // snapshot; this aligns the PAYE/HS rate block to the same version.
+  const calculation = await startCalculationAttempt({
+    runId,
+    actorId,
+    idempotencyKey,
+  });
+  const attempt = calculation.attempt;
+  if (calculation.duplicate) {
+    if (attempt.status === 'succeeded') {
+      const current = await getPayrollRun(runId);
+      if (!current) {
+        throw Object.assign(new Error('Calculated run could not be reloaded.'), { status: 503 });
+      }
+      return current;
+    }
+    if (attempt.status === 'failed') {
+      throw Object.assign(
+        new Error(
+          `${attempt.error_message ?? 'The prior calculation attempt failed.'} Correlation ID: ${attempt.correlation_id}. Use a new idempotency key after correcting the cause.`,
+        ),
+        { status: 422, code: attempt.error_code, correlationId: attempt.correlation_id },
+      );
+    }
+    throw Object.assign(
+      new Error(`A calculation is already running. Correlation ID: ${attempt.correlation_id}.`),
+      { status: 409, correlationId: attempt.correlation_id },
+    );
+  }
+
+  try {
   const version = await getStatutoryVersion(run.statutoryVersionId);
   if (!version) {
     throw Object.assign(
@@ -921,7 +1204,16 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     // ── Timesheet warnings (base pay depends on approved worked hours) ────────
     // Derived from the base_pay input metadata snapshotted at lock-inputs time.
     const baseInput = empInputs.find(i => i.sourceType === 'base_pay');
-    const baseMeta = (baseInput?.metadata ?? {}) as { pay_basis?: string; has_approved_timesheet?: boolean };
+    const baseMeta = (baseInput?.metadata ?? {}) as {
+      pay_basis?: string;
+      has_approved_timesheet?: boolean;
+      nis_contribution_weeks?: unknown;
+    };
+    const employeeContributionWeeks = readFrozenContributionWeeks(
+      baseMeta.nis_contribution_weeks,
+    );
+    const employeeWeeksInPeriod = employeeContributionWeeks
+      .reduce((sum, period) => sum + period.weeks, 0);
     if (baseMeta.pay_basis === 'hourly' && !baseMeta.has_approved_timesheet) {
       warningRows.push({
         run_id:       runId,
@@ -990,7 +1282,7 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
       voluntaryDeductions,
       nisApplicable,
       nisClasses,
-      weeksInPeriod: run.weeksInPeriod,
+      weeksInPeriod: employeeWeeksInPeriod,
       payPeriods: payPeriodsForFrequency(run.payFrequency),
       statutory: {
         payePersonalAllowance: version.payePersonalAllowance,
@@ -1005,13 +1297,16 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
 
     // Warn if NIS class not found despite being applicable
     if (nisApplicable && result.nisClassNo === null && result.gross > 0) {
+      const weeklyInsurable = employeeWeeksInPeriod > 0
+        ? result.taxableGross / employeeWeeksInPeriod
+        : 0;
       warningRows.push({
         run_id:       runId,
         employee_id:  empId,
         warning_type: 'nis_class_not_found',
         severity:     'warning',
-        message:      `No NIS class found for employee ${empId} (weekly insurable = ${(result.taxableGross / run.weeksInPeriod).toFixed(2)}).`,
-        metadata:     { weeklyInsurable: result.taxableGross / run.weeksInPeriod },
+        message:      `No NIS class found for employee ${empId} (weekly insurable = ${weeklyInsurable.toFixed(2)}).`,
+        metadata:     { weeklyInsurable },
       });
     }
 
@@ -1019,6 +1314,14 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     const nisNumberMasked = profile?.nisNumber
       ? maskNisNumber(profile.nisNumber)
       : null;
+    const nisContributionPeriods = buildNisContributionPeriods({
+      contributionWeeks: employeeContributionWeeks,
+      weeksInPeriod: employeeWeeksInPeriod,
+      employeeWeekly: result.nisEmployeeWeekly,
+      employerWeekly: result.nisEmployerWeekly,
+      employeeTotal: result.nisEmployee,
+      employerTotal: result.nisEmployer,
+    });
 
     lineRows.push({
       run_id:                  runId,
@@ -1037,7 +1340,10 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
         basePay, taxableAllowances, nonTaxableAllowances,
         approvedOtAmount, preTaxPensionDeductions,
         nisClassNo:     result.nisClassNo,
-        weeksInPeriod:  run.weeksInPeriod,
+        weeksInPeriod:  employeeWeeksInPeriod,
+        nisEmployeeWeekly: result.nisEmployeeWeekly,
+        nisEmployerWeekly: result.nisEmployerWeekly,
+        nisContributionPeriods,
         statutoryVersionId: run.statutoryVersionId,
       },
       department_id:           null, // resolved from app_users in a later phase
@@ -1083,38 +1389,70 @@ export async function calculateRun(runId: string, actorId: string): Promise<Payr
     },
   } as const;
 
-  const { data: commitEventId, error: commitErr } = await sb.rpc('finance_calculate_run_commit', {
-    p_run_id:   runId,
-    p_lines:    lineRows,
-    p_warnings: warningRows,
-    p_totals:   calcTotals,
-    p_event:    buildEventRow(calcEventInput),
-    p_audit:    buildHrAuditRow({
-      submoduleKey: 'finance_payroll', recordId: runId, actorId,
-      action: 'payroll_run.calculated',
-      previousState: { status: 'input_locked' },
-      newState: {
-        status: 'calculated',
-        employeeCount: empIds.length,
-        grossTotal:    calcTotals.grossTotal,
-        netTotal:      calcTotals.netTotal,
-        warningCount:  warningRows.length,
-      },
-    }),
+  const published = await publishCalculationVersion({
+    attemptId: attempt.id,
+    actorId,
+    lines: lineRows,
+    warnings: warningRows,
+    totals: calcTotals,
   });
-  if (commitErr) throw Object.assign(new Error('calculateRun/commit: ' + commitErr.message), { status: 500 });
-
-  // Re-read the committed run for the DTO.
-  const { data: updated, error: reErr } = await sb.from('finance_payroll_runs')
-    .select().eq('id', runId).single<DbRunRow>();
-  if (reErr) throw Object.assign(new Error('calculateRun/reread: ' + reErr.message), { status: 500 });
-
-  const updatedRun = toRunDto(updated);
+  const updatedRun = toRunDto(published.run as unknown as DbRunRow);
 
   // Best-effort notification delivery AFTER the commit (event is in the DB).
-  void deliverEventNotifications(calcEventInput, (commitEventId as string | null) ?? null);
+  void deliverEventNotifications(calcEventInput, published.eventId);
 
   return updatedRun;
+  } catch (error) {
+    const failure = calculationFailure(error);
+    try {
+      await failCalculationAttempt({
+        attemptId: attempt.id,
+        actorId,
+        errorCode: failure.errorCode,
+        errorMessage: failure.errorMessage,
+        technicalDetail: failure.technicalDetail,
+      });
+    } catch (recordError) {
+      let persistedAttempt: Awaited<ReturnType<typeof getCalculationAttempt>> = null;
+      try {
+        persistedAttempt = await getCalculationAttempt(attempt.id);
+      } catch (checkError) {
+        console.error('[payroll] failed to verify calculation attempt after record failure', {
+          attemptId: attempt.id,
+          correlationId: attempt.correlation_id,
+          error: (checkError as Error).message,
+        });
+      }
+      if (persistedAttempt?.status === 'succeeded') {
+        const committedRun = await getPayrollRun(runId);
+        if (committedRun) return committedRun;
+      }
+      if (persistedAttempt?.status === 'failed') {
+        throw Object.assign(
+          new Error(`${persistedAttempt.errorMessage ?? failure.errorMessage} Correlation ID: ${attempt.correlation_id}.`),
+          {
+            status: failure.status,
+            code: persistedAttempt.errorCode ?? failure.errorCode,
+            correlationId: attempt.correlation_id,
+          },
+        );
+      }
+      throw Object.assign(
+        new Error(
+          `Payroll calculation failed and its failure state could not be recorded: ${(recordError as Error).message}`,
+        ),
+        { status: 500, cause: error, correlationId: attempt.correlation_id },
+      );
+    }
+    throw Object.assign(
+      new Error(`${failure.errorMessage} Correlation ID: ${attempt.correlation_id}.`),
+      {
+        status: failure.status,
+        code: failure.errorCode,
+        correlationId: attempt.correlation_id,
+      },
+    );
+  }
 }
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -1125,84 +1463,7 @@ function maskNisNumber(nisNumber: string): string {
   return '***-' + nisNumber.slice(-4);
 }
 
-/** Return the last day of the month containing the given YYYY-MM-DD date. */
-function lastDayOfMonth(dateStr: string): string {
-  const d = new Date(dateStr + 'T00:00:00Z');
-  const lastDay = new Date(Date.UTC(d.getUTCFullYear(), d.getUTCMonth() + 1, 0));
-  return lastDay.toISOString().slice(0, 10);
-}
-
 // ── Resolve Warning ───────────────────────────────────────────────────────────
-
-export interface ResolveWarningResult {
-  id: string;
-  resolved: boolean;
-  resolvedBy: string;
-  resolvedAt: string;
-}
-
-/**
- * Resolve a payroll run warning.
- * Guards: warning must not already be resolved.
- * Side effects: emitFinanceMutationBackbone → app_event + hr_audit_log + notification to run owner.
- */
-export async function resolveRunWarning(
-  warningId: string,
-  actorId:   string,
-  note?:     string,
-): Promise<ResolveWarningResult> {
-  const { data: warn, error: wErr } = await sb
-    .from('finance_payroll_run_warnings')
-    .select('id, run_id, employee_id, warning_type, severity, message, resolved')
-    .eq('id', warningId)
-    .maybeSingle<{
-      id: string; run_id: string; employee_id: string | null;
-      warning_type: string; severity: string; message: string; resolved: boolean;
-    }>();
-  if (wErr) throw Object.assign(new Error('resolveRunWarning/get: ' + wErr.message), { status: 500 });
-  if (!warn) throw Object.assign(new Error('Warning not found.'), { status: 404 });
-  if (warn.resolved) throw Object.assign(new Error('Warning is already resolved.'), { status: 409 });
-
-  const now = new Date().toISOString();
-  const meta: Record<string, unknown> = {};
-  if (note?.trim()) meta['resolution_note'] = note.trim();
-
-  const { error: updErr } = await sb
-    .from('finance_payroll_run_warnings')
-    .update({ resolved: true, resolved_by: actorId, resolved_at: now, metadata: meta })
-    .eq('id', warningId);
-  if (updErr) throw Object.assign(new Error('resolveRunWarning/update: ' + updErr.message), { status: 500 });
-
-  // Backbone — throws on hr_audit_log failure (compensating: re-unresolve warning)
-  try {
-    const { emitFinanceMutationBackbone } = await import('./backbone.js');
-    await emitFinanceMutationBackbone({
-      actorUserId: actorId,
-      module:      'finance_payroll',
-      entityType:  'payroll_run_warning',
-      entityId:    warningId,
-      eventType:   'finance.payroll.warning.resolved',
-      auditAction: 'payroll_run_warning.resolved',
-      previousState: { resolved: false, severity: warn.severity, warningType: warn.warning_type },
-      newState:    { resolved: true, resolvedBy: actorId, note: note?.trim() ?? null },
-      severity:    'info',
-      metadata:    { runId: warn.run_id, warningType: warn.warning_type, note: note?.trim() ?? null },
-      notification: {
-        title: `Warning resolved: ${warn.warning_type.replace(/_/g, ' ')}`,
-        body:  warn.message,
-        actionRoute: 's-finance-payroll',
-      },
-    });
-  } catch (bbErr) {
-    // Compensating rollback: undo the resolved flag
-    await sb.from('finance_payroll_run_warnings')
-      .update({ resolved: false, resolved_by: null, resolved_at: null, metadata: {} })
-      .eq('id', warningId);
-    throw bbErr;
-  }
-
-  return { id: warningId, resolved: true, resolvedBy: actorId, resolvedAt: now };
-}
 
 // ── Employee Population Preview (wizard step) ─────────────────────────────────
 
@@ -1288,89 +1549,57 @@ export interface ExportDownloadResult {
   exportNo:  string;
   runId:     string;
   format:    string;
+  checksum:  string;
+  contentSizeBytes: number;
   content:   string;
   mimeType:  string;
   filename:  string;
+  duplicate: boolean;
 }
 
 /**
- * Regenerate and return the export content for download.
- * The export file_path is a logical path (not a storage bucket URL), so we
- * rebuild the CSV/JSON content from the current run lines.
- * Side-effects: emits finance.payroll.export.downloaded + hr_audit_log.
+ * Return the immutable export artifact and atomically record its download.
  */
 export async function downloadRunExport(
   exportId: string,
   actorId:  string,
+  idempotencyKey: string,
 ): Promise<ExportDownloadResult> {
-  interface DbExRow {
-    id: string; export_no: string; run_id: string;
-    format: string; file_path: string; generated_by: string | null;
-    generated_at: string; metadata: Record<string, unknown>;
-  }
+  const { data, error } = await sb.rpc('finance_payroll_download_export_tx', {
+    p_export_id: exportId,
+    p_actor_id: actorId,
+    p_idempotency_key: idempotencyKey,
+  });
+  if (error) throw payrollRpcHttpError(error);
 
-  const { data: exp, error: eErr } = await sb
-    .from('finance_payroll_exports')
-    .select('id, export_no, run_id, format, file_path, generated_by, generated_at, metadata')
-    .eq('id', exportId)
-    .maybeSingle<DbExRow>();
-  if (eErr) throw Object.assign(new Error('downloadExport/get: ' + eErr.message), { status: 500 });
-  if (!exp) throw Object.assign(new Error('Export not found.'), { status: 404 });
-
-  // Rebuild content from current run lines
-  const lines = await listRunLines(exp.run_id);
-
-  let content: string;
-  let mimeType: string;
-
-  if (exp.format === 'json') {
-    content  = JSON.stringify({
-      runId: exp.run_id, exportNo: exp.export_no,
-      exportedAt: exp.generated_at,
-      lines: lines.map(l => ({
-        employeeId: l.employeeId, gross: l.gross, nisEmployee: l.nisEmployee,
-        nisEmployer: l.nisEmployer, healthSurcharge: l.healthSurcharge,
-        paye: l.paye, voluntaryDeductions: l.voluntaryDeductions, net: l.net,
-        nisNumberMasked: l.nisNumberMasked, nisStatus: l.nisStatus, nisClassNo: l.nisClassNo,
-      })),
-    }, null, 2);
-    mimeType = 'application/json';
-  } else {
-    const headers = [
-      'employee_id','base','taxable_gross','gross','nis_employee','nis_employer',
-      'health_surcharge','chargeable_income','paye','voluntary_deductions','net',
-      'nis_number_masked','nis_status','nis_class_no',
-    ].join(',');
-    const rows = lines.map(l =>
-      [l.employeeId,l.base,l.taxableGross,l.gross,l.nisEmployee,l.nisEmployer,
-       l.healthSurcharge,l.chargeableIncome,l.paye,l.voluntaryDeductions,l.net,
-       l.nisNumberMasked??'',l.nisStatus??'',l.nisClassNo??''].join(','),
+  const result = (data ?? {}) as Partial<ExportDownloadResult>;
+  if (
+    !result.exportId ||
+    !result.exportNo ||
+    !result.runId ||
+    !result.format ||
+    !result.checksum ||
+    typeof result.contentSizeBytes !== 'number' ||
+    typeof result.content !== 'string' ||
+    !result.mimeType ||
+    !result.filename ||
+    typeof result.duplicate !== 'boolean'
+  ) {
+    throw Object.assign(
+      new Error('Payroll export download committed but returned an invalid result.'),
+      { status: 500 },
     );
-    content  = [headers, ...rows].join('\n');
-    mimeType = 'text/csv';
   }
-
-  const filename = exp.file_path.split('/').pop() ?? `${exp.export_no}.${exp.format}`;
-
-  // Audit download
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: exp.run_id, actorId,
-    action:       'payroll_export.downloaded',
-    previousState: null,
-    newState:     { exportId, exportNo: exp.export_no, format: exp.format },
-  });
-
-  void emitAppEvent({
-    eventType:        'finance.payroll.export.downloaded',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_export',
-    sourceEntityId:   exportId,
-    actorUserId:      actorId,
-    severity:         'info',
-    payload:          { exportNo: exp.export_no, format: exp.format, runId: exp.run_id },
-  });
-
-  return { exportId, exportNo: exp.export_no, runId: exp.run_id, format: exp.format, content, mimeType, filename };
+  if (
+    Buffer.byteLength(result.content, 'utf8') !== result.contentSizeBytes ||
+    payrollExportChecksum(result.content) !== result.checksum
+  ) {
+    throw Object.assign(
+      new Error('Export integrity verification failed. The stored artifact is corrupt.'),
+      { status: 409 },
+    );
+  }
+  return result as ExportDownloadResult;
 }
 
 // ── Submit Run ────────────────────────────────────────────────────────────────
@@ -1418,7 +1647,12 @@ export async function submitRun(runId: string, actorId: string, idempotencyKey: 
     p_request_key:  requestKey,
     p_business:     { runNo: run.runNo, periodMonth: run.periodMonth, sourceType: 'payroll_run', submittedBy: actorId },
   });
-  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  if (error) {
+    const rpcError = error as { code?: string | null; message: string };
+    throw rpcError.code?.startsWith('PR')
+      ? payrollRpcHttpError(rpcError)
+      : rpcHttpError(rpcError);
+  }
 
   const result = (data ?? {}) as { workflowId?: string | null; workflowNo?: string | null };
 
@@ -1570,75 +1804,42 @@ export async function emitRunApprovedSideEffects(run: PayrollRunDto, actorId: st
  * Transitions: approved → locked.
  * Requires finance.payroll.lock permission (gated in route).
  */
-export async function lockRun(runId: string, actorId: string): Promise<PayrollRunDto> {
-  const run = await getPayrollRun(runId);
-  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status !== 'approved') {
-    throw Object.assign(
-      new Error(`Cannot lock: run is in status '${run.status}'. Only 'approved' runs can be locked.`),
-      { status: 422 },
-    );
+export async function lockRun(
+  runId: string,
+  actorId: string,
+  idempotencyKey: string,
+): Promise<PayrollRunDto> {
+  const { data, error } = await sb.rpc('finance_payroll_lock_run_tx', {
+    p_run_id: runId,
+    p_actor_id: actorId,
+    p_idempotency_key: idempotencyKey,
+  });
+  if (error) throw payrollRpcHttpError(error);
+
+  const result = data as {
+    run: DbRunRow;
+    eventId: string;
+    loanDeductionCount: number;
+    duplicate: boolean;
+  };
+  const updatedRun = toRunDto(result.run);
+
+  // Notification delivery remains post-commit across the event engine. The
+  // calculation version scopes dedupe so a legitimate reopen/recalculate/relock
+  // cycle sends a fresh notification without duplicating a command retry.
+  if (!result.duplicate) {
+    void notifyUsersByRole('finance_manager', {
+      type:           'finance.payroll.run.locked',
+      title:          `Payroll run ${updatedRun.runNo} locked`,
+      body:           `Period ${updatedRun.periodMonth.slice(0, 7)} payroll run is now locked. Generate payslips from the run drawer.`,
+      module:         'finance_payroll',
+      severity:       'success',
+      sourceType:     'payroll_run',
+      sourceId:       runId,
+      actionRequired: true,
+      dedupeKey:      `payroll_run.locked.${runId}.${updatedRun.currentCalculationVersionId ?? 'none'}`,
+    });
   }
-
-  const now = new Date().toISOString();
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({ status: 'locked', locked_by: actorId, locked_at: now })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('lockRun/update: ' + updErr.message), { status: 500 });
-
-  const updatedRun = toRunDto(updated);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.locked',
-    previousState: { status: 'approved' },
-    newState: { status: 'locked', lockedAt: now },
-  });
-
-  void emitAppEvent({
-    eventType:        'finance.payroll.run.locked',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    actorUserId:      actorId,
-    severity:         'success',
-    payload:          { runNo: updatedRun.runNo, lockedAt: now },
-  });
-
-  // Wave 5 — the run is now final: record loan installment deductions into the ledger
-  // and decrement loan balances (idempotent per loan+run; reversed if the run is reopened).
-  await recordLoanDeductionsForRun(runId, actorId);
-
-  // §8.1 — notify Finance Managers that the run is locked and payslips can be generated
-  void notifyUsersByRole('finance_manager', {
-    type:           'finance.payroll.run.locked',
-    title:          `Payroll run ${updatedRun.runNo} locked`,
-    body:           `Period ${updatedRun.periodMonth.slice(0, 7)} payroll run is now locked. Generate payslips from the run drawer.`,
-    module:         'finance_payroll',
-    severity:       'success',
-    sourceType:     'payroll_run',
-    sourceId:       runId,
-    actionRequired: true,
-    dedupeKey:      `payroll_run.locked.${runId}`,
-  });
-
-  // §8.1 — handoff to payslip generation
-  void createHandoff({
-    sourceModule:     'finance_payroll',
-    targetModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    targetEntityType: 'payslip_generation',
-    payload: {
-      runNo:          updatedRun.runNo,
-      periodMonth:    updatedRun.periodMonth,
-      employeeCount:  updatedRun.employeeCount,
-      lockedAt:       now,
-    },
-    createdBy: actorId,
-  });
 
   return updatedRun;
 }
@@ -1654,76 +1855,23 @@ export async function reopenRun(
   runId: string,
   actorId: string,
   reason: string,
+  idempotencyKey: string,
 ): Promise<PayrollRunDto> {
-  const run = await getPayrollRun(runId);
-  if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
-  if (run.status === 'exported') {
-    throw Object.assign(
-      new Error('Cannot reopen an exported run. Create a new run for the next period.'),
-      { status: 422 },
-    );
-  }
-  if (run.status !== 'locked') {
-    throw Object.assign(
-      new Error(`Cannot reopen: run is in status '${run.status}'. Only 'locked' runs can be reopened.`),
-      { status: 422 },
-    );
-  }
-  if (!reason || reason.trim() === '') {
-    throw Object.assign(new Error('A reason is required to reopen a locked payroll run.'), { status: 422 });
-  }
-
-  const now = new Date().toISOString();
-
-  // Clear lines + inputs so the run must be fully re-locked and re-calculated
-  await sb.from('finance_payroll_run_lines').delete().eq('run_id', runId);
-  await sb.from('finance_payroll_run_inputs').delete().eq('run_id', runId);
-  await sb.from('finance_payroll_run_warnings').delete().eq('run_id', runId);
-
-  // Wave 5 — reverse this run's loan deductions (restore balances) so the re-lock
-  // that follows records them afresh and the loan isn't double-decremented.
-  await reverseLoanDeductionsForRun(runId);
-
-  const { data: updated, error: updErr } = await sb.from('finance_payroll_runs')
-    .update({
-      status:         'draft',
-      workflow_id:    null,
-      reopened_by:    actorId,
-      reopened_at:    now,
-      reopen_reason:  reason.trim(),
-      // Reset totals since lines are cleared
-      gross_total:         0,
-      deduction_total:     0,
-      net_total:           0,
-      nis_employer_total:  0,
-      employee_count:      0,
-    })
-    .eq('id', runId)
-    .select()
-    .single<DbRunRow>();
-  if (updErr) throw Object.assign(new Error('reopenRun/update: ' + updErr.message), { status: 500 });
-
-  const updatedRun = toRunDto(updated);
-
-  await writeHrAudit({
-    submoduleKey: 'finance_payroll', recordId: runId, actorId,
-    action: 'payroll_run.reopened',
-    previousState: { status: 'locked' },
-    newState: { status: 'draft', reopenReason: reason.trim() },
-    reason: reason.trim(),
+  const { data, error } = await sb.rpc('finance_payroll_reopen_run_tx', {
+    p_run_id: runId,
+    p_actor_id: actorId,
+    p_reason: reason,
+    p_idempotency_key: idempotencyKey,
   });
+  if (error) throw payrollRpcHttpError(error);
 
-  void emitAppEvent({
-    eventType:        'finance.payroll.run.reopened',
-    sourceModule:     'finance_payroll',
-    sourceEntityType: 'payroll_run',
-    sourceEntityId:   runId,
-    actorUserId:      actorId,
-    severity:         'warning',
-    payload:          { runNo: updatedRun.runNo, reason: reason.trim() },
-  });
-
-  return updatedRun;
+  const result = data as {
+    run: DbRunRow;
+    eventId: string;
+    reversedLoanCount: number;
+    duplicate: boolean;
+  };
+  return toRunDto(result.run);
 }
 
 // ── Reject Run — DELETED ──────────────────────────────────────────────────────

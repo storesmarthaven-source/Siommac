@@ -6,8 +6,8 @@
  */
 export const title = 'Payroll — Statutory Forms (employer profile + TD4)';
 
-// Distinct tax year per suite run (finance_payroll_runs.period_month is unique
-// table-wide) — hash TAG into a high, unlikely-to-collide year. Kept within the
+// Distinct tax year per suite run keeps its scheduled-run identity isolated.
+// Hash TAG into a high, unlikely-to-collide year. Kept within the
 // route's tax-year ceiling (<= 2100) so the run isn't rejected on validation;
 // 2040-2099 is still far past any real run so period_month never collides.
 function taxYearFromTag(tag) {
@@ -15,6 +15,8 @@ function taxYearFromTag(tag) {
   for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
   return 2040 + (n % 60);
 }
+
+import { payrollRunSeed } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
@@ -77,10 +79,10 @@ export default async function run(h) {
     }).select('id').single();
     expect(!vErr, `seed version failed: ${vErr?.message}`);
     ctx.versionId = ver.id;
-    const { data: rn, error: rErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-SF-${TAG.slice(-6)}`, period_month: `${YEAR}-06-15`,
+    const { data: rn, error: rErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-SF-${TAG.slice(-6)}`, periodStart: `${YEAR}-06-15`,
       statutory_version_id: ctx.versionId, status: 'locked', employee_count: 2,
-    }).select('id').single();
+    })).select('id').single();
     expect(!rErr, `seed run failed: ${rErr?.message}`);
     ctx.runId = rn.id;
     const { error: lErr } = await sb.from('finance_payroll_run_lines').insert([
