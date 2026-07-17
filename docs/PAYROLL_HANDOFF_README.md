@@ -100,9 +100,11 @@ from the 420–425 source (drop and re-create) rather than applying on top of dr
 ### Path A — EXISTING database (the live dev DB)
 
 1. **Prerequisite check** (schema preflight, do not skip):
-   - `finance_loan_deductions` exists with `unique(loan_id, run_id)` (from `20260918000090`;
-     if the loans tables are missing entirely, apply 090 once — note 090 is NOT generally
-     rerunnable: its trigger is created without a preceding drop).
+   - `finance_loan_deductions` exists with `unique(loan_id, run_id)` (from `20260918000090`).
+     If the loans tables already exist, SKIP 090. (090's `updated_at` trigger was previously
+     created without a preceding drop, so re-applying it raised
+     `trigger … already exists`; it now has `drop trigger if exists` and is safe to re-run,
+     but on an existing DB it is still a no-op you can skip.)
    - `finance_loan_deductions.entry_type` exists (from `20260918000130` — previously flagged
      unapplied; the reopen RPC in 423 reads it; apply 130 if missing, it is idempotent).
    - `finance_remittances.period_year` / `period_month` exist (original `20260805000000` — live
