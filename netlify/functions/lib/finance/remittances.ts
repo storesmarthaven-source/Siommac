@@ -200,10 +200,13 @@ export async function computeRemittanceFromRun(
   if (runErr) throw Object.assign(new Error('computeRemittanceFromRun: ' + runErr.message), { status: 500 });
   if (!run) throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
 
-  const APPROVED_STATUSES = ['approved', 'locked', 'exported'];
+  // 'released' is the execution model's terminal state (release itself creates the
+  // period-stamped remittances); the bridge then reuses those via the (run,
+  // authority) uniqueness. 'exported' is kept for legacy runs.
+  const APPROVED_STATUSES = ['approved', 'locked', 'exported', 'released'];
   if (!APPROVED_STATUSES.includes(run.status)) {
     throw Object.assign(
-      new Error(`Payroll run must be approved or locked to compute a remittance (current status: ${run.status}).`),
+      new Error(`Payroll run must be approved, locked or released to compute a remittance (current status: ${run.status}).`),
       { status: 422 },
     );
   }
@@ -358,6 +361,27 @@ export interface CreateRemittanceInput {
   actorId: string;
 }
 
+/**
+ * Statutory due date when the caller doesn't supply one — mirrors the payroll
+ * release RPC: NIS/NIBTT is due at the end of the contribution month; PAYE and
+ * Health Surcharge on the 15th of the following month. `finance_remittances.due_date`
+ * is NOT NULL, so a remittance must always carry one.
+ */
+function deriveRemittanceDueDate(
+  authority: RemittanceAuthority,
+  periodYear: number,
+  periodMonth: number,
+): string {
+  if (authority === 'nis_nibtt') {
+    // Day 0 of the next month resolves to the last day of the period month.
+    return new Date(Date.UTC(periodYear, periodMonth, 0)).toISOString().slice(0, 10);
+  }
+  let y = periodYear;
+  let m = periodMonth + 1;
+  if (m > 12) { m = 1; y += 1; }
+  return `${y}-${String(m).padStart(2, '0')}-15`;
+}
+
 export async function createRemittance(
   input: CreateRemittanceInput,
 ): Promise<RemittanceDto> {
@@ -375,7 +399,8 @@ export async function createRemittance(
     total_due:        computed.totalDue,
     currency:         'TTD',
     status:           'draft' as const,
-    due_date:         input.dueDate ?? null,
+    due_date:         input.dueDate
+      ?? deriveRemittanceDueDate(input.authority, computed.periodYear, computed.periodMonth),
     metadata:         input.metadata ?? {},
     created_by:       input.actorId,
   };

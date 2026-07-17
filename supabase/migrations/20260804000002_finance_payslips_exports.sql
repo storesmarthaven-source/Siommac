@@ -28,12 +28,12 @@ grant select, insert, update, delete on public.finance_payslips to service_role;
 
 -- ── finance_payroll_exports (§8.5) ───────────────────────────────────────────
 -- One artifact per export action; re-export creates a new version (old is_current→false).
--- Only locked runs may be exported. Audited; does NOT disburse.
+-- Only released runs may be exported. Audited; does NOT disburse.
 create table if not exists public.finance_payroll_exports (
   id             uuid primary key default gen_random_uuid(),
   export_no      text unique not null,
   run_id         uuid not null references public.finance_payroll_runs(id) on delete cascade,
-  format         text not null check (format in ('csv','xlsx','pdf','json')),
+  format         text not null check (format in ('csv','json')),
   file_path      text not null,
   checksum       text,
   generated_by   text references public.app_users(id) on delete set null,

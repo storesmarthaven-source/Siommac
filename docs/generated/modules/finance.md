@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `885e41d53f311a4385029dcb`
+Source fingerprint: `eb15d38f16dd7fcc2d9f9559`
 
-Files: 122 | Symbols: 1713 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 174 | E2E suites: 9
+Files: 122 | Symbols: 1714 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 176 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -93,7 +93,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/disbursements/bank-file/signed-url` | `finance.disbursement.bank_file.download` | requirePermission | `z.object({ disbursementId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:312` | - | financeDisbursements |
 | `/api/finance/disbursements/bank-files/list` | `finance.disbursement.view` | requirePermission | `z.object({ disbursementId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:242` | - | financeDisbursements |
 | `/api/finance/disbursements/bank-files/signed-url` | `finance.disbursement.bank_file.download` | requirePermission | `z.object({ bankFileId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:257` | - | financeDisbursements |
-| `/api/finance/disbursements/cancel` | `finance.disbursement.manage` | requirePermission | `z.object({     id: z.string().uuid(),     reason: z.string().trim().min(1).max(500),   })` | `netlify/functions/routes/financeDisbursements.ts:283` | - | financeDisbursements |
+| `/api/finance/disbursements/cancel` | `finance.disbursement.manage` | requirePermission | `z.object({     id: z.string().uuid(),     reason: z.string().trim().min(1).max(500),   })` | `netlify/functions/routes/financeDisbursements.ts:283` | - | financeDisbursements, financePayroll |
 | `/api/finance/disbursements/compute` | `finance.disbursement.view` | requirePermission | `z.object({ payrollRunId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:72` | - | financeDisbursements |
 | `/api/finance/disbursements/create` | `finance.disbursement.manage` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     currency:     z.string().length(3).optional(),     metadata:     z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financeDisbursements.ts:85` | - | financeDisbursements, payrollScale |
 | `/api/finance/disbursements/create-from-run` | `finance.disbursement.manage` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     currency:     z.string().length(3).optional(),     metadata:     z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financeDisbursements.ts:113` | - | financeDisbursements |
@@ -147,7 +147,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/pickers/vendors` | `finance.ap.view` | requirePermission | `z.object({ search: z.string().max(100).optional() })` | `netlify/functions/routes/financePickers.ts:70` | - | financeAp |
 | `/api/finance/remittances/approve` | `finance.remittances.approve` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeRemittances.ts:186` | - | financeRemittances |
 | `/api/finance/remittances/audit/list` | `finance.remittances.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeRemittances.ts:288` | - | financeRemittances |
-| `/api/finance/remittances/cancel` | `finance.remittances.manage` | requirePermission | `z.object({     id:     z.string().uuid(),     reason: z.string().trim().min(1, 'A reason is required to cancel a remittance.').max(500),   })` | `netlify/functions/routes/financeRemittances.ts:251` | - | financeRemittances |
+| `/api/finance/remittances/cancel` | `finance.remittances.manage` | requirePermission | `z.object({     id:     z.string().uuid(),     reason: z.string().trim().min(1, 'A reason is required to cancel a remittance.').max(500),   })` | `netlify/functions/routes/financeRemittances.ts:251` | - | financePayroll, financeRemittances |
 | `/api/finance/remittances/compute` | `finance.remittances.view` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     authority:    z.enum(AUTHORITY_VALUES),   })` | `netlify/functions/routes/financeRemittances.ts:127` | - | financeRemittances, payrollScale |
 | `/api/finance/remittances/create` | `finance.remittances.manage` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     authority:    z.enum(AUTHORITY_VALUES),     dueDate:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),     metadata:     z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financeRemittances.ts:145` | - | financeRemittances |
 | `/api/finance/remittances/get` | `finance.remittances.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeRemittances.ts:78` | - | financeRemittances |
@@ -371,8 +371,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | trigger | `trg_finance_statutory_versions_updated_at` | `supabase/migrations/20260802000002_finance_statutory_config.sql:55` |
 | table | `public.finance_nis_classes` | `supabase/migrations/20260802000002_finance_statutory_config.sql:59` |
 | table | `public.finance_remittances` | `supabase/migrations/20260805000000_finance_remittances.sql:11` |
-| trigger | `trg_finance_remittances_updated_at` | `supabase/migrations/20260805000000_finance_remittances.sql:55` |
-| table | `public.finance_remittance_lines` | `supabase/migrations/20260805000000_finance_remittances.sql:62` |
+| trigger | `trg_finance_remittances_updated_at` | `supabase/migrations/20260805000000_finance_remittances.sql:63` |
+| table | `public.finance_remittance_lines` | `supabase/migrations/20260805000000_finance_remittances.sql:70` |
 | table | `public.finance_expense_claims` | `supabase/migrations/20260806000000_finance_expense_claims.sql:16` |
 | function | `public.set_finance_expense_claims_updated_at` | `supabase/migrations/20260806000000_finance_expense_claims.sql:49` |
 | trigger | `trg_fec_updated_at` | `supabase/migrations/20260806000000_finance_expense_claims.sql:58` |
@@ -381,8 +381,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.finance_employee_bank_accounts` | `supabase/migrations/20260808000000_finance_employee_bank_accounts.sql:15` |
 | trigger | `trg_fin_bank_accts_updated_at` | `supabase/migrations/20260808000000_finance_employee_bank_accounts.sql:41` |
 | table | `public.finance_disbursements` | `supabase/migrations/20260808000001_finance_disbursements.sql:16` |
-| trigger | `trg_finance_disbursements_updated_at` | `supabase/migrations/20260808000001_finance_disbursements.sql:49` |
-| table | `public.finance_disbursement_lines` | `supabase/migrations/20260808000001_finance_disbursements.sql:55` |
+| trigger | `trg_finance_disbursements_updated_at` | `supabase/migrations/20260808000001_finance_disbursements.sql:50` |
+| table | `public.finance_disbursement_lines` | `supabase/migrations/20260808000001_finance_disbursements.sql:56` |
 | table | `public.finance_gl_accounts` | `supabase/migrations/20260917000000_finance_general_ledger.sql:19` |
 | function | `public.set_finance_gl_accounts_updated_at` | `supabase/migrations/20260917000000_finance_general_ledger.sql:46` |
 | trigger | `trg_fga_updated_at` | `supabase/migrations/20260917000000_finance_general_ledger.sql:52` |
@@ -427,8 +427,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.finance_employee_pay_group_assignments` | `supabase/migrations/20260918000040_finance_pay_groups.sql:26` |
 | table | `public.finance_overtime_rules` | `supabase/migrations/20260918000070_finance_overtime_rules.sql:10` |
 | table | `public.finance_employee_loans` | `supabase/migrations/20260918000090_finance_employee_loans.sql:17` |
-| trigger | `trg_finance_employee_loans_updated_at` | `supabase/migrations/20260918000090_finance_employee_loans.sql:45` |
-| table | `public.finance_loan_deductions` | `supabase/migrations/20260918000090_finance_employee_loans.sql:50` |
+| trigger | `trg_finance_employee_loans_updated_at` | `supabase/migrations/20260918000090_finance_employee_loans.sql:46` |
+| table | `public.finance_loan_deductions` | `supabase/migrations/20260918000090_finance_employee_loans.sql:51` |
 | table | `public.finance_disbursement_bank_files` | `supabase/migrations/20260918000120_finance_disbursement_bank_files.sql:11` |
 | table | `public.finance_statutory_forms` | `supabase/migrations/20260919000000_finance_statutory_forms.sql:13` |
 | function | `public.finance_calculate_run_commit` | `supabase/migrations/20260919000060_finance_calculate_run_commit.sql:33` |
@@ -475,12 +475,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/financeStatutoryForms.ts` | 139 |
 | e2e-suite | `scripts/e2e/suites/financeAp.mjs` | 950 |
 | e2e-suite | `scripts/e2e/suites/financeBudgets.mjs` | 641 |
-| e2e-suite | `scripts/e2e/suites/financeDisbursements.mjs` | 702 |
+| e2e-suite | `scripts/e2e/suites/financeDisbursements.mjs` | 705 |
 | e2e-suite | `scripts/e2e/suites/financeExpenses.mjs` | 750 |
-| e2e-suite | `scripts/e2e/suites/financeLookups.mjs` | 521 |
+| e2e-suite | `scripts/e2e/suites/financeLookups.mjs` | 524 |
 | e2e-suite | `scripts/e2e/suites/financeOverview.mjs` | 447 |
 | e2e-suite | `scripts/e2e/suites/financePayComponents.mjs` | 578 |
-| e2e-suite | `scripts/e2e/suites/financeRemittances.mjs` | 618 |
+| e2e-suite | `scripts/e2e/suites/financeRemittances.mjs` | 621 |
 | e2e-suite | `scripts/e2e/suites/financeStatutory.mjs` | 1202 |
 | frontend-api | `src/api/finance/accountsPayable.ts` | 424 |
 | frontend-api | `src/api/finance/attachments.ts` | 193 |

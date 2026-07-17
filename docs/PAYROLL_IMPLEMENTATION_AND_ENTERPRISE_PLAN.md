@@ -1,5 +1,11 @@
 # SIOMAC Payroll — Current Implementation & Enterprise Build Plan (Trinidad & Tobago)
 
+> **Historical baseline — not the current implementation authority.** This assessment predates the
+> GL, pay-group, override, loan, back-pay, payslip rendering/delivery, statutory-form and atomic
+> workflow-submit slices. Use `docs/PAYROLL_TECHNICAL_IMPLEMENTATION.md` for current build guidance
+> and `docs/generated/modules/payroll.md` for code-derived navigation. Retain this file only for its
+> original gap-analysis context; do not implement a feature merely because it is marked missing here.
+
 > Purpose: a complete, code-grounded snapshot of what payroll is TODAY (backend + frontend +
 > data model + cross-module ties), plus a T&T-specific enterprise gap plan derived from the
 > TTPay feature set. Feed this to Codex to scope the next build waves. Every claim below is

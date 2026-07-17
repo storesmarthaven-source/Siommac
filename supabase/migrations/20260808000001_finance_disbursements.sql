@@ -30,13 +30,14 @@ create table if not exists public.finance_disbursements (
   workflow_id      uuid references public.workflow_instances(id) on delete set null,
   metadata         jsonb not null default '{}'::jsonb,
   created_at       timestamptz not null default now(),
-  updated_at       timestamptz not null default now(),
-  -- One disbursement per run (prevent duplicate disbursements for same payroll run)
-  unique (payroll_run_id)
+  updated_at       timestamptz not null default now()
 );
 
 create index if not exists finance_disbursements_run_idx
   on public.finance_disbursements(payroll_run_id);
+create unique index if not exists finance_disbursements_one_active_run_uidx
+  on public.finance_disbursements(payroll_run_id)
+  where status <> 'cancelled';
 create index if not exists finance_disbursements_status_idx
   on public.finance_disbursements(status);
 create index if not exists finance_disbursements_workflow_idx
@@ -53,14 +54,26 @@ create trigger trg_finance_disbursements_updated_at
 -- ── finance_disbursement_lines (per-employee lines within a disbursement) ─────
 -- Each row = one employee's net pay to be disbursed to their bank account.
 create table if not exists public.finance_disbursement_lines (
-  id                uuid primary key default gen_random_uuid(),
-  disbursement_id   uuid not null references public.finance_disbursements(id) on delete cascade,
-  employee_id       text not null references public.app_users(id) on delete restrict,
-  bank_account_id   uuid references public.finance_employee_bank_accounts(id) on delete restrict,
-  net_amount        numeric(12,2) not null,
-  metadata          jsonb not null default '{}'::jsonb,
-  created_at        timestamptz not null default now(),
-  unique (disbursement_id, employee_id)
+  id                             uuid primary key default gen_random_uuid(),
+  disbursement_id                uuid not null references public.finance_disbursements(id) on delete cascade,
+  employee_id                    text not null references public.app_users(id) on delete restrict,
+  bank_account_id                uuid references public.finance_employee_bank_accounts(id) on delete restrict,
+  bank_name_snapshot             text,
+  branch_snapshot                text,
+  account_type_snapshot          text,
+  account_number_snapshot        text,
+  account_number_masked_snapshot text,
+  transit_number_snapshot        text,
+  routing_snapshot_checksum      text,
+  net_amount                     numeric(12,2) not null,
+  metadata                       jsonb not null default '{}'::jsonb,
+  created_at                     timestamptz not null default now(),
+  unique (disbursement_id, employee_id),
+  constraint finance_disbursement_lines_account_type_snapshot_ck
+    check (
+      account_type_snapshot is null
+      or account_type_snapshot in ('savings','chequing')
+    )
 );
 
 create index if not exists fin_disb_lines_disb_idx

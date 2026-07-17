@@ -24,15 +24,16 @@ const BASE_MAPPINGS = [
   ['health_surcharge_payable', '2140'], ['deductions_payable', '2150'],
 ];
 
-function yearFromTag(tag) {
-  let n = 17;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2200 + (n % 300);
-}
+import {
+  payrollCalculationCommand,
+  payrollLockCommand,
+  payrollPeriodYear,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
-  const Y = yearFromTag(TAG);
+  const Y = payrollPeriodYear('payrollScale', TAG);
   const PERIOD = `${Y}-06-01`;
   const empPrefix = `SCL-${TAG.slice(-8)}-`;
   // fmgr2Id must NOT start with empPrefix (else the employee-count assertion would see N+1).
@@ -144,12 +145,19 @@ export default async function run(h) {
   h.section('Scale > Lock inputs + calculate (crosses the 1000-row cap)');
 
   await test(`create run + lock-inputs populates all ${N} members (not truncated at 1000)`, async () => {
-    const cr = await api('finance/payroll/runs/create', fmgrT, { periodMonth: PERIOD, payGroupId: ctx.groupId });
+    const cr = await api('finance/payroll/runs/create', fmgrT, payrollRunCommand({
+      idempotencyKey: `${TAG}:scale:run:create`,
+      periodStart: PERIOD,
+      payGroupId: ctx.groupId,
+    }));
     ok(cr, `create run failed: ${cr.body.message}`);
     ctx.runId = cr.body.data.id;
     ctx.runNo = cr.body.data.runNo ?? cr.body.data.run_no;
 
-    const lr = await api('finance/payroll/runs/lock-inputs', fmgrT, { id: ctx.runId });
+    const lr = await api('finance/payroll/runs/lock-inputs', fmgrT, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:scale:run:lock-inputs:1`,
+    });
     ok(lr, `lock-inputs failed: ${lr.body.message}`);
 
     // Base-pay inputs: exactly one per employee -> N rows (> 1000 proves pagination + chunked insert).
@@ -158,7 +166,11 @@ export default async function run(h) {
   });
 
   await test(`calculate produces ${N} run lines with correct totals (batch profiles + chunked insert)`, async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgrT, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrT,
+      payrollCalculationCommand(ctx.runId, `${TAG}:scale:run:calculate:1`),
+    );
     ok(r, `calculate failed: ${r.body.message}`);
     expect(r.body.data.employeeCount === N, `run employeeCount ${r.body.data.employeeCount}`);
 
@@ -173,8 +185,12 @@ export default async function run(h) {
     if (!ctx.runNo && runRow?.run_no) ctx.runNo = runRow.run_no;
   });
 
-  await test('recalculate is idempotent (still N lines, clears + rebuilds)', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgrT, { id: ctx.runId });
+  await test('a new recalculation still produces exactly N lines', async () => {
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrT,
+      payrollCalculationCommand(ctx.runId, `${TAG}:scale:run:calculate:2`),
+    );
     ok(r, `recalculate failed: ${r.body.message}`);
     const { count } = await sb.from('finance_payroll_run_lines').select('id', { count: 'exact', head: true }).eq('run_id', ctx.runId);
     expect(count === N, `after recalc expected ${N} lines, got ${count}`);
@@ -183,7 +199,10 @@ export default async function run(h) {
   h.section('Scale > Approve + lock (via workflow, SoD enforced)');
 
   await test('fmgrT submits the run -> pending_approval + workflow task created', async () => {
-    const r = await api('finance/payroll/runs/submit', fmgrT, { id: ctx.runId, idempotencyKey: `submit-scale-${TAG}` });
+    const r = await api('finance/payroll/runs/submit', fmgrT, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:scale:run:submit`,
+    });
     ok(r, `submit failed: ${r.body.message}`);
     const got = await waitFor(async () => {
       const { data } = await sb.from('finance_payroll_runs').select('status, workflow_id').eq('id', ctx.runId).maybeSingle();
@@ -210,7 +229,11 @@ export default async function run(h) {
   });
 
   await test('fmgrT locks the approved run -> status=locked', async () => {
-    const r = await api('finance/payroll/runs/lock', fmgrT, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/lock',
+      fmgrT,
+      payrollLockCommand(ctx.runId, `${TAG}:run:scale:lock:1`),
+    );
     ok(r, `lock failed: ${r.body.message}`);
     const { data: run } = await sb.from('finance_payroll_runs').select('status').eq('id', ctx.runId).maybeSingle();
     expect(run?.status === 'locked', `expected locked, got ${run?.status}`);
@@ -295,7 +318,10 @@ export default async function run(h) {
   });
 
   await test(`GL post: journal posted, balanced + totalDebit >= ${N * 5000}`, async () => {
-    const r = await api('finance/payroll/gl/post', fmgrT, { runId: ctx.runId });
+    const r = await api('finance/payroll/gl/post', fmgrT, {
+      runId: ctx.runId,
+      idempotencyKey: `${TAG}:scale:gl:post`,
+    });
     ok(r, `gl/post failed: ${r.body.message}`);
     expect(Math.abs(r.body.data.totalDebit - r.body.data.totalCredit) < 0.01, 'posted journal must balance');
     // Same proof as preview: truncated => < N×5000; fixed => >= N×5000.

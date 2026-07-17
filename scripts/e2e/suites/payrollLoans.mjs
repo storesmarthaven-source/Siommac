@@ -28,6 +28,13 @@ function seedDate(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import {
+  payrollCalculationCommand,
+  payrollLockCommand,
+  payrollReopenCommand,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
 
@@ -292,11 +299,18 @@ export default async function run(h) {
 
     // Create the run as the MAKER (finance_staff) so the finance_manager can
     // approve it without tripping segregation-of-duties (creator != approver).
-    const cr = await api('finance/payroll/runs/create', staffToken, { periodMonth: '2029-10-01', payGroupId: groupId });
+    const cr = await api('finance/payroll/runs/create', staffToken, payrollRunCommand({
+      idempotencyKey: `${TAG}:loans:run:create`,
+      periodStart: '2029-10-01',
+      payGroupId: groupId,
+    }));
     ok(cr, `create run failed: ${cr.body.message}`);
     ctx.runId = cr.body.data.id;
 
-    const lr = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
+    const lr = await api('finance/payroll/runs/lock-inputs', fmgrToken, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:loans:run:lock-inputs:1`,
+    });
     ok(lr, `lock-inputs failed: ${lr.body.message}`);
 
     const ir = await api('finance/payroll/inputs/list', fmgrToken, { runId: ctx.runId });
@@ -307,7 +321,14 @@ export default async function run(h) {
   });
 
   await test('calculate + lock → ledger row written, balance decremented to 700', async () => {
-    ok(await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId }), 'calculate failed');
+    ok(
+      await api(
+        'finance/payroll/runs/calculate',
+        fmgrToken,
+        payrollCalculationCommand(ctx.runId, `${TAG}:loans:run:calculate:1`),
+      ),
+      'calculate failed',
+    );
     // Drive to approved via the run workflow, then lock.
     ok(await api('finance/payroll/runs/submit', staffToken, { id: ctx.runId, idempotencyKey: `loan-runsubmit-${TAG}` }), 'run submit failed');
     const { data: run } = await sb.from('finance_payroll_runs').select('workflow_id').eq('id', ctx.runId).maybeSingle();
@@ -318,7 +339,11 @@ export default async function run(h) {
       return data?.status === 'approved';
     });
     expect(approved, 'run not approved');
-    ok(await api('finance/payroll/runs/lock', fmgrToken, { id: ctx.runId }), 'lock failed');
+    ok(await api(
+      'finance/payroll/runs/lock',
+      fmgrToken,
+      payrollLockCommand(ctx.runId, `${TAG}:run:loan:lock:1`),
+    ), 'lock failed');
 
     const { data: led } = await sb.from('finance_loan_deductions').select('amount, balance_after').eq('loan_id', ctx.loanId).eq('run_id', ctx.runId).maybeSingle();
     expect(led, 'no ledger row after lock');
@@ -328,7 +353,11 @@ export default async function run(h) {
   });
 
   await test('reopen the run → ledger reversed + balance restored to 1200', async () => {
-    const r = await api('finance/payroll/runs/reopen', fmgrToken, { id: ctx.runId, reason: 'E2E loan reversal' });
+    const r = await api(
+      'finance/payroll/runs/reopen',
+      fmgrToken,
+      payrollReopenCommand(ctx.runId, 'E2E loan reversal', `${TAG}:run:loan:reopen:1`),
+    );
     ok(r, `reopen failed: ${r.body.message}`);
     const { data: led } = await sb.from('finance_loan_deductions').select('id').eq('run_id', ctx.runId);
     expect((led ?? []).length === 0, 'ledger rows should be gone after reopen');

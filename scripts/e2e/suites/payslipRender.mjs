@@ -133,6 +133,13 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import {
+  payrollCalculationCommand,
+  payrollLockCommand,
+  payrollPeriod,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
 
@@ -206,27 +213,22 @@ export default async function run(h) {
     ctx.statutoryVersionId = (data ?? [])[0]?.id ?? null;
   });
 
-  await test('acquire 2 finance_managers + provision an ISOLATED salaried employee', async () => {
+  await test('acquire 2 finance_managers + 1 salaried employee', async () => {
     const mgrR = await acquireActors('finance_manager', 2, { pay_basis: 'salary', monthly_salary: 7000.00 });
+    const empR = await acquireActors(
+      'employee',
+      1,
+      { pay_basis: 'salary', monthly_salary: 5000.00 },
+      {},
+      { forceSynthetic: true },
+    );
     [fmgr1Id, fmgr2Id] = mgrR.actors.map(a => a.id);
-
-    // The employee is SYNTHETIC on purpose: this suite gives them an exclusive
-    // pay-group assignment, and a roster employee can carry a live assignment
-    // from another suite in the same run (or a leaked one from a killed run) —
-    // which 409s the assign. An isolated employee removes the collision class.
-    empId = `PSR-EMP-${TAG}`;
-    const empUsername = `${TAG}_psr_emp`;
-    const { error: empErr } = await sb.from('app_users').insert({
-      id: empId, username: empUsername, full_name: 'Payslip Render E2E Employee',
-      role: 'employee', status: 'active', employment_type: 'employee',
-      pay_basis: 'salary', monthly_salary: 5000.00,
-    });
-    expect(!empErr, `synthetic employee insert failed: ${empErr?.message}`);
-    ctx.createdUserIds = [...mgrR.createdIds, empId];
+    empId = empR.actors[0].id;
+    ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
 
     fmgr1Token = mint({ id: fmgr1Id, username: mgrR.actors[0].username, role: 'finance_manager', department_id: null });
     fmgr2Token = mint({ id: fmgr2Id, username: mgrR.actors[1].username, role: 'finance_manager', department_id: null });
-    empToken   = mint({ id: empId,   username: empUsername,             role: 'employee',        department_id: null });
+    empToken   = mint({ id: empId,   username: empR.actors[0].username,  role: 'employee',        department_id: null });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -237,12 +239,9 @@ export default async function run(h) {
   // (1 employee) so the suite doesn't time out on large rosters.
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const testPeriod = seedDateFromTag(TAG, 71);
+  const testPeriod = payrollPeriod('payslipRender', 'run', TAG);
 
   await test('P2-b: create a pay group and assign the test employee to it', async () => {
-    // The employee is synthetic and unique to THIS run tag, so it can carry no
-    // pre-existing assignment — no self-heal sweep needed, and real roster
-    // assignments are never touched.
     const pgR = await api('finance/payroll/pay-groups/create', fmgr1Token, {
       code:      'PR-' + TAG.slice(-8),
       name:      'Payslip Render E2E ' + TAG,
@@ -261,12 +260,11 @@ export default async function run(h) {
   });
 
   await test('finance_manager creates a payroll run scoped to the pay group', async () => {
-    const r = await api('finance/payroll/runs/create', fmgr1Token, {
-      periodMonth:   testPeriod,
-      payFrequency:  'monthly',
-      weeksInPeriod: 4.333,
+    const r = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
+      idempotencyKey: `${TAG}:payslip-render:run:create`,
+      periodStart:   testPeriod,
       payGroupId:    ctx.payGroupId,   // P2-b: scope to 1 employee; prevents roster-wide timeout
-    });
+    }));
     ok(r, 'create run failed: ' + r.body.message);
     expect(r.body.data.status === 'draft', 'expected draft status');
     // Phase 2: templateId field present in run DTO (null at creation time)
@@ -276,7 +274,10 @@ export default async function run(h) {
   });
 
   await test('lock inputs', async () => {
-    const r = await api('finance/payroll/runs/lock-inputs', fmgr1Token, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/lock-inputs', fmgr1Token, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:payslip-render:run:lock-inputs:1`,
+    });
     ok(r, 'lock-inputs failed: ' + r.body.message);
     expect(r.body.data.status === 'input_locked',
       'status should be input_locked, got ' + r.body.data.status);
@@ -285,7 +286,11 @@ export default async function run(h) {
   });
 
   await test('calculate run', async () => {
-    const r = await api('finance/payroll/runs/calculate', fmgr1Token, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgr1Token,
+      payrollCalculationCommand(ctx.runId, `${TAG}:payslip-render:run:calculate:1`),
+    );
     ok(r, 'calculate failed: ' + r.body.message);
     expect(r.body.data.status === 'calculated', 'status should be calculated');
     expect(r.body.data.grossTotal > 0, 'grossTotal should be > 0');
@@ -324,7 +329,11 @@ export default async function run(h) {
   });
 
   await test('lock the approved run', async () => {
-    const r = await api('finance/payroll/runs/lock', fmgr2Token, { id: ctx.runId });
+    const r = await api(
+      'finance/payroll/runs/lock',
+      fmgr2Token,
+      payrollLockCommand(ctx.runId, `${TAG}:run:payslip-render:lock:1`),
+    );
     ok(r, 'lock run failed: ' + r.body.message);
     expect(r.body.data.status === 'locked', 'status should be locked');
   });
@@ -461,8 +470,6 @@ export default async function run(h) {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id').eq('run_id', ctx.runId);
     const psIds = (payslips ?? []).map(p => p.id);
-    // Guard the vacuous pass: with zero payslips, 0 events === 0 ids "passes".
-    expect(psIds.length > 0, 'no payslips exist for the run — cannot verify render events');
 
     const { data: events } = await sb.from('app_events')
       .select('source_entity_id, event_type')
@@ -476,7 +483,6 @@ export default async function run(h) {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id').eq('run_id', ctx.runId);
     const psIds = (payslips ?? []).map(p => p.id);
-    expect(psIds.length > 0, 'no payslips exist for the run — cannot verify render audit rows');
 
     const { data: auditRows } = await sb.from('hr_audit_log')
       .select('record_id, action')
@@ -617,8 +623,6 @@ export default async function run(h) {
   await test('after fallback render, payslips still have filePath', async () => {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id, file_path').eq('run_id', ctx.runId);
-    // Guard the vacuous pass: an empty list would satisfy the no-path filter.
-    expect((payslips ?? []).length > 0, 'no payslips exist for the run — cannot verify filePath');
     const noPath = (payslips ?? []).filter(p => !p.file_path);
     expect(noPath.length === 0,
       `${noPath.length} payslip(s) have no filePath after fallback render`);

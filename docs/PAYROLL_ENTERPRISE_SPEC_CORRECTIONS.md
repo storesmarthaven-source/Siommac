@@ -1,10 +1,14 @@
 # Payroll Enterprise Spec — Grounding Corrections (read WITH the spec, BEFORE generating)
 
+> Current authority: `docs/PAYROLL_TECHNICAL_IMPLEMENTATION.md`. This file remains the schema and
+> naming correction ledger. Where it references the older enterprise plan, use the reconciled
+> current-state section in the technical implementation first.
+
 The "SIOMAC Enterprise Payroll — Full Technical Implementation" spec is the target. It is sound.
 But several DDL snippets/column names in it do **not** match the actual SIOMAC schema. Apply these
 corrections or the generated migrations/queries will fail. Cross-checked against the real code
 (`netlify/functions/lib/finance/*`, `lib/hr/*`, migrations). Companion to
-`docs/PAYROLL_IMPLEMENTATION_AND_ENTERPRISE_PLAN.md`.
+`docs/PAYROLL_TECHNICAL_IMPLEMENTATION.md`.
 
 ## C1. ❌ `organization_id uuid` — SIOMAC is SINGLE-TENANT (critical)
 Every new table in the spec has `organization_id uuid not null`. **There is no `organizations`

@@ -29,6 +29,8 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
+import { payrollRunCommand, payrollPeriod } from '../helpers/payrollRun.mjs';
+
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
@@ -37,7 +39,7 @@ export default async function run(h) {
   const plainId = 'OT-EE-'   + TAG;
   const ruleCode = 'OTX-' + TAG.slice(-6);
 
-  const ctx = { groupId: null, runId: null, ruleId: null, period: seedDateFromTag(TAG, 55) };
+  const ctx = { groupId: null, runId: null, ruleId: null, period: payrollPeriod('payrollOvertimeRules', 'run', TAG) };
   let fmgrToken, plainToken;
 
   h.onCleanup(async () => {
@@ -108,11 +110,18 @@ export default async function run(h) {
   // ===========================================================================
 
   await test('lock-inputs prices the OT at the RULE multiplier (2.5), not the entry (1.5)', async () => {
-    const cr = await api('finance/payroll/runs/create', fmgrToken, { periodMonth: ctx.period, payGroupId: ctx.groupId });
+    const cr = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
+      idempotencyKey: `${TAG}:overtime-rules:run:create`,
+      periodStart: ctx.period,
+      payGroupId: ctx.groupId,
+    }));
     ok(cr, 'create run failed');
     ctx.runId = cr.body.data.id;
 
-    const lk = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
+    const lk = await api('finance/payroll/runs/lock-inputs', fmgrToken, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:overtime-rules:run:lock-inputs:1`,
+    });
     ok(lk, 'lock-inputs failed');
 
     const { data: otInputs } = await sb.from('finance_payroll_run_inputs')

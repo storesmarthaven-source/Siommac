@@ -42,6 +42,7 @@ create index if not exists finance_employee_loans_status_idx   on public.finance
 alter table public.finance_employee_loans enable row level security;
 grant select, insert, update, delete on public.finance_employee_loans to service_role;
 
+drop trigger if exists trg_finance_employee_loans_updated_at on public.finance_employee_loans;
 create trigger trg_finance_employee_loans_updated_at
   before update on public.finance_employee_loans
   for each row execute function public.set_updated_at();

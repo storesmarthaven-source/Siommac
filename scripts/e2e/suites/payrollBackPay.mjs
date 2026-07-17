@@ -17,15 +17,15 @@
  */
 export const title = 'Payroll — Back pay (retro adjustment, P2-a rebuild)';
 
-function yearFromTag(tag) {
-  let n = 11;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2500 + (n % 400);   // high, unlikely-to-collide year
-}
+import {
+  payrollCalculationCommand,
+  payrollPeriodYear,
+  payrollRunSeed,
+} from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
-  const Y = yearFromTag(TAG);
+  const Y = payrollPeriodYear('payrollBackPay', TAG);
   const P1 = `${Y}-01-01`, P2 = `${Y}-02-01`, P3 = `${Y}-03-01`;   // prior1, prior2, current
 
   let fmgrId, empId, otherEmpId, fmgrT, empT;
@@ -69,10 +69,10 @@ export default async function run(h) {
 
     // Two PRIOR locked monthly runs — employee paid base 5000 each.
     for (const period of [P1, P2]) {
-      const { data: rn, error: rErr } = await sb.from('finance_payroll_runs').insert({
-        run_no: `RUN-BP-${period}-${TAG.slice(-4)}`, period_month: period, pay_frequency: 'monthly',
+      const { data: rn, error: rErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+        run_no: `RUN-BP-${period}-${TAG.slice(-4)}`, periodStart: period,
         statutory_version_id: ctx.versionId, status: 'locked', employee_count: 1,
-      }).select('id').single();
+      })).select('id').single();
       expect(!rErr, `seed prior run failed: ${rErr?.message}`);
       ctx.runIds.push(rn.id);
       const { error: lErr } = await sb.from('finance_payroll_run_lines').insert({
@@ -83,10 +83,10 @@ export default async function run(h) {
     }
 
     // One prior LOCKED weekly run — for the frequency filter test.
-    const { data: wkRun, error: wErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-BP-WK-${TAG.slice(-4)}`, period_month: `${Y}-01-08`, pay_frequency: 'weekly',
+    const { data: wkRun, error: wErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-BP-WK-${TAG.slice(-4)}`, periodStart: `${Y}-01-08`, payFrequency: 'weekly',
       statutory_version_id: ctx.versionId, status: 'locked', employee_count: 1,
-    }).select('id').single();
+    })).select('id').single();
     expect(!wErr, `seed weekly run failed: ${wErr?.message}`);
     ctx.weeklyRunId = wkRun.id;
     const { error: wlErr } = await sb.from('finance_payroll_run_lines').insert({
@@ -96,10 +96,10 @@ export default async function run(h) {
     expect(!wlErr, `seed weekly run line failed: ${wlErr?.message}`);
 
     // Current run — monthly, input_locked, employee is a member (base_pay input).
-    const { data: cur, error: cErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-BP-CUR-${TAG.slice(-4)}`, period_month: P3, pay_frequency: 'monthly',
+    const { data: cur, error: cErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-BP-CUR-${TAG.slice(-4)}`, periodStart: P3,
       statutory_version_id: ctx.versionId, status: 'input_locked', employee_count: 1,
-    }).select('id').single();
+    })).select('id').single();
     expect(!cErr, `seed current run failed: ${cErr?.message}`);
     ctx.currentRunId = cur.id;
     ctx.runIds.push(cur.id);
@@ -279,7 +279,11 @@ export default async function run(h) {
     // Second adj: P2 only had base 5000, corrected to 6000 → delta 1000 (1 × 1000)
     // Total back pay in inputs = 3000; base pay in current run = 6000
     // Expected gross ≈ 9000 (6000 base + 3000 back pay)
-    const r = await api('finance/payroll/runs/calculate', fmgrT, { id: ctx.currentRunId });
+    const r = await api(
+      'finance/payroll/runs/calculate',
+      fmgrT,
+      payrollCalculationCommand(ctx.currentRunId, `${TAG}:back-pay:run:calculate:1`),
+    );
     ok(r, `calculate failed: ${r.body.message}`);
     const { data: line } = await sb.from('finance_payroll_run_lines')
       .select('gross').eq('run_id', ctx.currentRunId).eq('employee_id', empId).maybeSingle();

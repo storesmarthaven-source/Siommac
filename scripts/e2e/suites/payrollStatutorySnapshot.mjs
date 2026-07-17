@@ -29,14 +29,11 @@ export const title = 'Payroll — statutory-version snapshot binding (2a)';
 const V2_EFFECTIVE_FROM = '2099-12-28';
 const V2_LABEL_MARK = 'snapshot-2a V2';
 
-function seedDateFromTag(tag, salt) {
-  let n = salt >>> 0;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  const day = 20820 + (salt % 10) * 400 + (n % 365);
-  const d = new Date(Date.UTC(1970, 0, 1));
-  d.setUTCDate(d.getUTCDate() + day);
-  return d.toISOString().slice(0, 10);
-}
+import {
+  payrollCalculationCommand,
+  payrollPeriod,
+  payrollRunCommand,
+} from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
@@ -98,15 +95,20 @@ export default async function run(h) {
   let payeV1 = null, nisV1 = null;
 
   await test('create + lock-inputs + calculate a run (snapshots V1)', async () => {
-    const cr = await api('finance/payroll/runs/create', fmgrToken, {
-      periodMonth: seedDateFromTag(TAG, 61), payFrequency: 'monthly', weeksInPeriod: 4.333,
-    });
+    const cr = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
+      idempotencyKey: `${TAG}:statutory-snapshot:run:create`,
+      periodStart: payrollPeriod('payrollStatutorySnapshot', 'run', TAG),
+      weeksInPeriod: 4.333,
+    }));
     ok(cr, `create failed: ${cr.body.message}`);
     expect(cr.body.data.statutoryVersionId === ctx.v1Id,
       `run should snapshot the active version V1 (${ctx.v1Id}), got ${cr.body.data.statutoryVersionId}`);
     ctx.runId = cr.body.data.id;
 
-    const li = await api('finance/payroll/runs/lock-inputs', fmgrToken, { id: ctx.runId });
+    const li = await api('finance/payroll/runs/lock-inputs', fmgrToken, {
+      id: ctx.runId,
+      idempotencyKey: `${TAG}:statutory-snapshot:run:lock-inputs:1`,
+    });
     ok(li, `lock-inputs failed: ${li.body.message}`);
 
     // Inject a known TAXABLE earning for our employee so the line has real chargeable
@@ -119,7 +121,11 @@ export default async function run(h) {
     });
     expect(!inErr, `inject taxable input failed: ${inErr?.message}`);
 
-    const cc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const cc = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:statutory-snapshot:run:calculate:v1`),
+    );
     ok(cc, `calculate failed: ${cc.body.message}`);
     expect(cc.body.data.status === 'calculated', `status should be calculated, got ${cc.body.data.status}`);
   });
@@ -194,7 +200,11 @@ export default async function run(h) {
       .update({ statutory_version_id: ctx.v2Id }).eq('id', ctx.runId);
     expect(!repErr, `repoint failed: ${repErr?.message}`);
 
-    const cc = await api('finance/payroll/runs/calculate', fmgrToken, { id: ctx.runId });
+    const cc = await api(
+      'finance/payroll/runs/calculate',
+      fmgrToken,
+      payrollCalculationCommand(ctx.runId, `${TAG}:statutory-snapshot:run:calculate:v2`),
+    );
     ok(cc, `recalculate failed: ${cc.body.message}`);
 
     const r = await api('finance/payroll/run-lines/list', fmgrToken, { runId: ctx.runId });

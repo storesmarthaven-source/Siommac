@@ -213,18 +213,27 @@ export class Harness {
    * `filter` narrows which REAL users are eligible (e.g. `{ pay_basis: 'salary' }`
    * so a payroll suite doesn't pick a real hourly employee with a zero salary). It
    * has no effect on synthetic creation — use `extra` for that.
+   *
+   * `opts.forceSynthetic` skips the real-roster pool entirely and always creates
+   * fresh synthetic users. Use it when the suite's assertions depend on rows the
+   * suite itself seeds for the actor (e.g. exact-amount payroll math) — a real
+   * roster user carries pre-existing components/loans/attendance that would skew
+   * the expected values.
    */
-  acquireActors = async (role, count, extra = {}, filter = {}) => {
+  acquireActors = async (role, count, extra = {}, filter = {}, opts = {}) => {
     this._borrowed ??= new Set();
     this._acquireSeq ??= 0;
-    let q = this.sb.from('app_users')
-      .select('id, username, role, department_id, full_name')
-      .eq('status', 'active').eq('role', role);
-    for (const [k, v] of Object.entries(filter)) q = q.eq(k, v);
-    const { data: pool, error } = await q;
-    if (error) throw new Error(`acquireActors(${role}): ${error.message}`);
-    const real = (pool ?? []).filter(u => !this._borrowed.has(u.id)).slice(0, count);
-    real.forEach(u => this._borrowed.add(u.id));
+    let real = [];
+    if (!opts.forceSynthetic) {
+      let q = this.sb.from('app_users')
+        .select('id, username, role, department_id, full_name')
+        .eq('status', 'active').eq('role', role);
+      for (const [k, v] of Object.entries(filter)) q = q.eq(k, v);
+      const { data: pool, error } = await q;
+      if (error) throw new Error(`acquireActors(${role}): ${error.message}`);
+      real = (pool ?? []).filter(u => !this._borrowed.has(u.id)).slice(0, count);
+      real.forEach(u => this._borrowed.add(u.id));
+    }
 
     const createdIds = [];
     const created = [];

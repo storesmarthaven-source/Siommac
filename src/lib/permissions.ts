@@ -444,6 +444,13 @@ export const PERMISSION_KEYS = [
   'finance.payroll.approve',        // finance manager: approve a submitted payroll run via workflow (SoD: creator cannot approve)
   'finance.payroll.lock',           // finance manager: lock an approved run (lines immutable, payslips generatable) + reopen
   'finance.payroll.export',         // finance manager: export a locked run to CSV/JSON artifact
+  'finance.payroll.certify',        // finance preparer: certify a reviewed immutable calculation version
+  'finance.payroll.funding.approve', // finance manager: confirm payroll funding against net pay
+  'finance.payroll.release',        // finance manager: release a locked, funded payroll under three-way SoD
+  'finance.payroll.finding.assign', // payroll operator: assign an operational control finding
+  'finance.payroll.finding.resolve', // payroll operator: resolve a finding with evidence
+  'finance.payroll.finding.waive',  // payroll approver: waive an eligible warning
+  'finance.payroll.finding.reopen', // payroll operator: reopen a resolved or waived finding
   'finance.payroll.payslips.generate', // finance: generate + render payslip PDFs for a locked run
   'finance.payroll.payslips.distribute', // finance: email payslips (password-protected) to employees
   'finance.payroll.gl.preview',     // finance: preview the GL journal for a run (read-only)
@@ -613,6 +620,10 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.certify',
+    'finance.payroll.finding.assign',
+    'finance.payroll.finding.resolve',
+    'finance.payroll.finding.reopen',
     'finance.payroll.payslips.generate',
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
@@ -688,6 +699,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.approve',
     'finance.payroll.lock',
     'finance.payroll.export',
+    'finance.payroll.certify',
+    'finance.payroll.funding.approve',
+    'finance.payroll.release',
+    'finance.payroll.finding.assign',
+    'finance.payroll.finding.resolve',
+    'finance.payroll.finding.waive',
+    'finance.payroll.finding.reopen',
     // Remittances (F1)
     'finance.remittances.view',
     'finance.remittances.manage',
@@ -1009,6 +1027,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.approve',
     'finance.payroll.lock',
     'finance.payroll.export',
+    'finance.payroll.certify',
+    'finance.payroll.funding.approve',
+    'finance.payroll.release',
+    'finance.payroll.finding.assign',
+    'finance.payroll.finding.resolve',
+    'finance.payroll.finding.waive',
+    'finance.payroll.finding.reopen',
     // Remittances (F1) -- admin has all
     'finance.remittances.view', 'finance.remittances.manage',
     'finance.remittances.approve', 'finance.remittances.reports.view', 'finance.remittances.reports.export',
@@ -1218,6 +1243,13 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.approve',
     'finance.payroll.lock',
     'finance.payroll.export',
+    'finance.payroll.certify',
+    'finance.payroll.funding.approve',
+    'finance.payroll.release',
+    'finance.payroll.finding.assign',
+    'finance.payroll.finding.resolve',
+    'finance.payroll.finding.waive',
+    'finance.payroll.finding.reopen',
     // Budgets (F5) -- superadmin has all
     'finance.budgets.view', 'finance.budgets.manage',
     'finance.budgets.reports.view', 'finance.budgets.reports.export',

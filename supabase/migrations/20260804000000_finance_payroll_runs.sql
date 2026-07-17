@@ -9,11 +9,20 @@
 create table if not exists public.finance_payroll_runs (
   id                    uuid primary key default gen_random_uuid(),
   run_no                text unique not null,
-  period_month          date unique not null,
+  -- Reporting bucket only. Payroll identity is the explicit run type + period
+  -- + pay-group business key created after pay groups are available.
+  period_month          date not null,
+  run_type              text not null default 'scheduled'
+                          check (run_type in ('scheduled','off_cycle','correction','final_pay')),
+  period_start          date not null,
+  period_end            date not null,
+  sequence_no           integer not null default 1 check (sequence_no > 0),
+  source_run_id         uuid,
   pay_frequency         text not null default 'monthly',
   status                text not null default 'draft' check (status in (
-                          'draft','input_locked','calculated','pending_approval',
-                          'returned','approved','locked','exported','cancelled')),
+                          'draft','input_locked','calculation_failed','calculated',
+                          'pending_approval','returned','approved','locked',
+                          'released','exported','cancelled')),
   statutory_version_id  uuid not null references public.finance_statutory_versions(id) on delete restrict,
   weeks_in_period       numeric(6,3) not null default 4.333,
   employee_count        int not null default 0,
@@ -31,12 +40,51 @@ create table if not exists public.finance_payroll_runs (
   reopened_by           text references public.app_users(id) on delete set null,
   reopened_at           timestamptz,
   reopen_reason         text,
+  released_by           text,
+  released_at           timestamptz,
   exported_at           timestamptz,
+  creation_request_key  text,
+  creation_request_hash text,
   created_at            timestamptz not null default now(),
-  updated_at            timestamptz not null default now()
+  updated_at            timestamptz not null default now(),
+  constraint finance_payroll_runs_period_order_ck
+    check (period_end >= period_start),
+  -- Replaced with a pay-date reporting-month constraint after pay_date is
+  -- introduced by the scheduling migration.
+  constraint finance_payroll_runs_reporting_month_ck
+    check (period_month = date_trunc('month', period_start)::date),
+  constraint finance_payroll_runs_source_policy_ck
+    check (
+      (run_type = 'correction' and source_run_id is not null)
+      or (run_type <> 'correction' and source_run_id is null)
+    ),
+  constraint finance_payroll_runs_scheduled_sequence_ck
+    check (run_type <> 'scheduled' or sequence_no = 1),
+  constraint finance_payroll_runs_source_not_self_ck
+    check (source_run_id is null or source_run_id <> id),
+  constraint finance_payroll_runs_source_fk
+    foreign key (source_run_id)
+    references public.finance_payroll_runs(id)
+    on delete restrict,
+  constraint finance_payroll_runs_released_by_fk
+    foreign key (released_by)
+    references public.app_users(id)
+    on delete set null,
+  constraint finance_payroll_runs_creation_receipt_ck
+    check (
+      (creation_request_key is null and creation_request_hash is null)
+      or (creation_request_key is not null and creation_request_hash is not null)
+    )
 );
 create index if not exists finance_payroll_runs_period_idx   on public.finance_payroll_runs(period_month);
+create index if not exists finance_payroll_runs_period_range_idx
+  on public.finance_payroll_runs(period_start, period_end);
 create index if not exists finance_payroll_runs_status_idx   on public.finance_payroll_runs(status);
+create index if not exists finance_payroll_runs_source_idx on public.finance_payroll_runs(source_run_id)
+  where source_run_id is not null;
+create unique index if not exists finance_payroll_runs_creation_request_uidx
+  on public.finance_payroll_runs(creation_request_key)
+  where creation_request_key is not null;
 create index if not exists finance_payroll_runs_workflow_idx  on public.finance_payroll_runs(workflow_id)
   where workflow_id is not null;
 alter table public.finance_payroll_runs enable row level security;

@@ -3,6 +3,8 @@
  * E2E for Finance Bank Accounts & Payroll Bank Disbursements (module F2).
  */
 
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
+
 export const title = 'Finance -- Bank Accounts & Payroll Bank Disbursements (F2)';
 
 /** Deterministic-but-unique date from TAG + a per-suite salt, so this suite's seeded
@@ -100,18 +102,19 @@ export default async function run(h) {
     }).select('id').single();
     expect(!verErr, `seed version failed: ${verErr?.message}`);
     ctx.versionId = ver.id;
-    // finance_payroll_runs.period_month is unique across the WHOLE table — derive
-    // TAG-specific dates (distinct salts from other suites) to avoid colliding.
-    const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 13),
+    // Run identity is (pay group, period_start, period_end, run_type); the salt-derived
+    // date becomes period_start, so salts must be globally unique across suites
+    // (contract gate enforces it) to avoid scheduled-run identity collisions.
+    const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-DSB-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'mainRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 2,
-    }).select('id').single();
+    })).select('id').single();
     expect(!rnErr, `seed run failed: ${rnErr?.message}`);
     ctx.runId = rn.id;
-    const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 14),
+    const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'draftRun', TAG),
       statutory_version_id: ctx.versionId, status: 'draft', employee_count: 1,
-    }).select('id').single();
+    })).select('id').single();
     expect(!drErr, `seed draft run failed: ${drErr?.message}`);
     ctx.draftRunId = dr.id;
     // Real column is `net` (not net_pay). computeFromRun reads finance_payslips first,
@@ -140,10 +143,10 @@ export default async function run(h) {
     // account in the Bank Accounts section below) — used only for the
     // finance_staff "can create" access-control check, so it doesn't collide
     // with the (run_id) uniqueness of the main lifecycle disbursement below.
-    const { data: sr, error: srErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-STF-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 16),
+    const { data: sr, error: srErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-DSB-STF-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'staffRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
-    }).select('id').single();
+    })).select('id').single();
     expect(!srErr, `seed staff run failed: ${srErr?.message}`);
     ctx.staffRunId = sr.id;
     const { data: sLines, error: slErr } = await sb.from('finance_payroll_run_lines').insert([
@@ -164,10 +167,10 @@ export default async function run(h) {
     // A third approved run, single employee (empId), reserved for the Cancel-path
     // test — finance_disbursements has unique(payroll_run_id), so cancelling a
     // disbursement does not free up its run for a new one to reuse.
-    const { data: cr, error: crErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-DSB-CANCEL-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 17),
+    const { data: cr, error: crErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
+      run_no: `RUN-DSB-CANCEL-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'cancelRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
-    }).select('id').single();
+    })).select('id').single();
     expect(!crErr, `seed cancel run failed: ${crErr?.message}`);
     ctx.cancelRunId = cr.id;
     const { data: cLines, error: clErr } = await sb.from('finance_payroll_run_lines').insert([
