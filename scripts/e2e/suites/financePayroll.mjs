@@ -1352,6 +1352,11 @@ export default async function run(h) {
         `atomic-submit cleanup could not delete events for ${rid}`);
       expect(await h.mustDelete('hr_audit_log', q => q.eq('record_id', rid)),
         `atomic-submit cleanup could not delete audit rows for ${rid}`);
+      // seedCalculatedRun attaches a processor certification, and
+      // finance_payroll_certifications.run_id is ON DELETE RESTRICT — delete it
+      // first so the run delete can cascade its snapshot/version evidence.
+      expect(await h.mustDelete('finance_payroll_certifications', q => q.eq('run_id', rid)),
+        `atomic-submit cleanup could not delete certifications for ${rid}`);
       expect(await h.mustDelete('finance_payroll_runs', q => q.eq('id', rid)),
         `atomic-submit cleanup could not delete run ${rid}`);
     }
@@ -2931,52 +2936,14 @@ export default async function run(h) {
     if (unresolved.length > 0) warnId = unresolved[0].id;
   });
 
-  await test('a role without run.manage (plain employee) is denied the warning resolve endpoint', async () => {
-    // finance_staff IS the payroll maker (has finance.payroll.run.manage) so it CAN resolve —
-    // resolving a data warning is part of preparing a run; approval is the separate SoD gate.
-    // A plain employee has no finance.payroll.run.manage and must be denied.
-    const r = await api('finance/payroll/warnings/resolve', emp1Token, {
-      warningId: warnId ?? '00000000-0000-0000-0000-000000000001',
-      note: 'test',
-    });
-    fails(r, 'a plain employee must not be able to resolve run warnings');
-  });
-
-  await test('resolving a non-existent warning returns error (not a crash)', async () => {
-    const r = await api('finance/payroll/warnings/resolve', fmgr1Token, {
-      warningId: '00000000-0000-0000-0000-000000000001',
-    });
-    // Should return a clean error, not a 500
-    expect(typeof r.body.success === 'boolean', 'response should be shaped even on not-found');
-  });
-
-  if (warnId) {
-    await test('finance_manager can resolve a run warning and backbone side-effects fire', async () => {
-      const r = await api('finance/payroll/warnings/resolve', fmgr1Token, {
-        warningId: warnId,
-        note: `E2E resolved ${TAG}`,
-      });
-      ok(r, `warning resolve failed: ${r.body.message}`);
-      expect(r.body.data.resolved === true, 'resolved should be true after resolve');
-      expect(typeof r.body.data.resolvedAt === 'string', 'resolvedAt should be set');
-
-      // Assert app_event emitted
-      const { data: evts } = await sb.from('app_events')
-        .select('id').eq('event_type', 'finance.payroll.warning.resolved')
-        .eq('actor_user_id', fmgr1Id).order('created_at', { ascending: false }).limit(1);
-      expect((evts ?? []).length > 0, 'app_event finance.payroll.warning.resolved should have been emitted');
-
-      // Assert audit log entry — backbone writes auditAction='payroll_run_warning.resolved'
-      const { data: auditRows } = await sb.from('hr_audit_log')
-        .select('id').eq('actor_id', fmgr1Id).eq('action', 'payroll_run_warning.resolved').limit(1);
-      expect((auditRows ?? []).length > 0, 'hr_audit_log should have a payroll_run_warning.resolved entry');
-    });
-
-    await test('resolved warning can no longer be resolved again', async () => {
-      const r = await api('finance/payroll/warnings/resolve', fmgr1Token, { warningId: warnId });
-      expect(!r.body.success, 'resolving an already-resolved warning should fail');
-    });
-  }
+  // NOTE: the raw-warning-mutation route `finance/payroll/warnings/resolve` was
+  // REMOVED by the execution handoff. Per its Current Code Reconciliation (§5.4),
+  // raw calculation warnings stay the engine's immutable output and are NOT
+  // mutated from the UI; resolution now flows through normalized CONTROL FINDINGS
+  // (`finance/payroll/findings/{resolve,waive,reopen}`), which the main lifecycle
+  // section already covers (blocker resolve/waive + exact §2 side-effects). The
+  // obsolete raw-warning-resolve tests were dropped rather than pointed at a
+  // deleted route. `warnings/list` (above) remains valid as a read of that output.
 
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Population Preview (Wave 2B)');
@@ -3305,6 +3272,9 @@ export default async function run(h) {
     const cr = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
       idempotencyKey: `${TAG}:run:hourly:create`,
       periodStart: hrly.period,
+      // The group is weekly; run creation validates that the declared frequency
+      // matches the pay group's, so pass it explicitly.
+      payFrequency: 'weekly',
       payGroupId: hrly.groupId,
     }));
     ok(cr, `create hourly run failed: ${cr.body.message}`);

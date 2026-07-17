@@ -1,44 +1,15 @@
 -- ============================================================================
--- Finance Payroll -- ATOMIC GL POST v2 (execution-model alignment, 1 of 2)
+-- Finance payroll GL post — control-checksum scale fix
 -- ============================================================================
--- Supersedes the post_payroll_gl_tx created by 20260918000140 (which remains
--- the applied historical migration and is NOT edited). This version binds the
--- journal to the run's CURRENT calculation version, adds command receipts with
--- caller-owned idempotency keys, and switches to security invoker.
--- MUST run after 20260919000420: it declares
--- finance_payroll_calculation_versions%rowtype and reads
--- finance_payroll_runs.current_calculation_version_id, which %ROWTYPE
--- resolution requires to exist at CREATE time. The REVERSE function is in
--- 20260919000427. Service_role only. Idempotent / re-runnable.
+-- Supersedes post_payroll_gl_tx created by 20260919000426. That version signed
+-- the journal control checksum from expected lines cast to a bare ::numeric
+-- (scale 0), while release preflight recomputes it from the stored
+-- numeric(15,2) journal-line columns. 6000 vs 6000.00 serialize differently, so
+-- the checksum never re-validated and release failed 'gl_journal_checksum_
+-- mismatch'. This casts the expected debit/credit to numeric(15,2) so the two
+-- checksums are byte-identical. Function body only; 20260919000426's source is
+-- corrected identically for clean installs. Idempotent / re-runnable.
 -- ============================================================================
-
-create unique index if not exists fgj_one_posted_payroll_journal_per_run
-  on public.finance_gl_journals ((metadata->>'payrollRunId'))
-  where source_module = 'finance_payroll' and status = 'posted'
-    and metadata ? 'payrollRunId';
-
-create table if not exists public.finance_payroll_gl_command_receipts (
-  request_key   text primary key,
-  request_hash  text not null,
-  run_id        uuid not null references public.finance_payroll_runs(id) on delete cascade,
-  actor_id      text not null references public.app_users(id) on delete restrict,
-  command       text not null check (command in ('post','reverse')),
-  journal_id    uuid references public.finance_gl_journals(id) on delete set null,
-  result        jsonb not null,
-  created_at    timestamptz not null default now()
-);
-create index if not exists finance_payroll_gl_receipts_run_idx
-  on public.finance_payroll_gl_command_receipts(run_id, created_at desc);
-alter table public.finance_payroll_gl_command_receipts enable row level security;
-grant select, insert, update, delete
-  on public.finance_payroll_gl_command_receipts to service_role;
-
-drop function if exists public.post_payroll_gl_tx(
-  uuid, text, date, text, text, jsonb, jsonb
-);
-drop function if exists public.post_payroll_gl_tx(
-  uuid, text, text, jsonb, jsonb
-);
 
 create or replace function public.post_payroll_gl_tx(
   p_run_id          uuid,
@@ -443,4 +414,4 @@ revoke all on function public.post_payroll_gl_tx(uuid, text, text, jsonb)
 grant execute on function public.post_payroll_gl_tx(uuid, text, text, jsonb)
   to service_role;
 
--- After applying, run: NOTIFY pgrst, 'reload schema';
+notify pgrst, 'reload schema';
