@@ -100,7 +100,7 @@ export default async function run(h) {
 
     ctx.runNo = 'RUN-GL-' + TAG.slice(-6);
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert({
-      run_no: ctx.runNo, period_month: seedDateFromTag(TAG, 21),
+      run_no: ctx.runNo, period_month: seedDateFromTag(TAG, 82),
       statutory_version_id: ctx.versionId, status: 'locked', employee_count: 2,
     }).select('id').single();
     expect(!rnErr, 'seed run failed: ' + rnErr?.message);

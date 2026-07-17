@@ -45,11 +45,11 @@ export default async function run(h) {
   h.section('Offboarding › Setup');
 
   await test('provision an active employee + hr_staff user', async () => {
-    const { error: e1 } = await sb.from('app_users').insert({ id: empId, username: `${TAG}_emp`, full_name: 'Offboarding E2E Tester', role: 'employee', status: 'active', employment_type: 'employee' });
+    const { error: e1 } = await sb.from('app_users').insert({ id: empId, username: `${TAG}_ofb_emp`, full_name: 'Offboarding E2E Tester', role: 'employee', status: 'active', employment_type: 'employee' });
     expect(!e1, `seed employee failed: ${e1?.message}`);
-    const { error: e2 } = await sb.from('app_users').insert({ id: staffId, username: `${TAG}_staff`, full_name: 'Offboarding E2E Staff', role: 'hr_staff', status: 'active', employment_type: 'employee' });
+    const { error: e2 } = await sb.from('app_users').insert({ id: staffId, username: `${TAG}_ofb_staff`, full_name: 'Offboarding E2E Staff', role: 'hr_staff', status: 'active', employment_type: 'employee' });
     expect(!e2, `seed hr_staff failed: ${e2?.message}`);
-    ctx.staffT = mint({ id: staffId, username: `${TAG}_staff`, role: 'hr_staff', department_id: null });
+    ctx.staffT = mint({ id: staffId, username: `${TAG}_ofb_staff`, role: 'hr_staff', department_id: null });
   });
 
   // ── Start ──────────────────────────────────────────────────────────────────
@@ -158,7 +158,7 @@ export default async function run(h) {
   h.section('Offboarding › Access control');
 
   await test('employee denied start; hr_staff allowed view', async () => {
-    fails(await api('hr/offboarding/start', ctx.staffT ? mint({ id: empId, username: `${TAG}_emp`, role: 'employee', department_id: null }) : null, { employeeId: empId, reason: 'resignation' }), 'employee should not start offboarding');
+    fails(await api('hr/offboarding/start', ctx.staffT ? mint({ id: empId, username: `${TAG}_ofb_emp`, role: 'employee', department_id: null }) : null, { employeeId: empId, reason: 'resignation' }), 'employee should not start offboarding');
     ok(await api('hr/offboarding/list', ctx.staffT, {}), 'hr_staff should be allowed to view offboarding');
   });
 }

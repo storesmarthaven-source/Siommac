@@ -1,1 +1,2 @@
+npm run repo:index:check
 npx lint-staged

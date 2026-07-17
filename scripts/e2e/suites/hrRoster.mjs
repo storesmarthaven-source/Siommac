@@ -94,12 +94,12 @@ export default async function run(h) {
     expect(!bErr, `seed empB failed: ${bErr?.message}`);
 
     const { error: stErr } = await sb.from('app_users').insert({
-      id: staffId, username: `${TAG}_staff`, full_name: 'Roster E2E HR Staff',
+      id: staffId, username: `${TAG}_roster_staff`, full_name: 'Roster E2E HR Staff',
       role: 'hr_staff', status: 'active', employment_type: 'employee',
     });
     expect(!stErr, `seed hr_staff failed: ${stErr?.message}`);
 
-    ctx.staffToken = mint({ id: staffId, username: `${TAG}_staff`, role: 'hr_staff', department_id: null });
+    ctx.staffToken = mint({ id: staffId, username: `${TAG}_roster_staff`, role: 'hr_staff', department_id: null });
     ctx.empAToken  = mint({ id: empAId,  username: `${TAG}_empa`,  role: 'employee', department_id: null });
     ctx.empBToken  = mint({ id: empBId,  username: `${TAG}_empb`,  role: 'employee', department_id: null });
   });

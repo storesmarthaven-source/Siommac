@@ -167,7 +167,7 @@ export default async function run(h) {
   const atomCtx = { runId: null, remIds: [] };
   await test('A3 atomic setup: seed a fresh approved run', async () => {
     const { data, error } = await sb.from('finance_payroll_runs').insert({
-      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 21),
+      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, period_month: seedDateFromTag(TAG, 81),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
     }).select('id').single();
     expect(!error, `seed atom run failed: ${error?.message}`);

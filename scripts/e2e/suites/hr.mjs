@@ -181,7 +181,7 @@ export default async function run(h) {
     if (cr.body.data?.id) ctx.positionIds.push(cr.body.data.id);
     const lr = await api('hr/positions/list', T.admin, {});
     ok(lr, 'position list failed');
-    expect(lr.body.data.some(p => p.position_key === posKey), 'created position not listed');
+    expect(lr.body.data.some(p => p.positionKey === posKey), 'created position not listed');
     const ur = await api('hr/positions/update', T.admin, { positionId: cr.body.data.id, title: `${TAG} Senior Technician` });
     ok(ur, 'position update failed');
   });
@@ -194,7 +194,12 @@ export default async function run(h) {
   h.section('HR › Change requests');
 
   let reqId = null;
+  let tHrMgr = null;
   await test('change-request create + list', async () => {
+    // The engine task is role-assigned to hr_manager (binding matches now that
+    // source context threads through) — acquire the checker up front.
+    const { actors: [hrMgr] } = await h.acquireActors('hr_manager', 1);
+    tHrMgr = mint(hrMgr);
     const r = await api('hr/employees/change-request', T.admin, { employeeId: empId, changeType: 'status_change', requestedValue: { newStatus: 'active' }, reason: `${TAG} reinstate` });
     ok(r, 'change-request create failed');
     reqId = r.body.data?.id ?? null;
@@ -205,7 +210,7 @@ export default async function run(h) {
   });
 
   await test('decide approve → applied + change effected + event', async () => {
-    const r = await api('hr/employee-change-requests/decide', T.admin, { requestId: reqId, decision: 'approve' });
+    const r = await api('hr/employee-change-requests/decide', tHrMgr, { requestId: reqId, decision: 'approve' });
     ok(r, 'decide approve failed');
     expect(r.body.data.status === 'applied', `expected applied, got ${r.body.data.status}`);
     const { data } = await sb.from('app_users').select('status').eq('id', empId).single();
@@ -220,7 +225,7 @@ export default async function run(h) {
   await test('decide reject does NOT apply the change', async () => {
     const cr = await api('hr/employees/change-request', T.admin, { employeeId: empId, changeType: 'role_change', requestedValue: { role: 'manager' } });
     ok(cr, 'second change-request failed');
-    const r = await api('hr/employee-change-requests/decide', T.admin, { requestId: cr.body.data.id, decision: 'reject', comment: 'denied' });
+    const r = await api('hr/employee-change-requests/decide', tHrMgr, { requestId: cr.body.data.id, decision: 'reject', comment: 'denied' });
     ok(r, 'reject failed');
     expect(r.body.data.status === 'rejected', 'not rejected');
     const { data } = await sb.from('app_users').select('role').eq('id', empId).single();

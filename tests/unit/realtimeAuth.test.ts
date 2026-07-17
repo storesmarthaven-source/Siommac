@@ -50,6 +50,14 @@ describe('mintRealtimeToken (ES256)', () => {
     expect(freshImport().mintRealtimeToken('USR-001')).toBeNull();
   });
 
+  test('returns null when malformed text contains a PKCS8 marker', () => {
+    process.env.SUPABASE_JWT_ES256_PRIVATE_KEY = Buffer.from(
+      '-----BEGIN PRIVATE KEY-----\nnot-key-material\n-----END PRIVATE KEY-----',
+    ).toString('base64');
+    process.env.SUPABASE_JWT_ES256_KID = KID;
+    expect(freshImport().mintRealtimeToken('USR-001')).toBeNull();
+  });
+
   test('returns null for an empty userId', () => {
     process.env.SUPABASE_JWT_ES256_PRIVATE_KEY = makeKeypair().privateB64;
     process.env.SUPABASE_JWT_ES256_KID = KID;

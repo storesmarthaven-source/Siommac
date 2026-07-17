@@ -29,7 +29,20 @@ export default async function run(h) {
 
   const tplKey  = `e2e_wf_${TAG}`;
   const trigger = `ptw.submitted.e2e.${TAG}`;
-  const recordId = `PTW-E2E-${TAG}`;
+  const recordId = crypto.randomUUID();
+  const permitIds = new Set();
+
+  const seedPermit = async (id, supervisorId) => {
+    if (permitIds.has(id)) return;
+    const ref = `PTW-E2E-${TAG}-${id.slice(0, 8)}`;
+    const { error } = await sb.from('hse_permits').insert({
+      id, ref, permit_number: ref, type: 'general', permit_type: 'general',
+      status: 'draft', requestor_id: admin.id, requester_id: admin.id,
+      work_supervisor_id: supervisorId, created_by: admin.id,
+    });
+    expect(!error, `permit source insert failed: ${error?.message}`);
+    permitIds.add(id);
+  };
 
   const DEF = {
     schemaVersion: 1,
@@ -54,6 +67,7 @@ export default async function run(h) {
     try { await sb.from('workflow_instances').delete().eq('source_record_id', recordId); } catch {}
     try { await sb.from('module_workflow_bindings').delete().eq('trigger_event', trigger); } catch {}
     try { if (tplId) await sb.from('workflow_templates').delete().eq('id', tplId); } catch {}
+    try { if (permitIds.size) await sb.from('hse_permits').delete().in('id', [...permitIds]); } catch {}
   });
 
   // ── Seed template + published version + binding ───────────────────────────────
@@ -87,9 +101,10 @@ export default async function run(h) {
   let workflowId = null;
 
   await test('start → instance in_progress + first task assigned to supervisor', async () => {
+    await seedPermit(recordId, supEmp.id);
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: recordId, recordData: { supervisorId: supEmp.id },
+      sourceRecordId: recordId,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     ok(r, 'start failed');
@@ -98,7 +113,7 @@ export default async function run(h) {
     expect(r.body.data.status === 'in_progress', `expected in_progress, got ${r.body.data.status}`);
     const task = await openTask(workflowId);
     expect(task && task.step_key === 'supervisor', 'first task is not the supervisor step');
-    expect(task.assigned_to === supEmp.id, 'supervisor task not assigned to recordData.supervisorId');
+    expect(task.assigned_to === supEmp.id, 'supervisor task not assigned from the permit source row');
   });
 
   await test('started event + audit written (§2)', async () => {
@@ -156,7 +171,7 @@ export default async function run(h) {
   // blocking the routes. Without the shared guard, the legacy-route case would SUCCEED.
   h.section('Workflow › Access — decision bypass');
 
-  const bypassRecordId = `PTW-E2E-BYPASS-${TAG}`;
+  const bypassRecordId = crypto.randomUUID();
   let bypass = null;   // { supervisor, intruder, createdIds }
   let bypassWfId = null, bypassTaskId = null, tSup = null, tIntruder = null;
 
@@ -182,9 +197,10 @@ export default async function run(h) {
     );
     expect(!error, `override upsert failed: ${error?.message}`);
     // Fresh workflow whose first task is assigned to the SUPERVISOR (not the intruder).
+    await seedPermit(bypassRecordId, supervisor.id);
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: bypassRecordId, recordData: { supervisorId: supervisor.id },
+      sourceRecordId: bypassRecordId,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     ok(r, 'bypass workflow start failed');
@@ -264,9 +280,9 @@ export default async function run(h) {
   // dead-letter + gated instance + admin replay.
   h.section('Workflow › Atomic decisions');
 
-  const atomRecord  = `PTW-E2E-ATOM-${TAG}`;
-  const concRecord  = `PTW-E2E-CONC-${TAG}`;
-  const rejRecord   = `PTW-E2E-REJ-${TAG}`;
+  const atomRecord  = crypto.randomUUID();
+  const concRecord  = crypto.randomUUID();
+  const rejRecord   = crypto.randomUUID();
   const dlRecord    = `${crypto.randomUUID()}`;   // finance receipt RPC needs a uuid source id
   const parTplKey   = `e2e_wfpar_${TAG}`;
   const parTrigger  = `ptw.par.e2e.${TAG}`;
@@ -311,21 +327,21 @@ export default async function run(h) {
   };
 
   // templateVerId is REQUIRED by the new /start route (explicit, not binding-based).
-  // assignees optional: { stepKey: { userId?, roleKey? } } pre-resolved map.
-  const startWf = async (triggerEvt, moduleKey, wfType, recordId, recordData, templateVerId, assignees = undefined) => {
+  // Source context and assignees are derived from the canonical source row.
+  const startWf = async (triggerEvt, moduleKey, wfType, sourceId, supervisorId, templateVerId) => {
+    if (moduleKey === 'ptw') await seedPermit(sourceId, supervisorId);
     const r = await api('workflow-engine/start', T.admin, {
-      moduleKey, workflowType: wfType, triggerEvent: triggerEvt, sourceRecordId: recordId, recordData,
+      moduleKey, workflowType: wfType, triggerEvent: triggerEvt, sourceRecordId: sourceId,
       templateVersionId: templateVerId, idempotencyKey: crypto.randomUUID(),
-      ...(assignees ? { assignees } : {}),
     });
-    ok(r, `start ${recordId} failed`);
+    ok(r, `start ${sourceId} failed`);
     return r.body.data.id;
   };
 
   let atomWfId = null, atomTaskId = null;
 
   await test('decide commits transition + outbox + §2 rows atomically', async () => {
-    atomWfId = await startWf(trigger, 'ptw', 'permit_approval', atomRecord, { supervisorId: bypass.supervisor.id }, verId);
+    atomWfId = await startWf(trigger, 'ptw', 'permit_approval', atomRecord, bypass.supervisor.id, verId);
     const task = await openTask(atomWfId);
     atomTaskId = task.id;
     const r = await api('workflow-engine/decide', tSup, { workflowId: atomWfId, taskId: task.id, decision: 'approved', comment: 'atomic ok' });
@@ -366,7 +382,7 @@ export default async function run(h) {
 
   await test('CONCURRENCY: two simultaneous decides → one success + one 409, one decision row', async () => {
     // Linear DEF (supervisor → hse); both racers hit the supervisor task.
-    const wfId = await startWf(trigger, 'ptw', 'permit_approval', concRecord, { supervisorId: bypass.supervisor.id }, verId);
+    const wfId = await startWf(trigger, 'ptw', 'permit_approval', concRecord, bypass.supervisor.id, verId);
     const task = await openTask(wfId);
     const [r1, r2] = await Promise.all([
       api('workflow-engine/decide', tSup, { workflowId: wfId, taskId: task.id, decision: 'approved', comment: 'racer one' }),
@@ -396,7 +412,7 @@ export default async function run(h) {
       ],
     });
     parTplId = parSeed.tplId; parVerId = parSeed.verId;
-    const rejWfId = await startWf(parTrigger, 'ptw', 'permit_approval', rejRecord, { supervisorId: bypass.supervisor.id }, parVerId);
+    const rejWfId = await startWf(parTrigger, 'ptw', 'permit_approval', rejRecord, bypass.supervisor.id, parVerId);
     const { data: aTask } = await sb.from('workflow_tasks').select('id').eq('workflow_id', rejWfId).eq('step_key', 'a').single();
     const r = await api('workflow-engine/decide', tSup, { workflowId: rejWfId, taskId: aTask.id, decision: 'rejected', comment: 'not acceptable' });
     ok(r, 'reject failed');
@@ -510,7 +526,7 @@ export default async function run(h) {
   await test('DENY: unknown moduleKey → 403 (no permission mapping)', async () => {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'unknown_module_xyz', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: recordId, recordData: {},
+      sourceRecordId: recordId,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     fails(r, 'unknown module should be denied');
@@ -523,47 +539,44 @@ export default async function run(h) {
     const nonExistentId = crypto.randomUUID();
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'hse_incidents', workflowType: 'incident_review', triggerEvent: 'incident.submitted',
-      sourceRecordId: nonExistentId, recordData: {},
+      sourceRecordId: nonExistentId,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
     fails(r, 'non-existent UUID source should be denied');
     expect(r.status === 404, `expected 404, got ${r.status}`);
   });
 
-  // Gate 3 skip — text-ref sourceRecordId (non-UUID) must NOT be existence-checked.
-  // ptw module has no source table entry, so check is always skipped for ptw.
-  // But even for a module WITH a table entry, a text ref must bypass existence.
-  await test('ALLOW: text-ref sourceRecordId skips existence check', async () => {
+  // Canonical identity: UUID-backed modules reject human refs instead of skipping
+  // source authorization.
+  await test('DENY: text-ref sourceRecordId cannot bypass source authorization', async () => {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: `PTW-AUTH-SKIP-${TAG}`, recordData: { supervisorId: supEmp.id },
+      sourceRecordId: `PTW-AUTH-SKIP-${TAG}`,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
     });
-    ok(r, 'text-ref start should be allowed');
-    authWfId = r.body.data?.id ?? null;
-    expect(!!authWfId, 'no workflowId returned from text-ref start');
+    fails(r, 'text-ref start should be rejected');
+    expect(r.status === 400, `expected 400, got ${r.status}`);
   });
 
-  // Happy path — UUID sourceRecordId for ptw (no table entry, check skipped → allowed).
-  // Also confirms assignees pre-resolved path works end-to-end.
+  // Happy path — a real permit row supplies the dynamic supervisor.
   let authHappyWfId = null;
   h.onCleanup(async () => {
     try { if (authHappyWfId) await sb.from('workflow_instances').delete().eq('id', authHappyWfId); } catch {}
   });
 
-  await test('ALLOW: valid module + pre-resolved assignees → workflow created + task assigned', async () => {
+  await test('ALLOW: valid source row → workflow created + canonical assignee', async () => {
+    await seedPermit(authSourceId, supEmp.id);
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: authSourceId, recordData: {},
+      sourceRecordId: authSourceId,
       templateVersionId: verId, idempotencyKey: crypto.randomUUID(),
-      assignees: { supervisor: { userId: supEmp.id } },
     });
     ok(r, 'happy-path explicit start failed');
     authHappyWfId = r.body.data?.id ?? null;
     expect(!!authHappyWfId, 'no workflowId returned');
     const task = await openTask(authHappyWfId);
     expect(task && task.step_key === 'supervisor', `first task not supervisor: ${task?.step_key}`);
-    expect(task.assigned_to === supEmp.id, 'pre-resolved assignee not set on task');
+    expect(task.assigned_to === supEmp.id, 'source-derived assignee not set on task');
   });
 
   // §2 side-effects: workflow.started app_event + audit row.
@@ -579,9 +592,10 @@ export default async function run(h) {
   await test('IDEMPOTENCY: duplicate explicit start (same key) returns original workflowId', async () => {
     const idemKey = crypto.randomUUID();
     const src = crypto.randomUUID();
+    await seedPermit(src, supEmp.id);
     const r1 = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: src, recordData: { supervisorId: supEmp.id },
+      sourceRecordId: src,
       templateVersionId: verId, idempotencyKey: idemKey,
     });
     ok(r1, 'first explicit start failed');
@@ -590,7 +604,7 @@ export default async function run(h) {
 
     const r2 = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
-      sourceRecordId: src, recordData: { supervisorId: supEmp.id },
+      sourceRecordId: src,
       templateVersionId: verId, idempotencyKey: idemKey,
     });
     ok(r2, 'idempotent retry should succeed');
@@ -603,36 +617,34 @@ export default async function run(h) {
     h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', src); } catch {} });
   });
 
-  // ── Assignee pinning (migration 399 — audit F1 role-redirect injection) ──────
-  // _create_instance pins role/fixed_user assignees to the TEMPLATE resolver
-  // value: a caller-supplied roleKey that differs from the template's role must
-  // raise WF422 → 422 (before 399, a caller could redirect approval to any role).
-  // Uses the parallel template: step a = supervisor (dynamic), step b = role 'admin'.
-  await test('PIN: explicit start with a redirected role assignee → 422 (mig 399)', async () => {
+  // ── Public-context injection regression ─────────────────────────────────────
+  // The HTTP contract rejects both caller-resolved assignees and recordData. The
+  // backend derives both from the canonical source row before calling the RPC.
+  await test('DENY: explicit start rejects caller-supplied assignees', async () => {
+    const sourceId = crypto.randomUUID();
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: parTrigger,
-      sourceRecordId: crypto.randomUUID(), recordData: {},
+      sourceRecordId: sourceId,
       templateVersionId: parVerId, idempotencyKey: crypto.randomUUID(),
-      assignees: { a: { userId: supEmp.id }, b: { roleKey: 'employee' } },  // template says 'admin'
+      assignees: { a: { userId: supEmp.id }, b: { roleKey: 'employee' } },
     });
-    fails(r, 'redirected role assignee must be rejected');
-    expect(r.status === 422, `expected 422 (WF422 pin), got ${r.status}`);
+    fails(r, 'caller assignees must be rejected');
+    expect(r.status === 400, `expected 400, got ${r.status}`);
+    const { data: rows } = await sb.from('workflow_instances').select('id').eq('source_record_id', sourceId);
+    expect((rows?.length ?? 0) === 0, 'rejected assignee injection created a workflow');
   });
 
-  await test('PIN: explicit start with the TEMPLATE role assignee is allowed', async () => {
-    const pinSrc = crypto.randomUUID();
-    h.onCleanup(async () => { try { await sb.from('workflow_instances').delete().eq('source_record_id', pinSrc); } catch {} });
+  await test('DENY: explicit start rejects caller-supplied recordData', async () => {
+    const sourceId = crypto.randomUUID();
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: parTrigger,
-      sourceRecordId: pinSrc, recordData: {},
+      sourceRecordId: sourceId, recordData: { supervisorId: supEmp.id },
       templateVersionId: parVerId, idempotencyKey: crypto.randomUUID(),
-      assignees: { a: { userId: supEmp.id }, b: { roleKey: 'admin' } },     // matches template
     });
-    ok(r, 'matching-role explicit start should be allowed');
-    const wfId = r.body.data?.id ?? null;
-    expect(!!wfId, 'no workflowId returned');
-    const { data: bTask } = await sb.from('workflow_tasks').select('assigned_role').eq('workflow_id', wfId).eq('step_key', 'b').single();
-    expect(bTask?.assigned_role === 'admin', `step b should be role admin, got ${bTask?.assigned_role}`);
+    fails(r, 'caller recordData must be rejected');
+    expect(r.status === 400, `expected 400, got ${r.status}`);
+    const { data: rows } = await sb.from('workflow_instances').select('id').eq('source_record_id', sourceId);
+    expect((rows?.length ?? 0) === 0, 'rejected recordData injection created a workflow');
   });
 
   // ── Active-workflow unique index (migration 397) ─────────────────────────────
@@ -647,7 +659,7 @@ export default async function run(h) {
   // the resulting unique_violation (23505) to WF409 so the route returns 409.
   h.section('Workflow › Active-workflow uniqueness (mig 397)');
 
-  const uniqSrc = `PTW-E2E-UNIQ-${TAG}`;
+  const uniqSrc = crypto.randomUUID();
   let uniqWfId1 = null;
   h.onCleanup(async () => {
     try { await sb.from('workflow_instances').delete().eq('source_record_id', uniqSrc); } catch {}
@@ -655,10 +667,10 @@ export default async function run(h) {
   });
 
   await test('UNIQUE: first start on a fresh source record succeeds', async () => {
+    await seedPermit(uniqSrc, supEmp.id);
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
       sourceRecordId: uniqSrc,
-      recordData: { supervisorId: supEmp.id },
       templateVersionId: verId,
       idempotencyKey: crypto.randomUUID(),
     });
@@ -676,7 +688,6 @@ export default async function run(h) {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
       sourceRecordId: uniqSrc,
-      recordData: { supervisorId: supEmp.id },
       templateVersionId: verId,
       idempotencyKey: crypto.randomUUID(),
     });
@@ -695,6 +706,7 @@ export default async function run(h) {
     const r = await api('workflow-engine/cancel', T.admin, {
       workflowId: uniqWfId1,
       reason: 'E2E uniqueness test — forcing terminal state',
+      idempotencyKey: crypto.randomUUID(),
     });
     ok(r, 'cancel first workflow failed');
     const { data: wf } = await sb.from('workflow_instances').select('status').eq('id', uniqWfId1).single();
@@ -707,7 +719,6 @@ export default async function run(h) {
     const r = await api('workflow-engine/start', T.admin, {
       moduleKey: 'ptw', workflowType: 'permit_approval', triggerEvent: trigger,
       sourceRecordId: uniqSrc,
-      recordData: { supervisorId: supEmp.id },
       templateVersionId: verId,
       idempotencyKey: crypto.randomUUID(),
     });

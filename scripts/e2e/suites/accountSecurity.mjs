@@ -6,6 +6,7 @@
  *   • WebAuthn passkeys    (routes/webauthn.ts)         — credentials list/rename/delete,
  *                                                         prompt/dismiss, options + verify surface
  *   • Step-up             (routes/authStepUp.ts)        — options + verify surface
+ *   • Permission overrides (routes/auth.ts)             — authenticated self-only read
  *   • Admin security      (routes/adminSecurity.ts)     — users/status, admin revoke-all,
  *                                                         policy read + update
  *
@@ -22,6 +23,8 @@
  *   • Cleanup: synthetic users + seeded creds/devices removed; the shared
  *     auth_security_policy singleton is SNAPSHOTTED and restored.
  */
+
+import crypto from 'node:crypto';
 
 export const title = 'Account Security (trusted devices, passkeys, step-up, admin)';
 
@@ -41,7 +44,7 @@ export default async function run(h) {
   const adminT  = mint(admin);
   const adminSU = mintStepUp(admin);
 
-  const ctx = { credSelf: [], credTgt: [], devSelf: [], devTgt: [], policySnapshot: null };
+  const ctx = { credSelf: [], credTgt: [], devSelf: [], devTgt: [], policySnapshot: null, sessionTokenHash: null };
 
   const seedCred = (owner, n) => ({
     id: `WAC-${owner.id}-${n}`, user_id: owner.id,
@@ -59,7 +62,11 @@ export default async function run(h) {
     const users = [secUser.id, targetUser.id, plainUser.id];
     try { await sb.from('webauthn_credentials').delete().in('user_id', users); } catch {}
     try { await sb.from('auth_trusted_devices').delete().in('user_id', users); } catch {}
+    try { await sb.from('refresh_tokens').delete().in('user_id', users); } catch {}
+    try { await sb.from('session_revocations').delete().in('user_id', users); } catch {}
+    try { await sb.from('user_permissions').delete().in('user_id', users); } catch {}
     try { await sb.from('app_events').delete().eq('source_module', 'auth').in('source_entity_id', [...users, 'default']); } catch {}
+    try { await sb.from('activity_logs').delete().eq('action', 'session_revoke').in('entity_id', users); } catch {}
     try { await sb.from('activity_logs').delete().eq('user_id', secUser.id); } catch {}
     try { await sb.from('app_users').delete().in('id', users); } catch {}
     // Restore the shared security-policy singleton to its pre-test values.
@@ -98,6 +105,23 @@ export default async function run(h) {
     expect(!dErr, `seed devices failed: ${dErr?.message}`);
     ctx.devSelf = ['TD-' + secUser.id + '-1', 'TD-' + secUser.id + '-2'];
 
+    const { error: pErr } = await sb.from('user_permissions').insert([
+      { user_id: secUser.id, permission: 'dashboard.view', granted: true, set_by: admin.id },
+      { user_id: targetUser.id, permission: 'hr.view', granted: false, set_by: admin.id },
+    ]);
+    expect(!pErr, `seed permission overrides failed: ${pErr?.message}`);
+
+    ctx.sessionTokenHash = crypto.createHash('sha256').update(`session-${TAG}-${targetUser.id}`).digest('hex');
+    const { error: sErr } = await sb.from('refresh_tokens').insert({
+      user_id: targetUser.id,
+      token_hash: ctx.sessionTokenHash,
+      user_agent: 'SIOMAC E2E Browser',
+      ip_address: '203.0.113.25',
+      last_seen_at: new Date().toISOString(),
+      expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+    });
+    expect(!sErr, `seed active session failed: ${sErr?.message}`);
+
     // Snapshot the policy singleton so we can restore it after policy/update.
     const { data: pol } = await sb.from('auth_security_policy').select('*').eq('id', 'default').maybeSingle();
     ctx.policySnapshot = pol;
@@ -105,6 +129,23 @@ export default async function run(h) {
   });
 
   // ── Trusted devices (self-service) ───────────────────────────────────────────
+  h.section('Account Security > Permission overrides');
+
+  await test('getMyPermissionOverrides denies unauthenticated callers', async () => {
+    fails(await api('getMyPermissionOverrides', null, {}), 'permission overrides require authentication');
+  });
+
+  await test('getMyPermissionOverrides returns only the caller\'s rows', async () => {
+    const r = await api('getMyPermissionOverrides', selfT, {});
+    ok(r, `permission override read failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'permission override data must be an array');
+    expect(r.body.data.length === 1, `expected one self override, got ${r.body.data.length}`);
+    const row = r.body.data[0];
+    expect(row.user_id === secUser.id, `cross-user override leaked: ${row.user_id}`);
+    expect(row.permission === 'dashboard.view' && row.granted === true, 'override response shape/value mismatch');
+    expect('set_by' in row && 'set_at' in row, 'override response is missing audit fields');
+  });
+
   h.section('Account Security > Trusted devices');
 
   await test('unauthenticated trusted-devices/list is rejected', async () => {
@@ -266,6 +307,115 @@ export default async function run(h) {
   await test('a plain employee is DENIED both admin revoke-all endpoints', async () => {
     fails(await api('admin/security/users/passkeys/revoke-all', mintStepUp(plainUser), { userId: targetUser.id }), 'employee denied passkeys revoke');
     fails(await api('admin/security/users/trusted-devices/revoke-all', mintStepUp(plainUser), { userId: targetUser.id }), 'employee denied devices revoke');
+  });
+
+  // ── Active-session administration ───────────────────────────────────────────
+  h.section('Account Security > Active sessions');
+
+  // sessions.manage is superadmin-only by catalogue design. h.users.admin is
+  // NON-DETERMINISTIC (pickUsers takes admin-or-superadmin with no ORDER BY),
+  // so this section pins BOTH actors explicitly: the acting revoker is THE
+  // real superadmin row; the denial check uses a guaranteed role-admin.
+  const { data: saRow } = await sb.from('app_users').select('id, username, role, department_id')
+    .eq('role', 'superadmin').eq('status', 'active').limit(1).maybeSingle();
+  const saUser = saRow;
+  const saT = mint(saUser);
+  const { actors: [roleAdmin], createdIds: raCreated } = await h.acquireActors('admin', 1);
+  const roleAdminT = mint(roleAdmin);
+  h.onCleanup(async () => { if (raCreated?.length) { try { await sb.from('app_users').delete().in('id', raCreated); } catch { /* best-effort */ } } });
+
+  await test('a plain employee is DENIED the active-session register', async () => {
+    expect(saUser, 'no active superadmin on the roster — required for session administration');
+    fails(await api('superadmin/getActiveSessions', plainT, {}), 'employee must be denied the active-session register');
+    fails(await api('superadmin/getActiveSessions', roleAdminT, {}), 'role admin must be denied (sessions.manage is superadmin-only)');
+  });
+
+  await test('getActiveSessions returns the synthetic active session with the UI contract', async () => {
+    const r = await api('superadmin/getActiveSessions', saT, {});
+    ok(r, `getActiveSessions failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.sessions), 'sessions must be an array');
+    const session = r.body.sessions.find(row => row.userId === targetUser.id);
+    expect(session, 'synthetic target session missing from active-session register');
+    for (const field of ['userId', 'username', 'fullName', 'role', 'userAgent', 'ipAddress', 'lastSeenAt', 'createdAt']) {
+      expect(field in session, `active-session row missing field: ${field}`);
+    }
+    expect(session.userAgent === 'SIOMAC E2E Browser', `unexpected user agent: ${session.userAgent}`);
+    expect(session.ipAddress === '203.0.113.25', `unexpected IP address: ${session.ipAddress}`);
+  });
+
+  await test('revokeSession rejects self-revocation and unauthorized callers', async () => {
+    fails(await api('superadmin/revokeSession', saT, { userId: saUser.id, idempotencyKey: crypto.randomUUID() }), 'a superadmin must not revoke their own current session');
+    fails(await api('superadmin/revokeSession', plainT, { userId: targetUser.id, idempotencyKey: crypto.randomUUID() }), 'employee must be denied remote session revoke');
+  });
+
+  await test('revokeSession REQUIRES an idempotency key (no server fallback)', async () => {
+    // Exact 400: run as the AUTHORIZED superadmin so a 403 (wrong actor) can
+    // never masquerade as the missing-key rejection this test is about.
+    const r = await api('superadmin/revokeSession', saT, { userId: targetUser.id });
+    fails(r, 'a revoke without an idempotency key must be rejected');
+    expect(r.status === 400, `expected 400 for a missing idempotency key, got ${r.status}`);
+  });
+
+  const revokeKey = crypto.randomUUID();
+
+  await test('revokeSession is ATOMIC: zero tokens + exactly one marker, event and audit', async () => {
+    const r = await api('superadmin/revokeSession', saT, { userId: targetUser.id, idempotencyKey: revokeKey });
+    ok(r, `revokeSession failed: ${r.body.message}`);
+    expect(r.body.data?.replay === false, 'first revoke must not be a replay');
+
+    const { count: refreshCount } = await sb.from('refresh_tokens').select('token_hash', { count: 'exact', head: true }).eq('user_id', targetUser.id);
+    expect((refreshCount ?? 0) === 0, `target refresh tokens remain after revoke: ${refreshCount}`);
+
+    const { data: revocations } = await sb.from('session_revocations').select('revoked_at, revoked_by').eq('user_id', targetUser.id);
+    expect(revocations?.length === 1, `expected exactly one revocation marker, got ${revocations?.length}`);
+    expect(revocations[0].revoked_by === saUser.username, `unexpected revocation actor: ${revocations[0].revoked_by}`);
+
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'auth.session.revoked').eq('source_entity_id', targetUser.id);
+    expect(events?.length === 1, `expected exactly one auth.session.revoked event, got ${events?.length}`);
+
+    const { data: audits } = await sb.from('activity_logs').select('id, user_id')
+      .eq('action', 'session_revoke').eq('entity', 'user').eq('entity_id', targetUser.id);
+    expect(audits?.length === 1, `expected exactly one session_revoke audit row, got ${audits?.length}`);
+    expect(audits[0].user_id === saUser.id, 'audit row has the wrong actor');
+  });
+
+  await test('revokeSession same-key RETRY replays the original result and writes nothing new', async () => {
+    const r = await api('superadmin/revokeSession', saT, { userId: targetUser.id, idempotencyKey: revokeKey });
+    ok(r, `same-key retry failed: ${r.body.message}`);
+    expect(r.body.data?.replay === true, 'retry must report replay=true');
+
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'auth.session.revoked').eq('source_entity_id', targetUser.id);
+    expect(events?.length === 1, `retry duplicated the event: ${events?.length}`);
+    const { data: audits } = await sb.from('activity_logs').select('id')
+      .eq('action', 'session_revoke').eq('entity', 'user').eq('entity_id', targetUser.id);
+    expect(audits?.length === 1, `retry duplicated the audit row: ${audits?.length}`);
+    const { data: revocations } = await sb.from('session_revocations').select('user_id').eq('user_id', targetUser.id);
+    expect(revocations?.length === 1, `retry duplicated the revocation marker: ${revocations?.length}`);
+  });
+
+  await test('revokeSession same key + DIFFERENT target → 409, nothing written', async () => {
+    const r = await api('superadmin/revokeSession', saT, { userId: secUser.id, idempotencyKey: revokeKey });
+    fails(r, 'reusing an idempotency key for another target must be rejected');
+    expect(r.status === 409, `expected 409, got ${r.status}`);
+    const { data: marker } = await sb.from('session_revocations').select('user_id').eq('user_id', secUser.id).maybeSingle();
+    expect(!marker, 'a 409 must not write a revocation marker for the other target');
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('event_type', 'auth.session.revoked').eq('source_entity_id', secUser.id);
+    expect((events?.length ?? 0) === 0, 'a 409 must not write an event for the other target');
+  });
+
+  await test('revokeSession on a NON-EXISTENT target → 404, no state written', async () => {
+    const ghost = 'USR-GHOST-' + TAG;
+    const r = await api('superadmin/revokeSession', saT, { userId: ghost, idempotencyKey: crypto.randomUUID() });
+    fails(r, 'revoking a missing user must fail');
+    expect(r.status === 404, `expected 404, got ${r.status}`);
+    const { data: marker } = await sb.from('session_revocations').select('user_id').eq('user_id', ghost).maybeSingle();
+    expect(!marker, 'a failed revoke must not write a revocation marker');
+    const { data: audits } = await sb.from('activity_logs').select('id')
+      .eq('action', 'session_revoke').eq('entity_id', ghost);
+    expect((audits?.length ?? 0) === 0, 'a failed revoke must not write an audit row');
   });
 
   // ── Security policy ──────────────────────────────────────────────────────────

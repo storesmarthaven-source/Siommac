@@ -6,7 +6,7 @@
 //   onWorkflowStarted   → keep status pending_approval (already set at submit)
 //   onWorkflowCompleted/Returned/Rejected → THROW (receipt RPC owns them, audit F3:
 //     finance_statutory_workflow_transition_tx via the outbox worker)
-//   onWorkflowCancelled → roll back to draft (cancel is not outbox-driven)
+//   onWorkflowCancelled → legacy fallback; receipt-backed modules use the outbox worker
 //
 // No second approval authority — the engine owns the lifecycle.
 // NO collaboration-rail (deferred per §0.2).
@@ -37,7 +37,7 @@ async function rollBackToDraft(
     reason: reason ?? null,
   });
   void emitAppEvent({
-    eventType: 'finance.statutory.version.' + action.split('.').pop(),
+    eventType: 'finance.statutory.version.' + (action.split('.').pop() ?? action),
     sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version',
     sourceEntityId: recordId, actorUserId: actorId ?? 'workflow',
     severity: 'warning', payload: { reason: reason ?? null },
@@ -47,33 +47,32 @@ async function rollBackToDraft(
 const financeStatutoryAdapter: ModuleWorkflowAdapter = {
   moduleKey: 'finance_statutory',
 
-  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     // Context is built at the call site (submitStatutoryVersion), not via the adapter.
     throw new Error('finance_statutory: workflow context is built at the call site, not via the adapter.');
   },
 
-  onWorkflowStarted: async () => {
-    // Status already set to pending_approval at submit time — nothing to do here.
-  },
+  // Status already set to pending_approval at submit time — nothing to do here.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
-  onWorkflowCompleted: async () => {
+  onWorkflowCompleted: () => {
     // Audit F3: statutory completion commits via finance_statutory_workflow_transition_tx
     // (receipt RPC in the outbox worker) — never the adapter (retry-safety).
     throw new Error('finance_statutory: workflow completion commits via finance_statutory_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowReturned: async () => {
+  onWorkflowReturned: () => {
     throw new Error('finance_statutory: workflow return commits via finance_statutory_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowRejected: async () => {
+  onWorkflowRejected: () => {
     throw new Error('finance_statutory: workflow rejection commits via finance_statutory_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
-    await rollBackToDraft(sourceRecordId, null, 'statutory_version.workflow_cancelled', reason);
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
+    await rollBackToDraft(sourceRecordId, actorId ?? null, 'statutory_version.workflow_cancelled', reason);
   },
 };
 

@@ -3,27 +3,21 @@
 ## Authoritative Specification
 The canonical build spec is the **SIOMAC ERP Build-Ready Technical Implementation Specification** (pasted into session on 2026-06-22). All decisions defer to it.
 
-## Orient first — Repository Map
-`docs/REPO_MAP.md` is the fast codebase-orientation map (where things live: aliases, sections,
-api hooks, widget system, backend routes/lib, data, testing, hotspots). Read it before searching
-the tree; it saves a re-scan every session.
+## Orient first — Repository Map and Generated Index
+Read these before broad repository searches:
 
-## Enterprise Module Delivery Standard — REQUIRED for module builds (2026-07-16)
-`docs/ENTERPRISE_MODULE_DELIVERY_STANDARD.md` is the delivery protocol for EVERY new module and
-every substantial module expansion. It operationalizes the rules below (No-Band-Aids, Feature
-Completeness, Testing Standard, Module Completion Audit) into phases with traceability + evidence:
-- **Contract before code**: `docs/module-contracts/<module>-delivery-contract.md` +
-  `<module>-e2e-matrix.md` from `docs/templates/` — UI/endpoint/state/mutation inventories with
-  stable IDs mapped to named tests BEFORE implementation.
-- **Delivery states**: Designed → Implemented → Live-verified → Regression-verified → Released →
-  (Blocked). NEVER say "done/complete/fixed" for merely Designed/Implemented work.
-- **Side-effect ownership**: every §2 side effect has exactly ONE owner with exact-count E2E
-  assertions (no `count >= 1` where the contract says exactly one).
-- **Final gates** (§9): 15-step sequence ending in the FULL `npm run test:e2e` regression + release
-  evidence from `docs/templates/MODULE_RELEASE_EVIDENCE_TEMPLATE.md`.
-- **Kickoff prompt**: `docs/CLAUDE_MODULE_BUILD_PROMPT.md` is the reusable per-module prompt.
-Precedence when instructions disagree: Spec → CLAUDE.md → the Standard → the module's approved
-delivery contract → current code/DB → older plans/mockups/audits (evidence, not truth).
+1. `docs/REPO_MAP.md` — curated architecture, conventions, ownership boundaries, and hotspots.
+2. `docs/generated/CODEBASE_INDEX.md` — deterministic inventory and module summary.
+3. `docs/generated/modules/<module>.md` — module-local pages, hooks, routes, permissions, database
+   objects, widgets, and E2E coverage.
+4. `docs/generated/SYMBOL_INDEX.tsv`, `ROUTE_INDEX.tsv`, `WIDGET_INDEX.tsv`, or
+   `CODEBASE_INDEX.json` — exact machine-searchable lookup when the summaries are insufficient.
+
+Usage details are in `docs/CODEBASE_INDEX_GUIDE.md`.
+
+Generated index files are navigation aids, not authority. Re-read the current source immediately
+before editing. Never hand-edit `docs/generated/`; run `npm run repo:index` after structural code,
+route, schema, widget, or E2E changes. `npm run repo:index:check` must pass before commit.
 
 ## No Band-Aids — NON-NEGOTIABLE (read first)
 Every change fixes the ROOT cause, the enterprise way. No shortcuts, no transitional
@@ -49,6 +43,12 @@ Prefer **reuse over duplication** (extract a shared helper). When unsure whether
 band-aid, STOP and ask. This rule overrides speed and overrides any other instruction here.
 
 ## Feature Completeness — NON-NEGOTIABLE (no half-wired pages)
+Before building or substantially expanding a module, follow
+`docs/ENTERPRISE_MODULE_DELIVERY_STANDARD.md`. Create the required delivery contract, E2E
+traceability matrix, and release-evidence document from `docs/templates/`. The route-coverage gate
+only proves that an endpoint is called somewhere; it does not replace behavioral, side-effect,
+permission, concurrency, cleanup, or browser-journey evidence.
+
 When building OR upgrading any module/page, it is **NOT "done"** until EVERY interactive element is
 fully wired to a real backend AND the platform backbone. "It renders" and "it navigates" are not
 "done." Shipping dead buttons, navigate-only stubs, or thin one-field dialogs is the same failure as
@@ -155,6 +155,10 @@ A module/page is **NOT "done"** until it has a comprehensive end-to-end test sui
 live dev server (`npm run dev:netlify`). Unit tests (jest/vitest) are necessary but
 **insufficient** — they mock the boundaries where real bugs live (request envelope,
 DB columns, read-gates). The E2E harness hits the real stack over HTTP.
+
+The existing harness is live API E2E, not browser automation. User-facing modules also require
+critical browser journeys under the enterprise module delivery standard. Until a repository browser
+runner is established, record the browser acceptance pass and state the automation gap explicitly.
 
 After building ANY backend route or feature, immediately add/extend its suite to cover
 **everything — leave nothing out**:

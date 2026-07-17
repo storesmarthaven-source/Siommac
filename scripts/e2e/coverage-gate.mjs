@@ -1,8 +1,8 @@
 /**
  * scripts/e2e/coverage-gate.mjs — static E2E route-coverage gate.
  *
- * Parses every mounted POST route (api.ts mount prefixes × routes/*.ts
- * router.post paths) and every `api('<path>', …)` call in scripts/e2e/suites,
+ * Reads every mounted POST route from the deterministic codebase index and every
+ * `api('<path>', …)` call in scripts/e2e/suites,
  * then fails when a route is neither exercised by a suite nor listed in
  * coverage-waivers.json. The waiver file is the EXPLICIT debt list — the gate's
  * job is to stop NEW endpoints shipping without E2E coverage, per the Testing
@@ -14,44 +14,54 @@
  *   node scripts/e2e/coverage-gate.mjs --write-waivers   # regenerate waivers from current gaps
  */
 
+import { execFileSync } from 'node:child_process';
 import { readdirSync, readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 
 const here = dirname(fileURLToPath(import.meta.url));
-const fnRoot = join(here, '..', '..', 'netlify', 'functions');
+const repoRoot = join(here, '..', '..');
 const suitesDir = join(here, 'suites');
 const waiversPath = join(here, 'coverage-waivers.json');
+const routeIndexPath = join(repoRoot, 'docs', 'generated', 'ROUTE_INDEX.tsv');
 
-// ── 1. Mount prefixes: app.route('/api/xxx', someRouter) → routerVar → prefix ──
-const apiSrc = readFileSync(join(fnRoot, 'api.ts'), 'utf8');
-const mounts = new Map(); // routerVar -> [prefixes]
-for (const m of apiSrc.matchAll(/app\.route\('([^']+)',\s*(\w+)\)/g)) {
-  const [, prefix, routerVar] = m;
-  (mounts.get(routerVar) ?? mounts.set(routerVar, []).get(routerVar)).push(prefix);
+// ── 1. Mounted routes ────────────────────────────────────────────────────────
+// The index resolves default/named router exports, constant template paths, and
+// finite registration loops. Refuse to reason from it when source has drifted.
+try {
+  execFileSync(process.execPath, [join(repoRoot, 'scripts', 'generate-codebase-index.mjs'), '--check'], {
+    cwd: repoRoot,
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
 }
-// routerVar -> file: import xxxRouter from './routes/yyy'
-const importOf = new Map();
-for (const m of apiSrc.matchAll(/import\s+(\w+)\s+from\s+'\.\/routes\/([\w.-]+)'/g)) {
-  importOf.set(m[1], m[2]);
-}
-
-// ── 2. Routes per file: router.post('/path', …) ────────────────────────────────
-const routes = []; // { path: '/api/finance/disbursements/list', file }
-for (const [routerVar, prefixes] of mounts) {
-  const file = importOf.get(routerVar);
-  if (!file) continue;
-  const p = join(fnRoot, 'routes', `${file}.ts`);
-  if (!existsSync(p)) continue;
-  const src = readFileSync(p, 'utf8');
-  for (const m of src.matchAll(/router\.post\(\s*'([^']+)'/g)) {
-    for (const prefix of prefixes) {
-      routes.push({ path: `${prefix}${m[1]}`.replace(/\/{2,}/g, '/'), file: `routes/${file}.ts` });
-    }
-  }
+catch (error) {
+  process.stderr.write(error.stdout ?? '');
+  process.stderr.write(error.stderr ?? '');
+  console.error('\nThe E2E coverage gate requires a current codebase index. Run: npm run repo:index');
+  process.exit(1);
 }
 
-// ── 3. Suite calls: api('<path>', …) — paths are relative to /api/ ─────────────
+if (!existsSync(routeIndexPath)) {
+  console.error(`Route index missing: ${routeIndexPath}\nRun: npm run repo:index`);
+  process.exit(1);
+}
+
+const [routeHeader, ...routeRows] = readFileSync(routeIndexPath, 'utf8').trim().split(/\r?\n/).map(line => line.split('\t'));
+const routePathIndex = routeHeader.indexOf('path');
+const routeFileIndex = routeHeader.indexOf('file');
+if (routePathIndex < 0 || routeFileIndex < 0) throw new Error('ROUTE_INDEX.tsv is missing path/file columns');
+const routes = routeRows
+  .map(row => ({ path: row[routePathIndex], file: row[routeFileIndex] }))
+  .filter(route => !route.path.startsWith('UNMOUNTED:'));
+const unresolvedRoutes = routes.filter(route => route.path.includes('${...}'));
+if (unresolvedRoutes.length) {
+  console.error('Mounted route definitions could not be resolved statically:');
+  for (const route of unresolvedRoutes) console.error(`  ${route.path}  (${route.file})`);
+  process.exit(1);
+}
+
+// ── 2. Suite calls: api('<path>', …) — paths are relative to /api/ ─────────────
 const called = new Set();
 for (const f of readdirSync(suitesDir).filter(f => f.endsWith('.mjs'))) {
   const src = readFileSync(join(suitesDir, f), 'utf8');

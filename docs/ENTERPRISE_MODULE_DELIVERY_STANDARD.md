@@ -90,7 +90,8 @@ Before analysis or edits, Claude must record:
 4. The running Netlify/Vite process CWD and port, if a server is already running.
 5. Migration link/state and whether the target database is disposable development, shared
    development, staging, or production.
-6. Current module route files, API hooks, pages, database objects, permissions, and E2E suites.
+6. Current module route files, API hooks, pages, database objects, permissions, and E2E suites,
+   starting from `docs/generated/modules/<module>.md` and the generated lookup indexes.
 
 Required behavior:
 
@@ -98,6 +99,8 @@ Required behavior:
 - Treat concurrent edits as owned by another agent unless ownership was explicitly assigned.
 - Split parallel work by file ownership, not merely by topic.
 - Re-read a file immediately before editing it.
+- Treat `docs/generated/` as read-only output. Run `npm run repo:index` after structural changes
+  and `npm run repo:index:check` before final verification or commit.
 - Never reset, checkout, delete, or overwrite unrelated changes.
 - Do not trust a server until it has been rebuilt and restarted from the same checkout.
 
@@ -599,13 +602,15 @@ implementation.
 
 For each module, Claude must follow this order:
 
-1. Read `CLAUDE.md`, `docs/REPO_MAP.md`, this standard, current module code, and current contracts.
+1. Read `CLAUDE.md`, `docs/REPO_MAP.md`, `docs/generated/CODEBASE_INDEX.md`, the relevant
+   `docs/generated/modules/<module>.md`, this standard, current module code, and current contracts.
 2. Verify workspace and concurrent edits.
 3. Produce the delivery contract and E2E matrix before coding.
 4. Identify all contradictions and decisions requiring user input.
 5. Implement approved vertical slices without touching unrelated files.
 6. Update contract/matrix as behavior changes; do not let documentation drift.
-7. Run fast checks during implementation.
+7. Run fast checks during implementation and refresh the deterministic index after structural
+   code, route, schema, widget, or E2E changes.
 8. Run final target, dependency, browser, and full regression gates once the module is complete.
 9. Produce release evidence.
 10. Ask for independent review on SQL, security, permissions, atomicity, and test completeness.
@@ -641,6 +646,7 @@ reference:
 - Accessibility and keyboard behavior are verified.
 - Target API E2E and browser journeys are green.
 - Full repository regression is green.
+- `npm run repo:index:check` proves the generated codebase map is current.
 - Cleanup leaves no test data.
 - Deployment, rollback, and operator recovery are documented.
 - No target-module waiver, skipped test, dead control, fake value, or known P0/P1 remains.
@@ -658,4 +664,3 @@ Verify these at implementation time because platform behavior changes:
 - Supabase Realtime authorization: https://supabase.com/docs/guides/realtime/authorization
 - PostgreSQL explicit locking: https://www.postgresql.org/docs/current/explicit-locking.html
 - PostgreSQL transaction isolation: https://www.postgresql.org/docs/current/transaction-iso.html
-

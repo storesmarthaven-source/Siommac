@@ -102,7 +102,9 @@ export async function getActiveSessionsApi(): Promise<{
 
 /** Force-logout a user — their tokens are invalidated; they must log in again (fresh 2FA). */
 export async function revokeSessionApi(userId: string): Promise<{ success: boolean; message?: string }> {
-  return apiFetch('superadmin/revokeSession', { method: 'POST', body: { args: { userId } } });
+  // One idempotency key per attempt: a network-level retry of THIS attempt
+  // replays the committed result server-side instead of double-revoking.
+  return apiFetch('superadmin/revokeSession', { method: 'POST', body: { args: { userId, idempotencyKey: crypto.randomUUID() } } });
 }
 
 // ── Audit log ─────────────────────────────────────────────────────────────────

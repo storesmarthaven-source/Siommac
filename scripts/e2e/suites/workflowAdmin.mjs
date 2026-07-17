@@ -41,7 +41,9 @@ export default async function run(h) {
     try { await sb.from('workflow_tasks').delete().eq('workflow_id', ctx.workflowId); } catch {}
     try { await sb.from('workflow_audit_log').delete().eq('workflow_id', ctx.workflowId); } catch {}
     try { await sb.from('workflow_decisions').delete().eq('workflow_id', ctx.workflowId); } catch {}
-    try { await sb.from('app_events').delete().eq('source_module', 'workflow').eq('source_entity_id', ctx.workflowId); } catch {}
+    try { await sb.from('app_events').delete().eq('source_module', 'workflow').contains('payload', { workflowId: ctx.workflowId }); } catch {}
+    try { if (ctx.versionId) await sb.from('app_events').delete().eq('dedupe_key', `wf.template.version_published:${ctx.versionId}`); } catch {}
+    try { if (ctx.versionId) await sb.from('audit_logs').delete().eq('action', 'workflow.template.version_published').eq('record_id', ctx.versionId); } catch {}
     try { await sb.from('notifications').delete().eq('source_id', ctx.workflowId); } catch {}
     try { await sb.from('workflow_instances').delete().eq('id', ctx.workflowId); } catch {}
     try { await sb.from('module_workflow_bindings').delete().eq('template_id', ctx.templateId); } catch {}
@@ -104,6 +106,17 @@ export default async function run(h) {
     expect(ver?.version_status === 'published', `version should be published, got ${ver?.version_status}`);
     const { data: tpl } = await sb.from('workflow_templates').select('status, current_version').eq('id', ctx.templateId).maybeSingle();
     expect(tpl?.status === 'active' && tpl?.current_version >= 1, 'template should be active with current_version bumped');
+    const [{ data: events }, { data: audits }] = await Promise.all([
+      sb.from('app_events').select('id').eq('dedupe_key', `wf.template.version_published:${ctx.versionId}`),
+      sb.from('audit_logs').select('id').eq('action', 'workflow.template.version_published').eq('record_id', ctx.versionId),
+    ]);
+    expect(events?.length === 1, `publish should write one event, got ${events?.length}`);
+    expect(audits?.length === 1, `publish should write one audit, got ${audits?.length}`);
+
+    const retry = await api('workflow-engine/templates/version/publish', adminT, { versionId: ctx.versionId });
+    ok(retry, `idempotent publish retry failed: ${retry.body.message}`);
+    const { data: retryEvents } = await sb.from('app_events').select('id').eq('dedupe_key', `wf.template.version_published:${ctx.versionId}`);
+    expect(retryEvents?.length === 1, 'publish retry duplicated its event');
   });
 
   await test('employee is DENIED templates/version/publish', async () => {
@@ -120,6 +133,22 @@ export default async function run(h) {
     });
     ok(r, `bindings/create failed: ${r.body.message}`);
     ctx.bindingId = r.body.data.id;
+  });
+
+  await test('bindings/create rejects missing scoped id and discarded global scope id', async () => {
+    const missing = await api('workflow-engine/bindings/create', adminT, {
+      moduleKey: 'e2e_wf', workflowType: 'e2e_approval', triggerEvent: 'e2e.scoped.missing',
+      templateId: ctx.templateId, scopeType: 'site', priority: 101,
+    });
+    fails(missing, 'site binding without scopeId should fail');
+    expect(missing.status === 400, `expected 400, got ${missing.status}`);
+
+    const discarded = await api('workflow-engine/bindings/create', adminT, {
+      moduleKey: 'e2e_wf', workflowType: 'e2e_approval', triggerEvent: 'e2e.global.extra',
+      templateId: ctx.templateId, scopeType: 'global', scopeId: randomUUID(), priority: 102,
+    });
+    fails(discarded, 'global binding with scopeId should fail');
+    expect(discarded.status === 400, `expected 400, got ${discarded.status}`);
   });
 
   await test('bindings/list returns the binding (filtered by module)', async () => {
@@ -170,7 +199,7 @@ export default async function run(h) {
     expect(!iErr, `seed instance failed: ${iErr?.message}`);
     const { error: kErr } = await sb.from('workflow_tasks').insert({
       id: ctx.taskId, workflow_id: ctx.workflowId, step_key: 'step1', status: 'pending',
-      assigned_to: assignee.id, step_name: 'Step 1', step_type: 'approval', task_title: 'E2E task', is_required: true,
+      assigned_to: admin.id, step_name: 'Step 1', step_type: 'approval', task_title: 'E2E task', is_required: true,
     });
     expect(!kErr, `seed task failed: ${kErr?.message}`);
   });
@@ -194,30 +223,89 @@ export default async function run(h) {
     expect(Array.isArray(r.body.data), 'my-tasks data must be an array');
   });
 
+  await test('outbox/list exposes queue stats and honors workflow filtering', async () => {
+    const r = await api('workflow-engine/outbox/list', adminT, { workflowId: ctx.workflowId });
+    ok(r, `outbox/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'outbox/list data must be an array');
+    expect(r.body.data.every(row => row.workflow_transitions?.workflow_id === ctx.workflowId), 'workflow filter returned another workflow');
+    expect(Number.isInteger(r.body.stats?.queueDepth), 'queueDepth stat missing');
+    expect(Number.isInteger(r.body.stats?.deadLetters), 'deadLetters stat missing');
+    expect('oldestPendingAt' in r.body.stats, 'oldestPendingAt stat missing');
+  });
+
   await test('delegate the task to another user', async () => {
-    const r = await api('workflow-engine/delegate', adminT, { taskId: ctx.taskId, delegateTo: assignee.id, reason: 'E2E delegate' });
+    const key = randomUUID();
+    const args = { taskId: ctx.taskId, delegateTo: assignee.id, reason: 'E2E delegate', idempotencyKey: key };
+    const r = await api('workflow-engine/delegate', adminT, args);
     ok(r, `delegate failed: ${r.body.message}`);
-    const { data } = await sb.from('workflow_tasks').select('delegated_to, status').eq('id', ctx.taskId).maybeSingle();
-    expect(data?.delegated_to === assignee.id, `delegated_to should be set, got ${data?.delegated_to}`);
+    const { data } = await sb.from('workflow_tasks').select('assigned_to, assigned_role, delegated_to, status').eq('id', ctx.taskId).maybeSingle();
+    expect(data?.assigned_to === assignee.id && data?.delegated_to === assignee.id, 'delegate should transfer user assignment');
+    expect(data?.assigned_role == null, 'delegate must clear the previous role assignment');
+    expect(data?.status === 'pending', `delegate must leave the task actionable, got ${data?.status}`);
+
+    ok(await api('workflow-engine/delegate', adminT, args), 'same-key delegate retry should succeed');
+    const divergent = await api('workflow-engine/delegate', adminT, { ...args, delegateTo: emp.id });
+    fails(divergent, 'same key with a different delegate should fail');
+    expect(divergent.status === 409, `expected 409, got ${divergent.status}`);
+    const [{ data: decisions }, { data: audits }, { data: events }] = await Promise.all([
+      sb.from('workflow_decisions').select('id').eq('task_id', ctx.taskId),
+      sb.from('workflow_audit_log').select('id').eq('task_id', ctx.taskId).eq('action', 'workflow.task.delegated'),
+      sb.from('app_events').select('id').eq('dedupe_key', `wf.command:${admin.id}:${key}`),
+    ]);
+    expect(decisions?.length === 0, 'delegate must not consume the task decision slot');
+    expect(audits?.length === 1, `delegate should write one audit, got ${audits?.length}`);
+    expect(events?.length === 1, `delegate should write one event, got ${events?.length}`);
   });
 
   await test('reassign the task to another user', async () => {
-    const r = await api('workflow-engine/reassign', adminT, { taskId: ctx.taskId, reassignTo: emp.id, reason: 'E2E reassign' });
+    const key = randomUUID();
+    const r = await api('workflow-engine/reassign', adminT, { taskId: ctx.taskId, reassignTo: emp.id, reason: 'E2E reassign', idempotencyKey: key });
     ok(r, `reassign failed: ${r.body.message}`);
-    const { data } = await sb.from('workflow_tasks').select('assigned_to').eq('id', ctx.taskId).maybeSingle();
+    const [{ data }, { data: decisions }, { data: audits }, { data: events }] = await Promise.all([
+      sb.from('workflow_tasks').select('assigned_to').eq('id', ctx.taskId).maybeSingle(),
+      sb.from('workflow_decisions').select('id').eq('task_id', ctx.taskId),
+      sb.from('workflow_audit_log').select('id').eq('task_id', ctx.taskId).eq('action', 'workflow.task.reassigned'),
+      sb.from('app_events').select('id').eq('dedupe_key', `wf.command:${admin.id}:${key}`),
+    ]);
     expect(data?.assigned_to === emp.id, `assigned_to should be reassigned, got ${data?.assigned_to}`);
+    expect(decisions?.length === 0, 'reassign must not consume the task decision slot');
+    expect(audits?.length === 1, `reassign should write one audit, got ${audits?.length}`);
+    expect(events?.length === 1, `reassign should write one event, got ${events?.length}`);
   });
 
-  await test('cancel the workflow → status cancelled + audit written', async () => {
-    const r = await api('workflow-engine/cancel', adminT, { workflowId: ctx.workflowId, reason: 'E2E cancel' });
+  await test('cancel is atomic, idempotent, and records exact side effects', async () => {
+    const key = randomUUID();
+    const args = { workflowId: ctx.workflowId, reason: 'E2E cancel', idempotencyKey: key };
+    const r = await api('workflow-engine/cancel', adminT, args);
     ok(r, `cancel failed: ${r.body.message}`);
-    const { data } = await sb.from('workflow_instances').select('status').eq('id', ctx.workflowId).maybeSingle();
+    expect(r.status === 200 && r.body.pending !== true, `inline cancellation should finalize, got ${r.status}`);
+    const [{ data }, { data: task }, { data: transition }] = await Promise.all([
+      sb.from('workflow_instances').select('status, active_transition_id').eq('id', ctx.workflowId).maybeSingle(),
+      sb.from('workflow_tasks').select('status').eq('id', ctx.taskId).maybeSingle(),
+      sb.from('workflow_transitions').select('id, kind, status').eq('workflow_id', ctx.workflowId).eq('kind', 'cancel').maybeSingle(),
+    ]);
     expect(data?.status === 'cancelled', `instance should be cancelled, got ${data?.status}`);
-    const gotAudit = await waitFor(async () => {
-      const { data: a } = await sb.from('workflow_audit_log').select('id').eq('workflow_id', ctx.workflowId).eq('action', 'workflow.cancelled').limit(1);
-      return (a ?? []).length > 0;
-    });
-    expect(gotAudit, 'workflow.cancelled audit row not found');
+    expect(data?.active_transition_id == null, 'completed cancellation must clear the workflow gate');
+    expect(task?.status === 'cancelled', `open task should be cancelled, got ${task?.status}`);
+    expect(transition?.status === 'completed', `cancel transition should complete, got ${transition?.status}`);
+    const { data: outbox } = await sb.from('workflow_outbox').select('status').eq('transition_id', transition.id).maybeSingle();
+    expect(outbox?.status === 'completed', `cancel outbox should complete, got ${outbox?.status}`);
+
+    ok(await api('workflow-engine/cancel', adminT, args), 'same-key cancel retry should succeed');
+    const divergent = await api('workflow-engine/cancel', adminT, { ...args, reason: 'Different cancellation' });
+    fails(divergent, 'same cancel key with a different reason should fail');
+    expect(divergent.status === 409, `expected 409, got ${divergent.status}`);
+
+    const [{ data: decisions }, { data: audits }, { data: events }, { data: finalEvents }] = await Promise.all([
+      sb.from('workflow_decisions').select('id').eq('workflow_id', ctx.workflowId).eq('decision', 'cancelled'),
+      sb.from('workflow_audit_log').select('id').eq('workflow_id', ctx.workflowId).eq('action', 'workflow.cancelled'),
+      sb.from('app_events').select('id').eq('dedupe_key', `wf.command:${admin.id}:${key}`),
+      sb.from('app_events').select('id').eq('event_type', 'workflow.cancelled').contains('payload', { workflowId: ctx.workflowId }),
+    ]);
+    expect(decisions?.length === 1, `cancel should write one decision, got ${decisions?.length}`);
+    expect(audits?.length === 1, `cancel should write one audit, got ${audits?.length}`);
+    expect(events?.length === 1, `cancel should write one request event, got ${events?.length}`);
+    expect(finalEvents?.length === 1, `cancel should write one final event, got ${finalEvents?.length}`);
   });
 
   await test('audit/list returns the workflow audit trail', async () => {
@@ -230,8 +318,9 @@ export default async function run(h) {
     fails(await api('workflow-engine/register', empT, {}), 'employee denied register');
     fails(await api('workflow-engine/get', empT, { workflowId: ctx.workflowId }), 'employee denied get');
     fails(await api('workflow-engine/audit/list', empT, {}), 'employee denied audit/list');
-    fails(await api('workflow-engine/delegate', empT, { taskId: ctx.taskId, delegateTo: assignee.id, reason: 'x' }), 'employee denied delegate');
-    fails(await api('workflow-engine/reassign', empT, { taskId: ctx.taskId, reassignTo: assignee.id, reason: 'x' }), 'employee denied reassign');
-    fails(await api('workflow-engine/cancel', empT, { workflowId: ctx.workflowId, reason: 'x' }), 'employee denied cancel');
+    fails(await api('workflow-engine/outbox/list', empT, {}), 'employee denied outbox/list');
+    fails(await api('workflow-engine/delegate', empT, { taskId: ctx.taskId, delegateTo: assignee.id, reason: 'x', idempotencyKey: randomUUID() }), 'employee denied delegate');
+    fails(await api('workflow-engine/reassign', empT, { taskId: ctx.taskId, reassignTo: assignee.id, reason: 'x', idempotencyKey: randomUUID() }), 'employee denied reassign');
+    fails(await api('workflow-engine/cancel', empT, { workflowId: ctx.workflowId, reason: 'x', idempotencyKey: randomUUID() }), 'employee denied cancel');
   });
 }

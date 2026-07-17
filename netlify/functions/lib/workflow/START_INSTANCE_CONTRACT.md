@@ -1,4 +1,4 @@
-# `workflow_start_instance_tx` — Explicit-Start Contract (v1)
+# `workflow_start_instance_tx` - Explicit-Start Contract (v2)
 
 > Design authority: `SUBMIT_TX_DESIGN.md` §2d, §7.
 > This document is the REQUIRED/FORBIDDEN/DEFERRED preflight for the explicit-start
@@ -22,7 +22,7 @@ public.workflow_start_instance_tx(
   p_department_id       text   = null,
   p_priority            text   = 'medium',
   p_source_snapshot     jsonb  = '{}',
-  p_assignees           jsonb  = '{}',  -- stepKey -> { userId? | roleKey? } (first steps only)
+  p_assignees           jsonb  = '{}',  -- backend-resolved first-step assignees
   p_request_key         text   = null  -- blank -> no dedup; non-blank -> exactly-once
 ) returns jsonb  -- { workflowId, workflowNo, currentStepKey, firstTasks }
 ```
@@ -46,6 +46,9 @@ Custom SQLSTATEs: `WF422` (invalid input), `WF404` (template/version not found),
   `wf_internal._create_instance`.
 - **In-txn template re-validation**: the version is re-read FOR SHARE so a
   concurrent version-status change cannot slip through.
+- **Server-derived context**: public HTTP routes load the canonical source row,
+  enforce actor scope, redact sensitive fields, and resolve first-step assignees.
+  Caller-supplied snapshots and assignees are rejected by strict request schemas.
 - **In-txn receipt** (when `p_request_key` is non-blank): `_claim_request` blocks
   concurrents on the same key; `_record_request` writes the receipt in the same txn.
   Same key + same hash -> return stored result (idempotent 200).
@@ -64,10 +67,11 @@ Custom SQLSTATEs: `WF422` (invalid input), `WF404` (template/version not found),
   already wrote those in-txn. Doing so doubles the events.
 - **No source-record update in TS**: any `UPDATE source SET workflow_id = ...` after
   this RPC is a band-aid. If source linkage is needed, use the Shape-A/B wrappers.
-- **No auth bypass**: routes MUST run source-existence + module-authz checks BEFORE
-  calling this RPC. The RPC trusts its inputs; auth is the route's responsibility (§7).
-- **No caller-supplied snapshot as auth**: `p_source_snapshot` is metadata only;
-  the primitive never trusts it for authorization decisions.
+- **No auth bypass**: routes MUST run canonical source loading, actor-scope checks,
+  and module authorization BEFORE calling this service-role-only RPC.
+- **No caller-supplied workflow context**: public routes MUST reject `recordData`,
+  `assignees`, owner/site/department overrides, and caller priority. The backend
+  alone constructs `p_source_snapshot` and `p_assignees`.
 
 ---
 
@@ -77,8 +81,10 @@ Custom SQLSTATEs: `WF422` (invalid input), `WF404` (template/version not found),
 **Gate 1 (platform):** `workflow.view` via `requirePermission`.
 **Gate 2 (module):** actor must hold `MODULE_START_PERMISSION[sourceModule]`
   checked via `userCan`. Unknown module -> 403.
-**Gate 3 (source):** source record must exist in `MODULE_SOURCE_TABLE[sourceModule]`
-  (UUID-format IDs only; non-UUID refs skip the check). Missing record -> 404.
+**Gate 3 (source):** `buildCanonicalStartContext` resolves the module through the
+  static `SOURCE_SPECS` registry, requires the canonical UUID for UUID-backed
+  modules, loads the source record, and applies `assertInScope`. Unknown module ->
+  422; malformed identifier -> 400; missing record -> 404; out-of-scope -> 403.
 **idempotencyKey**: REQUIRED in Zod schema (uuid); FE generates `crypto.randomUUID()`
   per mutation attempt.
 
@@ -86,32 +92,32 @@ Custom SQLSTATEs: `WF422` (invalid input), `WF404` (template/version not found),
 **Gate 1 (platform):** `workflow.submit` via `requirePermission`.
 **Gate 2 (module):** actor must hold `MODULE_START_PERMISSION[moduleKey]`
   checked via `userCan`. Unknown module -> 403.
-**Gate 3 (source):** same UUID-based existence check as E1. Missing record -> 404.
+**Gate 3 (source):** same canonical registry load and scope check as E1.
 **templateVersionId**: REQUIRED in Zod schema (replaces bound-start binding resolution).
 **idempotencyKey**: REQUIRED in Zod schema (uuid); caller generates per attempt.
-**assignees**: accepted in Zod schema (optional jsonb); if omitted the TS wrapper
-  resolves from `recordData` via `resolveStepAssignee`.
+**assignees / recordData / context overrides**: FORBIDDEN by the strict Zod
+  schema. The backend resolves assignees from the canonical source snapshot.
 
-### E3 — `POST /api/onboarding/actions/case/add` -> `addCaseAction` -> `instantiate`
-**Gate 1 (route):** `hr.onboarding.custom_actions.case_add` via `requirePermission`
-  (already in place pre-slice).
-**Gate 2 (source):** `loadCase(caseId)` already throws 404 if the case is missing.
-**Gate 3 (module):** the template-module cross-check inside `_create_instance` rejects
-  a `workflowTemplateId` from a different module (e.g. a finance template called from
-  the onboarding context raises WF409 in the primitive).
-**idempotencyKey**: generated inside `instantiate` via `randomUUID()` and threaded to
-  `startWorkflowByTemplate` -> `startWorkflowExplicit`.
+### E3 - onboarding custom approval action
+
+E3 is not an explicit start. It creates an onboarding case-action row and starts a
+workflow for that new action, so it requires the typed
+`hr_onboarding_action_create_and_start_tx` Shape-B wrapper. Until that wrapper and
+caller cutover land, E3 remains a tracked blocker and MUST NOT be described as
+transactionally complete.
 
 ---
 
 ## 5. Source-validation rules
 
-`validateModuleSourceExists(moduleKey, sourceRecordId)` in `service.ts`:
-- Skips the check if `moduleKey` is not in `MODULE_SOURCE_TABLE`.
-- Skips the check if `sourceRecordId` does not match UUID format (text refs like
-  `PTW-2026-001` are allowed — source records in those modules are identified by ref).
-- For UUID IDs in known modules: `select('id').eq('id', id).maybeSingle()` via the
-  service-role client. `null` result -> caller returns 404.
+`buildCanonicalStartContext(input)` in `sourceContext.ts`:
+- rejects modules absent from the static source registry;
+- rejects non-UUID references for UUID-backed source tables;
+- loads the complete canonical source row and rejects missing records;
+- derives site, department, owner, subject, supervisor, department manager, site
+  manager, HSE manager, area owner, requester manager, priority, and source ref;
+- applies `assertInScope` before any workflow can be created;
+- removes password, MFA, banking, and token fields from the stored snapshot.
 
 ---
 
@@ -123,7 +129,7 @@ Two concurrent explicit-start calls with the same key and the same hash return t
 same `workflowId` (exactly-once). A second call with a different hash (different
 payload) raises WF409 — this is a caller bug, not a retry.
 
-For E1/E2/E3 the idempotencyKey is a per-attempt `crypto.randomUUID()` (stable
+For E1/E2 the idempotencyKey is a per-attempt `crypto.randomUUID()` (stable
 within one attempt, new for a user-initiated re-submit). This prevents accidental
 double-start from network retries while correctly allowing a user to start a second
 workflow on the same source record.
@@ -149,6 +155,14 @@ workflow on the same source record.
 ---
 
 ## 8. DEFERRED
+
+- Move the canonical source read and source-scope assertion into static typed SQL
+  wrappers. The current E1/E2 server-side read closes caller injection but still
+  occurs immediately before the workflow transaction, leaving a narrow source-row
+  change race. The typed wrappers are the final transaction-boundary design.
+- E3 onboarding custom approvals: implement
+  `hr_onboarding_action_create_and_start_tx`, link the workflow to the case-action
+  id, and remove the current create-then-start path.
 
 - Binding-mode support in this wrapper (pass a `p_binding_id` and omit
   `p_template_version_id`): the primitive already supports bound mode; a future

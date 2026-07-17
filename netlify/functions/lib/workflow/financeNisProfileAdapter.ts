@@ -42,16 +42,15 @@ const financeNisProfileAdapter: ModuleWorkflowAdapter = {
   moduleKey:    'finance_payroll',
   workflowType: 'finance_nis_profile_verification',
 
-  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     // Context is built at the call site (submitStatutoryProfile), not via the adapter.
     throw new Error('finance_payroll/nis: workflow context is built at the call site, not via the adapter.');
   },
 
-  onWorkflowStarted: async () => {
-    // Profile remains in pending_verification — no status change at start.
-  },
+  // Profile remains in pending_verification — no status change at start.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
     // Finance Manager has verified — set nis_status='verified'.
@@ -81,7 +80,7 @@ const financeNisProfileAdapter: ModuleWorkflowAdapter = {
       action:       'nis_profile.workflow_returned',
       previousState: { nisStatus: 'pending_verification' },
       newState:      { nisStatus: 'pending_verification' },
-      reason:        comment ?? null,
+      reason:        comment,
     });
     void emitAppEvent({
       eventType:       'finance.nis.profile.returned',
@@ -90,7 +89,7 @@ const financeNisProfileAdapter: ModuleWorkflowAdapter = {
       sourceEntityId:  sourceRecordId,
       actorUserId:     actor ?? 'workflow',
       severity:        'warning',
-      payload:         { reason: comment ?? null },
+      payload:         { reason: comment },
     });
   },
 
@@ -105,20 +104,20 @@ const financeNisProfileAdapter: ModuleWorkflowAdapter = {
       sourceEntityId:  sourceRecordId,
       actorUserId:     actor ?? 'workflow',
       severity:        'warning',
-      payload:         { reason: comment ?? null },
+      payload:         { reason: comment },
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     // Profile stays at pending_verification — HR may re-submit.
     await writeHrAudit({
       submoduleKey: 'finance_payroll_nis',
       recordId:     sourceRecordId,
-      actorId:      'workflow',
+      actorId:      actorId ?? null,
       action:       'nis_profile.workflow_cancelled',
       previousState: null,
       newState:      { nisStatus: 'pending_verification' },
-      reason:        reason ?? null,
+      reason,
     });
   },
 };

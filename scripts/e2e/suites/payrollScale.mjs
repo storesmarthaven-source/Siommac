@@ -183,7 +183,7 @@ export default async function run(h) {
   h.section('Scale > Approve + lock (via workflow, SoD enforced)');
 
   await test('fmgrT submits the run -> pending_approval + workflow task created', async () => {
-    const r = await api('finance/payroll/runs/submit', fmgrT, { id: ctx.runId });
+    const r = await api('finance/payroll/runs/submit', fmgrT, { id: ctx.runId, idempotencyKey: `submit-scale-${TAG}` });
     ok(r, `submit failed: ${r.body.message}`);
     const got = await waitFor(async () => {
       const { data } = await sb.from('finance_payroll_runs').select('status, workflow_id').eq('id', ctx.runId).maybeSingle();

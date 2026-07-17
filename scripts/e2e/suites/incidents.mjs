@@ -846,22 +846,34 @@ export default async function run(h) {
     expect((audits?.length ?? 0) === 1, `expected exactly 1 audit_logs row keyed by ref, got ${audits?.length ?? 0}`);
   });
 
-  await test('D1: lost-time incident still raises the HR handoff (post-commit parity)', async () => {
-    const r = await api('hse/incidents/create', T.admin, {
-      ...baseIncident(), title: `${TAG} D1 LostTime`, severity: 'high', lostTime: true, lostDays: 3,
+  await test('D1: incident + all conditional handoffs commit once and retry idempotently', async () => {
+    const payload = {
+      ...baseIncident(), title: `${TAG} D1 All Handoffs`, severity: 'high',
+      lostTime: true, lostDays: 3, costImpact: true, equipmentDamage: true,
       people: [{ personType: 'injured', fullName: `${TAG} D1 LT Worker`, userId: admin.id }],
-    });
+    };
+    const r = await api('hse/incidents/create', T.admin, payload);
+    const retry = await api('hse/incidents/create', T.admin, payload);
     ok(r, `create failed: ${r.body.message}`);
+    ok(retry, `retry failed: ${retry.body.message}`);
+    expect(retry.body.data.id === r.body.data.id, 'retry returned a different incident');
     ctx.incidentIds.push(r.body.data.id);
-    const { data: rowLt } = await sb.from('hse_incidents').select('workflow_id').eq('id', r.body.data.id).single();
+    const { data: rowLt } = await sb.from('hse_incidents').select('workflow_id,metadata').eq('id', r.body.data.id).single();
     if (rowLt?.workflow_id) d1WorkflowIds.push(rowLt.workflow_id);
-    expect((r.body.data.handoffIds?.length ?? 0) >= 1, 'expected at least the HR lost-time handoff id in the response');
-    const found = await waitFor(async () => {
-      const { data } = await sb.from('handoff_outbox').select('id')
-        .eq('source_entity_id', r.body.data.id).eq('target_module', 'hr').limit(1);
-      return (data ?? []).length > 0;
-    });
-    expect(found, 'HR lost-time handoff_outbox row not found');
+    expect(rowLt?.metadata?.costImpact === true, 'costImpact must persist on the incident');
+    expect(rowLt?.metadata?.equipmentDamage === true, 'equipmentDamage must persist on the incident');
+    expect(r.body.data.handoffIds?.length === 3, `expected 3 handoff ids, got ${r.body.data.handoffIds?.length}`);
+    expect(JSON.stringify(retry.body.data.handoffIds) === JSON.stringify(r.body.data.handoffIds), 'retry returned different handoff ids');
+
+    const [{ data: handoffs }, { data: handoffEvents }, { data: incidents }] = await Promise.all([
+      sb.from('handoff_outbox').select('id,target_module').eq('source_entity_id', r.body.data.id).order('target_module'),
+      sb.from('app_events').select('id').eq('event_type', 'handoff.created').eq('source_entity_id', r.body.data.id),
+      sb.from('hse_incidents').select('id').eq('id', r.body.data.id),
+    ]);
+    expect(handoffs?.length === 3, `expected exactly 3 handoffs, got ${handoffs?.length}`);
+    expect(handoffs?.map(x => x.target_module).join(',') === 'finance,hr,operations', 'wrong handoff targets');
+    expect(handoffEvents?.length === 3, `expected exactly 3 handoff events, got ${handoffEvents?.length}`);
+    expect(incidents?.length === 1, `retry duplicated the incident: ${incidents?.length}`);
   });
 
   await test('D1: CAPA create is ATOMIC — open status + closure workflow + 1 event + 1 audit', async () => {

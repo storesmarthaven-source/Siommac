@@ -26,8 +26,9 @@ claims were factually wrong — see "Audit errors" at the bottom.
      (`PIN: explicit start with a redirected role assignee → 422`).
    - financeStatutory exercises the new receipt RPC path end-to-end
      (incl. rejected-thread parity: subject contains "rejected").
-6. Realtime-auth switch-on (unchanged, separate): set `SUPABASE_JWT_SECRET` →
-   `node scripts/verify-realtime-auth.mjs` phase A → apply mig **351** (NOT 350 —
+6. Realtime-auth switch-on (unchanged, separate): set
+   `SUPABASE_JWT_ES256_PRIVATE_KEY` + `SUPABASE_JWT_ES256_KID` per
+   `RUNBOOK_REALTIME_AUTH.md` → `node scripts/verify-realtime-auth.mjs` phase A → apply mig **351** (NOT 350 —
    350 is HELD and its root apply-copy has been deleted) → verify A+B.
 
 ## Per-finding disposition

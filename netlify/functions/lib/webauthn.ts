@@ -27,7 +27,13 @@ import type { AppUser }  from '../../../types/db';
 
 export const WEBAUTHN_RP_ID     = process.env.WEBAUTHN_RP_ID     ?? 'localhost';
 export const WEBAUTHN_RP_NAME   = process.env.WEBAUTHN_RP_NAME   ?? 'SIOMAC ERP';
-export const WEBAUTHN_ORIGIN    = process.env.WEBAUTHN_ORIGIN    ?? 'http://localhost:8888';
+/** Allowed ceremony origins, comma-separated. The dev stack is reachable on
+ *  BOTH the Vite origin (5173, proxying /api) and the Netlify origin (8888) —
+ *  a single pinned origin rejects passkeys from the other one. Production
+ *  sets WEBAUTHN_ORIGIN to its real origin(s); rpID 'localhost' covers both
+ *  dev ports (rpID is a hostname, ports don't participate). */
+export const WEBAUTHN_ORIGINS   = (process.env.WEBAUTHN_ORIGIN ?? 'http://localhost:8888,http://localhost:5173')
+  .split(',').map(o => o.trim()).filter(Boolean);
 
 /** Challenge TTL: 5 minutes (enough for a credential ceremony). */
 const CHALLENGE_TTL_MS = 5 * 60 * 1000;
@@ -72,9 +78,10 @@ export interface CredentialSummary {
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Convert base64url string → Uint8Array (used by the library's credential shape). */
-function b64UrlToBytes(b64url: string): Uint8Array {
-  // Node's Buffer understands base64url with the 'base64url' encoding
-  return Buffer.from(b64url, 'base64url');
+function b64UrlToBytes(b64url: string): Uint8Array<ArrayBuffer> {
+  // Node's Buffer understands base64url; copy into a fresh Uint8Array so the
+  // result is backed by a plain ArrayBuffer (Buffers may share a pooled one).
+  return new Uint8Array(Buffer.from(b64url, 'base64url'));
 }
 
 /** Convert Uint8Array → base64url string for storage. */
@@ -135,21 +142,19 @@ export async function generateRegistrationOptions(
   _pruneExpiredChallenges();
 
   const existing = await _getCredentialRows(user.id);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const excludeCredentials = existing.map(c => ({
+  const excludeCredentials: PublicKeyCredentialDescriptorJSON[] = existing.map(c => ({
     id:         c.credential_id,
-    type:       'public-key' as const,
-    transports: (c.transports ?? []) as string[],
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  })) as any;
+    type:       'public-key',
+    // DB stores plain strings; the registration ceremony only echoes them back.
+    transports: (c.transports ?? undefined) as PublicKeyCredentialDescriptorJSON['transports'],
+  }));
 
   const options = await _genRegOpts({
     rpName:                WEBAUTHN_RP_NAME,
     rpID:                  WEBAUTHN_RP_ID,
     userName:              user.username,
-    userDisplayName:       user.full_name ?? user.username,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    userID:                new TextEncoder().encode(user.id) as any,
+    userDisplayName:       user.full_name,
+    userID:                new TextEncoder().encode(user.id),
     timeout:               60_000,
     attestationType:       'none',
     excludeCredentials,
@@ -204,29 +209,31 @@ export async function verifyRegistration(
   const verification = await _verifyReg({
     response:                 attResp,
     expectedChallenge:        challengeRow.challenge,
-    expectedOrigin:           WEBAUTHN_ORIGIN,
+    expectedOrigin:           WEBAUTHN_ORIGINS,
     expectedRPID:             WEBAUTHN_RP_ID,
     requireUserVerification:  false,
   });
 
-  if (!verification.verified || !verification.registrationInfo) {
+  if (!verification.verified) {
     throw Object.assign(new Error('Registration verification failed'), { status: 400 });
   }
 
   const info = verification.registrationInfo;
   const credId = `WAC-${crypto.randomUUID()}`;
+  // '' (label cleared/blank) intentionally stores NULL, not empty string.
+  const trimmedLabel = label?.trim();
 
   const row: Omit<CredentialRow, 'created_at' | 'last_used_at'> = {
     id:            credId,
     user_id:       user.id,
     credential_id: info.credential.id,
-    public_key:    bytesToB64Url(info.credential.publicKey as Uint8Array),
+    public_key:    bytesToB64Url(info.credential.publicKey),
     counter:       info.credential.counter,
-    transports:    (info.credential.transports ?? []) as string[],
-    device_type:   info.credentialDeviceType ?? null,
-    backed_up:     info.credentialBackedUp ?? false,
-    aaguid:        info.aaguid ?? null,
-    label:         label?.trim() || null,
+    transports:    info.credential.transports ?? [],
+    device_type:   info.credentialDeviceType,
+    backed_up:     info.credentialBackedUp,
+    aaguid:        info.aaguid,
+    label:         trimmedLabel === undefined || trimmedLabel === '' ? null : trimmedLabel,
   };
 
   await sb.from('webauthn_credentials').insert(row);
@@ -256,22 +263,20 @@ export async function generateAuthenticationOptions(
 ): Promise<{ options: Awaited<ReturnType<typeof _genAuthOpts>>; challengeId: string }> {
   _pruneExpiredChallenges();
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  let allowCredentials: any[] = [];
+  let allowCredentials: PublicKeyCredentialDescriptorJSON[] = [];
   if (userId) {
     const creds = await _getCredentialRows(userId);
     allowCredentials = creds.map(c => ({
       id:         c.credential_id,
-      type:       'public-key' as const,
-      transports: c.transports ?? [],
+      type:       'public-key',
+      transports: (c.transports ?? undefined) as PublicKeyCredentialDescriptorJSON['transports'],
     }));
   }
 
   const options = await _genAuthOpts({
     rpID:             WEBAUTHN_RP_ID,
     timeout:          60_000,
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    allowCredentials: allowCredentials as any,
+    allowCredentials,
     userVerification: 'preferred',
   });
 
@@ -332,16 +337,14 @@ export async function verifyAuthentication(
   const verification = await _verifyAuth({
     response:                assertionResp,
     expectedChallenge:       challengeRow.challenge,
-    expectedOrigin:          WEBAUTHN_ORIGIN,
+    expectedOrigin:          WEBAUTHN_ORIGINS,
     expectedRPID:            WEBAUTHN_RP_ID,
     requireUserVerification: false,
     credential: {
       id:         credRow.credential_id,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      publicKey:  b64UrlToBytes(credRow.public_key) as any,
+      publicKey:  b64UrlToBytes(credRow.public_key),
       counter:    credRow.counter,
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      transports: (credRow.transports ?? []) as any,
+      transports: (credRow.transports ?? undefined) as PublicKeyCredentialDescriptorJSON['transports'],
     },
   });
 
@@ -364,7 +367,7 @@ export async function verifyAuthentication(
     .eq('id', credRow.user_id)
     .single<AppUser>();
 
-  if (!user || user.status !== 'active') {
+  if (user?.status !== 'active') {
     throw Object.assign(new Error('User not found or inactive'), { status: 401 });
   }
 

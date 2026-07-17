@@ -40,7 +40,7 @@ const _dashCharts: DashCharts = {};
 
 function _destroyDash(key: keyof DashCharts): void {
   const chart = _dashCharts[key];
-  if (chart) { chart.destroy(); delete _dashCharts[key]; }
+  if (chart) { chart.destroy(); (_dashCharts as Record<keyof DashCharts, ChartClass | undefined>)[key] = undefined; }
 }
 
 // ── Palette (matches design spec) ─────────────────────────────────────────────
@@ -371,11 +371,13 @@ function _populateLeaveStats(l: { sick?: number; casual?: number; annual?: numbe
 
 // ── Composite render / update ─────────────────────────────────────────────────
 
+// Fields are optional: dashboard payloads can arrive partial (per-widget API
+// slices); render falls back to empty datasets rather than crashing the page.
 export interface DashboardChartData {
-  dailyTrend:        { date: string; present: number; late: number }[];
-  deptDistribution:  { name: string; count: number }[];
-  statusBreakdown:   { present: number; late: number; absent: number; onLeave: number };
-  leaveTypes:        { sick: number; casual: number; annual: number; medical: number };
+  dailyTrend?:        { date: string; present: number; late: number }[];
+  deptDistribution?:  { name: string; count: number }[];
+  statusBreakdown?:   { present: number; late: number; absent: number; onLeave: number };
+  leaveTypes?:        { sick: number; casual: number; annual: number; medical: number };
 }
 
 /** Full render — spinners → double-rAF → draw all four charts. */
@@ -391,8 +393,8 @@ export function renderDashboardCharts(data: DashboardChartData): void {
   requestAnimationFrame(() => requestAnimationFrame(() => {
     _renderTrendLine(data.dailyTrend ?? [],       rm.trend);
     _renderDeptDist(data.deptDistribution ?? [],  rm.dept);
-    _renderStatusBars(data.statusBreakdown, rm.status);
-    _renderLeaveTypes(data.leaveTypes,      rm.leaves);
+    _renderStatusBars(data.statusBreakdown ?? { present: 0, late: 0, absent: 0, onLeave: 0 }, rm.status);
+    _renderLeaveTypes(data.leaveTypes      ?? { sick: 0, casual: 0, annual: 0, medical: 0 },  rm.leaves);
     _populateDeptStats(data.deptDistribution ?? []);
     _populateStatusStats(data.statusBreakdown ?? {});
     _populateLeaveStats(data.leaveTypes ?? {});

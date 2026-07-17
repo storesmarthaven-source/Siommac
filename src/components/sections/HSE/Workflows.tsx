@@ -14,7 +14,6 @@ import {
   useWorkflowList,
   useWorkflow,
   useMyWorkflowTasks,
-  useCreateWorkflow,
   useDecideWorkflowTask,
   useHandoffList,
   useRetryHandoff,
@@ -29,7 +28,6 @@ const TABS: AreaTab[] = [
   { key: 'register',  label: 'Workflow Register', icon: 'fa-diagram-project' },
   { key: 'audit',     label: 'Audit Log',         icon: 'fa-shield-halved' },
   { key: 'handoffs',  label: 'Handoffs',          icon: 'fa-handshake' },
-  { key: 'wizard',    label: 'New Workflow',      icon: 'fa-wand-magic-sparkles' },
 ];
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
@@ -705,210 +703,14 @@ const SEEDED_TEMPLATES: SeededTemplate[] = [
     handoffsOnApproval: [],
   },
 ];
-const WIZARD_STEPS = ['Choose template', 'Fill details', 'Review & submit'];
-
-function WizardTab(): VNode {
-  const create = useCreateWorkflow();
-  const [step, setStep]           = useState(0);
-  const [templateId, setTemplate] = useState(SEEDED_TEMPLATES[0]?.id ?? '');
-  const [recordRef, setRecordRef] = useState('');
-  const [reason, setReason]       = useState('');
-  const [priority, setPriority]   = useState<'low' | 'medium' | 'high' | 'critical'>('medium');
-  const [submittedRef, setSubmittedRef] = useState<string | null>(null);
-
-  const tpl = SEEDED_TEMPLATES.find(t => t.id === templateId) ?? SEEDED_TEMPLATES[0];
-
-  function reset(): void {
-    setStep(0); setTemplate(SEEDED_TEMPLATES[0]?.id ?? ''); setRecordRef('');
-    setReason(''); setPriority('medium'); setSubmittedRef(null);
-    create.reset();
-  }
-
-  function submit(): void {
-    if (!tpl) return;
-    create.mutate({
-      templateKey:      tpl.id,
-      sourceModule:     tpl.sourceModule,
-      sourceEntityType: 'manual',
-      sourceEntityId:   recordRef.trim() || 'MANUAL',
-      priority,
-      reason:           reason.trim() || 'Manually initiated via Workflow Wizard.',
-    }, {
-      onSuccess: res => {
-        if (res.success) setSubmittedRef(res.ref);
-      },
-    });
-  }
-
-  if (submittedRef) {
-    return (
-      <div class="ppe-tab-content">
-        <div class="wf-submitted">
-          <div class="wf-submitted-icon"><i class="fas fa-circle-check" /></div>
-          <h3>Workflow submitted</h3>
-          <div class="wf-mono wf-submitted-id">{submittedRef}</div>
-          <p>Your workflow has been created and an approval task has been routed to the approver. Track its progress in the <strong>Workflow Register</strong> tab.</p>
-          <div class="wf-submitted-actions">
-            <button class="hse-btn primary" onClick={reset}><i class="fas fa-plus" /> New workflow</button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  if (SEEDED_TEMPLATES.length === 0) {
-    return (
-      <div class="ppe-tab-content">
-        <div class="wf-empty">
-          <i class="fas fa-wand-magic-sparkles" />
-          <strong>No templates available</strong>
-          <span>Workflow templates must be seeded in the database before workflows can be created.</span>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div class="ppe-tab-content">
-      <div class="wf-stepper">
-        {WIZARD_STEPS.map((label, i) => (
-          <div key={i} class={`wf-step${i === step ? ' active' : ''}${i < step ? ' done' : ''}`}>
-            <div class="wf-step-dot">
-              {i < step ? <i class="fas fa-check" /> : <span>{i + 1}</span>}
-            </div>
-            <span class="wf-step-label">{label}</span>
-            {i < WIZARD_STEPS.length - 1 && <div class="wf-step-connector" />}
-          </div>
-        ))}
-      </div>
-
-      {step === 0 && (
-        <div class="wf-wizard-body">
-          <h3 class="wf-wizard-heading">Choose a workflow template</h3>
-          <p class="wf-wizard-sub">Select the type of governed process to initiate. Each template defines the approval route and downstream handoffs.</p>
-          <div class="wf-template-grid">
-            {SEEDED_TEMPLATES.map(t => (
-              <label key={t.id} class={`wf-template-card${templateId === t.id ? ' selected' : ''}`}>
-                <input type="radio" name="template" value={t.id} checked={templateId === t.id} onChange={() => setTemplate(t.id)} style={{ position: 'absolute', opacity: 0 }} />
-                <div class="wf-template-icon">
-                  <i class={`fas ${MODULE_ICON[t.sourceModule] ?? 'fa-diagram-project'}`} />
-                </div>
-                <div class="wf-template-body">
-                  <strong>{t.label}</strong>
-                  <span>{t.approvalRoute.length}-step approval · {t.evidence.length} evidence gate{t.evidence.length !== 1 ? 's' : ''}</span>
-                  {t.handoffsOnApproval.length > 0 && (
-                    <span class="wf-template-handoff">
-                      <i class="fas fa-arrow-right-arrow-left" /> Handoffs: {t.handoffsOnApproval.map(h => h.target).join(', ')}
-                    </span>
-                  )}
-                </div>
-                <div class="wf-template-check">
-                  {templateId === t.id && <i class="fas fa-circle-check" />}
-                </div>
-              </label>
-            ))}
-          </div>
-          <div class="wf-wizard-foot">
-            <button class="hse-btn primary" onClick={() => setStep(1)}>Next <i class="fas fa-arrow-right" /></button>
-          </div>
-        </div>
-      )}
-
-      {step === 1 && tpl && (
-        <div class="wf-wizard-body">
-          <h3 class="wf-wizard-heading">Fill in the details</h3>
-          <p class="wf-wizard-sub">Provide the record reference this workflow governs, the reason, and the priority.</p>
-
-          <div class="wf-form-grid">
-            <div class="wf-form-field">
-              <label>Template</label>
-              <div class="wf-form-readonly">{tpl.label}</div>
-            </div>
-            <div class="wf-form-field">
-              <label>Record reference <span class="wf-req">*</span></label>
-              <input class="wf-input" type="text" value={recordRef} onInput={e => setRecordRef((e.target as HTMLInputElement).value)} placeholder="e.g. INC-2026-055, PTW-0041" />
-            </div>
-            <div class="wf-form-field wf-span-2">
-              <label>Reason / context <span class="wf-req">*</span></label>
-              <textarea class="wf-input" rows={3} value={reason} onInput={e => setReason((e.target as HTMLTextAreaElement).value)} placeholder="Briefly describe why this workflow is being initiated…" />
-            </div>
-            <div class="wf-form-field">
-              <label>Priority</label>
-              <select class="wf-input" value={priority} onChange={e => setPriority((e.target as HTMLSelectElement).value as typeof priority)}>
-                <option value="critical">Critical</option>
-                <option value="high">High</option>
-                <option value="medium">Medium</option>
-                <option value="low">Low</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="wf-wizard-foot">
-            <button class="hse-btn" onClick={() => setStep(0)}><i class="fas fa-arrow-left" /> Back</button>
-            <button class="hse-btn primary" onClick={() => setStep(2)}>Review <i class="fas fa-arrow-right" /></button>
-          </div>
-        </div>
-      )}
-
-      {step === 2 && tpl && (
-        <div class="wf-wizard-body">
-          <h3 class="wf-wizard-heading">Review &amp; submit</h3>
-          <p class="wf-wizard-sub">Confirm everything looks right before submitting. This will create a workflow and route an approval task.</p>
-
-          <div class="wf-review-card">
-            <div class="wf-review-row"><span>Template</span><strong>{tpl.label}</strong></div>
-            <div class="wf-review-row"><span>Record</span><strong class="wf-mono">{recordRef || 'MANUAL'}</strong></div>
-            <div class="wf-review-row"><span>Priority</span><PriorityChip priority={priority} /></div>
-            <div class="wf-review-row wf-review-reason"><span>Reason</span><em>{reason || 'Manually initiated via Workflow Wizard.'}</em></div>
-          </div>
-
-          <div class="wf-review-route">
-            <div class="wf-review-route-head"><i class="fas fa-route" /> Approval route</div>
-            {tpl.approvalRoute.map((r, i) => (
-              <div key={i} class="wf-review-route-step">
-                <div class="wf-review-route-num">{i + 1}</div>
-                <div>
-                  <strong>{r.role}</strong>
-                  <span>{r.label}</span>
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {tpl.handoffsOnApproval.length > 0 && (
-            <div class="wf-review-evidence">
-              <div class="wf-review-route-head"><i class="fas fa-arrow-right-arrow-left" /> Handoffs on approval</div>
-              {tpl.handoffsOnApproval.map((h, i) => (
-                <div key={i} class="wf-review-ev-item">
-                  <i class={`fas ${MODULE_ICON[h.target] ?? 'fa-gear'}`} style={{ fontSize: '0.72rem', color: '#60a5fa' }} />
-                  <span><strong>{h.target}</strong> — {h.summary}</span>
-                </div>
-              ))}
-            </div>
-          )}
-
-          {create.isError && (
-            <div class="hse-error-bar" style={{ marginTop: '12px' }}>
-              <i class="fas fa-triangle-exclamation" /> Failed to create workflow. Please try again.
-            </div>
-          )}
-
-          <div class="wf-wizard-foot">
-            <button class="hse-btn" onClick={() => setStep(1)}><i class="fas fa-arrow-left" /> Back</button>
-            <button class="hse-btn primary" disabled={create.isPending} onClick={submit}>
-              {create.isPending ? <><i class="fas fa-spinner fa-spin" /> Submitting…</> : <><i class="fas fa-paper-plane" /> Submit workflow</>}
-            </button>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
+// WizardTab DELETED - the ad-hoc 'New Workflow' wizard fed caller-controlled
+// inputs into the hardened explicit-start endpoint (schema now rejects them).
+// Workflows start from their source modules; templates render in the stat tile.
 
 // ── Root area component ───────────────────────────────────────────────────────
 
 export function WorkflowsArea({ tab }: { tab: string }): VNode {
-  const [active, setActive] = useState(tab);
+  const [active, setActive] = useState(TABS.some(item => item.key === tab) ? tab : 'approvals');
   const tasksQ    = useMyWorkflowTasks();
   const workflowQ = useWorkflowList();
 
@@ -939,11 +741,6 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
     },
   ];
 
-  const _handleTabAction = () => {
-    if (active === 'wizard') return; // wizard tab is self-contained
-    setActive('wizard');
-  };
-
   return (
     <div class="hse-tab hse-dash">
       <PageHeader
@@ -961,7 +758,6 @@ export function WorkflowsArea({ tab }: { tab: string }): VNode {
       {active === 'register'  && <RegisterTab />}
       {active === 'audit'     && <AuditTab />}
       {active === 'handoffs'  && <HandoffsTab />}
-      {active === 'wizard'    && <WizardTab />}
     </div>
   );
 }

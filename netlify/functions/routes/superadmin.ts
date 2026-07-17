@@ -10,7 +10,7 @@
 
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
-import { requireUser, requireRole, requirePermission, revokeUserSessions, log_ } from '../lib/auth';
+import { requirePermission, revokeUserSessions, log_ } from '../lib/auth';
 import { PERMISSION_KEYS, invalidateRolePermissions, isCriticalGrant } from '../lib/permissions';
 import { emitAppEvent }                   from '../lib/appEvents';
 import { getProfileSignedUrl }            from '../lib/photos';
@@ -61,13 +61,13 @@ async function requestCriticalGrant(
     requested_by:   actor.id,
     expires_at:     new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
   }).select('id').single<{ id: string }>();
-  if (error || !ins) {
+  if (error) {
     // The partial unique indexes (pga_uniq_pending_role/user) reject a duplicate
     // pending request even if the read-check above raced with a concurrent insert.
-    if (error?.code === '23505') {
+    if (error.code === '23505') {
       return { ok: false, status: 409, code: 'already_pending', message: 'A pending approval already exists for this grant.' };
     }
-    console.error('[requestCriticalGrant] insert error:', error?.message);
+    console.error('[requestCriticalGrant] insert error:', error.message);
     return { ok: false, status: 500, code: 'insert_failed', message: 'Failed to create the approval request.' };
   }
 
@@ -126,7 +126,7 @@ router.post('/listUsers', async c => {
   }
   // Resolve profile photo signed URLs in parallel.
   const deptMap = Object.fromEntries(((depts ?? []) as { id: string; name: string }[]).map(d => [d.id, d.name]));
-  const rows = (data ?? []) as { id: string; username: string; full_name: string; role: string; email: string | null; position: string | null; status: string; profile_image: string | null; department_id: string | null }[];
+  const rows = data as { id: string; username: string; full_name: string; role: string; email: string | null; position: string | null; status: string; profile_image: string | null; department_id: string | null }[];
   const photos = await Promise.all(rows.map(u => getProfileSignedUrl(u.id, u.profile_image)));
   const users = rows.map((u, i) => {
     const t = tally.get(u.id) ?? { grants: 0, denials: 0 };
@@ -161,7 +161,7 @@ router.post('/getUserPermissions', async c => {
     console.error('[superadmin/getUserPermissions] error:', error.message);
     return c.json({ success: false, message: 'Failed to load permissions.' }, 500);
   }
-  return c.json({ success: true, permissions: data ?? [] });
+  return c.json({ success: true, permissions: data });
 });
 
 // POST /superadmin/setUserPermission — upsert an explicit grant/deny override.
@@ -228,7 +228,12 @@ router.post('/clearUserPermission', async c => {
 // ── Active sessions: visibility + remote revoke ───────────────────────────────
 // Gated by 'sessions.manage' (superadmin by default).
 
-const RevokeSessionSchema = z.object({ userId: z.string().min(1) });
+const RevokeSessionSchema = z.object({
+  userId: z.string().min(1),
+  // Client-generated once per attempt — the RPC's retry receipt (same key +
+  // same target replays the committed result; different target → 409).
+  idempotencyKey: z.uuid(),
+});
 
 // POST /superadmin/getActiveSessions — every active session with device context.
 router.post('/getActiveSessions', async c => {
@@ -243,10 +248,10 @@ router.post('/getActiveSessions', async c => {
     return c.json({ success: false, message: 'Failed to load sessions.' }, 500);
   }
 
-  const rows = (tokens ?? []) as Array<{
+  const rows = tokens as {
     user_id: string; user_agent: string | null; ip_address: string | null;
     last_seen_at: string; created_at: string; expires_at: string;
-  }>;
+  }[];
   if (rows.length === 0) return c.json({ success: true, sessions: [] });
 
   // Join user identity in one query.
@@ -255,7 +260,7 @@ router.post('/getActiveSessions', async c => {
     .from('app_users')
     .select('id, username, full_name, role')
     .in('id', ids);
-  const userMap = new Map((users ?? []).map(u => [u.id, u]));
+  const userMap = new Map(((users ?? []) as { id: string; username: string; full_name: string; role: string }[]).map(u => [u.id, u]));
 
   const sessions = rows
     .filter(r => new Date(r.expires_at) > new Date())   // active only
@@ -276,21 +281,27 @@ router.post('/getActiveSessions', async c => {
   return c.json({ success: true, sessions });
 });
 
-// POST /superadmin/revokeSession — force-logout a user (epoch + delete refresh token).
+// POST /superadmin/revokeSession — force-logout a user, ATOMICALLY:
+// auth_revoke_user_sessions_tx owns the revocation marker, token purge, the
+// single app_event AND the single audit row (no separate log_() — that would
+// double-write the audit and could survive a failed revocation).
 router.post('/revokeSession', async c => {
   const actor = await requirePermission(c, 'sessions.manage');
   const v = zv(c, RevokeSessionSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { userId } = v.data;
+  const { userId, idempotencyKey } = v.data;
 
   if (userId === actor.id) {
     return c.json({ success: false, message: 'You cannot revoke your own active session here.' }, 400);
   }
 
-  await revokeUserSessions(userId, actor.username);
-  await log_(actor, 'session_revoke', 'user', userId,
-    `forced logout of user ${userId}; re-authentication (incl. 2FA) required`);
-  return c.json({ success: true });
+  try {
+    const result = await revokeUserSessions(userId, { id: actor.id, username: actor.username }, idempotencyKey);
+    return c.json({ success: true, data: result });
+  } catch (e) {
+    const err = e as { status?: number; message?: string };
+    return c.json({ success: false, message: err.message ?? 'Session revocation failed' }, (err.status ?? 500) as 200);
+  }
 });
 
 // ── Audit log viewer ──────────────────────────────────────────────────────────
@@ -345,7 +356,7 @@ router.post('/getAuditLogs', async c => {
   // Enrich each row with the actor's display name / photo / title from app_users. The audit
   // row only carries a raw user_id + a possibly-code username, and superadmins aren't in the
   // console-user list — the server resolves them here (with a signed avatar URL).
-  const logs = (data ?? []) as { id: string; user_id: string; username: string }[];
+  const logs = data as { id: string; user_id: string; username: string }[];
   const actorIds = [...new Set(logs.map(l => l.user_id).filter(Boolean))];
   const actorMap = new Map<string, { name: string; title: string; photo: string }>();
   if (actorIds.length) {
@@ -354,8 +365,8 @@ router.post('/getAuditLogs', async c => {
       .in('id', actorIds);
     await Promise.all(((actors ?? []) as { id: string; full_name: string | null; username: string | null; position: string | null; role: string | null; profile_image: string | null }[]).map(async a => {
       actorMap.set(a.id, {
-        name:  a.full_name || a.username || '',
-        title: a.position || a.role || '',
+        name:  a.full_name ?? a.username ?? '',
+        title: a.position ?? a.role ?? '',
         photo: await getProfileSignedUrl(a.id, a.profile_image),
       });
     }));
@@ -370,8 +381,9 @@ router.post('/getAuditLogs', async c => {
   let entities: string[] = [];
   if (offset === 0) {
     const { data: distinct } = await sb.from('activity_logs').select('action, entity').limit(2000);
-    actions  = [...new Set((distinct ?? []).map(r => r.action).filter(Boolean))].sort();
-    entities = [...new Set((distinct ?? []).map(r => r.entity).filter(Boolean))].sort();
+    const distinctRows = (distinct ?? []) as { action: string | null; entity: string | null }[];
+    actions  = [...new Set(distinctRows.map(r => r.action).filter((x): x is string => Boolean(x)))].sort();
+    entities = [...new Set(distinctRows.map(r => r.entity).filter((x): x is string => Boolean(x)))].sort();
   }
 
   return c.json({ success: true, logs: enrichedLogs, total: count ?? 0, actions, entities });
@@ -422,7 +434,7 @@ router.post('/listRoles', async c => {
   const counts = new Map<string, number>();
   for (const u of (users ?? []) as { role: string }[]) counts.set(u.role, (counts.get(u.role) ?? 0) + 1);
 
-  const out = (roles ?? []).map(r => ({
+  const out = (roles as { name: string; label: string | null; description: string | null; is_system: boolean; protected: boolean; sort_order: number | null; role_category: string | null }[]).map(r => ({
     name: r.name, label: r.label, description: r.description,
     isSystem: r.is_system, protected: r.protected, sortOrder: r.sort_order,
     category: r.role_category ?? null,
@@ -447,7 +459,7 @@ router.post('/getRolePermissions', async c => {
     console.error('[superadmin/getRolePermissions] error:', error.message);
     return c.json({ success: false, message: 'Failed to load role permissions.' }, 500);
   }
-  return c.json({ success: true, permissions: (data ?? []).map(r => r.permission) });
+  return c.json({ success: true, permissions: (data as { permission: string }[]).map(r => r.permission) });
 });
 
 // POST /superadmin/createRole
@@ -537,7 +549,7 @@ router.post('/listRoleCategories', async c => {
   const { data: roles } = await sb.from('roles').select('role_category');
   const counts = new Map<string, number>();
   for (const r of (roles ?? []) as { role_category: string | null }[]) if (r.role_category) counts.set(r.role_category, (counts.get(r.role_category) ?? 0) + 1);
-  const out = (cats ?? []).map(x => ({ key: x.key, label: x.label, sortOrder: x.sort_order, isSystem: x.is_system, roleCount: counts.get(x.key) ?? 0 }));
+  const out = (cats as { key: string; label: string | null; sort_order: number | null; is_system: boolean }[]).map(x => ({ key: x.key, label: x.label, sortOrder: x.sort_order, isSystem: x.is_system, roleCount: counts.get(x.key) ?? 0 }));
   return c.json({ success: true, categories: out });
 });
 

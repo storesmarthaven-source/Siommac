@@ -14,10 +14,7 @@ import { createHash }         from 'crypto';
 import { z, zv }              from '../lib/validate';
 import { requirePermission }  from '../lib/auth';
 import { sb }                 from '../lib/db';
-import { nextRef }            from '../lib/refGenerator';
 import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
-import { runModuleMutation }  from '../lib/moduleServiceAdapter';
-import { createHandoff }      from '../lib/handoffBus';
 import { selectWorkflowBinding } from '../lib/workflow/bindingResolver';
 import { rpcHttpError }       from '../lib/workflow/service';
 import type { HonoVariables } from '../../../types/api';
@@ -56,7 +53,7 @@ const ListSchema = z.object({
 
 router.post('/incidents/list', async c => {
   const user = await requirePermission(c, 'hse.incidents.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -80,14 +77,14 @@ router.post('/incidents/list', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/hse/incidents/get ───────────────────────────────────────────────
 
 router.post('/incidents/get', async c => {
   await requirePermission(c, 'hse.incidents.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { incidentId?: string; ref?: string } | undefined;
 
   if (!args?.incidentId && !args?.ref) {
@@ -101,9 +98,9 @@ router.post('/incidents/get', async c => {
   else q = q.eq('ref', args.ref!);
 
   const [incidentRes, peopleRes] = await Promise.all([
-    q.maybeSingle(),
+    q.maybeSingle<Record<string, unknown>>(),
     args.incidentId
-      ? sb.from('hse_incident_people').select('*').eq('incident_id', args.incidentId!)
+      ? sb.from('hse_incident_people').select('*').eq('incident_id', args.incidentId)
       : Promise.resolve({ data: [] }),
   ]);
 
@@ -152,62 +149,19 @@ const CreateSchema = z.object({
 
 router.post('/incidents/create', async c => {
   const user = await requirePermission(c, 'hse.incidents.create');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, CreateSchema, body.args);
   if (!v.ok) return v.response;
 
-  const injuredEmployeeId = v.data.people.find(p => p.personType === 'injured')?.userId ?? null;
   const evSeverity = v.data.severity === 'critical' ? 'critical' as const
     : v.data.severity === 'high' ? 'high' as const : 'info' as const;
 
   // Content-derived key over the FULL validated payload (audit F6).
   const contentKey = `hse.incident.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`;
-  // The 3 conditional cross-module handoffs (parity with the former Stage-4).
-  const buildHandoffs = (entityId: string, entityRef: string, eventId: string | null) => {
-    const defs = [
-      {
-        targetModule: 'hr', condition: v.data.lostTime,
-        payload: {
-          reason: 'lost_time_incident', severity: v.data.severity,
-          incidentType: v.data.incidentType, employeeId: injuredEmployeeId,
-          lostDays: v.data.lostDays, title: v.data.title,
-        },
-      },
-      {
-        targetModule: 'finance', condition: v.data.costImpact,
-        payload: {
-          reason: 'incident_cost_impact', severity: v.data.severity,
-          incidentType: v.data.incidentType, title: v.data.title,
-          siteId: v.data.siteId ?? null,
-        },
-      },
-      {
-        targetModule: 'operations', condition: v.data.equipmentDamage,
-        payload: {
-          reason: 'equipment_damage', severity: v.data.severity,
-          incidentType: v.data.incidentType,
-          title: `Equipment inspection: ${v.data.title}`,
-          description: 'Equipment damage reported in incident. Immediate inspection and repair assessment required.',
-          siteId: v.data.siteId ?? null,
-          priority: v.data.severity === 'critical' ? 'critical' : 'medium',
-        },
-      },
-    ];
-    return defs.filter(d => d.condition).map(d => createHandoff({
-      sourceModule: 'hse', targetModule: d.targetModule,
-      sourceEntityType: 'incident', sourceEntityId: entityId,
-      payload: { ...d.payload, sourceRef: entityRef, sourceEventId: eventId },
-      createdBy: user.id,
-    }));
-  };
-
   try {
-    // ATOMIC (finding #3, slice D1): with an investigation binding, the incident
-    // INSERT (status 'triage', the former adapter onStarted) + people rows +
-    // workflow start + workflow_id link + business event + audit row commit in
-    // ONE transaction (hse_incidents branch of workflow_create_and_start_tx).
-    // Notifications + cross-module handoffs are post-commit (parity with the
-    // former Stage-2/Stage-4 semantics — separate writes then, separate now).
+    // The wrapper commits the incident, people, workflow link, business event,
+    // audit row, and conditional handoff intents in one transaction. Only
+    // notification delivery remains post-commit, matching the engine contract.
     // Audit F2: site/department + record data let scoped/conditional bindings match.
     const binding = await selectWorkflowBinding(sb, {
       moduleKey: 'hse_incidents', workflowType: 'incident_investigation',
@@ -220,209 +174,68 @@ router.post('/incidents/create', async c => {
       },
     });
 
-    if (binding) {
-      const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
-      const { data, error } = await sb.rpc('workflow_create_and_start_tx', {
-        p_source_table: 'hse_incidents', p_actor_id: user.id,
-        p_binding_id: binding.id, p_request_key: contentKey,
-        p_business: {
-          title:              v.data.title,
-          description:        v.data.description,
-          incidentDate:       v.data.incidentDate,
-          siteId:             v.data.siteId ?? null,
-          departmentId:       v.data.departmentId ?? null,
-          locationText:       v.data.locationText ?? null,
-          incidentType:       v.data.incidentType,
-          severity:           v.data.severity,
-          immediateAction:    v.data.immediateAction ?? null,
-          regulatoryClass:    v.data.regulatoryClass ?? null,
-          oshClassification:  v.data.oshClassification ?? null,
-          injuryType:         v.data.injuryType ?? null,
-          bodyPart:           v.data.bodyPart ?? null,
-          lostDays:           v.data.lostDays,
-          returnToWork:       v.data.returnToWork ?? null,
-          oshNotificationDue: osh_notification_due,
-          oshWrittenDue:      osh_written_due,
-          recordable:         v.data.recordable,
-          lostTime:           v.data.lostTime,
-          metadata:           v.data.metadata ?? {},
-          people:             v.data.people,
-        },
-      });
-      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
-      const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string; eventId?: string };
-
-      void deliverEventNotifications({
-        eventType: 'hse.incident.submitted', sourceModule: 'hse', sourceEntityType: 'incident',
-        sourceEntityId: rpc.recordId ?? '', actorUserId: user.id,
-        severity: evSeverity,
-        notification: {
-          title: `New incident reported`,
-          body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
-          actionRoute: 'hse/incidents',
-          type:  'hse.incident.submitted',
-        },
-        dedupeKey: `${contentKey}:notify`,
-      }, rpc.eventId ?? null);
-
-      const handoffResults = await Promise.all(buildHandoffs(rpc.recordId ?? '', rpc.ref ?? '', rpc.eventId ?? null));
-      const handoffIds = handoffResults.filter(h => h.ok && h.handoffId).map(h => h.handoffId as string);
-      // Audit F5: a failed cross-module handoff is a §2 contract breach — never
-      // silent. The incident is committed, so surface it durably (critical
-      // event → ops alerting) instead of dropping it from the response.
-      const failedHandoffs = handoffResults.filter(h => !h.ok);
-      if (failedHandoffs.length) {
-        console.error(`[hseIncidents] ${failedHandoffs.length} handoff(s) FAILED for incident ${rpc.ref}:`,
-          failedHandoffs.map(h => h.message ?? 'unknown error').join('; '));
-        void emitAppEvent({
-          eventType: 'hse.incident.handoff_failed', sourceModule: 'hse',
-          sourceEntityType: 'incident', sourceEntityId: rpc.recordId ?? '',
-          actorUserId: user.id, severity: 'critical',
-          payload: { ref: rpc.ref, failed: failedHandoffs.length, errors: failedHandoffs.map(h => h.message ?? 'unknown') },
-          dedupeKey: `hse.incident.handoff_failed:${rpc.recordId}`,
-        });
-      }
-
-      return c.json({
-        success: true,
-        data: {
-          id:         rpc.recordId,
-          ref:        rpc.ref,
-          workflowId: rpc.workflowId ?? null,
-          eventId:    rpc.eventId ?? null,
-          handoffIds,
-        },
-      });
-    }
-
-    // No investigation binding — create-only via the module adapter (incident
-    // stays 'open'; audit + event + notification + handoffs preserved, no workflow).
-    const result = await runModuleMutation<{ id: string; ref: string }>({
-      context: {
-        actorUserId:  user.id,
-        siteId:       v.data.siteId ?? null,
-        departmentId: v.data.departmentId ?? null,
+    const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
+    const { data, error } = await sb.rpc('hse_incident_create_tx', {
+      p_actor_id:    user.id,
+      p_binding_id:  binding?.id ?? null,
+      p_request_key: contentKey,
+      p_business: {
+        title:              v.data.title,
+        description:        v.data.description,
+        incidentDate:       v.data.incidentDate,
+        siteId:             v.data.siteId ?? null,
+        departmentId:       v.data.departmentId ?? null,
+        locationText:       v.data.locationText ?? null,
+        incidentType:       v.data.incidentType,
+        severity:           v.data.severity,
+        immediateAction:    v.data.immediateAction ?? null,
+        regulatoryClass:    v.data.regulatoryClass ?? null,
+        oshClassification:  v.data.oshClassification ?? null,
+        injuryType:         v.data.injuryType ?? null,
+        bodyPart:           v.data.bodyPart ?? null,
+        lostDays:           v.data.lostDays,
+        returnToWork:       v.data.returnToWork ?? null,
+        oshNotificationDue: osh_notification_due,
+        oshWrittenDue:      osh_written_due,
+        recordable:         v.data.recordable,
+        lostTime:           v.data.lostTime,
+        costImpact:         v.data.costImpact,
+        equipmentDamage:    v.data.equipmentDamage,
+        metadata:           v.data.metadata ?? {},
+        people:             v.data.people,
       },
-      options: {
-        module:         'hse',
-        operation:      'create',
-        entityType:     'incident',
-        idempotencyKey: contentKey,
-        eventType:      'hse.incident.submitted',
-        eventSeverity:  evSeverity,
-        eventPayload:   { title: v.data.title, severity: v.data.severity, lostTime: v.data.lostTime },
-        notification: {
-          title: `New incident reported`,
-          body:  `${v.data.severity.toUpperCase()} — ${v.data.title}`,
-          actionRoute: 'hse/incidents',
-          type:  'hse.incident.submitted',
-        },
-        handoffs: [
-          {
-            targetModule: 'hr',
-            condition:    v.data.lostTime,
-            payload: {
-              reason:       'lost_time_incident',
-              severity:     v.data.severity,
-              incidentType: v.data.incidentType,
-              employeeId:   injuredEmployeeId,
-              lostDays:     v.data.lostDays,
-              title:        v.data.title,
-            },
-          },
-          {
-            targetModule: 'finance',
-            condition:    v.data.costImpact,
-            payload: {
-              reason:       'incident_cost_impact',
-              severity:     v.data.severity,
-              incidentType: v.data.incidentType,
-              title:        v.data.title,
-              siteId:       v.data.siteId ?? null,
-            },
-          },
-          {
-            targetModule: 'operations',
-            condition:    v.data.equipmentDamage,
-            payload: {
-              reason:       'equipment_damage',
-              severity:     v.data.severity,
-              incidentType: v.data.incidentType,
-              title:        `Equipment inspection: ${v.data.title}`,
-              description:  'Equipment damage reported in incident. Immediate inspection and repair assessment required.',
-              siteId:       v.data.siteId ?? null,
-              priority:     v.data.severity === 'critical' ? 'critical' : 'medium',
-            },
-          },
-        ],
-        getEntityIdentity: (record) => ({ id: record.id, ref: record.ref }),
+    }) as { data: unknown; error: { code?: string | null; message: string } | null };
+    if (error) throw rpcHttpError(error);
+    const rpc = (data ?? {}) as {
+      recordId?: string;
+      ref?: string;
+      workflowId?: string | null;
+      eventId?: string | null;
+      handoffIds?: string[];
+    };
+    if (!rpc.recordId || !rpc.ref) throw new Error('Incident transaction returned an incomplete result');
+
+    void deliverEventNotifications({
+      eventType: 'hse.incident.submitted', sourceModule: 'hse', sourceEntityType: 'incident',
+      sourceEntityId: rpc.recordId, actorUserId: user.id,
+      severity: evSeverity,
+      notification: {
+        title: 'New incident reported',
+        body:  `${v.data.severity.toUpperCase()} - ${v.data.title}`,
+        actionRoute: 'hse/incidents',
+        type:  'hse.incident.submitted',
       },
-      writeRecord: async () => {
-        const ref = await nextRef('INC');
-        const { osh_notification_due, osh_written_due } = oshDeadlines(v.data.incidentDate, v.data.severity);
-
-        const { data: incident, error: incErr } = await sb
-          .from('hse_incidents')
-          .insert({
-            ref,
-            title:              v.data.title,
-            description:        v.data.description,
-            incident_date:      v.data.incidentDate,
-            reported_by:        user.id,
-            site_id:            v.data.siteId ?? null,
-            department_id:      v.data.departmentId ?? null,
-            location_text:      v.data.locationText ?? null,
-            incident_type:      v.data.incidentType,
-            severity:           v.data.severity,
-            status:             'open',
-            immediate_action:   v.data.immediateAction ?? null,
-            regulatory_class:   v.data.regulatoryClass ?? null,
-            osh_classification: v.data.oshClassification ?? null,
-            injury_type:        v.data.injuryType ?? null,
-            body_part:          v.data.bodyPart ?? null,
-            lost_days:          v.data.lostDays,
-            return_to_work:     v.data.returnToWork ?? null,
-            osh_notification_due,
-            osh_written_due,
-            recordable:         v.data.recordable,
-            lost_time:          v.data.lostTime,
-            metadata:           v.data.metadata ?? {},
-          })
-          .select('id, ref')
-          .single<{ id: string; ref: string }>();
-
-        if (incErr || !incident) throw incErr ?? new Error('Incident insert failed');
-
-        if (v.data.people.length > 0) {
-          const { error: peopleErr } = await sb.from('hse_incident_people').insert(
-            v.data.people.map(p => ({
-              incident_id:        incident.id,
-              person_type:        p.personType,
-              user_id:            p.userId ?? null,
-              full_name:          p.fullName,
-              role_or_company:    p.roleOrCompany ?? null,
-              injury_description: p.injuryDescription ?? null,
-            })),
-          );
-          if (peopleErr) {
-            // Compensating rollback — never leave an incident without its people.
-            await sb.from('hse_incidents').delete().eq('id', incident.id);
-            throw peopleErr;
-          }
-        }
-
-        return incident;
-      },
-    });
+      dedupeKey: `${contentKey}:notify`,
+    }, rpc.eventId ?? null);
 
     return c.json({
       success: true,
       data: {
-        id:         result.entityId,
-        ref:        result.entityRef,
-        workflowId: null,
-        eventId:    result.eventId     ?? null,
-        handoffIds: result.handoffIds,
+        id:         rpc.recordId,
+        ref:        rpc.ref,
+        workflowId: rpc.workflowId ?? null,
+        eventId:    rpc.eventId ?? null,
+        handoffIds: rpc.handoffIds ?? [],
       },
     });
   } catch (err) {
@@ -435,7 +248,7 @@ router.post('/incidents/create', async c => {
 // ── POST /api/hse/incidents/update ────────────────────────────────────────────
 
 const UpdateSchema = z.object({
-  incidentId:      z.string().uuid(),
+  incidentId:      z.uuid(),
   title:           z.string().min(1).max(300).optional(),
   description:     z.string().optional(),
   status:          z.enum(['open','triage','investigation','capa','awaiting_closure','closed','cancelled']).optional(),
@@ -451,14 +264,12 @@ const UpdateSchema = z.object({
   oshWrittenAt:    z.string().nullable().optional(),
   recordable:      z.boolean().optional(),
   lostTime:        z.boolean().optional(),
-  costImpact:      z.boolean().optional(),
-  equipmentDamage: z.boolean().optional(),
   metadata:        z.record(z.string(), z.unknown()).optional(),
 });
 
 router.post('/incidents/update', async c => {
   const user = await requirePermission(c, 'hse.incidents.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, UpdateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -579,7 +390,7 @@ router.post('/dashboard/kpis', async c => {
   const ltiFreeDays = lastLtiDate
     ? Math.floor((Date.now() - new Date(lastLtiDate).getTime()) / 86_400_000)
     : null;
-  const totalLostDays = ((lostDaysResult.data ?? []) as Array<{ lost_days: number | null }>)
+  const totalLostDays = ((lostDaysResult.data ?? []) as { lost_days: number | null }[])
     .reduce((s, r) => s + (r.lost_days ?? 0), 0);
 
   return c.json({
@@ -606,7 +417,7 @@ router.post('/dashboard/kpis', async c => {
 
 router.post('/incidents/detail', async c => {
   await requirePermission(c, 'hse.incidents.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { incidentId?: string; ref?: string } | undefined;
 
   if (!args?.incidentId && !args?.ref) {
@@ -654,8 +465,8 @@ router.post('/incidents/detail', async c => {
       .limit(30),
   ]);
 
-  const investigation = ((invRes.data ?? []) as Record<string, unknown>[])[0] ?? null;
-  const workflow      = ((wfRes.data ?? []) as Record<string, unknown>[])[0] ?? null;
+  const investigation = ((invRes.data ?? []) as Record<string, unknown>[]).at(0) ?? null;
+  const workflow      = ((wfRes.data ?? []) as Record<string, unknown>[]).at(0) ?? null;
 
   // Phase 3 — data that needs investigation.id or workflow.id
   let evidence:      unknown[] = [];
@@ -696,7 +507,7 @@ router.post('/incidents/detail', async c => {
       investigation: investigation     ?? null,
       evidence,
       rootCauses,
-      capa:          [...(incCapaRes.data ?? []), ...invCapa],
+      capa:          [...((incCapaRes.data ?? []) as Record<string, unknown>[]), ...invCapa],
       workflow:      workflow           ?? null,
       workflowTasks,
       timeline:      timelineRes.data  ?? [],

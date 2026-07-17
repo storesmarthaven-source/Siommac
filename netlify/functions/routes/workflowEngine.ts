@@ -11,24 +11,24 @@ import { requireUser, requirePermission, userCan } from '../lib/auth';
 import { z, zv }      from '../lib/validate';
 import {
   decideTask, delegateTask, reassignTask, cancelWorkflow,
-  startWorkflowExplicit,
+  startWorkflowExplicit, publishWorkflowTemplateVersion,
   getModuleStartPermission,
-  validateModuleSourceExists,
 } from '../lib/workflow/service';
+import { buildCanonicalStartContext } from '../lib/workflow/sourceContext';
 import { validateWorkflowDefinition } from '../lib/workflow/validateDefinition';
 import type { WorkflowTemplateDefinition } from '../lib/workflow/definitionTypes';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
-const body = (c: { get: (k: 'body') => Record<string, unknown> }) => (c.get('body') as Record<string, unknown>).args ?? {};
+const body = (c: { get: (k: 'body') => Record<string, unknown> }) => (c.get('body')).args ?? {};
 const actorOf = (u: { id: string; role?: string }) => ({ id: u.id, role: u.role });
 
 // ── Lifecycle ────────────────────────────────────────────────────────────────
 
 // POST /api/workflow-engine/start — explicit template start (no binding).
 // Auth fix (finding #3 §7): Gate 2 module-authz + Gate 3 source-existence added.
-// templateVersionId + idempotencyKey REQUIRED; assignees optional (resolved from
-// recordData when omitted). Legacy startWorkflowForRecord call REMOVED.
+// templateVersionId + idempotencyKey are required. Context and first-step
+// assignees are resolved from the canonical source row on the server.
 router.post('/start', async c => {
   const user = await requirePermission(c, 'workflow.submit');
   const v = zv(c, z.object({
@@ -36,16 +36,9 @@ router.post('/start', async c => {
     workflowType:      z.string().min(1),
     triggerEvent:      z.string().min(1),
     sourceRecordId:    z.string().min(1),
-    sourceRecordRef:   z.string().optional(),
-    templateVersionId: z.string().uuid(),
-    idempotencyKey:    z.string().uuid(),
-    siteId:            z.string().nullable().optional(),
-    departmentId:      z.string().nullable().optional(),
-    ownerId:           z.string().nullable().optional(),
-    priority:          z.enum(['low','normal','medium','high','critical']).optional(),
-    recordData:        z.record(z.string(), z.unknown()).default({}),
-    assignees:         z.record(z.string(), z.object({ userId: z.string().optional(), roleKey: z.string().optional() })).optional(),
-  }), body(c));
+    templateVersionId: z.uuid(),
+    idempotencyKey:    z.uuid(),
+  }).strict(), body(c));
   if (!v.ok) return v.response;
 
   // Gate 2: module-specific permission (unknown module -> 403, safe default).
@@ -54,31 +47,20 @@ router.post('/start', async c => {
     return c.json({ success: false, message: 'Forbidden: insufficient module access' }, 403 as 200);
   }
 
-  // Gate 3: source record must exist (UUID-format IDs only; text refs skip).
-  const sourceExists = await validateModuleSourceExists(v.data.moduleKey, v.data.sourceRecordId);
-  if (!sourceExists) {
-    return c.json({ success: false, message: 'Source record not found' }, 404 as 200);
-  }
-
   try {
+    const context = await buildCanonicalStartContext({
+      moduleKey: v.data.moduleKey,
+      workflowType: v.data.workflowType,
+      triggerEvent: v.data.triggerEvent,
+      sourceRecordId: v.data.sourceRecordId,
+      requestedBy: user.id,
+      actor: user,
+    });
     const wf = await startWorkflowExplicit({
       versionId:      v.data.templateVersionId,
-      actor:          actorOf(user as { id: string; role?: string }),
+      actor:          actorOf(user),
       idempotencyKey: v.data.idempotencyKey,
-      context: {
-        moduleKey:      v.data.moduleKey,
-        workflowType:   v.data.workflowType,
-        triggerEvent:   v.data.triggerEvent,
-        sourceRecordId: v.data.sourceRecordId,
-        sourceRecordRef: v.data.sourceRecordRef,
-        requestedBy:    (user as { id: string }).id,
-        ownerId:        v.data.ownerId,
-        siteId:         v.data.siteId,
-        departmentId:   v.data.departmentId,
-        priority:       v.data.priority ?? 'medium',
-        recordData:     v.data.recordData,
-      },
-      preResolvedAssignees: v.data.assignees,
+      context,
     });
     return c.json({ success: true, data: wf });
   } catch (err) {
@@ -95,7 +77,7 @@ router.post('/start', async c => {
 router.post('/decide', async c => {
   const user = await requireUser(c);
   const v = zv(c, z.object({
-    workflowId: z.string().uuid(), taskId: z.string().uuid(),
+    workflowId: z.uuid(), taskId: z.uuid(),
     decision: z.enum(['approved','returned','rejected']), comment: z.string().max(2000).optional(),
     attachmentIds: z.array(z.string()).optional(),
     overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions
@@ -116,28 +98,49 @@ router.post('/decide', async c => {
 // POST /api/workflow-engine/delegate
 router.post('/delegate', async c => {
   const user = await requirePermission(c, 'workflow.tasks.delegate');
-  const v = zv(c, z.object({ taskId: z.string().uuid(), delegateTo: z.string().min(1), reason: z.string().max(500) }), body(c));
+  const v = zv(c, z.object({
+    taskId: z.uuid(), delegateTo: z.string().min(1),
+    reason: z.string().min(1).max(500), idempotencyKey: z.uuid(),
+  }).strict(), body(c));
   if (!v.ok) return v.response;
-  try { await delegateTask({ taskId: v.data.taskId, actor: actorOf(user as { id: string; role?: string }), delegateTo: v.data.delegateTo, reason: v.data.reason }); return c.json({ success: true }); }
-  catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Delegate failed' }, 400 as 200); }
+  try {
+    await delegateTask({ taskId: v.data.taskId, actor: actorOf(user), delegateTo: v.data.delegateTo, reason: v.data.reason, idempotencyKey: v.data.idempotencyKey });
+    return c.json({ success: true });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Delegate failed' }, ((err as { status?: number }).status ?? 400) as 200);
+  }
 });
 
 // POST /api/workflow-engine/reassign
 router.post('/reassign', async c => {
   const user = await requirePermission(c, 'workflow.instances.reassign');
-  const v = zv(c, z.object({ taskId: z.string().uuid(), reassignTo: z.string().min(1), reason: z.string().max(500) }), body(c));
+  const v = zv(c, z.object({
+    taskId: z.uuid(), reassignTo: z.string().min(1),
+    reason: z.string().min(1).max(500), idempotencyKey: z.uuid(),
+  }).strict(), body(c));
   if (!v.ok) return v.response;
-  await reassignTask({ taskId: v.data.taskId, actor: actorOf(user as { id: string; role?: string }), reassignTo: v.data.reassignTo, reason: v.data.reason });
-  return c.json({ success: true });
+  try {
+    await reassignTask({ taskId: v.data.taskId, actor: actorOf(user), reassignTo: v.data.reassignTo, reason: v.data.reason, idempotencyKey: v.data.idempotencyKey });
+    return c.json({ success: true });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Reassign failed' }, ((err as { status?: number }).status ?? 400) as 200);
+  }
 });
 
 // POST /api/workflow-engine/cancel
 router.post('/cancel', async c => {
   const user = await requirePermission(c, 'workflow.instances.cancel');
-  const v = zv(c, z.object({ workflowId: z.string().uuid(), reason: z.string().min(1).max(500) }), body(c));
+  const v = zv(c, z.object({
+    workflowId: z.uuid(), reason: z.string().min(1).max(500),
+    idempotencyKey: z.uuid(),
+  }).strict(), body(c));
   if (!v.ok) return v.response;
-  await cancelWorkflow({ workflowId: v.data.workflowId, actor: actorOf(user as { id: string; role?: string }), reason: v.data.reason });
-  return c.json({ success: true });
+  try {
+    const wf = await cancelWorkflow({ workflowId: v.data.workflowId, actor: actorOf(user), reason: v.data.reason, idempotencyKey: v.data.idempotencyKey });
+    return c.json({ success: true, data: wf, pending: wf.pendingTransition === true }, (wf.pendingTransition ? 202 : 200) as 200);
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Cancel failed' }, ((err as { status?: number }).status ?? 400) as 200);
+  }
 });
 
 // ── Reads ────────────────────────────────────────────────────────────────────
@@ -155,7 +158,7 @@ router.post('/my-tasks', async c => {
     .not('workflow_instances.status', 'in', '(completed,approved,returned,rejected,cancelled,closed)')
     .order('due_at', { ascending: true })
     .limit(200);
-  const rows = (data ?? []).map(({ workflow_instances: _wf, ...task }) => task);
+  const rows = ((data ?? []) as ({ workflow_instances?: unknown } & Record<string, unknown>)[]).map(({ workflow_instances: _wf, ...task }) => task);
   return c.json({ success: true, data: rows });
 });
 
@@ -174,7 +177,7 @@ router.post('/register', async c => {
 // POST /api/workflow-engine/get
 router.post('/get', async c => {
   await requirePermission(c, 'workflow.instances.view');
-  const v = zv(c, z.object({ workflowId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ workflowId: z.uuid() }), body(c));
   if (!v.ok) return v.response;
   const { data: wf } = await sb.from('workflow_instances').select('*').eq('id', v.data.workflowId).maybeSingle<{ id: string }>();
   if (!wf) return c.json({ success: false, message: 'Workflow not found.' }, 404 as 200);
@@ -190,7 +193,7 @@ router.post('/get', async c => {
 // POST /api/workflow-engine/outbox/list — queue + dead-letter visibility
 router.post('/outbox/list', async c => {
   await requirePermission(c, 'workflow.handoffs.view');
-  const v = zv(c, z.object({ status: z.string().optional(), workflowId: z.string().uuid().optional() }), body(c));
+  const v = zv(c, z.object({ status: z.string().optional(), workflowId: z.uuid().optional() }), body(c));
   if (!v.ok) return v.response;
   let q = sb.from('workflow_outbox')
     .select('id, transition_id, status, attempts, max_attempts, next_attempt_at, locked_by, last_error, created_at, processed_at, workflow_transitions(workflow_id, task_id, kind, decision, actor_id, status)')
@@ -198,13 +201,13 @@ router.post('/outbox/list', async c => {
   if (v.data.status) q = q.eq('status', v.data.status);
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  const rows = (data ?? []).filter(r => !v.data.workflowId || (r as { workflow_transitions?: { workflow_id?: string } }).workflow_transitions?.workflow_id === v.data.workflowId);
+  const rows = data.filter(r => !v.data.workflowId || (r as { workflow_transitions?: { workflow_id?: string } }).workflow_transitions?.workflow_id === v.data.workflowId);
   // Ops metrics: queue depth + oldest unprocessed job.
-  const open = (data ?? []).filter(r => ['pending', 'processing'].includes((r as { status: string }).status));
+  const open = data.filter(r => ['pending', 'processing'].includes((r as { status: string }).status));
   return c.json({ success: true, data: rows, stats: {
     queueDepth: open.length,
     oldestPendingAt: open.length ? (open[open.length - 1] as { created_at: string }).created_at : null,
-    deadLetters: (data ?? []).filter(r => (r as { status: string }).status === 'dead_letter').length,
+    deadLetters: data.filter(r => (r as { status: string }).status === 'dead_letter').length,
   } });
 });
 
@@ -221,7 +224,7 @@ router.post('/outbox/process', async c => {
 // replayed transition finalizes. Audited (§2).
 router.post('/outbox/replay', async c => {
   const user = await requirePermission(c, 'workflow.handoffs.retry');
-  const v = zv(c, z.object({ transitionId: z.string().uuid(), reason: z.string().min(1).max(500) }), body(c));
+  const v = zv(c, z.object({ transitionId: z.uuid(), reason: z.string().min(1).max(500) }), body(c));
   if (!v.ok) return v.response;
   const { data: tr } = await sb.from('workflow_transitions').select('id, workflow_id, status').eq('id', v.data.transitionId).maybeSingle<{ id: string; workflow_id: string; status: string }>();
   if (!tr) return c.json({ success: false, message: 'Transition not found.' }, 404 as 200);
@@ -248,7 +251,7 @@ router.post('/outbox/replay', async c => {
 // POST /api/workflow-engine/audit/list
 router.post('/audit/list', async c => {
   await requirePermission(c, 'workflow.audit.view');
-  const v = zv(c, z.object({ workflowId: z.string().uuid().optional(), moduleKey: z.string().optional() }), body(c));
+  const v = zv(c, z.object({ workflowId: z.uuid().optional(), moduleKey: z.string().optional() }), body(c));
   if (!v.ok) return v.response;
   let q = sb.from('workflow_audit_log').select('*').order('created_at', { ascending: false }).limit(300);
   if (v.data.workflowId) q = q.eq('workflow_id', v.data.workflowId);
@@ -262,7 +265,7 @@ router.post('/audit/list', async c => {
 // POST /api/workflow-engine/templates/version/create — new draft version
 router.post('/templates/version/create', async c => {
   const user = await requirePermission(c, 'workflow.templates.update');
-  const v = zv(c, z.object({ templateId: z.string().uuid(), definition: z.record(z.string(), z.unknown()), changeSummary: z.string().max(500).optional() }), body(c));
+  const v = zv(c, z.object({ templateId: z.uuid(), definition: z.record(z.string(), z.unknown()), changeSummary: z.string().max(500).optional() }), body(c));
   if (!v.ok) return v.response;
   try { validateWorkflowDefinition(v.data.definition as unknown as WorkflowTemplateDefinition); }
   catch (err) { return c.json({ success: false, message: err instanceof Error ? err.message : 'Invalid definition' }, 400 as 200); }
@@ -279,38 +282,14 @@ router.post('/templates/version/create', async c => {
 // POST /api/workflow-engine/templates/version/publish
 router.post('/templates/version/publish', async c => {
   const user = await requirePermission(c, 'workflow.templates.publish');
-  const v = zv(c, z.object({ versionId: z.string().uuid() }), body(c));
+  const v = zv(c, z.object({ versionId: z.uuid() }).strict(), body(c));
   if (!v.ok) return v.response;
-  const { data: ver } = await sb.from('workflow_template_versions').select('id, template_id, version_no').eq('id', v.data.versionId).maybeSingle<{ id: string; template_id: string; version_no: number }>();
-  if (!ver) return c.json({ success: false, message: 'Version not found.' }, 404 as 200);
-  // Audit F8: publish is ONE atomic statement — the new version becomes
-  // published and every OTHER published version of the template archives in
-  // the same UPDATE (no crash window with two published versions or a
-  // published version the template row does not reflect). Errors are checked.
-  const nowIso = new Date().toISOString();
-  const { error: pubErr } = await sb
-    .from('workflow_template_versions')
-    .update({ version_status: 'published', published_by: (user as { id: string }).id, published_at: nowIso })
-    .eq('id', ver.id);
-  if (pubErr) return c.json({ success: false, message: `publish failed: ${pubErr.message}` }, 500 as 200);
-  const { error: archErr } = await sb
-    .from('workflow_template_versions')
-    .update({ version_status: 'archived' })
-    .eq('template_id', ver.template_id)
-    .eq('version_status', 'published')
-    .neq('id', ver.id);
-  if (archErr) {
-    // Compensating rollback: the just-published version reverts so the template
-    // never carries two published versions or a half-applied publish.
-    await sb.from('workflow_template_versions').update({ version_status: 'draft', published_by: null, published_at: null }).eq('id', ver.id);
-    return c.json({ success: false, message: `publish failed archiving the prior version: ${archErr.message}` }, 500 as 200);
+  try {
+    const result = await publishWorkflowTemplateVersion(v.data.versionId, user.id);
+    return c.json({ success: true, data: result });
+  } catch (err) {
+    return c.json({ success: false, message: err instanceof Error ? err.message : 'Publish failed' }, ((err as { status?: number }).status ?? 500) as 200);
   }
-  const { error: tplErr } = await sb
-    .from('workflow_templates')
-    .update({ current_version: ver.version_no, status: 'active', updated_by: (user as { id: string }).id, updated_at: nowIso })
-    .eq('id', ver.template_id);
-  if (tplErr) return c.json({ success: false, message: `publish committed but the template row update failed: ${tplErr.message}` }, 500 as 200);
-  return c.json({ success: true, data: { versionId: ver.id, versionNo: ver.version_no } });
 });
 
 // POST /api/workflow-engine/bindings/list
@@ -329,15 +308,18 @@ router.post('/bindings/create', async c => {
   const user = await requirePermission(c, 'workflow.bindings.create');
   const v = zv(c, z.object({
     moduleKey: z.string().min(1), workflowType: z.string().min(1), triggerEvent: z.string().min(1),
-    templateId: z.string().uuid(), templateVersionId: z.string().uuid().nullable().optional(),
+    templateId: z.uuid(), templateVersionId: z.uuid().nullable().optional(),
     scopeType: z.enum(['global','site','department','role']).default('global'), scopeId: z.string().nullable().optional(),
     priority: z.number().int().default(100), conditions: z.record(z.string(), z.unknown()).optional(), isActive: z.boolean().default(true),
-  }), body(c));
+  }).strict(), body(c));
   if (!v.ok) return v.response;
   // Audit F8: a scoped binding without a scope id can never match anything —
   // reject it instead of persisting dead configuration.
   if (v.data.scopeType !== 'global' && !(v.data.scopeId ?? '').trim()) {
     return c.json({ success: false, message: `A ${v.data.scopeType}-scoped binding requires a scopeId` }, 400 as 200);
+  }
+  if (v.data.scopeType === 'global' && v.data.scopeId != null) {
+    return c.json({ success: false, message: 'A global binding must not include scopeId' }, 400 as 200);
   }
   const { data, error } = await sb.from('module_workflow_bindings').insert({
     module_key: v.data.moduleKey, workflow_type: v.data.workflowType, trigger_event: v.data.triggerEvent,
@@ -351,7 +333,7 @@ router.post('/bindings/create', async c => {
 
 // POST /api/workflow-engine/bindings/set-active  (activate | deactivate)
 router.post('/bindings/set-active', async c => {
-  const v = zv(c, z.object({ bindingId: z.string().uuid(), active: z.boolean() }), body(c));
+  const v = zv(c, z.object({ bindingId: z.uuid(), active: z.boolean() }), body(c));
   await requirePermission(c, v.ok && v.data.active ? 'workflow.bindings.activate' : 'workflow.bindings.deactivate');
   if (!v.ok) return v.response;
   const { error } = await sb.from('module_workflow_bindings').update({ is_active: v.data.active, updated_at: new Date().toISOString() }).eq('id', v.data.bindingId);

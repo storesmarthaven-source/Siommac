@@ -206,16 +206,27 @@ export default async function run(h) {
     ctx.statutoryVersionId = (data ?? [])[0]?.id ?? null;
   });
 
-  await test('acquire 2 finance_managers + 1 salaried employee', async () => {
+  await test('acquire 2 finance_managers + provision an ISOLATED salaried employee', async () => {
     const mgrR = await acquireActors('finance_manager', 2, { pay_basis: 'salary', monthly_salary: 7000.00 });
-    const empR = await acquireActors('employee',        1, { pay_basis: 'salary', monthly_salary: 5000.00 });
     [fmgr1Id, fmgr2Id] = mgrR.actors.map(a => a.id);
-    empId = empR.actors[0].id;
-    ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
+
+    // The employee is SYNTHETIC on purpose: this suite gives them an exclusive
+    // pay-group assignment, and a roster employee can carry a live assignment
+    // from another suite in the same run (or a leaked one from a killed run) —
+    // which 409s the assign. An isolated employee removes the collision class.
+    empId = `PSR-EMP-${TAG}`;
+    const empUsername = `${TAG}_psr_emp`;
+    const { error: empErr } = await sb.from('app_users').insert({
+      id: empId, username: empUsername, full_name: 'Payslip Render E2E Employee',
+      role: 'employee', status: 'active', employment_type: 'employee',
+      pay_basis: 'salary', monthly_salary: 5000.00,
+    });
+    expect(!empErr, `synthetic employee insert failed: ${empErr?.message}`);
+    ctx.createdUserIds = [...mgrR.createdIds, empId];
 
     fmgr1Token = mint({ id: fmgr1Id, username: mgrR.actors[0].username, role: 'finance_manager', department_id: null });
     fmgr2Token = mint({ id: fmgr2Id, username: mgrR.actors[1].username, role: 'finance_manager', department_id: null });
-    empToken   = mint({ id: empId,   username: empR.actors[0].username,  role: 'employee',        department_id: null });
+    empToken   = mint({ id: empId,   username: empUsername,             role: 'employee',        department_id: null });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -229,6 +240,9 @@ export default async function run(h) {
   const testPeriod = seedDateFromTag(TAG, 71);
 
   await test('P2-b: create a pay group and assign the test employee to it', async () => {
+    // The employee is synthetic and unique to THIS run tag, so it can carry no
+    // pre-existing assignment — no self-heal sweep needed, and real roster
+    // assignments are never touched.
     const pgR = await api('finance/payroll/pay-groups/create', fmgr1Token, {
       code:      'PR-' + TAG.slice(-8),
       name:      'Payslip Render E2E ' + TAG,
@@ -447,6 +461,8 @@ export default async function run(h) {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id').eq('run_id', ctx.runId);
     const psIds = (payslips ?? []).map(p => p.id);
+    // Guard the vacuous pass: with zero payslips, 0 events === 0 ids "passes".
+    expect(psIds.length > 0, 'no payslips exist for the run — cannot verify render events');
 
     const { data: events } = await sb.from('app_events')
       .select('source_entity_id, event_type')
@@ -460,6 +476,7 @@ export default async function run(h) {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id').eq('run_id', ctx.runId);
     const psIds = (payslips ?? []).map(p => p.id);
+    expect(psIds.length > 0, 'no payslips exist for the run — cannot verify render audit rows');
 
     const { data: auditRows } = await sb.from('hr_audit_log')
       .select('record_id, action')
@@ -600,6 +617,8 @@ export default async function run(h) {
   await test('after fallback render, payslips still have filePath', async () => {
     const { data: payslips } = await sb.from('finance_payslips')
       .select('id, file_path').eq('run_id', ctx.runId);
+    // Guard the vacuous pass: an empty list would satisfy the no-path filter.
+    expect((payslips ?? []).length > 0, 'no payslips exist for the run — cannot verify filePath');
     const noPath = (payslips ?? []).filter(p => !p.file_path);
     expect(noPath.length === 0,
       `${noPath.length} payslip(s) have no filePath after fallback render`);

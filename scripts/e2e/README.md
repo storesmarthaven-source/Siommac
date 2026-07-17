@@ -63,6 +63,20 @@ columns, then deletes the users. It is a recovery net, not a substitute for a su
 
 ## Writing a new suite (the standard)
 
+The governing behavioral standard is
+`docs/ENTERPRISE_MODULE_DELIVERY_STANDARD.md`; use
+`docs/templates/MODULE_E2E_MATRIX_TEMPLATE.md` to map every endpoint, transition, permission,
+side effect, operational flow, and UI journey to exact test names. The static route-coverage gate
+derives its mounted route set from the deterministic codebase index and only proves that a route
+path is called somewhere. It does not prove that the call has correct assertions or covers
+authorization, response shape, state, side effects, concurrency, or cleanup.
+
+Run `npm run repo:index` after route, mount, or suite changes. The coverage gate rejects a missing,
+stale, or unresolved mounted-route index instead of silently scanning an incomplete route subset.
+
+For the module being built, every route must be covered and removed from
+`coverage-waivers.json`. Do not use `--write-waivers` to make new module work pass.
+
 Create `suites/<module>.mjs`:
 
 ```js

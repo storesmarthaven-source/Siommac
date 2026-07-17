@@ -80,7 +80,7 @@ async function submitRiskJsaRecord(
   entity: RiskJsaEntity, id: string, actorId: string, note: string | null, idempotencyKey: string,
 ): Promise<{ workflowId: string | null; status: string }> {
   const cfg = RISK_JSA_SUBMIT[entity];
-  const requestKey = idempotencyKey?.trim();
+  const requestKey = idempotencyKey.trim();
   if (!requestKey) throw Object.assign(new Error('An idempotency key is required to submit for review.'), { status: 400 });
 
   const { data: rec } = await sb.from(cfg.table)
@@ -98,8 +98,8 @@ async function submitRiskJsaRecord(
   const { data, error } = await sb.rpc('workflow_submit_for_record_tx', {
     p_source_table: cfg.table, p_source_id: id, p_actor_id: actorId, p_binding_id: binding.id, p_request_key: requestKey,
     p_business: { title: rec.title, note: note ?? null, priority, ownerId: rec.owner_user_id ?? actorId },
-  });
-  if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+  }) as { data: unknown; error: { code?: string | null; message: string } | null };
+  if (error) throw rpcHttpError(error);
   const result = (data ?? {}) as { workflowId?: string | null; status?: string; businessEventId?: string | null };
 
   // Broadcast "submitted for review" notification (post-commit, best-effort). The
@@ -226,7 +226,7 @@ const HazardListSchema = z.object({
 
 router.post('/risk-jsa/hazards/list', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -245,7 +245,7 @@ router.post('/risk-jsa/hazards/list', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/hse/risk-jsa/hazards/create ────────────────────────────────────
@@ -274,7 +274,7 @@ const HazardCreateSchema = z.object({
 
 router.post('/risk-jsa/hazards/create', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -320,8 +320,8 @@ router.post('/risk-jsa/hazards/create', async c => {
           reviewDueAt:        v.data.reviewDueAt ?? null,
           controls:           v.data.controls,
         },
-      });
-      if (error) throw rpcHttpError(error as { code?: string | null; message: string });
+      }) as { data: unknown; error: { code?: string | null; message: string } | null };
+      if (error) throw rpcHttpError(error);
       const rpc = (data ?? {}) as { recordId?: string; ref?: string; workflowId?: string; eventId?: string };
 
       void deliverEventNotifications({
@@ -399,7 +399,7 @@ router.post('/risk-jsa/hazards/create', async c => {
           .select('id, ref')
           .single<{ id: string; ref: string }>();
 
-        if (error || !data) throw error ?? new Error('Hazard insert failed');
+        if (error) throw error;
 
         // Insert initial controls
         if (v.data.controls.length > 0) {
@@ -442,7 +442,7 @@ router.post('/risk-jsa/hazards/create', async c => {
 
 router.post('/risk-jsa/hazards/detail', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { hazardId?: string; ref?: string } | undefined;
 
   if (!args?.hazardId && !args?.ref) {
@@ -481,7 +481,7 @@ router.post('/risk-jsa/hazards/detail', async c => {
   return c.json({
     success: true,
     data: {
-      hazard:      hazardRes.data,
+      hazard:      hazardRes.data as Record<string, unknown> | null,
       controls:    controlsRes.data   ?? [],
       assessments: raRes.data         ?? [],
       capa:        capaRes.data       ?? [],
@@ -510,7 +510,7 @@ async function applyVersionedUpdate(
     .update({ ...updates, version: version + 1 })
     .eq('id', id).eq('version', version).select('id');
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  if (!data || data.length === 0) {
+  if (data.length === 0) {
     return c.json({ success: false, conflict: true, message: 'This record was changed by someone else — reload and re-apply your edits.' }, 409 as 200);
   }
   return null;
@@ -520,9 +520,9 @@ async function applyVersionedUpdate(
 
 router.post('/risk-jsa/assessments/update', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, z.object({
-    assessmentId: z.string().uuid(),
+    assessmentId: z.uuid(),
     title:        z.string().min(1).max(300).optional(),
     description:  z.string().optional(),
     status:       z.string().optional(),
@@ -549,9 +549,9 @@ router.post('/risk-jsa/assessments/update', async c => {
 
 router.post('/risk-jsa/jsa/update', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, z.object({
-    jsaId:       z.string().uuid(),
+    jsaId:       z.uuid(),
     title:       z.string().min(1).max(300).optional(),
     description: z.string().optional(),
     status:      z.string().optional(),
@@ -577,7 +577,7 @@ router.post('/risk-jsa/jsa/update', async c => {
 // ── POST /api/hse/risk-jsa/hazards/update ────────────────────────────────────
 
 const HazardUpdateSchema = z.object({
-  hazardId:            z.string().uuid(),
+  hazardId:            z.uuid(),
   title:               z.string().min(1).max(300).optional(),
   description:         z.string().optional(),
   category:            z.string().optional(),
@@ -592,7 +592,7 @@ const HazardUpdateSchema = z.object({
 
 router.post('/risk-jsa/hazards/update', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardUpdateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -639,7 +639,7 @@ const RaListSchema = z.object({
 
 router.post('/risk-jsa/assessments/list', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RaListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -655,7 +655,7 @@ router.post('/risk-jsa/assessments/list', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/hse/risk-jsa/assessments/create ────────────────────────────────
@@ -671,7 +671,7 @@ const RaCreateSchema = z.object({
   reviewCycle:     z.enum(['monthly','quarterly','biannual','annual','on_change']).default('annual'),
   reviewDueAt:     z.string().nullable().optional(),
   hazards: z.array(z.object({
-    hazardId:           z.string().uuid().nullable().optional(),
+    hazardId:           z.uuid().nullable().optional(),
     hazardDescription:  z.string().nullable().optional(),
     category:           z.string().nullable().optional(),
     initialLikelihood:  z.number().int().min(1).max(5),
@@ -684,7 +684,7 @@ const RaCreateSchema = z.object({
 
 router.post('/risk-jsa/assessments/create', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, RaCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -703,7 +703,7 @@ router.post('/risk-jsa/assessments/create', async c => {
         module:         'hse',
         operation:      'create',
         entityType:     'risk_assessment',
-        idempotencyKey: `hse.ra.create:${user.id}:${v.data.title}:${v.data.assessmentType}`,
+        idempotencyKey: `hse.ra.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`,
         eventType:      'hse.risk_assessment.created',
         eventSeverity:  level === 'critical' ? 'critical' : level === 'high' ? 'high' : 'info',
         eventPayload:   { title: v.data.title, assessmentType: v.data.assessmentType, riskLevel: level, hazardCount: v.data.hazards.length },
@@ -732,7 +732,7 @@ router.post('/risk-jsa/assessments/create', async c => {
           .select('id, ref')
           .single<{ id: string; ref: string }>();
 
-        if (error || !data) throw error ?? new Error('Risk Assessment insert failed');
+        if (error) throw error;
 
         if (v.data.hazards.length > 0) {
           await sb.from('hse_risk_assessment_hazards').insert(
@@ -773,7 +773,7 @@ router.post('/risk-jsa/assessments/create', async c => {
 
 router.post('/risk-jsa/assessments/detail', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { assessmentId?: string; ref?: string } | undefined;
 
   if (!args?.assessmentId && !args?.ref) {
@@ -824,13 +824,13 @@ router.post('/risk-jsa/assessments/detail', async c => {
 // ── POST /api/hse/risk-jsa/assessments/submit ────────────────────────────────
 
 const AssessmentSubmitSchema = z.object({
-  assessmentId:   z.string().uuid(),
+  assessmentId:   z.uuid(),
   note:           z.string().max(2000).nullable().optional(),
   idempotencyKey: z.string().min(1).max(200),
 });
 router.post('/risk-jsa/assessments/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, AssessmentSubmitSchema, body.args ?? {});
   if (!v.ok) return v.response;
   try {
@@ -849,7 +849,7 @@ const JsaListSchema = z.object({
 
 router.post('/risk-jsa/jsa/list', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, JsaListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -874,7 +874,7 @@ router.post('/risk-jsa/jsa/list', async c => {
     countMap.set(s.jsa_id as string, (countMap.get(s.jsa_id as string) ?? 0) + 1);
   }
 
-  const data = (jsaRes.data ?? []).map(j => ({
+  const data = jsaRes.data.map(j => ({
     ...j,
     stepCount: countMap.get((j as Record<string, unknown>).id as string) ?? 0,
   }));
@@ -893,7 +893,7 @@ const JsaCreateSchema = z.object({
   ownerUserId:  z.string().nullable().optional(),
   reviewDueAt:  z.string().nullable().optional(),
   /** When generated from a risk assessment, the source RA id — recorded as a link. */
-  linkedRiskAssessmentId: z.string().uuid().nullable().optional(),
+  linkedRiskAssessmentId: z.uuid().nullable().optional(),
   steps: z.array(z.object({
     stepNumber:         z.number().int().min(1),
     taskStep:           z.string().min(1),
@@ -939,7 +939,7 @@ const JsaCreateSchema = z.object({
 
 router.post('/risk-jsa/jsa/create', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, JsaCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -965,7 +965,7 @@ router.post('/risk-jsa/jsa/create', async c => {
         module:         'hse',
         operation:      'create',
         entityType:     'jsa',
-        idempotencyKey: `hse.jsa.create:${user.id}:${v.data.title}`,
+        idempotencyKey: `hse.jsa.create:${user.id}:${createHash('sha256').update(JSON.stringify(v.data)).digest('hex').slice(0, 32)}`,
         eventType:      'hse.jsa.created',
         eventSeverity:  'info',
         eventPayload:   { title: v.data.title, stepCount: v.data.steps.length, riskLevel: level },
@@ -991,7 +991,7 @@ router.post('/risk-jsa/jsa/create', async c => {
           .select('id, ref')
           .single<{ id: string; ref: string }>();
 
-        if (error || !data) throw error ?? new Error('JSA insert failed');
+        if (error) throw error;
 
         const ops: PromiseLike<unknown>[] = [];
 
@@ -1012,12 +1012,12 @@ router.post('/risk-jsa/jsa/create', async c => {
           ).select('id, step_number');
           if (stepRes.error) throw stepRes.error;
 
-          const stepIdByNum = new Map((stepRes.data ?? []).map(r => [r.step_number as number, r.id as string]));
+          const stepIdByNum = new Map(stepRes.data.map(r => [r.step_number as number, r.id as string]));
           for (const s of v.data.steps) {
             const stepId = stepIdByNum.get(s.stepNumber);
             if (!stepId || s.hazards.length === 0) continue;
             for (let hi = 0; hi < s.hazards.length; hi++) {
-              const h = s.hazards[hi]!;
+              const h = s.hazards[hi];
               const hzRes = await sb.from('hse_jsa_step_hazards').insert({
                 step_id:             stepId,
                 description:         h.description,
@@ -1031,7 +1031,7 @@ router.post('/risk-jsa/jsa/create', async c => {
               if (hzRes.data && h.controls.length > 0) {
                 await sb.from('hse_jsa_step_controls').insert(
                   h.controls.map((ctl, ci) => ({
-                    step_hazard_id: hzRes.data!.id,
+                    step_hazard_id: hzRes.data.id,
                     description:    ctl.description,
                     control_type:   ctl.controlType,
                     sort_order:     ci,
@@ -1113,7 +1113,7 @@ router.post('/risk-jsa/jsa/create', async c => {
 
 router.post('/risk-jsa/jsa/from-assessment', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { assessmentId?: string } | undefined;
   if (!args?.assessmentId) return c.json({ success: false, message: 'assessmentId required' }, 400 as 200);
 
@@ -1129,7 +1129,7 @@ router.post('/risk-jsa/jsa/from-assessment', async c => {
     .eq('assessment_id', ra.id)
     .order('initial_score', { ascending: false });
 
-  const suggestedHazards = (hzRes.data ?? []).map(h => ({
+  const suggestedHazards = ((hzRes.data ?? []) as { hazard_description: string | null; category: string | null; initial_likelihood: number | null; initial_severity: number | null; residual_likelihood: number | null; residual_severity: number | null; notes: string | null }[]).map(h => ({
     description:         h.hazard_description ?? '',
     category:            h.category ?? null,
     initialLikelihood:   h.initial_likelihood ?? null,
@@ -1158,7 +1158,7 @@ router.post('/risk-jsa/jsa/from-assessment', async c => {
 
 router.post('/risk-jsa/jsa/detail', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { jsaId?: string; ref?: string } | undefined;
 
   if (!args?.jsaId && !args?.ref) {
@@ -1193,21 +1193,21 @@ router.post('/risk-jsa/jsa/detail', async c => {
   ]);
 
   // Nest per-step hazards (each with its controls) under their steps.
-  const steps = (stepsRes.data ?? []) as Array<Record<string, unknown>>;
+  const steps = (stepsRes.data ?? []) as Record<string, unknown>[];
   const stepIds = steps.map(s => s.id as string);
   if (stepIds.length > 0) {
     const shRes = await sb.from('hse_jsa_step_hazards').select('*').in('step_id', stepIds).order('sort_order');
-    const stepHazards = (shRes.data ?? []) as Array<Record<string, unknown>>;
+    const stepHazards = (shRes.data ?? []) as Record<string, unknown>[];
     const hazIds = stepHazards.map(h => h.id as string);
     const scRes = hazIds.length
       ? await sb.from('hse_jsa_step_controls').select('*').in('step_hazard_id', hazIds).order('sort_order')
-      : { data: [] as Array<Record<string, unknown>> };
-    const controlsByHaz = new Map<string, Array<Record<string, unknown>>>();
-    for (const ctl of (scRes.data ?? []) as Array<Record<string, unknown>>) {
+      : { data: [] as Record<string, unknown>[] };
+    const controlsByHaz = new Map<string, Record<string, unknown>[]>();
+    for (const ctl of (scRes.data ?? []) as Record<string, unknown>[]) {
       const k = ctl.step_hazard_id as string;
       (controlsByHaz.get(k) ?? controlsByHaz.set(k, []).get(k)!).push(ctl);
     }
-    const hazByStep = new Map<string, Array<Record<string, unknown>>>();
+    const hazByStep = new Map<string, Record<string, unknown>[]>();
     for (const h of stepHazards) {
       h.controls = controlsByHaz.get(h.id as string) ?? [];
       const k = h.step_id as string;
@@ -1233,13 +1233,13 @@ router.post('/risk-jsa/jsa/detail', async c => {
 // ── POST /api/hse/risk-jsa/jsa/submit ────────────────────────────────────────
 
 const JsaSubmitSchema = z.object({
-  jsaId:          z.string().uuid(),
+  jsaId:          z.uuid(),
   note:           z.string().max(2000).nullable().optional(),
   idempotencyKey: z.string().min(1).max(200),
 });
 router.post('/risk-jsa/jsa/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, JsaSubmitSchema, body.args ?? {});
   if (!v.ok) return v.response;
   try {
@@ -1253,7 +1253,7 @@ router.post('/risk-jsa/jsa/submit', async c => {
 const ControlCreateSchema = z.object({
   sourceType:   z.enum(['hazard','assessment','jsa','capa']),
   sourceId:     z.string().min(1),
-  hazardId:     z.string().uuid().nullable().optional(),
+  hazardId:     z.uuid().nullable().optional(),
   description:  z.string().min(1),
   controlType:  z.enum(['elimination','substitution','engineering','administrative','ppe','emergency_response']).default('administrative'),
   ownerUserId:  z.string().nullable().optional(),
@@ -1262,7 +1262,7 @@ const ControlCreateSchema = z.object({
 
 router.post('/risk-jsa/controls/create', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ControlCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1282,7 +1282,7 @@ router.post('/risk-jsa/controls/create', async c => {
     .select('id')
     .single<{ id: string }>();
 
-  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   void emitAppEvent({
     eventType:        'hse.control.added',
@@ -1333,12 +1333,12 @@ const STATUS_TRANSITIONS: Record<string, string[]> = {
 };
 
 function canTransition(from: string, to: string): boolean {
-  return STATUS_TRANSITIONS[from]?.includes(to) ?? false;
+  return STATUS_TRANSITIONS[from].includes(to);
 }
 
 const ActionSchema = z.object({
   entityType:      z.enum(['hazard','assessment','jsa']),
-  entityId:        z.string().uuid(),
+  entityId:        z.uuid(),
   note:            z.string().nullable().optional(),
   nextReviewDueAt: z.string().nullable().optional(),
   /** Override the JSA crew competency gate when activating. */
@@ -1354,7 +1354,7 @@ async function jsaActivationGate(c: Context<{ Variables: HonoVariables }>, jsaId
   const crewRes = await sb.from('hse_jsa_crew_acknowledgements')
     .select('crew_name, required, competency_verified, acknowledged')
     .eq('jsa_id', jsaId);
-  const crew = (crewRes.data ?? []) as Array<{ required: boolean; competency_verified: boolean; acknowledged: boolean }>;
+  const crew = (crewRes.data ?? []) as { required: boolean; competency_verified: boolean; acknowledged: boolean }[];
   const required = crew.filter(m => m.required);
   const notAcked = required.filter(m => !m.acknowledged).length;
   const compGaps = required.filter(m => !m.competency_verified).length;
@@ -1418,12 +1418,12 @@ async function applyTransition(
                     : opts.toStatus === 'rejected' ? 'warning' : 'info',
     payload:          { action: opts.action, fromStatus: cur.data.status, toStatus: opts.toStatus, note: opts.note ?? null },
     ...(notifySubmitter ? {
-      explicitRecipients: [{ userId: cur.data.created_by as string, reason: 'owner' as const }],
+      explicitRecipients: [{ userId: cur.data.created_by!, reason: 'owner' as const }],
       notification: {
-        title:          decision!.title,
-        body:           decision!.body,
+        title:          decision.title,
+        body:           decision.body,
         actionRoute:    'hse/risk-jsa',
-        actionRequired: decision!.required,
+        actionRequired: decision.required,
       },
     } : {}),
   });
@@ -1495,19 +1495,19 @@ async function decideRecordViaWorkflow(
 for (const path of Object.keys(APPROVAL_DECISION)) {
   router.post(`/risk-jsa/${path}`, async c => {
     const user = await requirePermission(c, 'hse.risk.approve');
-    const body = c.get('body') as Record<string, unknown>;
+    const body = c.get('body');
     const v = zv(c, ActionSchema, body.args);
     if (!v.ok) return v.response;
     return decideRecordViaWorkflow(c, {
       entityType: v.data.entityType, entityId: v.data.entityId,
-      decision: APPROVAL_DECISION[path]!, action: APPROVAL_ACTION[path]!,
+      decision: APPROVAL_DECISION[path], action: APPROVAL_ACTION[path],
       actorId: user.id, note: v.data.note, nextReviewDueAt: v.data.nextReviewDueAt,
     });
   });
 }
 
 // Post-approval lifecycle → module-owned transitions (no approval semantics).
-const LIFECYCLE: Array<{ path: string; action: string; toStatus: string }> = [
+const LIFECYCLE: { path: string; action: string; toStatus: string }[] = [
   { path: 'activate', action: 'activated', toStatus: 'active'   },
   { path: 'close',    action: 'closed',    toStatus: 'closed'   },
   { path: 'archive',  action: 'archived',  toStatus: 'archived' },
@@ -1516,7 +1516,7 @@ const LIFECYCLE: Array<{ path: string; action: string; toStatus: string }> = [
 for (const L of LIFECYCLE) {
   router.post(`/risk-jsa/${L.path}`, async c => {
     const user = await requirePermission(c, 'hse.risk.manage');
-    const body = c.get('body') as Record<string, unknown>;
+    const body = c.get('body');
     const v = zv(c, ActionSchema, body.args);
     if (!v.ok) return v.response;
 
@@ -1538,14 +1538,14 @@ for (const L of LIFECYCLE) {
 // A crew member acknowledges a JSA (and optionally confirms competency).
 
 const AckSchema = z.object({
-  jsaId:              z.string().uuid(),
-  crewId:             z.string().uuid(),
+  jsaId:              z.uuid(),
+  crewId:             z.uuid(),
   competencyVerified: z.boolean().optional(),
 });
 
 router.post('/risk-jsa/jsa/acknowledge', async c => {
   const user = await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, AckSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1574,7 +1574,7 @@ router.post('/risk-jsa/jsa/acknowledge', async c => {
 
 const ReviewSchema = z.object({
   entityType:          z.enum(['hazard','assessment','jsa']),
-  entityId:            z.string().uuid(),
+  entityId:            z.uuid(),
   outcome:             z.enum(['approve','return','archive']),
   note:                z.string().nullable().optional(),
   nextReviewDueAt:     z.string().nullable().optional(),
@@ -1583,7 +1583,7 @@ const ReviewSchema = z.object({
 
 router.post('/risk-jsa/review', async c => {
   const user = await requirePermission(c, 'hse.risk.approve');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ReviewSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1615,7 +1615,7 @@ const QueueSchema = z.object({
 
 router.post('/risk-jsa/queue', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, QueueSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -1633,10 +1633,10 @@ router.post('/risk-jsa/queue', async c => {
   type Row = Record<string, unknown> & { updated_at?: string };
   const tag = (rows: Row[] | null, entityType: string) => (rows ?? []).map(r => ({ ...r, entityType }));
   const rows = [
-    ...tag(hz.data as Row[] | null, 'hazard'),
-    ...tag(ra.data as Row[] | null, 'assessment'),
-    ...tag(js.data as Row[] | null, 'jsa'),
-  ].sort((a, b) => String(b.updated_at ?? '').localeCompare(String(a.updated_at ?? '')));
+    ...tag(hz.data, 'hazard'),
+    ...tag(ra.data, 'assessment'),
+    ...tag(js.data, 'jsa'),
+  ].sort((a, b) => (b.updated_at ?? '').localeCompare(a.updated_at ?? ''));
 
   return c.json({ success: true, data: rows });
 });
@@ -1652,7 +1652,7 @@ const HazardLibrarySchema = z.object({
 
 router.post('/risk-jsa/library/hazards', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardLibrarySchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -1663,7 +1663,7 @@ router.post('/risk-jsa/library/hazards', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/hse/risk-jsa/library/hazards/create ────────────────────────────
@@ -1681,7 +1681,7 @@ const HazardLibraryCreateSchema = z.object({
 
 router.post('/risk-jsa/library/hazards/create', async c => {
   await requirePermission(c, 'hse.risk.library.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardLibraryCreateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1715,7 +1715,7 @@ const ControlLibrarySchema = z.object({
 
 router.post('/risk-jsa/library/controls', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ControlLibrarySchema, body.args ?? {});
   if (!v.ok) return v.response;
 
@@ -1726,7 +1726,7 @@ router.post('/risk-jsa/library/controls', async c => {
 
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── Attachments (presigned upload → metadata row → signed download) ──────────
@@ -1735,7 +1735,7 @@ const AttachEntity = z.enum(['hazard', 'assessment', 'jsa']);
 
 router.post('/risk-jsa/attachments/upload-url', async c => {
   await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) }), body.args);
   if (!v.ok) return v.response;
   try {
@@ -1748,7 +1748,7 @@ router.post('/risk-jsa/attachments/upload-url', async c => {
 
 router.post('/risk-jsa/attachments/create', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, z.object({
     entityType:  AttachEntity,
     entityId:    z.string().min(1),
@@ -1766,7 +1766,7 @@ router.post('/risk-jsa/attachments/create', async c => {
     storage_path: v.data.storagePath,
     uploaded_by:  user.id,
   }).select('id').single<{ id: string }>();
-  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Insert failed' }, 500 as 200);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   void emitAppEvent({
     eventType: 'hse.attachment.added', sourceModule: 'hse',
@@ -1779,7 +1779,7 @@ router.post('/risk-jsa/attachments/create', async c => {
 
 router.post('/risk-jsa/attachments/list', async c => {
   await requirePermission(c, 'hse.risk.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, z.object({ entityType: AttachEntity, entityId: z.string().min(1) }), body.args);
   if (!v.ok) return v.response;
 
@@ -1790,7 +1790,7 @@ router.post('/risk-jsa/attachments/list', async c => {
     .order('created_at', { ascending: false });
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
-  const rows = await Promise.all((data ?? []).map(async a => ({
+  const rows = await Promise.all(data.map(async a => ({
     ...a,
     url: await getSignedUrl(ATTACH_BUCKET, a.storage_path as string).catch(() => ''),
   })));
@@ -1799,15 +1799,15 @@ router.post('/risk-jsa/attachments/list', async c => {
 
 router.post('/risk-jsa/attachments/delete', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
-  const v = zv(c, z.object({ attachmentId: z.string().uuid() }), body.args);
+  const body = c.get('body');
+  const v = zv(c, z.object({ attachmentId: z.uuid() }), body.args);
   if (!v.ok) return v.response;
 
   const found = await sb.from('attachments').select('storage_path').eq('id', v.data.attachmentId).maybeSingle<{ storage_path: string }>();
   const { error } = await sb.from('attachments').delete().eq('id', v.data.attachmentId);
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
   if (found.data?.storage_path) {
-    await sb.storage.from(ATTACH_BUCKET).remove([found.data.storage_path]).catch(() => {});
+    await sb.storage.from(ATTACH_BUCKET).remove([found.data.storage_path]).catch(() => { /* best-effort */ });
   }
   void emitAppEvent({
     eventType: 'hse.attachment.removed', sourceModule: 'hse',
@@ -1821,13 +1821,13 @@ router.post('/risk-jsa/attachments/delete', async c => {
 // Submit a hazard for review → status under_review + (create) hazard-review workflow.
 
 const HazardSubmitSchema = z.object({
-  hazardId:       z.string().uuid(),
+  hazardId:       z.uuid(),
   note:           z.string().max(2000).nullable().optional(),
   idempotencyKey: z.string().min(1).max(200),
 });
 router.post('/risk-jsa/hazards/submit', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, HazardSubmitSchema, body.args ?? {});
   if (!v.ok) return v.response;
   try {
@@ -1840,14 +1840,14 @@ router.post('/risk-jsa/hazards/submit', async c => {
 // Mark a control verified with an effectiveness rating.
 
 const ControlVerifySchema = z.object({
-  controlId:     z.string().uuid(),
+  controlId:     z.uuid(),
   effectiveness: z.enum(['effective','partially_effective','ineffective']),
   note:          z.string().nullable().optional(),
 });
 
 router.post('/risk-jsa/controls/verify', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ControlVerifySchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1866,7 +1866,7 @@ router.post('/risk-jsa/controls/verify', async c => {
     .select('id, source_type, source_id, description')
     .single<{ id: string; source_type: string; source_id: string; description: string }>();
 
-  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Control not found' }, 500 as 200);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   void emitAppEvent({
     eventType:        'hse.control.verified',
@@ -1891,20 +1891,20 @@ router.post('/risk-jsa/templates/list', async c => {
     .eq('module_key', 'hse')
     .order('name');
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/hse/risk-jsa/templates/duplicate ───────────────────────────────
 // Clone a workflow template under a new key so it can be customised.
 
 const TemplateDuplicateSchema = z.object({
-  templateId: z.string().uuid(),
+  templateId: z.uuid(),
   newName:    z.string().min(1).max(200).nullable().optional(),
 });
 
 router.post('/risk-jsa/templates/duplicate', async c => {
   const user = await requirePermission(c, 'hse.risk.manage');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, TemplateDuplicateSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -1931,7 +1931,7 @@ router.post('/risk-jsa/templates/duplicate', async c => {
     .select('id, key:template_key, name')
     .single<{ id: string; key: string; name: string }>();
 
-  if (error || !data) return c.json({ success: false, message: error?.message ?? 'Duplicate failed' }, 500 as 200);
+  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
   void emitAppEvent({
     eventType:        'hse.workflow_template.duplicated',

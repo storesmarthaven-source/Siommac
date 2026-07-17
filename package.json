@@ -24,6 +24,8 @@
     "test:e2e": "node scripts/e2e/run.mjs",
     "test:e2e:coverage": "node scripts/e2e/coverage-gate.mjs",
     "test:e2e:sweep": "node scripts/e2e/sweep-orphans.mjs --apply",
+    "repo:index": "node scripts/generate-codebase-index.mjs --write",
+    "repo:index:check": "node scripts/generate-codebase-index.mjs --check",
     "gen:types": "supabase gen types typescript --project-id YOUR_PROJECT_ID > types/supabase-generated.ts",
     "prepare": "husky",
     "lint:backend": "eslint netlify/functions --ext .ts",

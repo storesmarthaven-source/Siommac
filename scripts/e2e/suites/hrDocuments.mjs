@@ -44,16 +44,20 @@ export default async function run(h) {
   // ── Bootstrap: find a real employee + their existing docs ────────────────────
 
   h.onCleanup(async () => {
-    // Remove the requirement we created
-    if (ctx.requirementId) {
-      await sb.from('hr_document_reminders').delete().in(
-        'document_id',
-        sb.from('hr_employee_documents').select('id').eq('employee_id', ctx.employeeId ?? ''),
-      ).catch(() => null);
-      await sb.from('app_events').delete().eq('source_entity_id', ctx.requirementId).catch(() => null);
-      await sb.from('hr_audit_log').delete().eq('record_id', ctx.requirementId).catch(() => null);
-      await sb.from('hr_document_requirements').delete().eq('id', ctx.requirementId).catch(() => null);
+    // Remove ALL requirement rows this suite created (by TAGGED document_type —
+    // covers the duplicate-attempt row too, not just ctx.requirementId). NOTE:
+    // supabase builders are thenables without .catch — await them plainly and
+    // never pass a builder into .in() (it silently produced the old
+    // ".catch is not a function" cleanup warnings).
+    const { data: docs } = await sb.from('hr_employee_documents').select('id').eq('employee_id', ctx.employeeId ?? '');
+    const docIds = (docs ?? []).map(d => d.id);
+    if (docIds.length) { try { await sb.from('hr_document_reminders').delete().in('document_id', docIds); } catch { /* best-effort */ } }
+    const { data: reqs } = await sb.from('hr_document_requirements').select('id').like('document_type', `${TAG}-%`);
+    for (const r of (reqs ?? [])) {
+      try { await sb.from('app_events').delete().eq('source_entity_id', r.id); } catch { /* best-effort */ }
+      try { await sb.from('hr_audit_log').delete().eq('record_id', r.id); } catch { /* best-effort */ }
     }
+    try { await sb.from('hr_document_requirements').delete().like('document_type', `${TAG}-%`); } catch { /* best-effort */ }
   });
 
   // Find a plain 'employee' user for access-control denial tests.

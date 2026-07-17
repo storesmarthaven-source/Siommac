@@ -12,7 +12,7 @@
 
 import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
-import type { ModuleWorkflowAdapter } from './definitionTypes';
+import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { writeHrAudit } from '../hr/employeeCore';
 import { emitAppEvent } from '../appEvents';
 
@@ -35,7 +35,7 @@ async function rollBackToDraft(
     reason: reason ?? null,
   });
   void emitAppEvent({
-    eventType:        'finance.remittance.' + action.split('.').pop(),
+    eventType:        'finance.remittance.' + (action.split('.').pop() ?? action),
     sourceModule:     'finance_remittances',
     sourceEntityType: 'remittance',
     sourceEntityId:   recordId,
@@ -48,35 +48,33 @@ async function rollBackToDraft(
 const financeRemittancesAdapter: ModuleWorkflowAdapter = {
   moduleKey: 'finance_remittances',
 
-  async buildWorkflowContext() {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     // Context is built at the call site (submitRemittance), not via the adapter.
     throw new Error('finance_remittances: workflow context is built at the call site.');
   },
 
-  onWorkflowStarted: async () => {
-    // Status already set to 'submitted' at submit time — nothing to do.
-  },
+  // Status already set to 'submitted' at submit time — nothing to do.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   // Terminal decision outcomes (approve/return/reject) commit through the
   // transactional finance_remittances_workflow_transition_tx receipt RPC via the
   // workflow outbox worker (exactly-once). Loud dead-ends so a stray caller can't
   // silently fork a second, non-atomic commit path.
-  onWorkflowCompleted: async () => {
+  onWorkflowCompleted: () => {
     throw new Error('finance_remittances: completion commits via finance_remittances_workflow_transition_tx (outbox worker), not the adapter.');
   },
-  onWorkflowReturned: async () => {
+  onWorkflowReturned: () => {
     throw new Error('finance_remittances: return commits via finance_remittances_workflow_transition_tx (outbox worker), not the adapter.');
   },
-  onWorkflowRejected: async () => {
+  onWorkflowRejected: () => {
     throw new Error('finance_remittances: rejection commits via finance_remittances_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  // Cancel still routes through cancelWorkflow() → this callback (not the worker),
-  // so it keeps its rollback-to-draft logic.
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
-    await rollBackToDraft(sourceRecordId, null, 'remittance.workflow_cancelled', reason);
+  // Legacy fallback; the registered receipt handler owns normal outbox cancels.
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
+    await rollBackToDraft(sourceRecordId, actorId ?? null, 'remittance.workflow_cancelled', reason);
   },
 };
 

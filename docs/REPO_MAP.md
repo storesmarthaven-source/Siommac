@@ -4,6 +4,24 @@ Fast orientation for the codebase so you can jump to the right file without re-s
 Read this first; it points at *where things live*, not *how they work* (that's the module
 docs, indexed at the bottom).
 
+## Deterministic codebase index
+
+The generated index complements this curated map with current code-derived facts:
+
+See `docs/CODEBASE_INDEX_GUIDE.md` for the agent workflow and static-analysis boundary.
+
+- `docs/generated/CODEBASE_INDEX.md` — repository inventory and module table.
+- `docs/generated/modules/<module>.md` — focused module maps for implementation work.
+- `docs/generated/SYMBOL_INDEX.tsv` — symbols with file and line references.
+- `docs/generated/ROUTE_INDEX.tsv` — mounted API paths, router definitions, permissions, guards,
+  schemas, and mount status.
+- `docs/generated/WIDGET_INDEX.tsv` — registry and page-local widgets.
+- `docs/generated/CODEBASE_INDEX.json` — complete machine-readable index.
+
+Run `npm run repo:index` after code structure, routes, migrations, widgets, or E2E suites change.
+Run `npm run repo:index:check` to prove the committed index matches the current source. Never edit
+`docs/generated/` manually; use it to locate code, then re-read the source before changing it.
+
 ## Tech stack (one line each)
 - **Frontend:** Preact + Vite + TypeScript. Data via TanStack Query. `noUncheckedIndexedAccess: true`.
 - **Backend:** Netlify Functions (single `api.ts` entry) → Hono router → Zod → lib → Supabase. **POST-only**, every route behind `requirePermission()`.
@@ -57,7 +75,7 @@ assets/     global stylesheets (topbar.css lives here)
 ## Testing
 - **Unit:** vitest (`*.test.ts`), 265 currently. Run `npx vitest run`.
 - **Typecheck (fast loop):** `npm run typecheck:frontend` / `:backend`. Use this while iterating — NOT the E2E suite.
-- **E2E:** `scripts/e2e/suites/<module>.mjs` (35 suites) via `npm run test:e2e -- <module>` against a **running** `dev:netlify`. Harness: `scripts/e2e/harness.mjs` (`acquireActors` prefers real employees). Reference suite: `communications.mjs`.
+- **E2E:** `scripts/e2e/suites/<module>.mjs` (discovered dynamically; do not rely on a hardcoded suite count) via `npm run test:e2e -- <module>` against a **running** `dev:netlify`. Harness: `scripts/e2e/harness.mjs` (`acquireActors` prefers real employees). Reference suite: `communications.mjs`. Behavioral completeness is governed by `ENTERPRISE_MODULE_DELIVERY_STANDARD.md`, not route-call presence alone.
 - **Cadence:** run full suites only when a task is DONE, not per-edit.
 
 ## Hotspots & gotchas (cost real time before)
@@ -68,10 +86,6 @@ assets/     global stylesheets (topbar.css lives here)
 - **New junction table breaks existing PostgREST `B(...)` embeds** — disambiguate with `!fk_column`.
 
 ## Docs index (deeper detail lives here)
-- **Delivery protocol (REQUIRED for module builds):** `ENTERPRISE_MODULE_DELIVERY_STANDARD.md` —
-  contract-before-code, delivery states, side-effect ownership, 15-step final gates, release
-  evidence. Templates in `docs/templates/` (delivery contract, E2E matrix, release evidence);
-  per-module artifacts land in `docs/module-contracts/`; kickoff prompt `CLAUDE_MODULE_BUILD_PROMPT.md`.
 - **Architecture:** `ARCHITECTURE.md`, `FRONTEND_ARCHITECTURE.md`, `SHELL_STRUCTURE.md`, `CODING_STANDARDS.md`, `DATA_DICTIONARY.md`, `API_SPEC.md`, `SECURITY.md`, `RUNBOOK.md`.
 - **Module maps:** `HR_MODULE_MAP.md`, `FINANCE_MODULE_MAP.md`; build order in `PHASE_PLAN.md` / `IMPLEMENTATION_PLAN.md`.
 - **Widget system:** `SIOMAC_ENTERPRISE_WIDGET_SYSTEM_IMPLEMENTATION.md` (+ `WIDGET_*` companions), `src/ui/widgets` (self-documenting), `WIDGET_AUTHORING_GUIDE.md`.

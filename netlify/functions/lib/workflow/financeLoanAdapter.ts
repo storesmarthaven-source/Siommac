@@ -23,28 +23,28 @@ const financeLoanAdapter: ModuleWorkflowAdapter = {
   moduleKey:    'finance_loan',
   workflowType: 'finance_loan_approval',
 
-  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     throw new Error('finance_loan: workflow context is built at the call site (submitLoan), not via the adapter.');
   },
 
-  onWorkflowStarted: async () => { /* status already pending_approval at submit time */ },
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStarted: () => Promise.resolve(), // status already pending_approval at submit time
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   // Terminal decision outcomes (approve/return/reject) commit through the
   // transactional finance_loan_workflow_transition_tx receipt RPC via the workflow
   // outbox worker (exactly-once). Loud dead-ends so a stray caller can't silently
   // fork a second, non-atomic commit path.
-  onWorkflowCompleted: async () => {
+  onWorkflowCompleted: () => {
     throw new Error('finance_loan: completion commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
   },
-  onWorkflowReturned: async () => {
+  onWorkflowReturned: () => {
     throw new Error('finance_loan: return commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
   },
-  onWorkflowRejected: async () => {
+  onWorkflowRejected: () => {
     throw new Error('finance_loan: rejection commits via finance_loan_workflow_transition_tx (outbox worker), not the adapter.');
   },
 
-  // Cancel still routes through cancelWorkflow() → this callback (not the worker).
+  // Legacy fallback; the registered receipt handler owns normal outbox cancels.
   onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await setLoanStatus(sourceRecordId, 'cancelled');
     // Use the real canceller (threaded from cancelWorkflow); null is a valid
@@ -52,7 +52,7 @@ const financeLoanAdapter: ModuleWorkflowAdapter = {
     // 'workflow', which isn't an app_users row and FK-violates.
     await writeHrAudit({
       submoduleKey: 'finance_loan', recordId: sourceRecordId, actorId: actorId ?? null,
-      action: 'loan.workflow_cancelled', previousState: { status: 'pending_approval' }, newState: { status: 'cancelled' }, reason: reason ?? null,
+      action: 'loan.workflow_cancelled', previousState: { status: 'pending_approval' }, newState: { status: 'cancelled' }, reason,
     });
   },
 };

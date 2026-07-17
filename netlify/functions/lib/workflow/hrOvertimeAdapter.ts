@@ -31,15 +31,14 @@ async function decidedBy(workflowId: string): Promise<string | null> {
 const hrOvertimeAdapter: ModuleWorkflowAdapter = {
   moduleKey: 'hr_overtime',
 
-  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     throw new Error('hr_overtime: workflow context is built at the call site, not via the adapter.');
   },
 
-  onWorkflowStarted: async () => {
-    // Status already 'submitted' when the entry was created — nothing to do.
-  },
+  // Status already 'submitted' when the entry was created — nothing to do.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
     const actor = await decidedBy(workflowId);
@@ -54,7 +53,7 @@ const hrOvertimeAdapter: ModuleWorkflowAdapter = {
       eventType: 'hr.overtime.review_returned',
       sourceModule: 'hr_overtime', sourceEntityType: 'overtime_entry',
       sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow',
-      severity: 'info', payload: { comment: comment ?? null },
+      severity: 'info', payload: { comment: comment },
     });
   },
 
@@ -65,17 +64,17 @@ const hrOvertimeAdapter: ModuleWorkflowAdapter = {
       eventType: 'hr.overtime.rejected',
       sourceModule: 'hr_overtime', sourceEntityType: 'overtime_entry',
       sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow',
-      severity: 'warning', payload: { reason: comment ?? null },
+      severity: 'warning', payload: { reason: comment },
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await setOvertimeStatus(sourceRecordId, 'cancelled', null, { reason });
     void emitAppEvent({
       eventType: 'hr.overtime.cancelled',
       sourceModule: 'hr_overtime', sourceEntityType: 'overtime_entry',
-      sourceEntityId: sourceRecordId, actorUserId: 'workflow',
-      severity: 'info', payload: { reason: reason ?? null },
+      sourceEntityId: sourceRecordId, actorUserId: actorId ?? null,
+      severity: 'info', payload: { reason },
     });
   },
 };

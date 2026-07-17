@@ -40,7 +40,7 @@ async function rollPayItemToDraft(
     reason: reason ?? null,
   });
   void emitAppEvent({
-    eventType: 'hr.compensation.item.' + action.split('.').pop(),
+    eventType: 'hr.compensation.item.' + (action.split('.').pop() ?? action),
     sourceModule: 'hr_compensation', sourceEntityType: 'pay_item',
     sourceEntityId: recordId, actorUserId: actorId ?? 'workflow',
     severity: 'warning', payload: { reason: reason ?? null },
@@ -50,15 +50,14 @@ async function rollPayItemToDraft(
 const hrCompensationAdapter: ModuleWorkflowAdapter = {
   moduleKey: 'hr_compensation',
 
-  async buildWorkflowContext(): Promise<ModuleWorkflowContext> {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     throw new Error('hr_compensation: workflow context is built at the call site, not via the adapter.');
   },
 
-  onWorkflowStarted: async () => {
-    // Status already set to pending_approval at submit time — nothing to do.
-  },
+  // Status already set to pending_approval at submit time — nothing to do.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
     const actor = await decidedBy(workflowId);
@@ -79,12 +78,12 @@ const hrCompensationAdapter: ModuleWorkflowAdapter = {
       eventType: 'hr.compensation.item.rejected',
       sourceModule: 'hr_compensation', sourceEntityType: 'pay_item',
       sourceEntityId: sourceRecordId, actorUserId: actor ?? 'workflow',
-      severity: 'warning', payload: { reason: comment ?? null },
+      severity: 'warning', payload: { reason: comment },
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
-    await rollPayItemToDraft(sourceRecordId, null, 'pay_item.workflow_cancelled', reason);
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
+    await rollPayItemToDraft(sourceRecordId, actorId ?? null, 'pay_item.workflow_cancelled', reason);
   },
 };
 

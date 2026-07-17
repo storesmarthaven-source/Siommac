@@ -42,7 +42,6 @@ const ACCESS_TOKEN_TTL     = '15m';
  *  refresh from the server's authoritative value (keep in sync with ACCESS_TOKEN_TTL). */
 export const ACCESS_TOKEN_TTL_MS = 15 * 60 * 1000;
 const REFRESH_TOKEN_TTL_MS = 7 * 24 * 60 * 60 * 1000;
-const REVOCATION_TTL_DAYS  = 1;
 
 // ── Refresh-token cookie (httpOnly — the browser never exposes it to JS) ──────
 // Path-scoped to the API so it rides only on API calls. SameSite=Lax + the
@@ -88,7 +87,6 @@ export interface AuthMethodClaims {
 /** Issue a short-lived signed access JWT for a user. */
 function signUser(u: AppUser, amrClaims?: Partial<AuthMethodClaims>): string {
   const jti = crypto.randomUUID();
-  const now  = new Date().toISOString();
   const payload = {
     sub:          u.id,
     username:     u.username,
@@ -208,7 +206,7 @@ async function rotateRefreshToken(
     p_old_hash:    hash,
     p_new_hash:    newRefreshHash,
     p_ttl_seconds: Math.floor(REFRESH_TOKEN_TTL_MS / 1000),
-  });
+  }) as { data: unknown; error: { message: string } | null };
   if (rpcErr) {
     console.error('[auth] rotate_refresh_token_tx failed:', rpcErr.message);
     return null;
@@ -225,7 +223,7 @@ async function rotateRefreshToken(
     .select('*')
     .eq('id', result.user_id)
     .single<AppUser>();
-  if (userErr || !user) return null;
+  if (userErr) return null;
 
   const claims: Partial<AuthMethodClaims> = {
     amr:           result.amr ?? ['pwd'],
@@ -282,18 +280,32 @@ async function isSessionRevoked(userId: string, iat: number): Promise<boolean> {
 }
 
 /**
- * Force-revoke ALL of a user's sessions (superadmin action). Sets the revocation
- * epoch (so existing access tokens are rejected) and deletes their refresh token
- * (so they cannot silently refresh). The user must log in again — which requires
- * a fresh 2FA code for mandatory-2FA roles.
+ * Force-revoke ALL of a user's sessions (superadmin action) — ONE transaction
+ * via auth_revoke_user_sessions_tx (migration 404): revocation-epoch upsert +
+ * refresh-token purge + exactly one `auth.session.revoked` app_event + exactly
+ * one activity_logs audit row commit together or roll back together. The
+ * event's dedupe_key is the retry receipt (same key + same target replays the
+ * original result; same key + different target → 409).
  */
-async function revokeUserSessions(userId: string, revokedBy: string): Promise<void> {
-  const nowIso = new Date().toISOString();
-  await sb.from('session_revocations').upsert(
-    { user_id: userId, revoked_at: nowIso, revoked_by: revokedBy },
-    { onConflict: 'user_id' },
-  );
-  await sb.from('refresh_tokens').delete().eq('user_id', userId);
+async function revokeUserSessions(
+  targetUserId: string,
+  actor: { id: string; username: string },
+  idempotencyKey: string,
+): Promise<{ revokedAt: string; deletedTokens: number; replay: boolean }> {
+  const { ip, userAgent } = getReqContext();
+  const { data, error } = await sb.rpc('auth_revoke_user_sessions_tx', {
+    p_target_user_id:  targetUserId,
+    p_actor_id:        actor.id,
+    p_actor_username:  actor.username,
+    p_idempotency_key: idempotencyKey,
+    p_ip:              ip ?? null,
+    p_user_agent:      userAgent ?? null,
+  }) as { data: unknown; error: { message: string; code?: string } | null };
+  if (error) {
+    const status = error.code === 'AU404' ? 404 : error.code === 'AU409' ? 409 : error.code === 'AU422' ? 422 : 500;
+    throw Object.assign(new Error(error.message.replace(/^auth_revoke:\s*/, '')), { status });
+  }
+  return data as { revokedAt: string; deletedTokens: number; replay: boolean };
 }
 
 // ── Token extraction ──────────────────────────────────────────────────────────
@@ -351,7 +363,7 @@ async function requireUser(c: Context<{ Variables: HonoVariables }>): Promise<Ap
     .eq('id', auth.sub)
     .single<AppUser>();
 
-  if (error || !data || data.status !== 'active') {
+  if (error || data.status !== 'active') {
     throw Object.assign(new Error('Unauthorized'), { status: 401 });
   }
   return data;
@@ -374,8 +386,8 @@ async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[
     .from('user_permissions')
     .select('permission, granted')
     .eq('user_id', userId);
-  if (error || !data) return [];
-  return data as PermissionOverrideRow[];
+  if (error) return [];
+  return data;
 }
 
 /**
@@ -433,8 +445,8 @@ async function log_(
       username:   user?.username ?? '',
       action,
       entity,
-      entity_id:  entityId ?? '',
-      details:    details  ?? '',
+      entity_id:  entityId,
+      details,
       ip_address: ip        ?? null,
       user_agent: userAgent ?? null,
     });

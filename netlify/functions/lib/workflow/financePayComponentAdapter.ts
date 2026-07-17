@@ -24,7 +24,7 @@
 
 import { sb } from '../db';
 import { registerWorkflowAdapter } from './adapterRegistry';
-import type { ModuleWorkflowAdapter } from './definitionTypes';
+import type { ModuleWorkflowAdapter, ModuleWorkflowContext } from './definitionTypes';
 import { emitFinanceMutationBackbone } from '../finance/backbone';
 import { writeHrAudit } from '../hr/employeeCore';
 
@@ -143,12 +143,12 @@ async function applyChangeRequest(cr: CrRow, actorId: string): Promise<void> {
       cost_allocation_required: boolean;
     }>;
     const patch: Record<string, unknown> = { updated_by: actorId, updated_at: now };
-    if (p.name !== undefined)                 patch['name']                    = p.name;
-    if (p.is_statutory !== undefined)         patch['is_statutory']            = p.is_statutory;
-    if (p.is_taxable !== undefined)           patch['is_taxable']              = p.is_taxable;
-    if (p.reduces_chargeable !== undefined)   patch['reduces_chargeable']      = p.reduces_chargeable;
-    if (p.gl_account_code !== undefined)      patch['gl_account_code']         = p.gl_account_code;
-    if (p.cost_allocation_required !== undefined) patch['cost_allocation_required'] = p.cost_allocation_required;
+    if (p.name !== undefined)                 patch.name                    = p.name;
+    if (p.is_statutory !== undefined)         patch.is_statutory            = p.is_statutory;
+    if (p.is_taxable !== undefined)           patch.is_taxable              = p.is_taxable;
+    if (p.reduces_chargeable !== undefined)   patch.reduces_chargeable      = p.reduces_chargeable;
+    if (p.gl_account_code !== undefined)      patch.gl_account_code         = p.gl_account_code;
+    if (p.cost_allocation_required !== undefined) patch.cost_allocation_required = p.cost_allocation_required;
 
     const { error: updErr } = await sb
       .from('finance_pay_components')
@@ -186,7 +186,7 @@ async function applyChangeRequest(cr: CrRow, actorId: string): Promise<void> {
       throw bbErr;
     }
 
-  } else if (cr.change_type === 'retire') {
+  } else { // change_type === 'retire' — the union's only remaining member
     if (!cr.component_id) throw Object.assign(new Error('Change request has no component_id for a retire.'), { status: 422 });
 
     const { data: existing, error: getErr } = await sb
@@ -223,9 +223,9 @@ async function applyChangeRequest(cr: CrRow, actorId: string): Promise<void> {
       throw bbErr;
     }
 
-  } else {
-    throw Object.assign(new Error(`Unknown change_type "${cr.change_type as string}".`), { status: 422 });
   }
+  // No unknown-change_type fallback needed: the type union AND the DB CHECK
+  // (mig 20260917000200) both pin change_type to create|update|retire.
 }
 
 // ── Adapter ───────────────────────────────────────────────────────────────────
@@ -234,16 +234,15 @@ const financePayComponentAdapter: ModuleWorkflowAdapter = {
   moduleKey:    'finance_pay_components',
   workflowType: 'finance_pay_component_approval',
 
-  async buildWorkflowContext() {
+  buildWorkflowContext(): Promise<ModuleWorkflowContext> {
     // Context is built at the call site (submitPayComponentChangeRequest), not via the adapter.
     throw new Error('finance_pay_components: workflow context is built at the call site, not via the adapter.');
   },
 
-  onWorkflowStarted: async () => {
-    // CR stays at pending_approval — no status change at start.
-  },
+  // CR stays at pending_approval — no status change at start.
+  onWorkflowStarted: () => Promise.resolve(),
 
-  onWorkflowStepCompleted: async () => {},
+  onWorkflowStepCompleted: () => Promise.resolve(),
 
   onWorkflowCompleted: async ({ workflowId, sourceRecordId }) => {
     const actorId = (await decidedBy(workflowId)) ?? 'workflow';
@@ -301,7 +300,7 @@ const financePayComponentAdapter: ModuleWorkflowAdapter = {
       action:        'pay_component_cr.workflow_returned',
       previousState: { status: 'pending_approval' },
       newState:      { status: 'pending_approval' },
-      reason:        comment ?? null,
+      reason:        comment,
     });
   },
 
@@ -317,22 +316,22 @@ const financePayComponentAdapter: ModuleWorkflowAdapter = {
       action:        'pay_component_cr.rejected',
       previousState: { status: 'pending_approval' },
       newState:      { status: 'rejected' },
-      reason:        comment ?? null,
+      reason:        comment,
     });
   },
 
-  onWorkflowCancelled: async ({ sourceRecordId, reason }) => {
+  onWorkflowCancelled: async ({ sourceRecordId, reason, actorId }) => {
     await sb.from('finance_pay_component_change_requests')
       .update({ status: 'rejected' })
       .eq('id', sourceRecordId);
     await writeHrAudit({
       submoduleKey:  'finance_payroll_components',
       recordId:      sourceRecordId,
-      actorId:       'workflow',
+      actorId:       actorId ?? null,
       action:        'pay_component_cr.cancelled',
       previousState: { status: 'pending_approval' },
       newState:      { status: 'rejected' },
-      reason:        reason ?? null,
+      reason,
     });
   },
 };

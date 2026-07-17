@@ -23,6 +23,7 @@
  * requires these env vars first. See lib/REALTIME_AUTH_CONTRACT.md.
  */
 
+import { createPrivateKey } from 'crypto';
 import jwt from 'jsonwebtoken';
 
 const TOKEN_TTL_SECONDS = 55 * 60;   // refreshed by the 30s summary poll long before expiry
@@ -42,7 +43,12 @@ function privateKeyPem(): string | null {
   if (!b64) { cachedPem = null; return null; }
   try {
     const pem = Buffer.from(b64, 'base64').toString('utf8');
-    cachedPem = pem.includes('BEGIN PRIVATE KEY') ? pem : null;
+    if (!pem.includes('BEGIN PRIVATE KEY')) throw new Error('not PKCS8 PEM');
+    const key = createPrivateKey({ key: pem, format: 'pem', type: 'pkcs8' });
+    if (key.asymmetricKeyType !== 'ec' || key.asymmetricKeyDetails?.namedCurve !== 'prime256v1') {
+      throw new Error('not a P-256 EC private key');
+    }
+    cachedPem = pem;
   } catch {
     cachedPem = null;
   }
@@ -58,17 +64,22 @@ export function mintRealtimeToken(userId: string): RealtimeToken | null {
 
   const nowSec = Math.floor(Date.now() / 1000);
   const expSec = nowSec + TOKEN_TTL_SECONDS;
-  const token = jwt.sign(
-    {
-      sub:  userId,               // TEXT app_users.id — policies use auth.jwt()->>'sub'
-      role: 'authenticated',      // postgres role Realtime adopts for RLS
-      aud:  'authenticated',
-      iss:  'siomac-realtime',
-      iat:  nowSec,
-      exp:  expSec,
-    },
-    pem,
-    { algorithm: 'ES256', keyid: kid },
-  );
-  return { token, expiresAt: new Date(expSec * 1000).toISOString() };
+  try {
+    const token = jwt.sign(
+      {
+        sub:  userId,               // TEXT app_users.id — policies use auth.jwt()->>'sub'
+        role: 'authenticated',      // postgres role Realtime adopts for RLS
+        aud:  'authenticated',
+        iss:  'siomac-realtime',
+        iat:  nowSec,
+        exp:  expSec,
+      },
+      pem,
+      { algorithm: 'ES256', keyid: kid },
+    );
+    return { token, expiresAt: new Date(expSec * 1000).toISOString() };
+  } catch (error) {
+    console.error('[realtimeAuth] ES256 token signing failed — realtime tokens disabled:', error instanceof Error ? error.message : error);
+    return null;
+  }
 }

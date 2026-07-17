@@ -31,7 +31,10 @@ await h.ping();
 // leaks would keep piling up (this is what put 34 dead users on the AC Users page).
 if (SWEEP) {
   try { await sweep(); }
-  catch (e) { console.warn(`[sweep] pre-run sweep skipped: ${e.message}`); }
+  catch (e) {
+    console.error(`[sweep] pre-run sweep FAILED — refusing to run against contaminated test data: ${e.message}`);
+    process.exit(3);
+  }
 }
 
 // Ctrl-C / kill: run the LIFO cleanup + a full sweep so an aborted run leaves

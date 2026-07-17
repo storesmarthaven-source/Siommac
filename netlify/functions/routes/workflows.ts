@@ -21,8 +21,8 @@ import {
   startWorkflowByTemplate,
   decideTask,
   getModuleStartPermission,
-  validateModuleSourceExists,
 } from '../lib/workflow/service';
+import { buildCanonicalStartContext } from '../lib/workflow/sourceContext';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -36,16 +36,12 @@ const CreateWorkflowSchema = z.object({
   sourceModule:       z.string().min(1),
   sourceEntityType:   z.string().min(1),
   sourceEntityId:     z.string().min(1),
-  priority:           z.enum(['low','medium','high','critical']).default('medium'),
-  ownerUserId:        z.string().optional().nullable(),
-  reason:             z.string().optional(),
-  metadata:           z.record(z.string(), z.unknown()).optional(),
-  idempotencyKey:     z.string().uuid(),
-});
+  idempotencyKey:     z.uuid(),
+}).strict();
 
 router.post('/workflows/create', async c => {
   const user = await requirePermission(c, 'workflow.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, CreateWorkflowSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -55,28 +51,21 @@ router.post('/workflows/create', async c => {
     return c.json({ success: false, message: 'Forbidden: insufficient module access' }, 403 as 200);
   }
 
-  // Gate 3: source record must exist (UUID-format IDs only; text refs skip).
-  const sourceExists = await validateModuleSourceExists(v.data.sourceModule, v.data.sourceEntityId);
-  if (!sourceExists) {
-    return c.json({ success: false, message: 'Source record not found' }, 404 as 200);
-  }
-
   // Explicit start via the atomic workflow_start_instance_tx RPC.
   try {
+    const context = await buildCanonicalStartContext({
+      moduleKey: v.data.sourceModule,
+      workflowType: v.data.sourceEntityType,
+      triggerEvent: 'manual.start',
+      sourceRecordId: v.data.sourceEntityId,
+      requestedBy: user.id,
+      actor: user,
+    });
     const wf = await startWorkflowByTemplate({
       templateKey:    v.data.templateKey,
       actor:          { id: user.id, role: user.role },
       idempotencyKey: v.data.idempotencyKey,
-      context: {
-        moduleKey:      v.data.sourceModule,
-        workflowType:   v.data.sourceEntityType,
-        triggerEvent:   'manual.start',
-        sourceRecordId: v.data.sourceEntityId,
-        requestedBy:    user.id,
-        ownerId:        v.data.ownerUserId ?? null,
-        priority:       v.data.priority,
-        recordData:     { ...(v.data.metadata ?? {}), reason: v.data.reason },
-      },
+      context,
     });
     return c.json({ success: true, workflowId: wf.id, ref: wf.workflow_no });
   } catch (err) {
@@ -97,7 +86,7 @@ const ListWorkflowsSchema = z.object({
 
 router.post('/workflows/list', async c => {
   const user = await requirePermission(c, 'workflow.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, ListWorkflowsSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -119,14 +108,14 @@ router.post('/workflows/list', async c => {
   const { data, error } = await q;
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
 
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/workflows/get ───────────────────────────────────────────────────
 
 router.post('/workflows/get', async c => {
   await requirePermission(c, 'workflow.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as Record<string, unknown> | undefined;
   const workflowId = args?.workflowId as string | undefined;
 
@@ -164,13 +153,13 @@ router.post('/workflows/tasks', async c => {
     .limit(50);
 
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 // ── POST /api/workflows/decision ──────────────────────────────────────────────
 
 const DecisionSchema = z.object({
-  taskId:         z.string().uuid(),
+  taskId:         z.uuid(),
   decision:       z.enum(['approved','rejected','returned','verified','completed']),
   note:           z.string().max(2000).optional(),
   overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions
@@ -178,7 +167,7 @@ const DecisionSchema = z.object({
 
 router.post('/workflows/decision', async c => {
   const user = await requirePermission(c, 'workflow.approve');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const v = zv(c, DecisionSchema, body.args);
   if (!v.ok) return v.response;
 
@@ -202,7 +191,7 @@ router.post('/workflows/decision', async c => {
 
 router.post('/workflows/audit', async c => {
   await requirePermission(c, 'workflow.view');
-  const body = c.get('body') as Record<string, unknown>;
+  const body = c.get('body');
   const args = body.args as { workflowId?: string; limit?: number } | undefined;
 
   if (!args?.workflowId) return c.json({ success: false, message: 'workflowId required' }, 400 as 200);
@@ -215,7 +204,7 @@ router.post('/workflows/audit', async c => {
     .limit(args.limit ?? 100);
 
   if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data: data ?? [] });
+  return c.json({ success: true, data });
 });
 
 export default router;

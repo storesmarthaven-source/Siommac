@@ -36,7 +36,6 @@ import {
   buildTaskRowForStep, workflowToContext, ownerRecipients, moduleRoute,
   type WorkflowRow,
 } from './service';
-import type { WorkflowTemplateDefinition } from './definitionTypes';
 
 interface OutboxJob {
   id: string; transition_id: string; status: string; attempts: number;
@@ -45,13 +44,14 @@ interface OutboxJob {
 interface TransitionRow {
   id: string; workflow_id: string; task_id: string | null; kind: string;
   decision: string | null; actor_id: string | null; input_hash: string; status: string;
+  result: Record<string, unknown> | null;
 }
 
 // ── Source-transition dispatch ────────────────────────────────────────────────
 // Modules whose terminal source mutation goes through a transactional receipt
 // RPC (exactly-once). Key: `${module_key}:${workflow_type}`. Everything else
 // falls back to the legacy adapter callback until its receipt RPC lands.
-type ReceiptOutcome = 'approved' | 'returned' | 'rejected';
+type ReceiptOutcome = 'approved' | 'returned' | 'rejected' | 'cancelled';
 interface SourceTransitionHandler {
   /** Commit the source mutation atomically (receipt-guarded). */
   commit(args: { transitionId: string; sourceRecordId: string; actorId: string;
@@ -60,7 +60,7 @@ interface SourceTransitionHandler {
   afterCommit?(args: { sourceRecordId: string; actorId: string; outcome: ReceiptOutcome; comment: string | null }): Promise<void>;
 }
 
-const RECEIPT_HANDLERS: Record<string, SourceTransitionHandler> = {
+const RECEIPT_HANDLERS: Partial<Record<string, SourceTransitionHandler>> = {
   'finance_payroll:finance_payroll_approval': {
     async commit({ transitionId, sourceRecordId, actorId, outcome, comment, inputHash }) {
       const { error } = await sb.rpc('finance_payroll_workflow_transition_tx', {
@@ -246,13 +246,17 @@ async function runSourceTransition(wf: WorkflowRow, tr: TransitionRow, outcome: 
         note: 'terminal transition finalized with NO source adapter — source status was NOT synced',
       },
       dedupeKey: `workflow.source_adapter_missing:${wf.id}`,
-    } as Parameters<typeof emitAppEvent>[0]);
+    });
     console.error(`[wf-outbox] no source-transition handler for ${wf.module_key}:${wf.workflow_type} — finalizing WITHOUT a source sync (source stays unchanged)`);
     return null;
   }
   if (outcome === 'approved') await adapter.onWorkflowCompleted({ workflowId: wf.id, sourceRecordId: wf.source_record_id, finalDecision: 'approved' });
   else if (outcome === 'returned') await adapter.onWorkflowReturned({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });
-  else await adapter.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });
+  else if (outcome === 'rejected') await adapter.onWorkflowRejected({ workflowId: wf.id, sourceRecordId: wf.source_record_id, comment: comment ?? '' });
+  else await adapter.onWorkflowCancelled({
+    workflowId: wf.id, sourceRecordId: wf.source_record_id,
+    reason: comment ?? '', actorId: tr.actor_id,
+  });
   return null;
 }
 
@@ -268,14 +272,25 @@ async function finalize(job: OutboxJob, args: {
     p_final_status: args.finalStatus, p_next_step_key: args.nextStepKey ?? null,
     p_new_tasks: args.newTasks ?? [], p_action: args.action,
     p_event_payload: args.eventPayload ?? {}, p_handoffs: args.handoffs ?? [],
-  });
-  if (error) throw Object.assign(new Error(`finalize: ${error.message}`), { code: (error as { code?: string }).code });
+  }) as { data: unknown; error: { message: string; code?: string } | null };
+  if (error) throw Object.assign(new Error(`finalize: ${error.message}`), { code: error.code });
   const r = (data ?? {}) as { eventId?: string | null; alreadyFinal?: boolean };
   return { eventId: r.eventId ?? null, alreadyFinal: r.alreadyFinal ?? false };
 }
 
-const TERMINAL: Record<string, { finalStatus: 'completed' | 'returned' | 'rejected'; outcome: ReceiptOutcome; action: string;
-  severity: 'success' | 'warning'; title: string; verb: string; actionRequired?: boolean }> = {
+async function finalizeCancel(job: OutboxJob, sourceResult: Record<string, unknown>): Promise<{ eventId: string | null; alreadyFinal: boolean }> {
+  const { data, error } = await sb.rpc('workflow_finalize_cancel_tx', {
+    p_transition_id: job.transition_id,
+    p_lease_token: job.lease_token,
+    p_source_result: sourceResult,
+  }) as { data: unknown; error: { message: string; code?: string } | null };
+  if (error) throw Object.assign(new Error(`finalize cancel: ${error.message}`), { code: error.code });
+  const r = (data ?? {}) as { eventId?: string | null; alreadyFinal?: boolean };
+  return { eventId: r.eventId ?? null, alreadyFinal: r.alreadyFinal ?? false };
+}
+
+const TERMINAL: Partial<Record<string, { finalStatus: 'completed' | 'returned' | 'rejected'; outcome: ReceiptOutcome; action: string;
+  severity: 'success' | 'warning'; title: string; verb: string; actionRequired?: boolean }>> = {
   finalize_completed: { finalStatus: 'completed', outcome: 'approved', action: 'workflow.completed', severity: 'success',  title: 'Workflow approved',  verb: 'was approved' },
   finalize_returned:  { finalStatus: 'returned',  outcome: 'returned', action: 'workflow.returned',  severity: 'warning',  title: 'Workflow returned',  verb: 'was returned', actionRequired: true },
   finalize_rejected:  { finalStatus: 'rejected',  outcome: 'rejected', action: 'workflow.rejected',  severity: 'warning',  title: 'Workflow rejected',  verb: 'was rejected' },
@@ -293,9 +308,9 @@ async function processTerminal(job: OutboxJob, wf: WorkflowRow, tr: TransitionRo
   // Handoffs declared on the template fire on completion (parity with the legacy
   // runWorkflowHandoffs, which only ran for 'workflow.completed').
   const handoffs = t.finalStatus !== 'completed' ? [] :
-    ((wf.template_snapshot.handoffs ?? []).filter(h => h.event === 'workflow.completed').map(h => ({
-      target_module: h.targetModule, action: h.action, fieldMap: h.fieldMap ?? {},
-      payload: { ...wf.source_snapshot, action: h.action, mappedFields: h.fieldMap ?? {} },
+    (wf.template_snapshot.handoffs.filter(h => h.event === 'workflow.completed').map(h => ({
+      target_module: h.targetModule, action: h.action, fieldMap: h.fieldMap,
+      payload: { ...wf.source_snapshot, action: h.action, mappedFields: h.fieldMap },
     })));
 
   const { eventId, alreadyFinal } = await finalize(job, {
@@ -321,12 +336,34 @@ async function processTerminal(job: OutboxJob, wf: WorkflowRow, tr: TransitionRo
   }
 }
 
+async function processCancel(job: OutboxJob, wf: WorkflowRow, tr: TransitionRow, reason: string | null): Promise<void> {
+  const handler = await runSourceTransition(wf, tr, 'cancelled', reason);
+  const { eventId, alreadyFinal } = await finalizeCancel(job, { sourceTransition: handler ? 'receipt' : 'adapter' });
+
+  if (!alreadyFinal || eventId) {
+    await deliverEventNotifications({
+      eventType: 'workflow.cancelled', sourceModule: 'workflow', sourceEntityType: 'workflow',
+      sourceEntityId: wf.workflow_no ?? wf.id, actorUserId: tr.actor_id, severity: 'warning',
+      explicitRecipients: ownerRecipients(wf),
+      notification: {
+        title: 'Workflow cancelled',
+        body: `${wf.workflow_no ?? ''} - ${wf.source_record_ref ?? wf.source_record_id} was cancelled${reason ? `: ${reason}` : '.'}`,
+        actionRoute: moduleRoute(wf.module_key), type: 'workflow.cancelled', actionRequired: true,
+      },
+    } as Parameters<typeof deliverEventNotifications>[0], eventId);
+    await handler?.afterCommit?.({
+      sourceRecordId: wf.source_record_id, actorId: tr.actor_id ?? 'workflow',
+      outcome: 'cancelled', comment: reason,
+    });
+  }
+}
+
 /** Advance path: resolveNext in TS; either the workflow completes (→ terminal)
  *  or the next step's tasks are resolved and committed via finalize. */
 async function processAdvance(job: OutboxJob, wf: WorkflowRow, tr: TransitionRow, comment: string | null): Promise<void> {
   const stepKey = await taskStepKey(tr);
   const { nextSteps, complete } = resolveNext(
-    wf.template_snapshot as WorkflowTemplateDefinition, stepKey, 'approved',
+    wf.template_snapshot, stepKey, 'approved',
     { workflow: wf, recordData: wf.source_snapshot },
   );
 
@@ -338,16 +375,16 @@ async function processAdvance(job: OutboxJob, wf: WorkflowRow, tr: TransitionRow
   const context = workflowToContext(wf);
   const newTasks = nextSteps.map(step => buildTaskRowForStep(step, context));
   await finalize(job, {
-    finalStatus: 'in_progress', nextStepKey: nextSteps[0]!.stepKey, newTasks,
+    finalStatus: 'in_progress', nextStepKey: nextSteps[0].stepKey, newTasks,
     action: 'workflow.step.advanced',
-    eventPayload: { fromStep: stepKey, toStep: nextSteps[0]!.stepKey, moduleKey: wf.module_key },
+    eventPayload: { fromStep: stepKey, toStep: nextSteps[0].stepKey, moduleKey: wf.module_key },
   });
 }
 
 async function taskStepKey(tr: TransitionRow): Promise<string> {
   if (!tr.task_id) throw new Error('transition has no task');
   const { data, error } = await sb.from('workflow_tasks').select('step_key, decision_comment').eq('id', tr.task_id).single<{ step_key: string; decision_comment: string | null }>();
-  if (error || !data) throw new Error(`task ${tr.task_id} not found for transition ${tr.id}`);
+  if (error) throw new Error(`task ${tr.task_id} not found for transition ${tr.id}`);
   return data.step_key;
 }
 
@@ -364,7 +401,7 @@ export async function processWorkflowOutbox(workerId: string, limit = 10, onlyTr
 
   const { data: jobs, error: claimErr } = await sb.rpc('workflow_outbox_claim', {
     p_worker_id: workerId, p_limit: limit, p_transition_id: onlyTransitionId ?? null,
-  });
+  }) as { data: unknown; error: { message: string } | null };
   if (claimErr) { console.error('[wf-outbox] claim failed:', claimErr.message); return summary; }
 
   for (const job of (jobs ?? []) as OutboxJob[]) {
@@ -376,10 +413,11 @@ export async function processWorkflowOutbox(workerId: string, limit = 10, onlyTr
       if (!wf) throw new Error(`workflow ${tr.workflow_id} not found`);
       const comment = tr.task_id
         ? (await sb.from('workflow_tasks').select('decision_comment').eq('id', tr.task_id).maybeSingle<{ decision_comment: string | null }>()).data?.decision_comment ?? null
-        : null;
+        : typeof tr.result?.reason === 'string' ? tr.result.reason : null;
 
       if (tr.kind === 'resolve_approved_step') await processAdvance(job, wf, tr, comment);
       else if (tr.kind === 'finalize_returned' || tr.kind === 'finalize_rejected') await processTerminal(job, wf, tr, tr.kind, comment);
+      else if (tr.kind === 'cancel') await processCancel(job, wf, tr, comment);
       else throw new Error(`unexpected transition kind ${tr.kind}`);
 
       const { error: doneErr } = await sb.rpc('workflow_outbox_complete', { p_transition_id: job.transition_id, p_lease_token: job.lease_token });
@@ -392,7 +430,7 @@ export async function processWorkflowOutbox(workerId: string, limit = 10, onlyTr
       if ((e as { code?: string }).code === 'WF409') { console.warn('[wf-outbox] stale lease, skipping:', job.transition_id); continue; }
       const { data: failRes, error: failErr } = await sb.rpc('workflow_outbox_fail', {
         p_transition_id: job.transition_id, p_lease_token: job.lease_token, p_error: msg,
-      });
+      }) as { data: unknown; error: { message: string } | null };
       if (failErr) { console.error('[wf-outbox] fail-record failed:', failErr.message); continue; }
       summary.failed++;
       const f = (failRes ?? {}) as { deadLetter?: boolean; attempts?: number };
@@ -410,7 +448,7 @@ export async function processWorkflowOutbox(workerId: string, limit = 10, onlyTr
             body: `A workflow transition exhausted its retries and is dead-lettered. The workflow stays gated until replayed. (${msg.slice(0, 160)})`,
             actionRoute: 'admin/workflows', type: 'workflow.transition_failed', actionRequired: true,
           },
-        } as Parameters<typeof emitAppEvent>[0]);
+        });
       }
     }
   }
