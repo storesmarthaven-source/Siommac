@@ -1,0 +1,82 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Failed Payroll Calculation | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="failed">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page">
+        <div>
+          <div class="crumbs"><a href="index.html">Payroll</a><span class="sep">&rsaquo;</span><a href="index.html">Payroll runs</a><span class="sep">&rsaquo;</span><b>PAY-2026-07-C01</b></div>
+          <div class="page-header"><div><h1>July Correction Payroll</h1><div class="sub">Calculation attempt 2 failed without replacing the last valid checkpoint.</div></div><div class="ha"><button class="btn" type="button">Download Diagnostics</button><button class="btn primary" type="button" data-dialog="retry-calculation">Retry Calculation</button></div></div>
+        </div>
+
+        <section class="card runhead">
+          <div class="rh-cell"><div class="rh-ico">P</div><div><div class="rh-name">July Correction Payroll</div><div class="rh-id">PAY-2026-07-C01</div></div></div>
+          <div class="rh-cell"><div class="rh-ci">!</div><div><div class="k">Status</div><span class="pill red">Calculation failed</span></div></div>
+          <div class="rh-cell"><div class="rh-ci">3</div><div><div class="k">Current stage</div><div class="v">Recovery required</div><div class="rh-stagebar"><span style="width:38%;background:var(--red)"></span></div></div></div>
+          <div class="rh-cell"><div class="rh-owner"><span class="av">MJ</span><div><div class="k">Owner</div><div class="v">Maya Joseph<small>Payroll Processor</small></div></div></div></div>
+          <div class="rh-cell"><div><div class="k">Run type</div><div class="v">Correction</div></div></div>
+          <div class="rh-cell"><div><div class="k">Source run</div><div class="v">PAY-2026-07-M01</div></div></div>
+          <div class="rh-cell"><div><div class="k">Pay date</div><div class="v">4 Aug 2026</div></div></div>
+          <div class="rh-cell"><div><div class="k">Employees</div><div class="v">12</div></div></div>
+        </section>
+
+        <section class="card">
+          <div class="lifecycle">
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Draft</div><div class="lc-s">Complete</div><div class="lc-t">28 Jul &middot; 10:08</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Inputs Locked</div><div class="lc-s">Complete</div><div class="lc-t">28 Jul &middot; 10:31</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step fail"><div class="lc-c">!</div><div><div class="lc-l">Calculated</div><div class="lc-s">Attempt failed</div><div class="lc-t">Attempt 2 &middot; 10:42</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step pend"><div class="lc-c">4</div><div><div class="lc-l">Approval</div><div class="lc-s">Blocked</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step pend"><div class="lc-c">5</div><div><div class="lc-l">Approved</div><div class="lc-s">Blocked</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step pend"><div class="lc-c">6</div><div><div class="lc-l">Locked</div><div class="lc-s">Blocked</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step pend"><div class="lc-c">7</div><div><div class="lc-l">Released</div><div class="lc-s">Blocked</div></div></div>
+          </div>
+          <div class="lc-stats"><div class="lc-stat"><span>!</span><div><div class="k">Failed attempt</div><div class="v">2</div></div></div><div class="lc-stat"><span>#</span><div><div class="k">Processed before rollback</div><div class="v">8 <small>/ 12</small></div></div></div><div class="lc-stat"><span>T</span><div><div class="k">Elapsed</div><div class="v">00:00:23</div></div></div><div class="lc-stat"><span>&#10003;</span><div><div class="k">Last valid checkpoint</div><div class="v">Inputs v1</div></div></div></div>
+        </section>
+
+        <section class="banner danger">
+          <div class="b-ico">!</div><div><div class="b-eyebrow">CALCULATION STOPPED</div><div class="b-title">Two employees reference an expired statutory configuration</div><div class="b-sub">No partial payroll results were committed. Correct the source records, revalidate the input snapshot and then retry.</div></div><div class="b-btns"><button class="btn danger" type="button">Open affected records</button></div><div class="b-meta"><div class="k">INCIDENT</div><div class="v">PAY-CALC-00418</div></div>
+        </section>
+
+        <section class="attempt-band"><div class="attempt-title"><strong>Attempt 2 is immutable</strong><small>Failure evidence remains available after a successful retry for audit and root-cause analysis.</small></div><div><div class="k">Started</div><div class="v">28 Jul &middot; 10:42:03</div></div><div><div class="k">Failed</div><div class="v">28 Jul &middot; 10:42:26</div></div><div><div class="k">Input snapshot</div><div class="v">v1 &middot; 4A91...2CB7</div></div><div><div class="k">Correlation ID</div><div class="v">CALC-7C31E9</div></div></section>
+
+        <div class="section-grid">
+          <div class="stack">
+            <section class="card"><div class="sec-head"><div class="sec-ico">R</div><div><div class="sec-title">Root-cause diagnosis</div><div class="sec-sub">The failure is deterministic and must be fixed at the source before retry.</div></div><div class="aux"><span class="pill red">2 blocking records</span></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Employee</th><th>Component</th><th>Problem</th><th>Expected</th><th>Owner</th><th>Action</th></tr></thead><tbody><tr><td><div class="employee"><span class="av">JL</span><div><strong>Jason Lewis</strong><small>EMP-00541</small></div></div></td><td>NIS</td><td>Class A version expired 30 Jun</td><td>Effective version on 4 Aug</td><td>HR Payroll Data</td><td><button class="btn">Open profile</button></td></tr><tr><td><div class="employee"><span class="av">AT</span><div><strong>Alicia Thomas</strong><small>EMP-00602</small></div></div></td><td>PAYE</td><td>Election version not approved</td><td>Approved effective election</td><td>HR Payroll Data</td><td><button class="btn">Open profile</button></td></tr></tbody></table></div></section>
+
+            <section class="card"><div class="sec-head"><div class="sec-ico">1</div><div><div class="sec-title">Controlled recovery</div><div class="sec-sub">Retry is enabled only when the same preflight controls pass against refreshed source data.</div></div></div><div><div class="recovery-step"><div class="n">1</div><div><strong>Correct the authoritative employee records</strong><small>Update and approve the effective statutory versions in HR; do not override the failure in payroll.</small></div><span class="pill amber">In progress</span></div><div class="recovery-step"><div class="n">2</div><div><strong>Refresh and compare source readiness</strong><small>Recheck version effective dates and show exactly what changed after the failed attempt.</small></div><span class="pill grey">Waiting</span></div><div class="recovery-step"><div class="n">3</div><div><strong>Create input snapshot v2</strong><small>Lock a new checksum while retaining snapshot v1 and failed attempt 2 as immutable evidence.</small></div><span class="pill grey">Waiting</span></div><div class="recovery-step"><div class="n">4</div><div><strong>Retry as calculation attempt 3</strong><small>Use an idempotent job key and commit a new result version only after all 12 employees complete.</small></div><span class="pill grey">Blocked</span></div></div></section>
+
+            <section class="card"><div class="sec-head"><div class="sec-ico">D</div><div><div class="sec-title">Diagnostic detail</div><div class="sec-sub">Support-safe technical evidence; employee pay amounts are excluded.</div></div><div class="aux"><button class="btn">Copy correlation ID</button></div></div><div class="panel-body"><div class="failure-code">PAYROLL_STATUTORY_VERSION_INVALID
+correlation_id: CALC-7C31E9
+attempt_id: ATT-2026-07-C01-02
+input_snapshot: v1 / 4A91...2CB7
+failed_stage: statutory_deductions
+affected_records: 2
+transaction_result: rolled_back
+partial_results_committed: false</div></div></section>
+          </div>
+
+          <aside class="stack">
+            <section class="card"><div class="sec-head"><div class="sec-title">Run impact</div></div><div class="panel-body"><div class="summary-row"><span>Affected employees</span><strong>2 of 12</strong></div><div class="summary-row"><span>Unaffected results</span><strong>Not committed</strong></div><div class="summary-row"><span>Approval workflow</span><strong style="color:var(--red)">Not created</strong></div><div class="summary-row"><span>Disbursement / GL</span><strong style="color:var(--red)">Not created</strong></div><div class="summary-row"><span>Input snapshot v1</span><strong style="color:var(--green)">Preserved</strong></div></div></section>
+            <section class="card"><div class="sec-head"><div class="sec-title">Escalation</div><span class="pill amber">Owner assigned</span></div><div class="panel-body"><div class="summary-row"><span>Primary owner</span><strong>HR Payroll Data</strong></div><div class="summary-row"><span>Payroll owner</span><strong>Maya Joseph</strong></div><div class="summary-row"><span>Target resolution</span><strong>28 Jul &middot; 14:00</strong></div><div class="summary-row"><span>Escalates after</span><strong>2 hours</strong></div></div></section>
+            <section class="card"><div class="sec-head"><div class="sec-title">Recent activity</div><div class="aux"><button class="btn" type="button">View full audit</button></div></div><div class="act-row"><div class="act-dot red">!</div><div><div class="act-t">Calculation attempt 2 failed</div><div class="act-s">Rolled back &middot; correlation CALC-7C31E9</div></div><div class="act-m">10:42</div></div><div class="act-row"><div class="act-dot amber">A</div><div><div class="act-t">Recovery owner assigned</div><div class="act-s">HR Payroll Data &middot; due 14:00</div></div><div class="act-m">10:43</div></div><div class="act-row"><div class="act-dot green">&#10003;</div><div><div class="act-t">Input snapshot v1 locked</div><div class="act-s">12 employees &middot; checksum 4A91...2CB7</div></div><div class="act-m">10:31</div></div></section>
+          </aside>
+        </div>
+        <div class="footer-note">Enterprise failed-calculation proposal &middot; no partial results or destructive retries</div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>

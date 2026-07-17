@@ -1,0 +1,152 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payroll Reports | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="reports">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page">
+        <nav class="payroll-subnav" aria-label="Payroll Sections"><a href="index.html">Command Center</a><a href="runs.html">Payroll Runs</a><a href="exceptions.html">Approvals &amp; Exceptions <span class="count alert">7</span></a><a href="payslips.html">Payslip Batches</a><a class="on" href="reports.html">Reports</a></nav>
+
+        <header class="page-lead">
+          <div><div class="crumbs"><a href="index.html">Payroll</a><span class="sep">&rsaquo;</span><b>Reports</b></div><h1>Payroll Reports</h1><p>Run operational, analytical, statutory-evidence and audit reports from locked payroll data.</p></div>
+          <div class="page-lead-actions"><button class="btn" type="button" data-dialog="schedule-report"><i class="fa-regular fa-clock"></i> Schedule Report</button><button class="btn primary" type="button" data-dialog="run-report"><i class="fa-solid fa-play"></i> Run Selected Report</button></div>
+        </header>
+
+        <section class="card metrics">
+          <div class="metric"><div class="m-ico blue"><i class="fa-solid fa-file-lines"></i></div><div><div class="k">Available Reports</div><div class="v">9</div><div class="s">Permission-Gated</div></div></div>
+          <div class="metric"><div class="m-ico green"><i class="fa-solid fa-circle-check"></i></div><div><div class="k">Generated This Month</div><div class="v">18</div><div class="s">From Locked Runs</div></div></div>
+          <div class="metric"><div class="m-ico blue"><i class="fa-solid fa-clock-rotate-left"></i></div><div><div class="k">Scheduled Reports</div><div class="v">3</div><div class="s">Finance And Payroll</div></div></div>
+          <div class="metric"><div class="m-ico amber"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="k">NIS Exceptions</div><div class="v">2</div><div class="s">July Monthly Run</div></div></div>
+          <div class="metric"><div class="m-ico blue"><i class="fa-solid fa-code-compare"></i></div><div><div class="k">Material Variances</div><div class="v">12</div><div class="s">All Certified</div></div></div>
+          <div class="metric"><div class="m-ico green"><i class="fa-solid fa-shield"></i></div><div><div class="k">Audit Packages</div><div class="v">8</div><div class="s">Current Month</div></div></div>
+        </section>
+
+        <div class="report-layout">
+          <aside class="card report-nav" aria-label="Report Catalog">
+            <button type="button" data-report-tab="register"><i class="fa-solid fa-table-list"></i> Payroll Register</button>
+            <button type="button" data-report-tab="net"><i class="fa-solid fa-money-check-dollar"></i> Net Pay Summary</button>
+            <button type="button" data-report-tab="cost"><i class="fa-solid fa-chart-line"></i> Payroll Cost Analysis</button>
+            <button type="button" data-report-tab="reconcile"><i class="fa-solid fa-scale-balanced"></i> Gross-To-Net Reconciliation</button>
+            <button type="button" data-report-tab="variance"><i class="fa-solid fa-code-compare"></i> Variance Analysis</button>
+            <button type="button" data-report-tab="overtime"><i class="fa-solid fa-clock"></i> Overtime And Allowances</button>
+            <button type="button" data-report-tab="population"><i class="fa-solid fa-users-viewfinder"></i> Population Movements</button>
+            <button type="button" data-report-tab="nis"><i class="fa-solid fa-shield-halved"></i> NIS Exceptions</button>
+            <button type="button" data-report-tab="audit"><i class="fa-solid fa-clipboard-check"></i> Export And Audit</button>
+          </aside>
+
+          <div class="stack">
+            <section class="report-panel" data-report-panel="register">
+              <div class="report-preview">
+                <section class="card">
+                  <div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-table-list"></i></div><div><div class="sec-title">Payroll Register</div><div class="sec-sub">Employee gross-to-net lines from one locked payroll run.</div></div><div class="aux"><span class="pill blue">Employee Level</span></div></div>
+                  <div class="table-wrap"><table class="data-table"><thead><tr><th>Employee</th><th>Pay Group</th><th class="num">Gross</th><th class="num">PAYE</th><th class="num">NIS</th><th class="num">Other</th><th class="num">Net</th></tr></thead><tbody><tr><td>Andre Baptiste<small>EMP-00418</small></td><td>Monthly Salaried</td><td class="num">32,320</td><td class="num">3,842</td><td class="num">710</td><td class="num">1,098</td><td class="num"><strong>26,670</strong></td></tr><tr><td>Sonia Ali<small>EMP-00274</small></td><td>Monthly Salaried</td><td class="num">18,700</td><td class="num">2,612</td><td class="num">710</td><td class="num">1,348</td><td class="num"><strong>14,030</strong></td></tr><tr><td>Danielle Moore<small>EMP-00315</small></td><td>Monthly Salaried</td><td class="num">23,500</td><td class="num">3,194</td><td class="num">710</td><td class="num">802</td><td class="num"><strong>18,794</strong></td></tr></tbody><tfoot><tr><td colspan="2"><strong>302 Employees</strong></td><td class="num"><strong>9,243,600</strong></td><td class="num"><strong>821,440</strong></td><td class="num"><strong>236,180</strong></td><td class="num"><strong>371,060</strong></td><td class="num"><strong>7,814,920</strong></td></tr></tfoot></table></div>
+                </section>
+                <aside class="card report-parameters"><div class="sec-title">Report Parameters</div><div class="form-row"><div class="form-field full"><label>Payroll Run</label><select><option>PAY-2026-07-M01 &middot; July Monthly</option><option>PAY-2026-07-W04 &middot; Week 4</option></select></div><div class="form-field"><label>Department</label><select><option>All Departments</option><option>Operations</option><option>Finance</option></select></div><div class="form-field"><label>Format</label><select><option>On-Screen Preview</option><option>XLSX</option><option>CSV</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Report</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="net">
+              <div class="report-preview">
+                <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-money-check-dollar"></i></div><div><div class="sec-title">Net Pay Summary</div><div class="sec-sub">Control totals by pay group and payment readiness.</div></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Pay Group</th><th class="num">Employees</th><th class="num">Gross</th><th class="num">Deductions</th><th class="num">Net Pay</th><th>Payment Readiness</th></tr></thead><tbody><tr><td><strong>Monthly Salaried</strong></td><td class="num">302</td><td class="num">9,243,600</td><td class="num">1,428,680</td><td class="num"><strong>7,814,920</strong></td><td><span class="pill amber">3 Held</span></td></tr><tr><td><strong>Weekly Field</strong></td><td class="num">84</td><td class="num">1,421,630</td><td class="num">259,790</td><td class="num"><strong>1,161,840</strong></td><td><span class="pill green">Ready</span></td></tr><tr><td><strong>Rotational Operations A</strong></td><td class="num">84</td><td class="num">1,574,820</td><td class="num">288,380</td><td class="num"><strong>1,286,440</strong></td><td><span class="pill amber">Review</span></td></tr></tbody></table></div></section>
+                <aside class="card report-parameters"><div class="sec-title">Report Parameters</div><div class="form-row"><div class="form-field"><label>Period</label><select><option>July 2026</option><option>June 2026</option></select></div><div class="form-field"><label>Group By</label><select><option>Pay Group</option><option>Department</option><option>Cost Centre</option></select></div><div class="form-field"><label>Run Status</label><select><option>Locked And Exported</option><option>All Calculated</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Report</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="cost">
+              <div class="report-preview">
+                <section class="card">
+                  <div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-chart-line"></i></div><div><div class="sec-title">Payroll Cost Analysis</div><div class="sec-sub">Six-month gross, net and employer-cost trend with current-period ownership detail.</div></div><div class="aux"><span class="pill blue">TTD</span></div></div>
+                  <div class="report-chart-wrap"><div class="report-chart-head"><div><strong>Monthly Payroll Cost Trend</strong><small>Locked monthly runs, February To July 2026</small></div><span class="report-permission"><i class="fa-solid fa-lock"></i> Aggregate View</span></div><div class="report-chart-frame"><canvas data-report-chart="cost" aria-label="Monthly Payroll Cost Trend"></canvas></div></div>
+                  <div class="table-wrap"><table class="data-table"><thead><tr><th>Department</th><th>Cost Centre</th><th class="num">Employees</th><th class="num">Gross</th><th class="num">Employer Cost</th><th class="num">Vs Prior Month</th></tr></thead><tbody><tr><td><strong>Operations</strong></td><td>OPS-100</td><td class="num">128</td><td class="num">4,106,240</td><td class="num">4,298,760</td><td class="num delta-up">+3.1%</td></tr><tr><td><strong>Field Services</strong></td><td>FLD-210</td><td class="num">84</td><td class="num">2,184,560</td><td class="num">2,281,920</td><td class="num delta-up">+2.7%</td></tr><tr><td><strong>Corporate Services</strong></td><td>COR-300</td><td class="num">90</td><td class="num">2,952,800</td><td class="num">3,099,320</td><td class="num">+0.8%</td></tr></tbody></table></div>
+                </section>
+                <aside class="card report-parameters"><div class="sec-title">Analysis Parameters</div><div class="form-row"><div class="form-field"><label>Period</label><select><option>February To July 2026</option><option>Year To Date 2026</option></select></div><div class="form-field"><label>Group By</label><select><option>Department And Cost Centre</option><option>Pay Group</option></select></div><div class="form-field"><label>Include</label><select><option>Gross, Net And Employer Cost</option><option>Gross And Net Only</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Analysis</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="reconcile">
+              <div class="report-preview">
+                <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-scale-balanced"></i></div><div><div class="sec-title">Gross-To-Net Reconciliation</div><div class="sec-sub">Prove payroll control totals from gross earnings through statutory and other deductions to net pay.</div></div><span class="pill green">Balanced</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Control</th><th class="num">Register Total</th><th class="num">Summary Total</th><th class="num">Difference</th><th>Evidence</th><th>Status</th></tr></thead><tbody><tr><td><strong>Gross Earnings</strong></td><td class="num">9,243,600</td><td class="num">9,243,600</td><td class="num">0.00</td><td>302 Employee Lines</td><td><span class="pill green">Balanced</span></td></tr><tr><td><strong>PAYE Deductions</strong></td><td class="num">821,440</td><td class="num">821,440</td><td class="num">0.00</td><td>PAYE Control Schedule</td><td><span class="pill green">Balanced</span></td></tr><tr><td><strong>NIS Deductions</strong></td><td class="num">236,180</td><td class="num">236,180</td><td class="num">0.00</td><td>NIS Contribution Schedule</td><td><span class="pill green">Balanced</span></td></tr><tr><td><strong>Other Deductions</strong></td><td class="num">371,060</td><td class="num">371,060</td><td class="num">0.00</td><td>Approved Deduction Inputs</td><td><span class="pill green">Balanced</span></td></tr><tr><td><strong>Net Pay</strong></td><td class="num">7,814,920</td><td class="num">7,814,920</td><td class="num">0.00</td><td>Bank Disbursement Control</td><td><span class="pill green">Balanced</span></td></tr></tbody><tfoot><tr><td colspan="3"><strong>Gross Less Deductions Equals Net Pay</strong></td><td class="num"><strong>0.00</strong></td><td colspan="2"><span class="pill green">Certified By Asha Samaroo</span></td></tr></tfoot></table></div></section>
+                <aside class="card report-parameters"><div class="sec-title">Reconciliation Parameters</div><div class="form-row"><div class="form-field"><label>Payroll Run</label><select><option>PAY-2026-07-M01</option></select></div><div class="form-field"><label>Compare Against</label><select><option>Locked Register And Outputs</option><option>General Ledger Journal</option></select></div><div class="form-field"><label>Rounding Tolerance</label><select><option>TTD 0.01</option><option>TTD 1.00</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Reconciliation</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="variance">
+              <div class="report-preview">
+                <section class="card">
+                  <div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-code-compare"></i></div><div><div class="sec-title">Variance Analysis</div><div class="sec-sub">Compare the current run with its prior released run and certification evidence.</div></div><span class="pill amber">12 Material</span></div>
+                  <div class="report-chart-wrap"><div class="report-chart-head"><div><strong>Material Variance Drivers</strong><small>Impact on July net payroll compared with June</small></div><span class="report-permission"><i class="fa-solid fa-certificate"></i> Certified Drivers</span></div><div class="report-chart-frame"><canvas data-report-chart="variance" aria-label="Material Variance Drivers"></canvas></div></div>
+                  <div class="table-wrap"><table class="data-table"><thead><tr><th>Measure</th><th class="num">June Released</th><th class="num">July Approved</th><th class="num">Change</th><th>Main Driver</th><th>Certification</th></tr></thead><tbody><tr><td>Employees</td><td class="num">300</td><td class="num">302</td><td class="num">+2</td><td>Three Hires, One Leaver</td><td><span class="pill green">Certified</span></td></tr><tr><td>Gross Payroll</td><td class="num">9,026,750</td><td class="num">9,243,600</td><td class="num delta-up">+2.4%</td><td>Overtime And Acting Allowances</td><td><span class="pill green">Certified</span></td></tr><tr><td>Net Payroll</td><td class="num">7,676,480</td><td class="num">7,814,920</td><td class="num delta-up">+1.8%</td><td>Population And Approved Inputs</td><td><span class="pill green">Certified</span></td></tr></tbody></table></div>
+                </section>
+                <aside class="card report-parameters"><div class="sec-title">Comparison Parameters</div><div class="form-row"><div class="form-field"><label>Current Run</label><select><option>PAY-2026-07-M01</option></select></div><div class="form-field"><label>Compare With</label><select><option>Prior Released Run</option><option>Select Another Run</option></select></div><div class="form-field"><label>Materiality</label><select><option>Policy Threshold &middot; 10% Or TTD 2,500</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Comparison</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="overtime">
+              <div class="report-preview">
+                <section class="card">
+                  <div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-clock"></i></div><div><div class="sec-title">Overtime And Allowance Analysis</div><div class="sec-sub">Identify labour-cost concentration, policy thresholds and approval evidence.</div></div><span class="pill amber">2 Thresholds</span></div>
+                  <div class="report-chart-wrap"><div class="report-chart-head"><div><strong>Overtime And Allowance Cost By Department</strong><small>July 2026 locked payroll runs</small></div><span class="report-permission"><i class="fa-solid fa-lock"></i> Aggregate View</span></div><div class="report-chart-frame"><canvas data-report-chart="overtime" aria-label="Overtime And Allowance Cost By Department"></canvas></div></div>
+                  <div class="table-wrap"><table class="data-table"><thead><tr><th>Department</th><th class="num">Employees</th><th class="num">Overtime Hours</th><th class="num">Overtime Cost</th><th class="num">Allowance Cost</th><th>Control Status</th></tr></thead><tbody><tr><td><strong>Operations</strong></td><td class="num">128</td><td class="num">1,842</td><td class="num">116,400</td><td class="num">68,400</td><td><span class="pill amber">Supervisor Threshold</span></td></tr><tr><td><strong>Field Services</strong></td><td class="num">84</td><td class="num">1,264</td><td class="num">82,400</td><td class="num">51,200</td><td><span class="pill green">Approved</span></td></tr><tr><td><strong>Maintenance</strong></td><td class="num">38</td><td class="num">706</td><td class="num">48,600</td><td class="num">37,800</td><td><span class="pill amber">Cost Centre Review</span></td></tr></tbody></table></div>
+                </section>
+                <aside class="card report-parameters"><div class="sec-title">Analysis Parameters</div><div class="form-row"><div class="form-field"><label>Period</label><select><option>July 2026</option><option>Year To Date 2026</option></select></div><div class="form-field"><label>Group By</label><select><option>Department</option><option>Cost Centre</option><option>Pay Group</option></select></div><div class="form-field"><label>Threshold</label><select><option>Show All With Policy Status</option><option>Exceptions Only</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Analysis</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="population">
+              <div class="report-preview">
+                <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-users-viewfinder"></i></div><div><div class="sec-title">Payroll Population Movements</div><div class="sec-sub">Hires, leavers, transfers, unpaid leave and pay-group changes affecting the selected period.</div></div><span class="pill blue">17 Movements</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Employee</th><th>Movement</th><th>Effective Date</th><th>Prior Assignment</th><th>Current Assignment</th><th>Payroll Impact</th><th>Evidence</th></tr></thead><tbody><tr><td><strong>Leah Thomas</strong><small>EMP-00642</small></td><td><span class="pill green">Hire</span></td><td>01 Jul 2026</td><td>Not In Payroll</td><td>Operations &middot; Monthly</td><td>Full-Month Inclusion</td><td>Contract Verified</td></tr><tr><td><strong>Marcus Pierre</strong><small>EMP-00396</small></td><td><span class="pill blue">Transfer</span></td><td>15 Jul 2026</td><td>Field Services</td><td>Maintenance</td><td>Split Cost Centre</td><td>Transfer Approved</td></tr><tr><td><strong>Nadia Mohammed</strong><small>EMP-00208</small></td><td><span class="pill amber">Unpaid Leave</span></td><td>08 Jul 2026</td><td>Monthly Salaried</td><td>Monthly Salaried</td><td>8-Day Deduction</td><td>Leave Approved</td></tr><tr><td><strong>Ryan James</strong><small>EMP-00174</small></td><td><span class="pill red">Leaver</span></td><td>12 Jul 2026</td><td>Operations</td><td>Exited</td><td>Final Pay Included</td><td>Separation Cleared</td></tr></tbody></table></div></section>
+                <aside class="card report-parameters"><div class="sec-title">Movement Parameters</div><div class="form-row"><div class="form-field"><label>Period</label><select><option>July 2026</option><option>June 2026</option></select></div><div class="form-field"><label>Movement Type</label><select><option>All Movement Types</option><option>Hires And Leavers</option><option>Transfers</option><option>Leave Changes</option></select></div><div class="form-field"><label>Evidence Status</label><select><option>All Evidence States</option><option>Missing Evidence</option><option>Verified</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Report</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="nis">
+              <div class="report-preview">
+                <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-shield-halved"></i></div><div><div class="sec-title">NIS Exceptions</div><div class="sec-sub">Unverified profiles and continuity findings affecting payroll calculation evidence.</div></div><span class="pill red">2 Open</span></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Employee</th><th>NIS Number</th><th>Class</th><th>Profile Status</th><th>Payroll Impact</th><th>Owner</th></tr></thead><tbody><tr><td>Jason Lewis<small>EMP-00541</small></td><td>Awaiting Verification</td><td>A</td><td><span class="pill red">Unverified</span></td><td>Calculation Warning</td><td>HR Payroll Data</td></tr><tr><td>Alicia Thomas<small>EMP-00602</small></td><td>910023456</td><td>A</td><td><span class="pill amber">Continuity Review</span></td><td>Contribution Weeks Review</td><td>Finance Staff</td></tr></tbody></table></div></section>
+                <aside class="card report-parameters"><div class="sec-title">Report Parameters</div><div class="form-row"><div class="form-field"><label>Scope</label><select><option>PAY-2026-07-M01</option><option>All Unverified Profiles</option></select></div><div class="form-field"><label>Status</label><select><option>Open Exceptions</option><option>All Including Resolved</option></select></div><div class="form-field"><label>Owner</label><select><option>All Owners</option><option>HR Payroll Data</option><option>Finance Staff</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Run Report</button></div></aside>
+              </div>
+            </section>
+
+            <section class="report-panel" data-report-panel="audit" id="audit">
+              <div class="report-preview">
+                <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-clipboard-check"></i></div><div><div class="sec-title">Export And Audit Package</div><div class="sec-sub">Versioned exports, calculation attempts, decisions, warnings and release evidence.</div></div><span class="pill green">Complete</span></div><div class="panel-body audit-timeline"><div class="audit-event"><time>31 Jul &middot; 17:06</time><strong>Maya Joseph</strong><span>Delivered 298 Of 302 Payslips; Four Records Remain In The Exception Register.</span><code>PAYSLIP_DELIVERY</code></div><div class="audit-event"><time>31 Jul &middot; 16:44</time><strong>Asha Samaroo</strong><span>Posted Balanced Payroll Journal GL-2026-007184.</span><code>GL_POSTED</code></div><div class="audit-event"><time>31 Jul &middot; 16:21</time><strong>Maya Joseph</strong><span>Created CSV Payroll Export Version 2; Checksum 29A1...8F70.</span><code>RUN_EXPORTED</code></div><div class="audit-event"><time>30 Jul &middot; 16:18</time><strong>Maya Joseph</strong><span>Closed And Locked Approved Calculation Version 3.</span><code>RUN_LOCKED</code></div></div></section>
+                <aside class="card report-parameters"><div class="sec-title">Package Parameters</div><div class="form-row"><div class="form-field"><label>Payroll Run</label><select><option>PAY-2026-07-M01</option></select></div><div class="form-field"><label>Include</label><select><option>Full Audit Package</option><option>Exports Only</option><option>Decisions And Controls</option></select></div><div class="form-field"><label>Format</label><select><option>ZIP &middot; PDF + CSV + JSON Manifest</option></select></div></div><div class="report-actions"><button class="btn primary" type="button" data-dialog="run-report">Generate Package</button></div></aside>
+              </div>
+            </section>
+          </div>
+        </div>
+
+        <section class="card register-shell">
+          <div class="register-titlebar"><div><h2>Scheduled Reports</h2><p>Owned delivery schedules run only against locked payroll evidence.</p></div><button class="btn" type="button" data-dialog="schedule-report"><i class="fa-solid fa-plus"></i> New Schedule</button></div>
+          <div class="table-wrap"><table class="register-table"><thead><tr><th>Report</th><th>Schedule</th><th>Recipients</th><th>Owner</th><th>Next Run</th><th>State</th><th></th></tr></thead><tbody>
+            <tr><td><strong>Payroll Register</strong><small>SCH-RPT-0014</small></td><td><div class="schedule-state"><i class="fa-solid fa-lock"></i><span>After Monthly Payroll Close</span></div></td><td>Payroll Control Group<small>4 Approved Recipients</small></td><td>Maya Joseph</td><td>31 Jul 2026<small>After PAY-2026-07-M01 Locks</small></td><td><span class="pill green">Active</span></td><td><div class="row-actions"><button type="button" data-dialog="manage-report-schedule" aria-label="Manage Payroll Register Schedule"><i class="fa-solid fa-sliders"></i></button></div></td></tr>
+            <tr><td><strong>Payroll Cost Analysis</strong><small>SCH-RPT-0018</small></td><td><div class="schedule-state"><i class="fa-solid fa-calendar-day"></i><span>First Business Day Monthly</span></div></td><td>Finance Management<small>6 Approved Recipients</small></td><td>Asha Samaroo</td><td>03 Aug 2026<small>08:00 AST</small></td><td><span class="pill green">Active</span></td><td><div class="row-actions"><button type="button" data-dialog="manage-report-schedule" aria-label="Manage Cost Analysis Schedule"><i class="fa-solid fa-sliders"></i></button></div></td></tr>
+            <tr><td><strong>NIS Exceptions</strong><small>SCH-RPT-0021</small></td><td><div class="schedule-state"><i class="fa-solid fa-calendar-week"></i><span>Every Monday</span></div></td><td>Payroll And HR Data<small>5 Approved Recipients</small></td><td>Keisha Grant</td><td>20 Jul 2026<small>07:30 AST</small></td><td><span class="pill amber">Recipient Review</span></td><td><div class="row-actions"><button type="button" data-dialog="manage-report-schedule" aria-label="Manage NIS Exceptions Schedule"><i class="fa-solid fa-sliders"></i></button></div></td></tr>
+          </tbody></table></div>
+        </section>
+
+        <section class="card register-shell">
+          <div class="register-titlebar"><div><h2>Recent Report History</h2><p>Generated artifacts remain permission-gated and downloadable according to retention policy.</p></div><a href="#">View All History</a></div>
+          <div class="table-wrap"><table class="register-table"><thead><tr><th>Report</th><th>Scope</th><th>Generated By</th><th>Generated</th><th>Format</th><th>Retention</th><th>Status</th><th></th></tr></thead><tbody>
+            <tr><td><strong>Payroll Register</strong><small>RPT-2026-07184</small></td><td>PAY-2026-07-M01</td><td>Maya Joseph</td><td>31 Jul &middot; 16:22</td><td>XLSX &middot; 302 Rows</td><td>7 Years<small>Employee-Level Access</small></td><td><span class="pill green">Ready</span></td><td><div class="row-actions"><button type="button" aria-label="Download Payroll Register"><i class="fa-solid fa-download"></i></button></div></td></tr>
+            <tr><td><strong>Export Audit Package</strong><small>RPT-2026-07183</small></td><td>PAY-2026-07-M01</td><td>Asha Samaroo</td><td>31 Jul &middot; 16:20</td><td>ZIP &middot; 14 Files</td><td>7 Years<small>Audit Access</small></td><td><span class="pill green">Ready</span></td><td><div class="row-actions"><button type="button" aria-label="Download Audit Package"><i class="fa-solid fa-download"></i></button></div></td></tr>
+            <tr><td><strong>Variance Analysis</strong><small>RPT-2026-07177</small></td><td>June Vs July Monthly</td><td>Maya Joseph</td><td>30 Jul &middot; 15:08</td><td>PDF &middot; 18 Pages</td><td>3 Years<small>Aggregate Access</small></td><td><span class="pill green">Ready</span></td><td><div class="row-actions"><button type="button" aria-label="Download Variance Analysis"><i class="fa-solid fa-download"></i></button></div></td></tr>
+          </tbody></table></div>
+        </section>
+      </div>
+    </main>
+  </div>
+  <script src="../../node_modules/chart.js/dist/chart.umd.min.js"></script>
+  <script src="app.js"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>

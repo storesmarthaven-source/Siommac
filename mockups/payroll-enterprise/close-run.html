@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Close Payroll Run | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="close-run">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page">
+        <nav class="payroll-subnav" aria-label="Payroll Sections"><a href="index.html">Command Center</a><a class="on" href="runs.html">Payroll Runs</a><a href="exceptions.html">Approvals &amp; Exceptions <span class="count alert">7</span></a><a href="payslips.html">Payslip Batches</a><a href="reports.html">Reports</a></nav>
+        <header class="page-lead"><div><div class="crumbs"><a href="index.html">Payroll</a><span class="sep">&rsaquo;</span><a href="runs.html">Payroll Runs</a><span class="sep">&rsaquo;</span><b>PAY-2026-07-M01</b></div><h1>Close July 2026 Monthly Payroll</h1><p>Verify the approved calculation, lock the run, create governed output artifacts, and issue the payroll release certificate.</p></div><div class="page-lead-actions"><button class="btn" type="button" data-menu="close"><i class="fa-solid fa-ellipsis"></i> More Actions</button><a class="btn" href="run.html#release"><i class="fa-solid fa-arrow-left"></i> Run Workspace</a></div></header>
+
+        <section class="card runhead">
+          <div class="rh-cell"><div class="rh-ico"><i class="fa-solid fa-file-invoice-dollar"></i></div><div><div class="rh-name">July 2026 Monthly Salaried</div><div class="rh-id">PAY-2026-07-M01</div></div></div>
+          <div class="rh-cell"><div class="rh-ci"><i class="fa-solid fa-circle-check"></i></div><div><div class="k">Status</div><span class="pill green">Approved</span></div></div>
+          <div class="rh-cell"><div class="rh-ci">6</div><div><div class="k">Current Stage</div><div class="v">Close And Lock</div><div class="rh-stagebar"><span style="width:86%"></span></div></div></div>
+          <div class="rh-cell"><div class="rh-owner"><span class="av">MJ</span><div><div class="k">Close Owner</div><div class="v">Maya Joseph<small>Payroll Processor</small></div></div></div></div>
+          <div class="rh-cell"><div><div class="k">Approved By</div><div class="v">David Ram<small>30 Jul · 15:42</small></div></div></div>
+          <div class="rh-cell"><div><div class="k">Pay Date</div><div class="v">31 Jul 2026</div></div></div>
+          <div class="rh-cell"><div><div class="k">Employees</div><div class="v">302</div></div></div>
+          <div class="rh-cell"><div><div class="k">Net Payroll</div><div class="v">TTD 7,814,920</div></div></div>
+        </section>
+
+        <section class="card">
+          <div class="lifecycle">
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Draft</div><div class="lc-s">Complete</div><div class="lc-t">22 Jul · 08:46</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Inputs Locked</div><div class="lc-s">Complete</div><div class="lc-t">25 Jul · 17:02</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Calculated</div><div class="lc-s">Version 3</div><div class="lc-t">26 Jul · 09:31</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Approval</div><div class="lc-s">Complete</div><div class="lc-t">30 Jul · 15:42</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step done"><div class="lc-c">&#10003;</div><div><div class="lc-l">Approved</div><div class="lc-s">Complete</div><div class="lc-t">Two Approvers</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step cur"><div class="lc-c">6</div><div><div class="lc-l">Locked</div><div class="lc-s">Current Action</div><div class="lc-t">Due 30 Jul · 17:00</div></div></div><div class="lc-chev">&rsaquo;</div>
+            <div class="lc-step pend"><div class="lc-c">7</div><div><div class="lc-l">Released</div><div class="lc-s">Pending Outputs</div></div></div>
+          </div>
+          <div class="lc-stats"><div class="lc-stat"><span><i class="fa-solid fa-shield-halved"></i></span><div><div class="k">Controls Passed</div><div class="v">12 <small>/ 12</small></div></div></div><div class="lc-stat"><span><i class="fa-solid fa-code-branch"></i></span><div><div class="k">Approved Version</div><div class="v">3</div></div></div><div class="lc-stat"><span><i class="fa-solid fa-building-columns"></i></span><div><div class="k">Funding Confirmed</div><div class="v">100%</div></div></div><div class="lc-stat"><span><i class="fa-solid fa-scale-balanced"></i></span><div><div class="k">GL Difference</div><div class="v">0.00</div></div></div></div>
+        </section>
+
+        <section class="banner info"><div class="b-ico"><i class="fa-solid fa-lock"></i></div><div><div class="b-eyebrow">NEXT REQUIRED ACTION</div><div class="b-title">Close And Lock The Approved Payroll</div><div class="b-sub">Locking establishes version 3 as the immutable source for payslips, exports, accounting, disbursement and statutory handoffs.</div></div><div class="b-btns"><button class="btn primary" type="button" data-dialog="lock-run" data-success="The approved payroll was closed and locked at version 3."><i class="fa-solid fa-lock"></i> Close And Lock</button></div><div class="b-meta"><div class="k">CONTROL WINDOW</div><div class="v">Closes At 17:00 AST</div></div></section>
+
+        <div class="close-grid">
+          <div class="stack">
+            <section class="card close-hero">
+              <div class="close-hero-head"><div><span>Approved Payroll Position</span><strong>Ready For Controlled Close</strong><small>No unresolved blockers or warnings</small></div><div><span>Gross Payroll</span><strong>TTD 9,243,600</strong><small>302 Employee Lines</small></div><div><span>Employee Deductions</span><strong>TTD 1,428,680</strong><small>PAYE, NIS And Other</small></div><div><span>Employer Cost</span><strong>TTD 9,675,740</strong><small>Including Employer NIS</small></div></div>
+              <div class="close-controls">
+                <div class="close-control"><span class="control-state">&#10003;</span><div><strong>Approval Package Complete</strong><small>Maker-checker and threshold decisions are recorded against calculation version 3.</small></div><div class="control-proof"><b>Asha Samaroo · David Ram</b>30 Jul · 15:42 AST</div><span class="pill green">Passed</span></div>
+                <div class="close-control"><span class="control-state">&#10003;</span><div><strong>Funding Evidence Confirmed</strong><small>Dedicated payroll account covers net disbursement plus the approved buffer.</small></div><div class="control-proof"><b>TTD 8,100,000 Available</b>Bank Evidence FND-0730-18</div><span class="pill green">Passed</span></div>
+                <div class="close-control"><span class="control-state">&#10003;</span><div><strong>Employee And Statutory Totals Reconciled</strong><small>PAYE, NIS and Health Surcharge agree from employee line to authority totals.</small></div><div class="control-proof"><b>Difference TTD 0.00</b>Checked 30 Jul · 15:18</div><span class="pill green">Passed</span></div>
+                <div class="close-control"><span class="control-state">&#10003;</span><div><strong>Accounting Preview Balanced</strong><small>All earnings, deductions, liabilities and cost dimensions map to approved accounts.</small></div><div class="control-proof"><b>Debit Equals Credit</b>Preview GLP-2026-07184</div><span class="pill green">Passed</span></div>
+                <div class="close-control"><span class="control-state warn">!</span><div><strong>Close Attestation Required</strong><small>The payroll close owner must attest to the immutable output source and handoff totals.</small></div><div class="control-proof"><b>Maya Joseph</b>Due Before 17:00 AST</div><span class="pill amber">Your Action</span></div>
+              </div>
+            </section>
+
+            <section class="card" id="outputs"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-box-archive"></i></div><div><div class="sec-title">Output And Handoff Register</div><div class="sec-sub">Payroll-owned artifacts and governed transitions into separate downstream modules.</div></div><div class="aux"><span class="pill amber">Available After Lock</span></div></div><div class="panel-body"><div class="output-grid">
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span><h3>Payslip Batch</h3><p>Generate, render, validate and deliver one protected payslip per locked employee line.</p><footer><span>302 Expected</span><a class="btn" href="payslips.html">Open</a></footer></article>
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-file-export"></i></span><h3>Payroll Export</h3><p>Create a versioned register artifact with control totals, checksum and download evidence.</p><footer><span>No Export Yet</span><button class="btn" type="button" data-dialog="export-run">Create</button></footer></article>
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-book"></i></span><h3>General Ledger</h3><p>Post the balanced journal from approved payroll accounts and cost dimensions.</p><footer><span>Preview Balanced</span><button class="btn" type="button" data-dialog="post-gl">Post</button></footer></article>
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-building-columns"></i></span><h3>Bank Disbursement Handoff</h3><p>Send the locked net-pay population and control total to Bank Disbursements.</p><footer><span>Separate Module</span><span class="pill grey">Pending</span></footer></article>
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-landmark"></i></span><h3>Statutory Remittance Handoff</h3><p>Send authority-period PAYE, NIS and Health Surcharge liabilities to Remittances.</p><footer><span>Separate Module</span><span class="pill grey">Pending</span></footer></article>
+              <article class="output-tile"><span class="output-icon"><i class="fa-solid fa-file-shield"></i></span><h3>Statutory Forms Evidence</h3><p>Make locked run lines eligible for TD4, TD4 Summary, NI184 and NI187 generation.</p><footer><span>Separate Module</span><span class="pill grey">Eligible</span></footer></article>
+            </div></div></section>
+
+            <section class="card"><div class="sec-head"><div class="sec-ico"><i class="fa-solid fa-clock-rotate-left"></i></div><div><div class="sec-title">Close Audit Trail</div><div class="sec-sub">Immutable decision and evidence history for this close cycle.</div></div><div class="aux"><a href="reports.html#audit">Export Audit Package</a></div></div><div class="panel-body audit-timeline"><div class="audit-event"><time>30 Jul · 15:42</time><strong>David Ram</strong><span>Approved The Funding Threshold Decision For Calculation Version 3.</span><code>RUN_APPROVED</code></div><div class="audit-event"><time>30 Jul · 15:31</time><strong>Asha Samaroo</strong><span>Approved The Certified Payroll Control Package.</span><code>TASK_DECIDED</code></div><div class="audit-event"><time>30 Jul · 15:18</time><strong>System</strong><span>Reconciled Statutory, Funding And Accounting Control Totals.</span><code>CLOSE_PREFLIGHT</code></div><div class="audit-event"><time>29 Jul · 16:07</time><strong>Maya Joseph</strong><span>Submitted Calculation Version 3 For Independent Approval.</span><code>RUN_SUBMITTED</code></div></div></section>
+          </div>
+
+          <aside class="stack">
+            <section class="card" id="certificate"><div class="sec-head"><div><div class="sec-title">Payroll Release Certificate</div><div class="sec-sub">Issued only after lock and output manifest validation.</div></div><span class="pill grey">Draft</span></div><div class="certificate"><div class="summary-row"><span>Run</span><strong>PAY-2026-07-M01</strong></div><div class="summary-row"><span>Approved Version</span><strong>Calculation v3</strong></div><div class="summary-row"><span>Input Snapshot</span><strong>v1 · 96C2...8AE1</strong></div><div class="summary-row"><span>Policy Snapshot</span><strong>Monthly Salaried v5</strong></div><div class="summary-row"><span>Statutory Version</span><strong>TT 2026 v4</strong></div><div class="summary-row"><span>Net Control Total</span><strong>TTD 7,814,920</strong></div><div class="certificate-code">certificate_status: draft
+output_manifest: pending
+lock_actor: pending
+lock_timestamp: pending
+manifest_checksum: pending</div><label class="attestation"><input type="checkbox"><span>I Confirm That Calculation Version 3, The Approved Control Totals, And The Downstream Handoff Population Are Complete And Correct.</span></label><div class="close-actions"><button class="btn primary" type="button" data-dialog="release-payroll"><i class="fa-solid fa-certificate"></i> Issue Release Certificate</button><button class="btn" type="button" disabled><i class="fa-solid fa-download"></i> Download Certificate</button></div></div></section>
+            <section class="card"><div class="sec-head"><div class="sec-title">Correction Boundary</div><span class="pill green">Clear</span></div><div class="panel-body"><div class="summary-block"><span>Before Lock</span><strong>Return To Processor</strong><small>Approval Is Reopened And A New Calculation Version Is Required.</small></div><div class="summary-block"><span>After Lock</span><strong>Controlled Reopen With Reason</strong><small>Allowed Only Before An Irreversible Export Or Downstream Settlement.</small></div><div class="summary-block"><span>After Release</span><strong>New Correction Run</strong><small>Never Edit The Released Run Or Replace Its Evidence.</small></div></div></section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>

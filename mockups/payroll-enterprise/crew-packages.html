@@ -1,0 +1,115 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Pay Policies | SIOMAC</title>
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+</head>
+<body data-page="crew-packages">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page">
+        <div>
+          <div class="crumbs"><a href="index.html">Finance</a><span class="sep">&rsaquo;</span><b>Payroll Setup</b></div>
+          <div class="page-intro">
+            <div><h1>Pay Policies</h1><p>Govern effective-dated pay, work-pattern, source, statutory and costing rules assigned to pay groups.</p></div>
+            <div class="page-actions"><button class="btn" type="button">Export configuration</button><a class="btn primary" href="create-crew-package.html#identity">+ New pay policy</a></div>
+          </div>
+        </div>
+
+        <section class="command-band">
+          <div><div class="eyebrow">Configuration position</div><h2>6 configured pay policies</h2></div>
+          <div class="command-fact"><span>Covered employees</span><strong>604</strong></div>
+          <div class="command-fact"><span>Pay groups</span><strong>9 assigned</strong></div>
+          <div class="command-fact"><span>Draft versions</span><strong>1 in review</strong></div>
+          <div class="command-fact tablet-hide"><span>Next effective date</span><strong>1 Aug 2026</strong></div>
+          <div class="command-fact tablet-hide"><span>Integrity</span><strong><span class="pill amber">2 findings</span></strong></div>
+        </section>
+
+        <section class="card metrics" aria-label="Pay policy metrics">
+          <div class="metric"><div class="m-ico blue">P</div><div><div class="k">Active policies</div><div class="v">5</div><div class="s">1 retiring · 1 pending version</div></div></div>
+          <div class="metric"><div class="m-ico green">#</div><div><div class="k">Assigned employees</div><div class="v">604</div><div class="s">Effective today</div></div></div>
+          <div class="metric"><div class="m-ico blue">W</div><div><div class="k">Work patterns</div><div class="v">6</div><div class="s">Standard, shift, project and rotation</div></div></div>
+          <div class="metric"><div class="m-ico amber">!</div><div><div class="k">Setup findings</div><div class="v">2</div><div class="s">One blocks activation</div></div></div>
+          <div class="metric"><div class="m-ico blue">V</div><div><div class="k">Versions this year</div><div class="v">11</div><div class="s">All changes retained</div></div></div>
+        </section>
+
+        <section class="banner danger">
+          <div class="b-ico">!</div>
+          <div><div class="b-eyebrow">ACTIVATION BLOCKED</div><div class="b-title">TT Offshore 7/7 Hourly v1 has no approved owner for crew-movement reconciliation</div><div class="b-sub">The policy cannot become effective until Crewing Operations accepts ownership of embarkation, disembarkation and transfer exceptions.</div></div>
+          <div class="b-btns"><a class="btn danger" href="crew-package.html#sources">Review draft</a><button class="btn" type="button">Assign owner</button></div>
+          <div class="b-meta"><div class="k">OWNER</div><div class="v">Crewing Operations</div></div>
+        </section>
+
+        <div class="section-grid">
+          <div class="stack">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">P</div><div><div class="sec-title">Policy directory</div><div class="sec-sub">Approved configurations and pending versions available to pay groups.</div></div><div class="aux"><span class="pill grey">6 policies</span></div></div>
+              <div class="setup-toolbar">
+                <input class="field setup-search" placeholder="Search policy, code or pay group">
+                <div class="setup-filters"><select class="select"><option>All workforce types</option><option>Standard salaried</option><option>Hourly / shift</option><option>Offshore platform</option><option>Marine / vessel</option><option>Project / shutdown</option></select><select class="select"><option>All statuses</option><option>Active</option><option>Draft</option><option>Retired</option></select></div>
+              </div>
+              <div class="table-wrap">
+                <table class="data-table">
+                  <thead><tr><th>Policy</th><th>Work pattern</th><th>Pay basis</th><th class="num">Pay groups</th><th class="num">Employees</th><th>Current version</th><th>Status</th><th></th></tr></thead>
+                  <tbody>
+                    <tr><td><div class="package-id"><span class="package-glyph">M</span><div><strong>Monthly Salaried</strong><small>POL-TT-MONTHLY</small></div></div></td><td>Monthly calendar</td><td>Salary + allowances</td><td class="num">1</td><td class="num">302</td><td>v5 <span class="sec-sub">1 Jan 2026</span></td><td><span class="pill green">Active</span></td><td><a href="crew-package.html#overview" aria-label="Open Monthly Salaried pay policy">Open</a></td></tr>
+                    <tr><td><div class="package-id"><span class="package-glyph">W</span><div><strong>Weekly Hourly &amp; Shift</strong><small>POL-TT-WEEKLY</small></div></div></td><td>Weekly / shift roster</td><td>Hours + premiums</td><td class="num">2</td><td class="num">84</td><td>v3 <span class="sec-sub">1 May 2026</span></td><td><span class="pill green">Active</span></td><td><a href="crew-package.html#overview" aria-label="Open Weekly Hourly and Shift pay policy">Open</a></td></tr>
+                    <tr><td><div class="package-id"><span class="package-glyph">14</span><div><strong>TT Offshore 14/14 Day Rate</strong><small>POL-TT-OFF-1414</small></div></div></td><td>14 on / 14 off</td><td>Offshore day rate</td><td class="num">2</td><td class="num">126</td><td>v3 <span class="sec-sub">1 Jun 2026</span></td><td><span class="pill green">Active</span></td><td><a href="crew-package.html#overview" aria-label="Open TT Offshore 14/14 Day Rate pay policy">Open</a></td></tr>
+                    <tr><td><div class="package-id"><span class="package-glyph">MV</span><div><strong>Marine / Vessel</strong><small>POL-TT-MARINE</small></div></div></td><td>Voyage / roster</td><td>Salary + sea days</td><td class="num">2</td><td class="num">54</td><td>v4 <span class="sec-sub">1 Apr 2026</span></td><td><span class="pill green">Active</span></td><td><a href="crew-package.html#overview" aria-label="Open Marine and Vessel pay policy">Open</a></td></tr>
+                    <tr><td><div class="package-id"><span class="package-glyph">ST</span><div><strong>Shutdown / Turnaround</strong><small>POL-TT-SHUTDOWN</small></div></div></td><td>Project roster</td><td>Hourly + premiums</td><td class="num">1</td><td class="num">38</td><td>v2 <span class="sec-sub">15 Mar 2026</span></td><td><span class="pill green">Active</span></td><td><a href="crew-package.html#overview" aria-label="Open Shutdown and Turnaround pay policy">Open</a></td></tr>
+                    <tr><td><div class="package-id"><span class="package-glyph">SB</span><div><strong>Standby &amp; Call-out</strong><small>POL-TT-STANDBY</small></div></div></td><td>Call-out roster</td><td>Retainer + call-out</td><td class="num">1</td><td class="num">0</td><td>v1 <span class="sec-sub">1 Feb 2025</span></td><td><span class="pill grey">Retiring</span></td><td><a href="crew-package.html#overview" aria-label="Open Standby and Call-out pay policy">Open</a></td></tr>
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">L</div><div><div class="sec-title">Configuration dependencies</div><div class="sec-sub">Each active policy resolves these governed records before a run can snapshot it.</div></div><div class="aux"><span class="pill green">22 of 23 valid</span></div></div>
+              <div class="composition-grid">
+                <div class="composition-item"><div class="n">1</div><strong>Statutory profile</strong><small>PAYE, NIS and Health Surcharge version selected by pay date and employee determination.</small></div>
+                <div class="composition-item"><div class="n">2</div><strong>Work pattern and time rules</strong><small>Calendar, shift or optional rotation pattern with qualifying-time controls.</small></div>
+                <div class="composition-item"><div class="n">3</div><strong>Pay components</strong><small>Catalogued earnings and deductions with typed rate basis and eligibility rules.</small></div>
+                <div class="composition-item"><div class="n">4</div><strong>Cost and payment policy</strong><small>Asset, client and project dimensions plus TTD disbursement controls.</small></div>
+              </div>
+            </section>
+          </div>
+
+          <aside class="stack">
+            <section class="card">
+              <div class="sec-head"><div class="sec-title">Policy integrity</div><div class="aux"><a href="#">Run validation</a></div></div>
+              <div class="panel-body summary-rows">
+                <div class="summary-row"><span>Approved component mappings</span><strong style="color:var(--green)">42 of 42</strong></div>
+                <div class="summary-row"><span>Published rotation patterns</span><strong style="color:var(--green)">5 of 5</strong></div>
+                <div class="summary-row"><span>Crew-movement ownership</span><strong style="color:var(--red)">1 missing</strong></div>
+                <div class="summary-row"><span>Statutory mappings</span><strong style="color:var(--green)">Complete</strong></div>
+                <div class="summary-row"><span>GL dimension mappings</span><strong style="color:var(--amber)">1 warning</strong></div>
+              </div>
+            </section>
+            <section class="card">
+              <div class="sec-head"><div class="sec-title">Upcoming changes</div></div>
+              <div class="attention-list">
+                <div class="attention-row"><span class="signal blue"></span><div class="row-copy"><strong>Offshore 14/14 v4</strong><small>Hazard allowance policy change effective 1 Aug.</small></div><span class="row-meta">Review</span></div>
+                <div class="attention-row"><span class="signal amber"></span><div class="row-copy"><strong>7/7 policy activation</strong><small>Awaiting Finance Manager approval.</small></div><span class="row-meta">31 Jul</span></div>
+                <div class="attention-row"><span class="signal red"></span><div class="row-copy"><strong>Standby Pool retirement</strong><small>One pay group still references the retiring version.</small></div><span class="row-meta">15 Aug</span></div>
+              </div>
+            </section>
+            <section class="card">
+              <div class="sec-head"><div class="sec-title">Recent activity</div><div class="aux"><a href="crew-package.html#audit">View audit</a></div></div>
+              <div class="act-row"><div class="act-dot blue">V</div><div><div class="act-t">Policy v4 submitted</div><div class="act-s">TT Offshore 14/14 - Maya Joseph</div></div><div class="act-m">10:42</div></div>
+              <div class="act-row"><div class="act-dot amber">!</div><div><div class="act-t">Source owner missing</div><div class="act-s">TT Offshore 7/7 Hourly v1</div></div><div class="act-m">09:18</div></div>
+              <div class="act-row"><div class="act-dot green">OK</div><div><div class="act-t">Cost mappings validated</div><div class="act-s">Marine / Vessel Crew v4</div></div><div class="act-m">Yesterday</div></div>
+            </section>
+          </aside>
+        </div>
+        <div class="footer-note">Pay policy configuration proposal</div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <title>Payroll Command Center | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css?v=command-center-v54">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="command">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page command-page">
+        <header class="command-page-head">
+          <div class="command-heading">
+            <span class="command-heading-icon"><i class="fa-solid fa-money-check-dollar"></i></span>
+            <div>
+              <div class="crumbs">Finance <span class="sep">&rsaquo;</span> <b>Payroll</b></div>
+              <h1>Payroll Command Center</h1>
+              <p>Run payroll, clear release controls, coordinate approvals and confirm funding.</p>
+            </div>
+          </div>
+          <div class="page-actions command-page-actions">
+            <button class="btn command-icon-btn" type="button" data-command-refresh aria-label="Refresh payroll data" title="Refresh payroll data"><i class="fa-solid fa-rotate"></i></button>
+            <a class="btn" href="crew-packages.html"><i class="fa-solid fa-sliders"></i> Pay policies</a>
+            <a class="btn primary" href="create-run.html#basics"><i class="fa-solid fa-plus"></i> New payroll run</a>
+          </div>
+        </header>
+
+        <section class="portfolio-health" aria-label="Payroll portfolio health">
+          <div class="health-urgency-rail"><i class="fa-solid fa-exclamation"></i><span>At Risk</span></div>
+          <div class="health-summary"><span>Payroll portfolio health</span><strong>2 runs need intervention</strong><small>Resolve four critical controls before the next release window.</small></div>
+          <div class="health-stats" aria-label="Portfolio risk measures">
+            <div class="health-stat"><strong>1</strong><span>Approval due</span><small>Today &middot; 12:00 AST</small></div>
+            <div class="health-stat"><strong>TTD 420K</strong><span>Funding gap</span><small>5.4% unconfirmed</small></div>
+            <div class="health-stat"><strong>Today</strong><span>Next cutoff</span><small>17:00 AST</small></div>
+          </div>
+          <div class="health-actions health-actions-numbered" aria-label="Priority payroll actions">
+            <div class="health-actions-head"><span>Resolve in order</span><a href="run.html#exceptions">7 total</a></div>
+            <a href="run.html#exceptions"><b>01</b><span>Complete statutory profiles</span><i class="fa-solid fa-arrow-right"></i></a>
+            <a href="run.html#release"><b>02</b><span>Confirm payroll funding</span><i class="fa-solid fa-arrow-right"></i></a>
+          </div>
+        </section>
+
+        <section class="payroll-metrics" aria-label="Payroll operational measures">
+          <article class="payroll-metric metric-neutral">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-calendar-day"></i></span><div><strong>31 Jul</strong><span>Next pay date</span></div></div>
+            <small><i class="status-dot amber"></i> Monthly cutoff today</small>
+          </article>
+          <article class="payroll-metric metric-blue">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-file-invoice-dollar"></i></span><div><strong>4</strong><span>Active runs</span></div></div>
+            <a href="#active-runs">2 need attention <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+          <article class="payroll-metric metric-teal">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-users"></i></span><div><strong>470</strong><span>Employees due</span></div></div>
+            <a href="run.html#population">Across 3 pay groups <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+          <article class="payroll-metric metric-purple">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-coins"></i></span><div><strong>TTD 10.3M</strong><span>Gross payroll</span></div></div>
+            <small><i class="status-dot green"></i> 1.6% above June</small>
+          </article>
+          <article class="payroll-metric metric-green">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-wallet"></i></span><div><strong>TTD 8.7M</strong><span>Net payroll</span></div></div>
+            <a href="run.html#reconciliation">3 variances to explain <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+          <article class="payroll-metric metric-amber">
+            <div class="metric-top"><span class="metric-icon"><i class="fa-solid fa-building-columns"></i></span><div><strong>94.6%</strong><span>Funding confirmed</span></div></div>
+            <a href="run.html#release">TTD 420K outstanding <i class="fa-solid fa-arrow-right"></i></a>
+          </article>
+        </section>
+
+        <div class="command-grid command-grid-dashboard">
+          <div class="command-workspace">
+          <section class="card pay-widget pay-widget-approvals">
+            <div class="widget-head"><div><span class="widget-kicker">Assigned to you</span><h2>Approval and activity</h2><p>Your next payroll decision and its latest movement.</p></div><span class="pill blue">1 due</span></div>
+            <div class="approval-focus approval-featured">
+              <div class="approval-decision-banner">
+                <div class="approval-assignee"><img src="../../src/assets/avatars/team-sara.png" alt="Asha Samaroo"><div><small>Assigned approver</small><strong>Asha Samaroo</strong><span>Finance Manager</span></div></div>
+                <div class="approval-decision-copy"><small>Decision due today</small><strong>Weekly Field payroll is ready</strong><p>Review by 12:00 AST</p></div>
+              </div>
+              <div class="approval-control-summary"><div><small>Payroll run</small><strong>PAY-2026-07-W04</strong></div><div><small>Net payroll</small><strong>TTD 612,480</strong></div></div>
+              <div class="approval-command"><div class="approval-context"><span><i class="fa-regular fa-calendar"></i> Weekly Field</span><span><i class="fa-solid fa-users"></i> 84 employees</span></div><a class="btn primary" href="approval.html"><i class="fa-solid fa-user-check"></i> Review <i class="fa-solid fa-arrow-right"></i></a></div>
+            </div>
+            <div class="activity-head"><span>Recent payroll activity</span><small>3 updates</small></div>
+            <div class="activity-list approval-activity-list">
+              <div class="activity-item"><span class="activity-icon green"><i class="fa-solid fa-check"></i></span><div><strong>Processor certified the run</strong><small>Maya Joseph</small></div><time>08:52</time></div>
+              <div class="activity-item"><span class="activity-icon blue"><i class="fa-solid fa-calculator"></i></span><div><strong>July Monthly recalculated</strong><small>302 employees</small></div><time>08:34</time></div>
+              <div class="activity-item"><span class="activity-icon amber"><i class="fa-solid fa-comment"></i></span><div><strong>Funding confirmation requested</strong><small>Treasury queue</small></div><time>08:17</time></div>
+            </div>
+            <div class="widget-foot"><a href="approval.html">Open approval queue</a><span>1 decision assigned</span></div>
+          </section>
+
+          <section class="card pay-widget pay-widget-deadlines">
+            <div class="widget-head"><div><span class="widget-kicker">Pay calendar</span><h2>Upcoming deadlines</h2><p>Release-critical dates in the next seven days.</p></div><span class="pill amber">3 due</span></div>
+            <div class="deadline-strip" aria-label="Payroll deadlines from 27 July to 2 August">
+              <span><small>Mon</small>27</span><span><small>Tue</small>28</span><span class="today has"><small>Wed</small>29</span><span class="has"><small>Thu</small>30</span><span class="has"><small>Fri</small>31</span><span><small>Sat</small>1</span><span><small>Sun</small>2</span>
+            </div>
+            <div class="deadline-list">
+              <a href="run.html#inputs"><time><strong>29</strong><small>Jul</small></time><span><strong>Monthly input cutoff</strong><small>7 approvals open &middot; 17:00 AST</small></span><span class="pill red">Today</span></a>
+              <a href="run.html#release"><time><strong>30</strong><small>Jul</small></time><span><strong>Funding confirmation</strong><small>TTD 420K remains unconfirmed</small></span><span class="pill amber">Pending</span></a>
+              <a href="run.html#summary"><time><strong>31</strong><small>Jul</small></time><span><strong>Monthly salaried pay date</strong><small>302 employees scheduled</small></span><span class="pill blue">Scheduled</span></a>
+            </div>
+            <div class="widget-foot"><a href="#active-runs">View scheduled runs</a><span>Times shown in AST</span></div>
+          </section>
+
+          <section id="active-runs" class="card pay-widget pay-widget-runs run-register">
+            <div class="widget-head">
+              <div><span class="widget-kicker">Operational workspace</span><h2>Payroll runs</h2><p>Ordered by release risk, action due time and pay date.</p></div>
+              <span class="pill red">2 need action</span>
+            </div>
+            <div class="run-tabs" role="tablist" aria-label="Payroll run views">
+              <button class="run-tab on" type="button" role="tab" data-run-filter="active" aria-selected="true">Active</button>
+              <button class="run-tab" type="button" role="tab" data-run-filter="attention" aria-selected="false">Needs action</button>
+              <button class="run-tab" type="button" role="tab" data-run-filter="approval" aria-selected="false">My approvals</button>
+              <button class="run-tab" type="button" role="tab" data-run-filter="completed" aria-selected="false">Completed</button>
+            </div>
+            <div class="run-toolbar">
+              <label class="run-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search runs or pay groups" data-run-search aria-label="Search payroll runs"></label>
+            </div>
+            <div class="table-wrap">
+              <table class="data-table payroll-run-table">
+                <thead><tr><th>Run</th><th>Pay group</th><th>Pay date</th><th class="num">Net payroll</th><th>Readiness</th><th></th></tr></thead>
+                <tbody>
+                  <tr data-run-state="attention"><td><strong>PAY-2026-07-M01</strong><small>July monthly</small></td><td>Monthly Salaried<small>302 employees &middot; Scheduled</small></td><td><strong>31 Jul 2026</strong><small class="text-red">Cutoff today</small></td><td class="num">TTD 7,814,920</td><td><div class="run-progress"><span style="width:68%"></span></div><small>Calculated &middot; 68% &middot; 4 blockers</small></td><td><a class="table-action" href="run.html#summary" aria-label="Open PAY-2026-07-M01"><i class="fa-solid fa-arrow-right"></i></a></td></tr>
+                  <tr data-run-state="approval"><td><strong>PAY-2026-07-W04</strong><small>Week 4</small></td><td>Weekly Field<small>84 employees &middot; Scheduled</small></td><td><strong>24 Jul 2026</strong><small>Due 12:00</small></td><td class="num">TTD 612,480</td><td><div class="run-progress is-ready"><span style="width:100%"></span></div><small>Pending approval &middot; Ready</small></td><td><a class="table-action" href="approval.html" aria-label="Review PAY-2026-07-W04"><i class="fa-solid fa-arrow-right"></i></a></td></tr>
+                  <tr data-run-state="attention"><td><strong>PAY-2026-07-R14</strong><small>Rotation cycle 14</small></td><td>Rotational Operations A<small>84 employees &middot; Scheduled</small></td><td><strong>31 Jul 2026</strong><small>Policy controls active</small></td><td class="num">TTD 1,286,440</td><td><div class="run-progress is-warning"><span style="width:82%"></span></div><small>Readiness review &middot; 82%</small></td><td><a class="table-action" href="run.html#summary" aria-label="Open PAY-2026-07-R14"><i class="fa-solid fa-arrow-right"></i></a></td></tr>
+                  <tr data-run-state="completed"><td><strong>PAY-2026-07-OC02</strong><small>Retro adjustments</small></td><td>Monthly Salaried<small>17 employees &middot; Off-cycle</small></td><td><strong>22 Jul 2026</strong><small>Released 14:22</small></td><td class="num">TTD 188,760</td><td><div class="run-progress is-ready"><span style="width:100%"></span></div><small>Released &middot; All controls passed</small></td><td><a class="table-action" href="run.html#release" aria-label="View PAY-2026-07-OC02"><i class="fa-solid fa-arrow-right"></i></a></td></tr>
+                  <tr data-run-state="attention"><td><strong>PAY-2026-07-W03</strong><small>Week 3</small></td><td>Weekly Field<small>82 employees &middot; Scheduled</small></td><td><strong>17 Jul 2026</strong><small class="text-red">Recovery required</small></td><td class="num">TTD 598,230</td><td><div class="run-progress is-danger"><span style="width:46%"></span></div><small>Failed &middot; Calculation recovery</small></td><td><a class="table-action" href="failed.html" aria-label="Review PAY-2026-07-W03"><i class="fa-solid fa-arrow-right"></i></a></td></tr>
+                  <tr class="run-empty-row" data-run-empty hidden><td colspan="6"><i class="fa-regular fa-folder-open"></i><strong>No payroll runs match this view</strong><small>Change the filter or clear the search.</small></td></tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="run-table-footer"><a href="runs.html">View Payroll Register</a><span>Showing Portfolio Activity For July 2026</span></div>
+          </section>
+          </div>
+
+          <aside class="command-side-rail" aria-label="Payroll release controls">
+            <section class="card pay-widget pay-widget-readiness">
+              <div class="readiness-profile-hero">
+                <div class="widget-head readiness-profile-head">
+                  <div class="readiness-profile-title"><span class="readiness-profile-icon"><i class="fa-solid fa-calendar-check"></i></span><div><span class="widget-kicker">Next scheduled run</span><h2>Release readiness</h2></div></div>
+                  <span class="readiness-profile-status"><i></i> Blocked</span>
+                </div>
+                <div class="readiness-overview">
+                  <div class="readiness-chart" role="img" aria-label="2 of 4 release control groups complete; 3 critical blockers remain">
+                    <canvas data-readiness-chart width="82" height="82" aria-hidden="true"></canvas>
+                    <div class="readiness-chart-value"><strong>2 / 4</strong><span>controls</span></div>
+                  </div>
+                  <div class="readiness-identity">
+                    <strong class="readiness-identity-name">Monthly Salaried</strong>
+                    <div class="readiness-reference"><span class="readiness-run-id">PAY-2026-07-M01</span><span>Critical controls active</span></div>
+                    <div class="readiness-meta"><span><i class="fa-regular fa-calendar"></i>31 Jul 2026</span><i class="readiness-meta-sep"></i><span><i class="fa-solid fa-users"></i>302 employees</span></div>
+                  </div>
+                </div>
+              </div>
+              <div class="readiness-profile-stats" aria-label="Release readiness facts">
+                <div><small>Pay population</small><strong>302</strong></div>
+                <div><small>Critical blockers</small><strong class="bad">3</strong></div>
+                <div><small>Input cutoff</small><strong>Today &middot; 17:00</strong></div>
+              </div>
+              <div class="readiness-gates-head"><span>Release controls</span><a href="run.html#summary">Open workspace <i class="fa-solid fa-arrow-right"></i></a></div>
+              <div class="readiness-gates">
+                <div class="gate-row"><span class="gate-state ok">&#10003;</span><div><strong>Population and eligibility</strong><small>302 employees resolved</small></div><span class="gate-value">Complete</span></div>
+                <div class="gate-row"><span class="gate-state bad">!</span><div><strong>Employee profiles</strong><small>2 statutory profiles, 1 bank account</small></div><span class="gate-value bad">3 blocked</span></div>
+                <div class="gate-row"><span class="gate-state warn">!</span><div><strong>Time, leave and overtime</strong><small>7 approvals remain</small></div><a class="gate-value warn" href="run.html#inputs">Review</a></div>
+                <div class="gate-row"><span class="gate-state ok">&#10003;</span><div><strong>Statutory version and inputs</strong><small>TT 2026 snapshot locked</small></div><span class="gate-value">Complete</span></div>
+              </div>
+            </section>
+
+            <section class="card pay-widget pay-widget-impact">
+              <div class="widget-head"><div><span class="widget-kicker">Monthly Salaried</span><h2>Release impact</h2><p>What is exposed if the next scheduled payroll misses its release controls.</p></div><span class="pill red">3 blockers</span></div>
+              <div class="impact-overview">
+                <div class="impact-run"><span>Release at risk</span><strong>PAY-2026-07-M01</strong><small>31 Jul 2026 pay date</small></div>
+                <div><span>Employees exposed</span><strong>302</strong><small>Monthly Salaried population</small></div>
+                <div><span>Net payroll exposed</span><strong>TTD 7.81M</strong><small>Bank release control total</small></div>
+                <div><span>Decision window</span><strong>6h 42m</strong><small>Input cutoff today at 17:00</small></div>
+              </div>
+              <div class="impact-path" aria-label="Release control path">
+                <a class="impact-step bad" href="run.html#exceptions"><span><i class="fa-solid fa-id-card"></i></span><div><small>Employee data</small><strong>3 profiles blocked</strong><em>HR Staff owns resolution</em></div></a>
+                <a class="impact-step warn" href="run.html#inputs"><span><i class="fa-solid fa-clock"></i></span><div><small>Inputs</small><strong>7 approvals open</strong><em>Cutoff today at 17:00</em></div></a>
+                <a class="impact-step bad" href="run.html#release"><span><i class="fa-solid fa-building-columns"></i></span><div><small>Funding</small><strong>TTD 420K gap</strong><em>Treasury confirmation pending</em></div></a>
+                <a class="impact-step ok" href="approval.html"><span><i class="fa-solid fa-user-check"></i></span><div><small>Final approval</small><strong>Not yet available</strong><em>Unlocks when blockers clear</em></div></a>
+              </div>
+              <div class="widget-foot"><a href="run.html#summary">Open release control room</a><span>Critical controls override readiness percentage</span></div>
+            </section>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="../../node_modules/chart.js/dist/chart.umd.min.js"></script>
+  <script src="app.js?v=command-center-v55-ux"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>

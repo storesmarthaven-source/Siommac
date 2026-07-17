@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Create Payroll Run | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="wizard">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page wizard-wrap">
+        <div>
+          <div class="crumbs"><a href="index.html">Payroll</a><span class="sep">›</span><b>New payroll run</b></div>
+          <div class="page-intro"><div><h1>Create Payroll Run</h1><p>Configure the run, reconcile the employee population and source inputs, then complete preflight controls before creating the draft.</p></div><div class="page-actions"><a class="btn" href="index.html">Close</a></div></div>
+        </div>
+
+        <section class="wizard-bar" aria-label="Payroll creation steps">
+          <div class="wiz">
+            <div class="wiz-step" data-step="basics"><div class="wiz-c">1</div><div class="t"><div class="l">Run Type</div><div class="s">Purpose and ownership</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="paygroup"><div class="wiz-c">2</div><div class="t"><div class="l">Pay Group</div><div class="s">Frequency and membership</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="dates"><div class="wiz-c">3</div><div class="t"><div class="l">Pay Period &amp; Dates</div><div class="s">Calendar and cut-offs</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="statutory"><div class="wiz-c">4</div><div class="t"><div class="l">Statutory Version</div><div class="s">Rules and effective date</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="population"><div class="wiz-c">5</div><div class="t"><div class="l">Employee Population</div><div class="s">Reconcile who is paid</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="inputs"><div class="wiz-c">6</div><div class="t"><div class="l">Input Sources</div><div class="s">Readiness and cut-off</div></div></div><div class="wiz-conn" data-connector></div>
+            <div class="wiz-step" data-step="review"><div class="wiz-c">7</div><div class="t"><div class="l">Review &amp; Create</div><div class="s">Controls and confirmation</div></div></div>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="basics">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">1</div><div><div class="sec-title">Run type and ownership</div><div class="sec-sub">Identify why this payroll is being created and who is accountable for preparation.</div></div></div>
+              <div class="panel-body stack">
+                <div class="choice-grid">
+                  <label class="choice on"><input type="radio" name="type" checked><span><strong>Scheduled payroll</strong><small>Regular run generated from an approved pay group and payroll calendar.</small></span></label>
+                  <label class="choice"><input type="radio" name="type"><span><strong>Off-cycle payroll</strong><small>Supplementary payment outside the scheduled cycle.</small></span></label>
+                  <label class="choice"><input type="radio" name="type"><span><strong>Correction run</strong><small>Correct a released payroll with traceability to the source run.</small></span></label>
+                  <label class="choice"><input type="radio" name="type"><span><strong>Final pay</strong><small>Termination settlement for one or more employees.</small></span></label>
+                </div>
+                <div class="field-grid">
+                  <div class="field-group"><label>Run name</label><input class="field" value="July 2026 Monthly Salaried"><small>Generated run number: PAY-2026-07-M01</small></div>
+                  <div class="field-group"><label>Payroll owner</label><select class="select"><option>Maya Joseph · Payroll Processor</option><option>Kevin Singh · Finance Staff</option></select><small>Responsible for preparation and exception closure.</small></div>
+                  <div class="field-group"><label>Reason code</label><select class="select"><option>Regular scheduled payroll</option><option>Supplementary earnings</option><option>Correction</option><option>Final pay</option></select></div>
+                  <div class="field-group"><label>Cost entity</label><select class="select"><option>SIOMAC Trinidad and Tobago</option></select></div>
+                </div>
+                <div class="field-group"><label>Internal description</label><textarea class="textarea">Regular monthly payroll for salaried employees for July 2026.</textarea></div>
+              </div>
+            </section>
+            <aside class="stack">
+              <section class="card"><div class="sec-head"><div class="sec-title">Run impact</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Run classification</span><strong>Scheduled</strong></div><div class="summary-row"><span>Expected approvals</span><strong>2 sequential</strong></div><div class="summary-row"><span>Correction linkage</span><strong>Not applicable</strong></div><div class="summary-row"><span>Expected release</span><strong>31 Jul 2026</strong></div></div></section>
+              <section class="card"><div class="sec-head"><div class="sec-title">Control reminders</div></div><div class="panel-body"><div class="comp-row"><div class="disc">✓</div><div><div class="t">Maker-checker enforced</div><div class="s">The preparer cannot approve this run.</div></div></div><div class="comp-row"><div class="disc">✓</div><div><div class="t">Run purpose is immutable</div><div class="s">Changes after creation require cancellation and recreation.</div></div></div></div></section>
+            </aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="paygroup">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">2</div><div><div class="sec-title">Select pay group</div><div class="sec-sub">The group defines frequency, membership, calendar rules and the effective pay policy.</div></div><div class="aux"><input class="field" placeholder="Search pay groups" style="width:210px"></div></div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th></th><th>Pay group</th><th>Frequency</th><th class="num">Members</th><th>Pay policy</th><th>Default pay day</th><th>Last run</th><th>Health</th></tr></thead><tbody>
+                <tr style="background:#f5f8ff"><td><input type="radio" name="pay-group" checked></td><td><strong>Monthly Salaried</strong><div class="sec-sub">MTH-SAL</div></td><td>Monthly</td><td class="num">302</td><td>TT Monthly Salaried v4</td><td>Last business day</td><td>30 Jun 2026</td><td><span class="pill green">Healthy</span></td></tr>
+                <tr><td><input type="radio" name="pay-group"></td><td><strong>Offshore Crew A - 14/14</strong><div class="sec-sub">OFF-A-1414</div></td><td>Fortnightly</td><td class="num">84</td><td><a href="crew-package.html#overview">TT Offshore 14/14 v3</a></td><td>Every other Friday</td><td>12 Jul 2026</td><td><span class="pill green">Healthy</span></td></tr>
+                <tr><td><input type="radio" name="pay-group"></td><td><strong>Offshore Crew B - 14/14</strong><div class="sec-sub">OFF-B-1414</div></td><td>Fortnightly</td><td class="num">42</td><td><a href="crew-package.html#overview">TT Offshore 14/14 v3</a></td><td>Every other Friday</td><td>12 Jul 2026</td><td><span class="pill amber">2 movements</span></td></tr>
+                <tr><td><input type="radio" name="pay-group"></td><td><strong>Marine Vessel Crew</strong><div class="sec-sub">MTH-MARINE</div></td><td>Monthly</td><td class="num">54</td><td><a href="crew-packages.html">Marine / Vessel Crew v4</a></td><td>Last business day</td><td>30 Jun 2026</td><td><span class="pill green">Healthy</span></td></tr>
+                <tr><td><input type="radio" name="pay-group"></td><td><strong>Weekly Field</strong><div class="sec-sub">WK-FLD</div></td><td>Weekly</td><td class="num">84</td><td>TT Weekly Hourly v2</td><td>Friday</td><td>17 Jul 2026</td><td><span class="pill amber">2 changes</span></td></tr>
+                <tr><td><input type="radio" name="pay-group"></td><td><strong>Executive</strong><div class="sec-sub">MTH-EXE</div></td><td>Monthly</td><td class="num">18</td><td>TT Monthly Salaried v4</td><td>Last business day</td><td>30 Jun 2026</td><td><span class="pill green">Healthy</span></td></tr>
+              </tbody></table></div>
+            </section>
+            <aside class="stack">
+              <section class="card"><div class="sec-head"><div class="sec-title">Selected group</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Pay group</span><strong>Monthly Salaried</strong></div><div class="summary-row"><span>Active members</span><strong>302</strong></div><div class="summary-row"><span>Frequency</span><strong>Monthly</strong></div><div class="summary-row"><span>Pay policy</span><strong>TT Monthly Salaried v4</strong></div><div class="summary-row"><span>New since last run</span><strong>+4 employees</strong></div><div class="summary-row"><span>Removed since last run</span><strong>−2 employees</strong></div></div></section>
+              <div class="snapshot-callout"><strong>Policy version resolves from pay date</strong><span>Every pay group applies its approved component, source, statutory and costing rules. Offshore and marine policies additionally apply rotation and movement controls. The selected version is snapshotted when the run is created.</span></div>
+              <div class="banner info" style="padding:14px"><div class="b-ico" style="width:36px;height:36px">i</div><div><div class="b-title" style="font-size:13px">Effective membership</div><div class="b-sub">Membership is evaluated against the period end and frozen when inputs are locked.</div></div></div>
+            </aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="dates">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">3</div><div><div class="sec-title">Pay period and operational dates</div><div class="sec-sub">Calendar defaults are applied from Monthly Salaried and may be adjusted before creation.</div></div></div>
+              <div class="panel-body stack">
+                <div class="field-grid three"><div class="field-group"><label>Period start</label><input class="field" type="date" value="2026-07-01"></div><div class="field-group"><label>Period end</label><input class="field" type="date" value="2026-07-31"></div><div class="field-group"><label>Pay date</label><input class="field" type="date" value="2026-07-31"><small>Last business day.</small></div></div>
+                <div class="field-grid three"><div class="field-group"><label>Employee-change cut-off</label><input class="field" type="datetime-local" value="2026-07-25T17:00"></div><div class="field-group"><label>Time and overtime cut-off</label><input class="field" type="datetime-local" value="2026-07-24T16:00"></div><div class="field-group"><label>Approval deadline</label><input class="field" type="datetime-local" value="2026-07-29T12:00"></div></div>
+                <div class="field-grid"><div class="field-group"><label>Payment funding date</label><input class="field" type="date" value="2026-07-30"><small>Treasury must fund the payroll bank account by 14:00.</small></div><div class="field-group"><label>Release window</label><select class="select"><option>30 Jul 18:00 – 31 Jul 08:00</option></select></div></div>
+                <div class="banner info"><div class="b-ico">i</div><div><div class="b-eyebrow">CALENDAR VALIDATION</div><div class="b-title">No conflicting scheduled run exists</div><div class="b-sub">This period and pay group are available. Two off-cycle runs exist in July but do not overlap this scheduled run.</div></div></div>
+              </div>
+            </section>
+            <aside class="stack"><section class="card"><div class="sec-head"><div class="sec-title">Calendar timeline</div></div><div class="panel-body"><div class="act-row" style="padding-inline:0"><div class="act-dot red">1</div><div><div class="act-t">24 Jul · 16:00</div><div class="act-s">Time and overtime cut-off</div></div></div><div class="act-row" style="padding-inline:0"><div class="act-dot amber">2</div><div><div class="act-t">25 Jul · 17:00</div><div class="act-s">Employee-change cut-off</div></div></div><div class="act-row" style="padding-inline:0"><div class="act-dot blue">3</div><div><div class="act-t">29 Jul · 12:00</div><div class="act-s">Approval deadline</div></div></div><div class="act-row" style="padding-inline:0"><div class="act-dot green">4</div><div><div class="act-t">31 Jul</div><div class="act-s">Employee pay date</div></div></div></div></section></aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="statutory">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">4</div><div><div class="sec-title">Statutory configuration snapshot</div><div class="sec-sub">The effective version is resolved from the pay date and permanently stamped on the run.</div></div><div class="aux"><span class="pill green">Effective</span></div></div>
+              <div class="panel-body stack">
+                <div class="field-grid"><div class="field-group"><label>Jurisdiction</label><select class="select"><option>Trinidad and Tobago</option></select></div><div class="field-group"><label>Resolved version</label><select class="select"><option>TT-2026.1 · Effective 1 Jan 2026</option></select><small>Automatically selected for pay date 31 Jul 2026.</small></div></div>
+                <div class="grid-3">
+                  <div class="card panel-body"><span class="pill blue">PAYE</span><h3 style="font-size:14px">Income tax</h3><p class="sec-sub">Personal allowance TTD 90,000 · 25% / 30% bands.</p></div>
+                  <div class="card panel-body"><span class="pill blue">NIS</span><h3 style="font-size:14px">National Insurance</h3><p class="sec-sub">Class table 2026 · employee and employer rates.</p></div>
+                  <div class="card panel-body"><span class="pill blue">HS</span><h3 style="font-size:14px">Health Surcharge</h3><p class="sec-sub">Weekly and monthly thresholds active.</p></div>
+                </div>
+                <div class="check-row"><input type="checkbox" checked><div><strong>Lock this run to TT-2026.1</strong><small>Future configuration changes will not alter this payroll’s calculation basis.</small></div></div>
+              </div>
+            </section>
+            <aside class="stack"><section class="card"><div class="sec-head"><div class="sec-title">Version impact</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Employees covered</span><strong>300 of 302</strong></div><div class="summary-row"><span>Missing statutory profiles</span><strong style="color:var(--red)">2 blockers</strong></div><div class="summary-row"><span>NIS classes available</span><strong>16</strong></div><div class="summary-row"><span>Pay components mapped</span><strong>24 of 24</strong></div></div></section><div class="banner danger" style="padding:14px"><div class="b-ico" style="width:36px;height:36px">!</div><div><div class="b-title" style="font-size:13px">Two employees need profiles</div><div class="b-sub">Assign to HR now or create the draft and block input locking.</div></div></div></aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="population">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">5</div><div><div class="sec-title">Employee population reconciliation</div><div class="sec-sub">Compare the proposed population with the previous released run before freezing membership.</div></div><div class="aux"><button class="btn" type="button">View 302 employees</button></div></div>
+              <div class="card metrics" style="border:0;box-shadow:none;border-bottom:1px solid var(--border-soft);border-radius:0">
+                <div class="metric"><div class="m-ico blue">#</div><div><div class="k">Proposed population</div><div class="v">302</div><div class="s">Monthly Salaried</div></div></div>
+                <div class="metric"><div class="m-ico green">+</div><div><div class="k">New hires</div><div class="v">4</div><div class="s">Effective by pay date</div></div></div>
+                <div class="metric"><div class="m-ico amber">−</div><div><div class="k">Terminations</div><div class="v">2</div><div class="s">Final pay included</div></div></div>
+                <div class="metric"><div class="m-ico red">!</div><div><div class="k">Blocking setup</div><div class="v">3</div><div class="s">Requires correction</div></div></div>
+              </div>
+              <div class="table-wrap"><table class="data-table"><thead><tr><th>Population change</th><th class="num">Count</th><th>Rule</th><th>Owner</th><th>State</th><th></th></tr></thead><tbody>
+                <tr><td><strong>New hires</strong><div class="sec-sub">Joined during July</div></td><td class="num">4</td><td>Hire date ≤ pay date</td><td>HR Operations</td><td><span class="pill green">Included</span></td><td><a href="#">Review</a></td></tr>
+                <tr><td><strong>Terminations</strong><div class="sec-sub">Leaving during July</div></td><td class="num">2</td><td>Final pay required</td><td>HR Operations</td><td><span class="pill amber">Review</span></td><td><a href="#">Review</a></td></tr>
+                <tr><td><strong>Missing pay basis</strong></td><td class="num">1</td><td>Must have salary or hourly basis</td><td>HR Staff</td><td><span class="pill red">Blocker</span></td><td><a href="#">Open employee</a></td></tr>
+                <tr><td><strong>Missing statutory profile</strong></td><td class="num">2</td><td>NIS and PAYE profile required</td><td>HR Staff</td><td><span class="pill red">Blocker</span></td><td><a href="#">Open employees</a></td></tr>
+                <tr><td><strong>Missing primary bank account</strong></td><td class="num">1</td><td>Required before release</td><td>Finance Staff</td><td><span class="pill amber">Warning</span></td><td><a href="#">Open employee</a></td></tr>
+              </tbody></table></div>
+            </section>
+            <aside class="stack"><section class="card"><div class="sec-head"><div class="sec-title">Prior-run comparison</div></div><div class="panel-body"><div class="fin-row"><span class="k">June released population</span><span class="v">300</span></div><div class="fin-row"><span class="k">Added</span><span class="v" style="color:var(--green)">+4</span></div><div class="fin-row"><span class="k">Removed</span><span class="v" style="color:var(--red)">−2</span></div><div class="fin-row total"><span class="k">July proposed population</span><span class="v">302</span></div></div></section><section class="card"><div class="sec-head"><div class="sec-title">Department distribution</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Operations</span><strong>142</strong></div><div class="summary-row"><span>Corporate Services</span><strong>74</strong></div><div class="summary-row"><span>Finance</span><strong>38</strong></div><div class="summary-row"><span>Human Resources</span><strong>24</strong></div><div class="summary-row"><span>Other</span><strong>24</strong></div></div></section></aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="inputs">
+          <div class="wizard-content">
+            <section class="card">
+              <div class="sec-head"><div class="sec-ico">6</div><div><div class="sec-title">Input-source readiness</div><div class="sec-sub">Validate freshness, approval state and ownership before the input snapshot is locked.</div></div><div class="aux"><button class="btn" type="button">Refresh checks</button></div></div>
+              <div class="panel-body">
+                <div class="source-row" style="font-size:10px;text-transform:uppercase;color:var(--muted);font-weight:800"><span>Source</span><span>Records</span><span>Freshness</span><span>Owner</span><span>State</span></div>
+                <div class="source-row"><div class="source-name"><strong>Base compensation</strong><small>Salary, hourly rate and recurring components</small></div><strong>302 / 302</strong><span>09:42 today</span><span>HR Operations</span><span class="pill green">Ready</span></div>
+                <div class="source-row"><div class="source-name"><strong>Overtime</strong><small>Approved overtime in the period</small></div><strong>87 entries</strong><span>09:28 today</span><span>Department managers</span><span class="pill amber">7 pending</span></div>
+                <div class="source-row"><div class="source-name"><strong>Timesheets</strong><small>Approved hours for hourly employees</small></div><strong>84 / 84</strong><span>09:36 today</span><span>Operations</span><span class="pill green">Ready</span></div>
+                <div class="source-row"><div class="source-name"><strong>Leave and absences</strong><small>Unpaid leave and statutory leave impact</small></div><strong>18 entries</strong><span>09:30 today</span><span>HR Operations</span><span class="pill green">Ready</span></div>
+                <div class="source-row"><div class="source-name"><strong>Loans and advances</strong><small>Active approved repayment schedules</small></div><strong>26 active</strong><span>08:55 today</span><span>Finance Staff</span><span class="pill green">Ready</span></div>
+                <div class="source-row"><div class="source-name"><strong>One-time adjustments</strong><small>Bonuses, allowances, deductions and back pay</small></div><strong>34 entries</strong><span>09:18 today</span><span>Payroll</span><span class="pill amber">3 review</span></div>
+              </div>
+            </section>
+            <aside class="stack"><section class="card"><div class="sec-head"><div class="sec-title">Cut-off controls</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Overtime cut-off</span><strong>24 Jul · 16:00</strong></div><div class="summary-row"><span>HR change cut-off</span><strong>25 Jul · 17:00</strong></div><div class="summary-row"><span>Late inputs</span><strong style="color:var(--amber)">2 detected</strong></div><div class="summary-row"><span>Snapshot mode</span><strong>Immutable</strong></div></div></section><section class="card"><div class="sec-head"><div class="sec-title">Outstanding ownership</div></div><div class="attention-list"><div class="attention-row"><span class="signal amber"></span><div class="row-copy"><strong>7 overtime approvals</strong><small>Operations managers · due 24 Jul</small></div></div><div class="attention-row"><span class="signal amber"></span><div class="row-copy"><strong>3 adjustments need notes</strong><small>Payroll team · due before lock</small></div></div></div></section></aside>
+          </div>
+        </section>
+
+        <section class="wizard-panel" data-panel="review">
+          <div class="wizard-content">
+            <div class="stack">
+              <section class="card"><div class="sec-head"><div class="sec-ico">7</div><div><div class="sec-title">Run configuration</div><div class="sec-sub">Final configuration that will be recorded on the draft.</div></div><div class="aux"><a href="#basics">Edit</a></div></div><div class="panel-body grid-3"><div class="summary-rows"><div class="summary-row"><span>Run type</span><strong>Scheduled</strong></div><div class="summary-row"><span>Pay group</span><strong>Monthly Salaried</strong></div><div class="summary-row"><span>Population</span><strong>302 proposed</strong></div></div><div class="summary-rows"><div class="summary-row"><span>Period</span><strong>1–31 Jul 2026</strong></div><div class="summary-row"><span>Pay date</span><strong>31 Jul 2026</strong></div><div class="summary-row"><span>Cut-off</span><strong>25 Jul · 17:00</strong></div></div><div class="summary-rows"><div class="summary-row"><span>Statutory version</span><strong>TT-2026.1</strong></div><div class="summary-row"><span>Owner</span><strong>Maya Joseph</strong></div><div class="summary-row"><span>Approvals</span><strong>2 sequential</strong></div></div></div></section>
+              <section class="card"><div class="sec-head"><div><div class="sec-title">Preflight readiness</div><div class="sec-sub">Draft creation is allowed; blockers must be cleared before inputs can be locked.</div></div><div class="aux"><span class="pill red">3 blockers · 11 warnings</span></div></div><div class="panel-body"><div class="readiness-row"><div class="readiness-count ok">✓</div><div><strong>Run identity and calendar</strong><small>No duplicate scheduled run; dates follow policy.</small></div><span class="pill green">Passed</span></div><div class="readiness-row"><div class="readiness-count bad">3</div><div><strong>Employee population</strong><small>1 missing pay basis and 2 statutory profiles.</small></div><a href="#population">Resolve</a></div><div class="readiness-row"><div class="readiness-count warn">10</div><div><strong>Input sources</strong><small>7 overtime approvals and 3 adjustment notes.</small></div><a href="#inputs">Review</a></div><div class="readiness-row"><div class="readiness-count warn">1</div><div><strong>Payment readiness</strong><small>One employee missing a primary bank account.</small></div><a href="#population">Review</a></div><div class="readiness-row"><div class="readiness-count ok">✓</div><div><strong>Accounting setup</strong><small>All required GL mapping keys are configured.</small></div><span class="pill green">Passed</span></div></div></section>
+              <section class="card"><div class="sec-head"><div><div class="sec-title">Confirmation</div><div class="sec-sub">These attestations are recorded in the audit history.</div></div></div><div class="panel-body"><label class="check-row"><input type="checkbox" data-confirm><div><strong>The run purpose, pay group and dates are correct</strong><small>I reviewed the scheduled calendar and expected population.</small></div></label><label class="check-row"><input type="checkbox" data-confirm><div><strong>I understand the unresolved preflight findings</strong><small>The draft cannot lock inputs until all blocking findings are resolved.</small></div></label><label class="check-row"><input type="checkbox" data-confirm><div><strong>Segregation of duties applies</strong><small>A different authorized Finance Manager must approve the payroll.</small></div></label></div></section>
+            </div>
+            <aside class="stack"><section class="card"><div class="sec-head"><div class="sec-title">Preliminary financial impact</div><span class="pill grey">Estimate</span></div><div class="fin"><div class="fin-hero"><div class="k">Estimated net payroll</div><div class="v">TTD 7,814,920</div><div class="s">Based on current approved inputs</div></div><div class="fin-row"><span class="k">Gross payroll</span><span class="v">TTD 9,243,600</span></div><div class="fin-row"><span class="k">Employee deductions</span><span class="v">TTD 1,428,680</span></div><div class="fin-row"><span class="k">Employer contributions</span><span class="v">TTD 432,140</span></div><div class="fin-row total"><span class="k">Estimated employer cost</span><span class="v">TTD 9,675,740</span></div><div class="cmp"><span>Gross vs June</span><span class="pct up">+2.4%</span><span class="dv">+TTD 216,850</span></div><div class="cmp"><span>Net vs June</span><span class="pct up">+1.8%</span><span class="dv">+TTD 138,440</span></div></div></section><section class="card"><div class="sec-head"><div class="sec-title">On creation</div></div><div class="panel-body summary-rows"><div class="summary-row"><span>Status</span><strong>Draft</strong></div><div class="summary-row"><span>Statutory snapshot</span><strong>TT-2026.1</strong></div><div class="summary-row"><span>Audit event</span><strong>Recorded</strong></div><div class="summary-row"><span>Next action</span><strong>Resolve blockers</strong></div></div></section></aside>
+          </div>
+        </section>
+
+        <footer class="wizard-footer"><a class="btn" data-back href="index.html">Back</a><div class="right"><button class="btn" type="button" data-dialog="save-draft">Save Draft</button><a class="btn primary" data-next href="#paygroup">Next Step</a><button class="btn primary" data-create data-dialog="create-run" data-navigate="run.html#summary" type="button" disabled>Create Draft Run</button></div></footer>
+        <div class="footer-note">Seven-step payroll creation proposal · WIZSTEP-2</div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>

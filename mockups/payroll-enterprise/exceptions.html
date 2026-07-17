@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>Payroll Approvals And Exceptions | SIOMAC</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+  <link rel="stylesheet" href="siomac-ui.css">
+  <link rel="stylesheet" href="enterprise.css">
+  <link rel="stylesheet" href="payroll-closeout.css">
+</head>
+<body data-page="exceptions">
+  <div class="app">
+    <aside class="side" data-shell-side></aside>
+    <main class="main">
+      <header class="topbar" data-shell-top></header>
+      <div class="page">
+        <nav class="payroll-subnav" aria-label="Payroll Sections"><a href="index.html">Command Center</a><a href="runs.html">Payroll Runs</a><a class="on" href="exceptions.html">Approvals &amp; Exceptions <span class="count alert">7</span></a><a href="payslips.html">Payslip Batches</a><a href="reports.html">Reports</a></nav>
+        <header class="page-lead"><div><div class="crumbs"><a href="index.html">Payroll</a><span class="sep">&rsaquo;</span><b>Approvals &amp; Exceptions</b></div><h1>Approvals And Exceptions</h1><p>One work queue for payroll decisions, blocking controls and warnings, ordered by pay-date impact and due time.</p></div><div class="page-lead-actions"><button class="icon-btn" type="button" aria-label="Refresh Queue"><i class="fa-solid fa-rotate"></i></button><a class="btn" href="dialogs.html"><i class="fa-regular fa-window-restore"></i> Dialog Library</a></div></header>
+
+        <section class="card metrics">
+          <div class="metric"><div class="m-ico amber"><i class="fa-solid fa-user-check"></i></div><div><div class="k">Assigned Approvals</div><div class="v">2</div><div class="s">One Due Today</div></div></div>
+          <div class="metric"><div class="m-ico red"><i class="fa-solid fa-ban"></i></div><div><div class="k">Blocking Findings</div><div class="v">4</div><div class="s">Three Employee Records</div></div></div>
+          <div class="metric"><div class="m-ico amber"><i class="fa-solid fa-triangle-exclamation"></i></div><div><div class="k">Open Warnings</div><div class="v">11</div><div class="s">Five Need Certification</div></div></div>
+          <div class="metric"><div class="m-ico red"><i class="fa-solid fa-clock"></i></div><div><div class="k">Overdue</div><div class="v">1</div><div class="s">Funding Confirmation</div></div></div>
+          <div class="metric"><div class="m-ico blue"><i class="fa-solid fa-user-tag"></i></div><div><div class="k">Owned By Payroll</div><div class="v">7</div><div class="s">Across Four Runs</div></div></div>
+          <div class="metric"><div class="m-ico green"><i class="fa-solid fa-circle-check"></i></div><div><div class="k">Resolved Today</div><div class="v">9</div><div class="s">All Evidence Retained</div></div></div>
+        </section>
+
+        <div class="workbench" data-register>
+          <section class="card queue-board">
+            <div class="register-titlebar"><div><h2>Payroll Work Queue</h2><p>Critical items first; warnings cannot be cleared without evidence.</p></div><div class="filter-summary"><strong data-visible-count>7</strong> Items Shown</div></div>
+            <div class="register-tabs"><button class="on" type="button" data-register-filter="all">All Open <span>17</span></button><button type="button" data-register-filter="approval">My Approvals <span>2</span></button><button type="button" data-register-filter="blocker">Blockers <span>4</span></button><button type="button" data-register-filter="warning">Warnings <span>11</span></button><button type="button" data-register-filter="resolved">Resolved Today <span>9</span></button></div>
+            <div class="toolbar-card" style="border:0;border-radius:0"><label class="toolbar-search"><i class="fa-solid fa-magnifying-glass"></i><input type="search" placeholder="Search Finding, Run Or Employee" data-register-search></label><select class="filter-select" data-register-select="owner"><option value="all">All Owners</option><option value="me">Assigned To Me</option><option value="hr">HR Staff</option><option value="finance">Finance</option><option value="treasury">Treasury</option></select></div>
+
+            <div class="queue-section"><div class="queue-section-head"><i class="fa-solid fa-user-check"></i> Decisions Requiring Your Approval <span>Ordered By Due Time</span></div>
+              <div class="queue-item" data-finding="approval-weekly" data-register-state="approval" data-owner="me"><div class="queue-severity warn"><i class="fa-solid fa-user-check"></i></div><div class="queue-copy"><strong>Approve Weekly Field Payroll</strong><small>PAY-2026-07-W04 · 84 Employees · Certified Version 2</small></div><div class="queue-owner"><strong>TTD 1,161,840</strong><small>Net Payroll</small></div><div class="queue-due overdue">Due Today · 12:00</div><a class="btn primary" href="approval.html">Review</a></div>
+              <div class="queue-item" data-finding="approval-offcycle" data-register-state="approval" data-owner="me"><div class="queue-severity warn"><i class="fa-solid fa-user-check"></i></div><div class="queue-copy"><strong>Approve Off-Cycle Incentive Payroll</strong><small>PAY-2026-07-OC03 · 43 Employees · Threshold Approval</small></div><div class="queue-owner"><strong>TTD 438,560</strong><small>Net Payroll</small></div><div class="queue-due">Due 30 Jul · 14:00</div><a class="btn" href="approval.html">Review</a></div>
+            </div>
+
+            <div class="queue-section"><div class="queue-section-head"><i class="fa-solid fa-ban"></i> Release-Blocking Findings <span>Must Be Closed Before Submission</span></div>
+              <div class="queue-item" data-finding="statutory" data-register-state="blocker" data-owner="hr"><div class="queue-severity">2</div><div class="queue-copy"><strong>Employee Statutory Profiles Incomplete</strong><small>Jason Lewis And Alicia Thomas · PAYE Election Or NIS Class Missing</small></div><div class="owner-chip"><span class="av">HT</span><div class="queue-owner"><strong>HR Payroll Data</strong><small>Two Records</small></div></div><div class="queue-due overdue">Due Today</div><a class="btn" href="run.html#exceptions">Open</a></div>
+              <div class="queue-item" data-finding="bank-account" data-register-state="blocker" data-owner="finance"><div class="queue-severity">1</div><div class="queue-copy"><strong>Primary Bank Account Missing</strong><small>Marcus George Cannot Enter The Disbursement Handoff</small></div><div class="owner-chip"><span class="av">FS</span><div class="queue-owner"><strong>Finance Staff</strong><small>One Record</small></div></div><div class="queue-due">Due 30 Jul</div><a class="btn" href="run.html#exceptions">Open</a></div>
+              <div class="queue-item" data-finding="cost-centre" data-register-state="blocker" data-owner="finance"><div class="queue-severity">1</div><div class="queue-copy"><strong>Cost-Centre Mapping Missing</strong><small>Operations Acting Allowance Has No Approved GL Dimension</small></div><div class="owner-chip"><span class="av">FM</span><div class="queue-owner"><strong>Finance Manager</strong><small>One Component</small></div></div><div class="queue-due">Due 30 Jul</div><a class="btn" href="run.html#exceptions">Map</a></div>
+            </div>
+
+            <div class="queue-section"><div class="queue-section-head"><i class="fa-solid fa-triangle-exclamation"></i> Warnings Requiring Certification <span>Evidence And Note Required</span></div>
+              <div class="queue-item selected" data-finding="variance" data-register-state="warning" data-owner="me"><div class="queue-severity warn">5</div><div class="queue-copy"><strong>Material Net-Pay Variances Unexplained</strong><small>Five Employees Exceed 10% Or TTD 2,500 Policy Threshold</small></div><div class="owner-chip"><span class="av">MJ</span><div class="queue-owner"><strong>Maya Joseph</strong><small>Payroll Processor</small></div></div><div class="queue-due">Due Today · 11:30</div><button class="btn" type="button" data-dialog="resolve-warning">Resolve</button></div>
+              <div class="queue-item" data-finding="funding" data-register-state="warning" data-owner="treasury"><div class="queue-severity warn">1</div><div class="queue-copy"><strong>Payroll Funding Shortfall</strong><small>Available Funds Are TTD 420,000 Below The Approved Net Control Total</small></div><div class="owner-chip"><span class="av">TO</span><div class="queue-owner"><strong>Treasury Operations</strong><small>Funding Evidence</small></div></div><div class="queue-due overdue">Overdue · 38 Min</div><button class="btn" type="button" data-dialog="resolve-warning">Review</button></div>
+            </div>
+            <div class="queue-section resolved"><div class="queue-section-head"><i class="fa-solid fa-circle-check"></i> Resolved Today <span>Immutable Resolution Evidence Retained</span></div>
+              <div class="queue-item" data-finding="resolved-profile" data-register-state="resolved" data-owner="hr"><div class="queue-severity"><i class="fa-solid fa-check"></i></div><div class="queue-copy"><strong>Employee NIS Class Added</strong><small>Ravi Maharaj · HR Change HR-2026-1841</small></div><div class="owner-chip"><span class="av">KG</span><div class="queue-owner"><strong>Keisha Grant</strong><small>HR Operations</small></div></div><div class="queue-due">Resolved 09:18</div><button class="btn" type="button" data-dialog="comment-finding">View Evidence</button></div>
+              <div class="queue-item" data-finding="variance" data-register-state="resolved" data-owner="me"><div class="queue-severity"><i class="fa-solid fa-check"></i></div><div class="queue-copy"><strong>Overtime Variance Certified</strong><small>Andre Baptiste · OT-2026-0719-44</small></div><div class="owner-chip"><span class="av">MJ</span><div class="queue-owner"><strong>Maya Joseph</strong><small>Payroll Processor</small></div></div><div class="queue-due">Resolved 08:52</div><button class="btn" type="button" data-dialog="comment-finding">View Evidence</button></div>
+            </div>
+            <div class="empty-register" data-register-empty hidden><i class="fa-regular fa-circle-check"></i><strong>No Queue Items Match This View</strong><small>Change A Filter Or Clear The Search.</small></div>
+            <footer class="register-foot"><span>17 Open Items Across Four Payroll Runs · Refreshed 10:44 AST</span><a href="reports.html#audit">Open Resolution Audit</a></footer>
+          </section>
+
+          <aside class="card side-summary" data-finding-summary>
+            <header class="side-summary-head"><span>Selected Finding</span><h3 data-finding-value="title">Material Net-Pay Variance</h3><p data-finding-value="ref">VAR-2026-0719-05 · PAY-2026-07-M01</p></header>
+            <div class="side-summary-body">
+              <div class="summary-block"><span>Employee Or Scope</span><strong data-finding-value="employee">Danielle Moore · EMP-00315</strong><small data-finding-value="employeeSub">Human Resources · Monthly Salaried</small></div>
+              <div class="summary-block"><span>Control Trigger</span><strong data-finding-value="trigger">Net Pay Increased 11.2%</strong><small data-finding-value="triggerSub">TTD 2,367 Above June Released Payroll</small></div>
+              <div class="summary-block"><span>Likely Driver</span><strong data-finding-value="driver">Acting Allowance</strong><small data-finding-value="driverSub">Input ADJ-2026-0198 · Approval Evidence Attached</small></div>
+              <div class="summary-block"><span>Required Evidence</span><strong data-finding-value="evidence">Processor Explanation And Source Approval</strong><small data-finding-value="evidenceSub">The Finding Remains Immutable After Resolution.</small></div>
+              <div class="summary-block"><span>Ownership</span><strong data-finding-value="owner">Maya Joseph · Payroll Processor</strong><small data-finding-value="ownerSub">Due Today At 11:30 AST</small></div>
+              <div class="side-summary-actions"><button class="btn primary" type="button" data-dialog="resolve-warning"><i class="fa-solid fa-circle-check"></i> Record Resolution</button><a class="btn" href="run.html#reconciliation"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open Run Evidence</a></div>
+              <div class="finding-actions"><button class="btn" type="button" data-dialog="reassign-finding"><i class="fa-solid fa-user-pen"></i> Reassign</button><button class="btn" type="button" data-dialog="escalate-finding"><i class="fa-solid fa-arrow-up-right-dots"></i> Escalate</button><button class="btn" type="button" data-dialog="comment-finding"><i class="fa-regular fa-comment"></i> Comment</button><a class="btn" href="reports.html#audit"><i class="fa-solid fa-clock-rotate-left"></i> History</a></div>
+              <div class="finding-activity"><h4>Latest Activity</h4><div class="finding-event"><i class="fa-solid fa-paperclip"></i><div><strong>Source Approval Attached</strong><small>Maya Joseph · ADJ-2026-0198</small></div><time>10:42</time></div><div class="finding-event"><i class="fa-solid fa-user"></i><div><strong>Assigned To Payroll Processor</strong><small>System Routing Policy</small></div><time>09:31</time></div></div>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+  </div>
+  <script src="app.js"></script>
+  <script src="payroll-prototype.js?v=ux-v2"></script>
+</body>
+</html>
