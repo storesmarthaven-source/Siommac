@@ -83,6 +83,14 @@ old test pass.
 Apply from the MAIN tree flow against the live DB, in this exact order. Every file below is
 idempotent (`if not exists` / `create or replace`) and safe to re-apply over an earlier version.
 
+**Step 0 — renumbering pre-check (required).** The payroll execution migrations were renumbered
+410–415 → 420–425 (collision with the applied messaging `20260919000410`). Before applying, confirm
+the target DB never received a manual 410–415 apply: the migration history must contain no payroll
+rows numbered `20260919000411`–`415`, and `pg_proc` must not already contain
+`finance_payroll_create_run_tx` / `finance_payroll_finding_command_tx` / `finance_payroll_lock_run_tx`
+from an earlier apply. If any exist, STOP — reconcile deliberately from the 420–425 source (drop and
+re-create) rather than applying on top of drifted identities.
+
 Corrected source migrations first (re-apply even if a prior version ran):
 
 1. `supabase/migrations/20260804000000_finance_payroll_runs.sql`
