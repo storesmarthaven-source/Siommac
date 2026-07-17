@@ -13,6 +13,7 @@ import { CheckCircle2, FileUp, Link, Send, Smile, Trash2, UploadCloud, X } from 
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
 import { linkPreviewFromUrl, sanitizeComposerHtml } from "../../domain/format";
+import { isSendKey, shouldRestoreReply } from "./composerLogic";
 import { TYPING_REFRESH_MS } from "../../adapters/siomacRealtime";
 import { useMessaging } from "../../app/MessagingProvider";
 import { AttachmentCard, LinkCard } from "./MessageCards";
@@ -51,6 +52,11 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
   const draftSaved = useRef("");
   const draftTimer = useRef<number | null>(null);
   const bodyRef = useRef("");
+  // Live mirror of the reply-target prop so a failed send (which runs in a
+  // closure capturing the OLD replyTo) can tell whether the user has since
+  // picked a NEWER target — and if so, not clobber it on restore.
+  const replyToRef = useRef(replyTo);
+  useEffect(() => { replyToRef.current = replyTo; }, [replyTo]);
   const [attachOpen, setAttachOpen] = useState(false);
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
   const isUploading = attachments.some((attachment) => attachment.transferState !== "available");
@@ -253,7 +259,9 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     } catch {
       // The provider already removed the pending bubble and toasted the error.
       setBody(restore.body); setHtml(restore.html); setAttachments(restore.attachments); setLink(restore.link);
-      if (restore.replyTo) onRestoreReply(restore.replyTo);
+      // Restore the reply target ONLY if the user has not started a newer reply
+      // meanwhile (else this stale restore would clobber their fresher choice).
+      if (shouldRestoreReply(restore.replyTo, replyToRef.current)) onRestoreReply(restore.replyTo!);
       if (editorRef.current) editorRef.current.innerHTML = restore.html || restore.body;
       scheduleDraftSave(restore.body);   // the draft must survive the failure
     } finally { setSending(false); }
@@ -272,7 +280,7 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
         <div className={`sm-rich-editor-wrap ${placeholderVisible ? "is-empty" : ""}`} data-placeholder="Type your message...">
           {/* isComposing guard: Enter that CONFIRMS an IME composition (CJK and
               other composed input) must not send the half-typed message. */}
-          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label="Message" aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void send(); } }} />
+          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label="Message" aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (isSendKey(event)) { event.preventDefault(); void send(); } }} />
         </div>
         <div className="sm-composer__toolbar">
           <span>

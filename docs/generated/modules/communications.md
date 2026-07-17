@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `0182d49e40485320c0d9cb75`
+Source fingerprint: `885e41d53f311a4385029dcb`
 
-Files: 89 | Symbols: 826 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 3
+Files: 91 | Symbols: 830 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -227,7 +227,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Avatar` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:12` | `-` |
 | `GroupAvatarStack` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:23` | `-` |
 | `ComplianceView` | function / component | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx:25` | `-` |
-| `Composer` | function / component | `src/components/sections/Messages/messenger/ui/components/Composer.tsx:27` | `-` |
+| `Composer` | function / component | `src/components/sections/Messages/messenger/ui/components/Composer.tsx:28` | `-` |
 | `DetailsPanel` | function / component | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx:27` | `-` |
 | `Dialog` | function / component | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx:16` | `-` |
 | `Activity` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:17` | `-` |
@@ -426,7 +426,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx` | 105 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx` | 34 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx` | 119 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/Composer.tsx` | 300 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/Composer.tsx` | 308 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx` | 173 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx` | 45 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx` | 138 |
@@ -434,6 +434,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx` | 188 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx` | 125 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx` | 125 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/composerLogic.test.ts` | 60 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/composerLogic.ts` | 42 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/icons.tsx` | 79 |
 | frontend-page | `src/components/sections/Messages/mount.ts` | 43 |
 | frontend-page | `src/components/sections/Messages/threadDisplay.test.ts` | 47 |
