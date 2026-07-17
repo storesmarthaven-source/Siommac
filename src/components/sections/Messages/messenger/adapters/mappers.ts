@@ -105,6 +105,8 @@ export function mapPost(p: PostDTO): Message {
     reactions: (p.reactions ?? []).map(r => ({ emoji: r.emoji, userIds: r.userIds })),
     delivery: mapDelivery(p.deliveryStatus),
     pinned: p.isPinned ?? false,
+    pinnedBy: p.pinnedBy ?? null,
+    pinActions: p.allowedPinActions ?? (p.isPinned ?? false ? [] : ["pin"]),
     deleted: p.deletedAt != null,
     ...(sysEvent ? { system: { event: sysEvent, subjectUserId: subjectUserIdOf(p.systemEventPayload) } } : {}),
   };
@@ -153,6 +155,8 @@ export function mapThread(t: ThreadDTO, currentUserId: string, authoredByMe = fa
   // a badge. The Compliance TAB is the separate audited browser surface.
   const queue = t.isArchived ? 'archived' : 'inbox';
   return {
+    hasDraft: t.hasDraft === true,
+    draftPreview: t.draftPreview ?? null,
     id: t.id,
     kind: mapKind(t.threadType),
     name: isDirect ? (other?.displayName ?? other?.username ?? 'Direct message') : (t.subject ?? 'Group'),

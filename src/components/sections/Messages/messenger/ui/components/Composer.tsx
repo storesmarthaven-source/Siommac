@@ -4,6 +4,11 @@
 //   • the attach dialog is upload-only: the bundle's "Document Vault" and
 //     "Shared media" tabs fabricated demo files and are NOT ported (a real
 //     vault picker is its own future slice).
+/* eslint-disable react-hooks/immutability, react-hooks/purity --
+   The composer's helpers (typing throttle, draft debounce, upload registry,
+   contenteditable reads) mutate their own refs and call Date.now exclusively
+   from event handlers/effects; the compiler rules cannot prove event-only
+   execution for plain component-body functions shared across handlers. */
 import { CheckCircle2, FileUp, Link, Send, Smile, Trash2, UploadCloud, X } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
@@ -16,13 +21,17 @@ import { Dialog } from "./Dialog";
 const emojis = ["👍", "✅", "📌", "⚠️", "📄", "💬", "🙂", "🎉", "👀", "🙏", "❤️", "👏"];
 const urlPattern = /(?:https?:\/\/|www\.)[^\s<]+/i;
 type FormatCommand = "bold" | "italic" | "underline";
+// eslint-disable-next-line @typescript-eslint/no-deprecated -- queryCommandState/execCommand remain the ONLY synchronous contenteditable formatting API; no replacement exists
 const commandState = (command: FormatCommand) => typeof document.queryCommandState === "function" && document.queryCommandState(command);
 
-export function Composer({ threadId, replyTo, onClearReply, onSent }: {
+export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSent }: {
   threadId: string;
   replyTo: Message | null;
-  onClearReply(): void;
-  onSent(): void;
+  onClearReply: () => void;
+  /** Re-arm the reply target after a FAILED send (the optimistic clear already
+   *  dismissed it — the user's reply context must not be lost). */
+  onRestoreReply: (message: Message) => void;
+  onSent: () => void;
 }) {
   const { actions } = useMessaging();
   const editorRef = useRef<HTMLDivElement>(null);
@@ -37,6 +46,11 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
   const [linkOpen, setLinkOpen] = useState(false);
   const [linkValue, setLinkValue] = useState("");
   const [sending, setSending] = useState(false);
+  // Draft persistence (slice 3): last body saved to the server, the pending
+  // debounce timer, and a body mirror the unmount/switch flush can read.
+  const draftSaved = useRef("");
+  const draftTimer = useRef<number | null>(null);
+  const bodyRef = useRef("");
   const [attachOpen, setAttachOpen] = useState(false);
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
   const isUploading = attachments.some((attachment) => attachment.transferState !== "available");
@@ -64,6 +78,48 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
   }
   useEffect(() => stopTyping, [threadId]);   // stop on unmount / thread switch
 
+  // Load the server draft when the thread opens (seed ONLY an empty editor —
+  // never clobber text already typed). On switch/unmount, FLUSH any unsaved
+  // body to the OLD thread first (last-write-wins per user+thread).
+  useEffect(() => {
+    let cancelled = false;
+    // RESET first: the composer is one instance across threads — without this,
+    // text typed in the previous thread stayed visible in (and could be saved
+    // against) the newly-opened one.
+    setBody(""); setHtml(""); setAttachments([]); setLink(undefined);
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    void actions.getDraft(threadId).then((draft) => {
+      if (cancelled || !draft?.body) return;
+      if (bodyRef.current.trim()) return;   // user is already typing
+      setBody(draft.body); setHtml(draft.body);
+      bodyRef.current = draft.body;
+      draftSaved.current = draft.body;
+      if (editorRef.current) editorRef.current.textContent = draft.body;
+    });
+    return () => {
+      cancelled = true;
+      if (draftTimer.current !== null) { window.clearTimeout(draftTimer.current); draftTimer.current = null; }
+      const unsaved = bodyRef.current;
+      if (unsaved !== draftSaved.current) {
+        void actions.saveDraft(threadId, unsaved.trim() ? unsaved : null, null).catch(() => { /* best-effort */ });
+      }
+      bodyRef.current = ""; draftSaved.current = "";
+    };
+  }, [actions, threadId]);
+
+  function scheduleDraftSave(nextBody: string) {
+    bodyRef.current = nextBody;
+    if (draftTimer.current !== null) window.clearTimeout(draftTimer.current);
+    draftTimer.current = window.setTimeout(() => {
+      draftTimer.current = null;
+      if (bodyRef.current === draftSaved.current) return;
+      const value = bodyRef.current;
+      draftSaved.current = value;
+      // Empty body = server-side delete (the API's own semantics).
+      void actions.saveDraft(threadId, value.trim() ? value : null, replyTo?.id ?? null).catch(() => { /* best-effort */ });
+    }, 800);
+  }
+
   useEffect(() => {
     const update = () => {
       const selection = window.getSelection();
@@ -78,11 +134,12 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
   function readEditor() {
     const editor = editorRef.current;
     if (!editor) return;
-    const cleanHtml = sanitizeComposerHtml(editor.innerHTML).replace(/​/g, "");
-    const text = (editor.innerText ?? editor.textContent ?? "").replace(/ /g, " ").replace(/​/g, "");
+    const cleanHtml = sanitizeComposerHtml(editor.innerHTML).replace(/\u200B/g, "");
+    const text = editor.innerText.replace(/\u00A0/g, " ").replace(/\u200B/g, "");
     setBody(text); setHtml(cleanHtml);
+    scheduleDraftSave(text);
     if (text.trim()) publishTyping(); else stopTyping();
-    const pastedUrl = text.match(urlPattern)?.[0];
+    const pastedUrl = urlPattern.exec(text)?.[0];
     if (pastedUrl && !link) { try { setLink(linkPreviewFromUrl(pastedUrl)); } catch { /* Invalid URLs remain plain text. */ } }
   }
 
@@ -93,6 +150,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
     editor.focus();
     const range = selection.getRangeAt(0);
     if (!editor.contains(range.commonAncestorContainer)) return;
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- see commandState note: no non-deprecated contenteditable formatting API exists
     if (document.execCommand(command, false)) {
       setActiveFormats({ bold: commandState("bold"), italic: commandState("italic"), underline: commandState("underline") });
       readEditor();
@@ -100,7 +158,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
     }
     const wrapper = document.createElement(command === "bold" ? "strong" : command === "italic" ? "em" : "u");
     if (range.collapsed) {
-      wrapper.append(document.createTextNode("​"));
+      wrapper.append(document.createTextNode("\u200B"));
       range.insertNode(wrapper);
       range.selectNodeContents(wrapper);
       range.collapse(false);
@@ -128,7 +186,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
     readEditor(); setEmojiOpen(false);
   }
 
-  async function addFiles(files: FileList | File[] | null) {
+  function addFiles(files: FileList | File[] | null): void {
     if (!files) return;
     for (const file of Array.from(files)) {
       const draftId = crypto.randomUUID();
@@ -141,7 +199,7 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
       }, controller.signal).then((uploaded) => {
         setAttachments((current) => current.map((item) => item.id === draftId ? { ...uploaded } : item));
         uploads.current.delete(draftId);
-      }).catch((cause) => {
+      }).catch((cause: unknown) => {
         if ((cause as DOMException).name !== "AbortError") {
           setAttachments((current) => current.map((item) => item.id === draftId ? { ...item, transferState: "failed" } : item));
         }
@@ -178,11 +236,26 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
       ...(replyTo ? { replyToId: replyTo.id } : {}), ...(link ? { link } : {}),
     };
     stopTyping();
+    // A send supersedes the draft cycle: cancel the pending debounce so it
+    // cannot resurrect the text server-side after the message commits.
+    if (draftTimer.current !== null) { window.clearTimeout(draftTimer.current); draftTimer.current = null; }
+    // Clear IMMEDIATELY — the optimistic bubble is already in the thread, so
+    // the composer must not hold the text through the server round-trip. On
+    // failure the draft is restored verbatim (nothing the user typed is lost).
+    const restore = { body, html, attachments, link, replyTo };
+    setBody(""); setHtml(""); setAttachments([]); setLink(undefined);
+    bodyRef.current = "";
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    onClearReply(); onSent();
     try {
       await actions.send(threadId, draft);
-      setBody(""); setHtml(""); setAttachments([]); setLink(undefined);
-      if (editorRef.current) editorRef.current.innerHTML = "";
-      onClearReply(); onSent();
+      draftSaved.current = "";   // provider deleted the server draft
+    } catch {
+      // The provider already removed the pending bubble and toasted the error.
+      setBody(restore.body); setHtml(restore.html); setAttachments(restore.attachments); setLink(restore.link);
+      if (restore.replyTo) onRestoreReply(restore.replyTo);
+      if (editorRef.current) editorRef.current.innerHTML = restore.html || restore.body;
+      scheduleDraftSave(restore.body);   // the draft must survive the failure
     } finally { setSending(false); }
   }
 
@@ -197,7 +270,9 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
       <div className="sm-composer__surface">
         <div className="sm-composer__tabs"><span>Reply</span></div>
         <div className={`sm-rich-editor-wrap ${placeholderVisible ? "is-empty" : ""}`} data-placeholder="Type your message...">
-          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label="Message" aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey) { event.preventDefault(); void send(); } }} />
+          {/* isComposing guard: Enter that CONFIRMS an IME composition (CJK and
+              other composed input) must not send the half-typed message. */}
+          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label="Message" aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (event.key === "Enter" && !event.shiftKey && !event.isComposing) { event.preventDefault(); void send(); } }} />
         </div>
         <div className="sm-composer__toolbar">
           <span>
@@ -213,8 +288,8 @@ export function Composer({ threadId, replyTo, onClearReply, onSent }: {
       </div>
       <Dialog open={attachOpen} title="Attach files" description="Upload files from your device." icon={<UploadCloud />} onClose={cancelAttachmentDialog}>
         <div className="sm-attach-dialog">
-          <button className="sm-upload-dropzone" type="button" onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (event.dataTransfer) void addFiles(event.dataTransfer.files); }}><span><FileUp /></span><strong>Drop files here or browse from device</strong><small>Documents, archives, images, video, audio, HTML, CSS, or JSON up to 25 MB.</small></button>
-          <input ref={inputRef} hidden type="file" multiple accept="image/*,video/*,audio/*,.pdf,.zip,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.html,.htm,.css,.txt,.md,.json" onChange={(event) => void addFiles(event.currentTarget.files)} />
+          <button className="sm-upload-dropzone" type="button" onClick={() => inputRef.current?.click()} onDragOver={(event) => event.preventDefault()} onDrop={(event) => { event.preventDefault(); if (event.dataTransfer) addFiles(event.dataTransfer.files); }}><span><FileUp /></span><strong>Drop files here or browse from device</strong><small>Documents, archives, images, video, audio, HTML, CSS, or JSON up to 25 MB.</small></button>
+          <input ref={inputRef} hidden type="file" multiple accept="image/*,video/*,audio/*,.pdf,.zip,.doc,.docx,.xls,.xlsx,.csv,.ppt,.pptx,.html,.htm,.css,.txt,.md,.json" onChange={(event) => addFiles(event.currentTarget.files)} />
           {attachments.length ? <div className="sm-attach-queue" aria-label="Selected files">{attachments.map((attachment) => <article key={attachment.id}><span className={`sm-file-chip sm-file-chip--${attachment.kind}`}>{attachment.name.split(".").pop()?.toUpperCase()}</span><div><strong>{attachment.name}</strong><small>{attachment.transferState === "available" ? "Ready to attach" : attachment.transferState === "failed" ? "Upload failed" : `Uploading ${attachment.progress}%`}</small>{attachment.transferState !== "available" && attachment.transferState !== "failed" ? <span className="sm-attach-progress"><i style={{ width: `${attachment.progress}%` }} /></span> : null}</div><button className="sm-icon-button" type="button" aria-label={`Remove ${attachment.name}`} onClick={() => removeAttachment(attachment.id)}><Trash2 /></button></article>)}</div> : <p className="sm-attach-empty">No files selected.</p>}
           <footer className="sm-attach-footer"><button type="button" onClick={cancelAttachmentDialog}>Cancel</button><button type="button" disabled={!attachments.length || isUploading} onClick={() => setAttachOpen(false)}><CheckCircle2 />{isUploading ? "Uploading..." : attachments.length ? `Attach ${attachments.length} selected` : "Attach selected"}</button></footer>
         </div>

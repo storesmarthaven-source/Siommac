@@ -4,7 +4,7 @@
 import { SiomacMessagingRepository } from './siomacRepository';
 import { SiomacAttachmentService } from './siomacAttachments';
 import { SiomacRealtimeGateway } from './siomacRealtime';
-import type { AttachmentService, MessagingRepository, RealtimeGateway } from '../domain/ports';
+import type { AttachmentService, MessagingRepository } from '../domain/ports';
 
 export { SiomacMessagingRepository } from './siomacRepository';
 export { SiomacAttachmentService } from './siomacAttachments';
@@ -19,7 +19,27 @@ export type SiomacRepository = MessagingRepository & {
   loadThreadDetail(threadId: string): Promise<{
     messages: import('../domain/models').Message[];
     authors: import('../domain/models').User[];
+    hasMore: boolean;
   }>;
+  /** Previous (older) history page — pagination contract slice 2. */
+  loadOlderMessages(threadId: string): Promise<{
+    messages: import('../domain/models').Message[];
+    authors: import('../domain/models').User[];
+    hasMore: boolean;
+  }>;
+  /** Next thread-list page(s); all+sent cursors advance in step. */
+  loadMoreThreads(currentUserId: string): Promise<{
+    threads: import('../domain/models').Thread[];
+    hasMore: boolean;
+  }>;
+  /** True while further thread-list pages exist. */
+  readonly threadListHasMore: boolean;
+  /** Per-user/thread composer draft persistence (slice 3). */
+  saveDraft(threadId: string, body: string | null, replyToPostId: string | null): Promise<void>;
+  getDraft(threadId: string): Promise<{ body: string | null; replyToPostId: string | null } | null>;
+  deleteDraft(threadId: string): Promise<void>;
+  /** Server-side message-CONTENT search (first page). */
+  searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]>;
   listRecipients(query?: string): Promise<import('../domain/models').User[]>;
   createGroup(
     name: string, participantIds: string[], actorId: string, firstMessage?: string,

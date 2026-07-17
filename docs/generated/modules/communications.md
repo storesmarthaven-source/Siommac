@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `714c181dda4b1504a0c014c3`
+Source fingerprint: `0182d49e40485320c0d9cb75`
 
 Files: 89 | Symbols: 826 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 3
 
@@ -227,7 +227,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Avatar` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:12` | `-` |
 | `GroupAvatarStack` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:23` | `-` |
 | `ComplianceView` | function / component | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx:25` | `-` |
-| `Composer` | function / component | `src/components/sections/Messages/messenger/ui/components/Composer.tsx:21` | `-` |
+| `Composer` | function / component | `src/components/sections/Messages/messenger/ui/components/Composer.tsx:27` | `-` |
 | `DetailsPanel` | function / component | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx:27` | `-` |
 | `Dialog` | function / component | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx:16` | `-` |
 | `Activity` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:17` | `-` |
@@ -302,7 +302,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `MessagesWorkspace` | function / component | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx:26` | `-` |
 | `ThreadHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:30` | `-` |
 | `MessageThread` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:57` | `-` |
-| `RichMessage` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:318` | `-` |
+| `RichMessage` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:317` | `-` |
 | `QueueHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:31` | `-` |
 | `ThreadSidebar` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:54` | `-` |
 | `InviteDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx:18` | `-` |
@@ -426,11 +426,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx` | 105 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx` | 34 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx` | 119 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/Composer.tsx` | 293 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/Composer.tsx` | 300 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx` | 173 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx` | 45 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx` | 138 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 338 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 337 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx` | 188 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx` | 125 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx` | 125 |

@@ -6,7 +6,7 @@
 import type { VNode } from "preact";
 import { LucideIcon, type LucideName } from "@ui";
 
-export type IconProps = { className?: string };
+export interface IconProps { className?: string }
 
 function make(name: LucideName) {
   return function Icon({ className }: IconProps): VNode {
@@ -17,6 +17,7 @@ function make(name: LucideName) {
 export const Activity = make("Activity");
 export const AlertCircle = make("AlertCircle");
 export const Archive = make("Archive");
+export const ArchiveRestore = make("ArchiveRestore");
 export const ArrowLeft = make("ArrowLeft");
 export const ArrowUpRight = make("ArrowUpRight");
 export const AudioLines = make("AudioLines");

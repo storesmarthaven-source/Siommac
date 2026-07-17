@@ -52,7 +52,7 @@ export function DetailsPanel({ thread, infoOpen, onCloseInfo, onInvite, onPrevie
   const createdDate = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date(messages[0]?.createdAt ?? thread.lastActivityAt));
 
   return (
-    <aside className="sm-details-panel">
+    <aside className={`sm-details-panel${infoOpen ? " is-info-open" : ""}`}>
       {infoOpen ? (
         <>
           <header className="sm-details-panel__takeover">
@@ -86,12 +86,6 @@ export function DetailsPanel({ thread, infoOpen, onCloseInfo, onInvite, onPrevie
         </>
       ) : (
         <>
-          <div className="sm-profile-summary">
-            <Avatar user={currentUser} size="large" showPresence />
-            <strong>{currentUser.name}</strong>
-            <span>{currentUser.title}</span>
-          </div>
-
           <PanelSection icon={<Users />} title={`Participants · ${participants.length}`} action={thread.kind === "group" ? <button className="sm-panel-action sm-panel-action--invite" type="button" onClick={onInvite}><UserPlus />Invite</button> : undefined}>
             <div className="sm-participant-list">
               {participants.map((user) => (
@@ -112,7 +106,7 @@ export function DetailsPanel({ thread, infoOpen, onCloseInfo, onInvite, onPrevie
 
           <PanelSection icon={<Pin />} title="Pinned Messages">
             {pinnedMessages.length ? pinnedMessages.map((message) => (
-              <PinnedMessage key={message.id} message={message} onJump={onJump} onUnpin={() => void actions.togglePin(message.id)} />
+              <PinnedMessage key={message.id} message={message} onJump={onJump} onUnpin={message.pinActions.includes("unpin") ? () => void actions.togglePin(message.id) : null} />
             )) : <p className="sm-panel-empty">No pinned messages.</p>}
           </PanelSection>
 
@@ -150,8 +144,10 @@ function SummaryMetric({ icon, value, label }: { icon: ComponentChildren; value:
   return <div><span>{icon}</span><p><strong>{label}</strong><small>{value} {value === 1 ? "item" : "items"}</small></p></div>;
 }
 
-function PinnedMessage({ message, onJump, onUnpin }: { message: Message; onJump: (messageId: string) => void; onUnpin: () => void }) {
-  return <article className="sm-pinned-item"><button type="button" onClick={() => onJump(message.id)}><strong>Pinned message</strong><span>{message.body}</span></button><button className="sm-icon-button" type="button" aria-label="Unpin message" onClick={onUnpin}><X /></button></article>;
+function PinnedMessage({ message, onJump, onUnpin }: { message: Message; onJump: (messageId: string) => void; onUnpin: (() => void) | null }) {
+  // onUnpin null = the caller lacks the capability (pinned by someone else,
+  // not thread owner) — no dead control is rendered.
+  return <article className="sm-pinned-item"><button type="button" onClick={() => onJump(message.id)}><strong>Pinned message</strong><span>{message.body}</span></button>{onUnpin ? <button className="sm-icon-button" type="button" aria-label="Unpin message" onClick={onUnpin}><X /></button> : null}</article>;
 }
 
 function RelatedRecordSection({ thread }: { thread: Thread }) {

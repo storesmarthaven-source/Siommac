@@ -7,14 +7,17 @@
 //     and notification clicks;
 //   • typing state is gone (hidden feature).
 import { AlertCircle } from "./icons";
+import { createPortal } from "preact/compat";
 import { useEffect, useMemo, useState } from "preact/hooks";
+import { useActiveSection } from "@/shell/sections/useActiveSection";
 import { useCan } from "@lib/permissions";
 import { ComposeThreadDialog } from "../../../ComposeThreadDialog";
 import { useMessaging } from "../../app/MessagingProvider";
 import type { ActivityEntry, Attachment, CollaborationCard, Queue, Thread } from "../../domain/models";
 import { DetailsPanel } from "./DetailsPanel";
-import { MessageThread } from "./MessageThread";
+import { MessageThread, ThreadHeader } from "./MessageThread";
 import { QueueHeader, ThreadSidebar, threadInQueue } from "./ThreadSidebar";
+import { ShieldCheck } from "./icons";
 import { ComplianceView } from "./ComplianceView";
 import { ActivityDialog, CollaborationDialog, InviteDialog, PreviewDialog } from "./WorkspaceDialogs";
 import { AppearanceDialog } from "./AppearanceDialog";
@@ -34,6 +37,9 @@ export function MessagesWorkspace() {
   const [collaboration, setCollaboration] = useState<CollaborationCard | null>(null);
   const [appearanceOpen, setAppearanceOpen] = useState(false);
   const canCompliance = useCan("communications.compliance_read");
+  const isActive = useActiveSection();
+  const isMessagesActive = isActive("s-messages");
+  const navSlot = document.getElementById("topbar-nav-slot");
 
   // Shell deep-links: the header dropdown and message notifications target a
   // specific thread. Record the request; it resolves once the snapshot has it.
@@ -66,10 +72,13 @@ export function MessagesWorkspace() {
 
   const active = useMemo(() => {
     if (!snapshot || queue === "compliance") return undefined;
+    // No keep-open fallback for a thread that LEFT the current queue: archiving
+    // (or restoring) the open thread moves on to the queue's next thread —
+    // otherwise the pane showed a conversation the sidebar no longer lists.
     return snapshot.threads.find((thread) => thread.id === activeId && threadInQueue(thread, queue))
-      ?? snapshot.threads.find((thread) => thread.id === activeId)
-      ?? snapshot.threads.find((thread) => threadInQueue(thread, queue))
-      ?? snapshot.threads[0];
+      ?? snapshot.threads.find((thread) => threadInQueue(thread, queue));
+    // No cross-queue fallback: an EMPTY tab renders its empty state, never a
+    // thread from another queue (e.g. after restoring the last archived one).
   }, [activeId, queue, snapshot]);
 
   // Lazy-load the active thread's messages whenever the selection resolves.
@@ -80,7 +89,7 @@ export function MessagesWorkspace() {
   const messageGap = preferences.density === "compact" ? "28px" : preferences.density === "spacious" ? "46px" : "36px";
   const messageTextSize = preferences.messageTextSize === "large" ? "15.5px" : preferences.messageTextSize === "extra-large" ? "17px" : "14px";
   const surfaces = { white: "#ffffff", "soft-gray": "#f5f7fa", "cool-blue": "#f2f6fa" } as const;
-  const appearanceStyle = `--sm-navy:${preferences.accent};--sm-admin-bubble:${preferences.accent};--sm-thread-bg:${surfaces[preferences.surface]};--sm-message-gap:${messageGap};--sm-message-font-size:${messageTextSize}`;
+  const appearanceStyle = `--sm-navy:${preferences.accent};--sm-admin-bubble:${preferences.accent};--sm-received-bubble:${preferences.receivedBubble};--sm-thread-bg:${surfaces[preferences.surface]};--sm-message-gap:${messageGap};--sm-message-font-size:${messageTextSize}`;
 
   if (loading) return <div className="sm-workspace"><div className="sm-loading"><span /><strong>Loading messages...</strong></div></div>;
   if (!snapshot) return <div className="sm-workspace"><div className="sm-error"><AlertCircle /><strong>Messages are unavailable</strong><span>{error ?? "No conversations were returned."}</span><button type="button" onClick={() => void actions.reload()}>Try again</button></div></div>;
@@ -99,6 +108,28 @@ export function MessagesWorkspace() {
     notifyCollaborationStarted(card, { onOpen: () => setCollaboration(card) });
   }
 
+  // The pill's footer band is the messenger's chrome row, mirroring the shell
+  // columns below it: queue tabs (above the list) · the ACTIVE thread's header
+  // (above the messages) · Compliance (above the rail). Portalled into
+  // #topbar-nav-slot — context flows through portals — and gated on the ACTIVE
+  // panel (the messenger stays mounted while hidden; an ungated portal would
+  // leave this chrome on every other page).
+  const bandThread = active && queue !== "compliance" ? active : null;
+  const pageHeader = isMessagesActive && navSlot
+    ? createPortal(
+        <>
+          <div className="sm-band-queues"><QueueHeader queue={queue} onQueue={selectQueue} /></div>
+          <div className="sm-band-thread">
+            {bandThread ? <ThreadHeader thread={bandThread} onOpenDetails={() => setDetailsInfo(true)} onOpenAppearance={() => setAppearanceOpen(true)} onInvite={() => setInviteOpen(true)} /> : null}
+          </div>
+          <div className="sm-band-right">
+            {canCompliance ? <button className={`app-topbar-nav-btn${queue === "compliance" ? " active" : ""}`} type="button" onClick={() => selectQueue("compliance")}><ShieldCheck />Compliance</button> : null}
+          </div>
+        </>,
+        navSlot,
+      )
+    : null;
+
   const composeDialog = (
     <ComposeThreadDialog
       open={composeOpen}
@@ -114,7 +145,7 @@ export function MessagesWorkspace() {
 
   if (queue === "compliance" && canCompliance) {
     return <main className="sm-workspace" style={appearanceStyle}>
-      <QueueHeader queue={queue} canCompliance={canCompliance} onQueue={selectQueue} onCompose={() => setComposeOpen(true)} />
+      {pageHeader}
       <ComplianceView />
       {composeDialog}
     </main>;
@@ -122,7 +153,7 @@ export function MessagesWorkspace() {
 
   if (!active) {
     return <main className="sm-workspace" style={appearanceStyle}>
-      <QueueHeader queue={queue} canCompliance={canCompliance} onQueue={selectQueue} onCompose={() => setComposeOpen(true)} />
+      {pageHeader}
       <div className="sm-error"><AlertCircle /><strong>No conversations yet</strong><span>Start a direct message, group conversation, or record-linked discussion.</span><button type="button" onClick={() => setComposeOpen(true)}>New Message</button></div>
       {composeDialog}
     </main>;
@@ -139,11 +170,11 @@ export function MessagesWorkspace() {
   }
 
   return <main className="sm-workspace" style={appearanceStyle} data-high-contrast={preferences.highContrast || undefined} data-reduced-motion={preferences.reducedMotion || undefined} data-enhanced-focus={preferences.enhancedFocus || undefined}>
-    <QueueHeader queue={queue} canCompliance={canCompliance} onQueue={selectQueue} onCompose={() => setComposeOpen(true)} />
+    {pageHeader}
     {error ? <div className="sm-error-banner" role="alert">{error}</div> : null}
     <div className="sm-shell">
-      <ThreadSidebar activeThreadId={active.id} queue={queue} onSelect={selectThread} />
-      <MessageThread thread={active} onOpenDetails={() => setDetailsInfo(true)} onOpenAppearance={() => setAppearanceOpen(true)} onInvite={() => setInviteOpen(true)} onPreview={setPreview} onActivity={openActivity} onOpenCollaboration={openCollaboration} />
+      <ThreadSidebar activeThreadId={active.id} queue={queue} onSelect={selectThread} onCompose={() => setComposeOpen(true)} />
+      <MessageThread thread={active} onPreview={setPreview} onActivity={openActivity} onOpenCollaboration={openCollaboration} />
       <DetailsPanel thread={active} infoOpen={detailsInfo} onCloseInfo={() => setDetailsInfo(false)} onInvite={() => setInviteOpen(true)} onPreview={setPreview} onJump={jumpTo} />
     </div>
     <InviteDialog open={inviteOpen} thread={active} onClose={() => setInviteOpen(false)} onGroupCreated={(thread) => { setQueue("inbox"); setActiveId(thread.id); }} />

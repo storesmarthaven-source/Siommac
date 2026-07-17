@@ -28,6 +28,7 @@ function openAI(): void {
   void dialog.info('AI Assistant', 'The AI assistant is coming soon.');
 }
 
+
 export interface UserPillProps {
   /** Icon shown next to the title, e.g. 'fa-users'. */
   icon?: string;
@@ -77,6 +78,10 @@ export function UserPill({ icon, title, sub, module, crumbs = [], meta = [], nav
         </button>
         <div class="app-topbar-pill"><AccountPill iconsFirst /></div>
       </div>
+
+      {/* Portal slot: the ACTIVE module portals its sub-nav here (e.g. the
+          messenger's queue tabs). Collapses via CSS :empty when unused. */}
+      <div class="app-topbar-footer has-nav app-topbar-footer--slot" id="topbar-nav-slot" />
 
       {(!!nav || trail.length > 0 || meta.length > 0) && (
         <div class={`app-topbar-footer${nav ? ' has-nav' : ''}`}>

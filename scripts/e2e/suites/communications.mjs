@@ -598,8 +598,11 @@ export default async function run(h) {
       expect(subscribed, 'authenticated realtime channel never reached SUBSCRIBED');
       const { error: insErr } = await sb.from('communication_signals').insert({ channel_key: chan, domain: 'messages' });
       expect(!insErr, `signal insert failed: ${insErr?.message}`);
+      // 15s window: under a FULL-suite run the realtime fan-out can exceed the
+      // 7s that suffices standalone (observed once in the 61-suite gate) —
+      // this measures delivery, not latency SLA.
       const t0 = Date.now();
-      while (Date.now() - t0 < 7000 && !received) await new Promise(r => setTimeout(r, 120));
+      while (Date.now() - t0 < 15000 && !received) await new Promise(r => setTimeout(r, 120));
     } finally {
       await authed.removeChannel(ch);
     }
@@ -771,6 +774,39 @@ export default async function run(h) {
       .eq('event_type', 'communications.message_pinned').eq('source_entity_id', pdp.threadId).limit(10);
     expect((data || []).some(r => r.payload?.pinId === pdp.personalPinId), 'message_pinned app_event not written');
   });
+  await test('CAPABILITIES: posts DTO carries pinnedBy + allowedPinActions per caller (slice 4)', async () => {
+    // A THREAD-visible pin by admin on pdp.postId: the pinner (admin, also
+    // owner) may unpin; B — participant, NOT pinner, NOT owner — gets NO
+    // action on that post; any UNPINNED post offers ['pin'] to everyone.
+    const pv = await api('communications/messages/pins/pin', T.admin, {
+      threadId: pdp.threadId, postId: pdp.postId, pinType: 'post', visibility: 'thread',
+    });
+    ok(pv, 'thread-visibility post pin failed: ' + pv.body.message);
+    const capPinId = pv.body.data?.id;
+    try {
+      const forAdmin = await api('communications/messages/posts', T.admin, { threadId: pdp.threadId, limit: 50 });
+      ok(forAdmin);
+      const adminPost = (forAdmin.body.data || []).find(p => p.id === pdp.postId);
+      expect(adminPost?.pinnedBy === admin.id, `pinnedBy must be the pinner, got ${adminPost?.pinnedBy}`);
+      expect(JSON.stringify(adminPost?.allowedPinActions) === JSON.stringify(['unpin']),
+        `pinner/owner must get ['unpin'], got ${JSON.stringify(adminPost?.allowedPinActions)}`);
+
+      const forB = await api('communications/messages/posts', T.b, { threadId: pdp.threadId, limit: 50 });
+      ok(forB);
+      const bPost = (forB.body.data || []).find(p => p.id === pdp.postId);
+      expect(JSON.stringify(bPost?.allowedPinActions) === JSON.stringify([]),
+        `non-pinner non-owner must get NO pin action, got ${JSON.stringify(bPost?.allowedPinActions)}`);
+      // A guaranteed-unpinned post (the seed thread has only one real post).
+      const extra = await api('communications/messages/post', T.b, { threadId: pdp.threadId, body: `${TAG} unpinned probe` });
+      ok(extra, 'probe post failed');
+      const forB2 = await api('communications/messages/posts', T.b, { threadId: pdp.threadId, limit: 50 });
+      const bUnpinned = (forB2.body.data || []).find(p => p.id === extra.body.postId);
+      expect(bUnpinned && JSON.stringify(bUnpinned.allowedPinActions) === JSON.stringify(['pin']),
+        `unpinned post must offer ['pin'], got ${JSON.stringify(bUnpinned?.allowedPinActions)}`);
+    } finally {
+      if (capPinId) await api('communications/messages/pins/unpin', T.admin, { pinId: capPinId });
+    }
+  });
   await test('owner can thread-pin; visible to participant B', async () => {
     const r = await api('communications/messages/pins/pin', T.admin, {
       threadId: pdp.threadId, pinType: 'thread', visibility: 'thread', note: `${TAG} pinned convo`,
@@ -820,6 +856,12 @@ export default async function run(h) {
     ok(await api('communications/messages/draft/save', T.admin, { threadId: pdp.threadId, body: '   ' }));
     const r = await api('communications/messages/draft/get', T.admin, { threadId: pdp.threadId });
     ok(r); expect(r.body.data == null, 'empty draft not cleared');
+  });
+  await test('draft/delete removes an existing draft (the send-success path)', async () => {
+    ok(await api('communications/messages/draft/save', T.admin, { threadId: pdp.threadId, body: `${TAG} to be deleted` }));
+    ok(await api('communications/messages/draft/delete', T.admin, { threadId: pdp.threadId }));
+    const r = await api('communications/messages/draft/get', T.admin, { threadId: pdp.threadId });
+    ok(r); expect(r.body.data == null, 'draft survived an explicit delete');
   });
 
   // ── Presence ──

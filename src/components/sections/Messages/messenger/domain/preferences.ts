@@ -8,6 +8,9 @@ export type ConversationSurface = "white" | "soft-gray" | "cool-blue";
 
 export interface ChatPreferences {
   accent: string;
+  /** Background of RECEIVED (other-party) bubbles — light tints only, the
+   *  dark-slate bubble text must stay readable. Own bubbles use `accent`. */
+  receivedBubble: string;
   surface: ConversationSurface;
   density: MessageDensity;
   messageTextSize: MessageTextSize;
@@ -17,7 +20,10 @@ export interface ChatPreferences {
 }
 
 export const defaultChatPreferences: ChatPreferences = {
-  accent: "#001f3f",
+  // The brand navy (--siomac-navy in assets/styles/base.css). The port's
+  // original #001f3f was mislabelled "SIOMAC Navy" — it never matched the kit.
+  accent: "#1b2d54",
+  receivedBubble: "#ffffff",
   surface: "soft-gray",
   density: "comfortable",
   messageTextSize: "normal",

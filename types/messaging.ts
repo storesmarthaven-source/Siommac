@@ -96,6 +96,11 @@ export interface MessagePost {
   authorProfileImageVersion?: number;
   priority?:            MessagePriority;
   isPinned?:            boolean;
+  /** Who holds the ACTIVE post pin (null when unpinned). */
+  pinnedBy?:            string | null;
+  /** Server-derived pin capabilities for the CALLER — the UI renders commands
+   *  from this list; the messaging_pin RPC stays the enforcement point. */
+  allowedPinActions?:   ('pin' | 'unpin')[];
   replyToPost?: {
     id:         string;
     authorName: string | null;

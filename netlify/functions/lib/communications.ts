@@ -944,6 +944,24 @@ export type ParticipantProfile = MessageParticipant;
 export interface ListThreadsResult {
   rows:       ThreadRow[];
   nextCursor: string | null;
+  /** Set when the supplied cursor was malformed — the route answers 400. */
+  invalidCursor?: boolean;
+}
+
+/** Composite keyset cursor: "<ISO timestamp>|<uuid>". Returns null for an
+ *  absent cursor and 'invalid' for a malformed one (route maps to 400). */
+export function parseKeyCursor(cursor: string | null | undefined): { at: string; id: string } | null | 'invalid' {
+  if (!cursor) return null;
+  const i = cursor.indexOf('|');
+  if (i < 1) return 'invalid';
+  const at = cursor.slice(0, i);
+  const id = cursor.slice(i + 1);
+  if (Number.isNaN(Date.parse(at)) || !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id)) return 'invalid';
+  return { at, id };
+}
+
+export function formatKeyCursor(at: string | null, id: string): string {
+  return `${at ?? new Date(0).toISOString()}|${id}`;
 }
 
 export async function listThreadsForUser(input: ListThreadsInput): Promise<ListThreadsResult> {
@@ -973,65 +991,47 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       };
     }
 
-    let q = sb
-      .from('message_participants')
-      .select('thread_id, role, last_read_at, archived_at, removed_at, notifications_muted, message_threads!inner(id, thread_type, subject, last_post_at, last_post_preview, source_module, source_entity_type, source_entity_id, created_by, priority, action_required)')
-      .eq('user_id', userId)
-      .is('removed_at', null)
-      .order('thread_id', { ascending: false })
-      .limit(limit);
+    // Keyset SQL page (mig 20260919000410): activity DESC + id DESC tiebreak,
+    // with tab and search filters IN SQL — pages are exact-size until the
+    // final page (the old JS post-filters could return an empty page while
+    // more rows existed, and the thread_id cursor didn't match the sort).
+    const parsed = parseKeyCursor(cursor);
+    if (parsed === 'invalid') return { rows: [], nextCursor: null, invalidCursor: true };
 
-    // Tab filters
-    if (tab === 'inbox')    q = q.is('archived_at', null);
-    if (tab === 'archived') q = q.not('archived_at', 'is', null);
-    // 'sent' and 'all' — no extra filter here; 'sent' is filtered post-query
-
-    if (cursor) q = q.lt('thread_id', cursor); // rough cursor; last_post_at cursor applied below
-
-    const { data: rows, error } = await q as {
-      data: ParticipantWithThread[] | null;
-      error: { message: string } | null;
-    };
-
-    if (error || !rows) return { rows: [], nextCursor: null };
-
-    // Filter 'sent': only threads where this user authored ≥1 post
-    let filtered = rows;
-    if (tab === 'sent') {
-      const threadIds = rows.map(r => r.thread_id);
-      if (threadIds.length === 0) return { rows: [], nextCursor: null };
-      const { data: sentPosts } = await sb
-        .from('message_posts')
-        .select('thread_id')
-        .in('thread_id', threadIds)
-        .eq('author_user_id', userId)
-        .is('deleted_at', null) as { data: { thread_id: string }[] | null };
-      const sentSet = new Set((sentPosts ?? []).map(p => p.thread_id));
-      filtered = rows.filter(r => sentSet.has(r.thread_id));
+    interface ThreadPageRow {
+      thread_id: string; thread_type: string; subject: string;
+      last_post_at: string | null; last_post_preview: string | null;
+      source_module: string | null; source_entity_type: string | null;
+      source_entity_id: string | null; created_by: string | null;
+      priority: string | null; action_required: boolean | null;
+      participant_role: string; last_read_at: string | null;
+      archived_at: string | null; notifications_muted: boolean | null;
+    }
+    const { data: pageRows, error } = await sb.rpc('messaging_list_threads_page', {
+      p_user_id:   userId,
+      p_tab:       tab,
+      p_search:    search ?? null,
+      p_limit:     limit,
+      p_cursor_at: parsed?.at ?? null,
+      p_cursor_id: parsed?.id ?? null,
+    }) as { data: ThreadPageRow[] | null; error: { message: string } | null };
+    if (error || !pageRows) {
+      if (error) console.error('[communications] messaging_list_threads_page failed:', error.message);
+      return { rows: [], nextCursor: null };
     }
 
-    // Search filter
-    if (search) {
-      const needle = search.toLowerCase();
-      filtered = filtered.filter(r =>
-        r.message_threads.subject.toLowerCase().includes(needle) ||
-        (r.message_threads.last_post_preview ?? '').toLowerCase().includes(needle),
-      );
-    }
-
-    // Sort by last_post_at desc
-    filtered.sort((a, b) => {
-      const at = a.message_threads.last_post_at ?? a.message_threads.id;
-      const bt = b.message_threads.last_post_at ?? b.message_threads.id;
-      return bt < at ? -1 : bt > at ? 1 : 0;
-    });
-
-    // Apply last_post_at cursor pagination
-    if (cursor) {
-      filtered = filtered.filter(r => (r.message_threads.last_post_at ?? '') < cursor);
-    }
-
-    const page = filtered.slice(0, limit);
+    // Adapt to the enrichment pipeline's shape (unchanged below).
+    const page: ParticipantWithThread[] = pageRows.map(r => ({
+      thread_id: r.thread_id, role: r.participant_role, last_read_at: r.last_read_at,
+      archived_at: r.archived_at, removed_at: null, notifications_muted: r.notifications_muted,
+      message_threads: {
+        id: r.thread_id, thread_type: r.thread_type, subject: r.subject,
+        last_post_at: r.last_post_at, last_post_preview: r.last_post_preview,
+        source_module: r.source_module, source_entity_type: r.source_entity_type,
+        source_entity_id: r.source_entity_id, created_by: r.created_by,
+        priority: r.priority, action_required: r.action_required,
+      },
+    }));
 
     // Batch-fetch all participants for threads in result set
     const threadIdSet = page.map(r => r.thread_id);
@@ -1175,9 +1175,9 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       };
     });
 
-    const lastRow    = page[page.length - 1];
-    const nextCursor = page.length === limit
-      ? (lastRow.message_threads.last_post_at ?? null)
+    const lastRow    = page.at(-1);
+    const nextCursor = page.length === limit && lastRow
+      ? formatKeyCursor(lastRow.message_threads.last_post_at, lastRow.thread_id)
       : null;
 
     return { rows: resultRows, nextCursor };
@@ -1303,7 +1303,7 @@ export type AttachmentRow = MessageAttachment;
 export interface GetThreadPostsResult {
   ok:         boolean;
   message?:   string;
-  code?:      'compliance_required' | 'forbidden';
+  code?:      'compliance_required' | 'forbidden' | 'bad_cursor';
   posts?:     PostRow[];
   nextCursor?: string | null;
 }
@@ -1311,7 +1311,7 @@ export interface GetThreadPostsResult {
 export async function getThreadPosts(
   threadId: string,
   userId:   string,
-  opts: { limit?: number; cursor?: string | null },
+  opts: { limit?: number; cursor?: string | null; direction?: 'forward' | 'backward' },
   userRole?: string,
 ): Promise<GetThreadPostsResult> {
   try {
@@ -1351,17 +1351,34 @@ export async function getThreadPosts(
       } | null;
     }
 
+    // Directional composite keyset (created_at, id) — the id tiebreak fixes
+    // same-timestamp skip/dupe of the old created_at-only cursor.
+    //   forward  (legacy): ascending walk from the start of history.
+    //   backward (chat):   NEWEST page first; response rows are re-sorted
+    //                      ascending for display; nextCursor = oldest row.
+    const direction = opts.direction ?? 'forward';
+    const parsedCursor = parseKeyCursor(opts.cursor);
+    if (parsedCursor === 'invalid') return { ok: false, code: 'bad_cursor', message: 'Malformed cursor' };
+
     let q = sb
       .from('message_posts')
       .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, deleted_by, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
       .eq('thread_id', threadId)
-      .order('created_at', { ascending: true })
+      .order('created_at', { ascending: direction === 'forward' })
+      .order('id',         { ascending: direction === 'forward' })
       .limit(limit);
 
-    if (opts.cursor) q = q.gt('created_at', opts.cursor);
+    if (parsedCursor) {
+      const { at, id } = parsedCursor;
+      q = direction === 'forward'
+        ? q.or(`created_at.gt.${at},and(created_at.eq.${at},id.gt.${id})`)
+        : q.or(`created_at.lt.${at},and(created_at.eq.${at},id.lt.${id})`);
+    }
 
     const { data: posts, error } = await q as { data: RawPost[] | null; error: { message: string } | null };
     if (error) return { ok: false, message: error.message };
+    // Backward pages arrive newest-first — flip to ascending for display.
+    if (direction === 'backward') (posts ?? []).reverse();
 
     const postIds = (posts ?? []).map(p => p.id);
 
@@ -1409,18 +1426,24 @@ export async function getThreadPosts(
 
     const readCountMap = new Map<string, number>();
     const pinnedPosts  = new Set<string>();
+    // Slice 4: server-derived pin CAPABILITIES. The UI renders commands from
+    // allowedPinActions; the messaging_pin RPC remains the enforcement point.
+    const pinnedByMap  = new Map<string, string>();
     const reactionsMap = new Map<string, Map<string, string[]>>();   // post → emoji → userIds
+    let callerIsOwner = false;
     if (postIds.length > 0) {
-      const [receiptsRes, pinsRes, reactionsRes] = await Promise.all([
+      const [receiptsRes, pinsRes, reactionsRes, roleRes] = await Promise.all([
         sb.from('message_post_receipts').select('post_id, read_at').in('post_id', postIds),
-        sb.from('message_pins').select('post_id').eq('pin_type', 'post').is('unpinned_at', null).in('post_id', postIds),
+        sb.from('message_pins').select('post_id, pinned_by').eq('pin_type', 'post').is('unpinned_at', null).in('post_id', postIds),
         sb.from('message_post_reactions').select('post_id, user_id, emoji').in('post_id', postIds).order('created_at', { ascending: true }),
+        sb.from('message_participants').select('role').eq('thread_id', threadId).eq('user_id', userId).is('removed_at', null).maybeSingle(),
       ]);
+      callerIsOwner = ((roleRes as { data: { role: string } | null }).data?.role ?? '') === 'owner';
       for (const r of ((receiptsRes as { data: { post_id: string; read_at: string | null }[] | null }).data) ?? []) {
         if (r.read_at) readCountMap.set(r.post_id, (readCountMap.get(r.post_id) ?? 0) + 1);
       }
-      for (const pin of ((pinsRes as { data: { post_id: string | null }[] | null }).data) ?? []) {
-        if (pin.post_id) pinnedPosts.add(pin.post_id);
+      for (const pin of ((pinsRes as { data: { post_id: string | null; pinned_by: string }[] | null }).data) ?? []) {
+        if (pin.post_id) { pinnedPosts.add(pin.post_id); pinnedByMap.set(pin.post_id, pin.pinned_by); }
       }
       for (const rx of ((reactionsRes as { data: { post_id: string; user_id: string; emoji: string }[] | null }).data) ?? []) {
         const perPost = reactionsMap.get(rx.post_id) ?? new Map<string, string[]>();
@@ -1458,6 +1481,10 @@ export async function getThreadPosts(
         authorProfileImageVersion: au?.profile_image_version ?? 1,
         priority:           (p.priority ?? 'normal') as PostRow['priority'],
         isPinned:           pinnedPosts.has(p.id),
+        pinnedBy:           pinnedByMap.get(p.id) ?? null,
+        allowedPinActions:  pinnedPosts.has(p.id)
+          ? ((pinnedByMap.get(p.id) === userId || callerIsOwner) ? ['unpin' as const] : [])
+          : ['pin' as const],
         replyToPost:        p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null,
         deliveryStatus:     (p.delivery_status ?? undefined) as PostRow['deliveryStatus'],
         readByCount:        readCountMap.get(p.id) ?? 0,
@@ -1467,14 +1494,70 @@ export async function getThreadPosts(
       };
     });
 
-    const lastPost = resultPosts[resultPosts.length - 1];
-    const nextCursor = resultPosts.length === limit ? lastPost.createdAt : null;
+    // Composite cursor for the NEXT page: forward continues after the newest
+    // returned row; backward continues before the OLDEST returned row (rows
+    // are ascending in both directions at this point).
+    const edge = direction === 'forward' ? resultPosts.at(-1) : resultPosts.at(0);
+    const nextCursor = resultPosts.length === limit && edge
+      ? formatKeyCursor(edge.createdAt, edge.id)
+      : null;
 
     return { ok: true, posts: resultPosts, nextCursor };
   } catch (e) {
     console.error('[communications] getThreadPosts failed:', e);
     return { ok: false, message: 'Internal error' };
   }
+}
+
+// ── Message-content search (slice 2) ─────────────────────────────────────────
+
+export interface MessageSearchHit {
+  postId:       string;
+  threadId:     string;
+  subject:      string;
+  snippet:      string;
+  authorUserId: string | null;
+  createdAt:    string;
+}
+
+export interface MessageSearchResult {
+  ok:          boolean;
+  message?:    string;
+  code?:       'bad_cursor';
+  hits?:       MessageSearchHit[];
+  nextCursor?: string | null;
+}
+
+/** Content search over the caller's ACTIVE-participant threads (contract:
+ *  docs/module-contracts/messenger-pagination-search.md). Keyset newest-first
+ *  via messaging_search_posts_page (mig 20260919000410). */
+export async function searchMessagePosts(
+  userId: string,
+  query:  string,
+  opts:   { limit?: number; cursor?: string | null } = {},
+): Promise<MessageSearchResult> {
+  const limit = opts.limit ?? 20;
+  const parsed = parseKeyCursor(opts.cursor);
+  if (parsed === 'invalid') return { ok: false, code: 'bad_cursor', message: 'Malformed cursor' };
+
+  interface Row { post_id: string; thread_id: string; subject: string; snippet: string; author_user_id: string | null; created_at: string }
+  const { data, error } = await sb.rpc('messaging_search_posts_page', {
+    p_user_id:   userId,
+    p_query:     query,
+    p_limit:     limit,
+    p_cursor_at: parsed?.at ?? null,
+    p_cursor_id: parsed?.id ?? null,
+  }) as { data: Row[] | null; error: { message: string } | null };
+  if (error) {
+    console.error('[communications] messaging_search_posts_page failed:', error.message);
+    return { ok: false, message: 'Search failed' };
+  }
+  const hits = (data ?? []).map(r => ({
+    postId: r.post_id, threadId: r.thread_id, subject: r.subject,
+    snippet: r.snippet, authorUserId: r.author_user_id, createdAt: r.created_at,
+  }));
+  const last = hits.at(-1);
+  return { ok: true, hits, nextCursor: hits.length === limit && last ? formatKeyCursor(last.createdAt, last.postId) : null };
 }
 
 // ── Source-record resolution (collaboration cards) ───────────────────────────

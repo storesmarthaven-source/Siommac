@@ -63,8 +63,7 @@ import {
   recordThreadExport,
   searchThreadsForCompliance,
   resolveRecordThread,
-  COMPLIANCE_REASONS,
-} from '../lib/communications';
+  COMPLIANCE_REASONS, searchMessagePosts } from '../lib/communications';
 import {
   pinMessage,
   unpinMessage,
@@ -352,6 +351,9 @@ router.post('/communications/messages/threads', async c => {
     limit:  v.data.limit,
     cursor: v.data.cursor,
   });
+  if (result.invalidCursor) {
+    return c.json({ success: false, message: 'Malformed cursor' }, 400);
+  }
   return c.json({ success: true, data: result.rows, nextCursor: result.nextCursor });
 });
 
@@ -381,9 +383,12 @@ router.post('/communications/messages/thread', async c => {
 
 // POST /api/communications/messages/posts  (no auto mark-read)
 const PostsSchema = z.object({
-  threadId: z.uuid(),
-  limit:    z.number().int().min(1).max(100).default(50),
-  cursor:   z.string().nullable().optional(),
+  threadId:  z.uuid(),
+  limit:     z.number().int().min(1).max(100).default(50),
+  cursor:    z.string().nullable().optional(),
+  /** 'backward' = newest page first (the chat home view); 'forward' keeps the
+   *  legacy ascending walk. Contract: messenger-pagination-search.md. */
+  direction: z.enum(['forward', 'backward']).default('forward'),
 });
 
 router.post('/communications/messages/posts', async c => {
@@ -392,15 +397,40 @@ router.post('/communications/messages/posts', async c => {
   const v = zv(c, PostsSchema, body.args);
   if (!v.ok) return v.response;
 
-  const result = await getThreadPosts(v.data.threadId, user.id, { limit: v.data.limit, cursor: v.data.cursor }, user.role);
+  const result = await getThreadPosts(v.data.threadId, user.id, { limit: v.data.limit, cursor: v.data.cursor, direction: v.data.direction }, user.role);
   if (!result.ok) {
     if (result.code === 'compliance_required') {
       return c.json({ success: false, code: 'compliance_required', message: result.message }, 403 as 200);
     }
-    const status = result.code === 'forbidden' ? 403 as 200 : 500 as 200;
+    const status = result.code === 'forbidden' ? 403 as 200
+                 : result.code === 'bad_cursor' ? 400 as 200
+                 : 500 as 200;
     return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true, data: result.posts ?? [], nextCursor: result.nextCursor });
+});
+
+// POST /api/communications/messages/search — message-CONTENT search over the
+// caller's active-participant threads (keyset newest-first; contract:
+// docs/module-contracts/messenger-pagination-search.md).
+const MessageSearchSchema = z.object({
+  query:  z.string().min(2).max(200),
+  limit:  z.number().int().min(1).max(50).default(20),
+  cursor: z.string().nullable().optional(),
+});
+
+router.post('/communications/messages/search', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, MessageSearchSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const result = await searchMessagePosts(user.id, v.data.query, { limit: v.data.limit, cursor: v.data.cursor });
+  if (!result.ok) {
+    const status = result.code === 'bad_cursor' ? 400 as 200 : 500 as 200;
+    return c.json({ success: false, code: result.code, message: result.message ?? 'Search failed' }, status);
+  }
+  return c.json({ success: true, data: result.hits ?? [], nextCursor: result.nextCursor });
 });
 
 // POST /api/communications/messages/activity — thread activity history

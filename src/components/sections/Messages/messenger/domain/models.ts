@@ -71,6 +71,12 @@ export interface Reaction {
 
 export interface Message {
   id: MessageId;
+  /** Stable RENDER key for optimistically-sent messages: set to the pending
+   *  id and carried onto the committed server message (and across reloads),
+   *  so the pending→committed swap does not remount the bubble and replay
+   *  its entry animation. Absent on ordinary messages — render key falls
+   *  back to `id`. */
+  clientKey?: string;
   threadId: ThreadId;
   authorId: UserId;
   body: string;
@@ -84,6 +90,11 @@ export interface Message {
   reactions: Reaction[];
   delivery: DeliveryState;
   pinned: boolean;
+  /** Who holds the active pin (server-provided; null/absent when unpinned). */
+  pinnedBy?: UserId | null;
+  /** Server-derived pin capabilities for the SIGNED-IN user — the UI renders
+   *  pin/unpin commands from this list; the server stays the enforcer. */
+  pinActions: ("pin" | "unpin")[];
   deleted: boolean;
   system?: { event: "joined" | "added" | "removed" | "created"; subjectUserId: UserId };
 }
@@ -105,6 +116,10 @@ export interface Thread {
    *  queue — server-derived from the /threads tab=sent filter). */
   authoredByMe?: boolean;
   relatedRecord?: RelatedRecord;
+  /** The signed-in user has an unsent composer draft on this thread. */
+  hasDraft?: boolean;
+  /** First characters of that draft (server-provided, for the list row). */
+  draftPreview?: string | null;
   lastActivityAt: string;
 }
 

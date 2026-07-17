@@ -7935,24 +7935,24 @@ LoadedThread	interface	communications	false		src/components/sections/Messages/me
 ComplianceView	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	25	
 open	function	communications	false		src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	33	ComplianceView
 ComplianceMessage	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	100	
-emojis	array	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	16	
-urlPattern	variable	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	17	
-FormatCommand	type	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	18	
-commandState	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	19	
-Composer	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Composer.tsx	21	
-publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	60	Composer
-stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	67	Composer
-scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	104	Composer
-update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	118	Composer
-readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	128	Composer
-format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	140	Composer
-insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	167	Composer
-addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	182	Composer
-removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	204	Composer
-openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	209	Composer
-cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	214	Composer
-addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	219	Composer
-send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	224	Composer
+emojis	array	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	21	
+urlPattern	variable	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	22	
+FormatCommand	type	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	23	
+commandState	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	25	
+Composer	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Composer.tsx	27	
+publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	66	Composer
+stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	73	Composer
+scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	110	Composer
+update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	124	Composer
+readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	134	Composer
+format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	146	Composer
+insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	174	Composer
+addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	189	Composer
+removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	211	Composer
+openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	216	Composer
+cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	221	Composer
+addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	226	Composer
+send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	231	Composer
 DetailsPanelProps	interface	communications	false		src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	18	
 DetailsPanel	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	27	
 SummaryMetric	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	143	
@@ -7963,7 +7963,7 @@ PanelSection	function	communications	false	component	src/components/sections/Mes
 DialogProps	interface	communications	false		src/components/sections/Messages/messenger/ui/components/Dialog.tsx	6	
 Dialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Dialog.tsx	16	
 handleKeyDown	function	communications	false		src/components/sections/Messages/messenger/ui/components/Dialog.tsx	23	Dialog
-IconProps	type	communications	true		src/components/sections/Messages/messenger/ui/components/icons.tsx	9	
+IconProps	interface	communications	true		src/components/sections/Messages/messenger/ui/components/icons.tsx	9	
 make	function	communications	false		src/components/sections/Messages/messenger/ui/components/icons.tsx	11	
 Activity	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	17	
 AlertCircle	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	18	
@@ -8052,12 +8052,12 @@ ThreadHeader	function	communications	true	component	src/components/sections/Mess
 MessageThread	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	57	
 markIfVisible	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	97	MessageThread
 handleListScroll	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	174	MessageThread
-jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	182	MessageThread
-SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	268	
-MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	272	
-MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	312	
-RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	318	
-renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	324	
+jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	181	MessageThread
+SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	267	
+MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	271	
+MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	311	
+RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	317	
+renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	323	
 tabs	array	communications	false		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	17	
 threadInQueue	function	communications	true		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	23	
 QueueHeader	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	31	

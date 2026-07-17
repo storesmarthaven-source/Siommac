@@ -5,22 +5,31 @@ import { Dialog } from "./Dialog";
 import { defaultChatPreferences, type ChatPreferences, type ConversationSurface } from "../../domain/preferences";
 
 const accentPresets = [
-  { color: "#001f3f", label: "SIOMAC Navy" },
+  { color: "#1b2d54", label: "SIOMAC Navy" },
   { color: "#315d85", label: "Operational Blue" },
   { color: "#147a78", label: "Assurance Teal" },
   { color: "#2f6b45", label: "Safety Green" },
 ] as const;
-const surfaces: Array<{ value: ConversationSurface; label: string; color: string }> = [
+const surfaces: { value: ConversationSurface; label: string; color: string }[] = [
   { value: "white", label: "White", color: "#ffffff" },
   { value: "soft-gray", label: "Soft gray", color: "#f5f7fa" },
   { value: "cool-blue", label: "Cool blue", color: "#f2f6fa" },
 ];
+// Received (other-party) bubble tints — LIGHT only: the bubble's dark slate
+// text must stay readable, so no contrast juggling is needed.
+const receivedPresets = [
+  { color: "#ffffff", label: "White" },
+  { color: "#eef2f7", label: "Soft gray" },
+  { color: "#e8f1fb", label: "Cool blue" },
+  { color: "#e9f6ef", label: "Mint" },
+  { color: "#f8f2e7", label: "Sand" },
+] as const;
 
 export function AppearanceDialog({ open, value, onSave, onClose }: {
   open: boolean;
   value: ChatPreferences;
-  onSave(value: ChatPreferences): Promise<void>;
-  onClose(): void;
+  onSave: (value: ChatPreferences) => Promise<void>;
+  onClose: () => void;
 }) {
   const [draft, setDraft] = useState(value);
   const [saving, setSaving] = useState(false);
@@ -37,12 +46,19 @@ export function AppearanceDialog({ open, value, onSave, onClose }: {
     finally { setSaving(false); }
   }
 
-  return <Dialog open={open} title="Chat appearance" description="Personalize how conversations appear on this device." icon={<Palette />} onClose={onClose} size="small">
+  return <Dialog open={open} title="Chat appearance" description="Personalize how conversations appear on this device." icon={<Palette />} onClose={onClose}>
     <div className="sm-appearance-settings">
       <fieldset>
         <legend>Interface color</legend>
         <div className="sm-color-presets">
           {accentPresets.map((preset) => <button key={preset.color} type="button" aria-label={preset.label} aria-pressed={draft.accent === preset.color} style={{ backgroundColor: preset.color }} onClick={() => set("accent", preset.color)}>{draft.accent === preset.color ? <Check /> : null}</button>)}
+        </div>
+      </fieldset>
+
+      <fieldset>
+        <legend>Received bubble</legend>
+        <div className="sm-color-presets sm-color-presets--light">
+          {receivedPresets.map((preset) => <button key={preset.color} type="button" aria-label={preset.label} aria-pressed={draft.receivedBubble === preset.color} style={{ backgroundColor: preset.color }} onClick={() => set("receivedBubble", preset.color)}>{draft.receivedBubble === preset.color ? <Check /> : null}</button>)}
         </div>
       </fieldset>
 
@@ -70,7 +86,7 @@ export function AppearanceDialog({ open, value, onSave, onClose }: {
         </div>
       </fieldset>
 
-      <div className="sm-appearance-preview" aria-label="Appearance preview" style={`--sm-navy:${draft.accent};--sm-thread-bg:${surfaces.find((surface) => surface.value === draft.surface)?.color ?? "#f5f7fa"}`}>
+      <div className="sm-appearance-preview" aria-label="Appearance preview" style={`--sm-navy:${draft.accent};--sm-received-bubble:${draft.receivedBubble};--sm-thread-bg:${surfaces.find((surface) => surface.value === draft.surface)?.color ?? "#f5f7fa"}`}>
         <span className="is-received">Received message</span><span className="is-admin">Your message</span>
       </div>
 
@@ -83,6 +99,6 @@ export function AppearanceDialog({ open, value, onSave, onClose }: {
   </Dialog>;
 }
 
-function AccessibilitySwitch({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange(checked: boolean): void }) {
+function AccessibilitySwitch({ label, description, checked, onChange }: { label: string; description: string; checked: boolean; onChange: (checked: boolean) => void }) {
   return <div><span><strong>{label}</strong><small>{description}</small></span><button className="sm-settings-switch" type="button" role="switch" aria-label={label} aria-checked={checked} onClick={() => onChange(!checked)}><i /></button></div>;
 }

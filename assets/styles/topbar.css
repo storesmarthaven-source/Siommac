@@ -151,6 +151,19 @@
 }
 .app-topbar-footer-spacer { flex: 1; }
 
+/* Module sub-nav portal slot (see UserPill) — a WHITE band under the navy main
+   row. Bordered on its own (the white band otherwise blends into the page
+   background) with bottom radius matching the card. Collapses when no module
+   has portalled content into it. */
+/* Triple-compound: must outweigh `.app-topbar-footer.has-nav`'s height, which
+   sits LATER in this file (a same-specificity tie would lose on order). */
+.app-topbar-footer.has-nav.app-topbar-footer--slot {
+  height: 50px; padding: 0 24px 0 22px; background: #fff;
+  border: 1px solid #dfe5ee; border-top: 0;
+  border-radius: 0 0 12px 12px;
+}
+.app-topbar-footer--slot:empty { display: none; }
+
 /* When the footer hosts a module sub-nav it needs a little more room than the
    32px breadcrumb strip. */
 .app-topbar-footer.has-nav { height: 44px; }

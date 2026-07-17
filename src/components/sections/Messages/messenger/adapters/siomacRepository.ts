@@ -38,16 +38,29 @@ export class SiomacMessagingRepository implements MessagingRepository {
   // context-free togglePin(messageId) can resolve threadId + an existing pinId.
   private readonly threadOfPost = new Map<string, string>();
   private readonly pinOfPost    = new Map<string, string>();
+  /** Older-history cursor per thread (null = history exhausted). */
+  private readonly olderCursor  = new Map<string, string | null>();
+  /** Thread-list page cursors + accumulated Sent membership across pages. */
+  private threadCursors: { all: string | null; sent: string | null } = { all: null, sent: null };
+  private readonly sentThreadIds = new Set<string>();
 
   async load(currentUserId: string): Promise<WorkspaceSnapshot> {
-    const [threadDtos, sentDtos, online] = await Promise.all([
-      post<ThreadDTO[]>('communications/messages/threads', { tab: 'all', limit: 100 }),
+    // First PAGE of each tab (keyset cursors retained for loadMoreThreads —
+    // contract: docs/module-contracts/messenger-pagination-search.md).
+    const [threadsRes, sentRes, online] = await Promise.all([
+      apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null; message?: string }>('communications/messages/threads', { tab: 'all', limit: 30 }),
       // Server-derived Sent membership (threads where I authored ≥1 post) —
       // powers the Sent queue without loading every thread's messages.
-      post<ThreadDTO[]>('communications/messages/threads', { tab: 'sent', limit: 100 }),
+      apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null; message?: string }>('communications/messages/threads', { tab: 'sent', limit: 30 }),
       apiPost<{ success: boolean; data: OnlineUser[] }>('communications/messages/online', {}).then(r => (r.success ? r.data : [])),
     ]);
-    const sentIds = new Set(sentDtos.map(t => t.id));
+    if (!threadsRes.success) throw new Error(threadsRes.message ?? 'Failed to load conversations');
+    const threadDtos = threadsRes.data ?? [];
+    const sentDtos   = sentRes.success ? (sentRes.data ?? []) : [];
+    this.threadCursors = { all: threadsRes.nextCursor ?? null, sent: sentRes.success ? (sentRes.nextCursor ?? null) : null };
+    this.sentThreadIds.clear();
+    for (const t of sentDtos) this.sentThreadIds.add(t.id);
+    const sentIds = this.sentThreadIds;
     const users = new Map<string, User>();
     for (const t of threadDtos) {
       for (const p of t.participants) users.set(p.userId, mapParticipantToUser(p));
@@ -65,11 +78,16 @@ export class SiomacMessagingRepository implements MessagingRepository {
 
   /** Load one thread's messages + the post AUTHORS (who may not be current
    *  participants — departed members, compliance reads). */
-  async loadThreadDetail(threadId: string): Promise<{ messages: Message[]; authors: User[] }> {
-    const [posts, pins] = await Promise.all([
-      post<PostDTO[]>('communications/messages/posts', { threadId, limit: 100 }),
+  async loadThreadDetail(threadId: string): Promise<{ messages: Message[]; authors: User[]; hasMore: boolean }> {
+    // BACKWARD = the newest page. The old ascending limit:100 call showed the
+    // OLDEST 100 posts and silently hid the newest messages of long threads.
+    const [postsRes, pins] = await Promise.all([
+      apiPost<{ success: boolean; data?: PostDTO[]; nextCursor?: string | null; message?: string }>('communications/messages/posts', { threadId, limit: 50, direction: 'backward' }),
       apiPost<{ success: boolean; data: PinDTO[] }>('communications/messages/pins/list', { threadId }).then(r => (r.success ? r.data : [])),
     ]);
+    if (!postsRes.success) throw new Error(postsRes.message ?? 'Failed to load messages');
+    const posts = postsRes.data ?? [];
+    this.olderCursor.set(threadId, postsRes.nextCursor ?? null);
     for (const pin of pins) { if (pin.postId) this.pinOfPost.set(pin.postId, pin.id); }
     const authors = new Map<string, User>();
     for (const p of posts) {
@@ -84,7 +102,7 @@ export class SiomacMessagingRepository implements MessagingRepository {
         });
       }
     }
-    return { messages: posts.map(mapPost), authors: Array.from(authors.values()) };
+    return { messages: posts.map(mapPost), authors: Array.from(authors.values()), hasMore: (postsRes.nextCursor ?? null) !== null };
   }
 
   /** Load one thread's messages (called by the app layer on thread select). */
@@ -92,10 +110,78 @@ export class SiomacMessagingRepository implements MessagingRepository {
     return (await this.loadThreadDetail(threadId)).messages;
   }
 
+  /** Previous (older) history page for a thread — the provider prepends it. */
+  async loadOlderMessages(threadId: string): Promise<{ messages: Message[]; authors: User[]; hasMore: boolean }> {
+    const cursor = this.olderCursor.get(threadId) ?? null;
+    if (!cursor) return { messages: [], authors: [], hasMore: false };
+    const res = await apiPost<{ success: boolean; data?: PostDTO[]; nextCursor?: string | null; message?: string }>(
+      'communications/messages/posts', { threadId, limit: 50, direction: 'backward', cursor });
+    if (!res.success) throw new Error(res.message ?? 'Failed to load earlier messages');
+    const posts = res.data ?? [];
+    this.olderCursor.set(threadId, res.nextCursor ?? null);
+    const authors = new Map<string, User>();
+    for (const p of posts) {
+      this.threadOfPost.set(p.id, threadId);
+      if (p.authorUserId) {
+        authors.set(p.authorUserId, { id: p.authorUserId, name: p.authorName ?? p.authorUserId, title: p.authorRoleKey ?? '', avatarUrl: p.authorProfileImage ?? '', presence: 'offline' });
+      }
+    }
+    return { messages: posts.map(mapPost), authors: Array.from(authors.values()), hasMore: (res.nextCursor ?? null) !== null };
+  }
+
+  /** True while further thread-list pages exist (either tab cursor live). */
+  get threadListHasMore(): boolean {
+    return this.threadCursors.all !== null || this.threadCursors.sent !== null;
+  }
+
+  /** Next thread-list page(s): advances the all/sent cursors in step. */
+  async loadMoreThreads(currentUserId: string): Promise<{ threads: Thread[]; hasMore: boolean }> {
+    const { all, sent } = this.threadCursors;
+    if (!all && !sent) return { threads: [], hasMore: false };
+    const [allRes, sentRes] = await Promise.all([
+      all  ? apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null }>('communications/messages/threads', { tab: 'all', limit: 30, cursor: all }) : Promise.resolve(null),
+      sent ? apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null }>('communications/messages/threads', { tab: 'sent', limit: 30, cursor: sent }) : Promise.resolve(null),
+    ]);
+    if (allRes?.success)  this.threadCursors.all  = allRes.nextCursor ?? null;
+    if (sentRes?.success) { this.threadCursors.sent = sentRes.nextCursor ?? null; for (const t of sentRes.data ?? []) this.sentThreadIds.add(t.id); }
+    const dtos = allRes?.success ? (allRes.data ?? []) : [];
+    return {
+      threads: dtos.map(t => mapThread(t, currentUserId, this.sentThreadIds.has(t.id))),
+      hasMore: this.threadCursors.all !== null || this.threadCursors.sent !== null,
+    };
+  }
+
+  /** Per-user/thread composer draft (slice 3). Empty body deletes server-side. */
+  async saveDraft(threadId: string, body: string | null, replyToPostId: string | null): Promise<void> {
+    await post('communications/messages/draft/save', { threadId, body, replyToPostId });
+  }
+
+  async getDraft(threadId: string): Promise<{ body: string | null; replyToPostId: string | null } | null> {
+    const res = await apiPost<{ success: boolean; data?: { body: string | null; replyToPostId: string | null } | null }>(
+      'communications/messages/draft/get', { threadId });
+    return res.success ? (res.data ?? null) : null;
+  }
+
+  async deleteDraft(threadId: string): Promise<void> {
+    await post('communications/messages/draft/delete', { threadId });
+  }
+
+  /** Server-side message-CONTENT search over the caller's threads (first page). */
+  async searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]> {
+    const res = await apiPost<{ success: boolean; data?: { postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]; message?: string }>(
+      'communications/messages/search', { query, limit: 20 });
+    if (!res.success) throw new Error(res.message ?? 'Search failed');
+    return res.data ?? [];
+  }
+
   loadPreferences(userId: string): Promise<ChatPreferences> {
     try {
       const raw = localStorage.getItem(PREFS_KEY(userId));
-      return Promise.resolve(raw ? { ...defaultChatPreferences, ...JSON.parse(raw) as Partial<ChatPreferences> } : defaultChatPreferences);
+      const stored = raw ? { ...defaultChatPreferences, ...JSON.parse(raw) as Partial<ChatPreferences> } : defaultChatPreferences;
+      // Legacy migration: #001f3f was the old default AND the swatch mislabelled
+      // "SIOMAC Navy" — both intents map to the real brand navy.
+      if (stored.accent === "#001f3f") stored.accent = "#1b2d54";
+      return Promise.resolve(stored);
     } catch { return Promise.resolve(defaultChatPreferences); }
   }
 
@@ -131,7 +217,7 @@ export class SiomacMessagingRepository implements MessagingRepository {
       body, html: draft.html || body, createdAt: new Date().toISOString(),
       ...(draft.replyToId ? { replyToId: draft.replyToId } : {}),
       ...(draft.link ? { link: draft.link } : {}),
-      attachments: draft.attachments, reactions: [], delivery: 'sent', pinned: false, deleted: false,
+      attachments: draft.attachments, reactions: [], delivery: 'sent', pinned: false, pinActions: ['pin'], deleted: false,
     };
   }
 
@@ -164,13 +250,21 @@ export class SiomacMessagingRepository implements MessagingRepository {
   async togglePin(messageId: string, _actorId: string): Promise<void> {
     const pinId = this.pinOfPost.get(messageId);
     if (pinId) {
-      await post('communications/messages/pins/unpin', { pinId });
+      // Clear the cache BEFORE the round-trip: a re-toggle while the unpin is
+      // in flight must send 'pin', not a second unpin of the same id.
+      // Restored on failure so the state stays truthful.
       this.pinOfPost.delete(messageId);
+      try { await post('communications/messages/pins/unpin', { pinId }); }
+      catch (cause) { this.pinOfPost.set(messageId, pinId); throw cause; }
       return;
     }
     const threadId = this.threadOfPost.get(messageId);
     if (!threadId) throw new Error('Cannot pin: the message thread is not loaded.');
-    await post('communications/messages/pins/pin', { threadId, postId: messageId, pinType: 'post', visibility: 'thread' });
+    const pin = await post<{ id: string }>('communications/messages/pins/pin', { threadId, postId: messageId, pinType: 'post', visibility: 'thread' });
+    // Record the new pin id NOW — the next toggle must send unpin. Without
+    // this, a pin→toggle sequence re-sent 'pin' and the server (correctly)
+    // rejected it with "an active pin for this post+visibility already exists".
+    if (pin.id) this.pinOfPost.set(messageId, pin.id);
   }
 
   async markRead(threadId: string, _userId: string): Promise<void> {

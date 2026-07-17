@@ -14,6 +14,7 @@
 import { createContext } from "preact";
 import type { ComponentChildren } from "preact";
 import { useCallback, useContext, useEffect, useMemo, useRef, useState } from "preact/hooks";
+import { toast } from "@store";
 import type { ActivityEntry, Attachment, Message, MessageDraft, MessageId, Thread, ThreadId, User, UserId, WorkspaceSnapshot } from "../domain/models";
 import type { AttachmentService } from "../domain/ports";
 import type { SiomacRepository, SiomacRealtimeGateway } from "../adapters";
@@ -41,6 +42,15 @@ interface MessagingActions {
   loadThreadDetail(threadId: ThreadId): Promise<{ messages: Message[]; authors: User[] }>;
   /** Server-derived thread activity history (posts/pins/membership/reads). */
   listActivity(threadId: ThreadId): Promise<ActivityEntry[]>;
+  /** Prepend the previous (older) history page of a thread. */
+  loadOlderMessages(threadId: ThreadId): Promise<void>;
+  /** Append the next thread-list page (all+sent cursors advance in step). */
+  loadMoreThreads(): Promise<void>;
+  /** Server-side message-CONTENT search (first page of hits). */
+  searchMessages(query: string): Promise<{ postId: string; threadId: string; subject: string; snippet: string; createdAt: string }[]>;
+  /** Per-user/thread composer draft persistence (last-write-wins). */
+  saveDraft(threadId: ThreadId, body: string | null, replyToPostId: string | null): Promise<void>;
+  getDraft(threadId: ThreadId): Promise<{ body: string | null; replyToPostId: string | null } | null>;
   upload(file: File, onProgress: (attachment: Attachment) => void, signal: AbortSignal): Promise<Attachment>;
   download(attachment: Attachment): Promise<void>;
   savePreferences(preferences: ChatPreferences): Promise<void>;
@@ -57,6 +67,10 @@ interface MessagingContextValue {
   actions: MessagingActions;
   /** Users currently typing per thread (self excluded, TTL-pruned). */
   typingByThread: ReadonlyMap<ThreadId, UserId[]>;
+  /** Threads with MORE (older) history available to load. */
+  hasOlderByThread: ReadonlyMap<ThreadId, boolean>;
+  /** True while the thread LIST has further pages. */
+  threadsHaveMore: boolean;
 }
 
 const MessagingContext = createContext<MessagingContextValue | null>(null);
@@ -72,17 +86,47 @@ export interface MessagingProviderProps {
 export function MessagingProvider({ repository, realtime, attachments, currentUserId, children }: MessagingProviderProps) {
   const [base, setBase] = useState<WorkspaceSnapshot | null>(null);
   const [messagesByThread, setMessagesByThread] = useState<ReadonlyMap<ThreadId, Message[]>>(new Map());
+  const [hasOlderByThread, setHasOlderByThread] = useState<ReadonlyMap<ThreadId, boolean>>(new Map());
+  const [threadsHaveMore, setThreadsHaveMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<ChatPreferences>(defaultChatPreferences);
   const sourceId = useRef(crypto.randomUUID());
   const activeThreadId = useRef<ThreadId | null>(null);
+  // Message ids with a pin/unpin currently in flight (double-fire guard).
+  const pinsInFlight = useRef(new Set<MessageId>());
+  // Render-independent mirror of messagesByThread: lets `actions` read the
+  // cache WITHOUT depending on its identity — with base/messagesByThread in
+  // the useMemo deps, every state change minted a NEW actions object and
+  // re-ran every [actions]-dependent effect (draft/get churn, markRead spam).
+  const messagesRef = useRef<ReadonlyMap<ThreadId, Message[]>>(new Map());
+  useEffect(() => { messagesRef.current = messagesByThread; }, [messagesByThread]);
+  // Same render-independence for the base snapshot: `base` is NOT in the
+  // actions useMemo deps (deliberately — see above), so any action reading the
+  // `base` closure sees the snapshot from whenever actions LAST recomputed.
+  // markRead read a stale unreadCount of 0 through that closure and silently
+  // no-opped; actions must read the current snapshot through this ref instead.
+  const baseRef = useRef<WorkspaceSnapshot | null>(null);
+  useEffect(() => { baseRef.current = base; }, [base]);
+
+  // Server refreshes replace a thread's messages wholesale — carry each
+  // message's clientKey (the optimistic render key) over by id, or the
+  // refresh remounts freshly-sent bubbles and replays their entry animation.
+  const preserveClientKeys = (incoming: Message[], previous: Message[] | undefined): Message[] => {
+    if (!previous?.some((message) => message.clientKey)) return incoming;
+    const keyById = new Map(previous.filter((message) => message.clientKey).map((message) => [message.id, message.clientKey] as const));
+    return incoming.map((message) => {
+      const clientKey = keyById.get(message.id);
+      return clientKey ? { ...message, clientKey } : message;
+    });
+  };
 
   const loadThreadMessages = useCallback(async (threadId: ThreadId) => {
-    const { messages, authors } = await repository.loadThreadDetail(threadId);
+    const { messages, authors, hasMore } = await repository.loadThreadDetail(threadId);
+    setHasOlderByThread((current) => new Map(current).set(threadId, hasMore));
     setMessagesByThread((current) => {
       const next = new Map(current);
-      next.set(threadId, messages);
+      next.set(threadId, preserveClientKeys(messages, current.get(threadId)));
       return next;
     });
     // Merge post authors the roster does not know (departed participants) so
@@ -96,6 +140,19 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     });
   }, [repository]);
 
+  /** Merge a freshly-fetched NEWEST page into a thread's cached messages:
+   *  older loaded pages and in-flight pending bubbles survive (a plain
+   *  replace wiped both — every realtime signal reset a paged-back reader
+   *  to 50 messages and could kill a pending send's bubble). */
+  const mergeThreadMessages = (existing: Message[] | undefined, incoming: Message[]): Message[] => {
+    const prior = existing ?? [];
+    const merged = preserveClientKeys(incoming, prior);
+    const incomingIds = new Set(merged.map((message) => message.id));
+    const olderPages = prior.filter((message) => !incomingIds.has(message.id) && !message.id.startsWith("pending-"));
+    const pending = prior.filter((message) => !incomingIds.has(message.id) && message.id.startsWith("pending-"));
+    return [...olderPages, ...merged, ...pending];
+  };
+
   /** Reload the base snapshot; refresh the active thread's messages and drop
    *  the other cached threads (they refetch on next open). */
   const reload = useCallback(async () => {
@@ -108,12 +165,56 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       ]);
       setBase(nextBase);
       setPreferences(nextPreferences);
-      setMessagesByThread(active && activeMessages ? new Map([[active, activeMessages]]) : new Map());
+      setMessagesByThread((current) => active && activeMessages
+        ? new Map([[active, mergeThreadMessages(current.get(active), activeMessages)]])
+        : new Map());
       setError(null);
+      setThreadsHaveMore(repository.threadListHasMore);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to load messages");
     } finally {
       setLoading(false);
+    }
+  }, [currentUserId, repository]);
+
+  /** NARROW refresh (slice 5) — what a realtime signal triggers: page 1 of the
+   *  thread list MERGED into the known set (threads paged beyond page 1 and
+   *  users learned from history are retained), plus a newest-page MERGE for
+   *  the active thread. No preference fetch, no cache drops, no full reload. */
+  const refreshNarrow = useCallback(async () => {
+    try {
+      const active = activeThreadId.current;
+      const [nextBase, activeDetail] = await Promise.all([
+        repository.load(currentUserId),
+        active ? repository.loadThreadDetail(active) : Promise.resolve(null),
+      ]);
+      setThreadsHaveMore(repository.threadListHasMore);
+      setBase((current) => {
+        if (!current) return nextBase;
+        const incoming = new Set(nextBase.threads.map((thread) => thread.id));
+        const retainedThreads = current.threads.filter((thread) => !incoming.has(thread.id));
+        const knownUsers = new Set(nextBase.users.map((user) => user.id));
+        const retainedUsers = current.users.filter((user) => !knownUsers.has(user.id));
+        return { ...nextBase, threads: [...nextBase.threads, ...retainedThreads], users: [...nextBase.users, ...retainedUsers] };
+      });
+      if (active && activeDetail) {
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(active, mergeThreadMessages(current.get(active), activeDetail.messages));
+          return next;
+        });
+        if (activeDetail.authors.length) {
+          setBase((current) => {
+            if (!current) return current;
+            const known = new Set(current.users.map((user) => user.id));
+            const missing = activeDetail.authors.filter((author) => !known.has(author.id));
+            return missing.length ? { ...current, users: [...current.users, ...missing] } : current;
+          });
+        }
+      }
+      setError(null);
+    } catch (cause) {
+      console.warn('[messenger] narrow refresh failed:', cause);
     }
   }, [currentUserId, repository]);
 
@@ -123,9 +224,19 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   const [typing, setTyping] = useState<TypingState>(emptyTypingState);
   const [online, setOnline] = useState<ReadonlySet<UserId>>(new Set());
 
+  const refreshTimerRef = useRef<number | null>(null);
+  const scheduleNarrowRefresh = useCallback(() => {
+    if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current);
+    refreshTimerRef.current = window.setTimeout(() => {
+      refreshTimerRef.current = null;
+      void refreshNarrow();
+    }, 400);
+  }, [refreshNarrow]);
+  useEffect(() => () => { if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current); }, []);
+
   useEffect(() => realtime.subscribe((event) => {
     if (event.sourceId === sourceId.current) return;
-    if (event.type === "snapshot-changed") { void reload(); return; }
+    if (event.type === "snapshot-changed") { scheduleNarrowRefresh(); return; }
     if (event.type === "typing") {
       setTyping((current) => applyTyping(current, event.threadId, event.userId, event.active, Date.now(), TYPING_TTL_MS));
       return;
@@ -137,7 +248,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       if (event.presence === "online") next.add(event.userId); else next.delete(event.userId);
       return next;
     });
-  }), [realtime, reload]);
+  }), [realtime, scheduleNarrowRefresh]);
 
   // TTL sweep — a dropped stop-broadcast must not strand a stuck indicator.
   useEffect(() => {
@@ -149,37 +260,72 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   const mutate = useCallback(async (operation: () => Promise<void>) => {
     try {
       await operation();
-      await reload();
+      await refreshNarrow();
       realtime.publish({ type: "snapshot-changed", sourceId: sourceId.current });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The messaging action failed");
+      toast.error(cause instanceof Error ? cause.message : "The messaging action failed");
       throw cause;
     }
-  }, [realtime, reload]);
+  }, [realtime, refreshNarrow]);
 
   const actions = useMemo<MessagingActions>(() => ({
     reload,
     selectThread: async (threadId) => {
       activeThreadId.current = threadId;
       realtime.setActiveThread(threadId);   // follow the thread's typing channel
-      if (!messagesByThread.has(threadId)) {
+      if (!messagesRef.current.has(threadId)) {
         try { await loadThreadMessages(threadId); }
-        catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to load the conversation"); }
+        catch (cause) { toast.error(cause instanceof Error ? cause.message : "Unable to load the conversation"); }
       }
     },
     send: async (threadId, draft) => {
+      // Optimistic bubble: render IMMEDIATELY with a 'sending' tick, swap in the
+      // server's committed message on success. On failure the pending bubble is
+      // REMOVED (the composer keeps the draft — the throw prevents its clear),
+      // so nothing pretends to be sent.
+      const pendingId = `pending-${crypto.randomUUID()}`;
+      const pending: Message = {
+        id: pendingId, clientKey: pendingId, threadId, authorId: currentUserId,
+        body: draft.body, html: draft.html || draft.body, createdAt: new Date().toISOString(),
+        ...(draft.replyToId ? { replyToId: draft.replyToId } : {}),
+        ...(draft.link ? { link: draft.link } : {}),
+        attachments: draft.attachments, reactions: [], delivery: "sending", pinned: false, pinActions: ["pin"], deleted: false,
+      };
+      setMessagesByThread((current) => {
+        const next = new Map(current);
+        next.set(threadId, [...(next.get(threadId) ?? []), pending]);
+        return next;
+      });
       try {
         const message = await repository.send(threadId, currentUserId, draft);
-        // Optimistic append so the thread updates in one paint; reload reconciles.
+        // The message is committed — its draft is obsolete. Fire-and-forget:
+        // a failed cleanup only leaves a stale draft, never blocks the send.
+        void repository.deleteDraft(threadId).catch(() => { /* best-effort */ });
         setMessagesByThread((current) => {
           const next = new Map(current);
-          next.set(threadId, [...(next.get(threadId) ?? []), message]);
+          // Carry the pending id as the RENDER key — same key, no remount, no
+          // replayed entry animation on the pending→committed swap.
+          next.set(threadId, (next.get(threadId) ?? []).map((item) => item.id === pendingId ? { ...message, clientKey: pendingId } : item));
           return next;
         });
-        await reload();
+        // The send RESPONSE already updated the message cache (swap above) —
+        // no server round-trips here. Bump the thread locally: newest
+        // activity, Sent membership, front of the list.
+        setBase((current) => {
+          if (!current) return current;
+          const target = current.threads.find((thread) => thread.id === threadId);
+          if (!target) return current;
+          const bumped = { ...target, lastActivityAt: message.createdAt, authoredByMe: true };
+          return { ...current, threads: [bumped, ...current.threads.filter((thread) => thread.id !== threadId)] };
+        });
         realtime.publish({ type: "snapshot-changed", sourceId: sourceId.current });
       } catch (cause) {
-        setError(cause instanceof Error ? cause.message : "The message could not be sent");
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, (next.get(threadId) ?? []).filter((item) => item.id !== pendingId));
+          return next;
+        });
+        toast.error(cause instanceof Error ? cause.message : "The message could not be sent");
         throw cause;
       }
     },
@@ -190,12 +336,79 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       realtime.publish({ type: "snapshot-changed", sourceId: sourceId.current });
       return thread;
     },
-    remove: (messageId) => mutate(() => repository.deleteMessage(messageId)),
-    togglePin: (messageId) => mutate(() => repository.togglePin(messageId, currentUserId)),
-    toggleReaction: (messageId, emoji) => mutate(() => repository.toggleReaction(messageId, currentUserId, emoji)),
+    remove: async (messageId) => {
+      // Optimistic tombstone ("This message was deleted") with revert on failure.
+      const patch = (deleted: boolean) => setMessagesByThread((current) => {
+        const next = new Map(current);
+        for (const [threadId, messages] of next) {
+          next.set(threadId, messages.map((message) => message.id === messageId ? { ...message, deleted } : message));
+        }
+        return next;
+      });
+      patch(true);
+      try { await repository.deleteMessage(messageId); }
+      catch (cause) {
+        console.warn('[messenger] delete failed, restoring message:', cause);
+        patch(false);
+        toast.error(cause instanceof Error ? cause.message : "The message could not be deleted");
+      }
+    },
+    togglePin: async (messageId) => {
+      // One toggle in flight per message: a double-click must not race two
+      // identical actions to the server (the second one always 409s).
+      if (pinsInFlight.current.has(messageId)) return;
+      pinsInFlight.current.add(messageId);
+      // Optimistic pin flip (bubble + pinned banner) with revert on failure.
+      const flip = () => setMessagesByThread((current) => {
+        const next = new Map(current);
+        for (const [threadId, messages] of next) {
+          next.set(threadId, messages.map((message) => message.id === messageId ? { ...message, pinned: !message.pinned } : message));
+        }
+        return next;
+      });
+      flip();
+      try { await repository.togglePin(messageId, currentUserId); }
+      catch (cause) {
+        console.warn('[messenger] togglePin failed, reverting:', cause);
+        flip();
+        toast.error(cause instanceof Error ? cause.message : "The pin could not be saved");
+      } finally {
+        pinsInFlight.current.delete(messageId);
+      }
+    },
+    toggleReaction: async (messageId, emoji) => {
+      // Optimistic: paint the toggle immediately (no server round-trip + full
+      // reload before feedback); revert on failure. The realtime signal
+      // reconciles the authoritative counts.
+      const toggle = (messages: Message[]): Message[] => messages.map((message) => {
+        if (message.id !== messageId) return message;
+        const existing = message.reactions.find((reaction) => reaction.emoji === emoji);
+        const mine = existing?.userIds.includes(currentUserId) ?? false;
+        const reactions = mine
+          ? message.reactions
+              .map((reaction) => reaction.emoji === emoji ? { ...reaction, userIds: reaction.userIds.filter((id) => id !== currentUserId) } : reaction)
+              .filter((reaction) => reaction.userIds.length > 0)
+          : existing
+            ? message.reactions.map((reaction) => reaction.emoji === emoji ? { ...reaction, userIds: [...reaction.userIds, currentUserId] } : reaction)
+            : [...message.reactions, { emoji, userIds: [currentUserId] }];
+        return { ...message, reactions };
+      });
+      const previous = messagesRef.current;
+      setMessagesByThread((current) => {
+        const next = new Map(current);
+        for (const [threadId, messages] of next) next.set(threadId, toggle(messages));
+        return next;
+      });
+      try { await repository.toggleReaction(messageId, currentUserId, emoji); }
+      catch (cause) {
+        console.warn('[messenger] toggleReaction failed, reverting:', cause);
+        setMessagesByThread(previous);
+        toast.error(cause instanceof Error ? cause.message : "The reaction could not be saved");
+      }
+    },
     markRead: async (threadId) => {
       // Optimistic: clear the local badge; realtime reconciles the true count.
-      const thread = base?.threads.find((item) => item.id === threadId);
+      const thread = baseRef.current?.threads.find((item) => item.id === threadId);
       if (!thread || thread.unreadCount === 0) return;
       const previousUnread = thread.unreadCount;
       setBase((current) => current ? {
@@ -212,25 +425,112 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
         } : current);
       }
     },
-    setMuted: (threadId, muted) => mutate(() => repository.setMuted(threadId, muted, currentUserId)),
-    setArchived: (threadId, archived) => mutate(() => repository.setArchived(threadId, archived)),
-    setFavourite: (threadId, favourite) => mutate(() => repository.setFavourite(threadId, favourite, currentUserId)),
+    setMuted: async (threadId, muted) => {
+      // Optimistic bell flip (personal notification state) with revert.
+      setBase((current) => current ? {
+        ...current,
+        threads: current.threads.map((item) => item.id === threadId ? { ...item, muted } : item),
+      } : current);
+      try { await repository.setMuted(threadId, muted, currentUserId); }
+      catch (cause) {
+        console.warn('[messenger] setMuted failed, reverting:', cause);
+        setBase((current) => current ? {
+          ...current,
+          threads: current.threads.map((item) => item.id === threadId ? { ...item, muted: !muted } : item),
+        } : current);
+        toast.error(cause instanceof Error ? cause.message : "The mute setting could not be saved");
+      }
+    },
+    setArchived: async (threadId, archived) => {
+      // Optimistic queue move (archive is per-participant state); revert restores
+      // the thread's PREVIOUS queue (a sent/inbox thread must not land in inbox).
+      const previousQueue = baseRef.current?.threads.find((item) => item.id === threadId)?.queue;
+      setBase((current) => current ? {
+        ...current,
+        threads: current.threads.map((item) => item.id === threadId ? { ...item, queue: archived ? "archived" as const : "inbox" as const } : item),
+      } : current);
+      try {
+        await repository.setArchived(threadId, archived);
+        // Reconcile the authoritative queue derivation (sent vs inbox) quietly.
+        await reload();
+      } catch (cause) {
+        console.warn('[messenger] setArchived failed, reverting:', cause);
+        setBase((current) => current && previousQueue ? {
+          ...current,
+          threads: current.threads.map((item) => item.id === threadId ? { ...item, queue: previousQueue } : item),
+        } : current);
+        toast.error(cause instanceof Error ? cause.message : "The archive change could not be saved");
+      }
+    },
+    setFavourite: async (threadId, favourite) => {
+      // Optimistic star flip; revert on failure (personal UI state — no §2
+      // side-effects to wait on, so instant feedback is safe).
+      setBase((current) => current ? {
+        ...current,
+        threads: current.threads.map((item) => item.id === threadId ? { ...item, favourite } : item),
+      } : current);
+      try { await repository.setFavourite(threadId, favourite, currentUserId); }
+      catch (cause) {
+        console.warn('[messenger] setFavourite failed, reverting:', cause);
+        setBase((current) => current ? {
+          ...current,
+          threads: current.threads.map((item) => item.id === threadId ? { ...item, favourite: !favourite } : item),
+        } : current);
+        toast.error(cause instanceof Error ? cause.message : "The favourite could not be saved");
+      }
+    },
     invite: (threadId, participantId) => mutate(() => repository.invite(threadId, participantId, currentUserId)),
     removeParticipant: (threadId, participantId) => mutate(() => repository.removeParticipant(threadId, participantId, currentUserId)),
     listRecipients: (query) => repository.listRecipients(query),
     loadThreadDetail: (threadId) => repository.loadThreadDetail(threadId),
     listActivity: (threadId) => repository.listActivity(threadId),
+    loadOlderMessages: async (threadId) => {
+      const { messages, authors, hasMore } = await repository.loadOlderMessages(threadId);
+      setHasOlderByThread((current) => new Map(current).set(threadId, hasMore));
+      if (messages.length) {
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          const existing = next.get(threadId) ?? [];
+          const known = new Set(existing.map((m) => m.id));
+          next.set(threadId, [...messages.filter((m) => !known.has(m.id)), ...existing]);
+          return next;
+        });
+      }
+      if (authors.length) {
+        setBase((current) => {
+          if (!current) return current;
+          const known = new Set(current.users.map((user) => user.id));
+          const missing = authors.filter((author) => !known.has(author.id));
+          return missing.length ? { ...current, users: [...current.users, ...missing] } : current;
+        });
+      }
+    },
+    loadMoreThreads: async () => {
+      const { threads, hasMore } = await repository.loadMoreThreads(currentUserId);
+      setThreadsHaveMore(hasMore);
+      if (threads.length) {
+        setBase((current) => {
+          if (!current) return current;
+          const known = new Set(current.threads.map((t) => t.id));
+          const fresh = threads.filter((t) => !known.has(t.id));
+          return fresh.length ? { ...current, threads: [...current.threads, ...fresh] } : current;
+        });
+      }
+    },
+    searchMessages: (query) => repository.searchMessages(query),
+    saveDraft: (threadId, body, replyToPostId) => repository.saveDraft(threadId, body, replyToPostId),
+    getDraft: (threadId) => repository.getDraft(threadId),
     upload: (file, onProgress, signal) => attachments.upload(file, onProgress, signal),
     download: (attachment) => attachments.download(attachment),
     savePreferences: async (nextPreferences) => {
       setPreferences(nextPreferences);
       try { await repository.savePreferences(currentUserId, nextPreferences); }
-      catch (cause) { setError(cause instanceof Error ? cause.message : "Unable to save chat preferences"); throw cause; }
+      catch (cause) { toast.error(cause instanceof Error ? cause.message : "Unable to save chat preferences"); throw cause; }
     },
     setTyping: (threadId, active) => {
       realtime.publish({ type: "typing", sourceId: sourceId.current, threadId, userId: currentUserId, active });
     },
-  }), [attachments, base, currentUserId, loadThreadMessages, messagesByThread, mutate, realtime, reload, repository]);
+  }), [attachments, currentUserId, loadThreadMessages, mutate, realtime, reload, repository]);
 
   // The UI consumes the port's WorkspaceSnapshot shape; messages are the union
   // of the lazily-loaded threads.
@@ -260,7 +560,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     return next;
   }, [currentUserId, typing]);
 
-  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread }), [actions, error, loading, preferences, snapshot, typingByThread]);
+  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread, hasOlderByThread, threadsHaveMore }), [actions, error, loading, preferences, snapshot, typingByThread, hasOlderByThread, threadsHaveMore]);
   return <MessagingContext.Provider value={value}>{children}</MessagingContext.Provider>;
 }
 
