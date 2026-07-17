@@ -68,6 +68,10 @@ assets/     global stylesheets (topbar.css lives here)
 - **New junction table breaks existing PostgREST `B(...)` embeds** — disambiguate with `!fk_column`.
 
 ## Docs index (deeper detail lives here)
+- **Delivery protocol (REQUIRED for module builds):** `ENTERPRISE_MODULE_DELIVERY_STANDARD.md` —
+  contract-before-code, delivery states, side-effect ownership, 15-step final gates, release
+  evidence. Templates in `docs/templates/` (delivery contract, E2E matrix, release evidence);
+  per-module artifacts land in `docs/module-contracts/`; kickoff prompt `CLAUDE_MODULE_BUILD_PROMPT.md`.
 - **Architecture:** `ARCHITECTURE.md`, `FRONTEND_ARCHITECTURE.md`, `SHELL_STRUCTURE.md`, `CODING_STANDARDS.md`, `DATA_DICTIONARY.md`, `API_SPEC.md`, `SECURITY.md`, `RUNBOOK.md`.
 - **Module maps:** `HR_MODULE_MAP.md`, `FINANCE_MODULE_MAP.md`; build order in `PHASE_PLAN.md` / `IMPLEMENTATION_PLAN.md`.
 - **Widget system:** `SIOMAC_ENTERPRISE_WIDGET_SYSTEM_IMPLEMENTATION.md` (+ `WIDGET_*` companions), `src/ui/widgets` (self-documenting), `WIDGET_AUTHORING_GUIDE.md`.
