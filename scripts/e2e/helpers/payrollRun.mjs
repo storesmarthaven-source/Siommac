@@ -211,10 +211,16 @@ export function payrollReopenCommand(id, reason, idempotencyKey) {
 // (period_start, period_end). Non-period seed dates (e.g. a statutory
 // version's `effective_from`) are a different identity space and stay local.
 
+// 2027-01-01 base (day 20819 from 1970-01-01). Salt periods stay in a sane
+// near-future window well below the finance_remittances `period_year <= 2100`
+// CHECK (a released run creates period-stamped remittances), while each salt
+// owns a disjoint 30-day sub-window so distinct salts never share a date.
+const SALT_DATE_BASE_DAYS = 20819;
+const SALT_WINDOW_DAYS = 30;
 export function seedDateFromTag(tag, salt) {
   let n = salt >>> 0;
   for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  const day = (n % 1000) + salt * 1000;
+  const day = SALT_DATE_BASE_DAYS + salt * SALT_WINDOW_DAYS + (n % SALT_WINDOW_DAYS);
   const d = new Date(Date.UTC(1970, 0, 1));
   d.setUTCDate(d.getUTCDate() + day);
   return d.toISOString().slice(0, 10);
@@ -257,9 +263,12 @@ function yearOfDayOffset(dayOffset) {
   return d.getUTCFullYear();
 }
 
-/** Year window a salt can produce: [year(salt*1000), year(salt*1000+999)]. */
+/** Year window a salt can produce, from the same base/window seedDateFromTag uses. */
 export function saltYearWindow(salt) {
-  return [yearOfDayOffset(salt * 1000), yearOfDayOffset(salt * 1000 + 999)];
+  return [
+    yearOfDayOffset(SALT_DATE_BASE_DAYS + salt * SALT_WINDOW_DAYS),
+    yearOfDayOffset(SALT_DATE_BASE_DAYS + salt * SALT_WINDOW_DAYS + (SALT_WINDOW_DAYS - 1)),
+  ];
 }
 
 /**

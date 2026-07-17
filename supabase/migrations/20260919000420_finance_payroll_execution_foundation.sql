@@ -1189,11 +1189,16 @@ begin
 
   return v_state || jsonb_build_object(
     'ready', v_ready,
-    -- Bank accounts and GL mappings are release-readiness inputs. They remain
-    -- visible in the state response but do not invalidate a processor
-    -- certification made before those downstream artifacts are prepared.
+    -- The checksum signs the CALCULATION package's coherence, not the run's
+    -- lifecycle position. `runStatus` is excluded because it legitimately
+    -- advances calculated -> pending_approval -> approved -> locked while the
+    -- same certification must stay valid through lock/release (submit certifies,
+    -- the checker approves, then lock/release re-verify the SAME certification).
+    -- Bank accounts and GL mappings are release-readiness inputs, visible in the
+    -- state response but not part of the signed processor certification.
     'stateChecksum', md5((
       v_state
+        - 'runStatus'
         - 'missingBankAccountCount'
         - 'duplicateBankAccountCount'
         - 'missingGlMappingCount'
