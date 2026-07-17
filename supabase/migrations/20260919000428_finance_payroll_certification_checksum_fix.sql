@@ -374,5 +374,6 @@ $fn$;
 revoke all on function public.finance_payroll_certification_state(uuid, uuid)
   from public, anon, authenticated;
 grant execute on function public.finance_payroll_certification_state(uuid, uuid)
+  to service_role;
 
 notify pgrst, 'reload schema';
