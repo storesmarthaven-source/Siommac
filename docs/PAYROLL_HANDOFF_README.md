@@ -108,20 +108,23 @@ from the 420–425 source (drop and re-create) rather than applying on top of dr
    - `finance_remittances.period_year` / `period_month` exist (original `20260805000000` — live
      since the remittances build; 420's partial index depends on them).
 2. Apply the execution migrations in strict numeric order:
-   `20260919000420` → `421` → `422` → `423` → `424` → `425`.
-3. Re-apply the two GL command migrations (the handoff UPDATED their RPC bodies; both are
-   `create or replace` + `if not exists` and safe on an existing DB):
-   `20260918000140_finance_payroll_gl_atomic.sql`, then `20260918000141_finance_payroll_gl_reverse_tx.sql`.
-4. `NOTIFY pgrst, 'reload schema';` (425 issues it, but re-run if applying files individually),
+   `20260919000420` → `421` → `422` → `423` → `424` → `425` → `426` → `427`.
+   (426/427 carry the execution-aligned GL command RPCs. They intentionally live AFTER 420
+   because their functions declare `finance_payroll_calculation_versions%rowtype`, which
+   PostgreSQL resolves at CREATE time — the table must already exist. The historical
+   `20260918000140`/`141` files are untouched; they stay exactly as applied.)
+3. `NOTIFY pgrst, 'reload schema';` (425 issues it, but re-run if applying files individually),
    then `npm run build:backend` and restart `dev:netlify` before trusting any E2E.
 
 ### Path B — CLEAN install / full rebuild
 
 Apply ALL of `supabase/migrations/` in normal timestamp order. The corrected source files
-(`20260804000000`, `20260804000002`, `20260805000000`, `20260808000001`, `20260918000040`,
-`20260918000140`, `20260918000141`) define the corrected schema from scratch; 420–425 then run as
-guarded no-ops for the retrofit parts and create the execution tables/RPCs. No file may be skipped
-or reordered.
+(`20260804000000`, `20260804000002`, `20260805000000`, `20260808000001`, `20260918000040`) define
+the corrected schema from scratch; the original `20260918000140`/`141` create the first-generation
+GL RPCs (valid pre-420 — they reference nothing from the execution model); 420–425 then run as
+guarded no-ops for the retrofit parts and create the execution tables/RPCs; finally
+`20260919000426`/`427` replace the GL RPCs with the execution-aligned versions. Plain timestamp
+order is therefore valid end-to-end. No file may be skipped or reordered.
 
 ## Viewing
 

@@ -185,6 +185,160 @@ export function payrollReopenCommand(id, reason, idempotencyKey) {
   return { id, reason, idempotencyKey };
 }
 
+// ═══════════════════════════════════════════════════════════════════════════
+// CENTRAL PAYROLL-RUN PERIOD ALLOCATOR — the single source of run identity.
+// ═══════════════════════════════════════════════════════════════════════════
+// Every suite in one `run.mjs` invocation shares a single harness TAG, and a
+// payroll run's identity is (pay group, period_start, period_end, run_type)
+// under migration 420's partial unique indexes. Two null-pay-group scheduled
+// runs that resolve to the same period_start therefore collide at seed time
+// (cleanup only runs after ALL suites). This file is the ONE place run periods
+// are allocated, across TWO disjoint spaces:
+//
+//   • SALT space  — `payrollPeriod(suite, key, tag)` → a date derived from a
+//     claimed salt. Salt N maps into the disjoint day window
+//     [N*1000, N*1000+999] after 1970-01-01, so distinct salts never share a
+//     date regardless of TAG. Used by suites that just need "some" period.
+//
+//   • YEAR space  — `payrollPeriodYear(suite, tag)` → a year drawn from the
+//     suite's registered band. Used by suites that need a business year
+//     (statutory tax year, sequential retro months, adjacent-pair variance).
+//
+// The two spaces are provably disjoint: `assertPayrollPeriodAllocatorDisjoint`
+// runs at import (and in the contract gate) and throws unless every salt is
+// unique, every year band is mutually disjoint, and NO salt's year-window
+// overlaps ANY year band. So no two allocations can ever produce the same
+// (period_start, period_end). Non-period seed dates (e.g. a statutory
+// version's `effective_from`) are a different identity space and stay local.
+
+export function seedDateFromTag(tag, salt) {
+  let n = salt >>> 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  const day = (n % 1000) + salt * 1000;
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + day);
+  return d.toISOString().slice(0, 10);
+}
+
+export const PAYROLL_PERIOD_SALTS = Object.freeze({
+  financeRemittances:       Object.freeze({ approvedRun: 11, draftRun: 12, atomicRun: 24 }),
+  financeDisbursements:     Object.freeze({ mainRun: 13, draftRun: 14, staffRun: 16, cancelRun: 17 }),
+  financePayslipsEss:       Object.freeze({ run: 15 }),
+  financeLookups:           Object.freeze({ run: 23 }),
+  // gl/overrides were salts 25/44, whose year-windows (~2040 / ~2091) overlapped
+  // payrollStatutoryForms' year band [2040,2099]. Moved into the low cluster
+  // (~2019/2022, well below any year band). The disjointness assertion enforces this.
+  payrollGl:                Object.freeze({ run: 18 }),
+  payrollOverrides:         Object.freeze({ run: 19 }),
+  payrollPayGroups:         Object.freeze({ weeklyRun: 20 }),
+  financePayroll:           Object.freeze({
+    lifecycle: 51, denyCreate: 52, denySubmit: 53,
+    atom60: 60, atom61: 61, atom62: 62, atom63: 63, atom64: 64, atom65: 65,
+  }),
+  payrollOvertimeRules:     Object.freeze({ run: 55 }),
+  payrollStatutorySnapshot: Object.freeze({ run: 66 }),
+  payslipRender:            Object.freeze({ run: 71 }),
+});
+
+// [minYear, maxYear] inclusive. Bands are mutually disjoint AND disjoint from
+// every salt year-window (asserted below). statutoryForms sits in the salt gap
+// (~2038 low cluster → ~2109 high cluster); the rest are above the salt ceiling.
+export const PAYROLL_PERIOD_YEAR_BANDS = Object.freeze({
+  payrollStatutoryForms:   Object.freeze([2040, 2099]),
+  payslipTemplateApproval: Object.freeze([2200, 2349]),
+  payrollScale:            Object.freeze([2350, 2499]),
+  payrollBackPay:          Object.freeze([2500, 2899]),
+  payrollVarianceReports:  Object.freeze([2900, 2989]),
+});
+
+function yearOfDayOffset(dayOffset) {
+  const d = new Date(Date.UTC(1970, 0, 1));
+  d.setUTCDate(d.getUTCDate() + dayOffset);
+  return d.getUTCFullYear();
+}
+
+/** Year window a salt can produce: [year(salt*1000), year(salt*1000+999)]. */
+export function saltYearWindow(salt) {
+  return [yearOfDayOffset(salt * 1000), yearOfDayOffset(salt * 1000 + 999)];
+}
+
+/**
+ * Throws unless the whole allocator is collision-free: unique salts, mutually
+ * disjoint year bands, and no salt year-window overlapping any year band.
+ * Returns the flat list of (salt → owner) for reuse by the contract gate.
+ */
+export function assertPayrollPeriodAllocatorDisjoint() {
+  const overlaps = (a0, a1, b0, b1) => a0 <= b1 && b0 <= a1;
+
+  const claimed = new Map();
+  for (const [suite, keys] of Object.entries(PAYROLL_PERIOD_SALTS)) {
+    for (const [key, salt] of Object.entries(keys)) {
+      const prev = claimed.get(salt);
+      if (prev) {
+        throw new Error(
+          `PAYROLL_PERIOD_SALTS: salt ${salt} is claimed by both ${prev} and ${suite}.${key} — ` +
+          'same TAG + same salt = same period_start = scheduled-run identity collision',
+        );
+      }
+      claimed.set(salt, `${suite}.${key}`);
+    }
+  }
+
+  const bands = Object.entries(PAYROLL_PERIOD_YEAR_BANDS);
+  for (let i = 0; i < bands.length; i++) {
+    const [sa, [a0, a1]] = bands[i];
+    if (a0 > a1) throw new Error(`PAYROLL_PERIOD_YEAR_BANDS: ${sa} band [${a0},${a1}] is inverted`);
+    for (let j = i + 1; j < bands.length; j++) {
+      const [sb, [b0, b1]] = bands[j];
+      if (overlaps(a0, a1, b0, b1)) {
+        throw new Error(
+          `PAYROLL_PERIOD_YEAR_BANDS: ${sa} [${a0},${a1}] overlaps ${sb} [${b0},${b1}]`,
+        );
+      }
+    }
+  }
+
+  for (const [salt, owner] of claimed) {
+    const [s0, s1] = saltYearWindow(salt);
+    for (const [suite, [b0, b1]] of bands) {
+      if (overlaps(s0, s1, b0, b1)) {
+        throw new Error(
+          `payroll allocator: salt ${salt} (${owner}) year-window [${s0},${s1}] overlaps ` +
+          `year band ${suite} [${b0},${b1}] — a salt-derived run could match a year-derived run`,
+        );
+      }
+    }
+  }
+
+  return claimed;
+}
+
+assertPayrollPeriodAllocatorDisjoint();
+
+export function payrollPeriod(suite, key, tag) {
+  const salt = PAYROLL_PERIOD_SALTS[suite]?.[key];
+  if (salt === undefined) {
+    throw new Error(
+      `payrollPeriod: no registered salt for ${suite}.${key} — claim one in PAYROLL_PERIOD_SALTS`,
+    );
+  }
+  return seedDateFromTag(tag, salt);
+}
+
+/** Deterministic year in the suite's registered band. */
+export function payrollPeriodYear(suite, tag) {
+  const band = PAYROLL_PERIOD_YEAR_BANDS[suite];
+  if (!band) {
+    throw new Error(
+      `payrollPeriodYear: no registered year band for ${suite} — add one to PAYROLL_PERIOD_YEAR_BANDS`,
+    );
+  }
+  const [lo, hi] = band;
+  let n = 0;
+  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
+  return lo + (n % (hi - lo + 1));
+}
+
 export function payrollRunSeed({
   periodStart,
   periodEnd,

@@ -45,7 +45,7 @@ function sampleDesign(tag) {
   };
 }
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollPeriodYear, payrollRunSeed } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -455,7 +455,7 @@ export default async function run(h) {
       `render-gate fixture requires an active statutory version: ${verErr?.message ?? 'none found'}`,
     );
     // Use a far-future, TAG-derived period to isolate the scheduled-run identity.
-    const y = 2200 + (TAG.split('').reduce((a, c) => a + c.charCodeAt(0), 0) % 300);
+    const y = payrollPeriodYear('payslipTemplateApproval', TAG);
     const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no:       TAG + '-PTA-RUN',
       periodStart:  `${y}-06-01`,

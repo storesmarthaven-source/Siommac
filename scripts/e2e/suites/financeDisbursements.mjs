@@ -3,7 +3,7 @@
  * E2E for Finance Bank Accounts & Payroll Bank Disbursements (module F2).
  */
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 export const title = 'Finance -- Bank Accounts & Payroll Bank Disbursements (F2)';
 
@@ -106,13 +106,13 @@ export default async function run(h) {
     // date becomes period_start, so salts must be globally unique across suites
     // (contract gate enforces it) to avoid scheduled-run identity collisions.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-DSB-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 13),
+      run_no: `RUN-DSB-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'mainRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 2,
     })).select('id').single();
     expect(!rnErr, `seed run failed: ${rnErr?.message}`);
     ctx.runId = rn.id;
     const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 14),
+      run_no: `RUN-DSB-DRAFT-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'draftRun', TAG),
       statutory_version_id: ctx.versionId, status: 'draft', employee_count: 1,
     })).select('id').single();
     expect(!drErr, `seed draft run failed: ${drErr?.message}`);
@@ -144,7 +144,7 @@ export default async function run(h) {
     // finance_staff "can create" access-control check, so it doesn't collide
     // with the (run_id) uniqueness of the main lifecycle disbursement below.
     const { data: sr, error: srErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-DSB-STF-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 16),
+      run_no: `RUN-DSB-STF-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'staffRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
     })).select('id').single();
     expect(!srErr, `seed staff run failed: ${srErr?.message}`);
@@ -168,7 +168,7 @@ export default async function run(h) {
     // test — finance_disbursements has unique(payroll_run_id), so cancelling a
     // disbursement does not free up its run for a new one to reuse.
     const { data: cr, error: crErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-DSB-CANCEL-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 17),
+      run_no: `RUN-DSB-CANCEL-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeDisbursements', 'cancelRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
     })).select('id').single();
     expect(!crErr, `seed cancel run failed: ${crErr?.message}`);

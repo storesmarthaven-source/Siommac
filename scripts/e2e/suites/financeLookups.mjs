@@ -29,7 +29,7 @@
  * metadata flow only — the signed URL is generated from a stored path).
  */
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 export const title = 'Finance — Phase-0 Lookups + Attachments + Bridges';
 
@@ -152,7 +152,7 @@ export default async function run(h) {
     const { data: run, error: runErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no:              `TEST-LOOKUP-${TAG}`,
       status:              'approved',
-      periodMonth:         seedDateFromTag(TAG, 23),
+      periodMonth:         payrollPeriod('financeLookups', 'run', TAG),
       pay_date:            seedDateFromTag(TAG, 22),
       statutory_version_id: versionId,
       net_total:           10000,

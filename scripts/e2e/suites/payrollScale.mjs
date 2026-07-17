@@ -24,21 +24,16 @@ const BASE_MAPPINGS = [
   ['health_surcharge_payable', '2140'], ['deductions_payable', '2150'],
 ];
 
-function yearFromTag(tag) {
-  let n = 17;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2200 + (n % 300);
-}
-
 import {
   payrollCalculationCommand,
   payrollLockCommand,
+  payrollPeriodYear,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
-  const Y = yearFromTag(TAG);
+  const Y = payrollPeriodYear('payrollScale', TAG);
   const PERIOD = `${Y}-06-01`;
   const empPrefix = `SCL-${TAG.slice(-8)}-`;
   // fmgr2Id must NOT start with empPrefix (else the employee-count assertion would see N+1).

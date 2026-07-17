@@ -43,6 +43,7 @@ import {
   payrollLockCommand,
   payrollReleaseCommand,
   payrollReopenCommand,
+  payrollPeriod,
   payrollRunCommand,
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
@@ -371,7 +372,7 @@ export default async function run(h) {
   h.section('Finance Payroll › Create Run');
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const testPeriod = seedDateFromTag(TAG, 51); // TAG-derived to avoid scheduled-run identity collisions with residue
+  const testPeriod = payrollPeriod('financePayroll', 'lifecycle', TAG); // registry-derived to avoid scheduled-run identity collisions
 
   await test('finance_staff can create a payroll run', async () => {
     const r = await api('finance/payroll/runs/create', fstaff1Token, payrollRunCommand({
@@ -422,7 +423,7 @@ export default async function run(h) {
   await test('employee is DENIED creating a payroll run', async () => {
     const r = await api('finance/payroll/runs/create', emp1Token, payrollRunCommand({
       idempotencyKey: `${TAG}:run:denied:create`,
-      periodStart: seedDateFromTag(TAG, 52),
+      periodStart: payrollPeriod('financePayroll', 'denyCreate', TAG),
     }));
     fails(r, 'employee should be denied run creation');
   });
@@ -1083,7 +1084,7 @@ export default async function run(h) {
     // Create a separate draft run to test deny
     const cr = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
       idempotencyKey: `${TAG}:run:submit-denied:create`,
-      periodStart: seedDateFromTag(TAG, 53),
+      periodStart: payrollPeriod('financePayroll', 'denySubmit', TAG),
     }));
     ok(cr, 'could not create a secondary draft run for deny test');
     const draftId = cr.body.data.id;
@@ -1155,7 +1156,7 @@ export default async function run(h) {
 
   const seedRun = async (salt, status = 'calculated') => {
     const { data, error } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `${TAG}-ATOM-${salt}`, periodStart: seedDateFromTag(TAG, salt),
+      run_no: `${TAG}-ATOM-${salt}`, periodStart: payrollPeriod('financePayroll', `atom${salt}`, TAG),
       status, statutory_version_id: atomStatVer, created_by: fstaff1Id,
     })).select('id').single();
     if (error) throw new Error(`seedRun(${salt}): ${error.message}`);

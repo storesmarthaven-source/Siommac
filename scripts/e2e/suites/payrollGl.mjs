@@ -32,7 +32,7 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 const BASE_MAPPINGS = [
   ['salary_expense', '5200'], ['overtime_expense', '5120'], ['allowance_expense', '5220'],
@@ -174,7 +174,7 @@ export default async function run(h) {
 
     ctx.runNo = 'RUN-GL-' + TAG.slice(-6);
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: ctx.runNo, periodStart: seedDateFromTag(TAG, 25),
+      run_no: ctx.runNo, periodStart: payrollPeriod('payrollGl', 'run', TAG),
       statutory_version_id: ctx.versionId, status: 'locked', employee_count: 2,
     })).select('id').single();
     expect(!rnErr, 'seed run failed: ' + rnErr?.message);

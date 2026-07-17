@@ -10,6 +10,10 @@
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import {
+  PAYROLL_PERIOD_YEAR_BANDS,
+  assertPayrollPeriodAllocatorDisjoint,
+} from './helpers/payrollRun.mjs';
 
 const here = dirname(fileURLToPath(import.meta.url));
 const defaultSuitesDir = join(here, 'suites');
@@ -91,7 +95,6 @@ function lineNumber(source, index) {
 
 export function assertPayrollE2EContracts(suitesDir = defaultSuitesDir) {
   const violations = [];
-  const saltUsage = new Map();
   const files = readdirSync(suitesDir).filter((file) => file.endsWith('.mjs')).sort();
 
   for (const file of files) {
@@ -146,31 +149,89 @@ export function assertPayrollE2EContracts(suitesDir = defaultSuitesDir) {
       });
     }
 
-    // All suites share one harness TAG per run.mjs invocation, so the same
-    // seedDateFromTag salt in two files produces the SAME period_start — and
-    // the scheduled-run business key (migration 420) makes that a unique
-    // violation at seed time. Salts must be globally unique across suites.
-    // Within one file a repeated salt is legitimate (duplicate-key rejection
-    // and idempotent-replay tests intentionally reuse the same period).
-    const periodSalt = /(?:periodStart|periodMonth)\s*:\s*seedDateFromTag\(\s*TAG\s*,\s*(\d+)\s*\)/g;
-    for (const match of source.matchAll(periodSalt)) {
-      const salt = match[1];
-      saltUsage.set(salt, saltUsage.get(salt) ?? new Map());
-      const files = saltUsage.get(salt);
-      if (!files.has(file)) files.set(file, lineNumber(source, match.index));
-    }
-  }
+    // All suites share one harness TAG per run.mjs invocation, and payroll-run
+    // identity is (pay group, period_start, period_end, run_type) under
+    // migration 420's partial unique indexes. Run periods must therefore come
+    // from the CENTRAL registry (PAYROLL_PERIOD_SALTS + payrollPeriod() in
+    // helpers/payrollRun.mjs, uniqueness-validated below and at import time) —
+    // never from an ad-hoc seedDateFromTag call whose salt another suite might
+    // also pick.
 
-  for (const [salt, files] of saltUsage) {
-    if (files.size > 1) {
-      for (const [file, line] of files) {
+    // Direct ad-hoc period derivation.
+    const directPeriod = /(?:periodStart|periodMonth|period)\s*:\s*seedDateFromTag\(/g;
+    for (const match of source.matchAll(directPeriod)) {
+      violations.push({
+        file,
+        line: lineNumber(source, match.index),
+        message: 'run periods must come from payrollPeriod(suite, key, TAG) — claim a salt in PAYROLL_PERIOD_SALTS instead of calling seedDateFromTag directly',
+      });
+    }
+
+    // Indirect derivation through a local variable
+    // (const p = seedDateFromTag(...); ... periodStart: p).
+    const periodVars = [...source.matchAll(/(?:const|let)\s+(\w+)\s*=\s*seedDateFromTag\(/g)]
+      .map((m) => m[1]);
+    for (const name of periodVars) {
+      const use = new RegExp(`(?:periodStart|periodMonth|period)\\s*:\\s*${name}\\b`).exec(source);
+      if (use) {
         violations.push({
           file,
-          line,
-          message: `payroll period salt ${salt} is used by ${files.size} suites (${[...files.keys()].join(', ')}) — same TAG + same salt = same period_start = scheduled-run identity collision; assign a globally unique salt`,
+          line: lineNumber(source, use.index),
+          message: `run period is derived from local seedDateFromTag via '${name}' — use payrollPeriod(suite, key, TAG) with a registered salt`,
         });
       }
     }
+
+    // A suite may only draw from its OWN registry entry — reusing another
+    // suite's key/band would recreate the cross-suite collision under one TAG.
+    const suiteKey = file.replace(/\.mjs$/, '');
+    for (const re of [
+      /payrollPeriod\(\s*['"]([^'"]+)['"]/g,
+      /payrollPeriodYear\(\s*['"]([^'"]+)['"]/g,
+    ]) {
+      for (const match of source.matchAll(re)) {
+        if (match[1] !== suiteKey) {
+          violations.push({
+            file,
+            line: lineNumber(source, match.index),
+            message: `payroll period allocator called with '${match[1]}' inside ${file} — a suite must use its own registry entry ('${suiteKey}')`,
+          });
+        }
+      }
+    }
+
+    // Year-band suites must draw their business year from the central allocator,
+    // never a private year hash (the exact class of the removed yearFromTag/
+    // taxYearFromTag helpers, which could collide across suites).
+    if (PAYROLL_PERIOD_YEAR_BANDS[suiteKey]) {
+      if (!new RegExp(`payrollPeriodYear\\(\\s*['"]${suiteKey}['"]`).test(source)) {
+        violations.push({
+          file,
+          line: 1,
+          message: `${file} is a registered year-band suite but never calls payrollPeriodYear('${suiteKey}', TAG)`,
+        });
+      }
+    }
+    for (const m of source.matchAll(/function\s+(taxYearFromTag|yearFromTag)\b/g)) {
+      violations.push({
+        file,
+        line: lineNumber(source, m.index),
+        message: `local ${m[1]}() reintroduces a private year allocator — draw the year from payrollPeriodYear() instead`,
+      });
+    }
+  }
+
+  // Registry-level invariant: salts unique, year bands mutually disjoint, and no
+  // salt year-window overlaps any year band. The helper throws at import too;
+  // surfacing it here keeps every contract failure in one report.
+  try {
+    assertPayrollPeriodAllocatorDisjoint();
+  } catch (err) {
+    violations.push({
+      file: 'helpers/payrollRun.mjs',
+      line: 0,
+      message: err.message,
+    });
   }
 
   if (violations.length > 0) {

@@ -136,6 +136,7 @@ function seedDateFromTag(tag, salt) {
 import {
   payrollCalculationCommand,
   payrollLockCommand,
+  payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
 
@@ -238,7 +239,7 @@ export default async function run(h) {
   // (1 employee) so the suite doesn't time out on large rosters.
   // ═══════════════════════════════════════════════════════════════════════════
 
-  const testPeriod = seedDateFromTag(TAG, 71);
+  const testPeriod = payrollPeriod('payslipRender', 'run', TAG);
 
   await test('P2-b: create a pay group and assign the test employee to it', async () => {
     const pgR = await api('finance/payroll/pay-groups/create', fmgr1Token, {

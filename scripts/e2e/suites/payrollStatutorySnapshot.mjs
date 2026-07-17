@@ -29,17 +29,9 @@ export const title = 'Payroll — statutory-version snapshot binding (2a)';
 const V2_EFFECTIVE_FROM = '2099-12-28';
 const V2_LABEL_MARK = 'snapshot-2a V2';
 
-function seedDateFromTag(tag, salt) {
-  let n = salt >>> 0;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  const day = 20820 + (salt % 10) * 400 + (n % 365);
-  const d = new Date(Date.UTC(1970, 0, 1));
-  d.setUTCDate(d.getUTCDate() + day);
-  return d.toISOString().slice(0, 10);
-}
-
 import {
   payrollCalculationCommand,
+  payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
 
@@ -105,7 +97,7 @@ export default async function run(h) {
   await test('create + lock-inputs + calculate a run (snapshots V1)', async () => {
     const cr = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
       idempotencyKey: `${TAG}:statutory-snapshot:run:create`,
-      periodStart: seedDateFromTag(TAG, 66),
+      periodStart: payrollPeriod('payrollStatutorySnapshot', 'run', TAG),
       weeksInPeriod: 4.333,
     }));
     ok(cr, `create failed: ${cr.body.message}`);

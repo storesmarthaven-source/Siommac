@@ -30,7 +30,7 @@
  *   20260805000002_workflow_finance_remittance_binding.sql
  */
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 export const title = 'Finance — Statutory Remittances & Filing (F1)';
 
@@ -132,7 +132,7 @@ export default async function run(h) {
     // multiple finance suites seed a run in the same test pass.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no: `RUN-E2E-${TAG.slice(-6)}`,
-      periodMonth: seedDateFromTag(TAG, 11),
+      periodMonth: payrollPeriod('financeRemittances', 'approvedRun', TAG),
       statutory_version_id: ctx.versionId,
       status: 'approved',
       employee_count: 2,
@@ -143,7 +143,7 @@ export default async function run(h) {
     // a second, draft run — compute must reject it
     const { data: dr, error: drErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no: `RUN-E2E-DRAFT-${TAG.slice(-6)}`,
-      periodMonth: seedDateFromTag(TAG, 12),
+      periodMonth: payrollPeriod('financeRemittances', 'draftRun', TAG),
       statutory_version_id: ctx.versionId,
       status: 'draft',
       employee_count: 1,
@@ -170,7 +170,7 @@ export default async function run(h) {
   const atomCtx = { runId: null, remIds: [] };
   await test('A3 atomic setup: seed a fresh approved run', async () => {
     const { data, error } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, periodMonth: seedDateFromTag(TAG, 24),
+      run_no: `RUN-E2E-A3-${TAG.slice(-6)}`, periodMonth: payrollPeriod('financeRemittances', 'atomicRun', TAG),
       statutory_version_id: ctx.versionId, status: 'approved', employee_count: 1,
     })).select('id').single();
     expect(!error, `seed atom run failed: ${error?.message}`);

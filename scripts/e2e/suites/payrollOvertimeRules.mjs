@@ -29,7 +29,7 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
-import { payrollRunCommand } from '../helpers/payrollRun.mjs';
+import { payrollRunCommand, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -39,7 +39,7 @@ export default async function run(h) {
   const plainId = 'OT-EE-'   + TAG;
   const ruleCode = 'OTX-' + TAG.slice(-6);
 
-  const ctx = { groupId: null, runId: null, ruleId: null, period: seedDateFromTag(TAG, 55) };
+  const ctx = { groupId: null, runId: null, ruleId: null, period: payrollPeriod('payrollOvertimeRules', 'run', TAG) };
   let fmgrToken, plainToken;
 
   h.onCleanup(async () => {

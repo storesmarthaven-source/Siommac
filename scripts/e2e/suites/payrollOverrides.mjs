@@ -33,6 +33,7 @@ function seedDateFromTag(tag, salt) {
 
 import {
   payrollCalculationCommand,
+  payrollPeriod,
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
 
@@ -84,7 +85,7 @@ export default async function run(h) {
     ctx.versionId = ver.id;
 
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
-      run_no: 'RUN-OVR-' + TAG.slice(-6), periodStart: seedDateFromTag(TAG, 44),
+      run_no: 'RUN-OVR-' + TAG.slice(-6), periodStart: payrollPeriod('payrollOverrides', 'run', TAG),
       statutory_version_id: ctx.versionId, status: 'input_locked',
       weeks_in_period: 4.333, employee_count: 1,
     })).select('id').single();

@@ -88,11 +88,11 @@ Each fixture now carries the complete execution identity (`run_type`, `period_st
 
 ---
 
-## 7. Operator apply-order section (REWRITTEN in round 2 — see §11.1)
+## 7. Operator apply-order section (rewritten in round 2, corrected in round 3 — see §11.1 / §12.1)
 
-**File:** `docs/PAYROLL_HANDOFF_README.md` — "Operator Migration Apply Order (2026-07-17, rev 2)".
+**File:** `docs/PAYROLL_HANDOFF_README.md` — "Operator Migration Apply Order".
 
-The first revision instructed re-applying the corrected source migrations before 420 on the live DB. Codex round-2 finding P0 proved that wrong: `create table if not exists` no-ops on an existing table (no new columns), and the sources' subsequent index statements on `period_start`/`period_end` then fail. Rev 2 splits the instructions into **Path A (existing DB)** — schema preflight (090 presence / 130 `entry_type` / remittance `period_year`) → 420–425 in order → re-apply 140+141 (updated GL RPC bodies, `create or replace`, safe) → NOTIFY/rebuild/restart — and **Path B (clean install)** — all migrations in plain timestamp order, where 420–425's retrofits run as guarded no-ops. Verified: 420 retrofits every column and index the corrected sources define (run columns at lines 12–20, month-uniqueness drop, scheduled/sequence keys at 228/237, one-active disbursement/remittance indexes at 259/265), and `finance_remittances.period_year`/`period_month` predate the handoff (original 20260805000000 + live remittances lib), so 420's remittance index works on the existing schema.
+The first revision instructed re-applying the corrected source migrations before 420 on the live DB. Codex round-2 finding P0 proved that wrong: `create table if not exists` no-ops on an existing table (no new columns), and the sources' subsequent index statements on `period_start`/`period_end` then fail. The order splits into **Path A (existing DB)** — schema preflight (090 presence / 130 `entry_type` / remittance `period_year`) → 420–425 → **426 → 427** (the execution-aligned GL RPCs) → NOTIFY/rebuild/restart — and **Path B (clean install)** — all migrations in plain timestamp order. Round-3 correction: the round-2 draft told Path A to *re-apply the handoff-edited 140/141*, which (a) fails on a clean DB because those bodies declare `finance_payroll_calculation_versions%rowtype` before 420 creates it, and (b) is migration-history drift. Fixed by moving the updated GL bodies to new post-420 migrations 426/427 and reverting 140/141 to their applied content (§12.1). Verified: 420 retrofits every column/index the corrected sources define (run columns 12–20, month-uniqueness drop, scheduled/sequence keys 228/237, one-active disbursement/remittance indexes 259/265); `finance_remittances.period_year`/`period_month` predate the handoff so 420's remittance index works on the existing schema.
 
 ---
 
@@ -175,11 +175,7 @@ Fix (two parts):
    rejection and idempotent-replay tests intentionally reuse a period). Verified: gate passes on
    the fixed tree and correctly reports both files when a collision is reintroduced.
 
-Residual (noted, not fixed here): the year-hash suites use disjoint year windows
-(statutoryForms 2040–2099, scale 2200–2499, backPay 2500–2899, variance 2900–2989) EXCEPT
-`payslipTemplateApproval`, whose independent char-sum hash also maps into 2200–2499 with a
-June-01 period — a ~1/300-per-run flake overlap with `payrollScale`. Pre-existing pattern; the
-right root fix is the central fixture allocator, deferred to the next test-infrastructure slice.
+Round-2 residual (year-hash suites) was **fully resolved in round 3** — see §12.2/§12.3.
 
 ### 11.3 P2 — obsolete uniqueness comments (RESOLVED)
 
@@ -194,7 +190,77 @@ globally unique and the contract gate enforces it.
 fails when a collision is reintroduced — tested both directions) · no TypeScript touched, so the
 earlier backend `tsc` result stands. Live gate (§10) remains the outstanding proof.
 
-## 12. Merge notes for main
+## 12. Round 3 — Codex FIX-THEN-SHIP findings, resolved (2026-07-17)
+
+### 12.1 P0 — clean-install migration order invalid (RESOLVED)
+
+Finding: Path B applied `20260918000140`/`141` (the handoff-updated GL RPCs) in timestamp order,
+i.e. BEFORE `20260919000420`. But those updated functions declare
+`finance_payroll_calculation_versions%rowtype` and read `current_calculation_version_id` /
+`finance_payroll_calculation_version_lines` — objects 420 creates. `%ROWTYPE` resolves the composite
+type at CREATE time, so `CREATE FUNCTION` fails on a clean DB. (Correct: the tables don't exist yet.)
+
+Fix — the updated GL RPC bodies moved to NEW migrations that run AFTER 420:
+- `supabase/migrations/20260919000426_finance_payroll_gl_atomic_v2.sql` (post) and
+  `...427_finance_payroll_gl_reverse_tx_v2.sql` (reverse) carry the execution-aligned functions.
+  Their bodies are byte-identical to the handoff's 140/141 changes (verified by diff); only the file
+  header/placement changed.
+- `20260918000140`/`141` were **reverted to their original applied content** (`git checkout a52abaf9`),
+  so no already-applied migration is edited — this removes the migration-history-drift Codex flagged
+  (the previous Path A re-applied edited 140/141; that instruction is gone).
+- **Path A (existing DB):** preflight → 420–425 → **426 → 427**. No 140/141 re-apply.
+- **Path B (clean install):** plain timestamp order works end-to-end — original 140/141 create the
+  first-generation RPCs (valid pre-420, they reference nothing from the execution model), 420–425
+  build the execution schema, then 426/427 replace the GL RPCs. Verified: 426/427 are the only GL
+  functions that touch calculation-version objects, and they sort after 420.
+
+### 12.2 P1 — collision gate did not cover the whole collision class (RESOLVED)
+
+Finding: the round-2 gate only matched the literal `periodStart: seedDateFromTag(TAG, N)` form. It
+missed indirection (`const p = seedDateFromTag(...); … periodStart: p`), the `seedRun(salt)` pattern,
+periods stored in variables, and the independent year-hash fixtures. So a reintroduced salt-61
+collision would pass the gate.
+
+Fix — **one central allocator** in `scripts/e2e/helpers/payrollRun.mjs`, exactly as Codex asked:
+- `PAYROLL_PERIOD_SALTS` (salt space) and `PAYROLL_PERIOD_YEAR_BANDS` (year space) are the single
+  registry. `payrollPeriod(suite, key, tag)` and `payrollPeriodYear(suite, tag)` are the only ways a
+  suite gets a run period. Every seeded-fixture period site across **13 suites** was migrated to these.
+- `assertPayrollPeriodAllocatorDisjoint()` runs at import AND in the gate. It proves: every salt is
+  unique; every year band is mutually disjoint; and **no salt's year-window overlaps any year band**
+  (`seedDateFromTag` day-windows → years, checked against each band). This is a structural proof, not
+  a regex.
+- The contract gate now (a) rejects any `periodStart|periodMonth|period: seedDateFromTag(...)` direct
+  or via-variable, (b) rejects a suite using another suite's registry key/band, (c) requires every
+  registered year-band suite to call `payrollPeriodYear('<itself>', TAG)`, and (d) rejects any local
+  `yearFromTag`/`taxYearFromTag` (the private year allocators, now deleted). All four detectors were
+  negative-tested (each fails when its violation is reintroduced, passes when clean).
+- Empirical sweep: **zero cross-suite null-group period collisions across 5000 TAGs**.
+
+### 12.3 P2 — the "~1/300" residual claim (RESOLVED, and the real risk fixed)
+
+Codex is correct that the specific `payrollScale`↔`payslipTemplateApproval` "1/300" claim was
+mathematically impossible (opposite-parity hashes over an even modulus can't be equal). That claim is
+**removed**. More importantly, the *unification* above eliminated the whole class:
+- The 5 year-hash suites (`payrollStatutoryForms`, `payslipTemplateApproval`, `payrollScale`,
+  `payrollBackPay`, `payrollVarianceReports`) now draw their business year from `payrollPeriodYear`
+  with **disjoint bands**: [2040,2099], [2200,2349], [2350,2499], [2500,2899], [2900,2989]. The old
+  shared 2200–2499 range (scale + payslipTemplateApproval) is gone.
+- A **real latent collision Codex's report did not list** was found and fixed: salt-space suites
+  `payrollGl` (salt 25 → year-window ~2038–2041) and `payrollOverrides` (salt 44 → ~2090–2093) had
+  windows overlapping `payrollStatutoryForms`' [2040,2099] band — a low-probability, TAG-deterministic
+  flake. Both salts were moved into the low cluster (18/19 → ~2019/2022), and `payrollPayGroups`
+  (salt 33 → ~2060, harmless because pay-group-scoped, but it tripped the strict assertion) moved to
+  20. The disjointness assertion now guarantees no salt window can ever enter a year band.
+
+### 12.4 Re-verification after round 3
+
+`node --check` clean on the helper, gate, and all suites · contract gate **passed**, with all four
+detectors + the disjointness assertion negative-tested · jest (permissions.drift, permissionMeta.sync,
+payrollStatutory) 29/29 · vitest (permissions) 25/25 · empirical 5000-TAG sweep collision-free · GL
+RPC bodies in 426/427 diff-identical to the reverted 140/141 changes · no TypeScript touched. Live
+gate (§10) — now Path A `… → 425 → 426 → 427` — remains the outstanding proof.
+
+## 13. Merge notes for main
 
 - Main holds **uncommitted** triage copies of `payslipRender.mjs`, `payrollGl.mjs`, `payrollScale.mjs`. The handoff versions on this branch **subsume** those fixes (forceSynthetic actors, scoped idempotency keys, seedDateFromTag salts) — on merge, **this branch's versions win**; discard main's uncommitted copies of those three files.
 - Main also holds uncommitted messenger/Codex work — merge coordination required; do not merge without the user's go.

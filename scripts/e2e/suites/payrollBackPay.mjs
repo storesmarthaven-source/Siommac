@@ -17,20 +17,15 @@
  */
 export const title = 'Payroll — Back pay (retro adjustment, P2-a rebuild)';
 
-function yearFromTag(tag) {
-  let n = 11;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2500 + (n % 400);   // high, unlikely-to-collide year
-}
-
 import {
   payrollCalculationCommand,
+  payrollPeriodYear,
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
-  const Y = yearFromTag(TAG);
+  const Y = payrollPeriodYear('payrollBackPay', TAG);
   const P1 = `${Y}-01-01`, P2 = `${Y}-02-01`, P3 = `${Y}-03-01`;   // prior1, prior2, current
 
   let fmgrId, empId, otherEmpId, fmgrT, empT;

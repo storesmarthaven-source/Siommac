@@ -32,6 +32,7 @@ function seedDateFromTag(tag, salt) {
 
 import {
   payrollCalculationCommand,
+  payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
 
@@ -164,7 +165,7 @@ export default async function run(h) {
   await test('create a run scoped to the weekly group → weekly frequency', async () => {
     const r = await api('finance/payroll/runs/create', fmgrToken, payrollRunCommand({
       idempotencyKey: `${TAG}:pay-groups:run:create`,
-      periodStart: seedDateFromTag(TAG, 33),
+      periodStart: payrollPeriod('payrollPayGroups', 'weeklyRun', TAG),
       payFrequency: 'weekly',
       payGroupId: ctx.groupId,
     }));

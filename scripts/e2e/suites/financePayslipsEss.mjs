@@ -44,7 +44,7 @@ function seedDateFromTag(tag, salt) {
   return d.toISOString().slice(0, 10);
 }
 
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollRunSeed, payrollPeriod } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -126,7 +126,7 @@ export default async function run(h) {
     // with this fixture's scheduled-run business identity.
     const { data: rn, error: rnErr } = await sb.from('finance_payroll_runs').insert(payrollRunSeed({
       run_no: 'RUN-PSL-' + TAG.slice(-6),
-      periodStart: seedDateFromTag(TAG, 15),
+      periodStart: payrollPeriod('financePayslipsEss', 'run', TAG),
       statutory_version_id: ctx.versionId,
       status: 'locked',
       employee_count: 2,

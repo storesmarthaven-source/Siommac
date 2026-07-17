@@ -5,17 +5,11 @@
  */
 export const title = 'Payroll — Variation + Audit-Comparison reports';
 
-function yearFromTag(tag) {
-  let n = 13;
-  for (let i = 0; i < tag.length; i++) n = (Math.imul(n, 31) + tag.charCodeAt(i)) >>> 0;
-  return 2900 + (n % 90);   // high, unlikely-to-collide, adjacent pair with nothing between
-}
-
-import { payrollRunSeed } from '../helpers/payrollRun.mjs';
+import { payrollPeriodYear, payrollRunSeed } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
-  const Y = yearFromTag(TAG);
+  const Y = payrollPeriodYear('payrollVarianceReports', TAG);
   const P1 = `${Y}-01-01`, P2 = `${Y}-02-01`;
 
   let fmgrT, empT, empA, empB;
