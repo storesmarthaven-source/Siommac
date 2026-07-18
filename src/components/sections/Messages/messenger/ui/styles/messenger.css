@@ -33,7 +33,10 @@
    plane ink-on-navy (invisible) and overriding .sm-icon-button's grey. */
 .sm-workspace :where(button) { color: inherit; }
 .sm-workspace svg { width: 1em; height: 1em; stroke-width: 1.9; }
-.sm-avatar__initials { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; border: 1px solid #e2e9f1; color: #fff; background: var(--sm-navy-2); font-size: 40%; font-weight: 600; letter-spacing: .02em; }
+/* Fallback on --sm-navy-2: the avatar also renders in the pill footer band
+   (portalled ThreadHeader), OUTSIDE .sm-workspace where --sm-* is out of scope —
+   without the literal the initials were white-on-nothing (invisible). */
+.sm-avatar__initials { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; border: 1px solid #e2e9f1; color: #fff; background: var(--sm-navy-2, #0a315c); font-size: 40%; font-weight: 600; letter-spacing: .02em; }
 .sm-workspace { min-width: 1180px; min-height: 100%; padding: 12px; background: #f4f7fb; }
 /* Single row pinned to the shell height (minmax(0,…) lets the columns shrink
    below content so their OWN overflow scrolls — without it a long conversation
