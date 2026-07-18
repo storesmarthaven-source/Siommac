@@ -19,7 +19,7 @@ import type { Context, Next } from 'hono';
 import { setCookie, deleteCookie } from 'hono/cookie';
 import { isSecureRequest }  from './trustedDevices';
 import { sb }               from './db';
-import { resolveWithSet, loadRolePermissions, type PermissionOverrideRow } from './permissions';
+import { resolveWithSet, loadRolePermissions, COMPLIANCE_GATED_KEYS, type PermissionOverrideRow } from './permissions';
 import { getReqContext }    from './reqContext';
 import type { AppUser }     from '../../../types/db';
 import type { JwtPayload, HonoVariables } from '../../../types/api';
@@ -393,14 +393,22 @@ async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[
 /**
  * Like requireUser but enforces a permission key (resource.action).
  * Resolution: per-user override → role default → deny. superadmin always passes
- * (ROLE_PERMISSIONS.superadmin contains every key). Throws 403 if denied.
+ * for any key except COMPLIANCE_GATED_KEYS (compliance_read/export). Those two
+ * keys require an explicit user_permissions row even for superadmin (approved via
+ * the maker-checker workflow). All other keys — including the operational critical
+ * keys (permissions.manage, roles.manage, auth.*, etc.) — are auto-granted.
+ * Throws 403 if denied.
  */
 async function requirePermission(
   c: Context<{ Variables: HonoVariables }>,
   key: string,
 ): Promise<AppUser> {
   const u = await requireUser(c);
-  if (u.role === 'superadmin') return u;   // allow-all, no DB round-trips
+  // Superadmin is allow-all EXCEPT for COMPLIANCE_GATED_KEYS. Those keys require
+  // an explicit user_permissions row (approved via the maker-checker workflow).
+  // On DB failure loadUserOverrides returns [] and the role set excludes gated keys
+  // → fail-closed DENY for compliance endpoints.
+  if (u.role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return u;
   const [roleSet, overrides] = await Promise.all([
     loadRolePermissions(u.role),
     loadUserOverrides(u.id),
@@ -413,13 +421,13 @@ async function requirePermission(
 
 /**
  * Non-throwing permission check for an already-loaded user. Same resolution as
- * requirePermission (per-user override → role default → deny; superadmin allow-all)
- * but returns a boolean instead of throwing — for routes that must branch on
- * several capabilities (e.g. the messaging read-gate) rather than gate the whole
- * request on one key.
+ * requirePermission (per-user override → role default → deny; superadmin allow-all
+ * except COMPLIANCE_GATED_KEYS) — returns a boolean instead of throwing, for routes
+ * that branch on several capabilities.
  */
 async function userCan(user: { id: string; role?: string | null }, key: string): Promise<boolean> {
-  if (user.role === 'superadmin') return true;
+  // Same COMPLIANCE_GATED_KEYS carve-out as requirePermission (see above).
+  if (user.role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return true;
   const [roleSet, overrides] = await Promise.all([
     loadRolePermissions(user.role ?? ''),
     loadUserOverrides(user.id),

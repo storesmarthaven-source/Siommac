@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "75f34327d4948e09641e9b36538d9d7ef17cdfab",
+    "head": "91caab57260eafc53e72370a54450e90da0d833d",
     "branch": "main",
-    "fingerprint": "6bf7483f72a0ff61b6da3128",
-    "indexedFiles": 1386
+    "fingerprint": "446fa648fd249761e39851cc",
+    "indexedFiles": 1390
   },
   "summary": {
-    "files": 1090,
-    "symbols": 10681,
+    "files": 1092,
+    "symbols": 10693,
     "widgets": 22,
     "routes": 858,
     "routeDefinitions": 859,
     "unmountedRoutes": 17,
     "apiCalls": 368,
-    "databaseObjects": 1116,
-    "e2eSuites": 63,
-    "e2eTests": 2090
+    "databaseObjects": 1117,
+    "e2eSuites": 64,
+    "e2eTests": 2117
   },
   "modules": [
     {
@@ -74,14 +74,14 @@
     {
       "id": "communications",
       "counts": {
-        "files": 91,
-        "symbols": 830,
+        "files": 92,
+        "symbols": 832,
         "widgets": 0,
         "routes": 62,
         "routeDefinitions": 65,
         "apiCalls": 77,
         "databaseObjects": 88,
-        "e2eSuites": 3
+        "e2eSuites": 4
       }
     },
     {
@@ -101,12 +101,12 @@
       "id": "security",
       "counts": {
         "files": 42,
-        "symbols": 356,
+        "symbols": 358,
         "widgets": 0,
         "routes": 49,
         "routeDefinitions": 49,
         "apiCalls": 31,
-        "databaseObjects": 57,
+        "databaseObjects": 58,
         "e2eSuites": 3
       }
     },
@@ -152,8 +152,8 @@
     {
       "id": "testing",
       "counts": {
-        "files": 21,
-        "symbols": 116,
+        "files": 22,
+        "symbols": 124,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -224,8 +224,8 @@
       "path": "netlify/functions/lib/auth.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 475,
-      "hash": "7e81b978bc92802c"
+      "lines": 483,
+      "hash": "7ff2672b01d8b1a1"
     },
     {
       "path": "netlify/functions/lib/bootstrapEnv.ts",
@@ -1106,8 +1106,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1081,
-      "hash": "34c17fa4979dfc22"
+      "lines": 1114,
+      "hash": "a481b7c70aab6fb1"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -2100,8 +2100,8 @@
       "path": "scripts/e2e/harness.mjs",
       "module": "testing",
       "role": "tooling",
-      "lines": 285,
-      "hash": "ad1665a70294a699"
+      "lines": 380,
+      "hash": "16be1ac2f51a9b49"
     },
     {
       "path": "scripts/e2e/helpers/payrollRun.mjs",
@@ -2149,8 +2149,15 @@
       "path": "scripts/e2e/suites/communications.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 964,
-      "hash": "99ec12d4b3aea61f"
+      "lines": 1045,
+      "hash": "1b6c4534f1cf31b3"
+    },
+    {
+      "path": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "module": "communications",
+      "role": "e2e-suite",
+      "lines": 317,
+      "hash": "349d62ea6b09aae9"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -6405,8 +6412,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1389,
-      "hash": "8d696919cea0c41f"
+      "lines": 1426,
+      "hash": "2bf21a3f4d8ed1d3"
     },
     {
       "path": "src/lib/popup.ts",
@@ -7553,8 +7560,15 @@
       "path": "tests/unit/criticalGrants.sync.test.ts",
       "module": "testing",
       "role": "test",
-      "lines": 33,
-      "hash": "ea1f5b97c9f413c9"
+      "lines": 55,
+      "hash": "b17f20960cb1ee83"
+    },
+    {
+      "path": "tests/unit/criticalPermResolver.test.ts",
+      "module": "testing",
+      "role": "test",
+      "lines": 225,
+      "hash": "346c99d178f373ae"
     },
     {
       "path": "tests/unit/deliveryProtection.test.ts",
@@ -8510,7 +8524,7 @@
       "name": "requirePermission",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 398,
+      "line": 402,
       "module": "security",
       "exported": false,
       "container": "",
@@ -8520,7 +8534,7 @@
       "name": "userCan",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 421,
+      "line": 428,
       "module": "security",
       "exported": false,
       "container": "",
@@ -8530,7 +8544,7 @@
       "name": "log_",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 432,
+      "line": 440,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26319,10 +26333,20 @@
       "tags": []
     },
     {
+      "name": "COMPLIANCE_GATED_KEYS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/permissions.ts",
+      "line": 492,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 481,
+      "line": 502,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26332,7 +26356,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 929,
+      "line": 954,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26342,7 +26366,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 942,
+      "line": 967,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26352,7 +26376,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 956,
+      "line": 981,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26362,7 +26386,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 966,
+      "line": 991,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26372,7 +26396,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 967,
+      "line": 992,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26382,7 +26406,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 970,
+      "line": 995,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26392,7 +26416,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 981,
+      "line": 1010,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26402,7 +26426,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1012,
+      "line": 1045,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26412,7 +26436,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1024,
+      "line": 1057,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26422,7 +26446,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1025,
+      "line": 1058,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26432,7 +26456,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1028,
+      "line": 1061,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26442,7 +26466,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1038,
+      "line": 1071,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26452,7 +26476,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1051,
+      "line": 1084,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26462,7 +26486,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1059,
+      "line": 1092,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26472,7 +26496,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1070,
+      "line": 1103,
       "module": "security",
       "exported": true,
       "container": "",
@@ -37978,7 +38002,7 @@
       "name": "runCleanup",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 264,
+      "line": 359,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -37988,7 +38012,7 @@
       "name": "report",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 272,
+      "line": 367,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -38748,7 +38772,7 @@
       "name": "inB",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 447,
+      "line": 464,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38760,7 +38784,7 @@
       "name": "sumN",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 503,
+      "line": 520,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38772,7 +38796,7 @@
       "name": "sumM",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 504,
+      "line": 521,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38784,7 +38808,7 @@
       "name": "waitForSignal",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 508,
+      "line": 525,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38796,7 +38820,7 @@
       "name": "unreadOf",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 651,
+      "line": 668,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38808,10 +38832,34 @@
       "name": "threadUnread",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 652,
+      "line": 669,
       "module": "communications",
       "exported": false,
       "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 31,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 33,
+      "module": "communications",
+      "exported": true,
+      "container": "",
       "tags": [
         "test"
       ]
@@ -105821,10 +105869,20 @@
       "tags": []
     },
     {
+      "name": "COMPLIANCE_GATED_KEYS",
+      "kind": "variable",
+      "file": "src/lib/permissions.ts",
+      "line": 565,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 558,
+      "line": 580,
       "module": "security",
       "exported": false,
       "container": "",
@@ -105834,7 +105892,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 583,
+      "line": 605,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105844,7 +105902,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1273,
+      "line": 1295,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105854,7 +105912,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1295,
+      "line": 1326,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105864,7 +105922,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1321,
+      "line": 1358,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105874,7 +105932,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1327,
+      "line": 1364,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105884,7 +105942,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1333,
+      "line": 1370,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105894,7 +105952,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1343,
+      "line": 1380,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105904,7 +105962,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1363,
+      "line": 1400,
       "module": "security",
       "exported": true,
       "container": "",
@@ -105914,7 +105972,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1379,
+      "line": 1416,
       "module": "security",
       "exported": true,
       "container": "",
@@ -115702,10 +115760,106 @@
       ]
     },
     {
-      "name": "extractCriticalKeys",
+      "name": "extractSetKeys",
       "kind": "function",
       "file": "tests/unit/criticalGrants.sync.test.ts",
-      "line": 17,
+      "line": 19,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "BE",
+      "kind": "variable",
+      "file": "tests/unit/criticalGrants.sync.test.ts",
+      "line": 30,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "FE",
+      "kind": "variable",
+      "file": "tests/unit/criticalGrants.sync.test.ts",
+      "line": 31,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "COMPLIANCE_KEY",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 57,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "OPERATIONAL_CRIT_KEY",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 59,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "NONCRITICAL_KEY",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 61,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "superadminRoleSetNarrow",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 68,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "roleSetWithCompliance",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 77,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "roleSetWithoutCompliance",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 79,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -141909,6 +142063,13 @@
       "file": "supabase/migrations/20260919000429_finance_payroll_gl_checksum_scale_fix.sql",
       "line": 14,
       "module": "payroll"
+    },
+    {
+      "name": "authenticated read msg access grants",
+      "kind": "policy",
+      "file": "supabase/migrations/20260919000430_drop_grants_authenticated_read.sql",
+      "line": 7,
+      "module": "security"
     }
   ],
   "e2eSuites": [
@@ -142442,198 +142603,227 @@
           "line": 433
         },
         {
-          "name": "status: recipient unreadCount rises on new msg, resets on read",
+          "name": "attachments/get-url: participant gets a signed url per purpose",
           "line": 443
         },
         {
+          "name": "ACCESS: removed participant C cannot sign an attachment url (403)",
+          "line": 452
+        },
+        {
+          "name": "status: recipient unreadCount rises on new msg, resets on read",
+          "line": 460
+        },
+        {
           "name": "status: archive removes from inbox → archived tab, isArchived flips, unarchive reverses",
-          "line": 455
+          "line": 472
         },
         {
           "name": "concurrency: 8 messages posted at once all land, no loss, no dupes, in order",
-          "line": 469
+          "line": 486
         },
         {
           "name": "concurrency: recipient unread reflects the bulk burst, clears on read",
-          "line": 484
+          "line": 501
         },
         {
           "name": "notification badge: unread +1 on new, −1 on read",
-          "line": 518
+          "line": 535
         },
         {
           "name": "message badge: unread +1 on new message, −1 on read (recipient B)",
-          "line": 532
+          "line": 549
         },
         {
           "name": "realtime: a new message writes a communication_signals row for the recipient",
-          "line": 550
+          "line": 567
         },
         {
           "name": "realtime: a new notification writes a communication_signals row for the recipient",
-          "line": 563
+          "line": 580
         },
         {
           "name": "realtime DELIVERY: an AUTHENTICATED subscription receives the signal (mig 351)",
-          "line": 574
+          "line": 591
         },
         {
           "name": "realtime DENIAL: an ANONYMOUS subscription receives nothing (mig 351 RLS)",
-          "line": 612
+          "line": 629
         },
         {
           "name": "latency: summary endpoint responds quickly",
-          "line": 640
-        },
-        {
-          "name": "employee → admin: admin badge + thread unread rise, reset on read",
           "line": 657
         },
         {
+          "name": "employee → admin: admin badge + thread unread rise, reset on read",
+          "line": 674
+        },
+        {
           "name": "admin → employee: employee badge + thread unread rise, reset on read",
-          "line": 669
+          "line": 686
         },
         {
           "name": "employee → employee: recipient gets unread, sender does not",
-          "line": 680
+          "line": 697
         },
         {
           "name": "group (admin+B+C): a post raises unread for BOTH others, not the author; reads are per-user",
-          "line": 689
+          "line": 706
         },
         {
           "name": "BADGE↔UNREAD-TAB: your OWN message must NOT inflate your badge",
-          "line": 701
+          "line": 718
         },
         {
           "name": "BADGE↔UNREAD-TAB: badge equals the number of inbox threads with unreadCount>0",
-          "line": 715
+          "line": 732
         },
         {
           "name": "group reply re-raises unread for the other members",
-          "line": 729
+          "line": 746
         },
         {
           "name": "setup: thread (admin → B) for pins/drafts",
-          "line": 745
+          "line": 762
         },
         {
           "name": "pin a post (personal) returns a pin",
-          "line": 754
-        },
-        {
-          "name": "CONTRACT: pins/list returns the pin with expected shape",
-          "line": 761
-        },
-        {
-          "name": "personal pin is private to its creator (B cannot see it)",
-          "line": 767
-        },
-        {
-          "name": "SIDE-EFFECT: pin wrote app_events communications.message_pinned",
           "line": 771
         },
         {
+          "name": "CONTRACT: pins/list returns the pin with expected shape",
+          "line": 778
+        },
+        {
+          "name": "personal pin is private to its creator (B cannot see it)",
+          "line": 784
+        },
+        {
+          "name": "SIDE-EFFECT: pin wrote app_events communications.message_pinned",
+          "line": 788
+        },
+        {
           "name": "CAPABILITIES: posts DTO carries pinnedBy + allowedPinActions per caller (slice 4)",
-          "line": 777
+          "line": 794
         },
         {
           "name": "owner can thread-pin; visible to participant B",
-          "line": 810
-        },
-        {
-          "name": "CONTRACT: pinned-summary includes the pinned thread",
-          "line": 818
-        },
-        {
-          "name": "ACCESS: non-participant C cannot pin",
-          "line": 823
-        },
-        {
-          "name": "VALIDATION: post pin without postId is rejected",
-          "line": 825
-        },
-        {
-          "name": "unpin own pin removes it from the list",
           "line": 827
         },
         {
-          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
-          "line": 832
+          "name": "CONTRACT: pinned-summary includes the pinned thread",
+          "line": 835
         },
         {
-          "name": "draft/save stores a draft",
+          "name": "ACCESS: non-participant C cannot pin",
           "line": 840
         },
         {
-          "name": "draft/get returns the saved body",
+          "name": "VALIDATION: post pin without postId is rejected",
           "line": 842
         },
         {
+          "name": "unpin own pin removes it from the list",
+          "line": 844
+        },
+        {
+          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
+          "line": 849
+        },
+        {
+          "name": "draft/save stores a draft",
+          "line": 857
+        },
+        {
+          "name": "draft/get returns the saved body",
+          "line": 859
+        },
+        {
           "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
-          "line": 846
+          "line": 863
         },
         {
           "name": "draft is per-user (B has no draft on this thread)",
-          "line": 851
-        },
-        {
-          "name": "empty draft body deletes the draft",
-          "line": 855
-        },
-        {
-          "name": "draft/delete removes an existing draft (the send-success path)",
-          "line": 860
-        },
-        {
-          "name": "presence/update accepts a heartbeat",
           "line": 868
         },
         {
+          "name": "empty draft body deletes the draft",
+          "line": 872
+        },
+        {
+          "name": "draft/delete removes an existing draft (the send-success path)",
+          "line": 877
+        },
+        {
+          "name": "mute/unmute toggles the per-user thread mute",
+          "line": 885
+        },
+        {
+          "name": "VALIDATION: mute without the muted boolean is rejected",
+          "line": 889
+        },
+        {
+          "name": "presence/update accepts a heartbeat",
+          "line": 893
+        },
+        {
           "name": "online: array, excludes self, includes a freshly-online peer",
-          "line": 870
+          "line": 895
         },
         {
           "name": "activity: participant gets REAL derived entries (message + pin + join)",
-          "line": 881
+          "line": 906
         },
         {
           "name": "activity: NON-PARTICIPANT is denied (403)",
-          "line": 897
+          "line": 922
         },
         {
           "name": "record thread: threads list resolves the LIVE source record (collaboration card)",
-          "line": 903
+          "line": 928
         },
         {
           "name": "record thread with an UNKNOWN module resolves to null (no fabricated card)",
-          "line": 930
+          "line": 955
+        },
+        {
+          "name": "recordThread: find-or-create resolves a stable thread for a business record",
+          "line": 968
+        },
+        {
+          "name": "requestThreadAccess: a compliance grant is created + audited",
+          "line": 1009
+        },
+        {
+          "name": "ACCESS: a user without compliance_read is denied requestThreadAccess (403)",
+          "line": 1020
         },
         {
           "name": "create ticket",
-          "line": 946
+          "line": 1027
         },
         {
           "name": "ticket appears in list",
-          "line": 953
+          "line": 1034
         },
         {
           "name": "get ticket detail",
-          "line": 957
+          "line": 1038
         },
         {
           "name": "comment on ticket",
-          "line": 961
+          "line": 1042
         },
         {
           "name": "update ticket status",
-          "line": 962
+          "line": 1043
         }
       ],
       "apiPaths": [
         "/api/communications/messages/activity",
         "/api/communications/messages/archive",
         "/api/communications/messages/attachments/create",
+        "/api/communications/messages/attachments/get-url",
         "/api/communications/messages/attachments/upload-url",
         "/api/communications/messages/compliance/search",
         "/api/communications/messages/createThread",
@@ -142641,6 +142831,7 @@
         "/api/communications/messages/draft/get",
         "/api/communications/messages/draft/save",
         "/api/communications/messages/markRead",
+        "/api/communications/messages/mute",
         "/api/communications/messages/online",
         "/api/communications/messages/participants/add",
         "/api/communications/messages/participants/remove",
@@ -142652,6 +142843,8 @@
         "/api/communications/messages/posts",
         "/api/communications/messages/presence/update",
         "/api/communications/messages/recipients",
+        "/api/communications/messages/recordThread",
+        "/api/communications/messages/requestThreadAccess",
         "/api/communications/messages/search",
         "/api/communications/messages/thread",
         "/api/communications/messages/threads",
@@ -142669,6 +142862,103 @@
         "/api/communications/tickets/get",
         "/api/communications/tickets/list",
         "/api/communications/tickets/update"
+      ]
+    },
+    {
+      "name": "communicationsCompliance",
+      "title": "Communications — Compliance Critical-Grant (Slice 1)",
+      "module": "communications",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "tests": [
+        {
+          "name": "create a group thread for compliance tests",
+          "line": 83
+        },
+        {
+          "name": "A1. superadmin WITHOUT compliance_read is denied requestThreadAccess (403)",
+          "line": 100
+        },
+        {
+          "name": "B1. setUserPermission returns pending:true with an approvalId",
+          "line": 113
+        },
+        {
+          "name": "B2. pending approval row exists in permission_grant_approvals",
+          "line": 127
+        },
+        {
+          "name": "B3. compliance_read is NOT yet in user_permissions (grant not applied while pending)",
+          "line": 140
+        },
+        {
+          "name": "B4. superadmin is STILL denied while approval is pending (no effect yet)",
+          "line": 149
+        },
+        {
+          "name": "B5. duplicate request is rejected with already_pending (409)",
+          "line": 157
+        },
+        {
+          "name": "C1. self-approval is rejected by the RPC (SoD enforced)",
+          "line": 169
+        },
+        {
+          "name": "C2. checker approves with step-up token → success",
+          "line": 176
+        },
+        {
+          "name": "C3. approval row is now approved (not pending)",
+          "line": 182
+        },
+        {
+          "name": "C4. user_permissions row now exists (grant was applied)",
+          "line": 193
+        },
+        {
+          "name": "C5. approve again is rejected with not_pending (400)",
+          "line": 203
+        },
+        {
+          "name": "D1. requestThreadAccess now succeeds for the approved superadmin",
+          "line": 213
+        },
+        {
+          "name": "D2. message_thread_access_grants row written with correct metadata",
+          "line": 225
+        },
+        {
+          "name": "D3. app_events side-effect: iam.permission.grant_approved event emitted",
+          "line": 239
+        },
+        {
+          "name": "E1. clearUserPermission removes the grant (immediate, no maker-checker)",
+          "line": 251
+        },
+        {
+          "name": "E2. user_permissions row is gone after revoke",
+          "line": 260
+        },
+        {
+          "name": "E3. superadmin is denied again after revoke",
+          "line": 269
+        },
+        {
+          "name": "F1. superadmin still resolves a non-critical permission without explicit grant",
+          "line": 291
+        },
+        {
+          "name": "F2. list approvals (permissions.manage) still works for seeded superadmin",
+          "line": 301
+        }
+      ],
+      "apiPaths": [
+        "/api/admin/approvals/approve",
+        "/api/admin/approvals/list",
+        "/api/communications/messages/createThread",
+        "/api/communications/messages/requestThreadAccess",
+        "/api/communications/messages/threads",
+        "/api/superadmin/clearUserPermission",
+        "/api/superadmin/setUserPermission"
       ]
     },
     {

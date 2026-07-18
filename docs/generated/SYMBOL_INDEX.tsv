@@ -70,9 +70,9 @@ jwtMiddleware	function	security	false		netlify/functions/lib/auth.ts	334
 requireUser	function	security	false		netlify/functions/lib/auth.ts	348	
 requireRole	function	security	false		netlify/functions/lib/auth.ts	373	
 loadUserOverrides	function	security	false		netlify/functions/lib/auth.ts	384	
-requirePermission	function	security	false		netlify/functions/lib/auth.ts	398	
-userCan	function	security	false		netlify/functions/lib/auth.ts	421	
-log_	function	security	false		netlify/functions/lib/auth.ts	432	
+requirePermission	function	security	false		netlify/functions/lib/auth.ts	402	
+userCan	function	security	false		netlify/functions/lib/auth.ts	428	
+log_	function	security	false		netlify/functions/lib/auth.ts	440	
 AdapterContext	interface	platform	true		netlify/functions/lib/calendarAdapters.ts	20	
 MONTHS	array	platform	false		netlify/functions/lib/calendarAdapters.ts	28	
 deadline	function	platform	false		netlify/functions/lib/calendarAdapters.ts	31	
@@ -1849,22 +1849,23 @@ PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26
 PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	452	
 CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	460	
 isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	472	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	481	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	929	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	942	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	956	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	966	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	967	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	970	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	981	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1012	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1024	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1025	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1028	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1038	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1051	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1059	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1070	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	492	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	502	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	954	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	967	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	981	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	991	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	992	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	995	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1045	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1057	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1058	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1061	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1071	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1084	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1092	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1103	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -3014,8 +3015,8 @@ Harness	class	testing	true		scripts/e2e/harness.mjs	46
 isServerUp	method	testing	false		scripts/e2e/harness.mjs	155	Harness
 ping	method	testing	false		scripts/e2e/harness.mjs	165	Harness
 pickUsers	method	testing	false		scripts/e2e/harness.mjs	179	Harness
-runCleanup	method	testing	false		scripts/e2e/harness.mjs	264	Harness
-report	method	testing	false		scripts/e2e/harness.mjs	272	Harness
+runCleanup	method	testing	false		scripts/e2e/harness.mjs	359	Harness
+report	method	testing	false		scripts/e2e/harness.mjs	367	Harness
 addDays	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	1	
 endOfMonth	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	8	
 payrollPeriodEnd	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	16	
@@ -3086,12 +3087,14 @@ listItems	function	testing	false	test	scripts/e2e/suites/calendar.mjs	58	run
 title	variable	communications	true	test	scripts/e2e/suites/communications.mjs	16	
 run	function	communications	true	test	scripts/e2e/suites/communications.mjs	18	
 clearDirectThreadsAmong	function	communications	false	test	scripts/e2e/suites/communications.mjs	48	run
-inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	447	run
-sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	503	run
-sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	504	run
-waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	508	run
-unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	651	run
-threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	652	run
+inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	464	run
+sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	520	run
+sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	521	run
+waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	525	run
+unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	668	run
+threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	669	run
+title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	31	
+run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -9387,16 +9390,17 @@ override	function	security	false	test	src/lib/permissions.test.ts	35
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
 PermissionKey	type	security	true		src/lib/permissions.ts	532	
 CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	537	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	558	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	583	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1273	
-resolvePermission	function	security	true		src/lib/permissions.ts	1295	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1321	
-PermissionState	type	security	true		src/lib/permissions.ts	1327	
-permissionState	function	security	true		src/lib/permissions.ts	1333	
-permissionGroups	function	security	true		src/lib/permissions.ts	1343	
-can	function	security	true		src/lib/permissions.ts	1363	
-useCan	function	security	true	hook	src/lib/permissions.ts	1379	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	565	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	580	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	605	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1295	
+resolvePermission	function	security	true		src/lib/permissions.ts	1326	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1358	
+PermissionState	type	security	true		src/lib/permissions.ts	1364	
+permissionState	function	security	true		src/lib/permissions.ts	1370	
+permissionGroups	function	security	true		src/lib/permissions.ts	1380	
+can	function	security	true		src/lib/permissions.ts	1400	
+useCan	function	security	true	hook	src/lib/permissions.ts	1416	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -10308,7 +10312,15 @@ buildChain	function	payroll	false	test	tests/unit/backPay.test.ts	90
 then	method	payroll	false	test	tests/unit/backPay.test.ts	94	terminal
 capturingChain	function	payroll	false	test	tests/unit/backPay.test.ts	340	
 then	method	payroll	false	test	tests/unit/backPay.test.ts	342	terminal
-extractCriticalKeys	function	testing	false	test	tests/unit/criticalGrants.sync.test.ts	17	
+extractSetKeys	function	testing	false	test	tests/unit/criticalGrants.sync.test.ts	19	
+BE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	30	
+FE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	31	
+COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	57	
+OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
+NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
+superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	68	
+roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	77	
+roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	79	
 MaybeSingle	type	testing	false	test	tests/unit/loadRenderTemplate.test.ts	34	
 runRow	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	37	
 Loaded	interface	testing	false	test	tests/unit/loadRenderTemplate.test.ts	45	

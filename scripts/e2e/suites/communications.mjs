@@ -440,6 +440,23 @@ export default async function run(h) {
     expect(buf.length === PNG.length, `downloaded ${buf.length} bytes, expected ${PNG.length}`);
   });
 
+  await test('attachments/get-url: participant gets a signed url per purpose', async () => {
+    const posts = await api('communications/messages/posts', T.admin, { threadId: ctx.threadId, limit: 100 });
+    const att = (posts.body.data || []).flatMap(p => p.attachments || []).find(a => a.fileName === `${TAG}.png`);
+    expect(att?.id, 'no attachment id to sign');
+    const dl = await api('communications/messages/attachments/get-url', T.admin, { attachmentId: att.id, purpose: 'download' });
+    ok(dl, `get-url download failed: ${dl.body.message}`); expect(dl.body.data?.url, 'no signed download url');
+    const th = await api('communications/messages/attachments/get-url', T.admin, { attachmentId: att.id, purpose: 'thumbnail' });
+    ok(th, `get-url thumbnail failed: ${th.body.message}`);
+  });
+  await test('ACCESS: removed participant C cannot sign an attachment url (403)', async () => {
+    const posts = await api('communications/messages/posts', T.admin, { threadId: ctx.threadId, limit: 100 });
+    const att = (posts.body.data || []).flatMap(p => p.attachments || []).find(a => a.fileName === `${TAG}.png`);
+    expect(att?.id, 'no attachment id');
+    fails(await api('communications/messages/attachments/get-url', T.c, { attachmentId: att.id, purpose: 'download' }),
+      'removed participant signed an attachment url');
+  });
+
   await test('status: recipient unreadCount rises on new msg, resets on read', async () => {
     // group = an independent thread (direct is get-or-create/unique-per-pair)
     const ct = await api('communications/messages/createThread', T.admin, { threadType: 'group', subject: `${TAG} status-thread`, participantUserIds: [b.id], body: 'hi' });
@@ -864,6 +881,14 @@ export default async function run(h) {
     ok(r); expect(r.body.data == null, 'draft survived an explicit delete');
   });
 
+  // ── Mute (per-user thread notifications) ──
+  await test('mute/unmute toggles the per-user thread mute', async () => {
+    ok(await api('communications/messages/mute', T.admin, { threadId: pdp.threadId, muted: true }), 'mute failed');
+    ok(await api('communications/messages/mute', T.admin, { threadId: pdp.threadId, muted: false }), 'unmute failed');
+  });
+  await test('VALIDATION: mute without the muted boolean is rejected', async () =>
+    fails(await api('communications/messages/mute', T.admin, { threadId: pdp.threadId }), 'mute accepted without a muted flag'));
+
   // ── Presence ──
   await test('presence/update accepts a heartbeat', async () =>
     ok(await api('communications/messages/presence/update', T.b, { status: 'online' })));
@@ -939,6 +964,62 @@ export default async function run(h) {
     const row = (r.body.data || []).find(t => t.id === cr.body.threadId);
     expect(row && row.sourceRecord == null, 'unknown module must yield sourceRecord=null');
   });
+
+  await test('recordThread: find-or-create resolves a stable thread for a business record', async () => {
+    const { data: version } = await sb.from('finance_statutory_versions').select('id').limit(1).maybeSingle();
+    expect(version, 'no statutory version available to link');
+    const key = { sourceModule: 'finance_statutory', sourceEntityType: 'statutory_version', sourceEntityId: version.id };
+    const r1 = await api('communications/messages/recordThread', T.admin, key);
+    ok(r1, `recordThread failed: ${r1.body.message}`);
+    expect(r1.body.data?.threadId, 'no threadId returned');
+    ctx.threadIds.push(r1.body.data.threadId);
+    // Find-or-create: a second call for the same record returns the SAME thread, created:false.
+    const r2 = await api('communications/messages/recordThread', T.admin, key);
+    ok(r2, `recordThread (2nd) failed: ${r2.body.message}`);
+    expect(r2.body.data?.threadId === r1.body.data.threadId, 'recordThread was not find-or-create (different thread on repeat)');
+    expect(r2.body.data?.created === false, 'second recordThread call must not create a new thread');
+  });
+
+  // ─────────────── COMPLIANCE THREAD ACCESS (audited, time-boxed) ───────────────
+  h.section('Communications › Compliance thread access');
+
+  // compliance_read is a COMPLIANCE_GATED key (Slice 1 narrowed). Post-Slice-1,
+  // superadmins do NOT auto-hold it — it must be approved through the real
+  // maker-checker flow. All other keys (including permissions.manage) remain in
+  // the superadmin default set — no seeding needed.
+  //
+  // Setup:
+  //   sadmin  = MAKER (requests compliance_read for themselves) + compliance caller
+  //   sadmin2 = CHECKER (approves the grant; must be a distinct user — server enforces SoD)
+  const { actors: [sadmin, sadmin2], createdIds: sadminIds } = await h.acquireActors('superadmin', 2);
+  h.onCleanup(async () => {
+    if (sadminIds.length) await sb.from('app_users').delete().in('id', sadminIds);
+  });
+
+  // Grant compliance_read to sadmin through the full maker-checker flow.
+  // permissions.manage is auto-granted to superadmin from the role set (not gated).
+  await h.grantCriticalPerm(
+    sadmin, sadmin2, sadmin.id,
+    'communications.compliance_read',
+    `${TAG} compliance smoke-test grant`,
+  );
+
+  const Tsuper = mint(sadmin);
+
+  await test('requestThreadAccess: a compliance grant is created + audited', async () => {
+    const r = await api('communications/messages/requestThreadAccess', Tsuper, {
+      threadId: ctx.threadId, reason: 'investigation', caseRef: `${TAG}-case`, durationHours: 24,
+    });
+    ok(r, `requestThreadAccess failed: ${r.body.message}`);
+    expect(r.body.data?.grantId, 'no grantId'); expect(r.body.data?.expiresAt, 'no expiresAt');
+    // Side-effect: the time-boxed grant row exists (cleaned via ctx.threadIds).
+    const { data: grant } = await sb.from('message_thread_access_grants')
+      .select('id, reason').eq('id', r.body.data.grantId).maybeSingle();
+    expect(grant && grant.reason === 'investigation', 'grant row not written');
+  });
+  await test('ACCESS: a user without compliance_read is denied requestThreadAccess (403)', async () =>
+    fails(await api('communications/messages/requestThreadAccess', T.c, { threadId: ctx.threadId, reason: 'investigation' }),
+      'non-compliance user was granted thread access'));
 
   // ───────────────────────── TICKETS ─────────────────────────
   h.section('Communications › Tickets');

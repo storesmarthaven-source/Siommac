@@ -261,6 +261,101 @@ export class Harness {
     return { actors, createdIds, realCount: real.length };
   };
 
+  // ── Critical-grant helpers (Slice 1 — maker-checker flow) ───────────────────
+
+  /**
+   * Seed a critical-permission row directly via the service-role client.
+   *
+   * Use ONLY for bootstrap: giving synthetic test superadmins the
+   * permissions.manage / roles.manage rows they need BEFORE they can participate
+   * in the real maker-checker flow.  The production bootstrap migration
+   * (20260919000431) does the same thing for existing superadmins.
+   *
+   * Registers cleanup so the row is removed after the suite.
+   */
+  seedCriticalPermViaServiceRole = async (userId, permissionKey) => {
+    const { error } = await this.sb.from('user_permissions').upsert(
+      { user_id: userId, permission: permissionKey, granted: true,
+        set_by: `e2e_bootstrap_${this.TAG}`, set_at: new Date().toISOString() },
+      { onConflict: 'user_id,permission' },
+    );
+    if (error) throw new Error(`seedCriticalPerm(${permissionKey}, ${userId}): ${error.message}`);
+    this.onCleanup(() =>
+      this.mustDelete('user_permissions', q => q.eq('user_id', userId).eq('permission', permissionKey)),
+    );
+  };
+
+  /**
+   * Grant a critical permission to a user through the REAL maker-checker workflow.
+   *
+   * Pre-conditions (callers must satisfy before calling):
+   *   - makerUser.role === 'superadmin' and has permissions.manage in user_permissions
+   *   - checkerUser.role === 'superadmin' and has permissions.manage in user_permissions
+   *   - makerUser.id !== checkerUser.id  (server enforces segregation of duties)
+   *
+   * Expiry: user_permissions has NO expires_at column. Once approved the grant
+   * persists until revokeCriticalPerm() is called. Grant expiry is NOT supported
+   * at the user_permissions level (this is a known gap; the permission_grant_approvals
+   * window is 7 days for the APPROVAL REQUEST only, not the resulting grant).
+   *
+   * Registers cleanup that revokes the grant (via clearUserPermission) AFTER the
+   * suite, using the checker's token (also has permissions.manage).
+   *
+   * @returns approvalId for further assertions.
+   */
+  grantCriticalPerm = async (makerUser, checkerUser, targetUserId, permissionKey, reason) => {
+    // Step 1 — MAKER requests the grant (creates a pending approval row)
+    const makerToken = this.mint(makerUser);
+    const reqRes = await this.api('superadmin/setUserPermission', makerToken, {
+      userId: targetUserId, permission: permissionKey, granted: true, reason,
+    });
+    if (!reqRes.body.success || !reqRes.body.pending) {
+      throw new Error(
+        `grantCriticalPerm: MAKER setUserPermission failed for ${permissionKey}: ` +
+        `${reqRes.status} ${JSON.stringify(reqRes.body)}`,
+      );
+    }
+    const approvalId = reqRes.body.approvalId;
+    if (!approvalId) throw new Error(`grantCriticalPerm: no approvalId returned for ${permissionKey}`);
+
+    // Step 2 — CHECKER approves (step-up token required; maker≠checker enforced by RPC)
+    const checkerStepUp = this.mintStepUp(checkerUser);
+    const appRes = await this.api('admin/approvals/approve', checkerStepUp, { approvalId });
+    if (!appRes.body.success) {
+      throw new Error(
+        `grantCriticalPerm: CHECKER approve failed for ${permissionKey} (approvalId=${approvalId}): ` +
+        `${appRes.status} ${JSON.stringify(appRes.body)}`,
+      );
+    }
+
+    // Register cleanup — clearUserPermission is immediate (no maker-checker for removal)
+    const revokerToken = this.mint(checkerUser);
+    this.onCleanup(async () => {
+      await this.api('superadmin/clearUserPermission', revokerToken, {
+        userId: targetUserId, permission: permissionKey,
+      });
+      // Also clean the approval row itself
+      await this.mustDelete('permission_grant_approvals', q => q.eq('id', approvalId));
+    });
+
+    return approvalId;
+  };
+
+  /**
+   * Revoke a critical permission from a user.
+   *
+   * Calls clearUserPermission (immediate, no maker-checker) via the actor's token.
+   * The actor must have permissions.manage.
+   *
+   * @returns the API response for the caller to assert on.
+   */
+  revokeCriticalPerm = async (actorUser, targetUserId, permissionKey) => {
+    const token = this.mint(actorUser);
+    return this.api('superadmin/clearUserPermission', token, {
+      userId: targetUserId, permission: permissionKey,
+    });
+  };
+
   async runCleanup() {
     if (process.env.KEEP_DATA) { console.log('\nKEEP_DATA set — skipping cleanup.'); return; }
     for (const fn of this._cleanups.reverse()) {

@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `6bf7483f72a0ff61b6da3128`
+Source fingerprint: `446fa648fd249761e39851cc`
 
-Files: 42 | Symbols: 356 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 57 | E2E suites: 3
+Files: 42 | Symbols: 358 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 58 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -18,9 +18,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/admin/approvals/approve` | `permissions.manage` | requirePermission | `ApproveSchema` | `netlify/functions/routes/permissionApprovals.ts:132` | - | rbacConsole |
+| `/api/admin/approvals/approve` | `permissions.manage` | requirePermission | `ApproveSchema` | `netlify/functions/routes/permissionApprovals.ts:132` | - | communicationsCompliance, rbacConsole |
 | `/api/admin/approvals/cancel` | `permissions.manage` | requirePermission | `CancelSchema` | `netlify/functions/routes/permissionApprovals.ts:258` | - | - |
-| `/api/admin/approvals/list` | `permissions.manage` | requirePermission | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:69` | - | - |
+| `/api/admin/approvals/list` | `permissions.manage` | requirePermission | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:69` | - | communicationsCompliance |
 | `/api/admin/approvals/reject` | `permissions.manage` | requirePermission | `RejectSchema` | `netlify/functions/routes/permissionApprovals.ts:213` | - | - |
 | `/api/admin/security/policy/update` | `auth.security.manage_policy` | requirePermission | `PolicyUpdateSchema` | `netlify/functions/routes/adminSecurity.ts:225` | useUpdateSecurityPolicy @ src/api/security.ts:452 | accountSecurity, securityPolicy |
 | `/api/admin/security/users/passkeys/revoke-all` | `auth.passkeys.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:92` | useAdminRevokeUserPasskeys @ src/api/security.ts:373 | accountSecurity |
@@ -47,11 +47,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:594` | logoutApi @ src/components/auth/api.ts:109 | - |
 | `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:571` | - | - |
 | `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:436` | setup2faApi @ src/components/auth/api.ts:94 | - |
-| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:203` | - | rbacConsole |
+| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:203` | - | communicationsCompliance, rbacConsole |
 | `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:447` | - | rbacConsole |
 | `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:152` | - | rbacConsole |
 | `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:602` | - | rbacConsole |
-| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:168` | - | rbacConsole |
+| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:168` | - | communicationsCompliance, rbacConsole |
 | `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:610` | updateColorScheme @ src/components/nav/api.ts:41 | - |
 | `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:619` | updateLayoutMode @ src/components/nav/api.ts:44 | - |
 | `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:628` | res @ src/components/sections/Profile/api.ts:108 | - |
@@ -137,7 +137,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:138` | `-` |
 | `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:25` | `-` |
 | `AuthGate` | function / component | `src/components/shared/AuthGate.tsx:93` | `-` |
-| `useCan` | function / hook | `src/lib/permissions.ts:1379` | `-` |
+| `useCan` | function / hook | `src/lib/permissions.ts:1416` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

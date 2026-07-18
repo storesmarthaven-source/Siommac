@@ -473,6 +473,27 @@ export function isCriticalGrant(key: string): boolean {
   return CRITICAL_GRANT_KEYS.has(key);
 }
 
+/**
+ * Subset of CRITICAL_GRANT_KEYS: the compliance data-access keys that require an
+ * explicit maker-checker approval even for superadmin.
+ *
+ * The 6 operational critical keys (permissions.manage, roles.manage,
+ * auth.security.manage_policy, auth.passkeys.admin_revoke,
+ * auth.trusted_devices.admin_revoke, communications.admin) remain in the superadmin
+ * default set — they are inherent admin capabilities whose gating would cause
+ * bootstrap lockouts and are already held by the regular admin role.
+ *
+ * Slice 2 will extend this with the §7.2 compliance keys:
+ *   compliance_case_approve, compliance_grant_revoke,
+ *   compliance_legal_hold, compliance_audit_view.
+ *
+ * MIRROR — kept in sync with src/lib/permissions.ts by the criticalGrants.sync test.
+ */
+export const COMPLIANCE_GATED_KEYS = new Set<string>([
+  'communications.compliance_read',
+  'communications.compliance_export',
+]);
+
 // ── Role defaults ─────────────────────────────────────────────────────────────
 // Source of truth for role→permissions is now the `role_permissions` table
 // (phase 12). This constant is the SEED + a safe fallback used only if the DB
@@ -922,7 +943,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.ap.payment.record', 'finance.ap.payment.run.manage', 'finance.ap.payment.run.process',
     'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
   ]),
-  superadmin: new Set<PermissionKey>(PERMISSION_KEYS),  // everything, by definition
+  // Superadmin holds every key EXCEPT the COMPLIANCE_GATED_KEYS. Those two keys
+  // (compliance_read/export) require an explicit maker-checker grant even for superadmin.
+  // All other CRITICAL_GRANT_KEYS (permissions.manage, roles.manage, auth.*, etc.)
+  // remain in the default set — they are inherent superadmin capabilities.
+  superadmin: new Set<PermissionKey>(PERMISSION_KEYS.filter(k => !COMPLIANCE_GATED_KEYS.has(k))),
 };
 
 // ── Per-user override row (mirrors PermissionOverrideSchema) ──────────────────
@@ -959,7 +984,7 @@ export function resolvePermission(
   overrides: PermissionOverrideRow[],
 ): boolean {
   const set = ROLE_PERMISSIONS[role] ?? new Set<PermissionKey>();
-  return resolveWithSet(key, set as ReadonlySet<string>, overrides);
+  return resolveWithSet(key, set, overrides);
 }
 
 // ── Role permission set: DB-backed with a short cache ─────────────────────────
@@ -974,12 +999,20 @@ export function invalidateRolePermissions(roleName?: string): void {
 
 /**
  * Load a role's effective default permission set from `role_permissions`.
- * superadmin is allow-all by definition. Falls back to the hardcoded seed if
- * the table is empty/unreachable for a built-in role, so the app degrades
- * safely rather than locking everyone out.
+ * superadmin gets every key except COMPLIANCE_GATED_KEYS in-memory (no DB query).
+ * Those two keys (compliance_read/export) are deliberately absent so that
+ * requirePermission / userCan fall through to the user_permissions DB check,
+ * enforcing the fail-closed compliance-access grant model introduced in Slice 1.
+ * Operational critical keys (permissions.manage, roles.manage, auth.*, etc.) remain
+ * in the set — they are inherent superadmin capabilities.
+ * Falls back to the hardcoded seed if the DB is unreachable for built-in roles.
  */
 export async function loadRolePermissions(roleName: string): Promise<Set<string>> {
-  if (roleName === 'superadmin') return new Set<string>(PERMISSION_KEYS);
+  if (roleName === 'superadmin') {
+    // Return all keys except COMPLIANCE_GATED_KEYS in-memory.
+    // Compliance keys must be present in user_permissions to take effect.
+    return new Set<string>(PERMISSION_KEYS.filter(k => !COMPLIANCE_GATED_KEYS.has(k)));
+  }
 
   const cached = _roleCache.get(roleName);
   if (cached && Date.now() - cached.at < ROLE_CACHE_TTL_MS) return cached.set;
@@ -991,7 +1024,7 @@ export async function loadRolePermissions(roleName: string): Promise<Set<string>
       .select('permission')
       .eq('role_name', roleName);
     if (error) throw error;
-    if (data && data.length > 0) {
+    if (data.length > 0) {
       set = new Set(data.map(r => r.permission as string));
     } else {
       // No rows — fall back to the seed for built-ins; empty for unknown custom.

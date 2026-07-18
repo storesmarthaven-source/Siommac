@@ -545,6 +545,28 @@ export const CRITICAL_GRANT_KEYS = new Set<string>([
   'communications.admin',
 ]);
 
+/**
+ * Subset of CRITICAL_GRANT_KEYS: the compliance data-access keys that require an
+ * explicit maker-checker approval even for superadmin.
+ *
+ * The 6 operational critical keys (permissions.manage, roles.manage,
+ * auth.security.manage_policy, auth.passkeys.admin_revoke,
+ * auth.trusted_devices.admin_revoke, communications.admin) remain in the superadmin
+ * default set — they are inherent admin capabilities already held by the regular
+ * admin role and whose gating would cause bootstrap lockouts.
+ *
+ * Slice 2 will extend this with the §7.2 compliance keys:
+ *   compliance_case_approve, compliance_grant_revoke,
+ *   compliance_legal_hold, compliance_audit_view.
+ *
+ * MIRROR of netlify/functions/lib/permissions.ts — kept in sync by the
+ * criticalGrants.sync test.
+ */
+export const COMPLIANCE_GATED_KEYS = new Set<string>([
+  'communications.compliance_read',
+  'communications.compliance_export',
+]);
+
 // ── Role defaults ─────────────────────────────────────────────────────────────
 
 /**
@@ -1283,10 +1305,19 @@ export interface PermissionContext {
  * Resolve whether a permission is granted for a given context.
  *
  * Resolution order (first match wins):
- *   1. superadmin → always allow
+ *   1. superadmin + non-critical key → always allow
  *   2. per-user override (granted true → allow, false → deny)
  *   3. role default (the rolePermissions set loaded at login)
  *   4. deny
+ *
+ * CRITICAL_GRANT_KEYS are excluded from the superadmin short-circuit (step 1).
+ * For those keys, even a superadmin must have an explicit approved override row
+ * (step 2) or the key present in their loaded rolePermissions set (step 3).
+ * After the Slice-1 backend change, the backend sends rolePermissions without
+ * critical keys for superadmin, and only approved user_permissions rows appear
+ * in overrides — so the UI correctly hides compliance affordances from superadmins
+ * without an active grant. This is a UX mirror only; the backend is the security
+ * boundary.
  *
  * The role→permissions mapping is DB-driven (roles-as-data). This resolver is
  * pure/synchronous: it reads the pre-loaded `rolePermissions` snapshot from the
@@ -1301,8 +1332,12 @@ export function resolvePermission(
     logger.warn(`[permissions] Unknown permission key: "${key}"`, { key, role: ctx.role });
   }
 
-  // 1. superadmin is allow-all by definition.
-  if (ctx.role === 'superadmin') return true;
+  // 1. superadmin is allow-all EXCEPT for COMPLIANCE_GATED_KEYS.
+  //    Those two keys fall through to the override / role-set checks so the UI
+  //    correctly reflects the backend fail-closed compliance-access grant model.
+  //    Operational critical keys (permissions.manage, roles.manage, auth.*, etc.)
+  //    remain auto-granted — only compliance data-access is gated.
+  if (ctx.role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return true;
 
   // 2. Per-user override wins.
   const override = ctx.overrides.find((o) => o.permission === key);
@@ -1316,10 +1351,12 @@ export function resolvePermission(
 
 /**
  * Whether a role grants a permission by default — DB-driven: pass the role's
- * permission set (fetched from the backend, roles-as-data). superadmin = allow-all.
+ * permission set (fetched from the backend, roles-as-data). superadmin = allow-all
+ * except for COMPLIANCE_GATED_KEYS (compliance_read/export), which require an
+ * explicit user_permissions grant. Operational critical keys remain auto-granted.
  */
 export function roleDefaultGranted(roleSet: readonly string[], key: string, role?: UserRole): boolean {
-  if (role === 'superadmin') return true;
+  if (role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return true;
   return roleSet.includes(key);
 }
 

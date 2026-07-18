@@ -14,14 +14,9 @@
       ]
     },
     "communications_message_actions": {
-      "reason": "Message mute / draft-delete / recordThread / recordExport / requestThreadAccess / attachment get-url — the FE actions aren't wired. Cover WHEN the unified collaboration rail is built (see collaboration-rail-deferred memory).",
+      "reason": "recordExport (stamp a message-history export under a compliance grant) — the FE compliance-export action isn't wired yet. Cover WHEN the compliance export UI is built. NOTE: mute / draft-delete / recordThread / requestThreadAccess / attachments-get-url were previously parked here but are now wired AND E2E-covered in communications.mjs.",
       "routes": [
-        "/api/communications/messages/attachments/get-url",
-        "/api/communications/messages/draft/delete",
-        "/api/communications/messages/mute",
-        "/api/communications/messages/recordExport",
-        "/api/communications/messages/recordThread",
-        "/api/communications/messages/requestThreadAccess"
+        "/api/communications/messages/recordExport"
       ]
     },
     "hse_ptw": {
@@ -47,9 +42,8 @@
       ]
     },
     "settings_manifests": {
-      "reason": "Settings-catalog manifest deprecate/return governance + legacy getSettings — the Settings & Preferences UI isn't built out. Cover WHEN Settings is built (see settings-architecture memory).",
+      "reason": "Settings-catalog manifest deprecate/return governance actions — the manifest-governance UI isn't built out. Cover WHEN it's built (see settings-architecture memory). NOTE: legacy getSettings is wired/used by the built Settings page, so it moved to `waived` (built-but-untested coverage debt), not deferred.",
       "routes": [
-        "/api/getSettings",
         "/api/settings/manifests/deprecate",
         "/api/settings/manifests/return"
       ]
@@ -123,6 +117,7 @@
     "/api/getPendingLeavesForManager",
     "/api/getPublicBranding",
     "/api/getRecentAttendance",
+    "/api/getSettings",
     "/api/getTickets",
     "/api/getUnreadCount",
     "/api/getWorkHours",
