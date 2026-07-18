@@ -1001,9 +1001,59 @@ button.sm-related-record { cursor: pointer; }.sm-related-record small { color: #
 .sm-topbar-queues .app-topbar-nav-btn b { font-size: 0.7rem; font-weight: 700; opacity: .75; }
 
 
-/* Right rail stays NAVY (dark) always — the ported dark-first design.
-   The 2026-07-17 white/grey light-theme override was reverted per user call:
-   the details panel is intentionally dark in every app theme. */
+/* ── Right rail LIGHT theme (user call 2026-07-17: white / very light grey
+   instead of navy). LAST block wins over the ported dark styles above — one
+   cohesive override rather than edits scattered through the dark theme.
+   Gated on :not([data-theme="dark"]): in DARK MODE the original navy rail
+   rules above apply untouched (user call — keep navy for the dark toggle). */
+body:not([data-theme="dark"]) .sm-details-panel { color: #33465f; background: #fbfcfe; border-left: 1px solid var(--sm-line); scrollbar-color: rgba(15, 35, 65, .25) transparent; }
+body:not([data-theme="dark"]) .sm-panel-section { border-bottom: 1px solid #e8edf4; }
+body:not([data-theme="dark"]) .sm-panel-section > header > span { color: #66788f; }
+body:not([data-theme="dark"]) .sm-panel-action { border-color: #d3dce8; color: #33465f; background: #fff; }
+body:not([data-theme="dark"]) .sm-panel-action:hover { border-color: #b9c7d9; background: #f2f6fc; }
+body:not([data-theme="dark"]) .sm-panel-action--invite { color: #173960; background: #dcecff; border-color: #dcecff; }
+body:not([data-theme="dark"]) .sm-panel-action--invite:hover { background: #cfe4fd; }
+body:not([data-theme="dark"]) .sm-participant-list > div { border-color: #e3e8f0; background: #fff; }
+body:not([data-theme="dark"]) .sm-participant-list small { color: #66788f; }
+body:not([data-theme="dark"]) .sm-participant-list em { color: #526a86; background: #eef2f8; }
+body:not([data-theme="dark"]) .sm-participant-list em.is-online { color: #1e7d4f; background: rgba(31, 167, 104, .14); }
+body:not([data-theme="dark"]) .sm-participant-list .sm-icon-button { color: #66788f; }
+body:not([data-theme="dark"]) .sm-remove-participant { color: #33465f; background: #e8eef6; }
+body:not([data-theme="dark"]) .sm-mute-row { border-bottom: 1px solid #e8edf4; }
+body:not([data-theme="dark"]) .sm-mute-row svg { color: #66788f; }
+body:not([data-theme="dark"]) .sm-switch { background: #cfd9e6; }
+body:not([data-theme="dark"]) .sm-switch[aria-checked="true"] { background: #31a872; }
+body:not([data-theme="dark"]) .sm-panel-empty { color: #8a99ad; }
+body:not([data-theme="dark"]) .sm-pinned-item { border-color: #e3e8f0; background: #fff; }
+body:not([data-theme="dark"]) .sm-pinned-item span { color: #66788f; }
+body:not([data-theme="dark"]) .sm-pinned-item .sm-icon-button { color: #66788f; }
+body:not([data-theme="dark"]) .sm-sidebar-files > button { border-color: #e3e8f0; background: #fff; }
+body:not([data-theme="dark"]) .sm-sidebar-files > button:hover { background: #f2f6fc; }
+body:not([data-theme="dark"]) .sm-sidebar-files small { color: #66788f; }
+body:not([data-theme="dark"]) .sm-files-toggle { border-color: #d3dce8; color: #33465f; background: #fff; }
+body:not([data-theme="dark"]) .sm-files-toggle:hover { background: #f2f6fc; }
+body:not([data-theme="dark"]) .sm-media-grid button { border-color: #e3e8f0; }
+body:not([data-theme="dark"]) .sm-related-record { border-color: #e3e8f0; color: #1f2c42; background: #fff; }
+body:not([data-theme="dark"]) .sm-related-record small { color: #66788f; }
+body:not([data-theme="dark"]) .sm-details-panel__takeover { border-bottom: 1px solid #e8edf4; }
+body:not([data-theme="dark"]) .sm-details-panel__takeover .sm-icon-button { color: #4a5f7a; }
+body:not([data-theme="dark"]) .sm-details-panel__takeover small { color: #66788f; }
+body:not([data-theme="dark"]) .sm-info-list > div { border-bottom-color: #eef2f7; }
+body:not([data-theme="dark"]) .sm-info-list dt { color: #66788f; }
+body:not([data-theme="dark"]) .sm-thread-summary { border-color: #e3e8f0; }
+body:not([data-theme="dark"]) .sm-thread-summary > div { border-right-color: #eef2f7; border-bottom-color: #eef2f7; background: #fff; }
+body:not([data-theme="dark"]) .sm-thread-summary > div > p strong { color: #1f2c42; }
+body:not([data-theme="dark"]) .sm-thread-summary > div > p small, body:not([data-theme="dark"]) .sm-thread-summary small { color: #66788f; }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(1) > span { color: #2673c9; background: rgba(49, 143, 224, .12); }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(2) > span { color: #a8770f; background: rgba(214, 153, 24, .14); }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(3) > span { color: #1e7d5c; background: rgba(39, 161, 123, .14); }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(4) > span { color: #6f45b8; background: rgba(137, 86, 214, .12); }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(5) > span { color: #b23a63; background: rgba(211, 64, 111, .12); }
+body:not([data-theme="dark"]) .sm-thread-summary > div:nth-child(6) > span { color: #2b7d99; background: rgba(50, 140, 169, .14); }
+body:not([data-theme="dark"]) .sm-thread-activity { scrollbar-color: rgba(15, 35, 65, .25) transparent; }
+body:not([data-theme="dark"]) .sm-thread-activity > div { border-bottom-color: #eef2f7; }
+body:not([data-theme="dark"]) .sm-thread-activity > div > span { color: #526a86; background: #eef2f8; }
+body:not([data-theme="dark"]) .sm-thread-activity p small { color: #66788f; }
 
 /* Appearance dialog at the app's NORMAL text scale — the ported bundle sizes
    (9-11px) read as a miniature. Widths/heights scale with the type. */
