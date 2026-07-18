@@ -2,7 +2,7 @@
 
 # settings Module Map
 
-Source fingerprint: `e96c6b2d4457674a6a76b00d`
+Source fingerprint: `6bf7483f72a0ff61b6da3128`
 
 Files: 42 | Symbols: 246 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 
@@ -38,10 +38,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/settings/manifests/return` | `settings.manifests.return` | requirePermission | `z.object({ moduleKey: z.string().min(1), reason: z.string().min(1).max(500) })` | `netlify/functions/routes/settingsCatalog.ts:357` | - | - |
 | `/api/settings/manifests/review` | `settings.manifests.review` | requirePermission | `z.object({     moduleKey: z.string().min(1), reviewerRole: z.enum(REVIEWER_ROLES),     decision: z.enum(['approved', 'returned', 'not_required']), comment: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:331` | - | settings |
 | `/api/settings/manifests/submit` | `settings.manifests.submit` | requirePermission | `z.object({ moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:323` | - | settings |
-| `/api/settings/my-preferences` | `-` | requireUser | `-` | `netlify/functions/routes/settingsCatalog.ts:107` | useMyPreferences @ src/api/settingsCatalog.ts:156 | settings |
+| `/api/settings/my-preferences` | `-` | requireUser | `-` | `netlify/functions/routes/settingsCatalog.ts:107` | useMyPreferences @ src/api/settingsCatalog.ts:156<br>res @ src/lib/themePreference.ts:70 | settings |
 | `/api/settings/resolve` | `-` | requireUser | `z.object({ settingKey: z.string().min(1), moduleKey: z.string().min(1) })` | `netlify/functions/routes/settingsCatalog.ts:165` | - | hrEmployeeSettings, settings |
 | `/api/settings/values/reset` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:233` | useResetSetting @ src/api/settingsCatalog.ts:136 | hrEmployeeSettings, settings |
-| `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
+| `/api/settings/values/set` | `-` | requireUser, userCan | `z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/settingsCatalog.ts:181` | useSetSetting @ src/api/settingsCatalog.ts:126<br>res @ src/lib/themePreference.ts:60 | hrEmployeeSettings, hrLeave, hrOnboarding, settings |
 | `/api/updateSetting` | `-` | requireRole | `UpdateSettingSchema` | `netlify/functions/routes/settings.ts:33` | res @ src/components/sections/Settings/api.ts:84 | - |
 | `/api/uploadLogo` | `-` | requireRole | `UploadLogoSchema` | `netlify/functions/routes/settings.ts:66` | res @ src/components/sections/Settings/api.ts:137 | - |
 

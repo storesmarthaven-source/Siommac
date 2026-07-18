@@ -1,19 +1,19 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a52824ff39c02cba6a2dcc4eb8b3243631e4262c",
+    "head": "7928ecaaf366fcbb272d3c0a898866170db489b3",
     "branch": "main",
-    "fingerprint": "e96c6b2d4457674a6a76b00d",
-    "indexedFiles": 1384
+    "fingerprint": "6bf7483f72a0ff61b6da3128",
+    "indexedFiles": 1386
   },
   "summary": {
-    "files": 1088,
-    "symbols": 10663,
+    "files": 1090,
+    "symbols": 10681,
     "widgets": 22,
     "routes": 858,
     "routeDefinitions": 859,
     "unmountedRoutes": 17,
-    "apiCalls": 366,
+    "apiCalls": 368,
     "databaseObjects": 1116,
     "e2eSuites": 63,
     "e2eTests": 2090
@@ -139,12 +139,12 @@
     {
       "id": "platform",
       "counts": {
-        "files": 267,
-        "symbols": 2322,
+        "files": 269,
+        "symbols": 2340,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 41,
-        "apiCalls": 48,
+        "apiCalls": 50,
         "databaseObjects": 237,
         "e2eSuites": 0
       }
@@ -3248,8 +3248,8 @@
       "path": "src/components/nav/NavController.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 267,
-      "hash": "9e961f6ef942b98a"
+      "lines": 246,
+      "hash": "d993c11504e23434"
     },
     {
       "path": "src/components/nav/NavCustomizer.tsx",
@@ -6041,8 +6041,8 @@
       "path": "src/components/shared/AccountPill.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 218,
-      "hash": "78697afe14952914"
+      "lines": 219,
+      "hash": "f8adcce54ddcf4fc"
     },
     {
       "path": "src/components/shared/AuthGate.tsx",
@@ -6265,8 +6265,8 @@
       "path": "src/lib/attSystem.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 1357,
-      "hash": "fb4a3c15931e35b0"
+      "lines": 1343,
+      "hash": "87b384039b3efa38"
     },
     {
       "path": "src/lib/auth.ts",
@@ -6451,6 +6451,13 @@
       "hash": "3190551154c246ae"
     },
     {
+      "path": "src/lib/themePreference.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 76,
+      "hash": "7779365835d894b7"
+    },
+    {
       "path": "src/lib/workflow/index.ts",
       "module": "workflow",
       "role": "frontend",
@@ -6503,15 +6510,15 @@
       "path": "src/main.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 451,
-      "hash": "74389eccf5e689cc"
+      "lines": 457,
+      "hash": "4750e64f4817a364"
     },
     {
       "path": "src/shell/AppShell.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 171,
-      "hash": "a355bb62cc3630cf"
+      "lines": 189,
+      "hash": "3e4752e5e6245dd4"
     },
     {
       "path": "src/shell/LoginShell.tsx",
@@ -6566,8 +6573,8 @@
       "path": "src/shell/sections/AdminSections.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 627,
-      "hash": "4941445c610028f4"
+      "lines": 624,
+      "hash": "7d8b8bc7f6ca55be"
     },
     {
       "path": "src/shell/sections/AppSection.tsx",
@@ -6647,11 +6654,18 @@
       "hash": "8120b29c00a3f9bd"
     },
     {
+      "path": "src/store/theme.test.ts",
+      "module": "platform",
+      "role": "frontend",
+      "lines": 159,
+      "hash": "b581984de494e466"
+    },
+    {
       "path": "src/store/ui.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 126,
-      "hash": "e399b26bbefd048e"
+      "lines": 185,
+      "hash": "e3cdcea3766907e5"
     },
     {
       "path": "src/test-setup.ts",
@@ -58070,36 +58084,6 @@
       "tags": []
     },
     {
-      "name": "applyTheme",
-      "kind": "function",
-      "file": "src/components/nav/NavController.tsx",
-      "line": 218,
-      "module": "platform",
-      "exported": false,
-      "container": "NavController",
-      "tags": []
-    },
-    {
-      "name": "onThemeLight",
-      "kind": "function",
-      "file": "src/components/nav/NavController.tsx",
-      "line": 229,
-      "module": "platform",
-      "exported": false,
-      "container": "NavController",
-      "tags": []
-    },
-    {
-      "name": "onThemeDark",
-      "kind": "function",
-      "file": "src/components/nav/NavController.tsx",
-      "line": 230,
-      "module": "platform",
-      "exported": false,
-      "container": "NavController",
-      "tags": []
-    },
-    {
       "name": "cfg",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
@@ -100686,7 +100670,7 @@
       "name": "lIco",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 33,
+      "line": 34,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -100694,18 +100678,6 @@
     },
     {
       "name": "IcUser",
-      "kind": "function",
-      "file": "src/components/shared/AccountPill.tsx",
-      "line": 37,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "IcSettings",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
       "line": 38,
@@ -100717,7 +100689,7 @@
       ]
     },
     {
-      "name": "IcAbout",
+      "name": "IcSettings",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
       "line": 39,
@@ -100729,7 +100701,7 @@
       ]
     },
     {
-      "name": "IcMoon",
+      "name": "IcAbout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
       "line": 40,
@@ -100741,7 +100713,7 @@
       ]
     },
     {
-      "name": "IcLogout",
+      "name": "IcMoon",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
       "line": 41,
@@ -100753,10 +100725,22 @@
       ]
     },
     {
+      "name": "IcLogout",
+      "kind": "function",
+      "file": "src/components/shared/AccountPill.tsx",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "roleLabel",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 43,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -100766,7 +100750,7 @@
       "name": "nav",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 53,
+      "line": 54,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -100776,7 +100760,7 @@
       "name": "doLogout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 56,
+      "line": 57,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -100786,7 +100770,7 @@
       "name": "AccountPillProps",
       "kind": "interface",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 60,
+      "line": 61,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -100796,7 +100780,7 @@
       "name": "AccountPill",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 76,
+      "line": 77,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -100808,7 +100792,7 @@
       "name": "openMenu",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 99,
+      "line": 100,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -100818,7 +100802,7 @@
       "name": "close",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 111,
+      "line": 112,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -100828,7 +100812,7 @@
       "name": "onDoc",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 112,
+      "line": 113,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -100838,7 +100822,7 @@
       "name": "onKey",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 113,
+      "line": 114,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -100848,7 +100832,7 @@
       "name": "confirmLogout",
       "kind": "function",
       "file": "src/components/shared/AccountPill.tsx",
-      "line": 126,
+      "line": 127,
       "module": "platform",
       "exported": false,
       "container": "AccountPill",
@@ -103909,20 +103893,10 @@
       "tags": []
     },
     {
-      "name": "applyTheme",
-      "kind": "function",
-      "file": "src/lib/attSystem.ts",
-      "line": 1226,
-      "module": "platform",
-      "exported": false,
-      "container": "setupEventListeners",
-      "tags": []
-    },
-    {
       "name": "init",
       "kind": "function",
       "file": "src/lib/attSystem.ts",
-      "line": 1251,
+      "line": 1237,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -103932,7 +103906,7 @@
       "name": "AttendanceSystem",
       "kind": "object",
       "file": "src/lib/attSystem.ts",
-      "line": 1314,
+      "line": 1300,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -103942,7 +103916,7 @@
       "name": "goTo",
       "kind": "method",
       "file": "src/lib/attSystem.ts",
-      "line": 1316,
+      "line": 1302,
       "module": "platform",
       "exported": false,
       "container": "AttendanceSystem",
@@ -103952,7 +103926,7 @@
       "name": "_w",
       "kind": "variable",
       "file": "src/lib/attSystem.ts",
-      "line": 1343,
+      "line": 1329,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -106741,6 +106715,106 @@
       "tags": []
     },
     {
+      "name": "THEME_SETTING_KEY",
+      "kind": "variable",
+      "file": "src/lib/themePreference.ts",
+      "line": 14,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CACHE_PREFIX",
+      "kind": "variable",
+      "file": "src/lib/themePreference.ts",
+      "line": 15,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cacheKey",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "currentUserId",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 24,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readCachedTheme",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 32,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "writeCachedTheme",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 39,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "purgeLegacyThemeCache",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 44,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveTheme",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 49,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "persistThemeToDb",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 59,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadThemeFromDb",
+      "kind": "function",
+      "file": "src/lib/themePreference.ts",
+      "line": 69,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "CTX",
       "kind": "object",
       "file": "src/lib/workflow/store.test.ts",
@@ -107328,7 +107402,7 @@
       "name": "queryClient",
       "kind": "variable",
       "file": "src/main.tsx",
-      "line": 87,
+      "line": 93,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107338,7 +107412,7 @@
       "name": "SCRIPTS",
       "kind": "array",
       "file": "src/main.tsx",
-      "line": 97,
+      "line": 103,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107348,7 +107422,7 @@
       "name": "loadScript",
       "kind": "function",
       "file": "src/main.tsx",
-      "line": 119,
+      "line": 125,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107358,7 +107432,7 @@
       "name": "loadScripts",
       "kind": "function",
       "file": "src/main.tsx",
-      "line": 129,
+      "line": 135,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107368,7 +107442,7 @@
       "name": "bootApp",
       "kind": "function",
       "file": "src/main.tsx",
-      "line": 138,
+      "line": 144,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107378,7 +107452,7 @@
       "name": "_mountEmp",
       "kind": "function",
       "file": "src/main.tsx",
-      "line": 319,
+      "line": 325,
       "module": "platform",
       "exported": false,
       "container": "bootApp",
@@ -107388,7 +107462,7 @@
       "name": "CommsBridgeInner",
       "kind": "function",
       "file": "src/shell/AppShell.tsx",
-      "line": 48,
+      "line": 50,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107400,7 +107474,19 @@
       "name": "CommsBridge",
       "kind": "function",
       "file": "src/shell/AppShell.tsx",
-      "line": 54,
+      "line": 56,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ThemeBridge",
+      "kind": "function",
+      "file": "src/shell/AppShell.tsx",
+      "line": 66,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107412,7 +107498,7 @@
       "name": "Sidebar",
       "kind": "function",
       "file": "src/shell/AppShell.tsx",
-      "line": 62,
+      "line": 77,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107424,7 +107510,7 @@
       "name": "PageHeader",
       "kind": "function",
       "file": "src/shell/AppShell.tsx",
-      "line": 92,
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -107436,7 +107522,7 @@
       "name": "AppShell",
       "kind": "function",
       "file": "src/shell/AppShell.tsx",
-      "line": 107,
+      "line": 122,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -107596,7 +107682,7 @@
       "name": "AdminSections",
       "kind": "function",
       "file": "src/shell/sections/AdminSections.tsx",
-      "line": 574,
+      "line": 571,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108581,10 +108667,82 @@
       "tags": []
     },
     {
+      "name": "bodyTheme",
+      "kind": "function",
+      "file": "src/store/theme.test.ts",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "flush",
+      "kind": "function",
+      "file": "src/store/theme.test.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "setSession",
+      "kind": "function",
+      "file": "src/store/theme.test.ts",
+      "line": 19,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "mySetTheme",
+      "kind": "function",
+      "file": "src/store/theme.test.ts",
+      "line": 21,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "okThreads",
+      "kind": "variable",
+      "file": "src/store/theme.test.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "prefsWith",
+      "kind": "function",
+      "file": "src/store/theme.test.ts",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "SectionId",
       "kind": "type",
       "file": "src/store/ui.ts",
-      "line": 32,
+      "line": 37,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108594,17 +108752,37 @@
       "name": "UiState",
       "kind": "interface",
       "file": "src/store/ui.ts",
-      "line": 34,
+      "line": 39,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "readTheme",
+      "name": "applyThemeToDom",
       "kind": "function",
       "file": "src/store/ui.ts",
-      "line": 65,
+      "line": 76,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readInitialTheme",
+      "kind": "function",
+      "file": "src/store/ui.ts",
+      "line": 82,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "themeIntentSeq",
+      "kind": "variable",
+      "file": "src/store/ui.ts",
+      "line": 89,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -108614,7 +108792,7 @@
       "name": "useUiStore",
       "kind": "variable",
       "file": "src/store/ui.ts",
-      "line": 75,
+      "line": 93,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108626,7 +108804,7 @@
       "name": "navigateTo",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 83,
+      "line": 101,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108636,7 +108814,7 @@
       "name": "setSidebarOpen",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 88,
+      "line": 106,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108646,7 +108824,7 @@
       "name": "toggleSidebar",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 92,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108656,7 +108834,7 @@
       "name": "setTheme",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 96,
+      "line": 114,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108666,7 +108844,17 @@
       "name": "toggleTheme",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 106,
+      "line": 133,
+      "module": "platform",
+      "exported": false,
+      "container": "useUiStore",
+      "tags": []
+    },
+    {
+      "name": "hydrateTheme",
+      "kind": "method",
+      "file": "src/store/ui.ts",
+      "line": 138,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108676,7 +108864,7 @@
       "name": "setSectionLoading",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 111,
+      "line": 145,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
@@ -108686,17 +108874,37 @@
       "name": "setGlobalLoading",
       "kind": "method",
       "file": "src/store/ui.ts",
-      "line": 115,
+      "line": 149,
       "module": "platform",
       "exported": false,
       "container": "useUiStore",
       "tags": []
     },
     {
+      "name": "initUserTheme",
+      "kind": "function",
+      "file": "src/store/ui.ts",
+      "line": 163,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resetThemeToDefault",
+      "kind": "function",
+      "file": "src/store/ui.ts",
+      "line": 175,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "selectActiveSection",
       "kind": "function",
       "file": "src/store/ui.ts",
-      "line": 122,
+      "line": 181,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108706,7 +108914,7 @@
       "name": "selectSectionLoading",
       "kind": "function",
       "file": "src/store/ui.ts",
-      "line": 123,
+      "line": 182,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108716,7 +108924,7 @@
       "name": "selectTheme",
       "kind": "function",
       "file": "src/store/ui.ts",
-      "line": 124,
+      "line": 183,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -108726,7 +108934,7 @@
       "name": "selectSidebarOpen",
       "kind": "function",
       "file": "src/store/ui.ts",
-      "line": 125,
+      "line": 184,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -133553,6 +133761,14 @@
       "module": "settings"
     },
     {
+      "path": "/api/settings/my-preferences",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/lib/themePreference.ts",
+      "line": 70,
+      "module": "platform"
+    },
+    {
       "path": "/api/settings/values/reset",
       "helper": "apiPost",
       "caller": "useResetSetting",
@@ -133567,6 +133783,14 @@
       "file": "src/api/settingsCatalog.ts",
       "line": 126,
       "module": "settings"
+    },
+    {
+      "path": "/api/settings/values/set",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/lib/themePreference.ts",
+      "line": 60,
+      "module": "platform"
     },
     {
       "path": "/api/setup2fa",

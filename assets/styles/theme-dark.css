@@ -30,15 +30,18 @@
  */
 
 [data-theme-scope="adaptive"] {
-  /* neutral surfaces */
-  --surface:            var(--bg-card);      /* the panel/section background     */
-  --surface-subtle:     var(--bg-subtle);    /* recessed area within the surface */
+  /* neutral surfaces — the messenger rail's OWN original light values (taken
+     from the removed body:not([data-theme=dark]) block), NOT the generic app
+     palette, so the light rail is preserved pixel-for-pixel (#fbfcfe panel, not
+     the flat #fff of var(--bg-card)). */
+  --surface:            #ffffff;             /* the panel/section background     */
+  --surface-subtle:     #f3f7fb;             /* recessed area within the surface */
   --surface-raised:     #ffffff;             /* cards / rows sitting ON the panel */
-  --surface-hover:      #f3f6fa;
-  --surface-active:     #e8eef7;             /* selected / pressed                */
-  --surface-border:     var(--border);       /* dividers + control borders        */
-  --surface-text:       var(--text-primary);
-  --surface-muted:      var(--text-muted);   /* secondary / caption text          */
+  --surface-hover:      #f2f6fc;
+  --surface-active:     #e8eef6;             /* selected / pressed                */
+  --surface-border:     #e3e8f0;             /* dividers + control borders        */
+  --surface-text:       #33465f;
+  --surface-muted:      #66788f;             /* secondary / caption text          */
   --surface-disabled:   #9aa8bd;             /* disabled control text             */
   --surface-focus:      #2563eb;             /* focus-visible ring                */
   /* primary action ON the surface (e.g. Invite) */

@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `e96c6b2d4457674a6a76b00d`
+Source fingerprint: `6bf7483f72a0ff61b6da3128`
 
-Files: 267 | Symbols: 2322 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 48 | DB objects: 237 | E2E suites: 0
+Files: 269 | Symbols: 2340 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 237 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -104,6 +104,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/profile-photo/remove` | `apiPost` | `res` | `src/components/sections/Profile/api.ts:201` |
 | `/api/profile-photo/upload-url` | `apiPost` | `pres` | `src/components/sections/Profile/api.ts:157` |
 | `/api/replyTicket` | `apiPost` | `replyTicket` | `src/components/nav/api.ts:29` |
+| `/api/settings/my-preferences` | `apiPost` | `res` | `src/lib/themePreference.ts:70` |
+| `/api/settings/values/set` | `apiPost` | `res` | `src/lib/themePreference.ts:60` |
 | `/api/theme/get` | `authPost` | `res` | `src/api/theme.ts:14` |
 | `/api/theme/save` | `apiPost` | `res` | `src/api/theme.ts:20` |
 | `/api/updateColorScheme` | `apiPost` | `updateColorScheme` | `src/components/nav/api.ts:41` |
@@ -170,7 +172,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useApproveGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:273` | `-` |
 | `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:300` | `-` |
 | `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:323` | `-` |
-| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:76` | `-` |
+| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:77` | `-` |
 | `Avatar` | function / component | `src/components/shared/Avatar.tsx:78` | `-` |
 | `Badge` | function / component | `src/components/shared/Badge.tsx:112` | `-` |
 | `ConfirmDialog` | function / component | `src/components/shared/ConfirmDialog.tsx:72` | `-` |
@@ -182,17 +184,17 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `StepUpProvider` | function / component | `src/hooks/useStepUp.tsx:47` | `-` |
 | `useStepUp` | function / hook | `src/hooks/useStepUp.tsx:308` | `-` |
 | `useRecordQuery` | function / hook | `src/lib/recordQuery.ts:48` | `-` |
-| `AppShell` | function / component | `src/shell/AppShell.tsx:107` | `-` |
+| `AppShell` | function / component | `src/shell/AppShell.tsx:122` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
-| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:574` | `-` |
+| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:571` | `-` |
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
 | `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:18` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |
 | `useActiveSection` | function / hook | `src/shell/sections/useActiveSection.ts:69` | `-` |
 | `useDataStore` | variable / hook | `src/store/data.ts:135` | `-` |
 | `useSessionStore` | variable / hook | `src/store/session.ts:192` | `-` |
-| `useUiStore` | variable / hook | `src/store/ui.ts:75` | `-` |
+| `useUiStore` | variable / hook | `src/store/ui.ts:93` | `-` |
 | `BarRow` | function / component | `src/ui/charts/BarRow.tsx:18` | `-` |
 | `ProgressBar` | function / component | `src/ui/charts/ProgressBar.tsx:17` | `-` |
 | `Sparkline` | function / component | `src/ui/charts/Sparkline.tsx:18` | `-` |

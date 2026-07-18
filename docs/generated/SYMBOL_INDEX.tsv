@@ -4867,9 +4867,6 @@ afterOpen	function	platform	false		src/components/nav/NavController.tsx	119	NavC
 toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	148	NavController
 onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	173	NavController
 onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	188	NavController
-applyTheme	function	platform	false		src/components/nav/NavController.tsx	218	NavController
-onThemeLight	function	platform	false		src/components/nav/NavController.tsx	229	NavController
-onThemeDark	function	platform	false		src/components/nav/NavController.tsx	230	NavController
 cfg	function	platform	false		src/components/nav/navCore.ts	20	
 moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	30	
 allItemsForRole	function	platform	false		src/components/nav/navCore.ts	41	
@@ -8886,22 +8883,22 @@ storageKey	function	communications	false		src/components/sections/Tickets/useSee
 loadIds	function	communications	false		src/components/sections/Tickets/useSeenReplies.ts	18	
 saveIds	function	communications	false		src/components/sections/Tickets/useSeenReplies.ts	28	
 useSeenReplies	function	communications	true	hook	src/components/sections/Tickets/useSeenReplies.ts	34	
-lIco	function	platform	false		src/components/shared/AccountPill.tsx	33	
-IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	37	
-IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	38	
-IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	39	
-IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
-IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
-roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	43	
-nav	function	platform	false		src/components/shared/AccountPill.tsx	53	
-doLogout	function	platform	false		src/components/shared/AccountPill.tsx	56	
-AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	60	
-AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	76	
-openMenu	function	platform	false		src/components/shared/AccountPill.tsx	99	AccountPill
-close	function	platform	false		src/components/shared/AccountPill.tsx	111	AccountPill
-onDoc	function	platform	false		src/components/shared/AccountPill.tsx	112	AccountPill
-onKey	function	platform	false		src/components/shared/AccountPill.tsx	113	AccountPill
-confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	126	AccountPill
+lIco	function	platform	false		src/components/shared/AccountPill.tsx	34	
+IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	38	
+IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	39	
+IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
+IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
+IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	42	
+roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	44	
+nav	function	platform	false		src/components/shared/AccountPill.tsx	54	
+doLogout	function	platform	false		src/components/shared/AccountPill.tsx	57	
+AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	61	
+AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	77	
+openMenu	function	platform	false		src/components/shared/AccountPill.tsx	100	AccountPill
+close	function	platform	false		src/components/shared/AccountPill.tsx	112	AccountPill
+onDoc	function	platform	false		src/components/shared/AccountPill.tsx	113	AccountPill
+onKey	function	platform	false		src/components/shared/AccountPill.tsx	114	AccountPill
+confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	127	AccountPill
 AuthGateProps	interface	security	false		src/components/shared/AuthGate.tsx	49	
 ROLE_RANK	object	security	false		src/components/shared/AuthGate.tsx	69	
 roleAtLeast	function	security	false		src/components/shared/AuthGate.tsx	81	
@@ -9201,11 +9198,10 @@ updateClock	function	platform	false		src/lib/attSystem.ts	848
 set	function	platform	false		src/lib/attSystem.ts	853	updateClock
 initializeDateSelectors	function	platform	false		src/lib/attSystem.ts	859	
 setupEventListeners	function	platform	false		src/lib/attSystem.ts	901	
-applyTheme	function	platform	false		src/lib/attSystem.ts	1226	setupEventListeners
-init	function	platform	true		src/lib/attSystem.ts	1251	
-AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1314	
-goTo	method	platform	false		src/lib/attSystem.ts	1316	AttendanceSystem
-_w	variable	platform	false		src/lib/attSystem.ts	1343	
+init	function	platform	true		src/lib/attSystem.ts	1237	
+AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1300	
+goTo	method	platform	false		src/lib/attSystem.ts	1302	AttendanceSystem
+_w	variable	platform	false		src/lib/attSystem.ts	1329	
 AuthSuccess	interface	security	true		src/lib/auth.ts	56	
 Auth2faRequired	interface	security	true		src/lib/auth.ts	62	
 Auth2faSetupRequired	interface	security	true		src/lib/auth.ts	68	
@@ -9480,6 +9476,16 @@ rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	274
 cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	283	
 setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	294	
 setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	303	
+THEME_SETTING_KEY	variable	platform	true		src/lib/themePreference.ts	14	
+CACHE_PREFIX	variable	platform	false		src/lib/themePreference.ts	15	
+cacheKey	function	platform	false		src/lib/themePreference.ts	17	
+currentUserId	function	platform	true		src/lib/themePreference.ts	24	
+readCachedTheme	function	platform	true		src/lib/themePreference.ts	32	
+writeCachedTheme	function	platform	true		src/lib/themePreference.ts	39	
+purgeLegacyThemeCache	function	platform	true		src/lib/themePreference.ts	44	
+resolveTheme	function	platform	true		src/lib/themePreference.ts	49	
+persistThemeToDb	function	platform	true		src/lib/themePreference.ts	59	
+loadThemeFromDb	function	platform	true		src/lib/themePreference.ts	69	
 CTX	object	workflow	false	test	src/lib/workflow/store.test.ts	16	
 STORAGE_KEY	variable	workflow	false		src/lib/workflow/store.ts	25	
 Listener	type	workflow	false		src/lib/workflow/store.ts	27	
@@ -9538,17 +9544,18 @@ SubmitWorkflowInput	interface	workflow	true		src/lib/workflow/types.ts	186
 DEMO_ACTOR	object	workflow	false		src/lib/workflow/useWorkflow.ts	19	
 UseWorkflow	interface	workflow	true		src/lib/workflow/useWorkflow.ts	21	
 useWorkflow	function	workflow	true	hook	src/lib/workflow/useWorkflow.ts	36	
-queryClient	variable	platform	false		src/main.tsx	87	
-SCRIPTS	array	platform	false		src/main.tsx	97	
-loadScript	function	platform	false		src/main.tsx	119	
-loadScripts	function	platform	false		src/main.tsx	129	
-bootApp	function	platform	false		src/main.tsx	138	
-_mountEmp	function	platform	false		src/main.tsx	319	bootApp
-CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	48	
-CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	54	
-Sidebar	function	platform	false	component	src/shell/AppShell.tsx	62	
-PageHeader	function	platform	false	component	src/shell/AppShell.tsx	92	
-AppShell	function	platform	true	component	src/shell/AppShell.tsx	107	
+queryClient	variable	platform	false		src/main.tsx	93	
+SCRIPTS	array	platform	false		src/main.tsx	103	
+loadScript	function	platform	false		src/main.tsx	125	
+loadScripts	function	platform	false		src/main.tsx	135	
+bootApp	function	platform	false		src/main.tsx	144	
+_mountEmp	function	platform	false		src/main.tsx	325	bootApp
+CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	50	
+CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	56	
+ThemeBridge	function	platform	false	component	src/shell/AppShell.tsx	66	
+Sidebar	function	platform	false	component	src/shell/AppShell.tsx	77	
+PageHeader	function	platform	false	component	src/shell/AppShell.tsx	107	
+AppShell	function	platform	true	component	src/shell/AppShell.tsx	122	
 Phase	type	platform	false		src/shell/LoginShell.tsx	31	
 FlowCtx	interface	platform	false		src/shell/LoginShell.tsx	33	
 EMPTY_CTX	object	platform	false		src/shell/LoginShell.tsx	44	
@@ -9562,7 +9569,7 @@ TicketModal	function	communications	true	component	src/shell/modals/TicketModal.
 StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	29	
 PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	305	
 AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	426	
-AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	574	
+AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	571	
 AppSectionProps	interface	platform	false		src/shell/sections/AppSection.tsx	18	
 AppSection	function	platform	true	component	src/shell/sections/AppSection.tsx	26	
 EmpAttendanceSection	function	hr	false	component	src/shell/sections/EmployeeSections.tsx	23	
@@ -9658,21 +9665,32 @@ selectRole	function	platform	true		src/store/session.ts	326
 selectFullName	function	platform	true		src/store/session.ts	327	
 selectPermissions	function	platform	true		src/store/session.ts	328	
 selectTrustedDeviceUsed	function	platform	true		src/store/session.ts	330	
-SectionId	type	platform	true		src/store/ui.ts	32	
-UiState	interface	platform	true		src/store/ui.ts	34	
-readTheme	function	platform	false		src/store/ui.ts	65	
-useUiStore	variable	platform	true	hook	src/store/ui.ts	75	
-navigateTo	method	platform	false		src/store/ui.ts	83	useUiStore
-setSidebarOpen	method	platform	false		src/store/ui.ts	88	useUiStore
-toggleSidebar	method	platform	false		src/store/ui.ts	92	useUiStore
-setTheme	method	platform	false		src/store/ui.ts	96	useUiStore
-toggleTheme	method	platform	false		src/store/ui.ts	106	useUiStore
-setSectionLoading	method	platform	false		src/store/ui.ts	111	useUiStore
-setGlobalLoading	method	platform	false		src/store/ui.ts	115	useUiStore
-selectActiveSection	function	platform	true		src/store/ui.ts	122	
-selectSectionLoading	function	platform	true		src/store/ui.ts	123	
-selectTheme	function	platform	true		src/store/ui.ts	124	
-selectSidebarOpen	function	platform	true		src/store/ui.ts	125	
+bodyTheme	function	platform	false	test	src/store/theme.test.ts	17	
+flush	function	platform	false	test	src/store/theme.test.ts	18	
+setSession	function	platform	false	test	src/store/theme.test.ts	19	
+mySetTheme	function	platform	false	test	src/store/theme.test.ts	21	
+okThreads	variable	platform	false	test	src/store/theme.test.ts	22	
+prefsWith	function	platform	false	test	src/store/theme.test.ts	23	
+SectionId	type	platform	true		src/store/ui.ts	37	
+UiState	interface	platform	true		src/store/ui.ts	39	
+applyThemeToDom	function	platform	false		src/store/ui.ts	76	
+readInitialTheme	function	platform	false		src/store/ui.ts	82	
+themeIntentSeq	variable	platform	false		src/store/ui.ts	89	
+useUiStore	variable	platform	true	hook	src/store/ui.ts	93	
+navigateTo	method	platform	false		src/store/ui.ts	101	useUiStore
+setSidebarOpen	method	platform	false		src/store/ui.ts	106	useUiStore
+toggleSidebar	method	platform	false		src/store/ui.ts	110	useUiStore
+setTheme	method	platform	false		src/store/ui.ts	114	useUiStore
+toggleTheme	method	platform	false		src/store/ui.ts	133	useUiStore
+hydrateTheme	method	platform	false		src/store/ui.ts	138	useUiStore
+setSectionLoading	method	platform	false		src/store/ui.ts	145	useUiStore
+setGlobalLoading	method	platform	false		src/store/ui.ts	149	useUiStore
+initUserTheme	function	platform	true		src/store/ui.ts	163	
+resetThemeToDefault	function	platform	true		src/store/ui.ts	175	
+selectActiveSection	function	platform	true		src/store/ui.ts	181	
+selectSectionLoading	function	platform	true		src/store/ui.ts	182	
+selectTheme	function	platform	true		src/store/ui.ts	183	
+selectSidebarOpen	function	platform	true		src/store/ui.ts	184	
 BroadcastChannelStub	class	platform	false		src/test-setup.ts	35	
 postMessage	method	platform	false		src/test-setup.ts	37	BroadcastChannelStub
 close	method	platform	false		src/test-setup.ts	38	BroadcastChannelStub
