@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `bc6631ec0f77a6a3dbf91521`
+Source fingerprint: `d32b23074798f3fa5c607892`
 
-Files: 275 | Symbols: 2499 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
+Files: 275 | Symbols: 2502 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -465,6 +465,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
 | shared-types | `types/messaging.ts` | 281 |
-| shared-types | `types/messagingCompliance.ts` | 304 |
+| shared-types | `types/messagingCompliance.ts` | 316 |
 | shared-types | `types/supabase.ts` | 135 |
 

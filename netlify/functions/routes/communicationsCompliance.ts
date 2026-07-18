@@ -19,6 +19,7 @@ import {
 import {
   getComplianceCase,
   getComplianceExportById,
+  getComplianceSummary,
   listActiveCompliancePermissionHolders,
   listComplianceAccessEvents,
   listComplianceCases,
@@ -56,6 +57,8 @@ const ACCESS_EVENT_TYPES = [
   'export_downloaded',
   'case_closed',
 ] as const satisfies readonly ComplianceAccessEventType[];
+
+const SummaryGetSchema = z.object({}).strict();
 
 const CasesListSchema = z.object({
   status: z.enum(['all', 'pending_approval', 'approved', 'rejected', 'closed']).optional(),
@@ -218,6 +221,16 @@ function notifyCompliance(params: {
     },
   }, params.eventId);
 }
+
+router.post('/communications/compliance/summary/get', async c => {
+  await requirePermission(c, 'communications.compliance_read');
+  const value = zv(c, SummaryGetSchema, args(c));
+  if (!value.ok) return value.response;
+  return c.json({
+    success: true,
+    data: await getComplianceSummary(),
+  });
+});
 
 router.post('/communications/compliance/cases/list', async c => {
   const actor = await requirePermission(c, 'communications.compliance_read');

@@ -59,6 +59,11 @@ const MESSAGE_KEYS = [
   'isSystem', 'sequence',
 ];
 
+const SUMMARY_KEYS = [
+  'activeCases', 'asOf', 'expiringWithin24Hours', 'exportsThisMonth',
+  'pendingApprovalCases',
+];
+
 function sortedKeys(value) {
   return Object.keys(value ?? {}).sort();
 }
@@ -163,6 +168,7 @@ export default async function run(h) {
     jsonExport: null,
     pdfExport: null,
     expiryCaseId: null,
+    summaryBaseline: null,
   };
 
   // The operator-owned disposable-database reset is the cleanup mechanism.
@@ -200,6 +206,15 @@ export default async function run(h) {
   async function approveDatedPermission(approvalId) {
     const response = await api('admin/approvals/approve', checkerStepUp, { approvalId });
     ok(response, `approve permission ${approvalId} failed`);
+  }
+
+  async function readSummary(token = investigatorToken) {
+    const response = await api('communications/compliance/summary/get', token, {});
+    ok(response, 'compliance summary/get failed');
+    exactKeys(expect, response.body.data, SUMMARY_KEYS, 'compliance summary');
+    assertNoMessagePayload(expect, response.body.data, 'compliance summary');
+    expect(!Number.isNaN(Date.parse(response.body.data.asOf)), 'summary asOf is invalid');
+    return response.body.data;
   }
 
   async function assertEvidenceTriplet({
@@ -282,10 +297,14 @@ export default async function run(h) {
   await test('unauthenticated and ordinary employees are denied compliance APIs', async () => {
     const noAuth = await api('communications/compliance/cases/list', null, {});
     expectStatus(expect, noAuth, 401, 'unauthenticated cases/list');
+    const noAuthSummary = await api('communications/compliance/summary/get', null, {});
+    expectStatus(expect, noAuthSummary, 401, 'unauthenticated summary/get');
     const plain = await api('communications/compliance/conversations/search', plainToken, {
       search: TAG,
     });
     expectStatus(expect, plain, 403, 'plain employee search');
+    const plainSummary = await api('communications/compliance/summary/get', plainToken, {});
+    expectStatus(expect, plainSummary, 403, 'plain employee summary/get');
   });
 
   await test('superadmin is fail-closed without an explicit dated compliance_read grant', async () => {
@@ -394,6 +413,16 @@ export default async function run(h) {
       'conversation search leaked source text');
   });
 
+  await test('summary cards use one complete-dataset backend contract', async () => {
+    state.summaryBaseline = await readSummary();
+    for (const key of SUMMARY_KEYS.filter(key => key !== 'asOf')) {
+      expect(
+        Number.isInteger(state.summaryBaseline[key]) && state.summaryBaseline[key] >= 0,
+        `summary ${key} is not a non-negative integer`,
+      );
+    }
+  });
+
   const caseKey = randomUUID();
   const casePayload = {
     title: `${TAG} payroll access investigation`,
@@ -424,6 +453,15 @@ export default async function run(h) {
     expect(response.body.data.grants.length === 0, 'pending case created access grants');
     state.caseId = response.body.data.id;
     state.caseNo = response.body.data.caseNo;
+    const summary = await readSummary();
+    expect(
+      summary.pendingApprovalCases === state.summaryBaseline.pendingApprovalCases + 1,
+      'pending case did not reconcile to the summary',
+    );
+    expect(
+      summary.activeCases === state.summaryBaseline.activeCases,
+      'pending case incorrectly changed active cases',
+    );
   });
 
   await test('same-key same-payload case retry returns the original case and writes nothing new', async () => {
@@ -533,6 +571,19 @@ export default async function run(h) {
     expect(grant.threadId === state.threadId, 'grant scope does not match selected thread');
     expect(grant.status === 'active', 'approved grant is not active');
     state.grantId = grant.id;
+    const summary = await readSummary();
+    expect(
+      summary.pendingApprovalCases === state.summaryBaseline.pendingApprovalCases,
+      'approved case remained in pending summary',
+    );
+    expect(
+      summary.activeCases === state.summaryBaseline.activeCases + 1,
+      'approved case did not reconcile to active summary',
+    );
+    expect(
+      summary.expiringWithin24Hours === state.summaryBaseline.expiringWithin24Hours + 1,
+      'near-expiry approved case did not reconcile to expiry summary',
+    );
   });
 
   await test('case decision retry is idempotent and divergent reuse is 409', async () => {
@@ -912,6 +963,11 @@ export default async function run(h) {
     response.body.data.items.forEach((item, index) =>
       exactKeys(expect, item, EXPORT_KEYS, `export list item[${index}]`));
     assertNoMessagePayload(expect, response.body.data, 'exports/list');
+    const summary = await readSummary();
+    expect(
+      summary.exportsThisMonth === state.summaryBaseline.exportsThisMonth + 2,
+      'ready JSON/PDF exports did not reconcile to monthly summary',
+    );
 
     const { data: bucket, error } = await sb.storage
       .getBucket('message-compliance-exports');

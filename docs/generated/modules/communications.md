@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `bc6631ec0f77a6a3dbf91521`
+Source fingerprint: `d32b23074798f3fa5c607892`
 
-Files: 93 | Symbols: 855 | Widgets: 0 | Unique mounted endpoints: 71 | Route definitions: 72 mounted + 2 unmounted | API calls: 77 | DB objects: 118 | E2E suites: 4
+Files: 93 | Symbols: 858 | Widgets: 0 | Unique mounted endpoints: 72 | Route definitions: 73 mounted + 2 unmounted | API calls: 77 | DB objects: 120 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -20,18 +20,19 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|---|---|---|
 | `/api/clearAllNotifications` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:181` | res @ src/api/notifications.ts:111 | - |
 | `/api/clearClosedTickets` | `-` | requireUser | `-` | `netlify/functions/routes/tickets.ts:144` | res @ src/api/tickets.ts:89<br>clearClosedTickets @ src/components/nav/api.ts:38 | - |
-| `/api/communications/compliance/access-events/list` | `communications.compliance_read` | requirePermission | `AccessEventsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:429` | - | communicationsCompliance |
-| `/api/communications/compliance/cases/close` | `communications.compliance_read` | requirePermission | `CaseCloseSchema` | `netlify/functions/routes/communicationsCompliance.ts:411` | - | communicationsCompliance |
-| `/api/communications/compliance/cases/decide` | `communications.compliance_read` | requirePermission | `CaseDecisionSchema` | `netlify/functions/routes/communicationsCompliance.ts:274` | - | communicationsCompliance |
-| `/api/communications/compliance/cases/get` | `communications.compliance_read` | requirePermission | `CaseGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:232` | - | communicationsCompliance |
-| `/api/communications/compliance/cases/list` | `communications.compliance_read` | requirePermission | `CasesListSchema` | `netlify/functions/routes/communicationsCompliance.ts:222` | - | communicationsCompliance |
-| `/api/communications/compliance/cases/request` | `communications.compliance_read` | requirePermission | `CaseRequestSchema` | `netlify/functions/routes/communicationsCompliance.ts:242` | - | communicationsCompliance |
-| `/api/communications/compliance/conversations/read` | `communications.compliance_read` | requirePermission | `ConversationReadSchema` | `netlify/functions/routes/communicationsCompliance.ts:316` | - | communicationsCompliance |
-| `/api/communications/compliance/conversations/search` | `communications.compliance_read` | requirePermission | `ConversationSearchSchema` | `netlify/functions/routes/communicationsCompliance.ts:306` | - | communicationsCompliance |
-| `/api/communications/compliance/exports/create` | `communications.compliance_export` | requirePermission | `ExportCreateSchema` | `netlify/functions/routes/communicationsCompliance.ts:449` | - | communicationsCompliance |
-| `/api/communications/compliance/exports/download` | `communications.compliance_export` | requirePermission | `ExportDownloadSchema` | `netlify/functions/routes/communicationsCompliance.ts:465` | - | communicationsCompliance |
-| `/api/communications/compliance/exports/list` | `communications.compliance_read` | requirePermission | `ExportsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:439` | - | communicationsCompliance |
-| `/api/communications/compliance/grants/revoke` | `communications.compliance_read` | requirePermission | `GrantRevokeSchema` | `netlify/functions/routes/communicationsCompliance.ts:369` | - | communicationsCompliance |
+| `/api/communications/compliance/access-events/list` | `communications.compliance_read` | requirePermission | `AccessEventsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:442` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/close` | `communications.compliance_read` | requirePermission | `CaseCloseSchema` | `netlify/functions/routes/communicationsCompliance.ts:424` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/decide` | `communications.compliance_read` | requirePermission | `CaseDecisionSchema` | `netlify/functions/routes/communicationsCompliance.ts:287` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/get` | `communications.compliance_read` | requirePermission | `CaseGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:245` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/list` | `communications.compliance_read` | requirePermission | `CasesListSchema` | `netlify/functions/routes/communicationsCompliance.ts:235` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/request` | `communications.compliance_read` | requirePermission | `CaseRequestSchema` | `netlify/functions/routes/communicationsCompliance.ts:255` | - | communicationsCompliance |
+| `/api/communications/compliance/conversations/read` | `communications.compliance_read` | requirePermission | `ConversationReadSchema` | `netlify/functions/routes/communicationsCompliance.ts:329` | - | communicationsCompliance |
+| `/api/communications/compliance/conversations/search` | `communications.compliance_read` | requirePermission | `ConversationSearchSchema` | `netlify/functions/routes/communicationsCompliance.ts:319` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/create` | `communications.compliance_export` | requirePermission | `ExportCreateSchema` | `netlify/functions/routes/communicationsCompliance.ts:462` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/download` | `communications.compliance_export` | requirePermission | `ExportDownloadSchema` | `netlify/functions/routes/communicationsCompliance.ts:478` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/list` | `communications.compliance_read` | requirePermission | `ExportsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:452` | - | communicationsCompliance |
+| `/api/communications/compliance/grants/revoke` | `communications.compliance_read` | requirePermission | `GrantRevokeSchema` | `netlify/functions/routes/communicationsCompliance.ts:382` | - | communicationsCompliance |
+| `/api/communications/compliance/summary/get` | `communications.compliance_read` | requirePermission | `SummaryGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:225` | - | communicationsCompliance |
 | `/api/communications/messages/activity` | `communications.view` | requirePermission | `z.object({ threadId: z.uuid() })` | `netlify/functions/routes/communications.ts:435` | - | communications |
 | `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:638` | useArchiveThread @ src/api/communications.ts:617<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279 | communications |
 | `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:598` | useCreateMessageAttachment @ src/api/communications.ts:370<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
@@ -402,13 +403,14 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.message_compliance_export_fail_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:682` |
 | function | `public.message_compliance_export_download_prepare` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:819` |
 | function | `public.message_compliance_export_download_record_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:906` |
+| function | `public.message_compliance_summary` | `supabase/migrations/20260919000436_messaging_compliance_summary.sql:16` |
 
 ## E2E Suites
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
 | Communications (Notifications · Messages · Tickets) | 103 | 40 | `scripts/e2e/suites/communications.mjs` |
-| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 42 | 18 | `scripts/e2e/suites/communicationsCompliance.mjs` |
+| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 43 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
 | Messenger — two-session realtime verification | 8 | 4 | `scripts/e2e/suites/messengerRealtime.mjs` |
 
@@ -419,11 +421,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/communications.ts` | 1125 |
-| backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 482 |
+| backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 495 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
 | e2e-suite | `scripts/e2e/suites/communications.mjs` | 998 |
-| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1110 |
+| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1166 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | frontend-api | `src/api/communications.ts` | 885 |

@@ -27,6 +27,7 @@ import type {
   ComplianceExportsListRequest,
   ComplianceExportsListResponse,
   ComplianceGrant,
+  ComplianceSummary,
 } from '../../../../types/messagingCompliance';
 
 interface Actor {
@@ -198,6 +199,30 @@ function actorRef(id: string | null, names: Map<string, string>): ComplianceActo
 function nonEmptyTrimmed(value: string | null | undefined): string | null {
   const trimmed = value?.trim() ?? '';
   return trimmed.length > 0 ? trimmed : null;
+}
+
+function isComplianceSummary(value: unknown): value is ComplianceSummary {
+  if (!value || typeof value !== 'object') return false;
+  const row = value as Partial<ComplianceSummary>;
+  return Number.isInteger(row.activeCases)
+    && Number.isInteger(row.pendingApprovalCases)
+    && Number.isInteger(row.expiringWithin24Hours)
+    && Number.isInteger(row.exportsThisMonth)
+    && (row.activeCases ?? -1) >= 0
+    && (row.pendingApprovalCases ?? -1) >= 0
+    && (row.expiringWithin24Hours ?? -1) >= 0
+    && (row.exportsThisMonth ?? -1) >= 0
+    && typeof row.asOf === 'string'
+    && !Number.isNaN(Date.parse(row.asOf));
+}
+
+export async function getComplianceSummary(): Promise<ComplianceSummary> {
+  const result = await sb.rpc('message_compliance_summary') as unknown as DbResult<unknown>;
+  ensureNoError(result.error, 'load compliance summary');
+  if (!isComplianceSummary(result.data)) {
+    throw httpError('Compliance summary returned an invalid contract.', 500);
+  }
+  return result.data;
 }
 
 async function loadNames(ids: Iterable<string | null>): Promise<Map<string, string>> {

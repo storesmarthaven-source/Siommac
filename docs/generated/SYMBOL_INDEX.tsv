@@ -1831,39 +1831,41 @@ finalizeComplianceExportTx	function	platform	true		netlify/functions/lib/messagi
 failComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	324	
 prepareComplianceExportDownload	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	344	
 recordComplianceExportDownloadTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	356	
-Actor	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	32	
-PermissionContext	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	37	
-CaseRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	42	
-GrantRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	65	
-CaseThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	80	
-ThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	89	
-UserRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	99	
-ExportRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	105	
-DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	126	
-CursorPayload	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	131	
-CASE_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	137	
-GRANT_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	145	
-httpError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	151	
-ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	155	
-fingerprint	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	159	
-encodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	163	
-decodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	168	
-permissionContext	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	185	
-actorRef	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	193	
-nonEmptyTrimmed	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	198	
-loadNames	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	203	
-grantStatus	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	217	
-caseCapabilities	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	223	
-activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	246	
-applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	260	
-queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	269	
-listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	292	
-getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	404	
-searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	537	
-listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	607	
-listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	689	
-getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	768	
-listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	832	
+Actor	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	33	
+PermissionContext	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	38	
+CaseRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	43	
+GrantRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	66	
+CaseThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	81	
+ThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	90	
+UserRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	100	
+ExportRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	106	
+DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	127	
+CursorPayload	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	132	
+CASE_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	138	
+GRANT_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	146	
+httpError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	152	
+ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	156	
+fingerprint	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	160	
+encodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	164	
+decodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	169	
+permissionContext	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	186	
+actorRef	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	194	
+nonEmptyTrimmed	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	199	
+isComplianceSummary	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	204	
+getComplianceSummary	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	219	
+loadNames	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	228	
+grantStatus	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	242	
+caseCapabilities	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	248	
+activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	271	
+applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	285	
+queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	294	
+listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	317	
+getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	429	
+searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	562	
+listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	632	
+listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	714	
+getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	793	
+listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	857	
 MSG_SQLSTATE_HTTP	object	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	20	
 msgRpcHttpError	function	platform	true		netlify/functions/lib/messaging/messagingRpc.ts	29	
 RpcResponse	interface	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	41	
@@ -2588,23 +2590,24 @@ CreateTicketSchema	variable	communications	false		netlify/functions/routes/commu
 TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1002	
 CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1051	
 UpdateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1093	
-router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	35	
-args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
-CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	39	
-ACCESS_EVENT_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	47	
-CasesListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	60	
-CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	67	
-CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	69	
-CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	81	
-ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	88	
-ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	107	
-GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	115	
-CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	121	
-AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	127	
-ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	146	
-ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	152	
-ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	179	
-notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	184	
+router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
+args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	37	
+CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	40	
+ACCESS_EVENT_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	48	
+SummaryGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	61	
+CasesListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	63	
+CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	70	
+CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	72	
+CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	84	
+ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	91	
+ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	110	
+GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	118	
+CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	124	
+AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	130	
+ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	149	
+ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	155	
+ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	182	
+notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	187	
 router	variable	hr	false		netlify/functions/routes/departments.ts	7	
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
@@ -3230,19 +3233,21 @@ CAPABILITY_KEYS	array	communications	false	test	scripts/e2e/suites/communication
 GRANT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	44	
 EXPORT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	50	
 MESSAGE_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	57	
-sortedKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	62	
-exactKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	66	
-assertNoMessagePayload	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	73	
-expectStatus	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	87	
-sha256	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	94	
-rows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	98	
-countRows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	104	
-fetchArtifact	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	108	
-run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	121	
-requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	178	run
-approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	200	run
-assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	205	run
-requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	245	run
+SUMMARY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	62	
+sortedKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	67	
+exactKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	71	
+assertNoMessagePayload	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	78	
+expectStatus	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	92	
+sha256	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	99	
+rows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	103	
+countRows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	109	
+fetchArtifact	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	113	
+run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	126	
+requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	184	run
+approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	206	run
+readSummary	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	211	run
+assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	220	run
+requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	260	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -10844,34 +10849,35 @@ ComplianceAccessEventType	type	platform	true		types/messagingCompliance.ts	22
 ComplianceExportFormat	type	platform	true		types/messagingCompliance.ts	34	
 ComplianceExportStatus	type	platform	true		types/messagingCompliance.ts	35	
 ComplianceCapabilities	interface	platform	true		types/messagingCompliance.ts	37	
-ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	46	
-ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	51	
-ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	65	
-ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	82	
-ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	99	
-ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	111	
-ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	120	
-ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	132	
-ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	144	
-ComplianceExport	interface	platform	true		types/messagingCompliance.ts	158	
-ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	182	
-ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	187	
-ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	194	
-ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	200	
-ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	204	
-ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	213	
-ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	220	
-ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	226	
-ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	237	
-ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	242	
-ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	250	
-ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	256	
-ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	267	
-ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	272	
-ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	278	
-ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	283	
-ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	294	
-ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	299	
+ComplianceSummary	interface	platform	true		types/messagingCompliance.ts	50	
+ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	58	
+ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	63	
+ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	77	
+ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	94	
+ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	111	
+ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	123	
+ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	132	
+ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	144	
+ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	156	
+ComplianceExport	interface	platform	true		types/messagingCompliance.ts	170	
+ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	194	
+ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	199	
+ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	206	
+ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	212	
+ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	216	
+ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	225	
+ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	232	
+ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	238	
+ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	249	
+ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	254	
+ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	262	
+ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	268	
+ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	279	
+ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	284	
+ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	290	
+ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	295	
+ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	306	
+ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	311	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	

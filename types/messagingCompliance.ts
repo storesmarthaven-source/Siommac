@@ -43,6 +43,18 @@ export interface ComplianceCapabilities {
   canViewAccessLog: boolean;
 }
 
+/**
+ * Complete-dataset operational counts for the four compliance mockup cards.
+ * `exportsThisMonth` counts ready exports generated in the current UTC month.
+ */
+export interface ComplianceSummary {
+  activeCases: number;
+  pendingApprovalCases: number;
+  expiringWithin24Hours: number;
+  exportsThisMonth: number;
+  asOf: string;
+}
+
 export interface ComplianceActorRef {
   id: string;
   displayName: string | null;

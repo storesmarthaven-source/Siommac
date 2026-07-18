@@ -162,6 +162,19 @@ The shell contains:
 
 The top-level Messenger `QueueHeader` remains visible above this shell.
 
+Directly below the shell header, render the mockup's four compact operational
+summary cards. Their only data source is
+`communications/compliance/summary/get`; never calculate these values from the
+paginated case/export lists:
+
+- `Active Cases` -> `activeCases`
+- `Pending Approval` -> `pendingApprovalCases`
+- `Expiring Within 24h` -> `expiringWithin24Hours`
+- `Exports This Month` -> `exportsThisMonth`
+
+Use `asOf` as the snapshot timestamp. Loading, unavailable, and retry states
+apply to the entire four-card band so cards never display a mixed snapshot.
+
 ### 6.2 Cases
 
 Use the mockup's case register as the visual baseline.
@@ -347,6 +360,7 @@ Required operations:
 
 | Hook/function | Route |
 | --- | --- |
+| `useComplianceSummary` | `communications/compliance/summary/get` |
 | `useComplianceCases` | `communications/compliance/cases/list` |
 | `useComplianceCase` | `communications/compliance/cases/get` |
 | `useRequestComplianceCase` | `communications/compliance/cases/request` |
@@ -365,6 +379,7 @@ Suggested query keys:
 ```ts
 const complianceKeys = {
   all: ["communications", "compliance"] as const,
+  summary: () => [...complianceKeys.all, "summary"] as const,
   cases: (filters: ComplianceCaseListRequest) =>
     [...complianceKeys.all, "cases", filters] as const,
   case: (caseId: string) =>
@@ -452,8 +467,8 @@ under another case header.
 - No hard-coded dark-only surface.
 - Cards use 8px radius or less.
 - Use Lucide/current Messenger icons, not Font Awesome additions or hand SVGs.
-- No charts, KPI dashboard, decorative gradients, nested cards, or oversized
-  marketing headings.
+- No charts, decorative gradients, nested cards, or oversized marketing
+  headings. The four approved operational summary cards are the only KPI band.
 - Commands use icons where a familiar icon exists, with tooltips for unfamiliar
   icons.
 - Focus-visible, hover, selected, disabled, loading, empty, and error states

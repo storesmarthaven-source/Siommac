@@ -496,6 +496,7 @@ fresh immutable evidence.
 
 Add:
 
+- `communications/compliance/summary/get`
 - `communications/compliance/cases/list`
 - `communications/compliance/cases/get`
 - `communications/compliance/cases/request`
@@ -540,6 +541,7 @@ Create `types/messagingCompliance.ts`.
 
 Required DTO groups:
 
+- `ComplianceSummary`
 - `ComplianceCaseSummary`
 - `ComplianceCaseDetail`
 - `ComplianceCaseThread`
@@ -599,6 +601,19 @@ Keep the existing Compliance entry and provide three views:
 Exports appear inside the selected case instead of requiring a fourth V1 page.
 
 This is a dense operational surface, not a widget board. No charts.
+
+The Cases view begins with the four compact operational cards shown in the
+approved mockup. They are supplied only by
+`communications/compliance/summary/get`; the frontend must not derive them
+from a paginated case list:
+
+- Active Cases: approved cases whose validity has not expired.
+- Pending Approval: cases currently awaiting an independent decision.
+- Expiring Within 24h: active cases expiring after the summary snapshot and
+  within the following 24 hours.
+- Exports This Month: ready exports generated in the current UTC month.
+
+The response includes `asOf` so the UI can identify the snapshot time.
 
 ### 9.3 Cases view
 
