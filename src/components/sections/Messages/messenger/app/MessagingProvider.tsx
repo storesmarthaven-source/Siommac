@@ -225,12 +225,16 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   const [online, setOnline] = useState<ReadonlySet<UserId>>(new Set());
 
   const refreshTimerRef = useRef<number | null>(null);
+  // Trailing coalescer for realtime bursts: long enough to fold a rapid flurry
+  // of signals into one refetch, short enough that a single incoming message
+  // renders promptly (the authenticated refetch itself is the latency floor).
+  const NARROW_REFRESH_COALESCE_MS = 120;
   const scheduleNarrowRefresh = useCallback(() => {
     if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current);
     refreshTimerRef.current = window.setTimeout(() => {
       refreshTimerRef.current = null;
       void refreshNarrow();
-    }, 400);
+    }, NARROW_REFRESH_COALESCE_MS);
   }, [refreshNarrow]);
   useEffect(() => () => { if (refreshTimerRef.current !== null) window.clearTimeout(refreshTimerRef.current); }, []);
 

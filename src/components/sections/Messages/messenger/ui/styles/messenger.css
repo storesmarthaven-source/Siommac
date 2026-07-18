@@ -35,9 +35,13 @@
 .sm-workspace svg { width: 1em; height: 1em; stroke-width: 1.9; }
 .sm-avatar__initials { width: 100%; height: 100%; border-radius: 50%; display: grid; place-items: center; border: 1px solid #e2e9f1; color: #fff; background: var(--sm-navy-2); font-size: 40%; font-weight: 600; letter-spacing: .02em; }
 .sm-workspace { min-width: 1180px; min-height: 100%; padding: 12px; background: #f4f7fb; }
-.sm-shell { height: calc(100vh - 108px); min-height: 620px; display: grid; grid-template-columns: minmax(300px, 19.8vw) minmax(520px, 1fr) minmax(320px, 19.1vw); overflow: hidden; background: #fff; border: 1px solid var(--sm-line); border-radius: 8px; }
+/* Single row pinned to the shell height (minmax(0,…) lets the columns shrink
+   below content so their OWN overflow scrolls — without it a long conversation
+   list stretches this row and pushes the middle column's composer past the
+   overflow:hidden clip, i.e. off-screen). */
+.sm-shell { height: calc(100vh - 108px); min-height: 620px; display: grid; grid-template-columns: minmax(300px, 19.8vw) minmax(520px, 1fr) minmax(320px, 19.1vw); grid-template-rows: minmax(0, 1fr); overflow: hidden; background: #fff; border: 1px solid var(--sm-line); border-radius: 8px; }
 
-.sm-thread-sidebar { min-width: 0; display: flex; flex-direction: column; border-right: 1px solid var(--sm-line); background: #fff; }
+.sm-thread-sidebar { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid var(--sm-line); background: #fff; }
 .sm-thread-sidebar > header { height: 66px; padding: 12px 15px; display: flex; align-items: center; gap: 10px; }
 .sm-thread-sidebar > header h2 { margin: 0; font-size: 17px; font-weight: 600; }
 .sm-search { height: 40px; margin: 0 14px 12px; padding: 0 11px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--sm-line); border-radius: 6px; color: #8190a5; background: #fff; }
@@ -49,7 +53,7 @@
 .sm-thread-filters button[aria-selected="true"] { border-bottom-color: var(--sm-navy); color: var(--sm-ink); font-weight: 600; }
 .sm-thread-sidebar__label { padding: 12px 14px 6px; display: flex; justify-content: space-between; color: #718299; font-size: 11px; text-transform: uppercase; }
 .sm-thread-sidebar__label small { font-size: inherit; }
-.sm-thread-list { min-height: 0; padding: 0 8px 12px; overflow-y: auto; }
+.sm-thread-list { flex: 1; min-height: 0; padding: 0 8px 12px; overflow-y: auto; }
 .sm-thread-list > button { position: relative; width: 100%; min-height: 66px; padding: 9px 8px; border: 0; border-radius: 6px; display: grid; grid-template-columns: 38px minmax(0, 1fr) auto; gap: 9px; align-items: center; text-align: left; background: transparent; cursor: pointer; }
 .sm-thread-list > button.is-group { grid-template-columns: 56px minmax(0, 1fr) auto; }
 .sm-thread-list > button:hover { background: #f4f7fb; }
@@ -249,7 +253,7 @@
 .sm-link-entry input { min-width: 0; flex: 1; border: 0; outline: 0; font-size: 12px; }
 .sm-link-entry button { height: 28px; padding: 0 10px; border: 0; border-radius: 5px; color: #fff; background: var(--sm-navy); cursor: pointer; font-size: 11px; }
 
-.sm-details-panel { min-width: 0; overflow-y: auto; color: #edf5ff; background: #18365f; }
+.sm-details-panel { min-width: 0; min-height: 0; overflow-y: auto; color: #edf5ff; background: #18365f; }
 .sm-panel-section { padding: 14px; border-bottom: 1px solid rgba(255,255,255,.12); }
 .sm-panel-section > header { margin-bottom: 10px; display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .sm-panel-section > header > span { display: flex; align-items: center; gap: 7px; color: #afc3dc; }
@@ -397,7 +401,10 @@ button.sm-related-record { cursor: pointer; }.sm-related-record small { color: #
 .sm-remove-participant { position: absolute; top: 50%; right: 5px; width: 27px; height: 27px; transform: translateY(-50%); color: #dce9f8; background: #2b466f; opacity: 0; }
 .sm-participant-list > div:hover .sm-remove-participant,
 .sm-remove-participant:focus-visible { opacity: 1; }
-.sm-participant-list > div:hover > em { visibility: hidden; }
+/* Only hide the presence pill on hover when a remove button actually takes its
+   place (group threads). In a direct thread there is no remove button, so
+   hovering used to blank the "online" pill for no reason. */
+.sm-participant-list > div:hover:has(.sm-remove-participant) > em { visibility: hidden; }
 
 .sm-pinned-item { margin-bottom: 6px; }
 .sm-pinned-item:last-child { margin-bottom: 0; }

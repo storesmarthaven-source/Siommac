@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "7e5ce3ac3b22682a6044eb6f973feaf46121e6d1",
+    "head": "824f6b4f9a442f27e21da6f7e8ede44ce823a041",
     "branch": "main",
-    "fingerprint": "eb15d38f16dd7fcc2d9f9559",
+    "fingerprint": "7461b99c4ef55adc6711b7d7",
     "indexedFiles": 1384
   },
   "summary": {
@@ -5103,8 +5103,8 @@
       "path": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 572,
-      "hash": "d26b996212fb50f0"
+      "lines": 576,
+      "hash": "3db91351dbe831ec"
     },
     {
       "path": "src/components/sections/Messages/messenger/app/selectors.ts",
@@ -90775,7 +90775,7 @@
       "name": "patch",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 341,
+      "line": 345,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -90785,7 +90785,7 @@
       "name": "flip",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 362,
+      "line": 366,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -90795,7 +90795,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 383,
+      "line": 387,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -90805,7 +90805,7 @@
       "name": "useMessaging",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 567,
+      "line": 571,
       "module": "communications",
       "exported": true,
       "container": "",

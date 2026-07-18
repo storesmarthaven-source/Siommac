@@ -7961,10 +7961,10 @@ MessagingProviderProps	interface	communications	true		src/components/sections/Me
 MessagingProvider	function	communications	true	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	86	
 preserveClientKeys	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	115	MessagingProvider
 mergeThreadMessages	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	147	MessagingProvider
-patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	341	actions
-flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	362	actions
-toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	383	actions
-useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	567	
+patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	345	actions
+flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	366	actions
+toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	387	actions
+useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	571	
 userById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	7	
 threadById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	12	
 messagesForThread	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	18	

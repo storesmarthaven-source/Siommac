@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `eb15d38f16dd7fcc2d9f9559`
+Source fingerprint: `7461b99c4ef55adc6711b7d7`
 
 Files: 91 | Symbols: 830 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 3
 
@@ -220,7 +220,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `MessageDropdown` | function / component | `src/components/sections/Messages/MessageDropdown.tsx:38` | `-` |
 | `MessageDropdownItem` | function / component | `src/components/sections/Messages/MessageDropdownItem.tsx:33` | `-` |
 | `MessagingProvider` | function / component | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:86` | `-` |
-| `useMessaging` | function / hook | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:567` | `-` |
+| `useMessaging` | function / hook | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:571` | `-` |
 | `CollaborationCard` | interface / ui-tile | `src/components/sections/Messages/messenger/domain/models.ts:53` | `-` |
 | `MessengerWorkspace` | function / component | `src/components/sections/Messages/messenger/MessengerWorkspace.tsx:18` | `-` |
 | `AppearanceDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx:28` | `-` |
@@ -413,7 +413,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/adapters/siomacAttachments.ts` | 63 |
 | frontend-page | `src/components/sections/Messages/messenger/adapters/siomacRealtime.ts` | 162 |
 | frontend-page | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts` | 323 |
-| frontend-page | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx` | 572 |
+| frontend-page | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx` | 576 |
 | frontend-page | `src/components/sections/Messages/messenger/app/selectors.ts` | 31 |
 | frontend-page | `src/components/sections/Messages/messenger/app/typingState.test.ts` | 48 |
 | frontend-page | `src/components/sections/Messages/messenger/app/typingState.ts` | 58 |
