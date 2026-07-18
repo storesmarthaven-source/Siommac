@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "4746e3a7846d9a71dda2020b5770cdd1ed3f83ce",
+    "head": "ed3f7296e179479650af9c0ddd8fa074b82eb56c",
     "branch": "main",
-    "fingerprint": "57a2c42d25f14cf7ce406473",
+    "fingerprint": "1a7cce14127da8a837615a91",
     "indexedFiles": 1390
   },
   "summary": {
@@ -142077,7 +142077,7 @@
     {
       "name": "authenticated read msg access grants",
       "kind": "policy",
-      "file": "supabase/migrations/20260919000430_drop_grants_authenticated_read.sql",
+      "file": "supabase/migrations/20260919000432_drop_grants_authenticated_read.sql",
       "line": 7,
       "module": "security"
     }
