@@ -317,10 +317,8 @@ export class Harness {
    *   - checkerUser.role === 'superadmin' and has permissions.manage in user_permissions
    *   - makerUser.id !== checkerUser.id  (server enforces segregation of duties)
    *
-   * Expiry: user_permissions has NO expires_at column. Once approved the grant
-   * persists until revokeCriticalPerm() is called. Grant expiry is NOT supported
-   * at the user_permissions level (this is a known gap; the permission_grant_approvals
-   * window is 7 days for the APPROVAL REQUEST only, not the resulting grant).
+   * Compliance read/export grants are dated and default to a seven-day validity
+   * window here. Other critical permissions retain their existing approval shape.
    *
    * Registers cleanup that restores the exact pre-test override. A borrowed
    * roster actor may already hold an explicit grant or deny.
@@ -331,8 +329,13 @@ export class Harness {
     const previous = await this.readPermissionOverride(targetUserId, permissionKey);
     // Step 1 — MAKER requests the grant (creates a pending approval row)
     const makerToken = this.mint(makerUser);
+    const isCompliance = permissionKey === 'communications.compliance_read'
+      || permissionKey === 'communications.compliance_export';
+    const validFrom = new Date(Date.now() - 60_000).toISOString();
+    const validUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString();
     const reqRes = await this.api('superadmin/setUserPermission', makerToken, {
       userId: targetUserId, permission: permissionKey, granted: true, reason,
+      ...(isCompliance ? { validFrom, validUntil } : {}),
     });
     if (!reqRes.body.success || !reqRes.body.pending) {
       throw new Error(

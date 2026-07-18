@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ed3f7296e179479650af9c0ddd8fa074b82eb56c",
-    "branch": "main",
-    "fingerprint": "1a7cce14127da8a837615a91",
-    "indexedFiles": 1390
+    "head": "963ffca77ae88605d0d19e313defe049741691dd",
+    "branch": "Codex/wonderful-panini-34b331",
+    "fingerprint": "bc6631ec0f77a6a3dbf91521",
+    "indexedFiles": 1401
   },
   "summary": {
-    "files": 1092,
-    "symbols": 10694,
+    "files": 1100,
+    "symbols": 10878,
     "widgets": 22,
-    "routes": 858,
-    "routeDefinitions": 859,
+    "routes": 867,
+    "routeDefinitions": 868,
     "unmountedRoutes": 17,
     "apiCalls": 368,
-    "databaseObjects": 1117,
+    "databaseObjects": 1157,
     "e2eSuites": 64,
-    "e2eTests": 2117
+    "e2eTests": 2136
   },
   "modules": [
     {
@@ -74,13 +74,13 @@
     {
       "id": "communications",
       "counts": {
-        "files": 92,
-        "symbols": 832,
+        "files": 93,
+        "symbols": 855,
         "widgets": 0,
-        "routes": 62,
-        "routeDefinitions": 65,
+        "routes": 71,
+        "routeDefinitions": 74,
         "apiCalls": 77,
-        "databaseObjects": 88,
+        "databaseObjects": 118,
         "e2eSuites": 4
       }
     },
@@ -106,7 +106,7 @@
         "routes": 49,
         "routeDefinitions": 49,
         "apiCalls": 31,
-        "databaseObjects": 58,
+        "databaseObjects": 65,
         "e2eSuites": 3
       }
     },
@@ -139,21 +139,21 @@
     {
       "id": "platform",
       "counts": {
-        "files": 269,
-        "symbols": 2341,
+        "files": 275,
+        "symbols": 2499,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 41,
         "apiCalls": 50,
-        "databaseObjects": 237,
+        "databaseObjects": 240,
         "e2eSuites": 0
       }
     },
     {
       "id": "testing",
       "counts": {
-        "files": 22,
-        "symbols": 124,
+        "files": 23,
+        "symbols": 127,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -168,8 +168,8 @@
       "path": "netlify/functions/api.ts",
       "module": "platform",
       "role": "backend",
-      "lines": 340,
-      "hash": "613aea924ac85c1f"
+      "lines": 341,
+      "hash": "9889e6ba9da17e95"
     },
     {
       "path": "netlify/functions/auto-checkout.ts",
@@ -224,8 +224,8 @@
       "path": "netlify/functions/lib/auth.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 483,
-      "hash": "7ff2672b01d8b1a1"
+      "lines": 493,
+      "hash": "ae1ca9378c87729a"
     },
     {
       "path": "netlify/functions/lib/bootstrapEnv.ts",
@@ -252,8 +252,8 @@
       "path": "netlify/functions/lib/communications.ts",
       "module": "communications",
       "role": "backend-lib",
-      "lines": 2172,
-      "hash": "b231056545c6d72b"
+      "lines": 1955,
+      "hash": "6e275b01794d118b"
     },
     {
       "path": "netlify/functions/lib/db.ts",
@@ -1040,6 +1040,41 @@
       "hash": "b5e58ff827f7295a"
     },
     {
+      "path": "netlify/functions/lib/messaging/complianceEvidence.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 33,
+      "hash": "180a43e40a5158bb"
+    },
+    {
+      "path": "netlify/functions/lib/messaging/complianceExport.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 545,
+      "hash": "f58604fd77ac2fba"
+    },
+    {
+      "path": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 460,
+      "hash": "2e2cf69f97c6cfde"
+    },
+    {
+      "path": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 372,
+      "hash": "bb9d6710a694bdb4"
+    },
+    {
+      "path": "netlify/functions/lib/messaging/complianceService.ts",
+      "module": "platform",
+      "role": "backend-lib",
+      "lines": 855,
+      "hash": "0a6ec7bc0dae7e34"
+    },
+    {
       "path": "netlify/functions/lib/messaging/messagingRpc.ts",
       "module": "platform",
       "role": "backend-lib",
@@ -1106,8 +1141,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1114,
-      "hash": "a481b7c70aab6fb1"
+      "lines": 1128,
+      "hash": "ebc974c15fe46987"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -1617,8 +1652,8 @@
       "path": "netlify/functions/routes/auth.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 777,
-      "hash": "99ec46a47905ee98"
+      "lines": 769,
+      "hash": "ce7179bb156104f9"
     },
     {
       "path": "netlify/functions/routes/auth2fa.ts",
@@ -1645,8 +1680,15 @@
       "path": "netlify/functions/routes/communications.ts",
       "module": "communications",
       "role": "backend-route",
-      "lines": 1191,
-      "hash": "ff2113ef15d571ee"
+      "lines": 1125,
+      "hash": "c08aef9658725a67"
+    },
+    {
+      "path": "netlify/functions/routes/communicationsCompliance.ts",
+      "module": "communications",
+      "role": "backend-route",
+      "lines": 482,
+      "hash": "49bfcc8a25fd56bb"
     },
     {
       "path": "netlify/functions/routes/departments.ts",
@@ -1939,8 +1981,8 @@
       "path": "netlify/functions/routes/permissionApprovals.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 290,
-      "hash": "988d4b5d040b426a"
+      "lines": 281,
+      "hash": "e890dbd28da6d12e"
     },
     {
       "path": "netlify/functions/routes/settings.ts",
@@ -1967,8 +2009,8 @@
       "path": "netlify/functions/routes/superadmin.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 638,
-      "hash": "8be9ab05c8237771"
+      "lines": 762,
+      "hash": "b82c3996f4d0295e"
     },
     {
       "path": "netlify/functions/routes/tickets.ts",
@@ -2100,8 +2142,8 @@
       "path": "scripts/e2e/harness.mjs",
       "module": "testing",
       "role": "tooling",
-      "lines": 380,
-      "hash": "16be1ac2f51a9b49"
+      "lines": 405,
+      "hash": "6d6807a70f4df30a"
     },
     {
       "path": "scripts/e2e/helpers/payrollRun.mjs",
@@ -2149,15 +2191,15 @@
       "path": "scripts/e2e/suites/communications.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 1045,
-      "hash": "1b6c4534f1cf31b3"
+      "lines": 998,
+      "hash": "ea5ef728f77b6756"
     },
     {
       "path": "scripts/e2e/suites/communicationsCompliance.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 317,
-      "hash": "349d62ea6b09aae9"
+      "lines": 1110,
+      "hash": "1a9cfeb93b8d54fa"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -7567,8 +7609,8 @@
       "path": "tests/unit/criticalPermResolver.test.ts",
       "module": "testing",
       "role": "test",
-      "lines": 225,
-      "hash": "346c99d178f373ae"
+      "lines": 308,
+      "hash": "c8d631691d7f6c92"
     },
     {
       "path": "tests/unit/deliveryProtection.test.ts",
@@ -7590,6 +7632,13 @@
       "role": "test",
       "lines": 137,
       "hash": "1c30e3b520d2ffdc"
+    },
+    {
+      "path": "tests/unit/messagingComplianceExport.test.ts",
+      "module": "testing",
+      "role": "test",
+      "lines": 203,
+      "hash": "9a4fb893028f1b0b"
     },
     {
       "path": "tests/unit/overtimeRules.test.ts",
@@ -7802,6 +7851,13 @@
       "hash": "1f021d8fedd68489"
     },
     {
+      "path": "types/messagingCompliance.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 304,
+      "hash": "9e0661c05a2dd7bd"
+    },
+    {
       "path": "types/supabase.ts",
       "module": "platform",
       "role": "shared-types",
@@ -7814,7 +7870,7 @@
       "name": "ALLOWED_ORIGINS",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 84,
+      "line": 85,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7824,7 +7880,7 @@
       "name": "isAllowedOrigin",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 97,
+      "line": 98,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7834,7 +7890,7 @@
       "name": "app",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 106,
+      "line": 107,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7844,7 +7900,7 @@
       "name": "_legacyDispatch",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 257,
+      "line": 259,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7854,7 +7910,7 @@
       "name": "NetlifyV1Event",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 288,
+      "line": 289,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7864,7 +7920,7 @@
       "name": "NetlifyV1Context",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 297,
+      "line": 298,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -7874,7 +7930,7 @@
       "name": "handler",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 301,
+      "line": 302,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -8524,7 +8580,7 @@
       "name": "requirePermission",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 402,
+      "line": 412,
       "module": "security",
       "exported": false,
       "container": "",
@@ -8534,7 +8590,7 @@
       "name": "userCan",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 428,
+      "line": 438,
       "module": "security",
       "exported": false,
       "container": "",
@@ -8544,7 +8600,7 @@
       "name": "log_",
       "kind": "function",
       "file": "netlify/functions/lib/auth.ts",
-      "line": 440,
+      "line": 450,
       "module": "security",
       "exported": false,
       "container": "",
@@ -8844,7 +8900,7 @@
       "name": "ThreadAccessVia",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 85,
+      "line": 84,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -8854,7 +8910,7 @@
       "name": "ThreadAccessResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 87,
+      "line": 86,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -8864,17 +8920,17 @@
       "name": "recordViewPermissionKey",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 100,
+      "line": 99,
       "module": "communications",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "hasActiveThreadGrant",
+      "name": "communicationsReadUnavailable",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 110,
+      "line": 108,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -8884,97 +8940,7 @@
       "name": "resolveThreadReadAccess",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 128,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "COMPLIANCE_REASONS",
-      "kind": "variable",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 176,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComplianceReason",
-      "kind": "type",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 180,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RequestThreadAccessInput",
-      "kind": "interface",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 182,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RequestThreadAccessResult",
-      "kind": "interface",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 191,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "requestThreadAccess",
-      "kind": "function",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 205,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "recordThreadExport",
-      "kind": "function",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 268,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComplianceThreadRow",
-      "kind": "type",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 304,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "COMPLIANCE_CANDIDATE_CAP",
-      "kind": "variable",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 306,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "searchThreadsForCompliance",
-      "kind": "function",
-      "file": "netlify/functions/lib/communications.ts",
-      "line": 312,
+      "line": 120,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -8984,7 +8950,7 @@
       "name": "ResolveRecordThreadInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 389,
+      "line": 172,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -8994,7 +8960,7 @@
       "name": "ResolveRecordThreadResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 399,
+      "line": 182,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9004,7 +8970,7 @@
       "name": "resolveRecordThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 407,
+      "line": 190,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9014,7 +8980,7 @@
       "name": "emitSignal",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 509,
+      "line": 292,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9024,7 +8990,7 @@
       "name": "CommsSummary",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 538,
+      "line": 321,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9034,7 +9000,7 @@
       "name": "getCommsSummary",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 562,
+      "line": 345,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9044,7 +9010,7 @@
       "name": "NotifFlags",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 610,
+      "line": 393,
       "module": "communications",
       "exported": false,
       "container": "getCommsSummary",
@@ -9054,7 +9020,7 @@
       "name": "_countFromSettled",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 632,
+      "line": 415,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9064,7 +9030,7 @@
       "name": "_countWorkflowTasks",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 638,
+      "line": 421,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9074,7 +9040,7 @@
       "name": "_ensureRealtimeChannel",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 656,
+      "line": 439,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9084,7 +9050,7 @@
       "name": "tsMs",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 695,
+      "line": 478,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9094,7 +9060,7 @@
       "name": "_countUnreadThreads",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 697,
+      "line": 480,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9104,7 +9070,7 @@
       "name": "CreateThreadInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 735,
+      "line": 518,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9114,7 +9080,7 @@
       "name": "CreateThreadResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 750,
+      "line": 533,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9124,7 +9090,7 @@
       "name": "createMessageThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 760,
+      "line": 543,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9134,7 +9100,7 @@
       "name": "PostMessageInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 841,
+      "line": 624,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9144,7 +9110,7 @@
       "name": "PostMessageResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 853,
+      "line": 636,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9154,7 +9120,7 @@
       "name": "postMessage",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 863,
+      "line": 646,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9164,7 +9130,7 @@
       "name": "ThreadTab",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 930,
+      "line": 713,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9174,7 +9140,7 @@
       "name": "ListThreadsInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 932,
+      "line": 715,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9184,7 +9150,7 @@
       "name": "ThreadRow",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 941,
+      "line": 724,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9194,7 +9160,7 @@
       "name": "ParticipantProfile",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 942,
+      "line": 725,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9204,7 +9170,7 @@
       "name": "ListThreadsResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 944,
+      "line": 727,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9214,7 +9180,7 @@
       "name": "parseKeyCursor",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 953,
+      "line": 736,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9224,7 +9190,7 @@
       "name": "formatKeyCursor",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 963,
+      "line": 746,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9234,7 +9200,7 @@
       "name": "listThreadsForUser",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 967,
+      "line": 750,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9244,7 +9210,7 @@
       "name": "ParticipantWithThread",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 972,
+      "line": 755,
       "module": "communications",
       "exported": false,
       "container": "listThreadsForUser",
@@ -9254,7 +9220,7 @@
       "name": "ThreadPageRow",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1001,
+      "line": 784,
       "module": "communications",
       "exported": false,
       "container": "listThreadsForUser",
@@ -9264,7 +9230,7 @@
       "name": "GetThreadResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1192,
+      "line": 975,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9274,7 +9240,7 @@
       "name": "getThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1203,
+      "line": 986,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9284,7 +9250,7 @@
       "name": "PostRow",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1300,
+      "line": 1083,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9294,7 +9260,7 @@
       "name": "AttachmentRow",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1301,
+      "line": 1084,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9304,7 +9270,7 @@
       "name": "GetThreadPostsResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1303,
+      "line": 1086,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9314,7 +9280,7 @@
       "name": "getThreadPosts",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1311,
+      "line": 1094,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9324,7 +9290,7 @@
       "name": "RawPost",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1328,
+      "line": 1111,
       "module": "communications",
       "exported": false,
       "container": "getThreadPosts",
@@ -9334,7 +9300,7 @@
       "name": "MessageSearchHit",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1514,
+      "line": 1297,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9344,7 +9310,7 @@
       "name": "MessageSearchResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1523,
+      "line": 1306,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9354,7 +9320,7 @@
       "name": "searchMessagePosts",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1534,
+      "line": 1317,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9364,7 +9330,7 @@
       "name": "Row",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1543,
+      "line": 1326,
       "module": "communications",
       "exported": false,
       "container": "searchMessagePosts",
@@ -9374,7 +9340,7 @@
       "name": "SourceRecordResolver",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1571,
+      "line": 1354,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9384,7 +9350,7 @@
       "name": "s",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1578,
+      "line": 1361,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9394,7 +9360,7 @@
       "name": "SOURCE_RECORD_RESOLVERS",
       "kind": "object",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1583,
+      "line": 1366,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9404,7 +9370,7 @@
       "name": "resolveSourceRecords",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1611,
+      "line": 1394,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9414,7 +9380,7 @@
       "name": "sourceRecordFor",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1638,
+      "line": 1421,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9424,7 +9390,7 @@
       "name": "ListThreadActivityResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1649,
+      "line": 1432,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9434,7 +9400,7 @@
       "name": "listThreadActivity",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1662,
+      "line": 1445,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9444,7 +9410,7 @@
       "name": "PostSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1675,
+      "line": 1458,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9454,7 +9420,7 @@
       "name": "PinSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1676,
+      "line": 1459,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9464,7 +9430,7 @@
       "name": "PartSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1677,
+      "line": 1460,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9474,7 +9440,7 @@
       "name": "MessageAttachmentUploadUrlResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1743,
+      "line": 1526,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9484,7 +9450,7 @@
       "name": "createMessageAttachmentUploadUrl",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1756,
+      "line": 1539,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9494,7 +9460,7 @@
       "name": "CreateMessageAttachmentInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1764,
+      "line": 1547,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9504,7 +9470,7 @@
       "name": "createMessageAttachmentRecord",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1777,
+      "line": 1560,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9514,7 +9480,7 @@
       "name": "getAttachmentUrl",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1813,
+      "line": 1596,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9524,7 +9490,7 @@
       "name": "markThreadRead",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1854,
+      "line": 1637,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9534,7 +9500,7 @@
       "name": "archiveThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1874,
+      "line": 1657,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9544,7 +9510,7 @@
       "name": "muteThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1886,
+      "line": 1669,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9554,7 +9520,7 @@
       "name": "setThreadFavourite",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1901,
+      "line": 1684,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9564,7 +9530,7 @@
       "name": "addThreadParticipants",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1931,
+      "line": 1714,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9574,7 +9540,7 @@
       "name": "removeThreadParticipant",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1987,
+      "line": 1770,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9584,7 +9550,7 @@
       "name": "SearchMessageResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2018,
+      "line": 1801,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9594,7 +9560,7 @@
       "name": "searchMessages",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2027,
+      "line": 1810,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9604,7 +9570,7 @@
       "name": "PostWithAuthorAndThread",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2039,
+      "line": 1822,
       "module": "communications",
       "exported": false,
       "container": "searchMessages",
@@ -9614,7 +9580,7 @@
       "name": "RecipientProfile",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2074,
+      "line": 1857,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9624,7 +9590,7 @@
       "name": "getMessageRecipients",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2076,
+      "line": 1859,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9634,7 +9600,7 @@
       "name": "UserRow",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2078,
+      "line": 1861,
       "module": "communications",
       "exported": false,
       "container": "getMessageRecipients",
@@ -9644,7 +9610,7 @@
       "name": "CreateTicketInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2112,
+      "line": 1895,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9654,7 +9620,7 @@
       "name": "CreateTicketResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2123,
+      "line": 1906,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9664,7 +9630,7 @@
       "name": "createTicket",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2129,
+      "line": 1912,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -25333,6 +25299,1246 @@
       "tags": []
     },
     {
+      "name": "EVIDENCE_DOMAIN",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceEvidence.ts",
+      "line": 5,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "evidencePepper",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceEvidence.ts",
+      "line": 7,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "hashEvidence",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceEvidence.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "complianceEvidenceContext",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceEvidence.ts",
+      "line": 26,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "BUCKET",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 24,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SERIALIZER_VERSION",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MAX_ARTIFACT_BYTES",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 26,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DOWNLOAD_TTL_SECONDS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportStateRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportDownloadRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 43,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DbResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 64,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportBuildResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 69,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "httpError",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 74,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ensureNoError",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 81,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sha256",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 85,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "storagePath",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 89,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadExportState",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 93,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readyFromState",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 107,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uploadOrVerifyExisting",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 131,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordFailure",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 155,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "failureStateUnavailable",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 193,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordFailureAndRethrow",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 212,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createComplianceExport",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 229,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "downloadComplianceExport",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExport.ts",
+      "line": 442,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SERIALIZER_VERSION",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DELETED_MESSAGE_MARKER",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMPTY_MESSAGE_MARKER",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_MARGIN",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 14,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_NAVY",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 15,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_TEXT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 16,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_MUTED",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_BORDER",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PDF_SUBTLE",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 19,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CASE_TYPES",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 20,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CASE_STATUSES",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportCaseSnapshot",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 34,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportThreadSnapshot",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 43,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportRange",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 53,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportSnapshot",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 58,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportRenderFormat",
+      "kind": "type",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 67,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportRenderResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 69,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SafeAttachment",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 76,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SafeMessage",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 85,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SafeExportSnapshot",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 97,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 108,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requiredText",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 112,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nullableText",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 117,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "normalizeText",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 123,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isoInstant",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 127,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nullableIsoInstant",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 134,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "actorRef",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 139,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "attachmentMetadata",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 148,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "messageSnapshot",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 165,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "compareMessages",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 197,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "normalizeMessagingComplianceExportSnapshot",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 206,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "canonicalJsonString",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 256,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderMessagingComplianceJson",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 286,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderSafeJson",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 291,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "formatRange",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 295,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "drawPageHeader",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 299,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ensureVerticalSpace",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 316,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "drawLabelValue",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 326,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "attachmentSummary",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 341,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "drawMessage",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 352,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderSafePdf",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 396,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderMessagingCompliancePdf",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 436,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "renderMessagingComplianceExport",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceExportRenderer.ts",
+      "line": 440,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RpcError",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 18,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RpcResponse",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "unwrap",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceEvidenceContext",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 37,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseMutationResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 42,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceReadRpcResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 52,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceGrantRevokeResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 72,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportRequestResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 83,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportFinalizeResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 99,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportPreparedResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 111,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportFailureResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 125,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportDownloadMetadata",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 135,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestComplianceCaseTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 150,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decideComplianceCaseTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 168,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readComplianceConversationTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 184,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "revokeComplianceGrantTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 205,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "closeComplianceCaseTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 224,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestComplianceExportTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 241,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadComplianceExportSnapshot",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 261,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "prepareComplianceExportUploadTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 273,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "finalizeComplianceExportTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 299,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "failComplianceExportTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 324,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "prepareComplianceExportDownload",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 344,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "recordComplianceExportDownloadTx",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceRpc.ts",
+      "line": 356,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Actor",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 32,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PermissionContext",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GrantRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 65,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseThreadRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 80,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ThreadRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 89,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "UserRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 99,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 105,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DbResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 126,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CursorPayload",
+      "kind": "interface",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 131,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CASE_SELECT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 137,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GRANT_SELECT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 145,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "httpError",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 151,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ensureNoError",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 155,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fingerprint",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 159,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "encodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 163,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 168,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "permissionContext",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 185,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "actorRef",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 193,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nonEmptyTrimmed",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 198,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "loadNames",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 203,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "grantStatus",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 217,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "caseCapabilities",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 223,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activeGrantsForCases",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 246,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "applyCaseCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 260,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "queryCasePage",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 269,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listComplianceCases",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 292,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getComplianceCase",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 404,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "searchComplianceConversations",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 537,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listComplianceAccessEvents",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 607,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listComplianceExports",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 689,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getComplianceExportById",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 768,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listActiveCompliancePermissionHolders",
+      "kind": "function",
+      "file": "netlify/functions/lib/messaging/complianceService.ts",
+      "line": 832,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "MSG_SQLSTATE_HTTP",
       "kind": "object",
       "file": "netlify/functions/lib/messaging/messagingRpc.ts",
@@ -26356,7 +27562,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 502,
+      "line": 501,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26366,7 +27572,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 954,
+      "line": 953,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26376,7 +27582,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 967,
+      "line": 969,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26386,7 +27592,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 981,
+      "line": 994,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26396,7 +27602,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 991,
+      "line": 1004,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26406,7 +27612,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 992,
+      "line": 1005,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26416,7 +27622,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 995,
+      "line": 1008,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26426,7 +27632,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1010,
+      "line": 1024,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26436,7 +27642,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1045,
+      "line": 1059,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26446,7 +27652,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1057,
+      "line": 1071,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26456,7 +27662,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1058,
+      "line": 1072,
       "module": "security",
       "exported": false,
       "container": "",
@@ -26466,7 +27672,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1061,
+      "line": 1075,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26476,7 +27682,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1071,
+      "line": 1085,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26486,7 +27692,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1084,
+      "line": 1098,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26496,7 +27702,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1092,
+      "line": 1106,
       "module": "security",
       "exported": true,
       "container": "",
@@ -26506,7 +27712,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1103,
+      "line": 1117,
       "module": "security",
       "exported": true,
       "container": "",
@@ -31856,7 +33062,7 @@
       "name": "checkPasswordChangeLimit",
       "kind": "variable",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 709,
+      "line": 701,
       "module": "security",
       "exported": false,
       "container": "",
@@ -32226,7 +33432,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 83,
+      "line": 80,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32236,7 +33442,7 @@
       "name": "NotifListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 95,
+      "line": 92,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32246,7 +33452,7 @@
       "name": "PrefSetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 219,
+      "line": 216,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32256,7 +33462,7 @@
       "name": "MuteSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 246,
+      "line": 243,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32266,7 +33472,7 @@
       "name": "BroadcastSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 273,
+      "line": 270,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32276,7 +33482,7 @@
       "name": "ThreadsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 334,
+      "line": 331,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32286,7 +33492,7 @@
       "name": "ThreadGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 361,
+      "line": 358,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32296,7 +33502,7 @@
       "name": "PostsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 385,
+      "line": 382,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32306,37 +33512,7 @@
       "name": "MessageSearchSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 416,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RequestAccessSchema",
-      "kind": "variable",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 458,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RecordExportSchema",
-      "kind": "variable",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 487,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComplianceSearchSchema",
-      "kind": "variable",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 503,
+      "line": 413,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32346,7 +33522,7 @@
       "name": "RecordThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 521,
+      "line": 455,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32356,7 +33532,7 @@
       "name": "CreateThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 552,
+      "line": 486,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32366,7 +33542,7 @@
       "name": "PostMessageSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 592,
+      "line": 526,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32376,7 +33552,7 @@
       "name": "AttachUploadUrlSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 635,
+      "line": 569,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32386,7 +33562,7 @@
       "name": "AttachCreateSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 657,
+      "line": 591,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32396,7 +33572,7 @@
       "name": "MarkReadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 683,
+      "line": 617,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32406,7 +33582,7 @@
       "name": "ArchiveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 699,
+      "line": 633,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32416,7 +33592,7 @@
       "name": "MuteThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 716,
+      "line": 650,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32426,7 +33602,7 @@
       "name": "FavouriteThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 730,
+      "line": 664,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32436,7 +33612,7 @@
       "name": "ParticipantsAddSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 750,
+      "line": 684,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32446,7 +33622,7 @@
       "name": "ParticipantsRemoveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 770,
+      "line": 704,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32456,7 +33632,7 @@
       "name": "SearchSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 806,
+      "line": 740,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32466,7 +33642,7 @@
       "name": "RecipientsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 822,
+      "line": 756,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32476,7 +33652,7 @@
       "name": "AttachUrlSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 838,
+      "line": 772,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32486,7 +33662,7 @@
       "name": "PinSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 862,
+      "line": 796,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32496,7 +33672,7 @@
       "name": "UnpinSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 893,
+      "line": 827,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32506,7 +33682,7 @@
       "name": "DeleteMessageSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 910,
+      "line": 844,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32516,7 +33692,7 @@
       "name": "ToggleReactionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 938,
+      "line": 872,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32526,7 +33702,7 @@
       "name": "PinsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 958,
+      "line": 892,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32536,7 +33712,7 @@
       "name": "DraftSaveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 981,
+      "line": 915,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32546,7 +33722,7 @@
       "name": "DraftGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 997,
+      "line": 931,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32556,7 +33732,7 @@
       "name": "PresenceSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1022,
+      "line": 956,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32566,7 +33742,7 @@
       "name": "CreateTicketSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1047,
+      "line": 981,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32576,7 +33752,7 @@
       "name": "TicketListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1068,
+      "line": 1002,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32586,7 +33762,7 @@
       "name": "CommentSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1117,
+      "line": 1051,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -32596,7 +33772,177 @@
       "name": "UpdateTicketSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1159,
+      "line": 1093,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "router",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 35,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "args",
+      "kind": "function",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 36,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CASE_TYPES",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 39,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ACCESS_EVENT_TYPES",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 47,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CasesListSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 60,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseGetSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 67,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseRequestSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 69,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseDecisionSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 81,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ConversationSearchSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 88,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ConversationReadSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 107,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GrantRevokeSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 115,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CaseCloseSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 121,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AccessEventsListSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 127,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportsListSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 146,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportCreateSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 152,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ExportDownloadSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 179,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "notifyCompliance",
+      "kind": "function",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 184,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35906,7 +37252,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 25,
+      "line": 24,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35916,7 +37262,7 @@
       "name": "ListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 29,
+      "line": 28,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35926,7 +37272,7 @@
       "name": "ApproveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 33,
+      "line": 32,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35936,7 +37282,7 @@
       "name": "RejectSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 37,
+      "line": 36,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35946,7 +37292,7 @@
       "name": "CancelSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 42,
+      "line": 41,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35956,7 +37302,7 @@
       "name": "ApprovalRow",
       "kind": "interface",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 48,
+      "line": 47,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36186,7 +37532,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 20,
+      "line": 27,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36196,7 +37542,7 @@
       "name": "PERMISSION_KEY_SET",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 26,
+      "line": 33,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36206,7 +37552,7 @@
       "name": "requestCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 39,
+      "line": 46,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36216,7 +37562,7 @@
       "name": "GetUserPermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 87,
+      "line": 155,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36226,7 +37572,7 @@
       "name": "SetUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 88,
+      "line": 156,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36236,7 +37582,7 @@
       "name": "ClearUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 94,
+      "line": 164,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36246,7 +37592,7 @@
       "name": "RevokeSessionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 231,
+      "line": 348,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36256,7 +37602,7 @@
       "name": "GetAuditLogsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 310,
+      "line": 427,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36266,7 +37612,7 @@
       "name": "RoleNameSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 395,
+      "line": 512,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36276,7 +37622,7 @@
       "name": "RoleCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 398,
+      "line": 515,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36286,7 +37632,7 @@
       "name": "CreateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 399,
+      "line": 516,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36296,7 +37642,7 @@
       "name": "UpdateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 405,
+      "line": 522,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36306,7 +37652,7 @@
       "name": "GetRolePermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 412,
+      "line": 529,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36316,7 +37662,7 @@
       "name": "SetRolePermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 413,
+      "line": 530,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36326,7 +37672,7 @@
       "name": "DeleteRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 419,
+      "line": 536,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36336,7 +37682,7 @@
       "name": "slugify",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 539,
+      "line": 656,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36346,7 +37692,7 @@
       "name": "CreateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 540,
+      "line": 657,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36356,7 +37702,7 @@
       "name": "UpdateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 541,
+      "line": 658,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36366,7 +37712,7 @@
       "name": "DeleteCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 542,
+      "line": 659,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38012,7 +39358,7 @@
       "name": "runCleanup",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 359,
+      "line": 384,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -38022,7 +39368,7 @@
       "name": "report",
       "kind": "method",
       "file": "scripts/e2e/harness.mjs",
-      "line": 367,
+      "line": 392,
       "module": "testing",
       "exported": false,
       "container": "Harness",
@@ -38782,7 +40128,7 @@
       "name": "inB",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 464,
+      "line": 458,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38794,7 +40140,7 @@
       "name": "sumN",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 520,
+      "line": 514,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38806,7 +40152,7 @@
       "name": "sumM",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 521,
+      "line": 515,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38818,7 +40164,7 @@
       "name": "waitForSignal",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 525,
+      "line": 519,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38830,7 +40176,7 @@
       "name": "unreadOf",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 668,
+      "line": 662,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38842,7 +40188,7 @@
       "name": "threadUnread",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 669,
+      "line": 663,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -38854,9 +40200,177 @@
       "name": "title",
       "kind": "variable",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 31,
+      "line": 24,
       "module": "communications",
       "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CASE_DETAIL_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 26,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CASE_SUMMARY_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 33,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CAPABILITY_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 39,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "GRANT_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 44,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "EXPORT_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 50,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "MESSAGE_KEYS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 57,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sortedKeys",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 62,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "exactKeys",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 66,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "assertNoMessagePayload",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 73,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "expectStatus",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 87,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "sha256",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 94,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "rows",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 98,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "countRows",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 104,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "fetchArtifact",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 108,
+      "module": "communications",
+      "exported": false,
       "container": "",
       "tags": [
         "test"
@@ -38866,10 +40380,58 @@
       "name": "run",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 33,
+      "line": 121,
       "module": "communications",
       "exported": true,
       "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "requestDatedPermission",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 178,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "approveDatedPermission",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 200,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "assertEvidenceTriplet",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 205,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "requestId",
+      "kind": "function",
+      "file": "scripts/e2e/suites/communicationsCompliance.mjs",
+      "line": 245,
+      "module": "communications",
+      "exported": false,
+      "container": "run",
       "tags": [
         "test"
       ]
@@ -115809,7 +117371,7 @@
       "name": "COMPLIANCE_KEY",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 57,
+      "line": 59,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115821,7 +117383,7 @@
       "name": "OPERATIONAL_CRIT_KEY",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 59,
+      "line": 61,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115833,7 +117395,31 @@
       "name": "NONCRITICAL_KEY",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 61,
+      "line": 63,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "NOW",
+      "kind": "variable",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 64,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "activeComplianceOverride",
+      "kind": "function",
+      "file": "tests/unit/criticalPermResolver.test.ts",
+      "line": 66,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115845,7 +117431,7 @@
       "name": "superadminRoleSetNarrow",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 68,
+      "line": 81,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115857,7 +117443,7 @@
       "name": "roleSetWithCompliance",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 77,
+      "line": 90,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115869,7 +117455,7 @@
       "name": "roleSetWithoutCompliance",
       "kind": "variable",
       "file": "tests/unit/criticalPermResolver.test.ts",
-      "line": 79,
+      "line": 92,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -115918,6 +117504,18 @@
       "kind": "function",
       "file": "tests/unit/loadRenderTemplate.test.ts",
       "line": 52,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "snapshot",
+      "kind": "object",
+      "file": "tests/unit/messagingComplianceExport.test.ts",
+      "line": 7,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -119646,6 +121244,346 @@
       "tags": []
     },
     {
+      "name": "ComplianceCaseType",
+      "kind": "type",
+      "file": "types/messagingCompliance.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseStatus",
+      "kind": "type",
+      "file": "types/messagingCompliance.ts",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAccessEventType",
+      "kind": "type",
+      "file": "types/messagingCompliance.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportFormat",
+      "kind": "type",
+      "file": "types/messagingCompliance.ts",
+      "line": 34,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportStatus",
+      "kind": "type",
+      "file": "types/messagingCompliance.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCapabilities",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 37,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceActorRef",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 46,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseThread",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 51,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceGrant",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 65,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseSummary",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 82,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseDetail",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 99,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAttachmentMetadata",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 111,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceMessage",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 120,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceMessagePage",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 132,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAccessEvent",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 144,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExport",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 158,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseThreadInput",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 182,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCasesListRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 187,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCasesListResponse",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 194,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseGetRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 200,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 204,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseDecisionRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 213,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCaseCloseRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 220,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceConversationSearchRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 226,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceConversationSearchResponse",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 237,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceConversationReadRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 242,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceGrantRevokeRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 250,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAccessEventsListRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 256,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAccessEventsListResponse",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 267,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportsListRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 272,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportsListResponse",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 278,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportCreateRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 283,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportDownloadRequest",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 294,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportDownloadResponse",
+      "kind": "interface",
+      "file": "types/messagingCompliance.ts",
+      "line": 299,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "Database",
       "kind": "interface",
       "file": "types/supabase.ts",
@@ -119968,7 +121906,7 @@
       ],
       "schema": "ApproveSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 132,
+      "line": 139,
       "module": "security"
     },
     {
@@ -119981,7 +121919,7 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 258,
+      "line": 249,
       "module": "security"
     },
     {
@@ -119994,7 +121932,7 @@
       ],
       "schema": "ListSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 69,
+      "line": 70,
       "module": "security"
     },
     {
@@ -120007,7 +121945,7 @@
       ],
       "schema": "RejectSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 213,
+      "line": 214,
       "module": "security"
     },
     {
@@ -120151,7 +122089,7 @@
       ],
       "schema": "ChangePasswordSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 711,
+      "line": 703,
       "module": "security"
     },
     {
@@ -120351,6 +122289,162 @@
       "module": "communications"
     },
     {
+      "path": "/api/communications/compliance/access-events/list",
+      "localPath": "/communications/compliance/access-events/list",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "AccessEventsListSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 429,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/close",
+      "localPath": "/communications/compliance/cases/close",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "CaseCloseSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 411,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/decide",
+      "localPath": "/communications/compliance/cases/decide",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "CaseDecisionSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 274,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/get",
+      "localPath": "/communications/compliance/cases/get",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "CaseGetSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 232,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/list",
+      "localPath": "/communications/compliance/cases/list",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "CasesListSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 222,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/request",
+      "localPath": "/communications/compliance/cases/request",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "CaseRequestSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 242,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/conversations/read",
+      "localPath": "/communications/compliance/conversations/read",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "ConversationReadSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 316,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/conversations/search",
+      "localPath": "/communications/compliance/conversations/search",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "ConversationSearchSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 306,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/create",
+      "localPath": "/communications/compliance/exports/create",
+      "router": "router",
+      "permission": "communications.compliance_export",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "ExportCreateSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 449,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/download",
+      "localPath": "/communications/compliance/exports/download",
+      "router": "router",
+      "permission": "communications.compliance_export",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "ExportDownloadSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 465,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/list",
+      "localPath": "/communications/compliance/exports/list",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "ExportsListSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 439,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/grants/revoke",
+      "localPath": "/communications/compliance/grants/revoke",
+      "router": "router",
+      "permission": "communications.compliance_read",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "GrantRevokeSchema",
+      "file": "netlify/functions/routes/communicationsCompliance.ts",
+      "line": 369,
+      "module": "communications"
+    },
+    {
       "path": "/api/communications/messages/activity",
       "localPath": "/communications/messages/activity",
       "router": "router",
@@ -120360,7 +122454,7 @@
       ],
       "schema": "z.object({ threadId: z.uuid() })",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 438,
+      "line": 435,
       "module": "communications"
     },
     {
@@ -120373,7 +122467,7 @@
       ],
       "schema": "ArchiveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 704,
+      "line": 638,
       "module": "communications"
     },
     {
@@ -120386,7 +122480,7 @@
       ],
       "schema": "AttachCreateSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 664,
+      "line": 598,
       "module": "communications"
     },
     {
@@ -120399,7 +122493,7 @@
       ],
       "schema": "AttachUrlSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 843,
+      "line": 777,
       "module": "communications"
     },
     {
@@ -120412,20 +122506,7 @@
       ],
       "schema": "AttachUploadUrlSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 640,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/compliance/search",
-      "localPath": "/communications/messages/compliance/search",
-      "router": "router",
-      "permission": "communications.compliance_read",
-      "guards": [
-        "requirePermission"
-      ],
-      "schema": "ComplianceSearchSchema",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 508,
+      "line": 574,
       "module": "communications"
     },
     {
@@ -120438,7 +122519,7 @@
       ],
       "schema": "CreateThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 567,
+      "line": 501,
       "module": "communications"
     },
     {
@@ -120452,7 +122533,7 @@
       ],
       "schema": "DeleteMessageSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 915,
+      "line": 849,
       "module": "communications"
     },
     {
@@ -120465,7 +122546,7 @@
       ],
       "schema": "DraftGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1008,
+      "line": 942,
       "module": "communications"
     },
     {
@@ -120478,7 +122559,7 @@
       ],
       "schema": "DraftGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 999,
+      "line": 933,
       "module": "communications"
     },
     {
@@ -120491,7 +122572,7 @@
       ],
       "schema": "DraftSaveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 987,
+      "line": 921,
       "module": "communications"
     },
     {
@@ -120504,7 +122585,7 @@
       ],
       "schema": "FavouriteThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 735,
+      "line": 669,
       "module": "communications"
     },
     {
@@ -120517,7 +122598,7 @@
       ],
       "schema": "MarkReadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 688,
+      "line": 622,
       "module": "communications"
     },
     {
@@ -120530,7 +122611,7 @@
       ],
       "schema": "MuteThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 718,
+      "line": 652,
       "module": "communications"
     },
     {
@@ -120543,7 +122624,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1037,
+      "line": 971,
       "module": "communications"
     },
     {
@@ -120556,7 +122637,7 @@
       ],
       "schema": "ParticipantsAddSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 755,
+      "line": 689,
       "module": "communications"
     },
     {
@@ -120570,7 +122651,7 @@
       ],
       "schema": "ParticipantsRemoveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 775,
+      "line": 709,
       "module": "communications"
     },
     {
@@ -120583,7 +122664,7 @@
       ],
       "schema": "PinsListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 960,
+      "line": 894,
       "module": "communications"
     },
     {
@@ -120596,7 +122677,7 @@
       ],
       "schema": "PinSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 871,
+      "line": 805,
       "module": "communications"
     },
     {
@@ -120609,7 +122690,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 972,
+      "line": 906,
       "module": "communications"
     },
     {
@@ -120622,7 +122703,7 @@
       ],
       "schema": "UnpinSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 895,
+      "line": 829,
       "module": "communications"
     },
     {
@@ -120635,7 +122716,7 @@
       ],
       "schema": "PostMessageSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 605,
+      "line": 539,
       "module": "communications"
     },
     {
@@ -120648,7 +122729,7 @@
       ],
       "schema": "PostsSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 394,
+      "line": 391,
       "module": "communications"
     },
     {
@@ -120661,7 +122742,7 @@
       ],
       "schema": "PresenceSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1027,
+      "line": 961,
       "module": "communications"
     },
     {
@@ -120674,7 +122755,7 @@
       ],
       "schema": "ToggleReactionSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 943,
+      "line": 877,
       "module": "communications"
     },
     {
@@ -120687,20 +122768,7 @@
       ],
       "schema": "RecipientsSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 826,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/recordExport",
-      "localPath": "/communications/messages/recordExport",
-      "router": "router",
-      "permission": "communications.compliance_export",
-      "guards": [
-        "requirePermission"
-      ],
-      "schema": "RecordExportSchema",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 489,
+      "line": 760,
       "module": "communications"
     },
     {
@@ -120713,20 +122781,7 @@
       ],
       "schema": "RecordThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 529,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/requestThreadAccess",
-      "localPath": "/communications/messages/requestThreadAccess",
-      "router": "router",
-      "permission": "communications.compliance_read",
-      "guards": [
-        "requirePermission"
-      ],
-      "schema": "RequestAccessSchema",
-      "file": "netlify/functions/routes/communications.ts",
-      "line": 466,
+      "line": 463,
       "module": "communications"
     },
     {
@@ -120739,7 +122794,7 @@
       ],
       "schema": "MessageSearchSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 422,
+      "line": 419,
       "module": "communications"
     },
     {
@@ -120752,7 +122807,7 @@
       ],
       "schema": "SearchSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 811,
+      "line": 745,
       "module": "communications"
     },
     {
@@ -120765,7 +122820,7 @@
       ],
       "schema": "ThreadGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 365,
+      "line": 362,
       "module": "communications"
     },
     {
@@ -120778,7 +122833,7 @@
       ],
       "schema": "ThreadsListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 341,
+      "line": 338,
       "module": "communications"
     },
     {
@@ -120791,7 +122846,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 167,
+      "line": 164,
       "module": "communications"
     },
     {
@@ -120804,7 +122859,7 @@
       ],
       "schema": "BroadcastSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 286,
+      "line": 283,
       "module": "communications"
     },
     {
@@ -120817,7 +122872,7 @@
       ],
       "schema": "NotifListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 106,
+      "line": 103,
       "module": "communications"
     },
     {
@@ -120830,7 +122885,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 153,
+      "line": 150,
       "module": "communications"
     },
     {
@@ -120843,7 +122898,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 139,
+      "line": 136,
       "module": "communications"
     },
     {
@@ -120856,7 +122911,7 @@
       ],
       "schema": "MuteSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 252,
+      "line": 249,
       "module": "communications"
     },
     {
@@ -120869,7 +122924,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 189,
+      "line": 186,
       "module": "communications"
     },
     {
@@ -120882,7 +122937,7 @@
       ],
       "schema": "PrefSetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 226,
+      "line": 223,
       "module": "communications"
     },
     {
@@ -120895,7 +122950,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 87,
+      "line": 84,
       "module": "communications"
     },
     {
@@ -120908,7 +122963,7 @@
       ],
       "schema": "CommentSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1123,
+      "line": 1057,
       "module": "communications"
     },
     {
@@ -120921,7 +122976,7 @@
       ],
       "schema": "CreateTicketSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1057,
+      "line": 991,
       "module": "communications"
     },
     {
@@ -120934,7 +122989,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1096,
+      "line": 1030,
       "module": "communications"
     },
     {
@@ -120947,7 +123002,7 @@
       ],
       "schema": "TicketListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1075,
+      "line": 1009,
       "module": "communications"
     },
     {
@@ -120960,7 +123015,7 @@
       ],
       "schema": "UpdateTicketSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1166,
+      "line": 1100,
       "module": "communications"
     },
     {
@@ -130241,7 +132296,7 @@
       ],
       "schema": "ClearUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 203,
+      "line": 289,
       "module": "security"
     },
     {
@@ -130254,7 +132309,7 @@
       ],
       "schema": "CreateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 466,
+      "line": 583,
       "module": "platform"
     },
     {
@@ -130267,7 +132322,7 @@
       ],
       "schema": "CreateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 557,
+      "line": 674,
       "module": "platform"
     },
     {
@@ -130280,7 +132335,7 @@
       ],
       "schema": "DeleteRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 515,
+      "line": 632,
       "module": "platform"
     },
     {
@@ -130293,7 +132348,7 @@
       ],
       "schema": "DeleteCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 587,
+      "line": 704,
       "module": "platform"
     },
     {
@@ -130306,7 +132361,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 239,
+      "line": 356,
       "module": "platform"
     },
     {
@@ -130319,7 +132374,7 @@
       ],
       "schema": "GetAuditLogsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 326,
+      "line": 443,
       "module": "platform"
     },
     {
@@ -130332,7 +132387,7 @@
       ],
       "schema": "GetRolePermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 447,
+      "line": 564,
       "module": "security"
     },
     {
@@ -130345,7 +132400,7 @@
       ],
       "schema": "GetUserPermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 152,
+      "line": 223,
       "module": "security"
     },
     {
@@ -130358,7 +132413,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 545,
+      "line": 662,
       "module": "platform"
     },
     {
@@ -130371,7 +132426,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 422,
+      "line": 539,
       "module": "platform"
     },
     {
@@ -130384,7 +132439,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 102,
+      "line": 173,
       "module": "platform"
     },
     {
@@ -130397,7 +132452,7 @@
       ],
       "schema": "RevokeSessionSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 288,
+      "line": 405,
       "module": "platform"
     },
     {
@@ -130410,7 +132465,7 @@
       ],
       "schema": "SetRolePermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 602,
+      "line": 719,
       "module": "security"
     },
     {
@@ -130423,7 +132478,7 @@
       ],
       "schema": "SetUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 168,
+      "line": 239,
       "module": "security"
     },
     {
@@ -130436,7 +132491,7 @@
       ],
       "schema": "UpdateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 486,
+      "line": 603,
       "module": "platform"
     },
     {
@@ -130449,7 +132504,7 @@
       ],
       "schema": "UpdateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 574,
+      "line": 691,
       "module": "platform"
     },
     {
@@ -130629,7 +132684,7 @@
       ],
       "schema": "VerifyPasswordSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 698,
+      "line": 690,
       "module": "security"
     },
     {
@@ -142080,6 +144135,286 @@
       "file": "supabase/migrations/20260919000432_drop_grants_authenticated_read.sql",
       "line": 7,
       "module": "security"
+    },
+    {
+      "name": "user_permissions_active_validity_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 49,
+      "module": "security"
+    },
+    {
+      "name": "msg_internal._has_active_compliance_permission",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 73,
+      "module": "security"
+    },
+    {
+      "name": "public.approve_permission_grant_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 111,
+      "module": "security"
+    },
+    {
+      "name": "public.reject_permission_grant_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 336,
+      "module": "security"
+    },
+    {
+      "name": "public.cancel_permission_grant_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 419,
+      "module": "security"
+    },
+    {
+      "name": "public.request_compliance_permission_grant_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 506,
+      "module": "security"
+    },
+    {
+      "name": "public.revoke_compliance_permission_grant_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 671,
+      "module": "security"
+    },
+    {
+      "name": "public.message_compliance_cases",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 819,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_cases_status_expiry_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 881,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_cases_requester_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 883,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_cases_approver_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 885,
+      "module": "communications"
+    },
+    {
+      "name": "trg_message_compliance_cases_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 888,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_case_threads",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 893,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_case_threads_thread_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 908,
+      "module": "communications"
+    },
+    {
+      "name": "message_thread_access_grants_active_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 950,
+      "module": "communications"
+    },
+    {
+      "name": "message_thread_access_grants_case_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 953,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_access_events",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 958,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_access_events_case_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1015,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_access_events_actor_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1017,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_access_events_thread_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1019,
+      "module": "communications"
+    },
+    {
+      "name": "public.block_compliance_access_event_mutation",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1023,
+      "module": "platform"
+    },
+    {
+      "name": "trg_message_compliance_access_events_immutable",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1035,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_exports",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1040,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_exports_case_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1113,
+      "module": "communications"
+    },
+    {
+      "name": "message_compliance_exports_requester_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1115,
+      "module": "communications"
+    },
+    {
+      "name": "public.guard_compliance_export_mutation",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1118,
+      "module": "platform"
+    },
+    {
+      "name": "trg_message_compliance_exports_guard",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql",
+      "line": 1171,
+      "module": "communications"
+    },
+    {
+      "name": "msg_internal._write_compliance_evidence",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 10,
+      "module": "platform"
+    },
+    {
+      "name": "public.message_compliance_case_request_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 93,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_case_decide_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 305,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_thread_read_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 477,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_grant_revoke_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 765,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_case_close_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql",
+      "line": 910,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_request_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 13,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_snapshot",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 197,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_prepare_upload_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 336,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_finalize_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 481,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_fail_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 682,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_download_prepare",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 819,
+      "module": "communications"
+    },
+    {
+      "name": "public.message_compliance_export_download_record_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql",
+      "line": 906,
+      "module": "communications"
     }
   ],
   "e2eSuites": [
@@ -142549,284 +144884,272 @@
           "line": 256
         },
         {
-          "name": "compliance/search is gated (array or denied, never crash)",
-          "line": 260
-        },
-        {
           "name": "compose: recipient picker returns active users and excludes self",
-          "line": 269
+          "line": 263
         },
         {
           "name": "compose: DIRECT thread (1 recipient) → threadType direct",
-          "line": 276
+          "line": 270
         },
         {
           "name": "compose: GROUP thread (3 participants) → threadType group, all added",
-          "line": 283
+          "line": 277
         },
         {
           "name": "compose: thread WITHOUT a subject succeeds (subject optional)",
-          "line": 293
+          "line": 287
         },
         {
           "name": "compose VALIDATION: empty body is rejected by the backend",
-          "line": 298
+          "line": 292
         },
         {
           "name": "compose VALIDATION: no recipients is rejected by the backend",
-          "line": 302
+          "line": 296
         },
         {
           "name": "compose VALIDATION: an invalid recipient id is rejected (not silently dropped)",
-          "line": 306
+          "line": 300
         },
         {
           "name": "GOC 1: first call CREATES the direct thread (created=true)",
-          "line": 321
+          "line": 315
         },
         {
           "name": "GOC 2: second call returns the SAME threadId (created=false)",
-          "line": 329
+          "line": 323
         },
         {
           "name": "GOC 3: the reuse created a NEW post, not another thread",
-          "line": 338
+          "line": 332
         },
         {
           "name": "GOC 4: concurrent create calls resolve to ONE thread",
-          "line": 347
+          "line": 341
         },
         {
           "name": "GOC 5: attachment-only create reuses the thread and appends",
-          "line": 363
+          "line": 357
         },
         {
           "name": "GOC 6: idempotent retry does NOT duplicate the post",
-          "line": 378
+          "line": 372
         },
         {
           "name": "file upload: presign → PUT to storage → create record → attach → retrieve",
-          "line": 404
+          "line": 398
         },
         {
           "name": "uploaded file is actually downloadable via the signed url (bytes match)",
-          "line": 433
+          "line": 427
         },
         {
           "name": "attachments/get-url: participant gets a signed url per purpose",
-          "line": 443
+          "line": 437
         },
         {
           "name": "ACCESS: removed participant C cannot sign an attachment url (403)",
-          "line": 452
+          "line": 446
         },
         {
           "name": "status: recipient unreadCount rises on new msg, resets on read",
-          "line": 460
+          "line": 454
         },
         {
           "name": "status: archive removes from inbox → archived tab, isArchived flips, unarchive reverses",
-          "line": 472
+          "line": 466
         },
         {
           "name": "concurrency: 8 messages posted at once all land, no loss, no dupes, in order",
-          "line": 486
+          "line": 480
         },
         {
           "name": "concurrency: recipient unread reflects the bulk burst, clears on read",
-          "line": 501
+          "line": 495
         },
         {
           "name": "notification badge: unread +1 on new, −1 on read",
-          "line": 535
+          "line": 529
         },
         {
           "name": "message badge: unread +1 on new message, −1 on read (recipient B)",
-          "line": 549
+          "line": 543
         },
         {
           "name": "realtime: a new message writes a communication_signals row for the recipient",
-          "line": 567
+          "line": 561
         },
         {
           "name": "realtime: a new notification writes a communication_signals row for the recipient",
-          "line": 580
+          "line": 574
         },
         {
           "name": "realtime DELIVERY: an AUTHENTICATED subscription receives the signal (mig 351)",
-          "line": 591
+          "line": 585
         },
         {
           "name": "realtime DENIAL: an ANONYMOUS subscription receives nothing (mig 351 RLS)",
-          "line": 629
+          "line": 623
         },
         {
           "name": "latency: summary endpoint responds quickly",
-          "line": 657
+          "line": 651
         },
         {
           "name": "employee → admin: admin badge + thread unread rise, reset on read",
-          "line": 674
+          "line": 668
         },
         {
           "name": "admin → employee: employee badge + thread unread rise, reset on read",
-          "line": 686
+          "line": 680
         },
         {
           "name": "employee → employee: recipient gets unread, sender does not",
-          "line": 697
+          "line": 691
         },
         {
           "name": "group (admin+B+C): a post raises unread for BOTH others, not the author; reads are per-user",
-          "line": 706
+          "line": 700
         },
         {
           "name": "BADGE↔UNREAD-TAB: your OWN message must NOT inflate your badge",
-          "line": 718
+          "line": 712
         },
         {
           "name": "BADGE↔UNREAD-TAB: badge equals the number of inbox threads with unreadCount>0",
-          "line": 732
+          "line": 726
         },
         {
           "name": "group reply re-raises unread for the other members",
-          "line": 746
+          "line": 740
         },
         {
           "name": "setup: thread (admin → B) for pins/drafts",
-          "line": 762
+          "line": 756
         },
         {
           "name": "pin a post (personal) returns a pin",
-          "line": 771
+          "line": 765
         },
         {
           "name": "CONTRACT: pins/list returns the pin with expected shape",
-          "line": 778
+          "line": 772
         },
         {
           "name": "personal pin is private to its creator (B cannot see it)",
-          "line": 784
+          "line": 778
         },
         {
           "name": "SIDE-EFFECT: pin wrote app_events communications.message_pinned",
-          "line": 788
+          "line": 782
         },
         {
           "name": "CAPABILITIES: posts DTO carries pinnedBy + allowedPinActions per caller (slice 4)",
-          "line": 794
+          "line": 788
         },
         {
           "name": "owner can thread-pin; visible to participant B",
-          "line": 827
+          "line": 821
         },
         {
           "name": "CONTRACT: pinned-summary includes the pinned thread",
-          "line": 835
+          "line": 829
         },
         {
           "name": "ACCESS: non-participant C cannot pin",
-          "line": 840
+          "line": 834
         },
         {
           "name": "VALIDATION: post pin without postId is rejected",
-          "line": 842
+          "line": 836
         },
         {
           "name": "unpin own pin removes it from the list",
-          "line": 844
+          "line": 838
         },
         {
           "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
-          "line": 849
+          "line": 843
         },
         {
           "name": "draft/save stores a draft",
-          "line": 857
+          "line": 851
         },
         {
           "name": "draft/get returns the saved body",
-          "line": 859
+          "line": 853
         },
         {
           "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
-          "line": 863
+          "line": 857
         },
         {
           "name": "draft is per-user (B has no draft on this thread)",
-          "line": 868
+          "line": 862
         },
         {
           "name": "empty draft body deletes the draft",
-          "line": 872
+          "line": 866
         },
         {
           "name": "draft/delete removes an existing draft (the send-success path)",
-          "line": 877
+          "line": 871
         },
         {
           "name": "mute/unmute toggles the per-user thread mute",
-          "line": 885
+          "line": 879
         },
         {
           "name": "VALIDATION: mute without the muted boolean is rejected",
-          "line": 889
+          "line": 883
         },
         {
           "name": "presence/update accepts a heartbeat",
-          "line": 893
+          "line": 887
         },
         {
           "name": "online: array, excludes self, includes a freshly-online peer",
-          "line": 895
+          "line": 889
         },
         {
           "name": "activity: participant gets REAL derived entries (message + pin + join)",
-          "line": 906
+          "line": 900
         },
         {
           "name": "activity: NON-PARTICIPANT is denied (403)",
-          "line": 922
+          "line": 916
         },
         {
           "name": "record thread: threads list resolves the LIVE source record (collaboration card)",
-          "line": 928
+          "line": 922
         },
         {
           "name": "record thread with an UNKNOWN module resolves to null (no fabricated card)",
-          "line": 955
+          "line": 949
         },
         {
           "name": "recordThread: find-or-create resolves a stable thread for a business record",
-          "line": 968
-        },
-        {
-          "name": "requestThreadAccess: a compliance grant is created + audited",
-          "line": 1009
-        },
-        {
-          "name": "ACCESS: a user without compliance_read is denied requestThreadAccess (403)",
-          "line": 1020
+          "line": 962
         },
         {
           "name": "create ticket",
-          "line": 1027
+          "line": 980
         },
         {
           "name": "ticket appears in list",
-          "line": 1034
+          "line": 987
         },
         {
           "name": "get ticket detail",
-          "line": 1038
+          "line": 991
         },
         {
           "name": "comment on ticket",
-          "line": 1042
+          "line": 995
         },
         {
           "name": "update ticket status",
-          "line": 1043
+          "line": 996
         }
       ],
       "apiPaths": [
@@ -142835,7 +145158,6 @@
         "/api/communications/messages/attachments/create",
         "/api/communications/messages/attachments/get-url",
         "/api/communications/messages/attachments/upload-url",
-        "/api/communications/messages/compliance/search",
         "/api/communications/messages/createThread",
         "/api/communications/messages/draft/delete",
         "/api/communications/messages/draft/get",
@@ -142854,7 +145176,6 @@
         "/api/communications/messages/presence/update",
         "/api/communications/messages/recipients",
         "/api/communications/messages/recordThread",
-        "/api/communications/messages/requestThreadAccess",
         "/api/communications/messages/search",
         "/api/communications/messages/thread",
         "/api/communications/messages/threads",
@@ -142876,98 +145197,197 @@
     },
     {
       "name": "communicationsCompliance",
-      "title": "Communications — Compliance Critical-Grant (Slice 1)",
+      "title": "Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports)",
       "module": "communications",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
       "tests": [
         {
-          "name": "create a group thread for compliance tests",
-          "line": 83
-        },
-        {
-          "name": "A1. superadmin WITHOUT compliance_read is denied requestThreadAccess (403)",
-          "line": 100
-        },
-        {
-          "name": "B1. setUserPermission returns pending:true with an approvalId",
-          "line": 113
-        },
-        {
-          "name": "B2. pending approval row exists in permission_grant_approvals",
-          "line": 127
-        },
-        {
-          "name": "B3. compliance_read is NOT yet in user_permissions (grant not applied while pending)",
-          "line": 140
-        },
-        {
-          "name": "B4. superadmin is STILL denied while approval is pending (no effect yet)",
-          "line": 149
-        },
-        {
-          "name": "B5. duplicate request is rejected with already_pending (409)",
-          "line": 157
-        },
-        {
-          "name": "C1. self-approval is rejected by the RPC (SoD enforced)",
-          "line": 169
-        },
-        {
-          "name": "C2. checker approves with step-up token → success",
-          "line": 176
-        },
-        {
-          "name": "C3. approval row is now approved (not pending)",
-          "line": 182
-        },
-        {
-          "name": "C4. user_permissions row now exists (grant was applied)",
-          "line": 193
-        },
-        {
-          "name": "C5. approve again is rejected with not_pending (400)",
-          "line": 203
-        },
-        {
-          "name": "D1. requestThreadAccess now succeeds for the approved superadmin",
-          "line": 213
-        },
-        {
-          "name": "D2. message_thread_access_grants row written with correct metadata",
-          "line": 225
-        },
-        {
-          "name": "D3. app_events side-effect: iam.permission.grant_approved event emitted",
-          "line": 239
-        },
-        {
-          "name": "E1. clearUserPermission removes the grant (immediate, no maker-checker)",
+          "name": "creates a tagged three-message conversation through the real HTTP API",
           "line": 251
         },
         {
-          "name": "E2. user_permissions row is gone after revoke",
-          "line": 260
+          "name": "unauthenticated and ordinary employees are denied compliance APIs",
+          "line": 282
         },
         {
-          "name": "E3. superadmin is denied again after revoke",
-          "line": 269
-        },
-        {
-          "name": "F1. superadmin still resolves a non-critical permission without explicit grant",
+          "name": "superadmin is fail-closed without an explicit dated compliance_read grant",
           "line": 291
         },
         {
-          "name": "F2. list approvals (permissions.manage) still works for seeded superadmin",
-          "line": 301
+          "name": "maker requests a dated per-user compliance_read grant",
+          "line": 298
+        },
+        {
+          "name": "permission maker cannot approve their own grant request",
+          "line": 323
+        },
+        {
+          "name": "independent checker approves investigator compliance_read",
+          "line": 333
+        },
+        {
+          "name": "independent checker approves investigator compliance_export",
+          "line": 348
+        },
+        {
+          "name": "independent checker receives their own dated compliance_read authority",
+          "line": 365
+        },
+        {
+          "name": "conversation search is metadata-only and returns the tagged thread",
+          "line": 378
+        },
+        {
+          "name": "requesting a case creates a pending metadata-only case",
+          "line": 410
+        },
+        {
+          "name": "same-key same-payload case retry returns the original case and writes nothing new",
+          "line": 429
+        },
+        {
+          "name": "same case key with a divergent payload is rejected with 409",
+          "line": 445
+        },
+        {
+          "name": "case list/get shapes are metadata-only",
+          "line": 454
+        },
+        {
+          "name": "message read is denied before independent case approval",
+          "line": 475
+        },
+        {
+          "name": "case requester cannot approve their own case",
+          "line": 499
+        },
+        {
+          "name": "independent checker cannot decide a case without fresh step-up",
+          "line": 509
+        },
+        {
+          "name": "independent checker approves and creates one scoped grant",
+          "line": 518
+        },
+        {
+          "name": "case decision retry is idempotent and divergent reuse is 409",
+          "line": 538
+        },
+        {
+          "name": "ordinary Messenger thread and posts remain denied despite scoped compliance grant",
+          "line": 563
+        },
+        {
+          "name": "approved scoped read returns only the first exact message page",
+          "line": 584
+        },
+        {
+          "name": "same-key read retry returns the same page and records each disclosure",
+          "line": 606
+        },
+        {
+          "name": "same read key with a divergent limit is rejected with 409",
+          "line": 627
+        },
+        {
+          "name": "next scoped page completes the exact body set and records page_read",
+          "line": 637
+        },
+        {
+          "name": "access log is metadata-only and exposes the expected response shape",
+          "line": 668
+        },
+        {
+          "name": "access evidence rejects service-role UPDATE and DELETE",
+          "line": 687
+        },
+        {
+          "name": "export creation is denied without fresh step-up",
+          "line": 717
+        },
+        {
+          "name": "export requires explicit compliance_export authority",
+          "line": 728
+        },
+        {
+          "name": "creates and finalizes a real JSON export with metadata-only response",
+          "line": 744
+        },
+        {
+          "name": "JSON export retry is idempotent and divergent purpose is 409",
+          "line": 762
+        },
+        {
+          "name": "export download requires a current step-up token",
+          "line": 793
+        },
+        {
+          "name": "downloads JSON through a five-minute private signed URL and verifies checksum/body set",
+          "line": 802
+        },
+        {
+          "name": "JSON download retry records each signed-URL disclosure",
+          "line": 829
+        },
+        {
+          "name": "creates and downloads a valid PDF export with matching SHA-256",
+          "line": 848
+        },
+        {
+          "name": "export list is metadata-only and the storage bucket is private",
+          "line": 900
+        },
+        {
+          "name": "grantee revokes their own scoped grant",
+          "line": 931
+        },
+        {
+          "name": "grant revoke retry is idempotent and divergent reason is 409",
+          "line": 945
+        },
+        {
+          "name": "revocation immediately denies scoped read and export download",
+          "line": 966
+        },
+        {
+          "name": "requester closes the approved case with step-up",
+          "line": 993
+        },
+        {
+          "name": "case close retry is idempotent and divergent reason is 409",
+          "line": 1006
+        },
+        {
+          "name": "closed case remains metadata-visible but denies message reads",
+          "line": 1027
+        },
+        {
+          "name": "creates and approves a short-lived independent case",
+          "line": 1053
+        },
+        {
+          "name": "case validity expiry denies a new scoped read without changing case evidence",
+          "line": 1086
         }
       ],
       "apiPaths": [
         "/api/admin/approvals/approve",
-        "/api/admin/approvals/list",
+        "/api/communications/compliance/access-events/list",
+        "/api/communications/compliance/cases/close",
+        "/api/communications/compliance/cases/decide",
+        "/api/communications/compliance/cases/get",
+        "/api/communications/compliance/cases/list",
+        "/api/communications/compliance/cases/request",
+        "/api/communications/compliance/conversations/read",
+        "/api/communications/compliance/conversations/search",
+        "/api/communications/compliance/exports/create",
+        "/api/communications/compliance/exports/download",
+        "/api/communications/compliance/exports/list",
+        "/api/communications/compliance/grants/revoke",
         "/api/communications/messages/createThread",
-        "/api/communications/messages/requestThreadAccess",
-        "/api/communications/messages/threads",
-        "/api/superadmin/clearUserPermission",
+        "/api/communications/messages/post",
+        "/api/communications/messages/posts",
+        "/api/communications/messages/thread",
         "/api/superadmin/setUserPermission"
       ]
     },

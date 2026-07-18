@@ -13,12 +13,6 @@
         "/api/finance/ap/bills/void"
       ]
     },
-    "communications_message_actions": {
-      "reason": "recordExport (stamp a message-history export under a compliance grant) — the FE compliance-export action isn't wired yet. Cover WHEN the compliance export UI is built. NOTE: mute / draft-delete / recordThread / requestThreadAccess / attachments-get-url were previously parked here but are now wired AND E2E-covered in communications.mjs.",
-      "routes": [
-        "/api/communications/messages/recordExport"
-      ]
-    },
     "hse_ptw": {
       "reason": "Permit-to-Work isolations reject/remove, SIMOPS approve-override/resolve, reject-extension, save-draft — PTW page not built out. LIFE-SAFETY: cover thoroughly WHEN HSE PTW is built.",
       "routes": [

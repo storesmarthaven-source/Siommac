@@ -951,8 +951,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
 
 // ── Per-user override row (mirrors PermissionOverrideSchema) ──────────────────
 export interface PermissionOverrideRow {
-  permission: string;
-  granted:    boolean;
+  permission:  string;
+  granted:     boolean;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  revoked_at?: string | null;
 }
 
 /**
@@ -967,9 +970,20 @@ export function resolveWithSet(
   key: string,
   roleSet: ReadonlySet<string>,
   overrides: PermissionOverrideRow[],
+  now = new Date(),
 ): boolean {
   const override = overrides.find(o => o.permission === key);
-  if (override !== undefined) return override.granted;
+  if (override !== undefined) {
+    if (!override.granted) return false;
+    if (!COMPLIANCE_GATED_KEYS.has(key)) return true;
+
+    if (override.revoked_at || !override.valid_from || !override.valid_until) return false;
+    const validFrom = Date.parse(override.valid_from);
+    const validUntil = Date.parse(override.valid_until);
+    if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil)) return false;
+    return validFrom <= now.getTime() && validUntil > now.getTime();
+  }
+  if (COMPLIANCE_GATED_KEYS.has(key)) return false;
   return roleSet.has(key);
 }
 
@@ -1032,7 +1046,7 @@ export async function loadRolePermissions(roleName: string): Promise<Set<string>
       code: 'authorization_unavailable',
     });
   }
-  const set = new Set((data ?? []).map(r => r.permission as string));
+  const set = new Set(data.map(r => r.permission as string));
   _roleCache.set(roleName, { set, at: Date.now() });
   return set;
 }

@@ -21,7 +21,30 @@ Env:
 - `BASE_URL` — override the API origin (default `http://localhost:8888`).
 - `KEEP_DATA=1` — skip cleanup so you can inspect the rows the run created.
 
+Additional safety environment:
+
+- `E2E_DISPOSABLE_DB=1` is required by suites whose immutable evidence cannot
+  be removed by the service role. Set it only for an isolated E2E database
+  that an operator resets with database-owner tooling after every run.
+
 Exit code is `0` only when every test passes (CI-friendly).
+
+### Immutable-evidence suites
+
+`communicationsCompliance` creates intentionally immutable access evidence and
+completed export records. It refuses to run unless `E2E_DISPOSABLE_DB=1`.
+Do not point that suite at a shared development or production database. The
+required verification sequence is:
+
+1. provision an isolated disposable database;
+2. apply the current migrations;
+3. run the suite once;
+4. reset the database as its owner;
+5. re-apply migrations and run the suite a second time;
+6. reset the database again.
+
+There is deliberately no service-role cleanup bypass for immutable compliance
+evidence.
 
 ## Recovering from an interrupted run — `sweep-orphans.mjs`
 

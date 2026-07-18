@@ -59,11 +59,8 @@ import {
   createMessageAttachmentUploadUrl,
   createMessageAttachmentRecord,
   getAttachmentUrl,
-  requestThreadAccess,
-  recordThreadExport,
-  searchThreadsForCompliance,
   resolveRecordThread,
-  COMPLIANCE_REASONS, searchMessagePosts } from '../lib/communications';
+  searchMessagePosts } from '../lib/communications';
 import {
   pinMessage,
   unpinMessage,
@@ -450,69 +447,6 @@ router.post('/communications/messages/activity', async c => {
     return c.json({ success: false, code: result.code, message: result.message ?? 'Error' }, status);
   }
   return c.json({ success: true, data: result.entries ?? [] });
-});
-
-// POST /api/communications/messages/requestThreadAccess
-// Controlled, AUDITED compliance access to a private thread. Requires
-// communications.compliance_read. Creates a time-boxed grant + audit record.
-const RequestAccessSchema = z.object({
-  threadId:      z.uuid(),
-  reason:        z.enum(COMPLIANCE_REASONS),
-  caseRef:       z.string().max(120).nullable().optional(),
-  notes:         z.string().max(2000).nullable().optional(),
-  durationHours: z.number().int().min(1).max(168).optional(),
-});
-
-router.post('/communications/messages/requestThreadAccess', async c => {
-  const user = await requirePermission(c, 'communications.compliance_read');
-  const body = c.get('body');
-  const v = zv(c, RequestAccessSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const result = await requestThreadAccess({
-    threadId:      v.data.threadId,
-    userId:        user.id,
-    reason:        v.data.reason,
-    caseRef:       v.data.caseRef ?? null,
-    notes:         v.data.notes ?? null,
-    durationHours: v.data.durationHours,
-  });
-  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 400 as 200);
-  return c.json({ success: true, data: { grantId: result.grantId, expiresAt: result.expiresAt } });
-});
-
-// POST /api/communications/messages/recordExport
-// Stamp that message history was exported under an active compliance grant.
-// Requires communications.compliance_export. Audited.
-const RecordExportSchema = z.object({ threadId: z.uuid() });
-
-router.post('/communications/messages/recordExport', async c => {
-  const user = await requirePermission(c, 'communications.compliance_export');
-  const body = c.get('body');
-  const v = zv(c, RecordExportSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const result = await recordThreadExport(v.data.threadId, user.id);
-  if (!result.ok) return c.json({ success: false, message: result.message ?? 'Error' }, 400 as 200);
-  return c.json({ success: true });
-});
-
-// POST /api/communications/messages/compliance/search
-// Discover threads for compliance review (metadata only — no message bodies).
-// Requires communications.compliance_read. Reading a thread still requires a grant.
-const ComplianceSearchSchema = z.object({
-  search: z.string().max(160).optional(),
-  limit:  z.number().int().min(1).max(100).default(30),
-});
-
-router.post('/communications/messages/compliance/search', async c => {
-  const user = await requirePermission(c, 'communications.compliance_read');
-  const body = c.get('body');
-  const v = zv(c, ComplianceSearchSchema, body.args);
-  if (!v.ok) return v.response;
-
-  const result = await searchThreadsForCompliance({ actorUserId: user.id, search: v.data.search, limit: v.data.limit });
-  return c.json({ success: true, data: result.rows });
 });
 
 // POST /api/communications/messages/recordThread

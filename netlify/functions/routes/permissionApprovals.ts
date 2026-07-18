@@ -15,9 +15,8 @@
 
 import { Hono }                      from 'hono';
 import { sb }                        from '../lib/db';
-import { requirePermission, log_ }   from '../lib/auth';
+import { requirePermission }         from '../lib/auth';
 import { requireStepUp }             from '../lib/stepUp';
-import { emitAppEvent }             from '../lib/appEvents';
 import { invalidateRolePermissions } from '../lib/permissions';
 import { z, zv }                     from '../lib/validate';
 import type { HonoVariables }        from '../../../types/api';
@@ -61,6 +60,8 @@ interface ApprovalRow {
   decision_reason: string | null;
   applied_at:      string | null;
   expires_at:      string;
+  grant_valid_from:  string | null;
+  grant_valid_until: string | null;
   created_at:      string;
 }
 
@@ -84,7 +85,7 @@ router.post('/list', async c => {
     return c.json({ success: false, message: 'Failed to load approvals.' }, 500);
   }
 
-  const rows = (data ?? []) as ApprovalRow[];
+  const rows = data as ApprovalRow[];
 
   // Enrich with requester/decider display names
   const userIds = [...new Set([
@@ -94,12 +95,16 @@ router.post('/list', async c => {
 
   let nameMap = new Map<string, string>();
   if (userIds.length > 0) {
-    const { data: users } = await sb
+    const { data: users, error: usersError } = await sb
       .from('app_users')
       .select('id, username, full_name')
       .in('id', userIds);
+    if (usersError) {
+      console.error('[approvals/list] user enrichment error:', usersError.message);
+      return c.json({ success: false, message: 'Failed to load approval actors.' }, 500);
+    }
     nameMap = new Map(
-      ((users ?? []) as { id: string; username: string; full_name: string }[])
+      (users as { id: string; username: string; full_name: string }[])
         .map(u => [u.id, u.full_name || u.username]),
     );
   }
@@ -122,6 +127,8 @@ router.post('/list', async c => {
     decisionReason:  r.decision_reason,
     appliedAt:       r.applied_at,
     expiresAt:       r.expires_at,
+    grantValidFrom:  r.grant_valid_from,
+    grantValidUntil: r.grant_valid_until,
   }));
 
   return c.json({ success: true, approvals });
@@ -147,14 +154,26 @@ router.post('/approve', async c => {
     p_approval_id:      approvalId,
     p_checker_id:       actor.id,
     p_checker_username: actor.username,
-  });
+  }) as unknown as {
+    data: unknown;
+    error: { message: string } | null;
+  };
   if (rpcErr) {
     console.error('[approvals/approve] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to apply the permission grant.' }, 500);
   }
 
   const result = (rpcData ?? {}) as {
-    status:          'applied' | 'not_found' | 'not_pending' | 'expired' | 'self_approval';
+    status:
+      | 'applied'
+      | 'not_found'
+      | 'not_pending'
+      | 'expired'
+      | 'self_approval'
+      | 'target_inactive'
+      | 'invalid_compliance_target'
+      | 'invalid_compliance_effect'
+      | 'invalid_validity';
     current?:        string;
     request_type?:   'role_permission' | 'user_override';
     target_role?:    string | null;
@@ -170,6 +189,14 @@ router.post('/approve', async c => {
     case 'not_pending':   return c.json({ success: false, message: `Cannot approve: request is already ${result.current}.` }, 400);
     case 'expired':       return c.json({ success: false, code: 'expired', message: 'This approval request has expired.' }, 400);
     case 'self_approval': return c.json({ success: false, code: 'self_approval', message: 'You cannot approve your own permission grant request.' }, 403);
+    case 'target_inactive':
+      return c.json({ success: false, code: result.status, message: 'The target user is no longer active.' }, 409);
+    case 'invalid_compliance_target':
+      return c.json({ success: false, code: result.status, message: 'Compliance access must target one user.' }, 422);
+    case 'invalid_compliance_effect':
+      return c.json({ success: false, code: result.status, message: 'Compliance access can only be approved as an allow grant.' }, 422);
+    case 'invalid_validity':
+      return c.json({ success: false, code: result.status, message: 'The compliance grant validity window is no longer valid.' }, 422);
     default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
   }
 
@@ -178,32 +205,6 @@ router.post('/approve', async c => {
   if (result.request_type === 'role_permission' && result.target_role) {
     invalidateRolePermissions(result.target_role);
   }
-
-  // Audit log
-  await log_(actor, 'permission_grant_approved', 'permission_grant_approval', approvalId,
-    `approved ${result.permission_key} ${result.request_type === 'role_permission' ? 'for role ' + (result.target_role ?? '') : 'for user ' + (result.target_user_id ?? '')}`);
-
-  // Emit audit events
-  await Promise.all([
-    emitAppEvent({
-      eventType: 'iam.permission.grant_approved',
-      sourceModule: 'platform',
-      sourceEntityType: 'permission_grant_approval',
-      sourceEntityId: approvalId,
-      actorUserId: actor.id,
-      severity: 'warning',
-      payload: { permissionKey: result.permission_key, approvalId, requestedBy: result.requested_by },
-    }),
-    emitAppEvent({
-      eventType: 'iam.permission.granted',
-      sourceModule: 'platform',
-      sourceEntityType: 'permission_grant_approval',
-      sourceEntityId: approvalId,
-      actorUserId: actor.id,
-      severity: 'success',
-      payload: { permissionKey: result.permission_key, target: result.target_role ?? result.target_user_id },
-    }),
-  ]);
 
   return c.json({ success: true });
 });
@@ -223,7 +224,10 @@ router.post('/reject', async c => {
     p_approval_id: approvalId,
     p_checker_id:  actor.id,
     p_reason:      reason ?? '',
-  });
+  }) as unknown as {
+    data: unknown;
+    error: { message: string } | null;
+  };
   if (rpcErr) {
     console.error('[approvals/reject] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to reject approval.' }, 500);
@@ -236,19 +240,6 @@ router.post('/reject', async c => {
     case 'self_approval': return c.json({ success: false, code: 'self_approval', message: 'You cannot reject your own permission grant request.' }, 403);
     default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
   }
-
-  await log_(actor, 'permission_grant_rejected', 'permission_grant_approval', approvalId,
-    `rejected ${row.permission_key}`);
-
-  await emitAppEvent({
-    eventType: 'iam.permission.grant_rejected',
-    sourceModule: 'platform',
-    sourceEntityType: 'permission_grant_approval',
-    sourceEntityId: approvalId,
-    actorUserId: actor.id,
-    severity: 'info',
-    payload: { permissionKey: row.permission_key, approvalId, requestedBy: row.requested_by, reason },
-  });
 
   return c.json({ success: true });
 });
@@ -266,7 +257,10 @@ router.post('/cancel', async c => {
   const { data: rpcData, error: rpcErr } = await sb.rpc('cancel_permission_grant_tx', {
     p_approval_id: approvalId,
     p_actor_id:    actor.id,
-  });
+  }) as unknown as {
+    data: unknown;
+    error: { message: string } | null;
+  };
   if (rpcErr) {
     console.error('[approvals/cancel] rpc error:', rpcErr.message);
     return c.json({ success: false, message: 'Failed to cancel approval.' }, 500);
@@ -279,9 +273,6 @@ router.post('/cancel', async c => {
     case 'not_requester': return c.json({ success: false, message: 'Only the requester can cancel this approval request.' }, 403);
     default:              return c.json({ success: false, message: 'Unexpected approval state.' }, 500);
   }
-
-  await log_(actor, 'permission_grant_cancelled', 'permission_grant_approval', approvalId,
-    `cancelled request for ${row.permission_key}`);
 
   return c.json({ success: true });
 });

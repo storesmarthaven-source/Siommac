@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `bc6631ec0f77a6a3dbf91521`
 
-Files: 92 | Symbols: 832 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 4
+Files: 93 | Symbols: 855 | Widgets: 0 | Unique mounted endpoints: 71 | Route definitions: 72 mounted + 2 unmounted | API calls: 77 | DB objects: 118 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -20,53 +20,62 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|---|---|---|
 | `/api/clearAllNotifications` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:181` | res @ src/api/notifications.ts:111 | - |
 | `/api/clearClosedTickets` | `-` | requireUser | `-` | `netlify/functions/routes/tickets.ts:144` | res @ src/api/tickets.ts:89<br>clearClosedTickets @ src/components/nav/api.ts:38 | - |
-| `/api/communications/messages/activity` | `communications.view` | requirePermission | `z.object({ threadId: z.uuid() })` | `netlify/functions/routes/communications.ts:438` | - | communications |
-| `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:704` | useArchiveThread @ src/api/communications.ts:617<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279 | communications |
-| `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:664` | useCreateMessageAttachment @ src/api/communications.ts:370<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
-| `/api/communications/messages/attachments/get-url` | `communications.view` | requirePermission | `AttachUrlSchema` | `netlify/functions/routes/communications.ts:843` | useAttachmentUrl @ src/api/communications.ts:607<br>res @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:55 | communications |
-| `/api/communications/messages/attachments/upload-url` | `communications.view` | requirePermission | `AttachUploadUrlSchema` | `netlify/functions/routes/communications.ts:640` | useMessageAttachmentUploadUrl @ src/api/communications.ts:357<br>urlRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:15 | communications |
-| `/api/communications/messages/compliance/search` | `communications.compliance_read` | requirePermission | `ComplianceSearchSchema` | `netlify/functions/routes/communications.ts:508` | res @ src/api/communications.ts:717 | communications |
-| `/api/communications/messages/createThread` | `communications.thread_create` | requirePermission | `CreateThreadSchema` | `netlify/functions/routes/communications.ts:567` | res @ src/api/communications.ts:398<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:229 | communications, communicationsCompliance, messaging, messagingFavourites, messagingReactions, messagingTypingPresence, messengerPagination, messengerRealtime |
-| `/api/communications/messages/delete` | `communications.view` | requirePermission, userCan | `DeleteMessageSchema` | `netlify/functions/routes/communications.ts:915` | useDeleteMessage @ src/api/communications.ts:559 | messaging, messagingReactions |
-| `/api/communications/messages/draft/delete` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:1008` | - | communications |
-| `/api/communications/messages/draft/get` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:999` | res @ src/api/communications.ts:587<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160 | communications |
-| `/api/communications/messages/draft/save` | `communications.view` | requirePermission | `DraftSaveSchema` | `netlify/functions/routes/communications.ts:987` | useSaveDraft @ src/api/communications.ts:598 | communications |
-| `/api/communications/messages/favourites/set` | `communications.view` | requirePermission | `FavouriteThreadSchema` | `netlify/functions/routes/communications.ts:735` | setFavourite @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:316 | messagingFavourites |
-| `/api/communications/messages/markRead` | `communications.view` | requirePermission | `MarkReadSchema` | `netlify/functions/routes/communications.ts:688` | useMarkThreadRead @ src/api/communications.ts:489<br>markRead @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:271 | communications, messaging, messengerRealtime |
-| `/api/communications/messages/mute` | `communications.view` | requirePermission | `MuteThreadSchema` | `netlify/functions/routes/communications.ts:718` | useMuteThread @ src/api/communications.ts:632<br>setMuted @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:275 | communications |
-| `/api/communications/messages/online` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1037` | res @ src/api/communications.ts:574<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:55 | communications |
-| `/api/communications/messages/participants/add` | `communications.thread_manage_own` | requirePermission | `ParticipantsAddSchema` | `netlify/functions/routes/communications.ts:755` | useAddThreadParticipants @ src/api/communications.ts:645 | communications, messaging |
-| `/api/communications/messages/participants/remove` | `communications.thread_manage_own` | requirePermission, userCan | `ParticipantsRemoveSchema` | `netlify/functions/routes/communications.ts:775` | useRemoveThreadParticipant @ src/api/communications.ts:659 | communications, messaging |
-| `/api/communications/messages/pins/list` | `communications.view` | requirePermission | `PinsListSchema` | `netlify/functions/routes/communications.ts:960` | res @ src/api/communications.ts:521<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:86 | communications |
-| `/api/communications/messages/pins/pin` | `communications.view` | requirePermission | `PinSchema` | `netlify/functions/routes/communications.ts:871` | usePinMessage @ src/api/communications.ts:532 | communications, messaging |
-| `/api/communications/messages/pins/pinned-summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:972` | res @ src/api/communications.ts:509 | communications |
-| `/api/communications/messages/pins/unpin` | `communications.view` | requirePermission | `UnpinSchema` | `netlify/functions/routes/communications.ts:895` | useUnpinMessage @ src/api/communications.ts:545 | communications, messaging |
-| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:605` | usePostMessage @ src/api/communications.ts:332<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199 | communications, messaging, messagingReactions, messengerPagination, messengerRealtime |
-| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:394` | res @ src/api/communications.ts:308<br>res @ src/api/communications.ts:470<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117 | communications, messaging, messagingReactions, messengerPagination |
-| `/api/communications/messages/presence/update` | `communications.view` | requirePermission | `PresenceSchema` | `netlify/functions/routes/communications.ts:1027` | - | communications |
-| `/api/communications/messages/reactions/toggle` | `communications.view` | requirePermission | `ToggleReactionSchema` | `netlify/functions/routes/communications.ts:943` | - | messagingReactions |
-| `/api/communications/messages/recipients` | `communications.view` | requirePermission | `RecipientsSchema` | `netlify/functions/routes/communications.ts:826` | res @ src/api/communications.ts:770 | communications |
-| `/api/communications/messages/recordExport` | `communications.compliance_export` | requirePermission | `RecordExportSchema` | `netlify/functions/routes/communications.ts:489` | - | - |
-| `/api/communications/messages/recordThread` | `communications.thread_create` | requirePermission | `RecordThreadSchema` | `netlify/functions/routes/communications.ts:529` | useResolveRecordThread @ src/api/communications.ts:738 | communications |
-| `/api/communications/messages/requestThreadAccess` | `communications.compliance_read` | requirePermission | `RequestAccessSchema` | `netlify/functions/routes/communications.ts:466` | useRequestThreadAccess @ src/api/communications.ts:698 | communications, communicationsCompliance |
-| `/api/communications/messages/search` | `communications.view` | requirePermission | `MessageSearchSchema` | `netlify/functions/routes/communications.ts:422` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
-| `/api/communications/messages/search` | `communications.view` | requirePermission | `SearchSchema` | `netlify/functions/routes/communications.ts:811` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
-| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:365` | res @ src/api/communications.ts:443 | communications |
-| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:341` | res @ src/api/communications.ts:293<br>res @ src/api/communications.ts:427<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143 | communications, communicationsCompliance, messaging, messagingFavourites, messengerPagination |
-| `/api/communications/notifications/archive` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:167` | useArchiveNotification @ src/api/communications.ts:275 | communications |
-| `/api/communications/notifications/broadcast` | `communications.admin` | requirePermission | `BroadcastSchema` | `netlify/functions/routes/communications.ts:286` | useBroadcastNotification @ src/api/communications.ts:234 | communications |
-| `/api/communications/notifications/list` | `communications.view` | requirePermission | `NotifListSchema` | `netlify/functions/routes/communications.ts:106` | res @ src/api/communications.ts:177 | communications |
-| `/api/communications/notifications/markAllRead` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:153` | useMarkAllNotificationsRead @ src/api/communications.ts:259 | communications |
-| `/api/communications/notifications/markRead` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:139` | useMarkNotificationRead @ src/api/communications.ts:243 | communications |
-| `/api/communications/notifications/mute` | `communications.view` | requirePermission | `MuteSchema` | `netlify/functions/routes/communications.ts:252` | useMuteNotifications @ src/api/communications.ts:216 | communications |
-| `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:189` | res @ src/api/communications.ts:194 | communications |
-| `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:226` | useSetNotificationPreference @ src/api/communications.ts:207 | communications |
-| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:87` | res @ src/api/communications.ts:149<br>res @ src/components/nav/badgeSync.ts:25 | communications, messengerRealtime |
-| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1123` | useCommentTicket @ src/api/communications.ts:855 | communications |
-| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1057` | useCreateTicket @ src/api/communications.ts:835<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications |
-| `/api/communications/tickets/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1096` | res @ src/api/communications.ts:809 | communications |
-| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1075` | res @ src/api/communications.ts:794 | communications |
-| `/api/communications/tickets/update` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/communications.ts:1166` | useUpdateTicket @ src/api/communications.ts:876 | communications |
+| `/api/communications/compliance/access-events/list` | `communications.compliance_read` | requirePermission | `AccessEventsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:429` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/close` | `communications.compliance_read` | requirePermission | `CaseCloseSchema` | `netlify/functions/routes/communicationsCompliance.ts:411` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/decide` | `communications.compliance_read` | requirePermission | `CaseDecisionSchema` | `netlify/functions/routes/communicationsCompliance.ts:274` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/get` | `communications.compliance_read` | requirePermission | `CaseGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:232` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/list` | `communications.compliance_read` | requirePermission | `CasesListSchema` | `netlify/functions/routes/communicationsCompliance.ts:222` | - | communicationsCompliance |
+| `/api/communications/compliance/cases/request` | `communications.compliance_read` | requirePermission | `CaseRequestSchema` | `netlify/functions/routes/communicationsCompliance.ts:242` | - | communicationsCompliance |
+| `/api/communications/compliance/conversations/read` | `communications.compliance_read` | requirePermission | `ConversationReadSchema` | `netlify/functions/routes/communicationsCompliance.ts:316` | - | communicationsCompliance |
+| `/api/communications/compliance/conversations/search` | `communications.compliance_read` | requirePermission | `ConversationSearchSchema` | `netlify/functions/routes/communicationsCompliance.ts:306` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/create` | `communications.compliance_export` | requirePermission | `ExportCreateSchema` | `netlify/functions/routes/communicationsCompliance.ts:449` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/download` | `communications.compliance_export` | requirePermission | `ExportDownloadSchema` | `netlify/functions/routes/communicationsCompliance.ts:465` | - | communicationsCompliance |
+| `/api/communications/compliance/exports/list` | `communications.compliance_read` | requirePermission | `ExportsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:439` | - | communicationsCompliance |
+| `/api/communications/compliance/grants/revoke` | `communications.compliance_read` | requirePermission | `GrantRevokeSchema` | `netlify/functions/routes/communicationsCompliance.ts:369` | - | communicationsCompliance |
+| `/api/communications/messages/activity` | `communications.view` | requirePermission | `z.object({ threadId: z.uuid() })` | `netlify/functions/routes/communications.ts:435` | - | communications |
+| `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:638` | useArchiveThread @ src/api/communications.ts:617<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279 | communications |
+| `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:598` | useCreateMessageAttachment @ src/api/communications.ts:370<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
+| `/api/communications/messages/attachments/get-url` | `communications.view` | requirePermission | `AttachUrlSchema` | `netlify/functions/routes/communications.ts:777` | useAttachmentUrl @ src/api/communications.ts:607<br>res @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:55 | communications |
+| `/api/communications/messages/attachments/upload-url` | `communications.view` | requirePermission | `AttachUploadUrlSchema` | `netlify/functions/routes/communications.ts:574` | useMessageAttachmentUploadUrl @ src/api/communications.ts:357<br>urlRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:15 | communications |
+| `/api/communications/messages/createThread` | `communications.thread_create` | requirePermission | `CreateThreadSchema` | `netlify/functions/routes/communications.ts:501` | res @ src/api/communications.ts:398<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:229 | communications, communicationsCompliance, messaging, messagingFavourites, messagingReactions, messagingTypingPresence, messengerPagination, messengerRealtime |
+| `/api/communications/messages/delete` | `communications.view` | requirePermission, userCan | `DeleteMessageSchema` | `netlify/functions/routes/communications.ts:849` | useDeleteMessage @ src/api/communications.ts:559 | messaging, messagingReactions |
+| `/api/communications/messages/draft/delete` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:942` | - | communications |
+| `/api/communications/messages/draft/get` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:933` | res @ src/api/communications.ts:587<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160 | communications |
+| `/api/communications/messages/draft/save` | `communications.view` | requirePermission | `DraftSaveSchema` | `netlify/functions/routes/communications.ts:921` | useSaveDraft @ src/api/communications.ts:598 | communications |
+| `/api/communications/messages/favourites/set` | `communications.view` | requirePermission | `FavouriteThreadSchema` | `netlify/functions/routes/communications.ts:669` | setFavourite @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:316 | messagingFavourites |
+| `/api/communications/messages/markRead` | `communications.view` | requirePermission | `MarkReadSchema` | `netlify/functions/routes/communications.ts:622` | useMarkThreadRead @ src/api/communications.ts:489<br>markRead @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:271 | communications, messaging, messengerRealtime |
+| `/api/communications/messages/mute` | `communications.view` | requirePermission | `MuteThreadSchema` | `netlify/functions/routes/communications.ts:652` | useMuteThread @ src/api/communications.ts:632<br>setMuted @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:275 | communications |
+| `/api/communications/messages/online` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:971` | res @ src/api/communications.ts:574<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:55 | communications |
+| `/api/communications/messages/participants/add` | `communications.thread_manage_own` | requirePermission | `ParticipantsAddSchema` | `netlify/functions/routes/communications.ts:689` | useAddThreadParticipants @ src/api/communications.ts:645 | communications, messaging |
+| `/api/communications/messages/participants/remove` | `communications.thread_manage_own` | requirePermission, userCan | `ParticipantsRemoveSchema` | `netlify/functions/routes/communications.ts:709` | useRemoveThreadParticipant @ src/api/communications.ts:659 | communications, messaging |
+| `/api/communications/messages/pins/list` | `communications.view` | requirePermission | `PinsListSchema` | `netlify/functions/routes/communications.ts:894` | res @ src/api/communications.ts:521<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:86 | communications |
+| `/api/communications/messages/pins/pin` | `communications.view` | requirePermission | `PinSchema` | `netlify/functions/routes/communications.ts:805` | usePinMessage @ src/api/communications.ts:532 | communications, messaging |
+| `/api/communications/messages/pins/pinned-summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:906` | res @ src/api/communications.ts:509 | communications |
+| `/api/communications/messages/pins/unpin` | `communications.view` | requirePermission | `UnpinSchema` | `netlify/functions/routes/communications.ts:829` | useUnpinMessage @ src/api/communications.ts:545 | communications, messaging |
+| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:539` | usePostMessage @ src/api/communications.ts:332<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination, messengerRealtime |
+| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:391` | res @ src/api/communications.ts:308<br>res @ src/api/communications.ts:470<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination |
+| `/api/communications/messages/presence/update` | `communications.view` | requirePermission | `PresenceSchema` | `netlify/functions/routes/communications.ts:961` | - | communications |
+| `/api/communications/messages/reactions/toggle` | `communications.view` | requirePermission | `ToggleReactionSchema` | `netlify/functions/routes/communications.ts:877` | - | messagingReactions |
+| `/api/communications/messages/recipients` | `communications.view` | requirePermission | `RecipientsSchema` | `netlify/functions/routes/communications.ts:760` | res @ src/api/communications.ts:770 | communications |
+| `/api/communications/messages/recordThread` | `communications.thread_create` | requirePermission | `RecordThreadSchema` | `netlify/functions/routes/communications.ts:463` | useResolveRecordThread @ src/api/communications.ts:738 | communications |
+| `/api/communications/messages/search` | `communications.view` | requirePermission | `MessageSearchSchema` | `netlify/functions/routes/communications.ts:419` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
+| `/api/communications/messages/search` | `communications.view` | requirePermission | `SearchSchema` | `netlify/functions/routes/communications.ts:745` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
+| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:362` | res @ src/api/communications.ts:443 | communications, communicationsCompliance |
+| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:338` | res @ src/api/communications.ts:293<br>res @ src/api/communications.ts:427<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143 | communications, messaging, messagingFavourites, messengerPagination |
+| `/api/communications/notifications/archive` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:164` | useArchiveNotification @ src/api/communications.ts:275 | communications |
+| `/api/communications/notifications/broadcast` | `communications.admin` | requirePermission | `BroadcastSchema` | `netlify/functions/routes/communications.ts:283` | useBroadcastNotification @ src/api/communications.ts:234 | communications |
+| `/api/communications/notifications/list` | `communications.view` | requirePermission | `NotifListSchema` | `netlify/functions/routes/communications.ts:103` | res @ src/api/communications.ts:177 | communications |
+| `/api/communications/notifications/markAllRead` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:150` | useMarkAllNotificationsRead @ src/api/communications.ts:259 | communications |
+| `/api/communications/notifications/markRead` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:136` | useMarkNotificationRead @ src/api/communications.ts:243 | communications |
+| `/api/communications/notifications/mute` | `communications.view` | requirePermission | `MuteSchema` | `netlify/functions/routes/communications.ts:249` | useMuteNotifications @ src/api/communications.ts:216 | communications |
+| `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:186` | res @ src/api/communications.ts:194 | communications |
+| `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:223` | useSetNotificationPreference @ src/api/communications.ts:207 | communications |
+| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:84` | res @ src/api/communications.ts:149<br>res @ src/components/nav/badgeSync.ts:25 | communications, messengerRealtime |
+| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1057` | useCommentTicket @ src/api/communications.ts:855 | communications |
+| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:991` | useCreateTicket @ src/api/communications.ts:835<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications |
+| `/api/communications/tickets/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1030` | res @ src/api/communications.ts:809 | communications |
+| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1009` | res @ src/api/communications.ts:794 | communications |
+| `/api/communications/tickets/update` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/communications.ts:1100` | useUpdateTicket @ src/api/communications.ts:876 | communications |
 | `/api/createTicket` | `-` | requireUser | `CreateTicketSchema` | `netlify/functions/routes/tickets.ts:20` | res @ src/api/tickets.ts:58<br>createTicket @ src/components/nav/api.ts:26 | - |
 | `/api/deleteNotification` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:164` | res @ src/api/notifications.ts:103 | - |
 | `/api/deleteTicket` | `-` | requireUser | `GetTicketSchema` | `netlify/functions/routes/tickets.ts:126` | res @ src/api/tickets.ts:82<br>deleteTicket @ src/components/nav/api.ts:35 | - |
@@ -374,13 +383,32 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.message_thread_favourites` | `supabase/migrations/20260919000364_messaging_favourites.sql:13` |
 | function | `msg_internal.is_message_thread_participant` | `supabase/migrations/20260919000365_realtime_typing_presence_authorization.sql:26` |
 | function | `msg_internal.is_message_thread_participant` | `supabase/migrations/20260919000402_realtime_private_participant_helper.sql:7` |
+| table | `public.message_compliance_cases` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:819` |
+| trigger | `trg_message_compliance_cases_updated_at` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:888` |
+| table | `public.message_compliance_case_threads` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:893` |
+| table | `public.message_compliance_access_events` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:958` |
+| trigger | `trg_message_compliance_access_events_immutable` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1035` |
+| table | `public.message_compliance_exports` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1040` |
+| trigger | `trg_message_compliance_exports_guard` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1171` |
+| function | `public.message_compliance_case_request_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:93` |
+| function | `public.message_compliance_case_decide_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:305` |
+| function | `public.message_compliance_thread_read_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:477` |
+| function | `public.message_compliance_grant_revoke_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:765` |
+| function | `public.message_compliance_case_close_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:910` |
+| function | `public.message_compliance_export_request_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:13` |
+| function | `public.message_compliance_export_snapshot` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:197` |
+| function | `public.message_compliance_export_prepare_upload_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:336` |
+| function | `public.message_compliance_export_finalize_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:481` |
+| function | `public.message_compliance_export_fail_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:682` |
+| function | `public.message_compliance_export_download_prepare` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:819` |
+| function | `public.message_compliance_export_download_record_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:906` |
 
 ## E2E Suites
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
-| Communications (Notifications · Messages · Tickets) | 106 | 42 | `scripts/e2e/suites/communications.mjs` |
-| Communications — Compliance Critical-Grant (Slice 1) | 20 | 7 | `scripts/e2e/suites/communicationsCompliance.mjs` |
+| Communications (Notifications · Messages · Tickets) | 103 | 40 | `scripts/e2e/suites/communications.mjs` |
+| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 42 | 18 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
 | Messenger — two-session realtime verification | 8 | 4 | `scripts/e2e/suites/messengerRealtime.mjs` |
 
@@ -390,11 +418,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/communications.ts` | 1191 |
+| backend-route | `netlify/functions/routes/communications.ts` | 1125 |
+| backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 482 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
-| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1045 |
-| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 317 |
+| e2e-suite | `scripts/e2e/suites/communications.mjs` | 998 |
+| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1110 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | frontend-api | `src/api/communications.ts` | 885 |

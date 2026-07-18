@@ -2,10 +2,10 @@ path	module	permission	guards	schema	file	line
 /api/addDepartment	hr	departments.add	requirePermission	AddDepartmentSchema	netlify/functions/routes/departments.ts	51
 /api/addEmployee	hr	employees.add	requirePermission	AddEmployeeSchema	netlify/functions/routes/employees.ts	63
 /api/addProjectSite	platform	sites.add	requirePermission	AddSiteSchema	netlify/functions/routes/sites.ts	81
-/api/admin/approvals/approve	security	permissions.manage	requirePermission	ApproveSchema	netlify/functions/routes/permissionApprovals.ts	132
-/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	258
-/api/admin/approvals/list	security	permissions.manage	requirePermission	ListSchema	netlify/functions/routes/permissionApprovals.ts	69
-/api/admin/approvals/reject	security	permissions.manage	requirePermission	RejectSchema	netlify/functions/routes/permissionApprovals.ts	213
+/api/admin/approvals/approve	security	permissions.manage	requirePermission	ApproveSchema	netlify/functions/routes/permissionApprovals.ts	139
+/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	249
+/api/admin/approvals/list	security	permissions.manage	requirePermission	ListSchema	netlify/functions/routes/permissionApprovals.ts	70
+/api/admin/approvals/reject	security	permissions.manage	requirePermission	RejectSchema	netlify/functions/routes/permissionApprovals.ts	214
 /api/admin/security/policy/update	security	auth.security.manage_policy	requirePermission	PolicyUpdateSchema	netlify/functions/routes/adminSecurity.ts	225
 /api/admin/security/users/passkeys/revoke-all	security	auth.passkeys.admin_revoke	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	92
 /api/admin/security/users/status	security	auth.security.view	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	42
@@ -16,7 +16,7 @@ path	module	permission	guards	schema	file	line
 /api/auth/2fa/disable	security		requireUser	DisableSchema	netlify/functions/routes/auth2fa.ts	164
 /api/auth/2fa/setup	security		requireUser		netlify/functions/routes/auth2fa.ts	80
 /api/auth/2fa/status	security		requireUser		netlify/functions/routes/auth2fa.ts	59
-/api/auth/password/change	security		requireUser	ChangePasswordSchema	netlify/functions/routes/auth.ts	711
+/api/auth/password/change	security		requireUser	ChangePasswordSchema	netlify/functions/routes/auth.ts	703
 /api/auth/security/policy	security		requireUser		netlify/functions/routes/adminSecurity.ts	201
 /api/auth/step-up/options	security		requireUser		netlify/functions/routes/authStepUp.ts	45
 /api/auth/step-up/verify	security		requireUser	VerifySchema	netlify/functions/routes/authStepUp.ts	85
@@ -32,53 +32,62 @@ path	module	permission	guards	schema	file	line
 /api/calendar/update	platform	calendar.view	requirePermission,userCan	UpdateSchema	netlify/functions/routes/calendar.ts	599
 /api/clearAllNotifications	communications		requireUser		netlify/functions/routes/notify.ts	181
 /api/clearClosedTickets	communications		requireUser		netlify/functions/routes/tickets.ts	144
-/api/communications/messages/activity	communications	communications.view	requirePermission	z.object({ threadId: z.uuid() })	netlify/functions/routes/communications.ts	438
-/api/communications/messages/archive	communications	communications.view	requirePermission	ArchiveSchema	netlify/functions/routes/communications.ts	704
-/api/communications/messages/attachments/create	communications	communications.view	requirePermission	AttachCreateSchema	netlify/functions/routes/communications.ts	664
-/api/communications/messages/attachments/get-url	communications	communications.view	requirePermission	AttachUrlSchema	netlify/functions/routes/communications.ts	843
-/api/communications/messages/attachments/upload-url	communications	communications.view	requirePermission	AttachUploadUrlSchema	netlify/functions/routes/communications.ts	640
-/api/communications/messages/compliance/search	communications	communications.compliance_read	requirePermission	ComplianceSearchSchema	netlify/functions/routes/communications.ts	508
-/api/communications/messages/createThread	communications	communications.thread_create	requirePermission	CreateThreadSchema	netlify/functions/routes/communications.ts	567
-/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	915
-/api/communications/messages/draft/delete	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	1008
-/api/communications/messages/draft/get	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	999
-/api/communications/messages/draft/save	communications	communications.view	requirePermission	DraftSaveSchema	netlify/functions/routes/communications.ts	987
-/api/communications/messages/favourites/set	communications	communications.view	requirePermission	FavouriteThreadSchema	netlify/functions/routes/communications.ts	735
-/api/communications/messages/markRead	communications	communications.view	requirePermission	MarkReadSchema	netlify/functions/routes/communications.ts	688
-/api/communications/messages/mute	communications	communications.view	requirePermission	MuteThreadSchema	netlify/functions/routes/communications.ts	718
-/api/communications/messages/online	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1037
-/api/communications/messages/participants/add	communications	communications.thread_manage_own	requirePermission	ParticipantsAddSchema	netlify/functions/routes/communications.ts	755
-/api/communications/messages/participants/remove	communications	communications.thread_manage_own	requirePermission,userCan	ParticipantsRemoveSchema	netlify/functions/routes/communications.ts	775
-/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	960
-/api/communications/messages/pins/pin	communications	communications.view	requirePermission	PinSchema	netlify/functions/routes/communications.ts	871
-/api/communications/messages/pins/pinned-summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	972
-/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	895
-/api/communications/messages/post	communications	communications.view	requirePermission	PostMessageSchema	netlify/functions/routes/communications.ts	605
-/api/communications/messages/posts	communications	communications.view	requirePermission	PostsSchema	netlify/functions/routes/communications.ts	394
-/api/communications/messages/presence/update	communications	communications.view	requirePermission	PresenceSchema	netlify/functions/routes/communications.ts	1027
-/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	943
-/api/communications/messages/recipients	communications	communications.view	requirePermission	RecipientsSchema	netlify/functions/routes/communications.ts	826
-/api/communications/messages/recordExport	communications	communications.compliance_export	requirePermission	RecordExportSchema	netlify/functions/routes/communications.ts	489
-/api/communications/messages/recordThread	communications	communications.thread_create	requirePermission	RecordThreadSchema	netlify/functions/routes/communications.ts	529
-/api/communications/messages/requestThreadAccess	communications	communications.compliance_read	requirePermission	RequestAccessSchema	netlify/functions/routes/communications.ts	466
-/api/communications/messages/search	communications	communications.view	requirePermission	MessageSearchSchema	netlify/functions/routes/communications.ts	422
-/api/communications/messages/search	communications	communications.view	requirePermission	SearchSchema	netlify/functions/routes/communications.ts	811
-/api/communications/messages/thread	communications	communications.view	requirePermission	ThreadGetSchema	netlify/functions/routes/communications.ts	365
-/api/communications/messages/threads	communications	communications.view	requirePermission	ThreadsListSchema	netlify/functions/routes/communications.ts	341
-/api/communications/notifications/archive	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	167
-/api/communications/notifications/broadcast	communications	communications.admin	requirePermission	BroadcastSchema	netlify/functions/routes/communications.ts	286
-/api/communications/notifications/list	communications	communications.view	requirePermission	NotifListSchema	netlify/functions/routes/communications.ts	106
-/api/communications/notifications/markAllRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	153
-/api/communications/notifications/markRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	139
-/api/communications/notifications/mute	communications	communications.view	requirePermission	MuteSchema	netlify/functions/routes/communications.ts	252
-/api/communications/notifications/preferences/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	189
-/api/communications/notifications/preferences/set	communications	communications.view	requirePermission	PrefSetSchema	netlify/functions/routes/communications.ts	226
-/api/communications/summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	87
-/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1123
-/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	1057
-/api/communications/tickets/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1096
-/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1075
-/api/communications/tickets/update	communications	tickets.manage	requirePermission	UpdateTicketSchema	netlify/functions/routes/communications.ts	1166
+/api/communications/compliance/access-events/list	communications	communications.compliance_read	requirePermission	AccessEventsListSchema	netlify/functions/routes/communicationsCompliance.ts	429
+/api/communications/compliance/cases/close	communications	communications.compliance_read	requirePermission	CaseCloseSchema	netlify/functions/routes/communicationsCompliance.ts	411
+/api/communications/compliance/cases/decide	communications	communications.compliance_read	requirePermission	CaseDecisionSchema	netlify/functions/routes/communicationsCompliance.ts	274
+/api/communications/compliance/cases/get	communications	communications.compliance_read	requirePermission	CaseGetSchema	netlify/functions/routes/communicationsCompliance.ts	232
+/api/communications/compliance/cases/list	communications	communications.compliance_read	requirePermission	CasesListSchema	netlify/functions/routes/communicationsCompliance.ts	222
+/api/communications/compliance/cases/request	communications	communications.compliance_read	requirePermission	CaseRequestSchema	netlify/functions/routes/communicationsCompliance.ts	242
+/api/communications/compliance/conversations/read	communications	communications.compliance_read	requirePermission	ConversationReadSchema	netlify/functions/routes/communicationsCompliance.ts	316
+/api/communications/compliance/conversations/search	communications	communications.compliance_read	requirePermission	ConversationSearchSchema	netlify/functions/routes/communicationsCompliance.ts	306
+/api/communications/compliance/exports/create	communications	communications.compliance_export	requirePermission	ExportCreateSchema	netlify/functions/routes/communicationsCompliance.ts	449
+/api/communications/compliance/exports/download	communications	communications.compliance_export	requirePermission	ExportDownloadSchema	netlify/functions/routes/communicationsCompliance.ts	465
+/api/communications/compliance/exports/list	communications	communications.compliance_read	requirePermission	ExportsListSchema	netlify/functions/routes/communicationsCompliance.ts	439
+/api/communications/compliance/grants/revoke	communications	communications.compliance_read	requirePermission	GrantRevokeSchema	netlify/functions/routes/communicationsCompliance.ts	369
+/api/communications/messages/activity	communications	communications.view	requirePermission	z.object({ threadId: z.uuid() })	netlify/functions/routes/communications.ts	435
+/api/communications/messages/archive	communications	communications.view	requirePermission	ArchiveSchema	netlify/functions/routes/communications.ts	638
+/api/communications/messages/attachments/create	communications	communications.view	requirePermission	AttachCreateSchema	netlify/functions/routes/communications.ts	598
+/api/communications/messages/attachments/get-url	communications	communications.view	requirePermission	AttachUrlSchema	netlify/functions/routes/communications.ts	777
+/api/communications/messages/attachments/upload-url	communications	communications.view	requirePermission	AttachUploadUrlSchema	netlify/functions/routes/communications.ts	574
+/api/communications/messages/createThread	communications	communications.thread_create	requirePermission	CreateThreadSchema	netlify/functions/routes/communications.ts	501
+/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	849
+/api/communications/messages/draft/delete	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	942
+/api/communications/messages/draft/get	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	933
+/api/communications/messages/draft/save	communications	communications.view	requirePermission	DraftSaveSchema	netlify/functions/routes/communications.ts	921
+/api/communications/messages/favourites/set	communications	communications.view	requirePermission	FavouriteThreadSchema	netlify/functions/routes/communications.ts	669
+/api/communications/messages/markRead	communications	communications.view	requirePermission	MarkReadSchema	netlify/functions/routes/communications.ts	622
+/api/communications/messages/mute	communications	communications.view	requirePermission	MuteThreadSchema	netlify/functions/routes/communications.ts	652
+/api/communications/messages/online	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	971
+/api/communications/messages/participants/add	communications	communications.thread_manage_own	requirePermission	ParticipantsAddSchema	netlify/functions/routes/communications.ts	689
+/api/communications/messages/participants/remove	communications	communications.thread_manage_own	requirePermission,userCan	ParticipantsRemoveSchema	netlify/functions/routes/communications.ts	709
+/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	894
+/api/communications/messages/pins/pin	communications	communications.view	requirePermission	PinSchema	netlify/functions/routes/communications.ts	805
+/api/communications/messages/pins/pinned-summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	906
+/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	829
+/api/communications/messages/post	communications	communications.view	requirePermission	PostMessageSchema	netlify/functions/routes/communications.ts	539
+/api/communications/messages/posts	communications	communications.view	requirePermission	PostsSchema	netlify/functions/routes/communications.ts	391
+/api/communications/messages/presence/update	communications	communications.view	requirePermission	PresenceSchema	netlify/functions/routes/communications.ts	961
+/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	877
+/api/communications/messages/recipients	communications	communications.view	requirePermission	RecipientsSchema	netlify/functions/routes/communications.ts	760
+/api/communications/messages/recordThread	communications	communications.thread_create	requirePermission	RecordThreadSchema	netlify/functions/routes/communications.ts	463
+/api/communications/messages/search	communications	communications.view	requirePermission	MessageSearchSchema	netlify/functions/routes/communications.ts	419
+/api/communications/messages/search	communications	communications.view	requirePermission	SearchSchema	netlify/functions/routes/communications.ts	745
+/api/communications/messages/thread	communications	communications.view	requirePermission	ThreadGetSchema	netlify/functions/routes/communications.ts	362
+/api/communications/messages/threads	communications	communications.view	requirePermission	ThreadsListSchema	netlify/functions/routes/communications.ts	338
+/api/communications/notifications/archive	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	164
+/api/communications/notifications/broadcast	communications	communications.admin	requirePermission	BroadcastSchema	netlify/functions/routes/communications.ts	283
+/api/communications/notifications/list	communications	communications.view	requirePermission	NotifListSchema	netlify/functions/routes/communications.ts	103
+/api/communications/notifications/markAllRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	150
+/api/communications/notifications/markRead	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	136
+/api/communications/notifications/mute	communications	communications.view	requirePermission	MuteSchema	netlify/functions/routes/communications.ts	249
+/api/communications/notifications/preferences/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	186
+/api/communications/notifications/preferences/set	communications	communications.view	requirePermission	PrefSetSchema	netlify/functions/routes/communications.ts	223
+/api/communications/summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	84
+/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1057
+/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	991
+/api/communications/tickets/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1030
+/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1009
+/api/communications/tickets/update	communications	tickets.manage	requirePermission	UpdateTicketSchema	netlify/functions/routes/communications.ts	1100
 /api/confirm2faSetup	security			Setup2faConfirmSchema	netlify/functions/routes/auth.ts	473
 /api/createTicket	communications		requireUser	CreateTicketSchema	netlify/functions/routes/tickets.ts	20
 /api/deleteDepartment	hr	departments.delete	requirePermission	DeleteDepartmentSchema	netlify/functions/routes/departments.ts	78
@@ -791,23 +800,23 @@ path	module	permission	guards	schema	file	line
 /api/settings/values/reset	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	233
 /api/settings/values/set	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	181
 /api/setup2fa	security			Setup2faInitSchema	netlify/functions/routes/auth.ts	436
-/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	203
-/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	466
-/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	557
-/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	515
-/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	587
-/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	239
-/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	326
-/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	447
-/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	152
-/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	545
-/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	422
-/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	102
-/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	288
-/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	602
-/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	168
-/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	486
-/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	574
+/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	289
+/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	583
+/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	674
+/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	632
+/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	704
+/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	356
+/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	443
+/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	564
+/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	223
+/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	662
+/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	539
+/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	173
+/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	405
+/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	719
+/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	239
+/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	603
+/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	691
 /api/theme/get	widgets				netlify/functions/routes/uiPrefs.ts	48
 /api/theme/save	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	53
 /api/updateColorScheme	security		requireUser	UpdateColorSchemeSchema	netlify/functions/routes/auth.ts	610
@@ -821,7 +830,7 @@ path	module	permission	guards	schema	file	line
 /api/updateTicketStatus	communications		requireUser	UpdateTicketSchema	netlify/functions/routes/tickets.ts	105
 /api/uploadLogo	settings		requireRole	UploadLogoSchema	netlify/functions/routes/settings.ts	66
 /api/verify2fa	security			Verify2faExtSchema	netlify/functions/routes/auth.ts	350
-/api/verifyPassword	security		requireUser	VerifyPasswordSchema	netlify/functions/routes/auth.ts	698
+/api/verifyPassword	security		requireUser	VerifyPasswordSchema	netlify/functions/routes/auth.ts	690
 /api/webauthn/auth/options	security			AuthOptionsSchema	netlify/functions/routes/webauthn.ts	289
 /api/webauthn/auth/verify	security			AuthVerifySchema	netlify/functions/routes/webauthn.ts	321
 /api/webauthn/credentials/delete	security			CredentialIdSchema	netlify/functions/routes/webauthn.ts	251

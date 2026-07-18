@@ -19,7 +19,7 @@
  *   1. approved-active grant (user_permissions row, granted=true)  → ALLOW
  *   2. no grant, no role-set entry (superadmin post-Slice-1)       → DENY
  *   3. pending approval (no user_permissions row yet)               → DENY (same as 2)
- *   4. revoked grant (user_permissions row deleted)                 → DENY (same as 2)
+ *   4. revoked grant (retained row with revoked_at)                  → DENY
  *   5. explicit user-deny (user_permissions row, granted=false)     → DENY even if role set has it
  *   6. permission-table query FAILURE                               → DENY compliance key
  *
@@ -28,13 +28,11 @@
  *      even without a user_permissions row → ALLOW via role set
  *   8. superadmin auto-holds a non-critical key → ALLOW via role set
  *
- * Note on state 3 (pending) and 4 (revoked): both manifest identically in the
- * resolver — no user_permissions row → no override → role-set fallback → DENY.
+ * Pending requests have no active user_permissions row. Revoked grants retain
+ * their row as evidence but carry revoked_at. Both resolve to DENY.
  *
- * Note on expiry: user_permissions has no expires_at column; grant expiry is
- * NOT supported at the user_permissions level. Expiry of the underlying
- * permission_grant_approvals request row (7-day window) is separate. This is a
- * known gap reported in the Slice-1 deliverable.
+ * Dated compliance grants are active only while valid_from <= now < valid_until
+ * and revoked_at is null. Role membership cannot restore either gated key.
  */
 
 jest.mock('../../netlify/functions/lib/db', () => ({
@@ -63,6 +61,17 @@ const COMPLIANCE_KEY      = 'communications.compliance_read';
 const OPERATIONAL_CRIT_KEY = 'permissions.manage';
 /** A plain non-critical key — always in the superadmin set. */
 const NONCRITICAL_KEY     = 'communications.view';
+const NOW = new Date('2026-07-18T12:00:00.000Z');
+
+function activeComplianceOverride(granted = true) {
+  return {
+    permission: COMPLIANCE_KEY,
+    granted,
+    valid_from: '2026-07-18T11:00:00.000Z',
+    valid_until: '2026-07-18T13:00:00.000Z',
+    revoked_at: null,
+  };
+}
 
 /**
  * Post-Slice-1 superadmin role set: excludes COMPLIANCE_GATED_KEYS but retains
@@ -131,16 +140,16 @@ describe('COMPLIANCE_GATED_KEYS is a proper subset of CRITICAL_GRANT_KEYS', () =
 // 6-state matrix for a COMPLIANCE_GATED key (compliance_read)
 // ---------------------------------------------------------------------------
 
-describe('compliance key resolver — 6-state matrix', () => {
+describe('compliance key resolver — dated fail-closed matrix', () => {
   // ── State 1: approved-active grant ────────────────────────────────────────
   it('ALLOW when user_permissions has granted=true override', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: true }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides)).toBe(true);
+    const overrides = [activeComplianceOverride()];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides, NOW)).toBe(true);
   });
 
   it('ALLOW: override takes priority over missing role-set entry', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: true }];
-    expect(resolveWithSet(COMPLIANCE_KEY, new Set<string>(), overrides)).toBe(true);
+    const overrides = [activeComplianceOverride()];
+    expect(resolveWithSet(COMPLIANCE_KEY, new Set<string>(), overrides, NOW)).toBe(true);
   });
 
   // ── State 2: no grant, no role-set entry (post-Slice-1 superadmin default) ──
@@ -158,15 +167,53 @@ describe('compliance key resolver — 6-state matrix', () => {
     expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, [])).toBe(false);
   });
 
+  it('DENY a future-dated compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      valid_from: '2026-07-18T12:00:01.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY an expired compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      valid_until: '2026-07-18T12:00:00.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY a revoked compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      revoked_at: '2026-07-18T11:30:00.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY undated or malformed compliance grants', () => {
+    const undated = [{ permission: COMPLIANCE_KEY, granted: true }];
+    const malformed = [{
+      ...activeComplianceOverride(),
+      valid_until: 'not-a-date',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, undated, NOW)).toBe(false);
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, malformed, NOW)).toBe(false);
+  });
+
   // ── State 5: explicit user-deny ───────────────────────────────────────────
   it('DENY when user_permissions has granted=false override', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: false }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides)).toBe(false);
+    const overrides = [activeComplianceOverride(false)];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides, NOW)).toBe(false);
   });
 
   it('DENY: explicit user-deny wins even when compliance key IS in the role set', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: false }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides)).toBe(false);
+    const overrides = [activeComplianceOverride(false)];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY a stale role grant without an active per-user compliance grant', () => {
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, [], NOW)).toBe(false);
   });
 
   // ── State 6: DB query failure ──────────────────────────────────────────────

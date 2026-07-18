@@ -30,6 +30,7 @@ import { superadminRouter } from './routes/superadmin';
 import workflowsRouter      from './routes/workflows';
 import workflowEngineRouter from './routes/workflowEngine';
 import communicationsRouter from './routes/communications';
+import communicationsComplianceRouter from './routes/communicationsCompliance';
 import handoffsRouter       from './routes/handoffs';
 import orchestrationRouter  from './routes/orchestration';
 import hseIncidentsRouter   from './routes/hseIncidents';
@@ -116,7 +117,7 @@ app.onError((err, c) => {
   // Pass through discriminator codes (e.g. 'step_up_required', 'compliance_required')
   // so the frontend can branch on them without parsing message strings.
   const body: Record<string, unknown> = { success: false, message };
-  if (e.code) body['code'] = e.code;
+  if (e.code) body.code = e.code;
   return c.json(body, status as 200);
 });
 
@@ -238,6 +239,7 @@ app.route('/api',            widgetPackagesRouter);
 app.route('/api',            workflowsRouter);
 app.route('/api',            calendarRouter);
 app.route('/api',            communicationsRouter);
+app.route('/api',            communicationsComplianceRouter);
 app.route('/api',            handoffsRouter);
 app.route('/api/orchestration', orchestrationRouter);
 app.route('/api/auth/2fa',             auth2faRouter);
@@ -255,8 +257,8 @@ app.route('/api/admin/approvals',      permissionApprovalsRouter);
 //   POST /.netlify/functions/api — direct Netlify Dev path (dev only)
 // Both read the action field and re-dispatch to the matching /api/<action> route.
 async function _legacyDispatch(c: Context<{ Variables: HonoVariables }>): Promise<Response> {
-  const body   = c.get('body') ?? {};
-  const action = (body as Record<string, unknown>).action as string | undefined;
+  const body   = c.get('body');
+  const action = (body).action as string | undefined;
   if (!action) return c.json({ success: false, message: 'Missing action' }, 400);
 
   const url = new URL(c.req.url);
@@ -269,8 +271,7 @@ async function _legacyDispatch(c: Context<{ Variables: HonoVariables }>): Promis
   });
 
   // executionCtx is not available in lambda-local (Netlify Dev) — pass undefined
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  return app.fetch(syntheticReq, c.env, undefined as any);
+  return app.fetch(syntheticReq, c.env, undefined);
 }
 
 app.post('/api', c => _legacyDispatch(c));
@@ -311,7 +312,7 @@ export const handler = async (
   const base = 'http://localhost';
   const qs   = event.queryStringParameters
     ? '?' + new URLSearchParams(
-        Object.entries(event.queryStringParameters).filter(([, v]) => v != null) as [string, string][]
+        Object.entries(event.queryStringParameters)
       ).toString()
     : '';
   const url  = `${base}${event.path}${qs}`;
@@ -324,7 +325,7 @@ export const handler = async (
 
   const req = new Request(url, {
     method:  event.httpMethod,
-    headers: new Headers(event.headers ?? {}),
+    headers: new Headers(event.headers),
     body:    ['GET', 'HEAD'].includes(event.httpMethod) ? undefined : body,
   });
 

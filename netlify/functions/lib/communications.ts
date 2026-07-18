@@ -26,7 +26,7 @@ import {
 } from './messaging/messagingRpc';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
-  MessageRecipient, ComplianceThread, ThreadActivityEntry, ThreadSourceRecord,
+  MessageRecipient, ThreadActivityEntry, ThreadSourceRecord,
 } from '../../../types/messaging';
 
 // ── Messaging attachments bucket ───────────────────────────────────────────────
@@ -76,25 +76,24 @@ function initialsOf(name: string | null | undefined): string {
 //   • record        — the thread is linked to a business record (PTW/incident/…)
 //                     AND they hold communications.record_thread_read AND they can
 //                     view that record type
-//   • grant         — they have an ACTIVE compliance access grant on the thread
-//                     (audited, time-boxed; see message_thread_access_grants)
-// Otherwise access is denied. If the user holds communications.compliance_read we
-// signal `needsCompliance` so the UI can offer the audited access flow. Even
-// superadmin must obtain a grant — no role silently reads private DMs.
+// Compliance grants never authorize ordinary Messenger reads. Investigators use
+// the separate case-scoped compliance viewer, which atomically records evidence.
+// If the user holds communications.compliance_read, `needsCompliance` directs the
+// UI to that workspace without exposing a private thread here.
 
-export type ThreadAccessVia = 'participant' | 'record' | 'grant' | null;
+export type ThreadAccessVia = 'participant' | 'record' | null;
 
 export interface ThreadAccessResult {
   allowed:         boolean;
   via:             ThreadAccessVia;
-  needsCompliance: boolean;   // not allowed, but user may request audited access
+  needsCompliance: boolean;   // not allowed here, but may use the compliance workspace
   participantRole: string | null;   // their role IF a participant, else null
 }
 
 /**
  * Map a record-linked thread's source to the permission that governs viewing
  * that record. Conservative: unknown record types return null (no inheritance —
- * participant/grant only). Keyed on module + entity-type text so it tolerates
+ * participant only). Keyed on module + entity-type text so it tolerates
  * the various source_module/source_entity_type conventions in use.
  */
 function recordViewPermissionKey(sourceModule: string | null, sourceEntityType: string | null): string | null {
@@ -112,22 +111,6 @@ function communicationsReadUnavailable(operation: string, cause: unknown): Error
     status: 503,
     code: 'communications_authorization_unavailable',
   });
-}
-
-/** True if the user has a live (non-revoked, non-expired) compliance grant on the thread. */
-async function hasActiveThreadGrant(threadId: string, userId: string): Promise<boolean> {
-  const nowIso = new Date().toISOString();
-  const { data, error } = await sb
-    .from('message_thread_access_grants')
-    .select('id')
-    .eq('thread_id', threadId)
-    .eq('user_id', userId)
-    .is('revoked_at', null)
-    .gt('expires_at', nowIso)
-    .limit(1)
-    .maybeSingle<{ id: string }>();
-  if (error) throw communicationsReadUnavailable('active compliance grant lookup', error);
-  return !!data;
 }
 
 /**
@@ -174,239 +157,9 @@ export async function resolveThreadReadAccess(
     }
   }
 
-  // 3. Active compliance grant?
-  const hasGrant = await hasActiveThreadGrant(threadId, user.id);
-  const canUseComplianceGrant = hasGrant
-    ? await userCan(principal, 'communications.compliance_read')
-    : null;
-  if (hasGrant && canUseComplianceGrant) {
-    return { allowed: true, via: 'grant', needsCompliance: false, participantRole: null };
-  }
-
-  // 4. Denied — can they request audited access?
-  const needsCompliance = canUseComplianceGrant
-    ?? await userCan(principal, 'communications.compliance_read');
+  // 3. Denied. Compliance bodies are readable only through the case-scoped RPC.
+  const needsCompliance = await userCan(principal, 'communications.compliance_read');
   return { allowed: false, via: null, needsCompliance, participantRole: null };
-}
-
-// ── Compliance access flow (audited, time-boxed) ────────────────────────────────
-
-export const COMPLIANCE_REASONS = [
-  'investigation', 'safety_incident', 'hr_complaint',
-  'legal_compliance', 'security_review', 'other',
-] as const;
-export type ComplianceReason = typeof COMPLIANCE_REASONS[number];
-
-export interface RequestThreadAccessInput {
-  threadId:      string;
-  userId:        string;            // the requester (and grantee)
-  reason:        ComplianceReason;
-  caseRef?:      string | null;
-  notes?:        string | null;
-  durationHours?: number;           // access window length; default 24h
-}
-
-export interface RequestThreadAccessResult {
-  ok:        boolean;
-  message?:  string;
-  grantId?:  string;
-  expiresAt?: string;
-}
-
-/**
- * Open an audited, time-boxed compliance grant on a thread. The caller must
- * already hold communications.compliance_read (enforced at the route). Writes
- * the grant row AND an app_events + audit_logs record (who / thread / when /
- * reason / case ref / duration). Even superadmin reads a private thread only
- * after going through this flow — the read-gate honours the grant, not the role.
- */
-export async function requestThreadAccess(input: RequestThreadAccessInput): Promise<RequestThreadAccessResult> {
-  try {
-    // Thread must exist.
-    const { data: thread } = await sb
-      .from('message_threads')
-      .select('id, thread_type, subject')
-      .eq('id', input.threadId)
-      .maybeSingle<{ id: string; thread_type: string; subject: string }>();
-    if (!thread) return { ok: false, message: 'Thread not found' };
-
-    const hours     = Math.min(Math.max(input.durationHours ?? 24, 1), 168); // 1h..7d
-    const grantedAt = new Date();
-    const expiresAt = new Date(grantedAt.getTime() + hours * 3_600_000).toISOString();
-
-    const { data: grant, error } = await sb
-      .from('message_thread_access_grants')
-      .insert({
-        thread_id:  input.threadId,
-        user_id:    input.userId,
-        reason:     input.reason,
-        case_ref:   input.caseRef ?? null,
-        notes:      input.notes ?? null,
-        granted_at: grantedAt.toISOString(),
-        expires_at: expiresAt,
-      })
-      .select('id')
-      .maybeSingle<{ id: string }>();
-
-    if (error || !grant) return { ok: false, message: error?.message ?? 'Could not create access grant' };
-
-    // Audit trail (app_events + audit_logs). No recipient notification — compliance
-    // access must not tip off an active investigation.
-    void emitAppEvent({
-      eventType:        'communications.thread.compliance_access_granted',
-      sourceModule:     'communications',
-      sourceEntityType: 'message_thread',
-      sourceEntityId:   input.threadId,
-      actorUserId:      input.userId,
-      severity:         'warning',
-      payload: {
-        grantId:      grant.id,
-        reason:       input.reason,
-        caseRef:      input.caseRef ?? null,
-        notes:        input.notes ?? null,
-        durationHours: hours,
-        expiresAt,
-        threadType:   thread.thread_type,
-        threadSubject: thread.subject,
-      },
-    });
-
-    return { ok: true, grantId: grant.id, expiresAt };
-  } catch (e) {
-    console.error('[communications] requestThreadAccess failed:', e);
-    return { ok: false, message: 'Internal error' };
-  }
-}
-
-/**
- * Record that message history was exported under a compliance grant. Requires
- * communications.compliance_export (enforced at the route). Stamps the grant and
- * writes an audit row. Returns the grant ids stamped.
- */
-export async function recordThreadExport(threadId: string, userId: string): Promise<{ ok: boolean; message?: string }> {
-  try {
-    const nowIso = new Date().toISOString();
-    const { error } = await sb
-      .from('message_thread_access_grants')
-      .update({ exported_at: nowIso })
-      .eq('thread_id', threadId)
-      .eq('user_id', userId)
-      .is('revoked_at', null)
-      .gt('expires_at', nowIso);
-    if (error) return { ok: false, message: error.message };
-
-    void emitAppEvent({
-      eventType:        'communications.thread.compliance_export',
-      sourceModule:     'communications',
-      sourceEntityType: 'message_thread',
-      sourceEntityId:   threadId,
-      actorUserId:      userId,
-      severity:         'warning',
-      payload: { exportedAt: nowIso },
-    });
-    return { ok: true };
-  } catch (e) {
-    console.error('[communications] recordThreadExport failed:', e);
-    return { ok: false, message: 'Internal error' };
-  }
-}
-
-// ── Compliance thread browser (discovery for investigators) ─────────────────────
-//
-// Lets a holder of communications.compliance_read FIND threads they are not a
-// participant in. Returns METADATA ONLY — subject, participants, type, record
-// link, last-activity timestamp. NEVER returns post bodies or previews; reading
-// the actual messages still requires the audited grant flow (resolveThreadReadAccess).
-
-/** @see ComplianceThread in types/messaging.ts (shared contract) */
-export type ComplianceThreadRow = ComplianceThread;
-
-const COMPLIANCE_CANDIDATE_CAP = 200;
-
-/**
- * Search ALL threads (not participant-filtered) for compliance discovery. Matches
- * on subject OR participant name/email. Metadata only — no message content.
- */
-export async function searchThreadsForCompliance(input: {
-  actorUserId: string;
-  search?:     string;
-  limit?:      number;
-}): Promise<{ rows: ComplianceThreadRow[] }> {
-  try {
-    const limit = Math.min(input.limit ?? 30, 100);
-    const needle = (input.search ?? '').trim().toLowerCase();
-
-    // Pull the most-recent candidate threads (bounded), then filter/rank in JS.
-    const threadResult = await sb
-      .from('message_threads')
-      .select('id, thread_type, subject, last_post_at, source_module, source_entity_type, source_entity_id')
-      .order('last_post_at', { ascending: false, nullsFirst: false })
-      .limit(COMPLIANCE_CANDIDATE_CAP);
-    if (threadResult.error) {
-      throw communicationsReadUnavailable('compliance thread discovery', threadResult.error);
-    }
-    const threads = threadResult.data as {
-      id: string; thread_type: string; subject: string; last_post_at: string | null;
-      source_module: string | null; source_entity_type: string | null; source_entity_id: string | null;
-    }[] | null;
-    if (!threads || threads.length === 0) return { rows: [] };
-
-    const ids = threads.map(t => t.id);
-    const participantResult = await sb
-      .from('message_participants')
-      .select('thread_id, user_id, app_users!inner(full_name, email)')
-      .in('thread_id', ids)
-      .is('removed_at', null);
-    if (participantResult.error) {
-      throw communicationsReadUnavailable('compliance participant discovery', participantResult.error);
-    }
-    type ComplianceParticipantUser = { full_name: string | null; email: string };
-    const parts = participantResult.data as unknown as {
-      thread_id: string;
-      user_id: string;
-      app_users: ComplianceParticipantUser | ComplianceParticipantUser[] | null;
-    }[] | null;
-
-    const byThread = new Map<string, { names: string[]; emails: string[]; userIds: Set<string> }>();
-    for (const p of parts ?? []) {
-      const appUser = Array.isArray(p.app_users) ? p.app_users[0] : p.app_users;
-      if (!appUser) continue;
-      const e = byThread.get(p.thread_id) ?? { names: [], emails: [], userIds: new Set<string>() };
-      if (appUser.full_name) e.names.push(appUser.full_name);
-      e.emails.push(appUser.email);
-      e.userIds.add(p.user_id);
-      byThread.set(p.thread_id, e);
-    }
-
-    const rows: ComplianceThreadRow[] = [];
-    for (const t of threads) {
-      const e = byThread.get(t.id) ?? { names: [], emails: [], userIds: new Set<string>() };
-      if (needle) {
-        const hit = t.subject.toLowerCase().includes(needle)
-          || e.names.some(n => n.toLowerCase().includes(needle))
-          || e.emails.some(m => m.toLowerCase().includes(needle));
-        if (!hit) continue;
-      }
-      rows.push({
-        threadId:         t.id,
-        threadType:       t.thread_type as ComplianceThread['threadType'],
-        subject:          t.subject,
-        lastPostAt:       t.last_post_at,
-        participantCount: e.userIds.size,
-        participantNames: e.names,
-        sourceModule:     t.source_module,
-        sourceEntityType: t.source_entity_type,
-        sourceEntityId:   t.source_entity_id,
-        isParticipant:    e.userIds.has(input.actorUserId),
-      });
-      if (rows.length >= limit) break;
-    }
-    return { rows };
-  } catch (e) {
-    throw e instanceof Error
-      ? e
-      : communicationsReadUnavailable('compliance search', e);
-  }
 }
 
 // ── Record-linked thread resolver (Discussion deep-links) ───────────────────────
@@ -1232,7 +985,7 @@ export interface GetThreadResult {
 
 export async function getThread(threadId: string, userId: string, userRole?: string): Promise<GetThreadResult> {
   try {
-    // Participant-default read-gate (participant / record-inherited / compliance grant).
+    // Participant-default read-gate (participant / record-inherited).
     const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
     if (!access.allowed) {
       return access.needsCompliance
@@ -1345,7 +1098,7 @@ export async function getThreadPosts(
   userRole?: string,
 ): Promise<GetThreadPostsResult> {
   try {
-    // Participant-default read-gate (participant / record-inherited / compliance grant).
+    // Participant-default read-gate (participant / record-inherited).
     const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
     if (!access.allowed) {
       return access.needsCompliance
@@ -1687,7 +1440,7 @@ export interface ListThreadActivityResult {
  * A thread's activity history for the details/activity panel — DERIVED from
  * the real rows (posts, pins incl. unpins, membership joins, read state); no
  * separate activity table exists and none is fabricated. Same read-gate as
- * posts (participant / record-inherited / compliance grant).
+ * posts (participant / record-inherited).
  */
 export async function listThreadActivity(
   threadId: string,

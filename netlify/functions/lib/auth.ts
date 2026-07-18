@@ -384,7 +384,7 @@ async function requireRole(
 async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[]> {
   const { data, error } = await sb
     .from('user_permissions')
-    .select('permission, granted')
+    .select('permission, granted, valid_from, valid_until, revoked_at')
     .eq('user_id', userId);
   if (error) {
     console.error('[auth] user permission lookup failed', {
@@ -397,7 +397,7 @@ async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[
       code: 'authorization_unavailable',
     });
   }
-  return data ?? [];
+  return data;
 }
 
 /**

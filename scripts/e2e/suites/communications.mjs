@@ -257,12 +257,6 @@ export default async function run(h) {
     const r = await api('communications/messages/attachments/upload-url', T.admin, { fileName: 'test.png', mimeType: 'image/png' });
     ok(r); expect(r.body.data?.uploadUrl, 'no uploadUrl');
   });
-  await test('compliance/search is gated (array or denied, never crash)', async () => {
-    const r = await api('communications/messages/compliance/search', T.admin, { limit: 10 });
-    expect(typeof r.body?.success === 'boolean', 'no response');
-    if (r.body.success) expect(Array.isArray(r.body.data), 'data not array');
-  });
-
   // ──────────── NEW MESSAGE DIALOG (compose) ────────────
   h.section('Communications › New Message dialog (compose)');
 
@@ -979,49 +973,6 @@ export default async function run(h) {
     expect(r2.body.data?.threadId === r1.body.data.threadId, 'recordThread was not find-or-create (different thread on repeat)');
     expect(r2.body.data?.created === false, 'second recordThread call must not create a new thread');
   });
-
-  // ─────────────── COMPLIANCE THREAD ACCESS (audited, time-boxed) ───────────────
-  h.section('Communications › Compliance thread access');
-
-  // compliance_read is a COMPLIANCE_GATED key (Slice 1 narrowed). Post-Slice-1,
-  // superadmins do NOT auto-hold it — it must be approved through the real
-  // maker-checker flow. All other keys (including permissions.manage) remain in
-  // the superadmin default set — no seeding needed.
-  //
-  // Setup:
-  //   sadmin  = MAKER (requests compliance_read for themselves) + compliance caller
-  //   sadmin2 = CHECKER (approves the grant; must be a distinct user — server enforces SoD)
-  const { actors: [sadmin, sadmin2], createdIds: sadminIds } = await h.acquireActors(
-    'superadmin', 2, {}, {}, { forceSynthetic: true },
-  );
-  h.onCleanup(async () => {
-    if (sadminIds.length) await sb.from('app_users').delete().in('id', sadminIds);
-  });
-
-  // Grant compliance_read to sadmin through the full maker-checker flow.
-  // permissions.manage is auto-granted to superadmin from the role set (not gated).
-  await h.grantCriticalPerm(
-    sadmin, sadmin2, sadmin.id,
-    'communications.compliance_read',
-    `${TAG} compliance smoke-test grant`,
-  );
-
-  const Tsuper = mint(sadmin);
-
-  await test('requestThreadAccess: a compliance grant is created + audited', async () => {
-    const r = await api('communications/messages/requestThreadAccess', Tsuper, {
-      threadId: ctx.threadId, reason: 'investigation', caseRef: `${TAG}-case`, durationHours: 24,
-    });
-    ok(r, `requestThreadAccess failed: ${r.body.message}`);
-    expect(r.body.data?.grantId, 'no grantId'); expect(r.body.data?.expiresAt, 'no expiresAt');
-    // Side-effect: the time-boxed grant row exists (cleaned via ctx.threadIds).
-    const { data: grant } = await sb.from('message_thread_access_grants')
-      .select('id, reason').eq('id', r.body.data.grantId).maybeSingle();
-    expect(grant && grant.reason === 'investigation', 'grant row not written');
-  });
-  await test('ACCESS: a user without compliance_read is denied requestThreadAccess (403)', async () =>
-    fails(await api('communications/messages/requestThreadAccess', T.c, { threadId: ctx.threadId, reason: 'investigation' }),
-      'non-compliance user was granted thread access'));
 
   // ───────────────────────── TICKETS ─────────────────────────
   h.section('Communications › Tickets');

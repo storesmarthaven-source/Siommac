@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	84	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	97	
-app	variable	platform	false		netlify/functions/api.ts	106	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	257	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	288	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	297	
-handler	function	platform	true		netlify/functions/api.ts	301	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	85	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	98	
+app	variable	platform	false		netlify/functions/api.ts	107	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	259	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	289	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	298	
+handler	function	platform	true		netlify/functions/api.ts	302	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -70,9 +70,9 @@ jwtMiddleware	function	security	false		netlify/functions/lib/auth.ts	334
 requireUser	function	security	false		netlify/functions/lib/auth.ts	348	
 requireRole	function	security	false		netlify/functions/lib/auth.ts	373	
 loadUserOverrides	function	security	false		netlify/functions/lib/auth.ts	384	
-requirePermission	function	security	false		netlify/functions/lib/auth.ts	402	
-userCan	function	security	false		netlify/functions/lib/auth.ts	428	
-log_	function	security	false		netlify/functions/lib/auth.ts	440	
+requirePermission	function	security	false		netlify/functions/lib/auth.ts	412	
+userCan	function	security	false		netlify/functions/lib/auth.ts	438	
+log_	function	security	false		netlify/functions/lib/auth.ts	450	
 AdapterContext	interface	platform	true		netlify/functions/lib/calendarAdapters.ts	20	
 MONTHS	array	platform	false		netlify/functions/lib/calendarAdapters.ts	28	
 deadline	function	platform	false		netlify/functions/lib/calendarAdapters.ts	31	
@@ -102,89 +102,80 @@ validateRrule	function	platform	true		netlify/functions/lib/calendarRecurrence.t
 MESSAGES_BUCKET	variable	communications	true		netlify/functions/lib/communications.ts	33	
 cachedProfileUrl	function	communications	false		netlify/functions/lib/communications.ts	44	
 initialsOf	function	communications	false		netlify/functions/lib/communications.ts	65	
-ThreadAccessVia	type	communications	true		netlify/functions/lib/communications.ts	85	
-ThreadAccessResult	interface	communications	true		netlify/functions/lib/communications.ts	87	
-recordViewPermissionKey	function	communications	false		netlify/functions/lib/communications.ts	100	
-hasActiveThreadGrant	function	communications	false		netlify/functions/lib/communications.ts	110	
-resolveThreadReadAccess	function	communications	true		netlify/functions/lib/communications.ts	128	
-COMPLIANCE_REASONS	variable	communications	true		netlify/functions/lib/communications.ts	176	
-ComplianceReason	type	communications	true		netlify/functions/lib/communications.ts	180	
-RequestThreadAccessInput	interface	communications	true		netlify/functions/lib/communications.ts	182	
-RequestThreadAccessResult	interface	communications	true		netlify/functions/lib/communications.ts	191	
-requestThreadAccess	function	communications	true		netlify/functions/lib/communications.ts	205	
-recordThreadExport	function	communications	true		netlify/functions/lib/communications.ts	268	
-ComplianceThreadRow	type	communications	true		netlify/functions/lib/communications.ts	304	
-COMPLIANCE_CANDIDATE_CAP	variable	communications	false		netlify/functions/lib/communications.ts	306	
-searchThreadsForCompliance	function	communications	true		netlify/functions/lib/communications.ts	312	
-ResolveRecordThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	389	
-ResolveRecordThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	399	
-resolveRecordThread	function	communications	true		netlify/functions/lib/communications.ts	407	
-emitSignal	function	communications	true		netlify/functions/lib/communications.ts	509	
-CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	538	
-getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	562	
-NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	610	getCommsSummary
-_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	632	
-_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	638	
-_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	656	
-tsMs	function	communications	false		netlify/functions/lib/communications.ts	695	
-_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	697	
-CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	735	
-CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	750	
-createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	760	
-PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	841	
-PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	853	
-postMessage	function	communications	true		netlify/functions/lib/communications.ts	863	
-ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	930	
-ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	932	
-ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	941	
-ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	942	
-ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	944	
-parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	953	
-formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	963	
-listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	967	
-ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	972	listThreadsForUser
-ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	1001	listThreadsForUser
-GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	1192	
-getThread	function	communications	true		netlify/functions/lib/communications.ts	1203	
-PostRow	type	communications	true		netlify/functions/lib/communications.ts	1300	
-AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1301	
-GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1303	
-getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1311	
-RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1328	getThreadPosts
-MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1514	
-MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1523	
-searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1534	
-Row	interface	communications	false		netlify/functions/lib/communications.ts	1543	searchMessagePosts
-SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1571	
-s	function	communications	false		netlify/functions/lib/communications.ts	1578	
-SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1583	
-resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1611	
-sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1638	
-ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1649	
-listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1662	
-PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1675	listThreadActivity
-PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1676	listThreadActivity
-PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1677	listThreadActivity
-MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1743	
-createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1756	
-CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1764	
-createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1777	
-getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1813	
-markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1854	
-archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1874	
-muteThread	function	communications	true		netlify/functions/lib/communications.ts	1886	
-setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1901	
-addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1931	
-removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1987	
-SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	2018	
-searchMessages	function	communications	true		netlify/functions/lib/communications.ts	2027	
-PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	2039	searchMessages
-RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	2074	
-getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	2076	
-UserRow	interface	communications	false		netlify/functions/lib/communications.ts	2078	getMessageRecipients
-CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	2112	
-CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	2123	
-createTicket	function	communications	true		netlify/functions/lib/communications.ts	2129	
+ThreadAccessVia	type	communications	true		netlify/functions/lib/communications.ts	84	
+ThreadAccessResult	interface	communications	true		netlify/functions/lib/communications.ts	86	
+recordViewPermissionKey	function	communications	false		netlify/functions/lib/communications.ts	99	
+communicationsReadUnavailable	function	communications	false		netlify/functions/lib/communications.ts	108	
+resolveThreadReadAccess	function	communications	true		netlify/functions/lib/communications.ts	120	
+ResolveRecordThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	172	
+ResolveRecordThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	182	
+resolveRecordThread	function	communications	true		netlify/functions/lib/communications.ts	190	
+emitSignal	function	communications	true		netlify/functions/lib/communications.ts	292	
+CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	321	
+getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	345	
+NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	393	getCommsSummary
+_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	415	
+_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	421	
+_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	439	
+tsMs	function	communications	false		netlify/functions/lib/communications.ts	478	
+_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	480	
+CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	518	
+CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	533	
+createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	543	
+PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	624	
+PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	636	
+postMessage	function	communications	true		netlify/functions/lib/communications.ts	646	
+ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	713	
+ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	715	
+ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	724	
+ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	725	
+ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	727	
+parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	736	
+formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	746	
+listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	750	
+ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	755	listThreadsForUser
+ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	784	listThreadsForUser
+GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	975	
+getThread	function	communications	true		netlify/functions/lib/communications.ts	986	
+PostRow	type	communications	true		netlify/functions/lib/communications.ts	1083	
+AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1084	
+GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1086	
+getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1094	
+RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1111	getThreadPosts
+MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1297	
+MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1306	
+searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1317	
+Row	interface	communications	false		netlify/functions/lib/communications.ts	1326	searchMessagePosts
+SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1354	
+s	function	communications	false		netlify/functions/lib/communications.ts	1361	
+SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1366	
+resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1394	
+sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1421	
+ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1432	
+listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1445	
+PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1458	listThreadActivity
+PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1459	listThreadActivity
+PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1460	listThreadActivity
+MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1526	
+createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1539	
+CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1547	
+createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1560	
+getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1596	
+markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1637	
+archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1657	
+muteThread	function	communications	true		netlify/functions/lib/communications.ts	1669	
+setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1684	
+addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1714	
+removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1770	
+SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	1801	
+searchMessages	function	communications	true		netlify/functions/lib/communications.ts	1810	
+PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	1822	searchMessages
+RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	1857	
+getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	1859	
+UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1861	getMessageRecipients
+CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	1895	
+CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	1906	
+createTicket	function	communications	true		netlify/functions/lib/communications.ts	1912	
 SUPABASE_URL	variable	platform	false		netlify/functions/lib/db.ts	3	
 SUPABASE_SERVICE_ROLE_KEY	variable	platform	false		netlify/functions/lib/db.ts	4	
 SUPABASE_ANON_KEY	variable	platform	false		netlify/functions/lib/db.ts	5	
@@ -1749,6 +1740,130 @@ err	function	hr	false		netlify/functions/lib/hr/timesheetService.ts	16
 buildTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	18	
 submitTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	72	
 reopenTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	147	
+EVIDENCE_DOMAIN	variable	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	5	
+evidencePepper	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	7	
+hashEvidence	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	18	
+complianceEvidenceContext	function	platform	true		netlify/functions/lib/messaging/complianceEvidence.ts	26	
+BUCKET	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	24	
+SERIALIZER_VERSION	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	25	
+MAX_ARTIFACT_BYTES	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	26	
+DOWNLOAD_TTL_SECONDS	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	27	
+ExportStateRow	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	29	
+ExportDownloadRow	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	43	
+DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	64	
+ComplianceExportBuildResult	interface	platform	true		netlify/functions/lib/messaging/complianceExport.ts	69	
+httpError	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	74	
+ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	81	
+sha256	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	85	
+storagePath	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	89	
+loadExportState	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	93	
+readyFromState	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	107	
+uploadOrVerifyExisting	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	131	
+recordFailure	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	155	
+failureStateUnavailable	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	193	
+recordFailureAndRethrow	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	212	
+createComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExport.ts	229	
+downloadComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExport.ts	442	
+SERIALIZER_VERSION	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	11	
+DELETED_MESSAGE_MARKER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	12	
+EMPTY_MESSAGE_MARKER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	13	
+PDF_MARGIN	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	14	
+PDF_NAVY	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	15	
+PDF_TEXT	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	16	
+PDF_MUTED	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	17	
+PDF_BORDER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	18	
+PDF_SUBTLE	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	19	
+CASE_TYPES	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	20	
+CASE_STATUSES	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	27	
+ComplianceExportCaseSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	34	
+ComplianceExportThreadSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	43	
+ComplianceExportRange	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	53	
+ComplianceExportSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	58	
+ComplianceExportRenderFormat	type	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	67	
+ComplianceExportRenderResult	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	69	
+SafeAttachment	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	76	
+SafeMessage	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	85	
+SafeExportSnapshot	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	97	
+fail	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	108	
+requiredText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	112	
+nullableText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	117	
+normalizeText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	123	
+isoInstant	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	127	
+nullableIsoInstant	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	134	
+actorRef	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	139	
+attachmentMetadata	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	148	
+messageSnapshot	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	165	
+compareMessages	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	197	
+normalizeMessagingComplianceExportSnapshot	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	206	
+canonicalJsonString	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	256	
+renderMessagingComplianceJson	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	286	
+renderSafeJson	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	291	
+formatRange	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	295	
+drawPageHeader	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	299	
+ensureVerticalSpace	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	316	
+drawLabelValue	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	326	
+attachmentSummary	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	341	
+drawMessage	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	352	
+renderSafePdf	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	396	
+renderMessagingCompliancePdf	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	436	
+renderMessagingComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	440	
+RpcError	interface	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	18	
+RpcResponse	interface	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	23	
+unwrap	function	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	28	
+ComplianceEvidenceContext	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	37	
+ComplianceCaseMutationResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	42	
+ComplianceReadRpcResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	52	
+ComplianceGrantRevokeResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	72	
+ComplianceExportRequestResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	83	
+ComplianceExportFinalizeResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	99	
+ComplianceExportPreparedResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	111	
+ComplianceExportFailureResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	125	
+ComplianceExportDownloadMetadata	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	135	
+requestComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	150	
+decideComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	168	
+readComplianceConversationTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	184	
+revokeComplianceGrantTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	205	
+closeComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	224	
+requestComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	241	
+loadComplianceExportSnapshot	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	261	
+prepareComplianceExportUploadTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	273	
+finalizeComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	299	
+failComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	324	
+prepareComplianceExportDownload	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	344	
+recordComplianceExportDownloadTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	356	
+Actor	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	32	
+PermissionContext	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	37	
+CaseRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	42	
+GrantRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	65	
+CaseThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	80	
+ThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	89	
+UserRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	99	
+ExportRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	105	
+DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	126	
+CursorPayload	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	131	
+CASE_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	137	
+GRANT_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	145	
+httpError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	151	
+ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	155	
+fingerprint	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	159	
+encodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	163	
+decodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	168	
+permissionContext	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	185	
+actorRef	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	193	
+nonEmptyTrimmed	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	198	
+loadNames	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	203	
+grantStatus	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	217	
+caseCapabilities	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	223	
+activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	246	
+applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	260	
+queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	269	
+listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	292	
+getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	404	
+searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	537	
+listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	607	
+listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	689	
+getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	768	
+listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	832	
 MSG_SQLSTATE_HTTP	object	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	20	
 msgRpcHttpError	function	platform	true		netlify/functions/lib/messaging/messagingRpc.ts	29	
 RpcResponse	interface	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	41	
@@ -1851,22 +1966,22 @@ PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	452
 CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	460	
 isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	472	
 COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	492	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	502	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	954	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	967	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	981	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	991	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	992	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	995	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1045	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1057	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1058	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1061	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1071	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1084	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1092	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1103	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	501	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	953	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	969	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	994	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1004	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1005	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1008	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1024	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1059	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1071	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1072	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1075	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1085	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1098	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1106	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1117	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2401,7 +2516,7 @@ PASSKEY_PROMPT_INTERVAL_MS	variable	security	false		netlify/functions/routes/aut
 shouldPromptForPasskey	function	security	false		netlify/functions/routes/auth.ts	74	
 buildSessionPayload	function	security	true		netlify/functions/routes/auth.ts	84	
 Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	343	
-checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	709	
+checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	701	
 router	variable	security	false		netlify/functions/routes/auth2fa.ts	29	
 zAnyTotpCode	variable	security	false		netlify/functions/routes/auth2fa.ts	34	
 ConfirmSchema	variable	security	false		netlify/functions/routes/auth2fa.ts	38	
@@ -2438,44 +2553,58 @@ writeException	function	platform	false		netlify/functions/routes/calendar.ts	560
 UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	581	
 StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	664	
 CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	714	
-router	variable	communications	false		netlify/functions/routes/communications.ts	83	
-NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	95	
-PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	219	
-MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	246	
-BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	273	
-ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	334	
-ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	361	
-PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	385	
-MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	416	
-RequestAccessSchema	variable	communications	false		netlify/functions/routes/communications.ts	458	
-RecordExportSchema	variable	communications	false		netlify/functions/routes/communications.ts	487	
-ComplianceSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	503	
-RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	521	
-CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	552	
-PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	592	
-AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	635	
-AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	657	
-MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	683	
-ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	699	
-MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	716	
-FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	730	
-ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	750	
-ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	770	
-SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	806	
-RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	822	
-AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	838	
-PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	862	
-UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	893	
-DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	910	
-ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	938	
-PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	958	
-DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	981	
-DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	997	
-PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	1022	
-CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1047	
-TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1068	
-CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1117	
-UpdateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1159	
+router	variable	communications	false		netlify/functions/routes/communications.ts	80	
+NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	92	
+PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	216	
+MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	243	
+BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	270	
+ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	331	
+ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	358	
+PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	382	
+MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	413	
+RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	455	
+CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	486	
+PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	526	
+AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	569	
+AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	591	
+MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	617	
+ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	633	
+MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	650	
+FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	664	
+ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	684	
+ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	704	
+SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	740	
+RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	756	
+AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	772	
+PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	796	
+UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	827	
+DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	844	
+ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	872	
+PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	892	
+DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	915	
+DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	931	
+PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	956	
+CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	981	
+TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1002	
+CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1051	
+UpdateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1093	
+router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	35	
+args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
+CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	39	
+ACCESS_EVENT_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	47	
+CasesListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	60	
+CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	67	
+CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	69	
+CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	81	
+ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	88	
+ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	107	
+GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	115	
+CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	121	
+AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	127	
+ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	146	
+ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	152	
+ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	179	
+notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	184	
 router	variable	hr	false		netlify/functions/routes/departments.ts	7	
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
@@ -2806,12 +2935,12 @@ LinkCreateSchema	variable	workflow	false		netlify/functions/routes/orchestration
 LinkListSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	48	
 LinkDeleteSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	49	
 handle	function	workflow	false		netlify/functions/routes/orchestration.ts	52	
-router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	25	
-ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	29	
-ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	33	
-RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	37	
-CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	42	
-ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	48	
+router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	24	
+ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	28	
+ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	32	
+RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	36	
+CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	41	
+ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	47	
 router	variable	settings	false		netlify/functions/routes/settings.ts	12	
 ALLOWED_AVATAR_MIME	variable	settings	false		netlify/functions/routes/settings.ts	83	
 ProfilePhotoCommitSchema	variable	settings	false		netlify/functions/routes/settings.ts	119	
@@ -2834,25 +2963,25 @@ SiteRow	interface	platform	false		netlify/functions/routes/sites.ts	10
 AssignmentRow	interface	platform	false		netlify/functions/routes/sites.ts	16	
 PickerUser	interface	platform	false		netlify/functions/routes/sites.ts	24	
 _listProjectSites	function	platform	false		netlify/functions/routes/sites.ts	29	
-router	variable	platform	false		netlify/functions/routes/superadmin.ts	20	
-PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	26	
-requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	39	
-GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	87	
-SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	88	
-ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	94	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	231	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	310	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	395	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	398	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	399	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	405	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	412	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	413	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	419	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	539	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	540	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	541	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	542	
+router	variable	platform	false		netlify/functions/routes/superadmin.ts	27	
+PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	33	
+requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	46	
+GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	155	
+SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	156	
+ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	164	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	348	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	427	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	512	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	515	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	516	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	522	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	529	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	530	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	536	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	656	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	657	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	658	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	659	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -3016,8 +3145,8 @@ Harness	class	testing	true		scripts/e2e/harness.mjs	46
 isServerUp	method	testing	false		scripts/e2e/harness.mjs	155	Harness
 ping	method	testing	false		scripts/e2e/harness.mjs	165	Harness
 pickUsers	method	testing	false		scripts/e2e/harness.mjs	179	Harness
-runCleanup	method	testing	false		scripts/e2e/harness.mjs	359	Harness
-report	method	testing	false		scripts/e2e/harness.mjs	367	Harness
+runCleanup	method	testing	false		scripts/e2e/harness.mjs	384	Harness
+report	method	testing	false		scripts/e2e/harness.mjs	392	Harness
 addDays	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	1	
 endOfMonth	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	8	
 payrollPeriodEnd	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	16	
@@ -3088,14 +3217,32 @@ listItems	function	testing	false	test	scripts/e2e/suites/calendar.mjs	58	run
 title	variable	communications	true	test	scripts/e2e/suites/communications.mjs	16	
 run	function	communications	true	test	scripts/e2e/suites/communications.mjs	18	
 clearDirectThreadsAmong	function	communications	false	test	scripts/e2e/suites/communications.mjs	48	run
-inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	464	run
-sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	520	run
-sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	521	run
-waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	525	run
-unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	668	run
-threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	669	run
-title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	31	
-run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
+inB	function	communications	false	test	scripts/e2e/suites/communications.mjs	458	run
+sumN	function	communications	false	test	scripts/e2e/suites/communications.mjs	514	run
+sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	515	run
+waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	519	run
+unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	662	run
+threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	663	run
+title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	24	
+CASE_DETAIL_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	26	
+CASE_SUMMARY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
+CAPABILITY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	39	
+GRANT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	44	
+EXPORT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	50	
+MESSAGE_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	57	
+sortedKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	62	
+exactKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	66	
+assertNoMessagePayload	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	73	
+expectStatus	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	87	
+sha256	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	94	
+rows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	98	
+countRows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	104	
+fetchArtifact	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	108	
+run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	121	
+requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	178	run
+approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	200	run
+assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	205	run
+requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	245	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -10316,16 +10463,19 @@ then	method	payroll	false	test	tests/unit/backPay.test.ts	342	terminal
 extractSetKeys	function	testing	false	test	tests/unit/criticalGrants.sync.test.ts	19	
 BE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	30	
 FE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	31	
-COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	57	
-OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
-NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
-superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	68	
-roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	77	
-roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	79	
+COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
+OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
+NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	63	
+NOW	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	64	
+activeComplianceOverride	function	testing	false	test	tests/unit/criticalPermResolver.test.ts	66	
+superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	81	
+roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	90	
+roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	92	
 MaybeSingle	type	testing	false	test	tests/unit/loadRenderTemplate.test.ts	34	
 runRow	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	37	
 Loaded	interface	testing	false	test	tests/unit/loadRenderTemplate.test.ts	45	
 load	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	52	
+snapshot	object	testing	false	test	tests/unit/messagingComplianceExport.test.ts	7	
 rule	function	hr	false	test	tests/unit/overtimeRules.test.ts	4	
 RULES	array	hr	false	test	tests/unit/overtimeRules.test.ts	16	
 r2	function	payroll	false	test	tests/unit/payroll-calc.test.js	6	
@@ -10688,6 +10838,40 @@ MessageRealtimeReason	type	platform	true		types/messaging.ts	246
 MessageThreadDetail	interface	platform	true		types/messaging.ts	253	
 MessageRecipient	interface	platform	true		types/messaging.ts	258	
 ComplianceThread	interface	platform	true		types/messaging.ts	269	
+ComplianceCaseType	type	platform	true		types/messagingCompliance.ts	9	
+ComplianceCaseStatus	type	platform	true		types/messagingCompliance.ts	16	
+ComplianceAccessEventType	type	platform	true		types/messagingCompliance.ts	22	
+ComplianceExportFormat	type	platform	true		types/messagingCompliance.ts	34	
+ComplianceExportStatus	type	platform	true		types/messagingCompliance.ts	35	
+ComplianceCapabilities	interface	platform	true		types/messagingCompliance.ts	37	
+ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	46	
+ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	51	
+ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	65	
+ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	82	
+ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	99	
+ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	111	
+ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	120	
+ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	132	
+ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	144	
+ComplianceExport	interface	platform	true		types/messagingCompliance.ts	158	
+ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	182	
+ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	187	
+ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	194	
+ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	200	
+ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	204	
+ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	213	
+ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	220	
+ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	226	
+ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	237	
+ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	242	
+ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	250	
+ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	256	
+ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	267	
+ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	272	
+ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	278	
+ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	283	
+ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	294	
+ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	299	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	

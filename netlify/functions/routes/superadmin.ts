@@ -11,9 +11,16 @@
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
 import { requirePermission, revokeUserSessions, log_ } from '../lib/auth';
-import { PERMISSION_KEYS, invalidateRolePermissions, isCriticalGrant } from '../lib/permissions';
+import {
+  COMPLIANCE_GATED_KEYS,
+  PERMISSION_KEYS,
+  invalidateRolePermissions,
+  isCriticalGrant,
+} from '../lib/permissions';
 import { emitAppEvent }                   from '../lib/appEvents';
+import { msgRpcHttpError }                from '../lib/messaging/messagingRpc';
 import { getProfileSignedUrl }            from '../lib/photos';
+import { requireStepUp }                  from '../lib/stepUp';
 import { z, zv }                          from '../lib/validate';
 import type { HonoVariables }             from '../../../types/api';
 
@@ -38,11 +45,72 @@ const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 // id so the caller can respond { pending: true }.
 async function requestCriticalGrant(
   actor: { id: string; username: string },
-  req: { requestType: 'user_override' | 'role_permission'; targetUserId?: string; targetRole?: string; permissionKey: string; reason: string },
-): Promise<{ ok: true; approvalId: string } | { ok: false; status: 400 | 409 | 500; code: string; message: string }> {
+  req: {
+    requestType: 'user_override' | 'role_permission';
+    targetUserId?: string;
+    targetRole?: string;
+    permissionKey: string;
+    reason: string;
+    validFrom?: string;
+    validUntil?: string;
+  },
+): Promise<{ ok: true; approvalId: string } | { ok: false; status: 400 | 403 | 409 | 422 | 500; code: string; message: string }> {
   if (!req.reason.trim()) {
     return { ok: false, status: 400, code: 'reason_required', message: 'A reason is required to request a critical permission grant.' };
   }
+  if (COMPLIANCE_GATED_KEYS.has(req.permissionKey)) {
+    if (req.requestType !== 'user_override' || !req.targetUserId) {
+      return {
+        ok: false,
+        status: 422,
+        code: 'invalid_compliance_target',
+        message: 'Compliance permissions can only be granted to a specific user.',
+      };
+    }
+    if (!req.validFrom || !req.validUntil) {
+      return {
+        ok: false,
+        status: 422,
+        code: 'validity_required',
+        message: 'A start and end time are required for compliance access.',
+      };
+    }
+
+    const approvalId = `PGA-${crypto.randomUUID()}`;
+    const { data, error } = await sb.rpc('request_compliance_permission_grant_tx', {
+      p_request_id:        approvalId,
+      p_actor_id:          actor.id,
+      p_target_user_id:    req.targetUserId,
+      p_permission_key:    req.permissionKey,
+      p_reason:            req.reason.trim(),
+      p_grant_valid_from:  req.validFrom,
+      p_grant_valid_until: req.validUntil,
+    }) as unknown as {
+      data: unknown;
+      error: { code: string; message: string } | null;
+    };
+    if (error) {
+      const mapped = msgRpcHttpError(error);
+      return {
+        ok: false,
+        status: (mapped.status === 400 || mapped.status === 403
+          || mapped.status === 409 || mapped.status === 422
+          ? mapped.status
+          : 500),
+        code: error.code,
+        message: mapped.status ? mapped.message : 'Failed to create the approval request.',
+      };
+    }
+    const result = (data ?? {}) as { status?: string; approval_id?: string };
+    if (result.status === 'already_pending') {
+      return { ok: false, status: 409, code: 'already_pending', message: 'A pending approval already exists for this grant.' };
+    }
+    if (result.status !== 'requested' || !result.approval_id) {
+      return { ok: false, status: 500, code: 'unexpected_result', message: 'Failed to create the approval request.' };
+    }
+    return { ok: true, approvalId: result.approval_id };
+  }
+
   // Dedupe: one open request per target + capability.
   let dq = sb.from('permission_grant_approvals').select('id')
     .eq('request_type', req.requestType).eq('permission_key', req.permissionKey).eq('status', 'pending');
@@ -90,10 +158,13 @@ const SetUserPermSchema  = z.object({
   permission: z.string().refine(p => PERMISSION_KEY_SET.has(p), 'Unknown permission key'),
   granted:    z.boolean(),
   reason:     z.string().max(500).optional(),
+  validFrom:  z.iso.datetime().optional(),
+  validUntil: z.iso.datetime().optional(),
 });
 const ClearUserPermSchema = z.object({
   userId:     z.string().min(1),
   permission: z.string().min(1),
+  reason:     z.string().max(500).optional(),
 });
 
 // POST /superadmin/listUsers — all non-superadmin users (for the accounts view).
@@ -155,7 +226,7 @@ router.post('/getUserPermissions', async c => {
   if (!v.ok) return v.response;
   const { data, error } = await sb
     .from('user_permissions')
-    .select('permission, granted')
+    .select('permission, granted, valid_from, valid_until, approved_by, approval_id, revoked_at, revoked_by, revocation_reason')
     .eq('user_id', v.data.userId);
   if (error) {
     console.error('[superadmin/getUserPermissions] error:', error.message);
@@ -169,11 +240,26 @@ router.post('/setUserPermission', async c => {
   const actor = await requirePermission(c, 'permissions.manage');
   const v = zv(c, SetUserPermSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { userId, permission, granted, reason } = v.data;
+  const { userId, permission, granted, reason, validFrom, validUntil } = v.data;
+
+  if (!granted && COMPLIANCE_GATED_KEYS.has(permission)) {
+    return c.json({
+      success: false,
+      code: 'compliance_revocation_route_required',
+      message: 'Use the compliance revocation action with step-up verification and a reason.',
+    }, 422);
+  }
 
   // Critical ALLOW grant → maker-checker: create a pending approval, do NOT apply now.
   if (granted && isCriticalGrant(permission)) {
-    const r = await requestCriticalGrant(actor, { requestType: 'user_override', targetUserId: userId, permissionKey: permission, reason: reason ?? '' });
+    const r = await requestCriticalGrant(actor, {
+      requestType: 'user_override',
+      targetUserId: userId,
+      permissionKey: permission,
+      reason: reason ?? '',
+      validFrom,
+      validUntil,
+    });
     if (!r.ok) return c.json({ success: false, code: r.code, message: r.message }, r.status);
     return c.json({ success: true, pending: true, approvalId: r.approvalId });
   }
@@ -204,7 +290,38 @@ router.post('/clearUserPermission', async c => {
   const actor = await requirePermission(c, 'permissions.manage');
   const v = zv(c, ClearUserPermSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
-  const { userId, permission } = v.data;
+  const { userId, permission, reason } = v.data;
+
+  if (COMPLIANCE_GATED_KEYS.has(permission)) {
+    await requireStepUp(c);
+    if (!reason?.trim()) {
+      return c.json({
+        success: false,
+        code: 'reason_required',
+        message: 'A revocation reason is required for compliance access.',
+      }, 400);
+    }
+    const { data, error } = await sb.rpc('revoke_compliance_permission_grant_tx', {
+      p_actor_id:       actor.id,
+      p_target_user_id: userId,
+      p_permission_key: permission,
+      p_reason:         reason.trim(),
+    }) as unknown as {
+      data: unknown;
+      error: { code?: string; message: string } | null;
+    };
+    if (error) throw msgRpcHttpError(error);
+    const result = (data ?? {}) as { status?: string };
+    if (result.status === 'not_found') {
+      return c.json({ success: false, message: 'Permission override not found.' }, 404);
+    }
+    if (result.status !== 'revoked'
+        && result.status !== 'already_revoked'
+        && result.status !== 'deny_cleared') {
+      return c.json({ success: false, message: 'Unexpected revocation state.' }, 500);
+    }
+    return c.json({ success: true, status: result.status });
+  }
 
   const { error } = await sb
     .from('user_permissions')
@@ -606,6 +723,13 @@ router.post('/setRolePermission', async c => {
   const { roleName, permission, granted, reason } = v.data;
 
   if (roleName === 'superadmin') return c.json({ success: false, message: 'Superadmin permissions cannot be changed.' }, 400);
+  if (granted && COMPLIANCE_GATED_KEYS.has(permission)) {
+    return c.json({
+      success: false,
+      code: 'invalid_compliance_target',
+      message: 'Compliance permissions can only be granted to a specific user.',
+    }, 422);
+  }
 
   // Critical ALLOW grant → maker-checker: create a pending approval, do NOT apply now.
   if (granted && isCriticalGrant(permission)) {

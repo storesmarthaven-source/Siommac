@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `bc6631ec0f77a6a3dbf91521`
 
-Files: 269 | Symbols: 2341 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 237 | E2E suites: 0
+Files: 275 | Symbols: 2499 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -30,18 +30,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:51<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
-| `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:466` | - | rbacConsole |
-| `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:557` | - | rbacConsole |
-| `/api/superadmin/deleteRole` | `roles.manage` | requirePermission | `DeleteRoleSchema` | `netlify/functions/routes/superadmin.ts:515` | - | rbacConsole |
-| `/api/superadmin/deleteRoleCategory` | `roles.manage` | requirePermission | `DeleteCategorySchema` | `netlify/functions/routes/superadmin.ts:587` | - | rbacConsole |
-| `/api/superadmin/getActiveSessions` | `sessions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:239` | - | accountSecurity |
-| `/api/superadmin/getAuditLogs` | `audit.view` | requirePermission | `GetAuditLogsSchema` | `netlify/functions/routes/superadmin.ts:326` | - | rbacConsole |
-| `/api/superadmin/listRoleCategories` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:545` | - | rbacConsole |
-| `/api/superadmin/listRoles` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:422` | - | rbacConsole |
-| `/api/superadmin/listUsers` | `permissions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:102` | - | rbacConsole |
-| `/api/superadmin/revokeSession` | `sessions.manage` | requirePermission | `RevokeSessionSchema` | `netlify/functions/routes/superadmin.ts:288` | - | accountSecurity |
-| `/api/superadmin/updateRole` | `roles.manage` | requirePermission | `UpdateRoleSchema` | `netlify/functions/routes/superadmin.ts:486` | - | rbacConsole |
-| `/api/superadmin/updateRoleCategory` | `roles.manage` | requirePermission | `UpdateCategorySchema` | `netlify/functions/routes/superadmin.ts:574` | - | rbacConsole |
+| `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:583` | - | rbacConsole |
+| `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:674` | - | rbacConsole |
+| `/api/superadmin/deleteRole` | `roles.manage` | requirePermission | `DeleteRoleSchema` | `netlify/functions/routes/superadmin.ts:632` | - | rbacConsole |
+| `/api/superadmin/deleteRoleCategory` | `roles.manage` | requirePermission | `DeleteCategorySchema` | `netlify/functions/routes/superadmin.ts:704` | - | rbacConsole |
+| `/api/superadmin/getActiveSessions` | `sessions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:356` | - | accountSecurity |
+| `/api/superadmin/getAuditLogs` | `audit.view` | requirePermission | `GetAuditLogsSchema` | `netlify/functions/routes/superadmin.ts:443` | - | rbacConsole |
+| `/api/superadmin/listRoleCategories` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:662` | - | rbacConsole |
+| `/api/superadmin/listRoles` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:539` | - | rbacConsole |
+| `/api/superadmin/listUsers` | `permissions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:173` | - | rbacConsole |
+| `/api/superadmin/revokeSession` | `sessions.manage` | requirePermission | `RevokeSessionSchema` | `netlify/functions/routes/superadmin.ts:405` | - | accountSecurity |
+| `/api/superadmin/updateRole` | `roles.manage` | requirePermission | `UpdateRoleSchema` | `netlify/functions/routes/superadmin.ts:603` | - | rbacConsole |
+| `/api/superadmin/updateRoleCategory` | `roles.manage` | requirePermission | `UpdateCategorySchema` | `netlify/functions/routes/superadmin.ts:691` | - | rbacConsole |
 | `/api/updateMyPreference` | `-` | requireUser | `UpdatePrefSchema` | `netlify/functions/routes/notify.ts:127` | res @ src/api/notifications.ts:155 | - |
 | `/api/updateProjectSite` | `sites.edit` | assertInScope, requirePermission | `UpdateSiteSchema` | `netlify/functions/routes/sites.ts:97` | res @ src/api/sites.ts:143<br>updateProjectSiteApi @ src/components/sections/ProjectSites/api.ts:102 | - |
 | `UNMOUNTED:/contracts/activate` | `hr.contracts.manage` | requirePermission | `z.object({ contractId: z.string().uuid() })` | `netlify/functions/routes/hrContracts.ts:101` | - | - |
@@ -382,6 +382,9 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.messaging_toggle_reaction_tx` | `supabase/migrations/20260919000363_messaging_reactions.sql:28` |
 | function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:30` |
 | function | `public.messaging_search_posts_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:94` |
+| function | `public.block_compliance_access_event_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1023` |
+| function | `public.guard_compliance_export_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1118` |
+| function | `msg_internal._write_compliance_evidence` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:10` |
 
 ## E2E Suites
 
@@ -403,7 +406,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/hseTraining.ts` | 558 |
 | backend-route | `netlify/functions/routes/notify.ts` | 213 |
 | backend-route | `netlify/functions/routes/sites.ts` | 163 |
-| backend-route | `netlify/functions/routes/superadmin.ts` | 638 |
+| backend-route | `netlify/functions/routes/superadmin.ts` | 762 |
 | frontend-api | `src/api/calendar.ts` | 130 |
 | frontend-api | `src/api/index.ts` | 35 |
 | frontend-api | `src/api/queryKeys.ts` | 291 |
@@ -462,5 +465,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
 | shared-types | `types/messaging.ts` | 281 |
+| shared-types | `types/messagingCompliance.ts` | 304 |
 | shared-types | `types/supabase.ts` | 135 |
 
