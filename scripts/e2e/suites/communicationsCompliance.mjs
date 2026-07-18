@@ -238,7 +238,16 @@ export default async function run(h) {
     expect(!data.revoked_at,                  'revoked_at should be null on a live grant');
   });
 
-  await test('D3. app_events side-effect: iam.permission.grant_approved event emitted', async () => {
+  await test('D3. active grant + active compliance_read permits the non-participant read', async () => {
+    const r = await api('communications/messages/posts', mint(sadmin), {
+      threadId,
+      limit: 10,
+    });
+    ok(r, `approved compliance read failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data), 'compliance read must return a posts array');
+  });
+
+  await test('D4. app_events side-effect: iam.permission.grant_approved event emitted', async () => {
     const { data } = await sb.from('app_events')
       .select('event_type, source_entity_id')
       .eq('event_type', 'iam.permission.grant_approved')
@@ -274,6 +283,15 @@ export default async function run(h) {
       threadId, reason: 'investigation', caseRef: `${TAG}`, durationHours: 1,
     });
     fails(r, 'superadmin should be denied after compliance_read was revoked');
+  });
+
+  await test('E4. the still-live thread grant cannot bypass revoked compliance_read', async () => {
+    const r = await api('communications/messages/posts', mint(sadmin), {
+      threadId,
+      limit: 10,
+    });
+    expect(r.status === 403, `expected 403 after permission revoke, got ${r.status}`);
+    expect(r.body.code === 'forbidden', `expected forbidden, got ${r.body.code}`);
   });
 
   // Clean up the approval row (it's approved, so the approval-request cleanup handles

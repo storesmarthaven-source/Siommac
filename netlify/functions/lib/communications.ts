@@ -106,10 +106,18 @@ function recordViewPermissionKey(sourceModule: string | null, sourceEntityType: 
   return null;
 }
 
+function communicationsReadUnavailable(operation: string, cause: unknown): Error & { status: number; code: string } {
+  console.error(`[communications] ${operation} failed:`, cause);
+  return Object.assign(new Error('Communications authorization service unavailable'), {
+    status: 503,
+    code: 'communications_authorization_unavailable',
+  });
+}
+
 /** True if the user has a live (non-revoked, non-expired) compliance grant on the thread. */
 async function hasActiveThreadGrant(threadId: string, userId: string): Promise<boolean> {
   const nowIso = new Date().toISOString();
-  const { data } = await sb
+  const { data, error } = await sb
     .from('message_thread_access_grants')
     .select('id')
     .eq('thread_id', threadId)
@@ -118,6 +126,7 @@ async function hasActiveThreadGrant(threadId: string, userId: string): Promise<b
     .gt('expires_at', nowIso)
     .limit(1)
     .maybeSingle<{ id: string }>();
+  if (error) throw communicationsReadUnavailable('active compliance grant lookup', error);
   return !!data;
 }
 
@@ -130,21 +139,25 @@ export async function resolveThreadReadAccess(
   user: { id: string; role?: string },
 ): Promise<ThreadAccessResult> {
   // 1. Participant?
-  const { data: part } = await sb
+  const { data: part, error: participantError } = await sb
     .from('message_participants')
     .select('role')
     .eq('thread_id', threadId)
     .eq('user_id', user.id)
     .is('removed_at', null)
     .maybeSingle<{ role: string }>();
+  if (participantError) {
+    throw communicationsReadUnavailable('thread participant lookup', participantError);
+  }
   if (part) return { allowed: true, via: 'participant', needsCompliance: false, participantRole: part.role };
 
   // 2. Record-linked inheritance?
-  const { data: thread } = await sb
+  const { data: thread, error: threadError } = await sb
     .from('message_threads')
     .select('source_module, source_entity_type')
     .eq('id', threadId)
     .maybeSingle<{ source_module: string | null; source_entity_type: string | null }>();
+  if (threadError) throw communicationsReadUnavailable('thread source lookup', threadError);
 
   const principal = { id: user.id, role: (user.role ?? 'employee') };
 
@@ -162,12 +175,17 @@ export async function resolveThreadReadAccess(
   }
 
   // 3. Active compliance grant?
-  if (await hasActiveThreadGrant(threadId, user.id)) {
+  const hasGrant = await hasActiveThreadGrant(threadId, user.id);
+  const canUseComplianceGrant = hasGrant
+    ? await userCan(principal, 'communications.compliance_read')
+    : null;
+  if (hasGrant && canUseComplianceGrant) {
     return { allowed: true, via: 'grant', needsCompliance: false, participantRole: null };
   }
 
   // 4. Denied — can they request audited access?
-  const needsCompliance = await userCan(principal, 'communications.compliance_read');
+  const needsCompliance = canUseComplianceGrant
+    ?? await userCan(principal, 'communications.compliance_read');
   return { allowed: false, via: null, needsCompliance, participantRole: null };
 }
 
@@ -319,32 +337,43 @@ export async function searchThreadsForCompliance(input: {
     const needle = (input.search ?? '').trim().toLowerCase();
 
     // Pull the most-recent candidate threads (bounded), then filter/rank in JS.
-    const { data: threads } = await sb
+    const threadResult = await sb
       .from('message_threads')
       .select('id, thread_type, subject, last_post_at, source_module, source_entity_type, source_entity_id')
       .order('last_post_at', { ascending: false, nullsFirst: false })
-      .limit(COMPLIANCE_CANDIDATE_CAP) as {
-        data: {
-          id: string; thread_type: string; subject: string; last_post_at: string | null;
-          source_module: string | null; source_entity_type: string | null; source_entity_id: string | null;
-        }[] | null;
-      };
+      .limit(COMPLIANCE_CANDIDATE_CAP);
+    if (threadResult.error) {
+      throw communicationsReadUnavailable('compliance thread discovery', threadResult.error);
+    }
+    const threads = threadResult.data as {
+      id: string; thread_type: string; subject: string; last_post_at: string | null;
+      source_module: string | null; source_entity_type: string | null; source_entity_id: string | null;
+    }[] | null;
     if (!threads || threads.length === 0) return { rows: [] };
 
     const ids = threads.map(t => t.id);
-    const { data: parts } = await sb
+    const participantResult = await sb
       .from('message_participants')
       .select('thread_id, user_id, app_users!inner(full_name, email)')
       .in('thread_id', ids)
-      .is('removed_at', null) as {
-        data: { thread_id: string; user_id: string; app_users: { full_name: string | null; email: string } }[] | null;
-      };
+      .is('removed_at', null);
+    if (participantResult.error) {
+      throw communicationsReadUnavailable('compliance participant discovery', participantResult.error);
+    }
+    type ComplianceParticipantUser = { full_name: string | null; email: string };
+    const parts = participantResult.data as unknown as {
+      thread_id: string;
+      user_id: string;
+      app_users: ComplianceParticipantUser | ComplianceParticipantUser[] | null;
+    }[] | null;
 
     const byThread = new Map<string, { names: string[]; emails: string[]; userIds: Set<string> }>();
     for (const p of parts ?? []) {
+      const appUser = Array.isArray(p.app_users) ? p.app_users[0] : p.app_users;
+      if (!appUser) continue;
       const e = byThread.get(p.thread_id) ?? { names: [], emails: [], userIds: new Set<string>() };
-      if (p.app_users.full_name) e.names.push(p.app_users.full_name);
-      e.emails.push(p.app_users.email);
+      if (appUser.full_name) e.names.push(appUser.full_name);
+      e.emails.push(appUser.email);
       e.userIds.add(p.user_id);
       byThread.set(p.thread_id, e);
     }
@@ -374,8 +403,9 @@ export async function searchThreadsForCompliance(input: {
     }
     return { rows };
   } catch (e) {
-    console.error('[communications] searchThreadsForCompliance failed:', e);
-    return { rows: [] };
+    throw e instanceof Error
+      ? e
+      : communicationsReadUnavailable('compliance search', e);
   }
 }
 
