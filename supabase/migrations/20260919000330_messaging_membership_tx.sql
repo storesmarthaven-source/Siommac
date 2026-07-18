@@ -75,11 +75,24 @@ begin
   v_can_manage := (v_actor_part.role = 'owner');
 
   if not v_can_manage then
-    -- Check communications.admin permission via user_permissions
-    v_can_manage := exists (
-      select 1 from public.user_permissions
-       where user_id = p_actor_id and permission_key = 'communications.admin'
-         and is_granted = true
+    -- Explicit per-user overrides take precedence over the actor's role grant.
+    -- user_permissions columns are (permission, granted), not the obsolete
+    -- permission_key/is_granted names.
+    v_can_manage := coalesce(
+      (
+        select up.granted
+          from public.user_permissions up
+         where up.user_id = p_actor_id
+           and up.permission = 'communications.admin'
+      ),
+      p_actor_role = 'superadmin'
+        or exists (
+          select 1
+            from public.role_permissions rp
+           where rp.role_name = p_actor_role
+             and rp.permission = 'communications.admin'
+        ),
+      false
     );
   end if;
 
@@ -262,10 +275,21 @@ begin
 
     v_can_manage := (v_actor_part.role = 'owner');
     if not v_can_manage then
-      v_can_manage := exists (
-        select 1 from public.user_permissions
-         where user_id = p_actor_id and permission_key = 'communications.admin'
-           and is_granted = true
+      v_can_manage := coalesce(
+        (
+          select up.granted
+            from public.user_permissions up
+           where up.user_id = p_actor_id
+             and up.permission = 'communications.admin'
+        ),
+        p_actor_role = 'superadmin'
+          or exists (
+            select 1
+              from public.role_permissions rp
+             where rp.role_name = p_actor_role
+               and rp.permission = 'communications.admin'
+          ),
+        false
       );
     end if;
     if not v_can_manage then

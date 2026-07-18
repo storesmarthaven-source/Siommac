@@ -15,9 +15,7 @@
  */
 
 import { sb }                              from './db';
-import { emitAppEvent }                    from './appEvents';
-import { userCan }                         from './auth';
-import { emitSignal }                      from './communications';
+import { emitSignal, resolveThreadReadAccess } from './communications';
 import { pinTx, deleteMessageTx, toggleReactionTx } from './messaging/messagingRpc';
 import type { MessagePin, PresenceStatus } from '../../../types/messaging';
 
@@ -32,36 +30,14 @@ async function threadParticipantIds(threadId: string): Promise<string[]> {
     .from('message_participants')
     .select('user_id')
     .eq('thread_id', threadId)
-    .is('removed_at', null) as { data: Array<{ user_id: string }> | null };
+    .is('removed_at', null) as { data: { user_id: string }[] | null };
   return (data ?? []).map(r => r.user_id);
-}
-
-/** The caller's active role in a thread, or null if not an active participant. */
-async function participantRole(threadId: string, userId: string): Promise<string | null> {
-  const { data } = await sb
-    .from('message_participants')
-    .select('role')
-    .eq('thread_id', threadId)
-    .eq('user_id', userId)
-    .is('removed_at', null)
-    .maybeSingle<{ role: string }>();
-  return data?.role ?? null;
-}
-
-async function displayName(userId: string): Promise<string> {
-  const { data } = await sb
-    .from('app_users')
-    .select('full_name, email')
-    .eq('id', userId)
-    .maybeSingle<{ full_name: string | null; email: string }>();
-  return data?.full_name ?? data?.email ?? 'Someone';
 }
 
 // ── Pins ───────────────────────────────────────────────────────────────────────
 
 export interface PinMessageInput {
   currentUserId:   string;
-  currentUserRole: string;
   threadId:        string;
   postId?:         string | null;
   pinType:         'thread' | 'post';
@@ -72,11 +48,11 @@ export interface PinMessageInput {
 
 export interface PinResult { ok: boolean; message?: string; pin?: MessagePin; status?: number }
 
-type PinRow = {
+interface PinRow {
   id: string; thread_id: string; post_id: string | null;
   pin_type: 'thread' | 'post'; visibility: 'thread' | 'personal';
   pinned_by: string; pinned_at: string; note: string | null;
-};
+}
 
 function mapPin(row: PinRow, pinnerName: string, postPreview?: MessagePin['postPreview']): MessagePin {
   return {
@@ -101,6 +77,7 @@ export async function pinMessage(input: PinMessageInput): Promise<PinResult> {
   try {
     const result = await pinTx({
       action:          'pin',
+      pinId:           null,
       threadId:        input.threadId,
       actorId:         input.currentUserId,
       postId:          input.postId ?? null,
@@ -117,15 +94,10 @@ export async function pinMessage(input: PinMessageInput): Promise<PinResult> {
       void emitSignal(await threadParticipantIds(input.threadId), 'messages');
     }
 
-    // Fetch the pin row so the route can return the full MessagePin DTO.
-    const { data: row } = await sb
-      .from('message_pins')
-      .select('id, thread_id, post_id, pin_type, visibility, pinned_by, pinned_at, note')
-      .eq('id', result.pinId)
-      .maybeSingle<PinRow>();
-
-    if (!row) return { ok: false, message: 'Pin row not found after creation' };
-    return { ok: true, pin: mapPin(row, await displayName(input.currentUserId)) };
+    if (!result.pin) {
+      return { ok: false, message: 'Pin transaction returned no pin payload', status: 500 };
+    }
+    return { ok: true, pin: result.pin };
   } catch (e: unknown) {
     const err = e as { status?: number; message?: string };
     console.error('[messagingRich] pinMessage RPC failed:', err.message ?? e);
@@ -134,43 +106,21 @@ export async function pinMessage(input: PinMessageInput): Promise<PinResult> {
   }
 }
 
-export async function unpinMessage(pinId: string, userId: string, userRole: string): Promise<{ ok: boolean; message?: string }> {
+export async function unpinMessage(pinId: string, userId: string): Promise<{ ok: boolean; message?: string; status?: number }> {
   try {
-    const { data: pin } = await sb
-      .from('message_pins')
-      .select('id, thread_id, visibility, pinned_by')
-      .eq('id', pinId)
-      .is('unpinned_at', null)
-      .maybeSingle<{ id: string; thread_id: string; visibility: string; pinned_by: string }>();
-    if (!pin) return { ok: false, message: 'Pin not found' };
-
-    // You may remove your own pin; thread pins also removable by owner/admin.
-    if (pin.pinned_by !== userId) {
-      const role = await participantRole(pin.thread_id, userId);
-      const canUnpinAny = role === 'owner' || await userCan({ id: userId, role: userRole }, 'communications.messages.unpin_any');
-      if (!canUnpinAny) return { ok: false, message: 'You can only unpin your own pins' };
-    }
-
-    const { error } = await sb
-      .from('message_pins')
-      .update({ unpinned_at: new Date().toISOString(), unpinned_by: userId })
-      .eq('id', pinId);
-    if (error) return { ok: false, message: error.message };
-
-    if (pin.visibility === 'thread') void emitSignal(await threadParticipantIds(pin.thread_id), 'messages');
-    void emitAppEvent({
-      eventType:        'communications.message_unpinned',
-      sourceModule:     'communications',
-      sourceEntityType: 'message_pin',
-      sourceEntityId:   pinId,
-      actorUserId:      userId,
-      severity:         'info',
-      payload: { threadId: pin.thread_id },
+    const result = await pinTx({
+      action:   'unpin',
+      pinId,
+      actorId:  userId,
     });
+    if (result.visibility === 'thread') {
+      void emitSignal(await threadParticipantIds(result.threadId), 'messages');
+    }
     return { ok: true };
-  } catch (e) {
-    console.error('[messagingRich] unpinMessage failed:', e);
-    return { ok: false, message: 'Internal error' };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[messagingRich] unpinMessage failed:', err.message ?? e);
+    return { ok: false, message: err.message ?? 'Internal error', status: err.status };
   }
 }
 
@@ -203,17 +153,37 @@ export async function softDeleteMessage(input: {
   }
 }
 
-/** Active pins visible to the user in a thread (thread-visible + own personal). */
-export async function listPins(threadId: string, userId: string): Promise<MessagePin[]> {
-  const { data: pins } = await sb
+export type ListPinsResult =
+  | { ok: true; pins: MessagePin[] }
+  | { ok: false; status: number; message: string };
+
+/** Active pins visible to an authorized thread reader. */
+export async function listPins(threadId: string, userId: string, userRole?: string): Promise<ListPinsResult> {
+  const access = await resolveThreadReadAccess(threadId, { id: userId, role: userRole });
+  if (!access.allowed) {
+    return {
+      ok: false,
+      status: 403,
+      message: access.needsCompliance
+        ? 'Compliance access required to view thread pins'
+        : 'Not authorized to view thread pins',
+    };
+  }
+
+  const pinsRes = await sb
     .from('message_pins')
     .select('id, thread_id, post_id, pin_type, visibility, pinned_by, pinned_at, note')
     .eq('thread_id', threadId)
     .is('unpinned_at', null)
-    .order('pinned_at', { ascending: false }) as { data: PinRow[] | null };
+    .order('pinned_at', { ascending: false });
+  if (pinsRes.error) {
+    console.error('[messagingRich] listPins query failed:', pinsRes.error.message);
+    return { ok: false, status: 500, message: 'Could not load thread pins' };
+  }
+  const pins = pinsRes.data as PinRow[] | null;
 
   const visible = (pins ?? []).filter(p => p.visibility === 'thread' || p.pinned_by === userId);
-  if (visible.length === 0) return [];
+  if (visible.length === 0) return { ok: true, pins: [] };
 
   // Resolve pinner names + post previews in batch.
   const pinnerIds = [...new Set(visible.map(p => p.pinned_by))];
@@ -223,28 +193,33 @@ export async function listPins(threadId: string, userId: string): Promise<Messag
     sb.from('app_users').select('id, full_name, email').in('id', pinnerIds),
     postIds.length > 0
       ? sb.from('message_posts').select('id, body, author_user_id, created_at').in('id', postIds)
-      : Promise.resolve({ data: null }),
+      : Promise.resolve({ data: null, error: null }),
   ]);
-  const users = (usersRes as { data: Array<{ id: string; full_name: string | null; email: string }> | null }).data;
-  const posts = (postsRes as { data: Array<{ id: string; body: string | null; author_user_id: string | null; created_at: string }> | null }).data;
+  if (usersRes.error || postsRes.error) {
+    console.error('[messagingRich] listPins detail lookup failed:', usersRes.error?.message ?? postsRes.error?.message);
+    return { ok: false, status: 500, message: 'Could not load pin details' };
+  }
+  const users = (usersRes as { data: { id: string; full_name: string | null; email: string }[] | null }).data;
+  const posts = (postsRes as { data: { id: string; body: string | null; author_user_id: string | null; created_at: string }[] | null }).data;
 
   const nameMap = new Map((users ?? []).map(u => [u.id, u.full_name ?? u.email]));
   const postMap = new Map((posts ?? []).map(p => [p.id, p]));
 
-  return visible.map(p => {
+  const mapped = visible.map(p => {
     const post = p.post_id ? postMap.get(p.post_id) : undefined;
     const preview = post
       ? { body: post.body, authorName: post.author_user_id ? (nameMap.get(post.author_user_id) ?? null) : null, createdAt: post.created_at }
       : null;
     return mapPin(p, nameMap.get(p.pinned_by) ?? 'Someone', preview);
   });
+  return { ok: true, pins: mapped };
 }
 
 /** Pinned THREADS for the sidebar "Pinned Conversations" section (user-scoped). */
-export async function pinnedThreadSummary(userId: string): Promise<Array<{ threadId: string; subject: string | null; note: string | null; pinnedAt: string }>> {
+export async function pinnedThreadSummary(userId: string): Promise<{ threadId: string; subject: string | null; note: string | null; pinnedAt: string }[]> {
   // The user's own thread-pins + any thread-visible pin on a thread they're in.
   const myThreadIds = await (async () => {
-    const { data } = await sb.from('message_participants').select('thread_id').eq('user_id', userId).is('removed_at', null) as { data: Array<{ thread_id: string }> | null };
+    const { data } = await sb.from('message_participants').select('thread_id').eq('user_id', userId).is('removed_at', null) as { data: { thread_id: string }[] | null };
     return new Set((data ?? []).map(r => r.thread_id));
   })();
 
@@ -254,11 +229,11 @@ export async function pinnedThreadSummary(userId: string): Promise<Array<{ threa
     .eq('pin_type', 'thread')
     .is('unpinned_at', null)
     .order('pinned_at', { ascending: false }) as {
-      data: Array<{ thread_id: string; visibility: string; pinned_by: string; pinned_at: string; note: string | null; message_threads: { subject: string | null } }> | null;
+      data: { thread_id: string; visibility: string; pinned_by: string; pinned_at: string; note: string | null; message_threads: { subject: string | null } }[] | null;
     };
 
   const seen = new Set<string>();
-  const out: Array<{ threadId: string; subject: string | null; note: string | null; pinnedAt: string }> = [];
+  const out: { threadId: string; subject: string | null; note: string | null; pinnedAt: string }[] = [];
   for (const p of pins ?? []) {
     if (!myThreadIds.has(p.thread_id)) continue;
     if (p.visibility === 'personal' && p.pinned_by !== userId) continue;
@@ -273,7 +248,7 @@ export async function pinnedThreadSummary(userId: string): Promise<Array<{ threa
 
 export async function saveDraft(threadId: string, userId: string, body: string | null, replyToPostId: string | null): Promise<{ ok: boolean; message?: string }> {
   // Empty draft → delete (don't leave a ghost "Draft:" chip on the thread row).
-  if (!body || !body.trim()) return deleteDraft(threadId, userId);
+  if (!body?.trim()) return deleteDraft(threadId, userId);
   const { error } = await sb.from('message_thread_drafts').upsert({
     thread_id:        threadId,
     user_id:          userId,
@@ -327,7 +302,7 @@ export async function listOnlineUsers(excludeUserId: string): Promise<OnlineUser
     .neq('user_id', excludeUserId)
     .order('last_seen_at', { ascending: false })
     .limit(50) as {
-      data: Array<{ user_id: string; status: PresenceStatus; last_seen_at: string; app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null } }> | null;
+      data: { user_id: string; status: PresenceStatus; last_seen_at: string; app_users: { full_name: string | null; email: string; signed_url: string | null; signed_url_expires_at: string | null } }[] | null;
     };
 
   return (data ?? []).map(r => {

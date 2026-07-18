@@ -39,7 +39,7 @@ path	module	permission	guards	schema	file	line
 /api/communications/messages/attachments/upload-url	communications	communications.view	requirePermission	AttachUploadUrlSchema	netlify/functions/routes/communications.ts	640
 /api/communications/messages/compliance/search	communications	communications.compliance_read	requirePermission	ComplianceSearchSchema	netlify/functions/routes/communications.ts	508
 /api/communications/messages/createThread	communications	communications.thread_create	requirePermission	CreateThreadSchema	netlify/functions/routes/communications.ts	567
-/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	918
+/api/communications/messages/delete	communications	communications.view	requirePermission,userCan	DeleteMessageSchema	netlify/functions/routes/communications.ts	915
 /api/communications/messages/draft/delete	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	1008
 /api/communications/messages/draft/get	communications	communications.view	requirePermission	DraftGetSchema	netlify/functions/routes/communications.ts	999
 /api/communications/messages/draft/save	communications	communications.view	requirePermission	DraftSaveSchema	netlify/functions/routes/communications.ts	987
@@ -49,14 +49,14 @@ path	module	permission	guards	schema	file	line
 /api/communications/messages/online	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1037
 /api/communications/messages/participants/add	communications	communications.thread_manage_own	requirePermission	ParticipantsAddSchema	netlify/functions/routes/communications.ts	755
 /api/communications/messages/participants/remove	communications	communications.thread_manage_own	requirePermission,userCan	ParticipantsRemoveSchema	netlify/functions/routes/communications.ts	775
-/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	963
+/api/communications/messages/pins/list	communications	communications.view	requirePermission	PinsListSchema	netlify/functions/routes/communications.ts	960
 /api/communications/messages/pins/pin	communications	communications.view	requirePermission	PinSchema	netlify/functions/routes/communications.ts	871
 /api/communications/messages/pins/pinned-summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	972
-/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	898
+/api/communications/messages/pins/unpin	communications	communications.view	requirePermission	UnpinSchema	netlify/functions/routes/communications.ts	895
 /api/communications/messages/post	communications	communications.view	requirePermission	PostMessageSchema	netlify/functions/routes/communications.ts	605
 /api/communications/messages/posts	communications	communications.view	requirePermission	PostsSchema	netlify/functions/routes/communications.ts	394
 /api/communications/messages/presence/update	communications	communications.view	requirePermission	PresenceSchema	netlify/functions/routes/communications.ts	1027
-/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	946
+/api/communications/messages/reactions/toggle	communications	communications.view	requirePermission	ToggleReactionSchema	netlify/functions/routes/communications.ts	943
 /api/communications/messages/recipients	communications	communications.view	requirePermission	RecipientsSchema	netlify/functions/routes/communications.ts	826
 /api/communications/messages/recordExport	communications	communications.compliance_export	requirePermission	RecordExportSchema	netlify/functions/routes/communications.ts	489
 /api/communications/messages/recordThread	communications	communications.thread_create	requirePermission	RecordThreadSchema	netlify/functions/routes/communications.ts	529

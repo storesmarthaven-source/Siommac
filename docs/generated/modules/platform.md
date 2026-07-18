@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `446fa648fd249761e39851cc`
+Source fingerprint: `57a2c42d25f14cf7ce406473`
 
-Files: 269 | Symbols: 2340 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 237 | E2E suites: 0
+Files: 269 | Symbols: 2341 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 237 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -376,9 +376,9 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.hr_position_apply_reports_to_tx` | `supabase/migrations/20260919000290_hr_position_hierarchy_serialization.sql:37` |
 | function | `public.messaging_create_thread_tx` | `supabase/migrations/20260919000310_messaging_create_thread_tx.sql:20` |
 | function | `public.messaging_add_participants_tx` | `supabase/migrations/20260919000330_messaging_membership_tx.sql:25` |
-| function | `public.messaging_remove_participant_tx` | `supabase/migrations/20260919000330_messaging_membership_tx.sql:197` |
-| function | `public.messaging_pin_tx` | `supabase/migrations/20260919000340_messaging_pin_read_tx.sql:23` |
-| function | `public.messaging_mark_read_tx` | `supabase/migrations/20260919000340_messaging_pin_read_tx.sql:174` |
+| function | `public.messaging_remove_participant_tx` | `supabase/migrations/20260919000330_messaging_membership_tx.sql:210` |
+| function | `public.messaging_pin_tx` | `supabase/migrations/20260919000340_messaging_pin_read_tx.sql:25` |
+| function | `public.messaging_mark_read_tx` | `supabase/migrations/20260919000340_messaging_pin_read_tx.sql:333` |
 | function | `public.messaging_toggle_reaction_tx` | `supabase/migrations/20260919000363_messaging_reactions.sql:28` |
 | function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:30` |
 | function | `public.messaging_search_posts_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:94` |

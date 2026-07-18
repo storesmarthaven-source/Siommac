@@ -876,7 +876,6 @@ router.post('/communications/messages/pins/pin', async c => {
 
   const result = await pinMessage({
     currentUserId:   user.id,
-    currentUserRole: user.role,
     threadId:        v.data.threadId,
     postId:          v.data.postId ?? null,
     pinType:         v.data.pinType,
@@ -885,9 +884,7 @@ router.post('/communications/messages/pins/pin', async c => {
     expectedVersion: v.data.expectedVersion ?? null,
   });
   if (!result.ok) {
-    const status = result.status === 409 ? 409 as 200
-                 : /participant|owner/.test(result.message ?? '') ? 403 as 200
-                 : 400 as 200;
+    const status = (result.status ?? 400) as 200;
     return c.json({ success: false, message: result.message ?? 'Failed to pin' }, status);
   }
   return c.json({ success: true, data: result.pin });
@@ -901,9 +898,9 @@ router.post('/communications/messages/pins/unpin', async c => {
   const v = zv(c, UnpinSchema, body.args);
   if (!v.ok) return v.response;
 
-  const result = await unpinMessage(v.data.pinId, user.id, user.role);
+  const result = await unpinMessage(v.data.pinId, user.id);
   if (!result.ok) {
-    const status = /own pins|not found/.test(result.message ?? '') ? 403 as 200 : 400 as 200;
+    const status = (result.status ?? 400) as 200;
     return c.json({ success: false, message: result.message ?? 'Failed to unpin' }, status);
   }
   return c.json({ success: true });
@@ -965,8 +962,11 @@ router.post('/communications/messages/pins/list', async c => {
   const body = c.get('body');
   const v = zv(c, PinsListSchema, body.args);
   if (!v.ok) return v.response;
-  const pins = await listPins(v.data.threadId, user.id);
-  return c.json({ success: true, data: pins });
+  const result = await listPins(v.data.threadId, user.id, user.role);
+  if (!result.ok) {
+    return c.json({ success: false, message: result.message }, result.status as 200);
+  }
+  return c.json({ success: true, data: result.pins });
 });
 
 router.post('/communications/messages/pins/pinned-summary', async c => {

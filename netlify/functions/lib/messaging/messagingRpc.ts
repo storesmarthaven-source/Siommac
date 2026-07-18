@@ -14,6 +14,7 @@
  */
 
 import { sb } from '../db';
+import type { MessagePin } from '../../../../types/messaging';
 
 // ── SQLSTATE → HTTP mapping ────────────────────────────────────────────────────
 const MSG_SQLSTATE_HTTP: Record<string, number> = {
@@ -30,6 +31,25 @@ export function msgRpcHttpError(error: { code?: string | null; message: string }
   // Strip the PL/pgSQL function prefix ('messaging_create_thread: …') for user-facing text.
   const message = error.message.replace(/^messaging_[a-z_]+:\s*/i, '');
   return Object.assign(new Error(message), status ? { status } : {});
+}
+
+/**
+ * Shape of a supabase-js RPC response as consumed in this module: an untyped
+ * `data` payload plus the MSG* SQLSTATE error accepted by msgRpcHttpError.
+ * `data` is `unknown` (not `any`) so each wrapper narrows it explicitly.
+ */
+interface RpcResponse<T> { data: T | null; error: { code?: string | null; message: string } | null }
+
+/**
+ * Throw a typed HTTP error on a MSG* RPC failure, otherwise return the payload
+ * as T. Centralises the untyped-supabase → concrete-result-type step for every
+ * custom-RPC wrapper below (behaviour identical to the previous inline pattern).
+ * supabase-js infers `any` for custom RPCs; the T binding narrows it per call.
+ */
+function unwrapRpc<T>(res: RpcResponse<T>): T {
+  if (res.error) throw msgRpcHttpError(res.error);
+  // Non-null after the error guard: a MSG* success always returns a payload.
+  return res.data!;
 }
 
 // ── Result shapes ──────────────────────────────────────────────────────────────
@@ -74,8 +94,11 @@ export interface RemoveParticipantRpcResult {
 export interface PinRpcResult {
   pinId:         string;
   action:        'pin' | 'unpin';
+  threadId:      string;
+  visibility:    'thread' | 'personal';
   threadVersion: number;
   eventId:       string;
+  pin:           MessagePin | null;
 }
 
 export interface MarkReadRpcResult {
@@ -98,22 +121,21 @@ export async function createThreadTx(params: {
   requestKey?:       string | null;
   clientMsgKey?:     string | null;
 }): Promise<CreateThreadRpcResult> {
-  const { data, error } = await sb.rpc('messaging_create_thread_tx', {
+  return unwrapRpc<CreateThreadRpcResult>(await sb.rpc('messaging_create_thread_tx', {
     p_thread_type:        params.threadType,
     p_subject:            params.subject ?? null,
     p_source_module:      params.sourceModule ?? null,
     p_source_entity_type: params.sourceEntityType ?? null,
     p_source_entity_id:   params.sourceEntityId ?? null,
     p_created_by:         params.createdBy,
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition -- runtime guard: JS callers may pass undefined despite the string[] type
     p_participant_ids:    params.participantIds ?? [],
     p_body:               params.body ?? null,
     p_priority:           params.priority ?? 'normal',
     p_attachment_ids:     params.attachmentIds ?? [],
     p_request_key:        params.requestKey ?? null,
     p_client_msg_key:     params.clientMsgKey ?? null,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as CreateThreadRpcResult;
+  }));
 }
 
 // ── sendMessageTx ─────────────────────────────────────────────────────────────
@@ -127,7 +149,7 @@ export async function sendMessageTx(params: {
   attachmentIds?:  string[];
   clientMsgKey?:   string | null;
 }): Promise<SendMessageRpcResult> {
-  const { data, error } = await sb.rpc('messaging_send_message_tx', {
+  return unwrapRpc<SendMessageRpcResult>(await sb.rpc('messaging_send_message_tx', {
     p_thread_id:         params.threadId,
     p_actor_id:          params.actorId,
     p_body:              params.body ?? null,
@@ -135,9 +157,7 @@ export async function sendMessageTx(params: {
     p_reply_to_post_id:  params.replyToPostId ?? null,
     p_attachment_ids:    params.attachmentIds ?? [],
     p_client_msg_key:    params.clientMsgKey ?? null,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as SendMessageRpcResult;
+  }));
 }
 
 // ── addParticipantsTx ─────────────────────────────────────────────────────────
@@ -148,14 +168,12 @@ export async function addParticipantsTx(params: {
   userIds:   string[];
   actorRole?: string;
 }): Promise<AddParticipantsRpcResult> {
-  const { data, error } = await sb.rpc('messaging_add_participants_tx', {
+  return unwrapRpc<AddParticipantsRpcResult>(await sb.rpc('messaging_add_participants_tx', {
     p_thread_id:  params.threadId,
     p_actor_id:   params.actorId,
     p_user_ids:   params.userIds,
     p_actor_role: params.actorRole ?? null,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as AddParticipantsRpcResult;
+  }));
 }
 
 // ── removeParticipantTx ───────────────────────────────────────────────────────
@@ -166,40 +184,38 @@ export async function removeParticipantTx(params: {
   targetUserId:  string;
   actorRole?:    string;
 }): Promise<RemoveParticipantRpcResult> {
-  const { data, error } = await sb.rpc('messaging_remove_participant_tx', {
+  return unwrapRpc<RemoveParticipantRpcResult>(await sb.rpc('messaging_remove_participant_tx', {
     p_thread_id:       params.threadId,
     p_actor_id:        params.actorId,
     p_target_user_id:  params.targetUserId,
     p_actor_role:      params.actorRole ?? null,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as RemoveParticipantRpcResult;
+  }));
 }
 
 // ── pinTx ─────────────────────────────────────────────────────────────────────
 
 export async function pinTx(params: {
   action:          'pin' | 'unpin';
-  threadId:        string;
+  pinId?:          string | null;
+  threadId?:       string | null;
   actorId:         string;
   postId?:         string | null;
-  pinType:         'thread' | 'post';
-  visibility:      'thread' | 'personal';
+  pinType?:        'thread' | 'post' | null;
+  visibility?:     'thread' | 'personal' | null;
   note?:           string | null;
   expectedVersion?: number | null;
 }): Promise<PinRpcResult> {
-  const { data, error } = await sb.rpc('messaging_pin_tx', {
+  return unwrapRpc<PinRpcResult>(await sb.rpc('messaging_pin_tx', {
     p_action:           params.action,
-    p_thread_id:        params.threadId,
+    p_pin_id:           params.pinId ?? null,
+    p_thread_id:        params.threadId ?? null,
     p_actor_id:         params.actorId,
     p_post_id:          params.postId ?? null,
-    p_pin_type:         params.pinType,
-    p_visibility:       params.visibility,
+    p_pin_type:         params.pinType ?? null,
+    p_visibility:       params.visibility ?? null,
     p_note:             params.note ?? null,
     p_expected_version: params.expectedVersion ?? null,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as PinRpcResult;
+  }));
 }
 
 // ── markReadTx ────────────────────────────────────────────────────────────────
@@ -209,13 +225,11 @@ export async function markReadTx(params: {
   actorId:        string;
   upToSequence:   number;
 }): Promise<MarkReadRpcResult> {
-  const { data, error } = await sb.rpc('messaging_mark_read_tx', {
+  return unwrapRpc<MarkReadRpcResult>(await sb.rpc('messaging_mark_read_tx', {
     p_thread_id:       params.threadId,
     p_actor_id:        params.actorId,
     p_up_to_sequence:  params.upToSequence,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as MarkReadRpcResult;
+  }));
 }
 
 // ── deleteMessageTx ───────────────────────────────────────────────────────────
@@ -235,14 +249,12 @@ export async function deleteMessageTx(params: {
   reason?:     string | null;
   isModerator: boolean;
 }): Promise<DeleteMessageRpcResult> {
-  const { data, error } = await sb.rpc('messaging_delete_message_tx', {
+  return unwrapRpc<DeleteMessageRpcResult>(await sb.rpc('messaging_delete_message_tx', {
     p_post_id:      params.postId,
     p_actor_id:     params.actorId,
     p_reason:       params.reason ?? null,
     p_is_moderator: params.isModerator,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as DeleteMessageRpcResult;
+  }));
 }
 
 // ── Reactions (mig 20260919000363) ────────────────────────────────────────────
@@ -262,11 +274,9 @@ export async function toggleReactionTx(params: {
   actorId: string;
   emoji:   string;
 }): Promise<ToggleReactionRpcResult> {
-  const { data, error } = await sb.rpc('messaging_toggle_reaction_tx', {
+  return unwrapRpc<ToggleReactionRpcResult>(await sb.rpc('messaging_toggle_reaction_tx', {
     p_post_id:  params.postId,
     p_actor_id: params.actorId,
     p_emoji:    params.emoji,
-  });
-  if (error) throw msgRpcHttpError(error as { code?: string | null; message: string });
-  return data as ToggleReactionRpcResult;
+  }));
 }
