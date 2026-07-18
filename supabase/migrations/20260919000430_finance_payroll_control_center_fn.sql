@@ -325,7 +325,7 @@ with win as (
           select jsonb_agg(
             jsonb_build_object(
               'id', i.id, 'runNo', i.run_no, 'runType', i.run_type,
-              'payGroupId', r.pay_group_id, 'payGroupName', r.pay_group,
+              'payGroupId', r.pay_group_id, 'payGroupName', coalesce(pg.name, r.pay_group),
               'periodStart', to_char(i.period_start, 'YYYY-MM-DD'),
               'periodEnd', to_char(i.period_end, 'YYYY-MM-DD'),
               'payDate', to_char(i.pay_date, 'YYYY-MM-DD'),
@@ -337,6 +337,7 @@ with win as (
           )
           from reg_items i
           join public.finance_payroll_runs r on r.id = i.id
+          left join public.finance_pay_groups pg on pg.id = r.pay_group_id
         ), '[]'::jsonb),
         'nextCursor', (
           case when (select count(*) from reg_page) > p_limit then (
@@ -428,7 +429,7 @@ with win as (
     'nextRun', (
       select jsonb_build_object(
         'id', n.id, 'runNo', n.run_no, 'runType', n.run_type,
-        'payGroupId', r.pay_group_id, 'payGroupName', r.pay_group,
+        'payGroupId', r.pay_group_id, 'payGroupName', coalesce(pg.name, r.pay_group),
         'periodStart', to_char(n.period_start, 'YYYY-MM-DD'),
         'periodEnd', to_char(n.period_end, 'YYYY-MM-DD'),
         'payDate', to_char(n.pay_date, 'YYYY-MM-DD'),
@@ -442,6 +443,7 @@ with win as (
       )
       from facts n
       join public.finance_payroll_runs r on r.id = n.id
+      left join public.finance_pay_groups pg on pg.id = r.pay_group_id
       left join public.finance_payroll_calculation_versions cv on cv.id = n.current_calculation_version_id
       where n.run_type = 'scheduled' and n.status not in ('released', 'exported', 'cancelled')
         and n.pay_date is not null and n.pay_date >= p_from

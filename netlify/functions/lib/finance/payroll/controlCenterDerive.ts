@@ -137,7 +137,7 @@ const PREFLIGHT_CODE_TO_GATE: Record<string, PayrollReadinessGate['key']> = {
   remittance_conflict: 'bank_accounts_ready',
 };
 
-const GATE_ORDER: Array<{ key: PayrollReadinessGate['key']; label: string; okDetail: string }> = [
+const GATE_ORDER: { key: PayrollReadinessGate['key']; label: string; okDetail: string }[] = [
   { key: 'inputs_locked', label: 'Inputs Locked', okDetail: 'Input snapshot locked' },
   { key: 'calculation_current', label: 'Calculation Current', okDetail: 'Current calculation version valid' },
   { key: 'findings_clear', label: 'Findings & Statutory Evidence Clear', okDetail: 'No blocking findings or statutory-evidence issues' },
@@ -150,7 +150,7 @@ const GATE_ORDER: Array<{ key: PayrollReadinessGate['key']; label: string; okDet
 export interface PreflightReadinessInput {
   ready: boolean;
   alreadyReleased: boolean;
-  blockers: Array<{ code: string; message: string }>;
+  blockers: { code: string; message: string }[];
   status: string;
 }
 

@@ -69,7 +69,7 @@ export function payrollControlCenterQueryKey(p: PayrollControlCenterParams) {
       to: p.window.to,
       payGroupIds: [...new Set(p.payGroupIds ?? [])].sort(),
       tab: p.register?.tab ?? 'all',
-      search: search && search.length ? search : null,
+      search: search?.length ? search : null,
       cursor: p.register?.cursor ?? null,
       limit: p.register?.limit ?? 10,
     },
@@ -91,10 +91,10 @@ export async function getPayrollControlCenter(
   const search = params.register?.search?.trim();
   const body: PayrollControlCenterRequest = {
     window: params.window,
-    ...(params.payGroupIds && params.payGroupIds.length ? { payGroupIds: [...new Set(params.payGroupIds)] } : {}),
+    ...(params.payGroupIds?.length ? { payGroupIds: [...new Set(params.payGroupIds)] } : {}),
     register: {
       tab: params.register?.tab ?? 'all',
-      ...(search && search.length ? { search } : {}),
+      ...(search?.length ? { search } : {}),
       ...(params.register?.cursor ? { cursor: params.register.cursor } : {}),
       limit: params.register?.limit ?? 10,
     },

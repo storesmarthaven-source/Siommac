@@ -176,9 +176,20 @@ export async function getPayrollControlCenter(
     const runId = str(at.runId);
     const { data: rr } = await sb
       .from('finance_payroll_runs')
-      .select('pay_group, employee_count, net_total, current_calculation_version_id')
+      .select('pay_group, pay_group_id, employee_count, net_total, current_calculation_version_id')
       .eq('id', runId)
       .maybeSingle();
+    // Resolve the pay-group NAME from its id (authoritative) — the run's own pay_group column stores the
+    // group CODE for app-created runs, so display it only as a fallback when there is no pay_group_id.
+    let payGroupName = (rr?.pay_group as string | null) ?? null;
+    if (rr?.pay_group_id) {
+      const { data: pg } = await sb
+        .from('finance_pay_groups')
+        .select('name')
+        .eq('id', rr.pay_group_id as string)
+        .maybeSingle();
+      if (pg?.name) payGroupName = pg.name as string;
+    }
     let employeeCount = num(rr?.employee_count);
     let netAmount = num(rr?.net_total);
     if (rr?.current_calculation_version_id) {
@@ -194,7 +205,7 @@ export async function getPayrollControlCenter(
       workflowId: str(at.workflowId),
       runId,
       runNo: str(at.runNo),
-      payGroupName: (rr?.pay_group as string | null) ?? null,
+      payGroupName,
       employeeCount,
       netPayroll: money(netAmount),
       title: str(at.title),

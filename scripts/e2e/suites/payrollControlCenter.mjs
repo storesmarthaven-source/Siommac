@@ -328,6 +328,8 @@ export default async function run(h) {
     const calcRow = d.runRegister.items.find(i => i.id === ctx.bRuns.calc);
     expect(calcRow && calcRow.readiness.blockerCount === 2, `blockerCount ${calcRow?.readiness.blockerCount} !== 2 (stale version leaked?)`);
     expect(calcRow.readiness.state === 'blocked', 'state blocked');
+    // Pay-group column resolves to the group NAME (via pay_group_id), not the stored code.
+    expect(calcRow.payGroup.name === `CC E2E Group B ${TAG}`, `payGroup.name ${calcRow.payGroup?.name} (expected group NAME)`);
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -380,11 +382,9 @@ export default async function run(h) {
     const at = d.assignedToYou;
     expect(at && at.runId === ctx.a1RunId, `assignedToYou ${at?.runId} !== A1`);
     expect(at.action === 'review_approval', 'action');
-    // The card resolves the run to human values (pay-group label, population, net) instead of leaking the
-    // raw run id into every slot (mockup: "Weekly Field · 84 employees · Net TTD …"). The pay-group value
-    // is the run's stored pay_group — create_run_tx writes the group CODE there (same field the register
-    // shows); resolving code→NAME page-wide is a separate follow-up. What matters here: it is NOT the run no.
-    expect(at.payGroupName === `CCA-${TAG.slice(-8)}`, `payGroupName ${at.payGroupName} (expected group code)`);
+    // The card resolves the run to human values (pay-group NAME via pay_group_id, population, net) instead
+    // of leaking the raw run id / group code (mockup: "Weekly Field · 84 employees · Net TTD …").
+    expect(at.payGroupName === `CC E2E Group A ${TAG}`, `payGroupName ${at.payGroupName} (expected group NAME)`);
     expect(at.payGroupName !== at.runNo, 'pay-group slot must not be the raw run number');
     expect(typeof at.employeeCount === 'number' && at.employeeCount >= 0, `employeeCount ${at.employeeCount}`);
     expect(at.netPayroll && typeof at.netPayroll.amount === 'number' && at.netPayroll.currency === 'TTD', `netPayroll ${JSON.stringify(at.netPayroll)}`);

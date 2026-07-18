@@ -81,11 +81,11 @@ function defaultLayout(): BoardLayout {
       // (readiness over impact). Run register is a fixed region below the board.
       // 24-col grid (finer resize). Wide left workspace (approvals over deadlines) + narrow right rail.
       main: [
-        defInst(W_ASSIGNED,   0,  0, 16, 23, 'wide'),
-        defInst(W_DEADLINES,  0, 23, 16, 16, 'wide'),
-        defInst(W_READINESS, 16,  0,  8, 24, 'standard'),
-        defInst(W_IMPACT,    16, 24,  8, 15, 'standard'),
-        defInst(W_REGISTER,   0, 39, 24, 40, 'hero'),
+        defInst(W_ASSIGNED,   0,  0,  9, 25, 'wide'),
+        defInst(W_DEADLINES,  9,  0,  7, 25, 'wide'),
+        defInst(W_READINESS, 16,  0,  8, 25, 'standard'),
+        defInst(W_REGISTER,   0, 25, 16, 41, 'hero'),
+        defInst(W_IMPACT,    16, 25,  8, 30, 'standard'),
       ],
     },
   };
@@ -422,7 +422,7 @@ export function PayrollCommandCenter(): VNode {
         <div class="pcc-state pcc-state--error">
           <i class="fa-solid fa-triangle-exclamation" />
           <h3>Couldn't load the command center</h3>
-          <p>{(q.error as Error)?.message ?? 'Please try again.'}</p>
+          <p>{(q.error)?.message ?? 'Please try again.'}</p>
           <button type="button" class="pcc-hbtn pcc-hbtn--primary" onClick={refresh}>Retry</button>
         </div>
       ) : (!data && q.isLoading) ? (

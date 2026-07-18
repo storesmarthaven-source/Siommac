@@ -92,9 +92,9 @@
 .pcc .portfolio-health{display:grid;grid-template-columns:42px minmax(300px,1.2fr) minmax(330px,1fr) minmax(230px,.85fr);min-height:80px;overflow:hidden;border:1px solid #e1e6ef;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.04);}
 .pcc .portfolio-health.is-healthy .health-urgency-rail{background:var(--green);}
 .pcc .portfolio-health.is-attention .health-urgency-rail{background:var(--amber);}
-.pcc .portfolio-health.is-at_risk .health-urgency-rail{background:var(--red);}
-.pcc .portfolio-health.is-critical .health-urgency-rail{background:#b91c1c;}
-.pcc .health-urgency-rail{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;writing-mode:vertical-rl;transform:rotate(180deg);background:var(--red);color:#fff;}
+.pcc .portfolio-health.is-at_risk .health-urgency-rail{background:#c93f46;}
+.pcc .portfolio-health.is-critical .health-urgency-rail{background:#a8323a;}
+.pcc .health-urgency-rail{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;writing-mode:vertical-rl;transform:rotate(180deg);background:#c93f46;color:#fff;}
 .pcc .health-urgency-rail i{transform:rotate(180deg);font-size:11px;}
 .pcc .health-urgency-rail span{font-size:9px;font-weight:850;letter-spacing:.1em;}
 .pcc .health-summary{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:10px 16px;background:#fff;}
