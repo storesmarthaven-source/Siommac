@@ -1585,10 +1585,6 @@ const SOURCE_RECORD_RESOLVERS: Record<string, SourceRecordResolver | undefined> 
     table: 'finance_expense_claims', columns: 'id, claim_no, purpose, status', sectionId: 's-finance-expenses',
     toRef: r => ({ ref: s(r.claim_no), title: s(r.purpose) || s(r.claim_no), status: s(r.status) }),
   },
-  finance_budgets: {
-    table: 'finance_budget_lines', columns: 'id, category, fiscal_year, label, status', sectionId: 's-finance-budgets',
-    toRef: r => ({ ref: `${s(r.category)} FY${s(r.fiscal_year)}`, title: s(r.label) || `${s(r.category)} FY${s(r.fiscal_year)}`, status: s(r.status) }),
-  },
   finance_disbursements: {
     table: 'finance_payroll_runs', columns: 'id, run_no, period_month, status', sectionId: 's-finance-disbursements',
     toRef: r => ({ ref: s(r.run_no), title: `Payroll run ${s(r.run_no)} (${s(r.period_month)})`, status: s(r.status) }),

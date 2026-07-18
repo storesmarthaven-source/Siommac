@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `5eed2f760fc64022a5660d78`
 
 Files: 42 | Symbols: 358 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 58 | E2E suites: 3
 
@@ -31,7 +31,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/auth/2fa/disable` | `-` | requireUser | `DisableSchema` | `netlify/functions/routes/auth2fa.ts:164` | useDisableTotp @ src/api/security.ts:177 | - |
 | `/api/auth/2fa/setup` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:80` | useStartTotpSetup @ src/api/security.ts:150 | - |
 | `/api/auth/2fa/status` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:59` | useTotpStatus @ src/api/security.ts:138 | - |
-| `/api/auth/password/change` | `-` | requireUser | `ChangePasswordSchema` | `netlify/functions/routes/auth.ts:711` | res @ src/components/sections/Profile/api.ts:216 | - |
+| `/api/auth/password/change` | `-` | requireUser | `ChangePasswordSchema` | `netlify/functions/routes/auth.ts:703` | res @ src/components/sections/Profile/api.ts:216 | - |
 | `/api/auth/security/policy` | `-` | requireUser | `-` | `netlify/functions/routes/adminSecurity.ts:201` | useSecurityPolicy @ src/api/security.ts:436 | accountSecurity, securityPolicy |
 | `/api/auth/step-up/options` | `-` | requireUser | `-` | `netlify/functions/routes/authStepUp.ts:45` | ensureStepUp @ src/hooks/useStepUp.tsx:64 | accountSecurity |
 | `/api/auth/step-up/verify` | `-` | requireUser | `VerifySchema` | `netlify/functions/routes/authStepUp.ts:85` | res @ src/hooks/useStepUp.tsx:97<br>res @ src/hooks/useStepUp.tsx:118 | accountSecurity |
@@ -56,7 +56,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:619` | updateLayoutMode @ src/components/nav/api.ts:44 | - |
 | `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:628` | res @ src/components/sections/Profile/api.ts:108 | - |
 | `/api/verify2fa` | `-` | - | `Verify2faExtSchema` | `netlify/functions/routes/auth.ts:350` | verify2faApi @ src/components/auth/api.ts:88 | - |
-| `/api/verifyPassword` | `-` | requireUser | `VerifyPasswordSchema` | `netlify/functions/routes/auth.ts:698` | - | - |
+| `/api/verifyPassword` | `-` | requireUser | `VerifyPasswordSchema` | `netlify/functions/routes/auth.ts:690` | - | - |
 | `/api/webauthn/auth/options` | `-` | - | `AuthOptionsSchema` | `netlify/functions/routes/webauthn.ts:289` | webauthnAuthOptions @ src/components/auth/api.ts:121 | accountSecurity |
 | `/api/webauthn/auth/verify` | `-` | - | `AuthVerifySchema` | `netlify/functions/routes/webauthn.ts:321` | webauthnAuthVerify @ src/components/auth/api.ts:140 | accountSecurity |
 | `/api/webauthn/credentials/delete` | `-` | - | `CredentialIdSchema` | `netlify/functions/routes/webauthn.ts:251` | useDeletePasskey @ src/api/security.ts:274 | accountSecurity |
@@ -137,7 +137,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:138` | `-` |
 | `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:25` | `-` |
 | `AuthGate` | function / component | `src/components/shared/AuthGate.tsx:93` | `-` |
-| `useCan` | function / hook | `src/lib/permissions.ts:1416` | `-` |
+| `useCan` | function / hook | `src/lib/permissions.ts:1326` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -177,7 +177,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/adminSecurity.ts` | 261 |
-| backend-route | `netlify/functions/routes/auth.ts` | 777 |
+| backend-route | `netlify/functions/routes/auth.ts` | 769 |
 | backend-route | `netlify/functions/routes/auth2fa.ts` | 277 |
 | backend-route | `netlify/functions/routes/authStepUp.ts` | 178 |
 | backend-route | `netlify/functions/routes/permissionApprovals.ts` | 290 |

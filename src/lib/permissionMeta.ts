@@ -993,129 +993,13 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'ui.widgets.packages.view':   { module: 'System', group: 'Widgets', label: 'View Widget Packages', description: 'Read installed widget packages (needed to render boards).', risk: 'low' },
   'ui.widgets.packages.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Packages', description: 'Install or uninstall org-wide widget packages.', risk: 'medium' },
 
-  // ── Finance Overview + Accounts Payable ──────────────────────────────────────
+  // ── Finance shared reference data ────────────────────────────────────────────
   'finance.overview.view': {
-    module: 'Finance', group: 'Overview',
-    label: 'View Finance Overview',
-    description: 'View the finance command dashboard (spend, approvals, budgets, deadlines).',
+    module: 'Finance', group: 'Shared References',
+    label: 'View Shared Finance References',
+    description: 'Read shared cost-centre and employee reference data used by active Finance workflows.',
     risk: 'low',
   },
-  'finance.overview.export': {
-    module: 'Finance', group: 'Overview',
-    label: 'Export Dashboard Data',
-    description: 'Export finance overview data to CSV (audited data egress).',
-    risk: 'high',
-  },
-  'finance.overview.kpi.drill': {
-    module: 'Finance', group: 'Overview',
-    label: 'Drill Into KPI Cards',
-    description: 'Click through KPI cards to see the underlying filtered register.',
-    risk: 'low',
-  },
-  'finance.overview.approvals.inline': {
-    module: 'Finance', group: 'Overview',
-    label: 'Inline Approve/Reject',
-    description: 'Approve or reject items directly in the overview approvals queue (SoD enforced).',
-    risk: 'high',
-  },
-  'finance.ap.view': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'View Accounts Payable',
-    description: 'View vendor bills, vendors, payments and the AP aging register.',
-    risk: 'low',
-  },
-  'finance.ap.manage': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Manage Accounts Payable (legacy alias)',
-    description: 'Legacy coarse alias kept for role-bundle mapping. Granular keys govern new routes.',
-    risk: 'medium',
-  },
-  'finance.ap.approve': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Approve Bills (legacy alias)',
-    description: 'Legacy coarse alias kept for role-bundle mapping. finance.ap.bills.approve governs new routes.',
-    risk: 'medium',
-  },
-  'finance.ap.vendors.create': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Create Vendor',
-    description: 'Create a new supplier/vendor in the AP vendor register.',
-    risk: 'medium',
-  },
-  'finance.ap.vendors.update': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Edit Vendor',
-    description: 'Edit an existing vendor profile including banking and payment terms.',
-    risk: 'medium',
-  },
-  'finance.ap.bills.create': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Create Bill Draft',
-    description: 'Create a new AP bill draft (multi-line, with GL/cost-centre/tax).',
-    risk: 'medium',
-  },
-  'finance.ap.bills.edit': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Edit Draft Bill',
-    description: 'Edit an AP bill while it is in draft status.',
-    risk: 'medium',
-  },
-  'finance.ap.bills.submit': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Submit Bill for Approval',
-    description: 'Submit a draft bill into the approval workflow.',
-    risk: 'medium',
-  },
-  'finance.ap.bills.approve': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Approve/Reject Bill',
-    description: 'Approve or reject submitted bills. Segregation of duties: creator cannot approve their own bill.',
-    risk: 'high',
-  },
-  'finance.ap.bills.void': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Void Bill',
-    description: 'Void an AP bill in any non-paid state. Segregation of duties enforced.',
-    risk: 'high',
-  },
-  'finance.ap.payment.record': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Record Payment',
-    description: 'Record a payment against an approved bill (full or partial).',
-    risk: 'high',
-  },
-  'finance.ap.payment.run.manage': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Manage Payment Runs',
-    description: 'Create and manage batch payment runs against approved bills.',
-    risk: 'high',
-  },
-  'finance.ap.payment.run.process': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Process Payment Run',
-    description: 'Execute/process a payment run (marks bills paid). Segregation of duties: creator cannot process.',
-    risk: 'high',
-  },
-  'finance.ap.duplicate.resolve': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Resolve Duplicate Risk',
-    description: 'Review and resolve duplicate bill risk flags (mark duplicate or ignore with reason).',
-    risk: 'high',
-  },
-  'finance.ap.reports.export': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Export AP Reports',
-    description: 'Export AP registers and reports to CSV (audited data egress).',
-    risk: 'high',
-  },
-  'finance.ap.bills.import': {
-    module: 'Finance', group: 'Accounts Payable',
-    label: 'Import Bills',
-    description: 'Bulk import AP bills from a CSV or XLSX file.',
-    risk: 'high',
-  },
-
-  // ── Finance statutory configuration ──────────────────────────────────────────
   'finance.statutory.view': {
     module: 'Finance', group: 'Statutory Configuration',
     label: 'View Statutory Versions',
@@ -1529,57 +1413,6 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'medium',
   },
 
-  // ── Finance Budgets (F5) ─────────────────────────────────────────────────────
-  'finance.budgets.view': {
-    module: 'Finance', group: 'Budgets',
-    label: 'View Budgets',
-    description: 'View budget lines, actuals, and variance for accessible cost centres.',
-    risk: 'low',
-  },
-  'finance.budgets.manage': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Manage Budgets',
-    description: 'Create, update, and delete budget lines. Finance staff and manager.',
-    risk: 'medium',
-  },
-  'finance.budgets.reports.view': {
-    module: 'Finance', group: 'Budgets',
-    label: 'View Budget Reports',
-    description: 'View budget variance and summary reports.',
-    risk: 'low',
-  },
-  'finance.budgets.reports.export': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Export Budget Reports',
-    description: 'Export budget reports as CSV/PDF (audited data egress). Finance Manager or Admin only.',
-    risk: 'medium',
-  },
-  'finance.budgets.bulk_upsert': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Bulk Budget Entry',
-    description: 'Create or update many budget lines in one submit (bulk entry). Finance Manager or Admin.',
-    risk: 'medium',
-  },
-  'finance.budgets.copy_last_year': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Copy Last-Year Budget',
-    description: 'Copy prior-year budget lines into a new fiscal year with optional adjustment. Finance Manager or Admin.',
-    risk: 'medium',
-  },
-  'finance.budgets.attachments.upload': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Upload Budget Documents',
-    description: 'Upload supporting documents to a budget line (Wave 2B).',
-    risk: 'low',
-  },
-  'finance.budgets.attachments.delete': {
-    module: 'Finance', group: 'Budgets',
-    label: 'Delete Budget Documents',
-    description: 'Remove supporting documents from a budget line (Wave 2B).',
-    risk: 'low',
-  },
-
-  // Statutory Remittances & Filing
   'finance.remittances.view': {
     module: 'Finance', group: 'Statutory Remittances',
     label: 'View Remittances',

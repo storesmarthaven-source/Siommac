@@ -1,5 +1,7 @@
 # SIOMAC Finance — Wave 2 Build Spec (AP + Overview enterprise completion)
 
+> **Superseded.** Accounts Payable and the combined Finance Overview were retired on 2026-07-18. This document is retained as historical design evidence only. Current authority: `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
+
 > Authoritative, **reconciled**, file-chunked build plan for Wave 2. Rolls the user's
 > "SIOMAC Finance — Enterprise Functionality Build Spec" (2026-07-07, scope: Finance
 > Overview + Accounts Payable) into the actual repo. The user's raw narrative spec is

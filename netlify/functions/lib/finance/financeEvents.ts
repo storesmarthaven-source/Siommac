@@ -9,9 +9,8 @@
  *   notifyUsersByRole            — push in-app notifications to all users with a given role
  *   createFinanceRecordThread    — create a message thread linked to a finance record
  *
- * All six finance pages (AP, AR, Disbursements, Payroll, Expenses, Budgets) import
- * from here so the notification / handoff / thread patterns stay consistent and
- * are not duplicated module-by-module.
+ * Active Finance workflows reuse these helpers so notification, handoff, and
+ * thread behavior stays consistent without module-by-module duplication.
  *
  * NEVER throws — all errors are caught and logged so that a side-effect failure
  * never rolls back the primary business mutation.

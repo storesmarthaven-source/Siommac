@@ -9,9 +9,7 @@
  *   useCostCentrePicker(search)— re-export from pickers.ts (avoids duplication)
  *   useApprovedRunPicker(s)    — approved payroll run combobox
  *   useAuthorityPicker()       — static remittance authority list
- *   useBudgetCategoryPicker(s) — budget category combobox
  *
- * All hooks gate on finance.ap.view (minimum Finance access — enforced server-side).
  * Picker lists: 5 min staleTime (config changes rarely).
  * Name resolution: 1 min staleTime (names change rarely but can change).
  */
@@ -62,11 +60,6 @@ export interface AuthorityOption {
   value: 'paye_bir' | 'nis_nibtt' | 'health_surcharge';
   label: string;
   description: string;
-}
-
-export interface BudgetCategoryOption {
-  value: string;
-  label: string;
 }
 
 // ── Helper ────────────────────────────────────────────────────────────────────
@@ -161,20 +154,6 @@ export function useAuthorityPicker() {
     queryKey: financeQueryKeys.pickerAuthorities(),
     queryFn:  ({ signal }: QueryFunctionContext) =>
       post<AuthorityOption[]>('finance/lookups/authorities', {}, signal),
-    staleTime: STALE_5M,
-  });
-}
-
-/** Budget category autocomplete (live distinct values + built-in fallbacks). */
-export function useBudgetCategoryPicker(search?: string) {
-  return useQuery({
-    queryKey: financeQueryKeys.pickerBudgetCategories(search),
-    queryFn:  ({ signal }: QueryFunctionContext) =>
-      post<BudgetCategoryOption[]>(
-        'finance/lookups/budget-categories',
-        search ? { search } : {},
-        signal,
-      ),
     staleTime: STALE_5M,
   });
 }

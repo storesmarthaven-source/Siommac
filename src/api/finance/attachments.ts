@@ -1,25 +1,6 @@
 /**
- * src/api/finance/attachments.ts
- *
- * TanStack Query hooks for Finance Wave 2B shared attachment endpoints.
- * Wraps POST /api/finance/attachments/* (routes/financeAttachments.ts).
- *
- * Flow:
- *   1. Call useFinanceAttachmentUploadUrl() → get presigned URL + storagePath
- *   2. Client PUTs raw bytes to the presigned URL (outside this hook)
- *   3. Call useCompleteFinanceAttachment() with the storagePath → DB row committed
- *   4. useFinanceAttachments() lists all attachments for the entity
- *   5. useFinanceAttachmentSignedUrl() fetches a short-lived read URL for a file
- *   6. useDeleteFinanceAttachment() removes the attachment
- *
- * Entity types: 'expense_claim' | 'remittance' | 'disbursement' | 'budget_line' | 'payroll_run'
- *
- * Cache key mapping (from keys.ts):
- *   expense_claim  → financeQueryKeys.expenseAttachments(entityId)
- *   remittance     → financeQueryKeys.remittanceAttachments(entityId)
- *   disbursement   → financeQueryKeys.disbursementAttachments(entityId)
- *   budget_line    → financeQueryKeys.budgetAttachments(entityId)
- *   payroll_run    → financeQueryKeys.payrollAttachments(entityId)
+ * TanStack Query hooks for shared Finance attachment endpoints.
+ * Supported parents: expense claims, remittances, disbursements, payroll runs.
  */
 
 import {
@@ -37,7 +18,6 @@ export type FinanceEntityType =
   | 'expense_claim'
   | 'remittance'
   | 'disbursement'
-  | 'budget_line'
   | 'payroll_run';
 
 export interface AttachmentDto {
@@ -82,7 +62,6 @@ export function attachmentCacheKey(entityType: FinanceEntityType, entityId: stri
     case 'expense_claim':  return financeQueryKeys.expenseAttachments(entityId);
     case 'remittance':     return financeQueryKeys.remittanceAttachments(entityId);
     case 'disbursement':   return financeQueryKeys.disbursementAttachments(entityId);
-    case 'budget_line':    return financeQueryKeys.budgetAttachments(entityId);
     case 'payroll_run':    return financeQueryKeys.payrollAttachments(entityId);
   }
 }

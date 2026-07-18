@@ -1,39 +1,8 @@
-// routes/financeAttachments.ts — Finance Wave 2B attachment endpoints
-// Mounted at /api/finance in api.ts. POST-only, JWT-gated via requirePermission.
-// Envelope: body.args ?? {}.
-//
-// Routes:
-//   POST /finance/attachments/upload-url   — get presigned PUT URL
-//   POST /finance/attachments/complete     — commit metadata row after upload
-//   POST /finance/attachments/list         — list attachments for an entity
-//   POST /finance/attachments/signed-url   — get signed read URL for a file
-//   POST /finance/attachments/delete       — remove attachment + storage object
-//
-// Entity types: expense_claim | remittance | disbursement | budget_line | payroll_run
-//
-// Permission model (reuse-first per §0.3.6):
-//   upload-url / complete:
-//     expense_claim   → finance.expenses.receipt.upload  (NEW — reported)
-//     remittance      → finance.remittances.receipt.upload (NEW — reported)
-//     disbursement    → finance.disbursement.manage      (existing)
-//     budget_line     → finance.budgets.manage            (existing)
-//     payroll_run     → finance.payroll.run.manage        (existing)
-//   list / signed-url:
-//     expense_claim   → finance.expenses.view             (existing)
-//     remittance      → finance.remittances.view          (existing)
-//     disbursement    → finance.disbursement.view         (existing)
-//     budget_line     → finance.budgets.view              (existing)
-//     payroll_run     → finance.payroll.view_all          (existing)
-//   delete:
-//     expense_claim   → finance.expenses.manage           (existing)
-//     remittance      → finance.remittances.manage        (existing)
-//     disbursement    → finance.disbursement.manage       (existing)
-//     budget_line     → finance.budgets.manage            (existing)
-//     payroll_run     → finance.payroll.run.manage        (existing)
-//
-// NEW keys enforced here (not yet in PERMISSION_KEYS — orchestrator to catalogue):
-//   finance.expenses.receipt.upload
-//   finance.remittances.receipt.upload
+/**
+ * Shared attachment endpoints for expense claims, remittances,
+ * disbursements, and payroll runs. Accounts Payable and Budgeting are
+ * intentionally not accepted entity types.
+ */
 
 import { Hono } from 'hono';
 import { requirePermission } from '../lib/auth';
@@ -43,25 +12,21 @@ import {
   getExpenseAttachmentUploadUrl,
   getRemittanceAttachmentUploadUrl,
   getDisbursementAttachmentUploadUrl,
-  getBudgetAttachmentUploadUrl,
   getPayrollAttachmentUploadUrl,
   // Commit
   commitExpenseAttachment,
   commitRemittanceAttachment,
   commitDisbursementAttachment,
-  commitBudgetAttachment,
   commitPayrollAttachment,
   // List
   listExpenseAttachments,
   listRemittanceAttachments,
   listDisbursementAttachments,
-  listBudgetAttachments,
   listPayrollAttachments,
   // Delete
   deleteExpenseAttachment,
   deleteRemittanceAttachment,
   deleteDisbursementAttachment,
-  deleteBudgetAttachment,
   deletePayrollAttachment,
   // Signed URL (shared)
   getFinanceAttachmentSignedUrl,
@@ -82,7 +47,7 @@ function fail(c: { json: (o: unknown, s?: number) => Response }, e: unknown): Re
 }
 
 // Zod schemas
-const EntityTypeEnum = z.enum(['expense_claim', 'remittance', 'disbursement', 'budget_line', 'payroll_run']);
+const EntityTypeEnum = z.enum(['expense_claim', 'remittance', 'disbursement', 'payroll_run']);
 
 const UploadUrlSchema = z.object({
   entityType: EntityTypeEnum,
@@ -122,21 +87,18 @@ const UPLOAD_PERMS: Record<string, string> = {
   expense_claim: 'finance.expenses.receipt.upload',
   remittance:    'finance.remittances.receipt.upload',
   disbursement:  'finance.disbursement.manage',
-  budget_line:   'finance.budgets.manage',
   payroll_run:   'finance.payroll.run.manage',
 };
 const VIEW_PERMS: Record<string, string> = {
   expense_claim: 'finance.expenses.view',
   remittance:    'finance.remittances.view',
   disbursement:  'finance.disbursement.view',
-  budget_line:   'finance.budgets.view',
   payroll_run:   'finance.payroll.view_all',
 };
 const MANAGE_PERMS: Record<string, string> = {
   expense_claim: 'finance.expenses.manage',
   remittance:    'finance.remittances.manage',
   disbursement:  'finance.disbursement.manage',
-  budget_line:   'finance.budgets.manage',
   payroll_run:   'finance.payroll.run.manage',
 };
 
@@ -152,7 +114,6 @@ router.post('/attachments/upload-url', async c => {
       case 'expense_claim':  result = await getExpenseAttachmentUploadUrl(v.data.fileName, v.data.mimeType); break;
       case 'remittance':     result = await getRemittanceAttachmentUploadUrl(v.data.fileName, v.data.mimeType); break;
       case 'disbursement':   result = await getDisbursementAttachmentUploadUrl(v.data.fileName, v.data.mimeType); break;
-      case 'budget_line':    result = await getBudgetAttachmentUploadUrl(v.data.fileName, v.data.mimeType); break;
       case 'payroll_run':    result = await getPayrollAttachmentUploadUrl(v.data.fileName, v.data.mimeType); break;
     }
     return c.json({ success: true, data: result });
@@ -177,7 +138,6 @@ router.post('/attachments/complete', async c => {
       case 'expense_claim':  data = await commitExpenseAttachment(v.data.entityId, input, user.id); break;
       case 'remittance':     data = await commitRemittanceAttachment(v.data.entityId, input, user.id); break;
       case 'disbursement':   data = await commitDisbursementAttachment(v.data.entityId, input, user.id); break;
-      case 'budget_line':    data = await commitBudgetAttachment(v.data.entityId, input, user.id); break;
       case 'payroll_run':    data = await commitPayrollAttachment(v.data.entityId, input, user.id); break;
     }
     return c.json({ success: true, data });
@@ -196,7 +156,6 @@ router.post('/attachments/list', async c => {
       case 'expense_claim':  data = await listExpenseAttachments(v.data.entityId); break;
       case 'remittance':     data = await listRemittanceAttachments(v.data.entityId); break;
       case 'disbursement':   data = await listDisbursementAttachments(v.data.entityId); break;
-      case 'budget_line':    data = await listBudgetAttachments(v.data.entityId); break;
       case 'payroll_run':    data = await listPayrollAttachments(v.data.entityId); break;
     }
     return c.json({ success: true, data });
@@ -226,7 +185,6 @@ router.post('/attachments/delete', async c => {
       case 'expense_claim':  await deleteExpenseAttachment(v.data.id, v.data.entityId, user.id); break;
       case 'remittance':     await deleteRemittanceAttachment(v.data.id, v.data.entityId, user.id); break;
       case 'disbursement':   await deleteDisbursementAttachment(v.data.id, v.data.entityId, user.id); break;
-      case 'budget_line':    await deleteBudgetAttachment(v.data.id, v.data.entityId, user.id); break;
       case 'payroll_run':    await deletePayrollAttachment(v.data.id, v.data.entityId, user.id); break;
     }
     return c.json({ success: true, data: null });

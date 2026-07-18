@@ -2,17 +2,6 @@
   "_comment": "waived = routes backing BUILT pages that lack an E2E suite (real debt — write suites, remove entries). deferred = routes whose feature/page is not built out yet; cover them WHEN the module is built (see each group's reason). The gate fails on any route that is neither covered, waived, nor deferred.",
   "generatedAt": "2026-07-11T16:57:32.332Z",
   "deferred": {
-    "finance_ap_bill_actions": {
-      "reason": "AP supplier-bill reject/void/duplicate-check/comments/audit — backend ahead of the FE. Cover WHEN the Accounts Payable bills page is built out (walk every control per Feature Completeness, then add the E2E).",
-      "routes": [
-        "/api/finance/ap/bills/audit",
-        "/api/finance/ap/bills/check-duplicate",
-        "/api/finance/ap/bills/comments/create",
-        "/api/finance/ap/bills/comments/list",
-        "/api/finance/ap/bills/reject",
-        "/api/finance/ap/bills/void"
-      ]
-    },
     "communications_message_actions": {
       "reason": "recordExport (stamp a message-history export under a compliance grant) — the FE compliance-export action isn't wired yet. Cover WHEN the compliance export UI is built. NOTE: mute / draft-delete / recordThread / requestThreadAccess / attachments-get-url were previously parked here but are now wired AND E2E-covered in communications.mjs.",
       "routes": [
@@ -75,11 +64,6 @@
     "/api/deleteProjectSite",
     "/api/deleteTicket",
     "/api/disable2fa",
-    "/api/finance/budgets/attachments/complete",
-    "/api/finance/budgets/attachments/delete",
-    "/api/finance/budgets/attachments/list",
-    "/api/finance/budgets/attachments/signed-url",
-    "/api/finance/budgets/attachments/upload-url",
     "/api/finance/disbursements/audit-log",
     "/api/finance/disbursements/finance-audit-log",
     "/api/finance/disbursements/reports/bank-account-readiness",

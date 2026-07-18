@@ -2,8 +2,9 @@
  * src/components/sections/Finance/module.ts
  *
  * Finance feature module (ModuleDefinition). Declares the "Finance" sidebar group
- * and its sub-modules — Statutory Configuration, Payroll, Statutory Remittances,
- * and My Payslips (employee self-service, F3) — then self-registers at import.
+ * and its focused payroll sub-modules — Statutory Configuration, Payroll,
+ * Statutory Remittances, and My Payslips (employee self-service, F3) — then
+ * self-registers at import.
  * Finance owns the statutory treatment (NIS / PAYE / Health Surcharge versions),
  * the pay-component catalogue, payroll runs / payslips / exports, and remittances.
  */
@@ -12,20 +13,6 @@ import { registerModule, type ModuleDefinition, type ModuleNavItem } from '@lib/
 import { mountFinanceSection, unmountFinanceSection } from './mount';
 
 const FINANCE_ROOT_ID = 'preact-finance-root';
-
-const OVERVIEW_ITEM: ModuleNavItem = {
-  id: 's-finance-overview',
-  label: 'Overview',
-  icon: 'fa-sack-dollar',
-  sub: 'Finance dashboard — remittances, expenses, budgets & disbursements (customizable board)',
-};
-
-const PAYABLES_ITEM: ModuleNavItem = {
-  id: 's-finance-payables',
-  label: 'Accounts Payable',
-  icon: 'fa-file-invoice-dollar',
-  sub: 'Vendor bills, approvals and payments',
-};
 
 const STATUTORY_ITEM: ModuleNavItem = {
   id: 's-finance-statutory',
@@ -75,13 +62,6 @@ const EXPENSES_ITEM: ModuleNavItem = {
   sub: 'Employee expense claims with cost-centre allocation and reimbursement tracking',
 };
 
-const BUDGETS_ITEM: ModuleNavItem = {
-  id: 's-finance-budgets',
-  label: 'Budgeting',
-  icon: 'fa-chart-pie',
-  sub: 'Budget lines per cost centre / fiscal year, Budget-vs-Actual variance tracking',
-};
-
 const DISBURSEMENTS_ITEM: ModuleNavItem = {
   id: 's-finance-disbursements',
   label: 'Bank Disbursements',
@@ -99,7 +79,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [PAYROLL_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, STATUTORY_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

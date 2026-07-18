@@ -271,7 +271,7 @@ Each contributes a nav group + a mounted section.
 |---|---|---|---|---|
 | `access-control` | Access Control | superadmin | `s-access-control` | Overview, User Access, Roles, Module Coverage, Approvals, Audit Log, Sessions, Payslip Designer |
 | `hr` | Human Resources | admin, manager, superadmin | `s-hr` | Employee Master, Onboarding, Organization, Documents, Offboarding, Leave & Absence, Transfers & Promotions, Attendance & Timekeeping |
-| `finance` | Finance | admin, superadmin | `s-finance` | Overview, Accounts Payable, Statutory Configuration, Payroll, Payroll Setup, Payslip Designer, Statutory Remittances, My Payslips |
+| `finance` | Finance | admin, superadmin | `s-finance` | Payroll, Payroll Setup, Payslip Designer, Statutory Configuration, Statutory Remittances, Statutory Forms, Bank Disbursements, My Payslips, Expense Claims |
 | `hse` | HSE | admin, manager, superadmin | `s-hse` | HSE Dashboard, functional areas, PPE Manager |
 | `calendar` | (flat, `overview`) | superadmin, admin, manager, employee | `s-calendar` | Calendar & Tasks |
 
@@ -299,7 +299,7 @@ it revokes + nav ids it hides.
 | Canonical module | Permission modules covered | Nav to hide (module + legacy) | Note |
 |---|---|---|---|
 | **Human Resources** | HR, Employees, Attendance & Leave | `hr` module (`s-hr*`, incl. `s-hr-leave`) + manager `s-adm-leaves` + **ESS `s-emp-leave`** + legacy `s-adm-employees/departments/attendance` | `eligibleRoles` ⊇ **employee** (ESS-only); Leave is an HR **submodule** — see A8 |
-| **Finance** | Finance | `finance` module *minus* payroll sub-items (Overview, Accounts Payable, Statutory Config) + legacy `s-adm-rates` | Payroll split out ↓ (D-A1 = separate) |
+| **Finance** | Finance | active `finance` module sub-items + legacy `s-adm-rates` | Payroll split out below (D-A1 = separate); AP and Budgeting are retired |
 | **Payroll** | Payroll | finance payroll sub-items (`s-finance-payroll`, `s-finance-payroll-setup`, `s-finance-statutory-remit`, `s-finance-mypayslips`, Payslip Designer) + legacy `s-payroll` | own switch; hides only payroll surfaces |
 | **HSE** | HSE | `hse` module (`s-hse`) | clean |
 | **Sites & Map** | Sites & Map | `s-adm-projects`, `s-projectMap` | no feature module (static only) |

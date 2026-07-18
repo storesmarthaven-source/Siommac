@@ -7,7 +7,6 @@
  *   CostCentrePicker     — cost-centre search (useCostCentrePicker / useCostCentres)
  *   ApprovedRunPicker    — approved payroll run search (useApprovedRunPicker)
  *   AuthorityPicker      — remittance authority static list (useAuthorityPicker)
- *   BudgetCategoryPicker — budget category search (useBudgetCategoryPicker)
  *
  * Each picker:
  *   - Debounces its own search (300 ms) so it doesn't fire on every keystroke
@@ -33,7 +32,6 @@ import {
   useCostCentrePicker,
   useApprovedRunPicker,
   useAuthorityPicker,
-  useBudgetCategoryPicker,
 } from '@api/finance/lookups';
 import type { CostCentreOption } from '@api/finance/pickers';
 
@@ -245,52 +243,6 @@ export function AuthorityPicker({
       value={value}
       onChange={onChange}
       loading={isLoading}
-      placeholder={placeholder}
-      error={error}
-      disabled={disabled}
-      required={required}
-    />
-  );
-}
-
-// ── BudgetCategoryPicker ──────────────────────────────────────────────────────
-
-/**
- * Budget category picker — distinct categories from live data + built-in fallbacks.
- * Replaces free-text category input in the budget upsert wizard.
- */
-export function BudgetCategoryPicker({
-  label,
-  value,
-  onChange,
-  error,
-  disabled,
-  required,
-  placeholder = 'Search categories…',
-  id,
-}: BasePickerProps): VNode {
-  const [search, setSearch] = useState('');
-  const debouncedSearch = useDebounce(search, 300);
-  const { data, isLoading } = useBudgetCategoryPicker(debouncedSearch || undefined);
-
-  const options: EntityOption[] = (data ?? []).map(c => ({
-    value: c.value,
-    label: c.label,
-  }));
-
-  const handleSearch = useCallback((q: string) => {
-    setSearch(q);
-  }, []);
-
-  return (
-    <EntityPicker
-      id={id}
-      label={label}
-      options={options}
-      value={value}
-      onChange={onChange}
-      loading={isLoading}
-      onSearch={handleSearch}
       placeholder={placeholder}
       error={error}
       disabled={disabled}

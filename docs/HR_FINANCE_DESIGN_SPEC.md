@@ -1,5 +1,7 @@
 # SIOMAC — HR & Finance Implementation Spec (v3, build-ready)
 
+> **Finance scope superseded.** Accounts Payable, Budgeting, and full-accounting surfaces are out of scope as of 2026-07-18. Retain this file for historical UI context only; follow `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
+
 **Supersedes v2.** This is the authoritative page-by-page build document. It adopts the approved 5-page
 visual blueprint (Finance Overview, Accounts Payable, Accounts Receivable, General Ledger, Fixed Assets —
 see the mockup images) as the UI source of truth, and grounds it in how this codebase actually works so

@@ -19,8 +19,6 @@
  * Allowlist rationale:
  *   lib/workflow/service.ts
  *     -- Canonical definition and export.  Always allowed.
- *   lib/finance/accountsPayable.ts
- *     -- Direct caller; waiver dies with the AP module removal (D2).
  *   (moduleServiceAdapter.ts waiver REMOVED by slice D1 — the HSE callers now
  *    go through workflow_create_and_start_tx and the Stage-3 path is deleted.)
  *
@@ -37,8 +35,6 @@ const FUNCS_DIR  = join(ROOT, 'netlify/functions');
 const ALLOWLIST = new Set<string>([
   // Canonical definition -- always allowed.
   'lib/workflow/service.ts',
-  // Direct caller; waiver dies with the AP module removal.
-  'lib/finance/accountsPayable.ts',
 ]);
 
 /** Walk a directory recursively and return all .ts file paths. */

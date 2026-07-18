@@ -1,5 +1,7 @@
 # Wave 2 Agent Fleet Brief — launch from a FRESH session
 
+> **Historical execution brief.** Do not dispatch Accounts Payable, Budgeting, or combined Finance Overview work. Current authority: `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
+
 > Purpose: finish **Wave 2A (AP + Overview)** chunks 7–13 and start **Wave 2B** with a background
 > agent fleet. **Launch these from a fresh, quiet session** — agents die when the launching context is
 > deep/busy (happened twice; see `docs/OVERNIGHT_BUILD_HANDOFF.md`). After launching, the orchestrator

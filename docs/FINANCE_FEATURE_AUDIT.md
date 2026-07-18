@@ -1,5 +1,7 @@
 # SIOMAC Finance — Feature Functionality Audit (for Codex)
 
+> **Historical only.** Accounts Payable and the combined Finance Overview were retired on 2026-07-18. Do not implement this audit. Current authority: `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
+
 Honest, per-control audit of the two built Aurora pages (Finance Overview + Accounts Payable). Goal:
 turn every stub / navigate-only / basic dialog into a real enterprise feature. Nothing here is padded —
 if it only navigates or only toasts, it says so.

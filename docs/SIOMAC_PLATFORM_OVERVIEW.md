@@ -312,13 +312,12 @@ Letting employees claim back money they have spent for work.
 - Claims go through an approval workflow before reimbursement.
 - Finance tracks which claims have been reimbursed and which are outstanding.
 
-### Budgeting
+### External Accounting Boundary
 
-Knowing whether you are spending what you planned.
-
-- Set budget lines per cost centre and per fiscal period.
-- Budget-vs-Actual variance tracking compares what was planned against what was actually spent (from expense claims and payroll).
-- Reports highlight where spending is over or under budget.
+Accounts Payable, Budgeting, General Ledger, and financial statements belong in
+dedicated accounting software. SIOMAC may exchange approved payroll, remittance,
+disbursement, and reimbursable-expense data with that system, but does not duplicate
+its accounting modules.
 
 ### Employee Self-Service (My Payslips)
 
