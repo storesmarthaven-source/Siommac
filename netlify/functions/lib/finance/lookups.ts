@@ -1,7 +1,17 @@
 /**
- * Shared lookup helpers for payroll, remittance, disbursement, and expense
- * workflows. Results are bounded for picker and display use.
- * app_users.id remains TEXT throughout.
+ * netlify/functions/lib/finance/lookups.ts
+ *
+ * Wave 2B Phase 0 — shared lookup helpers consumed by all six 2B Finance pages.
+ *
+ * Functions exported:
+ *   resolveEmployees(ids)         — bulk-resolve app_users IDs → name/no/dept
+ *   listEmployeesForPicker(s)     — employee autocomplete options (active + inactive)
+ *   listApprovedPayrollRuns(s)    — approved/locked/exported runs for the run picker
+ *   listAuthorities()             — static remittance authority list
+ *   listBudgetCategories(s)       — distinct categories from finance_budget_lines
+ *
+ * All list functions return lightweight DTOs sized for autocomplete use (≤ 50 rows).
+ * `app_users.id` is TEXT throughout (not UUID).
  */
 
 import { sb } from '../db';
@@ -46,6 +56,11 @@ export interface AuthorityOption {
   value: RemittanceAuthority;
   label: string;
   description: string;
+}
+
+export interface BudgetCategoryOption {
+  value: string;
+  label: string;
 }
 
 // ── Internal DB row shapes ────────────────────────────────────────────────────
@@ -249,4 +264,68 @@ export function listAuthorities(): AuthorityOption[] {
       description: 'Monthly Health Surcharge deductions (employee only)',
     },
   ];
+}
+
+// ── Budget categories ─────────────────────────────────────────────────────────
+
+/**
+ * Built-in fallback budget categories displayed when the live DB has no rows yet.
+ * Label is title-cased for display; value is the DB storage key.
+ */
+const FALLBACK_CATEGORIES: BudgetCategoryOption[] = [
+  { value: 'salaries',          label: 'Salaries & Wages' },
+  { value: 'benefits',          label: 'Employee Benefits' },
+  { value: 'travel',            label: 'Travel & Transport' },
+  { value: 'office',            label: 'Office & Supplies' },
+  { value: 'professional_fees', label: 'Professional Fees' },
+  { value: 'utilities',         label: 'Utilities' },
+  { value: 'marketing',         label: 'Marketing & Advertising' },
+  { value: 'repairs',           label: 'Repairs & Maintenance' },
+  { value: 'equipment',         label: 'Equipment & Machinery' },
+  { value: 'it',                label: 'IT & Technology' },
+  { value: 'training',          label: 'Training & Development' },
+  { value: 'other',             label: 'Other' },
+];
+
+/**
+ * Return distinct budget category options.
+ * Live categories (from finance_budget_lines) are shown first so existing values
+ * always appear even if they aren't in the fallback list.
+ * Falls back to the built-in list when the DB is empty.
+ */
+export async function listBudgetCategories(search?: string): Promise<BudgetCategoryOption[]> {
+  // Fetch distinct categories from live data (no error throw — cosmetic)
+  const { data } = await sb
+    .from('finance_budget_lines')
+    .select('category')
+    .order('category', { ascending: true });
+
+  const seen = new Set<string>();
+  const live: BudgetCategoryOption[] = [];
+  for (const r of (data ?? []) as Array<{ category: string }>) {
+    if (!seen.has(r.category)) {
+      seen.add(r.category);
+      // Humanise the stored key: underscores → spaces, title-case each word
+      const label = r.category
+        .replace(/_/g, ' ')
+        .replace(/\b\w/g, c => c.toUpperCase());
+      live.push({ value: r.category, label });
+    }
+  }
+
+  // Merge live (keeps DB values first) then fallbacks not already present
+  const merged = [
+    ...live,
+    ...FALLBACK_CATEGORIES.filter(f => !seen.has(f.value)),
+  ];
+
+  const filtered = search
+    ? merged.filter(
+        c =>
+          c.label.toLowerCase().includes(search.toLowerCase()) ||
+          c.value.toLowerCase().includes(search.toLowerCase()),
+      )
+    : merged;
+
+  return filtered.slice(0, 50);
 }

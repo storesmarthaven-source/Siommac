@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	81	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	94	
-app	variable	platform	false		netlify/functions/api.ts	103	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	251	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	282	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	291	
-handler	function	platform	true		netlify/functions/api.ts	295	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	84	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	97	
+app	variable	platform	false		netlify/functions/api.ts	106	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	257	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	288	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	297	
+handler	function	platform	true		netlify/functions/api.ts	301	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -70,9 +70,9 @@ jwtMiddleware	function	security	false		netlify/functions/lib/auth.ts	334
 requireUser	function	security	false		netlify/functions/lib/auth.ts	348	
 requireRole	function	security	false		netlify/functions/lib/auth.ts	373	
 loadUserOverrides	function	security	false		netlify/functions/lib/auth.ts	384	
-requirePermission	function	security	false		netlify/functions/lib/auth.ts	412	
-userCan	function	security	false		netlify/functions/lib/auth.ts	438	
-log_	function	security	false		netlify/functions/lib/auth.ts	450	
+requirePermission	function	security	false		netlify/functions/lib/auth.ts	402	
+userCan	function	security	false		netlify/functions/lib/auth.ts	428	
+log_	function	security	false		netlify/functions/lib/auth.ts	440	
 AdapterContext	interface	platform	true		netlify/functions/lib/calendarAdapters.ts	20	
 MONTHS	array	platform	false		netlify/functions/lib/calendarAdapters.ts	28	
 deadline	function	platform	false		netlify/functions/lib/calendarAdapters.ts	31	
@@ -158,33 +158,33 @@ Row	interface	communications	false		netlify/functions/lib/communications.ts	1543
 SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1571	
 s	function	communications	false		netlify/functions/lib/communications.ts	1578	
 SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1583	
-resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1607	
-sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1634	
-ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1645	
-listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1658	
-PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1671	listThreadActivity
-PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1672	listThreadActivity
-PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1673	listThreadActivity
-MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1739	
-createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1752	
-CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1760	
-createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1773	
-getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1809	
-markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1850	
-archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1870	
-muteThread	function	communications	true		netlify/functions/lib/communications.ts	1882	
-setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1897	
-addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1927	
-removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1983	
-SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	2014	
-searchMessages	function	communications	true		netlify/functions/lib/communications.ts	2023	
-PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	2035	searchMessages
-RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	2070	
-getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	2072	
-UserRow	interface	communications	false		netlify/functions/lib/communications.ts	2074	getMessageRecipients
-CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	2108	
-CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	2119	
-createTicket	function	communications	true		netlify/functions/lib/communications.ts	2125	
+resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1611	
+sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1638	
+ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1649	
+listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1662	
+PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1675	listThreadActivity
+PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1676	listThreadActivity
+PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1677	listThreadActivity
+MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1743	
+createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1756	
+CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1764	
+createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1777	
+getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1813	
+markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1854	
+archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1874	
+muteThread	function	communications	true		netlify/functions/lib/communications.ts	1886	
+setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1901	
+addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1931	
+removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1987	
+SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	2018	
+searchMessages	function	communications	true		netlify/functions/lib/communications.ts	2027	
+PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	2039	searchMessages
+RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	2074	
+getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	2076	
+UserRow	interface	communications	false		netlify/functions/lib/communications.ts	2078	getMessageRecipients
+CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	2112	
+CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	2123	
+createTicket	function	communications	true		netlify/functions/lib/communications.ts	2129	
 SUPABASE_URL	variable	platform	false		netlify/functions/lib/db.ts	3	
 SUPABASE_SERVICE_ROLE_KEY	variable	platform	false		netlify/functions/lib/db.ts	4	
 SUPABASE_ANON_KEY	variable	platform	false		netlify/functions/lib/db.ts	5	
@@ -204,34 +204,131 @@ canUserSuppressMessage	function	platform	true		netlify/functions/lib/deliveryPro
 DeliveryProtectionError	class	platform	true		netlify/functions/lib/deliveryProtection.ts	33	
 ParticipantGuardRow	interface	platform	true		netlify/functions/lib/deliveryProtection.ts	38	
 assertCanRemoveParticipant	function	platform	true		netlify/functions/lib/deliveryProtection.ts	48	
-FINANCE_ATTACHMENT_BUCKET	variable	finance	true		netlify/functions/lib/finance/attachments.ts	54	
-AttachmentDto	interface	finance	true		netlify/functions/lib/finance/attachments.ts	58	
-CommitAttachmentInput	interface	finance	true		netlify/functions/lib/finance/attachments.ts	68	
-AttachmentUploadUrlResult	interface	finance	true		netlify/functions/lib/finance/attachments.ts	75	
-DbExpenseAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	81	
-DbRemittanceAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	87	
-DbAttachmentBase	type	finance	false		netlify/functions/lib/finance/attachments.ts	95	
-toAttachmentDto	function	finance	false		netlify/functions/lib/finance/attachments.ts	105	
-getAttachmentUploadUrl	function	finance	false		netlify/functions/lib/finance/attachments.ts	119	
-getExpenseAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	139	
-commitExpenseAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	150	
-listExpenseAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	201	
-deleteExpenseAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	224	
-getRemittanceAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	292	
-commitRemittanceAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	302	
-listRemittanceAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	353	
-deleteRemittanceAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	374	
-getFinanceAttachmentSignedUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	443	
-DbDisbursementAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	465	
-getDisbursementAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	471	
-commitDisbursementAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	478	
-listDisbursementAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	526	
-deleteDisbursementAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	540	
-DbPayrollAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	581	
-getPayrollAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	587	
-commitPayrollAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	594	
-listPayrollAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	632	
-deletePayrollAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	644	
+ApBillStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	18	
+ApPaymentMethod	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	19	
+ApVendorStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	20	
+SUBMODULE	variable	finance	false		netlify/functions/lib/finance/accountsPayable.ts	22	
+ApVendorDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	26	
+ApVendorBankAccountDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	36	
+ApBillDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	43	
+ApBillLineDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	53	
+ApPaymentDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	54	
+DbVendorRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	60	
+DbVendorBankAccountRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	68	
+DbBillRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	74	
+DbLineRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	75	
+DbPaymentRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	76	
+vendorName	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	82	
+toVendorDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	84	
+toVendorBankAccountDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	95	
+toBillDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	103	
+toLineDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	107	
+toPaymentDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	108	
+err	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	115	
+BillListOpts	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	119	
+BillListResult	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	124	
+listBills	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	126	
+getBillDetail	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	147	
+listVendors	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	158	
+listPayments	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	166	
+ApKpis	interface	finance	true	ui-tile	netlify/functions/lib/finance/accountsPayable.ts	172	
+getApKpis	function	finance	true	ui-tile	netlify/functions/lib/finance/accountsPayable.ts	178	
+MONTH_LABELS	array	finance	false		netlify/functions/lib/finance/accountsPayable.ts	202	
+ApTrend	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	204	
+getApTrend	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	207	
+AgingBucket	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	230	
+getAging	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	231	
+CreateVendorInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	251	
+createVendor	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	264	
+UpdateVendorInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	313	
+updateVendor	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	321	
+getVendorDetail	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	355	
+listVendorBills	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	368	
+listVendorPayments	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	374	
+BillLineInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	391	
+CreateBillInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	395	
+round2	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	403	
+lineAmount	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	405	
+DuplicateMatch	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	407	
+checkBillDuplicate	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	414	
+R	type	finance	false		netlify/functions/lib/finance/accountsPayable.ts	415	checkBillDuplicate
+add	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	417	checkBillDuplicate
+createBill	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	433	
+requireBill	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	495	
+submitBill	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	502	
+approveBill	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	522	
+rejectBill	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	534	
+RecordPaymentInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	546	
+REQUIRES_REFERENCE	array	finance	false		netlify/functions/lib/finance/accountsPayable.ts	558	
+recordPayment	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	560	
+voidBill	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	600	
+resolveUserNames	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	615	
+ApAuditEntry	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	622	
+listBillAudit	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	628	
+ApCommentDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	639	
+DbCommentRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	641	
+toCommentDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	642	
+listBillComments	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	645	
+createBillComment	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	655	
+ApDuplicateReviewDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	669	
+DbDupReviewRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	680	
+toDupReviewDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	689	
+listDuplicateReviews	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	704	
+ResolveDuplicateRiskInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	715	
+resolveDuplicateRisk	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	726	
+persistDuplicateOverride	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	761	
+BulkApproveResult	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	779	
+bulkApproveBills	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	788	
+ApPaymentRunStatus	type	finance	true		netlify/functions/lib/finance/accountsPayable.ts	824	
+ApPaymentRunItemDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	826	
+ApPaymentRunDto	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	832	
+DbPaymentRunRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	841	
+DbPaymentRunItemRow	interface	finance	false		netlify/functions/lib/finance/accountsPayable.ts	848	
+toRunDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	853	
+toRunItemDto	function	finance	false		netlify/functions/lib/finance/accountsPayable.ts	864	
+CreatePaymentRunInput	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	876	
+createPaymentRun	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	886	
+listPaymentRuns	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	931	
+getPaymentRunDetail	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	939	
+processPaymentRun	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	949	
+voidPaymentRun	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	994	
+ImportBillRow	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	1015	
+ImportValidationResult	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	1021	
+ImportBillsResult	interface	finance	true		netlify/functions/lib/finance/accountsPayable.ts	1027	
+importBills	function	finance	true		netlify/functions/lib/finance/accountsPayable.ts	1036	
+FINANCE_ATTACHMENT_BUCKET	variable	finance	true		netlify/functions/lib/finance/attachments.ts	60	
+AttachmentDto	interface	finance	true		netlify/functions/lib/finance/attachments.ts	64	
+CommitAttachmentInput	interface	finance	true		netlify/functions/lib/finance/attachments.ts	74	
+AttachmentUploadUrlResult	interface	finance	true		netlify/functions/lib/finance/attachments.ts	81	
+DbExpenseAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	87	
+DbRemittanceAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	93	
+DbAttachmentBase	type	finance	false		netlify/functions/lib/finance/attachments.ts	101	
+toAttachmentDto	function	finance	false		netlify/functions/lib/finance/attachments.ts	111	
+getAttachmentUploadUrl	function	finance	false		netlify/functions/lib/finance/attachments.ts	125	
+getExpenseAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	145	
+commitExpenseAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	156	
+listExpenseAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	207	
+deleteExpenseAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	230	
+getRemittanceAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	298	
+commitRemittanceAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	308	
+listRemittanceAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	359	
+deleteRemittanceAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	380	
+getFinanceAttachmentSignedUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	449	
+DbDisbursementAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	471	
+getDisbursementAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	477	
+commitDisbursementAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	484	
+listDisbursementAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	532	
+deleteDisbursementAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	546	
+DbBudgetAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	587	
+getBudgetAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	593	
+commitBudgetAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	600	
+listBudgetAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	640	
+deleteBudgetAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	652	
+DbPayrollAttachment	interface	finance	false		netlify/functions/lib/finance/attachments.ts	692	
+getPayrollAttachmentUploadUrl	function	finance	true		netlify/functions/lib/finance/attachments.ts	698	
+commitPayrollAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	705	
+listPayrollAttachments	function	finance	true		netlify/functions/lib/finance/attachments.ts	743	
+deletePayrollAttachment	function	finance	true		netlify/functions/lib/finance/attachments.ts	755	
 FinanceNotificationSpec	interface	finance	true		netlify/functions/lib/finance/backbone.ts	51	
 FinanceMessageThreadSpec	interface	finance	true		netlify/functions/lib/finance/backbone.ts	63	
 FinanceTicketSpec	interface	finance	true		netlify/functions/lib/finance/backbone.ts	70	
@@ -281,6 +378,36 @@ DbReimbursementHandoff	interface	finance	false		netlify/functions/lib/finance/br
 createDisbursementFromRun	function	finance	true		netlify/functions/lib/finance/bridges.ts	90	
 createRemittanceFromRun	function	finance	true		netlify/functions/lib/finance/bridges.ts	134	
 createReimbursementHandoff	function	finance	true		netlify/functions/lib/finance/bridges.ts	182	
+BudgetLineDto	interface	finance	true		netlify/functions/lib/finance/budgets.ts	21	
+BudgetVarianceRow	interface	finance	true		netlify/functions/lib/finance/budgets.ts	32	
+BudgetReportCatalogRow	interface	finance	true		netlify/functions/lib/finance/budgets.ts	37	
+CostEntryRow	interface	finance	true		netlify/functions/lib/finance/budgets.ts	39	
+BudgetActualsResult	interface	finance	true		netlify/functions/lib/finance/budgets.ts	52	
+BulkBudgetLineInput	interface	finance	true		netlify/functions/lib/finance/budgets.ts	59	
+BulkUpsertResult	interface	finance	true		netlify/functions/lib/finance/budgets.ts	73	
+CopyLastYearInput	interface	finance	true		netlify/functions/lib/finance/budgets.ts	79	
+CopyLastYearResult	interface	finance	true		netlify/functions/lib/finance/budgets.ts	89	
+DbBudgetRow	interface	finance	false		netlify/functions/lib/finance/budgets.ts	97	
+fetchActuals	function	finance	false		netlify/functions/lib/finance/budgets.ts	111	
+toDto	function	finance	false		netlify/functions/lib/finance/budgets.ts	136	
+applyRounding	function	finance	false		netlify/functions/lib/finance/budgets.ts	148	
+ListBudgetsOpts	interface	finance	true		netlify/functions/lib/finance/budgets.ts	156	
+listBudgets	function	finance	true		netlify/functions/lib/finance/budgets.ts	158	
+getBudgetLine	function	finance	true		netlify/functions/lib/finance/budgets.ts	185	
+UpsertBudgetLineInput	interface	finance	true		netlify/functions/lib/finance/budgets.ts	197	
+upsertBudgetLine	function	finance	true		netlify/functions/lib/finance/budgets.ts	203	
+deleteBudgetLine	function	finance	true		netlify/functions/lib/finance/budgets.ts	304	
+bulkUpsertBudgetLines	function	finance	true		netlify/functions/lib/finance/budgets.ts	326	
+copyLastYearBudget	function	finance	true		netlify/functions/lib/finance/budgets.ts	453	
+getBudgetLineActuals	function	finance	true		netlify/functions/lib/finance/budgets.ts	550	
+listCostEntriesForYear	function	finance	true		netlify/functions/lib/finance/budgets.ts	607	
+BudgetApprovalTask	interface	finance	true		netlify/functions/lib/finance/budgets.ts	650	
+getBudgetLineApprovals	function	finance	true		netlify/functions/lib/finance/budgets.ts	662	
+BudgetAuditEntry	interface	finance	true		netlify/functions/lib/finance/budgets.ts	700	
+getBudgetLineAuditLog	function	finance	true		netlify/functions/lib/finance/budgets.ts	710	
+getBudgetVarianceReport	function	finance	true		netlify/functions/lib/finance/budgets.ts	737	
+listBudgetReports	function	finance	true		netlify/functions/lib/finance/budgets.ts	758	
+runBudgetReport	function	finance	true		netlify/functions/lib/finance/budgets.ts	769	
 DisbursementStatus	type	finance	true		netlify/functions/lib/finance/disbursements.ts	24	
 DisbursementDto	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	27	
 DisbursementLineDto	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	46	
@@ -375,12 +502,12 @@ ExpenseKpis	interface	finance	true	ui-tile	netlify/functions/lib/finance/expense
 getExpenseKpis	function	finance	true	ui-tile	netlify/functions/lib/finance/expenses.ts	1127	
 getUserIdsByRole	function	finance	false		netlify/functions/lib/finance/expenses.ts	1185	
 listExpensesReport	function	finance	true		netlify/functions/lib/finance/expenses.ts	1194	
-FinanceMutationBackboneInput	interface	finance	true		netlify/functions/lib/finance/financeEvents.ts	30	
-emitFinanceMutationBackbone	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	51	
-getUserIdsByRole	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	77	
-notifyUsersByRole	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	101	
-CreateFinanceRecordThreadInput	interface	finance	true		netlify/functions/lib/finance/financeEvents.ts	116	
-createFinanceRecordThread	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	134	
+FinanceMutationBackboneInput	interface	finance	true		netlify/functions/lib/finance/financeEvents.ts	31	
+emitFinanceMutationBackbone	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	52	
+getUserIdsByRole	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	78	
+notifyUsersByRole	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	102	
+CreateFinanceRecordThreadInput	interface	finance	true		netlify/functions/lib/finance/financeEvents.ts	117	
+createFinanceRecordThread	function	finance	true		netlify/functions/lib/finance/financeEvents.ts	135	
 round2	function	finance	false		netlify/functions/lib/finance/generalLedger.ts	15	
 JournalLineDto	interface	finance	true		netlify/functions/lib/finance/generalLedger.ts	17	
 JournalDto	interface	finance	true		netlify/functions/lib/finance/generalLedger.ts	21	
@@ -409,20 +536,23 @@ LoanRow	type	finance	false		netlify/functions/lib/finance/loans.ts	318	loadLoanI
 recomputeLoanBalance	function	finance	false		netlify/functions/lib/finance/loans.ts	340	
 recordLoanDeductionsForRun	function	finance	true		netlify/functions/lib/finance/loans.ts	359	
 reverseLoanDeductionsForRun	function	finance	true		netlify/functions/lib/finance/loans.ts	393	
-EmployeeResolved	interface	finance	true		netlify/functions/lib/finance/lookups.ts	11	
-EmployeePickerOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	23	
-PayrollRunPickerOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	32	
-RemittanceAuthority	type	finance	true		netlify/functions/lib/finance/lookups.ts	43	
-AuthorityOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	45	
-DbUserRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	53	
-userDisplayName	function	finance	false		netlify/functions/lib/finance/lookups.ts	68	
-DbDeptRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	78	
-DbRunRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	83	
-resolveEmployees	function	finance	true		netlify/functions/lib/finance/lookups.ts	105	
-listEmployeesForPicker	function	finance	true		netlify/functions/lib/finance/lookups.ts	160	
-APPROVED_RUN_STATUSES	variable	finance	false		netlify/functions/lib/finance/lookups.ts	190	
-listApprovedPayrollRuns	function	finance	true		netlify/functions/lib/finance/lookups.ts	197	
-listAuthorities	function	finance	true		netlify/functions/lib/finance/lookups.ts	234	
+EmployeeResolved	interface	finance	true		netlify/functions/lib/finance/lookups.ts	21	
+EmployeePickerOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	33	
+PayrollRunPickerOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	42	
+RemittanceAuthority	type	finance	true		netlify/functions/lib/finance/lookups.ts	53	
+AuthorityOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	55	
+BudgetCategoryOption	interface	finance	true		netlify/functions/lib/finance/lookups.ts	61	
+DbUserRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	68	
+userDisplayName	function	finance	false		netlify/functions/lib/finance/lookups.ts	83	
+DbDeptRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	93	
+DbRunRow	interface	finance	false		netlify/functions/lib/finance/lookups.ts	98	
+resolveEmployees	function	finance	true		netlify/functions/lib/finance/lookups.ts	120	
+listEmployeesForPicker	function	finance	true		netlify/functions/lib/finance/lookups.ts	175	
+APPROVED_RUN_STATUSES	variable	finance	false		netlify/functions/lib/finance/lookups.ts	205	
+listApprovedPayrollRuns	function	finance	true		netlify/functions/lib/finance/lookups.ts	212	
+listAuthorities	function	finance	true		netlify/functions/lib/finance/lookups.ts	249	
+FALLBACK_CATEGORIES	array	finance	false		netlify/functions/lib/finance/lookups.ts	275	
+listBudgetCategories	function	finance	true		netlify/functions/lib/finance/lookups.ts	296	
 round2	function	finance	false		netlify/functions/lib/finance/niForms.ts	18	
 NiRow	interface	finance	true		netlify/functions/lib/finance/niForms.ts	20	
 NiPeriodData	interface	finance	true		netlify/functions/lib/finance/niForms.ts	32	
@@ -461,6 +591,42 @@ listOvertimeRules	function	finance	true		netlify/functions/lib/finance/overtimeR
 CreateOvertimeRuleInput	interface	finance	true		netlify/functions/lib/finance/overtimeRules.ts	47	
 createOvertimeRule	function	finance	true		netlify/functions/lib/finance/overtimeRules.ts	56	
 setOvertimeRuleActive	function	finance	true		netlify/functions/lib/finance/overtimeRules.ts	86	
+FinanceOverviewKpis	interface	finance	true	ui-tile	netlify/functions/lib/finance/overview.ts	21	
+CostCentreBurn	interface	finance	true		netlify/functions/lib/finance/overview.ts	33	
+ApprovalQueueItem	interface	finance	true		netlify/functions/lib/finance/overview.ts	40	
+FinanceDeadline	interface	finance	true		netlify/functions/lib/finance/overview.ts	51	
+FinanceActivityItem	interface	finance	true		netlify/functions/lib/finance/overview.ts	57	
+ApprovalsAging	interface	finance	true		netlify/functions/lib/finance/overview.ts	64	
+FinanceOverviewData	interface	finance	true		netlify/functions/lib/finance/overview.ts	71	
+HIGH_VALUE_THRESHOLD	variable	finance	false		netlify/functions/lib/finance/overview.ts	81	
+MONTH_LABELS	array	finance	false		netlify/functions/lib/finance/overview.ts	82	
+monthBounds	function	finance	false		netlify/functions/lib/finance/overview.ts	84	
+pctDelta	function	finance	false		netlify/functions/lib/finance/overview.ts	93	
+monthSpend	function	finance	false		netlify/functions/lib/finance/overview.ts	98	
+sum	function	finance	false		netlify/functions/lib/finance/overview.ts	107	monthSpend
+getFinanceOverview	function	finance	true		netlify/functions/lib/finance/overview.ts	112	
+ageDays	function	finance	false		netlify/functions/lib/finance/overview.ts	167	getFinanceOverview
+sumAmount	function	finance	false		netlify/functions/lib/finance/overview.ts	233	
+humanizeEvent	function	finance	false		netlify/functions/lib/finance/overview.ts	237	
+ExportType	type	finance	true		netlify/functions/lib/finance/overview.ts	247	
+ExportResult	interface	finance	true		netlify/functions/lib/finance/overview.ts	249	
+escCsv	function	finance	false		netlify/functions/lib/finance/overview.ts	255	
+toCsv	function	finance	false		netlify/functions/lib/finance/overview.ts	259	
+exportFinanceOverview	function	finance	true		netlify/functions/lib/finance/overview.ts	263	
+KpiType	type	finance	true	ui-tile	netlify/functions/lib/finance/overview.ts	325	
+KpiDrilldownRow	interface	finance	true	ui-tile	netlify/functions/lib/finance/overview.ts	327	
+KpiDrilldownResult	interface	finance	true	ui-tile	netlify/functions/lib/finance/overview.ts	339	
+getFinanceKpiDrilldown	function	finance	true	ui-tile	netlify/functions/lib/finance/overview.ts	347	
+ApprovalQueueItemV2	interface	finance	true		netlify/functions/lib/finance/overview.ts	447	
+ApprovalsQueueFilters	interface	finance	true		netlify/functions/lib/finance/overview.ts	463	
+getApprovalsQueueV2	function	finance	true		netlify/functions/lib/finance/overview.ts	470	
+ageDays	function	finance	false		netlify/functions/lib/finance/overview.ts	482	getApprovalsQueueV2
+QueueItemType	type	finance	true		netlify/functions/lib/finance/overview.ts	527	
+approveFinanceQueueItem	function	finance	true		netlify/functions/lib/finance/overview.ts	529	
+rejectFinanceQueueItem	function	finance	true		netlify/functions/lib/finance/overview.ts	554	
+SpendBudgetPeriod	type	finance	true		netlify/functions/lib/finance/overview.ts	582	
+SpendBudgetSeries	interface	finance	true		netlify/functions/lib/finance/overview.ts	584	
+getSpendBudgetSeries	function	finance	true		netlify/functions/lib/finance/overview.ts	592	
 PayGroupDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	13	
 DbPayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payGroups.ts	26	
 toDto	function	payroll	false		netlify/functions/lib/finance/payGroups.ts	33	
@@ -825,8 +991,16 @@ cap	function	payroll	false		netlify/functions/lib/finance/payslipTokens.ts	65
 fmtDate	function	payroll	false		netlify/functions/lib/finance/payslipTokens.ts	69	
 resolveTokenText	function	payroll	true		netlify/functions/lib/finance/payslipTokens.ts	83	
 buildTokenMap	function	payroll	true		netlify/functions/lib/finance/payslipTokens.ts	92	
-CostCentreOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	11	
-listCostCentres	function	finance	true		netlify/functions/lib/finance/pickers.ts	18	
+GlAccountOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	18	
+CostCentreOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	24	
+TaxCodeOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	31	
+PaymentTermsOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	38	
+VendorPickerOption	interface	finance	true		netlify/functions/lib/finance/pickers.ts	43	
+listGlAccounts	function	finance	true		netlify/functions/lib/finance/pickers.ts	59	
+listCostCentres	function	finance	true		netlify/functions/lib/finance/pickers.ts	113	
+listTaxCodes	function	finance	true		netlify/functions/lib/finance/pickers.ts	140	
+listPaymentTerms	function	finance	true		netlify/functions/lib/finance/pickers.ts	166	
+listVendorsForPicker	function	finance	true		netlify/functions/lib/finance/pickers.ts	194	
 RemittanceAuthority	type	finance	true		netlify/functions/lib/finance/remittances.ts	32	
 RemittanceStatus	type	finance	true		netlify/functions/lib/finance/remittances.ts	33	
 RemittanceDto	interface	finance	true		netlify/functions/lib/finance/remittances.ts	35	
@@ -1673,26 +1847,26 @@ byNewestFirst	function	workflow	false		netlify/functions/lib/orchestration/timel
 humanizeEventType	function	workflow	false		netlify/functions/lib/orchestration/timelineService.ts	71	
 getRecordTimeline	function	workflow	true		netlify/functions/lib/orchestration/timelineService.ts	78	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	422	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	430	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	442	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	462	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	471	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	872	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	885	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	899	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	909	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	910	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	913	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	929	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	964	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	976	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	977	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	980	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	990	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1003	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1011	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1022	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	452	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	460	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	472	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	492	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	502	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	954	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	967	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	981	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	991	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	992	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	995	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1045	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1057	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1058	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1061	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1071	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1084	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1092	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1103	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2157,56 +2331,56 @@ OutboxRunSummary	interface	workflow	true		netlify/functions/lib/workflow/outboxW
 processWorkflowOutbox	function	workflow	true		netlify/functions/lib/workflow/outboxWorker.ts	399	
 processTransitionInline	function	workflow	true		netlify/functions/lib/workflow/outboxWorker.ts	460	
 MODULE_START_PERMISSION	object	workflow	false		netlify/functions/lib/workflow/service.ts	36	
-getModuleStartPermission	function	workflow	true		netlify/functions/lib/workflow/service.ts	56	
-WorkflowActor	interface	workflow	true		netlify/functions/lib/workflow/service.ts	60	
-addHoursIso	function	workflow	false		netlify/functions/lib/workflow/service.ts	63	
-normalizePriority	function	workflow	false		netlify/functions/lib/workflow/service.ts	70	
-writeWorkflowAudit	function	workflow	false		netlify/functions/lib/workflow/service.ts	74	
-WfRecipient	interface	workflow	false		netlify/functions/lib/workflow/service.ts	85	
-EmitWfOpts	interface	workflow	false		netlify/functions/lib/workflow/service.ts	87	
-emitWf	function	workflow	false		netlify/functions/lib/workflow/service.ts	94	
-assigneeRecipients	function	workflow	false		netlify/functions/lib/workflow/service.ts	105	
-MODULE_ROUTE	object	workflow	false		netlify/functions/lib/workflow/service.ts	116	
-moduleRoute	function	workflow	true		netlify/functions/lib/workflow/service.ts	127	
-ownerRecipients	function	workflow	true		netlify/functions/lib/workflow/service.ts	135	
-WorkflowRow	interface	workflow	true		netlify/functions/lib/workflow/service.ts	142	
-getWorkflow	function	workflow	false		netlify/functions/lib/workflow/service.ts	150	
-resolveDefinition	function	workflow	false		netlify/functions/lib/workflow/service.ts	156	
-buildTaskRowForStep	function	workflow	true		netlify/functions/lib/workflow/service.ts	170	
-notifyTaskAssigned	function	workflow	true		netlify/functions/lib/workflow/service.ts	183	
-createTaskForStep	function	workflow	false		netlify/functions/lib/workflow/service.ts	200	
-UUID_RE	variable	workflow	false		netlify/functions/lib/workflow/service.ts	207	
-resolveDefinitionByTemplateRef	function	workflow	false		netlify/functions/lib/workflow/service.ts	213	
-instantiateWorkflow	function	workflow	false		netlify/functions/lib/workflow/service.ts	225	
-startWorkflowForRecord	function	workflow	true		netlify/functions/lib/workflow/service.ts	256	
-startWorkflowExplicit	function	workflow	true		netlify/functions/lib/workflow/service.ts	270	
-startWorkflowByTemplate	function	workflow	true		netlify/functions/lib/workflow/service.ts	319	
-WF_SQLSTATE_HTTP	object	workflow	false		netlify/functions/lib/workflow/service.ts	348	
-rpcHttpError	function	workflow	true		netlify/functions/lib/workflow/service.ts	353	
-decideTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	360	
-commandKey	function	workflow	false		netlify/functions/lib/workflow/service.ts	397	
-publishWorkflowTemplateVersion	function	workflow	true		netlify/functions/lib/workflow/service.ts	401	
-cancelWorkflow	function	workflow	true		netlify/functions/lib/workflow/service.ts	410	
-delegateTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	434	
-reassignTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	443	
-workflowToContext	function	workflow	true		netlify/functions/lib/workflow/service.ts	456	
+getModuleStartPermission	function	workflow	true		netlify/functions/lib/workflow/service.ts	57	
+WorkflowActor	interface	workflow	true		netlify/functions/lib/workflow/service.ts	61	
+addHoursIso	function	workflow	false		netlify/functions/lib/workflow/service.ts	64	
+normalizePriority	function	workflow	false		netlify/functions/lib/workflow/service.ts	71	
+writeWorkflowAudit	function	workflow	false		netlify/functions/lib/workflow/service.ts	75	
+WfRecipient	interface	workflow	false		netlify/functions/lib/workflow/service.ts	86	
+EmitWfOpts	interface	workflow	false		netlify/functions/lib/workflow/service.ts	88	
+emitWf	function	workflow	false		netlify/functions/lib/workflow/service.ts	95	
+assigneeRecipients	function	workflow	false		netlify/functions/lib/workflow/service.ts	106	
+MODULE_ROUTE	object	workflow	false		netlify/functions/lib/workflow/service.ts	117	
+moduleRoute	function	workflow	true		netlify/functions/lib/workflow/service.ts	128	
+ownerRecipients	function	workflow	true		netlify/functions/lib/workflow/service.ts	136	
+WorkflowRow	interface	workflow	true		netlify/functions/lib/workflow/service.ts	143	
+getWorkflow	function	workflow	false		netlify/functions/lib/workflow/service.ts	151	
+resolveDefinition	function	workflow	false		netlify/functions/lib/workflow/service.ts	157	
+buildTaskRowForStep	function	workflow	true		netlify/functions/lib/workflow/service.ts	171	
+notifyTaskAssigned	function	workflow	true		netlify/functions/lib/workflow/service.ts	184	
+createTaskForStep	function	workflow	false		netlify/functions/lib/workflow/service.ts	201	
+UUID_RE	variable	workflow	false		netlify/functions/lib/workflow/service.ts	208	
+resolveDefinitionByTemplateRef	function	workflow	false		netlify/functions/lib/workflow/service.ts	214	
+instantiateWorkflow	function	workflow	false		netlify/functions/lib/workflow/service.ts	226	
+startWorkflowForRecord	function	workflow	true		netlify/functions/lib/workflow/service.ts	257	
+startWorkflowExplicit	function	workflow	true		netlify/functions/lib/workflow/service.ts	271	
+startWorkflowByTemplate	function	workflow	true		netlify/functions/lib/workflow/service.ts	320	
+WF_SQLSTATE_HTTP	object	workflow	false		netlify/functions/lib/workflow/service.ts	349	
+rpcHttpError	function	workflow	true		netlify/functions/lib/workflow/service.ts	354	
+decideTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	361	
+commandKey	function	workflow	false		netlify/functions/lib/workflow/service.ts	398	
+publishWorkflowTemplateVersion	function	workflow	true		netlify/functions/lib/workflow/service.ts	402	
+cancelWorkflow	function	workflow	true		netlify/functions/lib/workflow/service.ts	411	
+delegateTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	435	
+reassignTask	function	workflow	true		netlify/functions/lib/workflow/service.ts	444	
+workflowToContext	function	workflow	true		netlify/functions/lib/workflow/service.ts	457	
 SourceSpec	interface	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	13	
 SOURCE_SPECS	object	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	24	
-UUID_RE	variable	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	92	
-SENSITIVE_KEYS	variable	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	93	
-SourceRow	type	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	98	
-workflowError	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	100	
-asObject	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	104	
-firstText	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	110	
-camelCase	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	120	
-sourceSnapshot	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	124	
-loadUser	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	136	
-departmentManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	146	
-siteManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	155	
-hseManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	164	
-CanonicalStartInput	interface	workflow	true		netlify/functions/lib/workflow/sourceContext.ts	173	
-sourcePriority	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	182	
-buildCanonicalStartContext	function	workflow	true		netlify/functions/lib/workflow/sourceContext.ts	194	
+UUID_RE	variable	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	96	
+SENSITIVE_KEYS	variable	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	97	
+SourceRow	type	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	102	
+workflowError	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	104	
+asObject	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	108	
+firstText	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	114	
+camelCase	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	124	
+sourceSnapshot	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	128	
+loadUser	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	140	
+departmentManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	150	
+siteManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	159	
+hseManager	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	168	
+CanonicalStartInput	interface	workflow	true		netlify/functions/lib/workflow/sourceContext.ts	177	
+sourcePriority	function	workflow	false		netlify/functions/lib/workflow/sourceContext.ts	186	
+buildCanonicalStartContext	function	workflow	true		netlify/functions/lib/workflow/sourceContext.ts	198	
 firstSteps	function	workflow	true		netlify/functions/lib/workflow/transitions.ts	13	
 NextResolution	interface	workflow	true		netlify/functions/lib/workflow/transitions.ts	19	
 resolveNext	function	workflow	true		netlify/functions/lib/workflow/transitions.ts	21	
@@ -2227,7 +2401,7 @@ PASSKEY_PROMPT_INTERVAL_MS	variable	security	false		netlify/functions/routes/aut
 shouldPromptForPasskey	function	security	false		netlify/functions/routes/auth.ts	74	
 buildSessionPayload	function	security	true		netlify/functions/routes/auth.ts	84	
 Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	343	
-checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	701	
+checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	709	
 router	variable	security	false		netlify/functions/routes/auth2fa.ts	29	
 zAnyTotpCode	variable	security	false		netlify/functions/routes/auth2fa.ts	34	
 ConfirmSchema	variable	security	false		netlify/functions/routes/auth2fa.ts	38	
@@ -2308,18 +2482,27 @@ UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17
 _listDepartments	function	hr	false		netlify/functions/routes/departments.ts	24	
 router	variable	hr	false		netlify/functions/routes/employees.ts	13	
 _nextEmployeeNumber	function	hr	false		netlify/functions/routes/employees.ts	15	
-router	variable	finance	false		netlify/functions/routes/financeAttachments.ts	36	
-b	function	finance	false		netlify/functions/routes/financeAttachments.ts	38	
-fail	function	finance	false		netlify/functions/routes/financeAttachments.ts	41	
-EntityTypeEnum	variable	finance	false		netlify/functions/routes/financeAttachments.ts	50	
-UploadUrlSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	52	
-CompleteSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	59	
-ListSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	68	
-SignedUrlSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	73	
-DeleteSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	79	
-UPLOAD_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	86	
-VIEW_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	92	
-MANAGE_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	98	
+router	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	20	
+b	function	finance	false		netlify/functions/routes/financeAccountsPayable.ts	21	
+BILL_STATUS	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	23	
+BILL_FILTER_STATUS	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	24	
+VENDOR_STATUS	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	25	
+PAYMENT_METHOD	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	26	
+fail	function	finance	false		netlify/functions/routes/financeAccountsPayable.ts	28	
+VendorCoreSchema	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	112	
+PAYMENT_RUN_STATUS	variable	finance	false		netlify/functions/routes/financeAccountsPayable.ts	292	
+router	variable	finance	false		netlify/functions/routes/financeAttachments.ts	71	
+b	function	finance	false		netlify/functions/routes/financeAttachments.ts	73	
+fail	function	finance	false		netlify/functions/routes/financeAttachments.ts	76	
+EntityTypeEnum	variable	finance	false		netlify/functions/routes/financeAttachments.ts	85	
+UploadUrlSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	87	
+CompleteSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	94	
+ListSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	103	
+SignedUrlSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	108	
+DeleteSchema	variable	finance	false		netlify/functions/routes/financeAttachments.ts	114	
+UPLOAD_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	121	
+VIEW_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	128	
+MANAGE_PERMS	object	finance	false		netlify/functions/routes/financeAttachments.ts	135	
 router	variable	finance	false		netlify/functions/routes/financeBankAccounts.ts	11	
 b	function	finance	false		netlify/functions/routes/financeBankAccounts.ts	12	
 FINANCE_ROLES	array	finance	false		netlify/functions/routes/financeBankAccounts.ts	13	
@@ -2327,6 +2510,8 @@ MANAGE_ROLES	array	finance	false		netlify/functions/routes/financeBankAccounts.t
 router	variable	finance	false		netlify/functions/routes/financeBridges.ts	35	
 b	function	finance	false		netlify/functions/routes/financeBridges.ts	37	
 fail	function	finance	false		netlify/functions/routes/financeBridges.ts	40	
+router	variable	finance	false		netlify/functions/routes/financeBudgets.ts	35	
+b	function	finance	false		netlify/functions/routes/financeBudgets.ts	37	
 router	variable	finance	false		netlify/functions/routes/financeDisbursements.ts	24	
 b	function	finance	false		netlify/functions/routes/financeDisbursements.ts	25	
 STATUS_VALUES	variable	finance	false		netlify/functions/routes/financeDisbursements.ts	27	
@@ -2336,11 +2521,14 @@ STATUS_VALUES	variable	finance	false		netlify/functions/routes/financeExpenses.t
 CATEGORY_VALUES	variable	finance	false		netlify/functions/routes/financeExpenses.ts	41	
 REPORT_TYPES	variable	finance	false		netlify/functions/routes/financeExpenses.ts	42	
 handleErr	function	finance	false		netlify/functions/routes/financeExpenses.ts	44	
-router	variable	finance	false		netlify/functions/routes/financeLookups.ts	18	
-b	function	finance	false		netlify/functions/routes/financeLookups.ts	21	
-fail	function	finance	false		netlify/functions/routes/financeLookups.ts	25	
+router	variable	finance	false		netlify/functions/routes/financeLookups.ts	21	
+b	function	finance	false		netlify/functions/routes/financeLookups.ts	24	
+fail	function	finance	false		netlify/functions/routes/financeLookups.ts	28	
 router	variable	finance	false		netlify/functions/routes/financeNis.ts	22	
 b	function	finance	false		netlify/functions/routes/financeNis.ts	25	
+router	variable	finance	false		netlify/functions/routes/financeOverview.ts	24	
+b	function	finance	false		netlify/functions/routes/financeOverview.ts	26	
+fail	function	finance	false		netlify/functions/routes/financeOverview.ts	29	
 router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	108	
 b	function	payroll	false		netlify/functions/routes/financePayroll.ts	111	
 routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	115	
@@ -2350,8 +2538,9 @@ P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22
 zDesign	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	23	
 fail	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	25	
 zOpenRef	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	162	
-router	variable	finance	false		netlify/functions/routes/financePickers.ts	12	
-bodyArgs	function	finance	false		netlify/functions/routes/financePickers.ts	13	
+router	variable	finance	false		netlify/functions/routes/financePickers.ts	17	
+b	function	finance	false		netlify/functions/routes/financePickers.ts	18	
+fail	function	finance	false		netlify/functions/routes/financePickers.ts	20	
 router	variable	finance	false		netlify/functions/routes/financeRemittances.ts	33	
 b	function	finance	false		netlify/functions/routes/financeRemittances.ts	36	
 AUTHORITY_VALUES	variable	finance	false		netlify/functions/routes/financeRemittances.ts	39	
@@ -2769,6 +2958,13 @@ manifest	object	widgets	false		scripts/build-widget-package.mjs	68
 archive	variable	widgets	false		scripts/build-widget-package.mjs	74	
 __dirname	variable	platform	false		scripts/check-role-perms-schema.mjs	7	
 sb	variable	platform	false		scripts/check-role-perms-schema.mjs	10	
+__dirname	variable	platform	false		scripts/check-wave2b-migrations.mjs	9	
+url	variable	platform	false		scripts/check-wave2b-migrations.mjs	12	
+key	variable	platform	false		scripts/check-wave2b-migrations.mjs	13	
+sb	variable	platform	false		scripts/check-wave2b-migrations.mjs	20	
+check	function	platform	false		scripts/check-wave2b-migrations.mjs	22	
+results	variable	platform	false		scripts/check-wave2b-migrations.mjs	39	
+allOk	variable	platform	false		scripts/check-wave2b-migrations.mjs	69	
 __dirname	variable	platform	false		scripts/check-wave4b-migrations.mjs	9	
 url	variable	platform	false		scripts/check-wave4b-migrations.mjs	12	
 key	variable	platform	false		scripts/check-wave4b-migrations.mjs	13	
@@ -2820,8 +3016,8 @@ Harness	class	testing	true		scripts/e2e/harness.mjs	46
 isServerUp	method	testing	false		scripts/e2e/harness.mjs	155	Harness
 ping	method	testing	false		scripts/e2e/harness.mjs	165	Harness
 pickUsers	method	testing	false		scripts/e2e/harness.mjs	179	Harness
-runCleanup	method	testing	false		scripts/e2e/harness.mjs	381	Harness
-report	method	testing	false		scripts/e2e/harness.mjs	389	Harness
+runCleanup	method	testing	false		scripts/e2e/harness.mjs	359	Harness
+report	method	testing	false		scripts/e2e/harness.mjs	367	Harness
 addDays	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	1	
 endOfMonth	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	8	
 payrollPeriodEnd	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	16	
@@ -2900,6 +3096,11 @@ unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mj
 threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	669	run
 title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	31	
 run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
+title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
+run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
+title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
+run	function	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	38	
+waitFor	function	finance	false	test	scripts/e2e/suites/financeBudgets.mjs	55	run
 title	variable	finance	true	test	scripts/e2e/suites/financeDisbursements.mjs	8	
 seedDateFromTag	function	finance	false	test	scripts/e2e/suites/financeDisbursements.mjs	13	
 run	function	finance	true	test	scripts/e2e/suites/financeDisbursements.mjs	22	
@@ -2910,6 +3111,8 @@ waitFor	function	finance	false	test	scripts/e2e/suites/financeExpenses.mjs	49	ru
 title	variable	finance	true	test	scripts/e2e/suites/financeLookups.mjs	34	
 seedDateFromTag	function	finance	false	test	scripts/e2e/suites/financeLookups.mjs	40	
 run	function	finance	true	test	scripts/e2e/suites/financeLookups.mjs	49	
+title	variable	finance	true	test	scripts/e2e/suites/financeOverview.mjs	24	
+run	function	finance	true	test	scripts/e2e/suites/financeOverview.mjs	26	
 title	variable	finance	true	test	scripts/e2e/suites/financePayComponents.mjs	37	
 run	function	finance	true	test	scripts/e2e/suites/financePayComponents.mjs	39	
 waitFor	function	finance	false	test	scripts/e2e/suites/financePayComponents.mjs	61	run
@@ -3334,16 +3537,79 @@ listManagers	function	hr	true		src/api/employees.ts	89
 addDepartment	function	hr	true		src/api/employees.ts	94	
 updateDepartment	function	hr	true		src/api/employees.ts	99	
 deleteDepartment	function	hr	true		src/api/employees.ts	104	
-FinanceEntityType	type	finance	true		src/api/finance/attachments.ts	17	
-AttachmentDto	interface	finance	true		src/api/finance/attachments.ts	23	
-AttachmentUploadUrlResult	interface	finance	true		src/api/finance/attachments.ts	33	
-post	function	finance	false		src/api/finance/attachments.ts	42	
-attachmentCacheKey	function	finance	true		src/api/finance/attachments.ts	60	
-useFinanceAttachments	function	finance	true	hook	src/api/finance/attachments.ts	78	
-useFinanceAttachmentUploadUrl	function	finance	true	hook	src/api/finance/attachments.ts	106	
-useCompleteFinanceAttachment	function	finance	true	hook	src/api/finance/attachments.ts	121	
-useFinanceAttachmentSignedUrl	function	finance	true	hook	src/api/finance/attachments.ts	142	
-useDeleteFinanceAttachment	function	finance	true	hook	src/api/finance/attachments.ts	159	
+ApBillStatus	type	finance	true		src/api/finance/accountsPayable.ts	13	
+ApVendorStatus	type	finance	true		src/api/finance/accountsPayable.ts	14	
+ApPaymentMethod	type	finance	true		src/api/finance/accountsPayable.ts	15	
+ApBill	interface	finance	true		src/api/finance/accountsPayable.ts	17	
+ApBillLine	interface	finance	true		src/api/finance/accountsPayable.ts	25	
+ApPayment	interface	finance	true		src/api/finance/accountsPayable.ts	26	
+ApVendor	interface	finance	true		src/api/finance/accountsPayable.ts	32	
+ApVendorBankAccount	interface	finance	true		src/api/finance/accountsPayable.ts	42	
+ApKpis	interface	finance	true	ui-tile	src/api/finance/accountsPayable.ts	49	
+ApAgingBucket	interface	finance	true		src/api/finance/accountsPayable.ts	50	
+ApTrend	interface	finance	true		src/api/finance/accountsPayable.ts	51	
+ApBillListResult	interface	finance	true		src/api/finance/accountsPayable.ts	52	
+ApBillFilterStatus	type	finance	true		src/api/finance/accountsPayable.ts	54	
+ApBillFilters	interface	finance	true		src/api/finance/accountsPayable.ts	55	
+post	function	finance	false		src/api/finance/accountsPayable.ts	61	
+useApBills	function	finance	true	hook	src/api/finance/accountsPayable.ts	69	
+useApBillDetail	function	finance	true	hook	src/api/finance/accountsPayable.ts	76	
+useApVendors	function	finance	true	hook	src/api/finance/accountsPayable.ts	85	
+useApVendorDetail	function	finance	true	hook	src/api/finance/accountsPayable.ts	93	
+useApVendorBills	function	finance	true	hook	src/api/finance/accountsPayable.ts	102	
+useApVendorPayments	function	finance	true	hook	src/api/finance/accountsPayable.ts	111	
+useApPayments	function	finance	true	hook	src/api/finance/accountsPayable.ts	120	
+useApKpis	function	finance	true	hook,ui-tile	src/api/finance/accountsPayable.ts	128	
+useApAging	function	finance	true	hook	src/api/finance/accountsPayable.ts	136	
+useApTrend	function	finance	true	hook	src/api/finance/accountsPayable.ts	144	
+useApMutation	function	finance	false	hook	src/api/finance/accountsPayable.ts	155	
+CreateBillLineInput	interface	finance	true		src/api/finance/accountsPayable.ts	166	
+CreateBillArgs	interface	finance	true		src/api/finance/accountsPayable.ts	170	
+useCreateBill	function	finance	true	hook	src/api/finance/accountsPayable.ts	177	
+DuplicateMatch	interface	finance	true		src/api/finance/accountsPayable.ts	179	
+useCheckBillDuplicate	function	finance	true	hook	src/api/finance/accountsPayable.ts	184	
+useSubmitBill	function	finance	true	hook	src/api/finance/accountsPayable.ts	191	
+useApproveBill	function	finance	true	hook	src/api/finance/accountsPayable.ts	192	
+useRejectBill	function	finance	true	hook	src/api/finance/accountsPayable.ts	193	
+useVoidBill	function	finance	true	hook	src/api/finance/accountsPayable.ts	194	
+useRecordPayment	function	finance	true	hook	src/api/finance/accountsPayable.ts	196	
+VendorBankAccountInput	interface	finance	true		src/api/finance/accountsPayable.ts	201	
+CreateVendorInput	interface	finance	true		src/api/finance/accountsPayable.ts	206	
+UpdateVendorInput	interface	finance	true		src/api/finance/accountsPayable.ts	214	
+useCreateVendor	function	finance	true	hook	src/api/finance/accountsPayable.ts	218	
+useUpdateVendor	function	finance	true	hook	src/api/finance/accountsPayable.ts	230	
+ApAuditEntry	interface	finance	true		src/api/finance/accountsPayable.ts	245	
+ApComment	interface	finance	true		src/api/finance/accountsPayable.ts	249	
+useBillAudit	function	finance	true	hook	src/api/finance/accountsPayable.ts	251	
+useBillComments	function	finance	true	hook	src/api/finance/accountsPayable.ts	258	
+useCreateBillComment	function	finance	true	hook	src/api/finance/accountsPayable.ts	265	
+ApDuplicateReview	interface	finance	true		src/api/finance/accountsPayable.ts	275	
+useApDuplicateRisks	function	finance	true	hook	src/api/finance/accountsPayable.ts	286	
+useResolveDuplicateRisk	function	finance	true	hook	src/api/finance/accountsPayable.ts	294	
+BulkApproveResult	interface	finance	true		src/api/finance/accountsPayable.ts	309	
+useBulkApproveBills	function	finance	true	hook	src/api/finance/accountsPayable.ts	314	
+ApPaymentRunStatus	type	finance	true		src/api/finance/accountsPayable.ts	327	
+ApPaymentRunItem	interface	finance	true		src/api/finance/accountsPayable.ts	329	
+ApPaymentRun	interface	finance	true		src/api/finance/accountsPayable.ts	335	
+useApPaymentRuns	function	finance	true	hook	src/api/finance/accountsPayable.ts	344	
+useApPaymentRunDetail	function	finance	true	hook	src/api/finance/accountsPayable.ts	352	
+useCreatePaymentRun	function	finance	true	hook	src/api/finance/accountsPayable.ts	361	
+useProcessPaymentRun	function	finance	true	hook	src/api/finance/accountsPayable.ts	374	
+useVoidPaymentRun	function	finance	true	hook	src/api/finance/accountsPayable.ts	387	
+ImportBillRow	interface	finance	true		src/api/finance/accountsPayable.ts	400	
+ImportValidationResult	interface	finance	true		src/api/finance/accountsPayable.ts	406	
+ImportBillsResult	interface	finance	true		src/api/finance/accountsPayable.ts	410	
+useImportBills	function	finance	true	hook	src/api/finance/accountsPayable.ts	414	
+FinanceEntityType	type	finance	true		src/api/finance/attachments.ts	36	
+AttachmentDto	interface	finance	true		src/api/finance/attachments.ts	43	
+AttachmentUploadUrlResult	interface	finance	true		src/api/finance/attachments.ts	53	
+post	function	finance	false		src/api/finance/attachments.ts	62	
+attachmentCacheKey	function	finance	true		src/api/finance/attachments.ts	80	
+useFinanceAttachments	function	finance	true	hook	src/api/finance/attachments.ts	99	
+useFinanceAttachmentUploadUrl	function	finance	true	hook	src/api/finance/attachments.ts	127	
+useCompleteFinanceAttachment	function	finance	true	hook	src/api/finance/attachments.ts	142	
+useFinanceAttachmentSignedUrl	function	finance	true	hook	src/api/finance/attachments.ts	163	
+useDeleteFinanceAttachment	function	finance	true	hook	src/api/finance/attachments.ts	180	
 BankAccount	interface	finance	true		src/api/finance/bankAccounts.ts	12	
 UpsertBankAccountArgs	interface	finance	true		src/api/finance/bankAccounts.ts	28	
 call	function	finance	false		src/api/finance/bankAccounts.ts	40	
@@ -3360,6 +3626,32 @@ post	function	finance	false		src/api/finance/bridges.ts	42
 useCreateDisbursementFromRun	function	finance	true	hook	src/api/finance/bridges.ts	63	
 useCreateRemittanceFromRun	function	finance	true	hook	src/api/finance/bridges.ts	87	
 useCreateReimbursementHandoff	function	finance	true	hook	src/api/finance/bridges.ts	113	
+BudgetLine	interface	finance	true		src/api/finance/budgets.ts	15	
+BudgetApprovalTask	interface	finance	true		src/api/finance/budgets.ts	35	
+BudgetAuditEntry	interface	finance	true		src/api/finance/budgets.ts	47	
+BudgetVarianceRow	interface	finance	true		src/api/finance/budgets.ts	57	
+BudgetReportCatalogRow	interface	finance	true		src/api/finance/budgets.ts	69	
+CostEntryRow	interface	finance	true		src/api/finance/budgets.ts	75	
+BudgetActualsResult	interface	finance	true		src/api/finance/budgets.ts	88	
+BulkUpsertResult	interface	finance	true		src/api/finance/budgets.ts	95	
+CopyLastYearResult	interface	finance	true		src/api/finance/budgets.ts	101	
+UpsertBudgetLineArgs	interface	finance	true		src/api/finance/budgets.ts	108	
+BulkBudgetLineArg	interface	finance	true		src/api/finance/budgets.ts	118	
+CopyLastYearArgs	interface	finance	true		src/api/finance/budgets.ts	132	
+call	function	finance	false		src/api/finance/budgets.ts	143	
+BudgetAttachmentDto	interface	finance	true		src/api/finance/budgets.ts	151	
+financeBudgetsApi	object	finance	true		src/api/finance/budgets.ts	161	
+financeBudgetsKeys	object	finance	true		src/api/finance/budgets.ts	200	
+useBudgets	function	finance	true	hook	src/api/finance/budgets.ts	216	
+useBudgetDetail	function	finance	true	hook	src/api/finance/budgets.ts	223	
+useBudgetVariance	function	finance	true	hook	src/api/finance/budgets.ts	231	
+useBudgetLineActuals	function	finance	true	hook	src/api/finance/budgets.ts	238	
+useBudgetActuals	function	finance	true	hook	src/api/finance/budgets.ts	246	
+useBudgetReports	function	finance	true	hook	src/api/finance/budgets.ts	253	
+useBudgetLineApprovals	function	finance	true	hook	src/api/finance/budgets.ts	260	
+useBudgetLineAuditLog	function	finance	true	hook	src/api/finance/budgets.ts	268	
+useBudgetLineAttachments	function	finance	true	hook	src/api/finance/budgets.ts	276	
+useBudgetMutation	function	finance	true	hook	src/api/finance/budgets.ts	287	
 DisbursementStatus	type	finance	true		src/api/finance/disbursements.ts	10	
 Disbursement	interface	finance	true		src/api/finance/disbursements.ts	13	
 DisbursementLine	interface	finance	true		src/api/finance/disbursements.ts	32	
@@ -3421,18 +3713,44 @@ useExpenseAuditLog	function	finance	true	hook	src/api/finance/expenses.ts	348
 useExpenseKpis	function	finance	true	hook,ui-tile	src/api/finance/expenses.ts	356	
 useExpenseMutation	function	finance	true	hook	src/api/finance/expenses.ts	366	
 useExpenseComment	function	finance	true	hook	src/api/finance/expenses.ts	378	
-financeQueryKeys	variable	finance	true		src/api/finance/keys.ts	7	
-STALE_5M	variable	finance	false		src/api/finance/lookups.ts	24	
-STALE_1M	variable	finance	false		src/api/finance/lookups.ts	25	
-EmployeeResolved	interface	finance	true		src/api/finance/lookups.ts	29	
-EmployeePickerOption	interface	finance	true		src/api/finance/lookups.ts	40	
-PayrollRunPickerOption	interface	finance	true		src/api/finance/lookups.ts	49	
-AuthorityOption	interface	finance	true		src/api/finance/lookups.ts	59	
-post	function	finance	false		src/api/finance/lookups.ts	67	
-useEmployeeNames	function	finance	true	hook	src/api/finance/lookups.ts	94	
-useEmployeePicker	function	finance	true	hook	src/api/finance/lookups.ts	124	
-useApprovedRunPicker	function	finance	true	hook	src/api/finance/lookups.ts	138	
-useAuthorityPicker	function	finance	true	hook	src/api/finance/lookups.ts	152	
+financeQueryKeys	variable	finance	true		src/api/finance/keys.ts	23	
+STALE_5M	variable	finance	false		src/api/finance/lookups.ts	26	
+STALE_1M	variable	finance	false		src/api/finance/lookups.ts	27	
+EmployeeResolved	interface	finance	true		src/api/finance/lookups.ts	31	
+EmployeePickerOption	interface	finance	true		src/api/finance/lookups.ts	42	
+PayrollRunPickerOption	interface	finance	true		src/api/finance/lookups.ts	51	
+AuthorityOption	interface	finance	true		src/api/finance/lookups.ts	61	
+BudgetCategoryOption	interface	finance	true		src/api/finance/lookups.ts	67	
+post	function	finance	false		src/api/finance/lookups.ts	74	
+useEmployeeNames	function	finance	true	hook	src/api/finance/lookups.ts	101	
+useEmployeePicker	function	finance	true	hook	src/api/finance/lookups.ts	131	
+useApprovedRunPicker	function	finance	true	hook	src/api/finance/lookups.ts	145	
+useAuthorityPicker	function	finance	true	hook	src/api/finance/lookups.ts	159	
+useBudgetCategoryPicker	function	finance	true	hook	src/api/finance/lookups.ts	169	
+FinanceOverviewKpis	interface	finance	true	ui-tile	src/api/finance/overview.ts	15	
+CostCentreBurn	interface	finance	true		src/api/finance/overview.ts	27	
+ApprovalQueueItem	interface	finance	true		src/api/finance/overview.ts	29	
+FinanceDeadline	interface	finance	true		src/api/finance/overview.ts	34	
+FinanceActivityItem	interface	finance	true		src/api/finance/overview.ts	35	
+ApprovalsAging	interface	finance	true		src/api/finance/overview.ts	36	
+FinanceOverviewData	interface	finance	true		src/api/finance/overview.ts	38	
+post	function	finance	false		src/api/finance/overview.ts	50	
+useFinanceOverview	function	finance	true	hook	src/api/finance/overview.ts	58	
+ExportType	type	finance	true		src/api/finance/overview.ts	70	
+ExportResult	interface	finance	true		src/api/finance/overview.ts	72	
+useExportOverview	function	finance	true	hook	src/api/finance/overview.ts	78	
+KpiType	type	finance	true	ui-tile	src/api/finance/overview.ts	87	
+KpiDrilldownRow	interface	finance	true	ui-tile	src/api/finance/overview.ts	89	
+KpiDrilldownResult	interface	finance	true	ui-tile	src/api/finance/overview.ts	94	
+useKpiDrilldown	function	finance	true	hook,ui-tile	src/api/finance/overview.ts	102	
+ApprovalsQueueItemV2	interface	finance	true		src/api/finance/overview.ts	114	
+ApprovalsQueueFilters	interface	finance	true		src/api/finance/overview.ts	123	
+useApprovalsQueue	function	finance	true	hook	src/api/finance/overview.ts	130	
+ActOnApprovalArgs	interface	finance	true		src/api/finance/overview.ts	139	
+useActOnApproval	function	finance	true	hook	src/api/finance/overview.ts	146	
+SpendBudgetPeriod	type	finance	true		src/api/finance/overview.ts	160	
+SpendBudgetSeries	interface	finance	true		src/api/finance/overview.ts	162	
+useSpendBudgetSeries	function	finance	true	hook	src/api/finance/overview.ts	170	
 PayrollRun	interface	payroll	true		src/api/finance/payroll.ts	14	
 PayrollRunInput	interface	payroll	true		src/api/finance/payroll.ts	47	
 PayrollRunLine	interface	payroll	true		src/api/finance/payroll.ts	62	
@@ -3487,10 +3805,18 @@ useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	553
 payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	561	
 usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	571	
 useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	582	
-STALE_5M	variable	finance	false		src/api/finance/pickers.ts	14	
-CostCentreOption	interface	finance	true		src/api/finance/pickers.ts	18	
-post	function	finance	false		src/api/finance/pickers.ts	27	
-useCostCentres	function	finance	true	hook	src/api/finance/pickers.ts	36	
+STALE_5M	variable	finance	false		src/api/finance/pickers.ts	15	
+GlAccountOption	interface	finance	true		src/api/finance/pickers.ts	19	
+CostCentreOption	interface	finance	true		src/api/finance/pickers.ts	25	
+TaxCodeOption	interface	finance	true		src/api/finance/pickers.ts	32	
+PaymentTermsOption	interface	finance	true		src/api/finance/pickers.ts	39	
+VendorPickerOption	interface	finance	true		src/api/finance/pickers.ts	44	
+post	function	finance	false		src/api/finance/pickers.ts	55	
+useGlAccounts	function	finance	true	hook	src/api/finance/pickers.ts	64	
+useCostCentres	function	finance	true	hook	src/api/finance/pickers.ts	74	
+useTaxCodes	function	finance	true	hook	src/api/finance/pickers.ts	84	
+usePaymentTerms	function	finance	true	hook	src/api/finance/pickers.ts	94	
+useVendorPicker	function	finance	true	hook	src/api/finance/pickers.ts	104	
 remittanceComputeKey	function	finance	false		src/api/finance/remittances.ts	24	
 remittanceLinesAllKey	function	finance	false		src/api/finance/remittances.ts	27	
 remittanceReportKey	function	finance	false		src/api/finance/remittances.ts	30	
@@ -5133,24 +5459,25 @@ EmployeeCellResolvedProps	interface	finance	true		src/components/sections/Financ
 EmployeeCellResolved	function	finance	true	component	src/components/sections/Finance/_shared/EmployeeCell.tsx	58	
 EmployeeCellProps	interface	finance	true		src/components/sections/Finance/_shared/EmployeeCell.tsx	94	
 EmployeeCell	function	finance	true	component	src/components/sections/Finance/_shared/EmployeeCell.tsx	107	
-useDebounce	function	finance	false	hook	src/components/sections/Finance/_shared/pickers.tsx	40	
-BasePickerProps	interface	finance	true		src/components/sections/Finance/_shared/pickers.tsx	57	
-EmployeePicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	74	
-CostCentrePicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	123	
-ApprovedRunPicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	173	
-AuthorityPicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	220	
-ReportResult	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	41	
-ReportRow	type	finance	true		src/components/sections/Finance/_shared/reports.tsx	48	
-ReportColumn	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	51	
-ReportDescriptor	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	70	
-exportReportCsv	function	finance	true		src/components/sections/Finance/_shared/reports.tsx	82	
-ReportDataTableProps	interface	finance	false		src/components/sections/Finance/_shared/reports.tsx	103	
-ReportDataTable	function	finance	true	component	src/components/sections/Finance/_shared/reports.tsx	115	
-cellValue	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	120	ReportDataTable
-isNumeric	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	134	ReportDataTable
-ReportPanelProps	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	183	
-ReportPanel	function	finance	true	component	src/components/sections/Finance/_shared/reports.tsx	216	
-handleExport	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	229	ReportPanel
+useDebounce	function	finance	false	hook	src/components/sections/Finance/_shared/pickers.tsx	42	
+BasePickerProps	interface	finance	true		src/components/sections/Finance/_shared/pickers.tsx	59	
+EmployeePicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	76	
+CostCentrePicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	125	
+ApprovedRunPicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	175	
+AuthorityPicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	222	
+BudgetCategoryPicker	function	finance	true	component	src/components/sections/Finance/_shared/pickers.tsx	262	
+ReportResult	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	42	
+ReportRow	type	finance	true		src/components/sections/Finance/_shared/reports.tsx	49	
+ReportColumn	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	52	
+ReportDescriptor	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	71	
+exportReportCsv	function	finance	true		src/components/sections/Finance/_shared/reports.tsx	83	
+ReportDataTableProps	interface	finance	false		src/components/sections/Finance/_shared/reports.tsx	104	
+ReportDataTable	function	finance	true	component	src/components/sections/Finance/_shared/reports.tsx	116	
+cellValue	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	121	ReportDataTable
+isNumeric	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	135	ReportDataTable
+ReportPanelProps	interface	finance	true		src/components/sections/Finance/_shared/reports.tsx	184	
+ReportPanel	function	finance	true	component	src/components/sections/Finance/_shared/reports.tsx	217	
+handleExport	function	finance	false		src/components/sections/Finance/_shared/reports.tsx	230	ReportPanel
 IconProps	interface	finance	false		src/components/sections/Finance/_shared/sfpKit.tsx	16	
 svg	function	finance	false		src/components/sections/Finance/_shared/sfpKit.tsx	17	
 IconFile	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	21	
@@ -5184,6 +5511,203 @@ TextField	function	finance	true	component	src/components/sections/Finance/_share
 MoneyField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	152	
 SelectField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	175	
 ToggleField	function	finance	true	component	src/components/sections/Finance/_shared/sfpKit.tsx	200	
+ApAdvFilters	interface	finance	true		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	15	
+countAdvFilters	function	finance	true		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	21	
+ApAdvancedFilterPanel	function	finance	true	component	src/components/sections/Finance/ApAdvancedFilterPanel.tsx	26	
+set	function	finance	false		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	35	ApAdvancedFilterPanel
+numOrUndef	function	finance	false		src/components/sections/Finance/ApAdvancedFilterPanel.tsx	36	ApAdvancedFilterPanel
+fmtDate	function	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	19	
+fmtDateTime	function	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	20	
+humanize	function	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	21	
+statusView	function	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	23	
+Tab	type	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	36	
+TABS	array	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	37	
+ApBillDrawerActions	interface	finance	true		src/components/sections/Finance/ApBillDrawer.tsx	43	
+ApBillDrawer	function	finance	true	component	src/components/sections/Finance/ApBillDrawer.tsx	48	
+postComment	function	finance	false		src/components/sections/Finance/ApBillDrawer.tsx	64	ApBillDrawer
+fmtDue	function	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	22	
+Props	interface	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	25	
+ApBulkApprovalQueue	function	finance	true	component	src/components/sections/Finance/ApBulkApprovalQueue.tsx	31	
+toggleAll	function	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	52	ApBulkApprovalQueue
+toggle	function	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	56	ApBulkApprovalQueue
+doApprove	function	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	60	ApBulkApprovalQueue
+doRejectOne	function	finance	false		src/components/sections/Finance/ApBulkApprovalQueue.tsx	77	ApBulkApprovalQueue
+MATCH_LABEL	object	finance	false		src/components/sections/Finance/ApDuplicateReviewDrawer.tsx	19	
+CONF_TONE	object	finance	false		src/components/sections/Finance/ApDuplicateReviewDrawer.tsx	26	
+Props	interface	finance	false		src/components/sections/Finance/ApDuplicateReviewDrawer.tsx	30	
+ApDuplicateReviewDrawer	function	finance	true	component	src/components/sections/Finance/ApDuplicateReviewDrawer.tsx	36	
+handleResolve	function	finance	false		src/components/sections/Finance/ApDuplicateReviewDrawer.tsx	47	ApDuplicateReviewDrawer
+Props	interface	finance	false		src/components/sections/Finance/ApDuplicateRiskBanner.tsx	12	
+ApDuplicateRiskBanner	function	finance	true	component	src/components/sections/Finance/ApDuplicateRiskBanner.tsx	16	
+REQUIRED_HEADERS	variable	finance	false	component	src/components/sections/Finance/ApImportWizard.tsx	24	
+ALL_HEADERS	variable	finance	false	component	src/components/sections/Finance/ApImportWizard.tsx	25	
+parseCsv	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	27	
+STEPS	array	finance	false		src/components/sections/Finance/ApImportWizard.tsx	42	
+Props	interface	finance	false		src/components/sections/Finance/ApImportWizard.tsx	44	
+ApImportWizard	function	finance	true	component	src/components/sections/Finance/ApImportWizard.tsx	50	
+reset	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	61	ApImportWizard
+close	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	64	ApImportWizard
+handleFile	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	66	ApImportWizard
+parseThenValidate	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	72	ApImportWizard
+doImport	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	108	ApImportWizard
+onPrimary	function	finance	false		src/components/sections/Finance/ApImportWizard.tsx	125	ApImportWizard
+LineDraft	interface	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	19	
+emptyLine	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	20	
+lineTotal	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	21	
+num	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	22	
+LineEditor	function	finance	false	component	src/components/sections/Finance/ApNewBillWizard.tsx	24	
+set	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	28	LineEditor
+ApNewBillWizard	function	finance	true	component	src/components/sections/Finance/ApNewBillWizard.tsx	53	
+H	function	finance	false	component	src/components/sections/Finance/ApNewBillWizard.tsx	70	ApNewBillWizard
+reset	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	71	ApNewBillWizard
+close	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	72	ApNewBillWizard
+pickVendor	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	73	ApNewBillWizard
+next	function	finance	false		src/components/sections/Finance/ApNewBillWizard.tsx	81	ApNewBillWizard
+METHODS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	28	
+fmtDue	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	34	
+STEPS	array	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	37	
+Props	interface	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	39	
+ApPaymentRunBuilder	function	finance	true	component	src/components/sections/Finance/ApPaymentRunBuilder.tsx	45	
+toggle	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	75	ApPaymentRunBuilder
+toggleAll	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	78	ApPaymentRunBuilder
+reset	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	82	ApPaymentRunBuilder
+close	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	86	ApPaymentRunBuilder
+doCreate	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	88	ApPaymentRunBuilder
+doProcess	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	108	ApPaymentRunBuilder
+doVoid	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	131	ApPaymentRunBuilder
+onNext	function	finance	false		src/components/sections/Finance/ApPaymentRunBuilder.tsx	157	ApPaymentRunBuilder
+METHODS	array	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	21	
+REQUIRES_REFERENCE	array	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	31	
+resultingStatus	function	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	35	
+todayIso	function	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	42	
+PayForm	interface	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	46	
+FieldErrors	type	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	54	
+ApRecordPaymentDialogProps	interface	finance	true		src/components/sections/Finance/ApRecordPaymentDialog.tsx	58	
+ApRecordPaymentDialog	function	finance	true	component	src/components/sections/Finance/ApRecordPaymentDialog.tsx	65	
+validate	function	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	90	ApRecordPaymentDialog
+submit	function	finance	false		src/components/sections/Finance/ApRecordPaymentDialog.tsx	100	ApRecordPaymentDialog
+BillStatusFacet	type	finance	true		src/components/sections/Finance/ApStatusFilterMenu.tsx	15	
+BILL_STATUS_LABEL	object	finance	true		src/components/sections/Finance/ApStatusFilterMenu.tsx	17	
+OPTIONS	array	finance	false		src/components/sections/Finance/ApStatusFilterMenu.tsx	22	
+ApStatusFilterMenu	function	finance	true	component	src/components/sections/Finance/ApStatusFilterMenu.tsx	24	
+validateEmail	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	26	
+validatePhone	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	27	
+CURRENCIES	array	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	29	
+METHODS	array	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	30	
+STATUSES	array	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	38	
+VendorForm	interface	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	46	
+EMPTY_FORM	object	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	69	
+fromVendor	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	77	
+FieldErrors	type	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	90	
+ApVendorDialogProps	interface	finance	true		src/components/sections/Finance/ApVendorDialog.tsx	94	
+ApVendorDialog	function	finance	true	component	src/components/sections/Finance/ApVendorDialog.tsx	102	
+validateStep	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	147	ApVendorDialog
+goNext	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	165	ApVendorDialog
+submit	function	finance	false		src/components/sections/Finance/ApVendorDialog.tsx	173	ApVendorDialog
+fmtDate	function	finance	false		src/components/sections/Finance/ApVendorDrawer.tsx	28	
+vendorStatusTone	function	finance	false		src/components/sections/Finance/ApVendorDrawer.tsx	33	
+vendorStatusLabel	function	finance	false		src/components/sections/Finance/ApVendorDrawer.tsx	36	
+billTone	function	finance	false		src/components/sections/Finance/ApVendorDrawer.tsx	40	
+VendorOverview	function	finance	false	component	src/components/sections/Finance/ApVendorDrawer.tsx	55	
+BillsTab	function	finance	false	component	src/components/sections/Finance/ApVendorDrawer.tsx	122	
+PaymentsTab	function	finance	false	component	src/components/sections/Finance/ApVendorDrawer.tsx	147	
+PayRow	type	finance	false		src/components/sections/Finance/ApVendorDrawer.tsx	149	PaymentsTab
+ApVendorDrawerProps	interface	finance	true		src/components/sections/Finance/ApVendorDrawer.tsx	173	
+ApVendorDrawer	function	finance	true	component	src/components/sections/Finance/ApVendorDrawer.tsx	180	
+CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	27	
+YEAR_OPTS	variable	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	28	
+PERIOD_OPTIONS	variable	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	30	
+LineEntry	interface	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	32	
+WizardState	interface	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	42	
+EMPTY_STATE	object	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	51	
+Step0FiscalYear	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	62	
+Step1CostCentre	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	95	
+Step2Categories	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	115	
+addCategory	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	121	Step2Categories
+removeCategory	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	127	Step2Categories
+Step3LineEntry	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	175	
+patchLine	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	179	Step3LineEntry
+Step4Review	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	261	
+Step5Confirm	function	finance	false	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	321	
+STEP_TITLES	array	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	346	
+BudBulkUpsertWizardProps	interface	finance	true		src/components/sections/Finance/BudBulkUpsertWizard.tsx	355	
+BudBulkUpsertWizard	function	finance	true	component	src/components/sections/Finance/BudBulkUpsertWizard.tsx	361	
+patch	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	378	BudBulkUpsertWizard
+syncLines	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	383	BudBulkUpsertWizard
+validateStep	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	391	BudBulkUpsertWizard
+handleNext	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	410	BudBulkUpsertWizard
+handleBack	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	421	BudBulkUpsertWizard
+handleSubmit	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	426	BudBulkUpsertWizard
+handlePrimary	function	finance	false		src/components/sections/Finance/BudBulkUpsertWizard.tsx	463	BudBulkUpsertWizard
+CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/BudCopyLastYearDialog.tsx	22	
+YEAR_OPTS	variable	finance	false	component	src/components/sections/Finance/BudCopyLastYearDialog.tsx	23	
+DialogState	interface	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	25	
+EMPTY	object	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	36	
+PreviewStep	function	finance	false	component	src/components/sections/Finance/BudCopyLastYearDialog.tsx	48	
+BudCopyLastYearDialogProps	interface	finance	true		src/components/sections/Finance/BudCopyLastYearDialog.tsx	134	
+BudCopyLastYearDialog	function	finance	true	component	src/components/sections/Finance/BudCopyLastYearDialog.tsx	140	
+patch	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	147	BudCopyLastYearDialog
+validate	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	151	BudCopyLastYearDialog
+handleNext	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	160	BudCopyLastYearDialog
+handleSubmit	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	167	BudCopyLastYearDialog
+handlePrimary	function	finance	false		src/components/sections/Finance/BudCopyLastYearDialog.tsx	196	BudCopyLastYearDialog
+CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	56	
+YEAR_OPTS	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	57	
+PAGE_SIZE	variable	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	58	
+Tab	type	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	60	
+TABS	array	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	61	
+varianceTone	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	71	
+fmtPct	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	79	
+SOURCE_MODULE_LABELS	object	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	84	
+humanModule	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	92	
+EditForm	interface	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	98	
+EMPTY_FORM	object	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	102	
+EditModalState	interface	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	112	
+LinesTab	function	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	116	
+handleSort	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	136	LinesTab
+openDrawer	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	171	LinesTab
+openEdit	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	176	LinesTab
+onEditSubmit	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	192	LinesTab
+onDelete	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	219	LinesTab
+handleExportCsv	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	236	LinesTab
+VarianceTab	function	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	406	
+handleSort	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	418	VarianceTab
+handleExport	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	466	VarianceTab
+ActualsTab	function	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	540	
+handleSort	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	551	ActualsTab
+handleExport	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	585	ActualsTab
+BUDGET_VARIANCE_COLS	array	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	638	
+BUDGET_ACTUALS_COLS	array	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	648	
+ReportsTab	function	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	656	
+runReport	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	668	ReportsTab
+ImportsTab	function	finance	false	component	src/components/sections/Finance/BudgetsOverview.tsx	710	
+parseCsv	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	723	ImportsTab
+onFileChange	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	735	ImportsTab
+onImport	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	746	ImportsTab
+BudgetsOverview	function	finance	true	component	src/components/sections/Finance/BudgetsOverview.tsx	868	
+handlePageExport	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	896	BudgetsOverview
+handleVarianceDrill	function	finance	false		src/components/sections/Finance/BudgetsOverview.tsx	911	BudgetsOverview
+MONTHS	array	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	33	
+fmtDate	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	35	
+fmtBytes	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	40	
+varianceTone	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	47	
+varianceLabel	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	55	
+approvalTone	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	62	
+DrawerTab	type	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	71	
+TABS	array	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	72	
+SummaryTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	85	
+ActualsTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	121	
+VarianceTrendTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	187	
+RelatedTransactionsTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	246	
+ApprovalsTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	315	
+TimelineTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	360	
+AuditTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	387	
+AttachmentsTab	function	finance	false	component	src/components/sections/Finance/BudLineDrawer.tsx	446	
+handleFileChange	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	456	AttachmentsTab
+handleDownload	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	491	AttachmentsTab
+handleDelete	function	finance	false		src/components/sections/Finance/BudLineDrawer.tsx	500	AttachmentsTab
+BudLineDrawerProps	interface	finance	true		src/components/sections/Finance/BudLineDrawer.tsx	576	
+BudLineDrawer	function	finance	true	component	src/components/sections/Finance/BudLineDrawer.tsx	584	
 STEPS	array	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	31	
 PaymentSettings	interface	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	39	
 CURRENCIES	array	finance	false		src/components/sections/Finance/DisbComputeWizard.tsx	45	
@@ -5316,18 +5840,43 @@ handleFinish	function	finance	false		src/components/sections/Finance/ExpNewClaim
 renderStep	function	finance	false		src/components/sections/Finance/ExpNewClaimWizard.tsx	353	ExpNewClaimWizard
 handleBack	function	finance	false		src/components/sections/Finance/ExpNewClaimWizard.tsx	763	ExpNewClaimWizard
 handleNext	function	finance	false		src/components/sections/Finance/ExpNewClaimWizard.tsx	765	ExpNewClaimWizard
-STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	24	
-PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	25	
-PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	26	
-REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	27	
-MY_PAYSLIPS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	28	
-EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	29	
-DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
-STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
-PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
-isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	34	
-FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	47	
-onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	58	FinanceSection
+openApproveModal	function	finance	true		src/components/sections/Finance/FinanceApprovalActionModal.tsx	18	
+openRejectModal	function	finance	true		src/components/sections/Finance/FinanceApprovalActionModal.tsx	44	
+go	function	finance	false		src/components/sections/Finance/FinanceApprovalsInbox.tsx	28	
+TYPE_TONES	object	finance	false		src/components/sections/Finance/FinanceApprovalsInbox.tsx	30	
+Props	interface	finance	false		src/components/sections/Finance/FinanceApprovalsInbox.tsx	37	
+FinanceApprovalsInbox	function	finance	true	component	src/components/sections/Finance/FinanceApprovalsInbox.tsx	42	
+handleApprove	function	finance	false		src/components/sections/Finance/FinanceApprovalsInbox.tsx	52	FinanceApprovalsInbox
+handleReject	function	finance	false		src/components/sections/Finance/FinanceApprovalsInbox.tsx	68	FinanceApprovalsInbox
+Props	interface	finance	false		src/components/sections/Finance/FinanceExportDialog.tsx	15	
+EXPORT_TYPES	array	finance	false		src/components/sections/Finance/FinanceExportDialog.tsx	20	
+FinanceExportDialog	function	finance	true	component	src/components/sections/Finance/FinanceExportDialog.tsx	28	
+handleExport	function	finance	false		src/components/sections/Finance/FinanceExportDialog.tsx	34	FinanceExportDialog
+handleBackdrop	function	finance	false		src/components/sections/Finance/FinanceExportDialog.tsx	55	FinanceExportDialog
+go	function	finance	false		src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	17	
+KPI_LABELS	object	finance	false	ui-tile	src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	19	
+KPI_MODULES	object	finance	false	ui-tile	src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	26	
+drilldownCols	array	finance	false		src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	33	
+Props	interface	finance	false		src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	47	
+FinanceKpiDrilldownDrawer	function	finance	true	component,ui-tile	src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx	53	
+go	function	finance	false		src/components/sections/Finance/FinanceOverview.tsx	27	
+TYPE_ROUTE	object	finance	false		src/components/sections/Finance/FinanceOverview.tsx	28	
+FinanceOverview	function	finance	true	component	src/components/sections/Finance/FinanceOverview.tsx	32	
+OVERVIEW_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	27	
+PAYABLES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	28	
+STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	29	
+PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
+PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
+REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
+MY_PAYSLIPS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	33	
+EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	34	
+BUDGETS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	35	
+DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	36	
+STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	37	
+PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	38	
+isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	40	
+FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	56	
+onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	62	FinanceSection
 MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	9	
 fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	11	
 fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	16	
@@ -5339,23 +5888,37 @@ money	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	9
 moneyCompact	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	15	
 deltaLabel	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	26	
 dateBadge	function	finance	true		src/components/sections/Finance/hrfinFormat.ts	33	
-FINANCE_ROOT_ID	variable	finance	false		src/components/sections/Finance/module.ts	15	
-STATUTORY_ITEM	object	finance	false		src/components/sections/Finance/module.ts	17	
-PAYROLL_ITEM	object	finance	false		src/components/sections/Finance/module.ts	24	
-PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	31	
-PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	38	
-REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	45	
-MY_PAYSLIPS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	52	
-EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	58	
-DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	65	
-STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	72	
-financeModule	object	finance	true		src/components/sections/Finance/module.ts	79	
+FINANCE_ROOT_ID	variable	finance	false		src/components/sections/Finance/module.ts	14	
+OVERVIEW_ITEM	object	finance	false		src/components/sections/Finance/module.ts	16	
+PAYABLES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	23	
+STATUTORY_ITEM	object	finance	false		src/components/sections/Finance/module.ts	30	
+PAYROLL_ITEM	object	finance	false		src/components/sections/Finance/module.ts	37	
+PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	44	
+PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	51	
+REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	58	
+MY_PAYSLIPS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	65	
+EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	71	
+BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	78	
+DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	85	
+STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	92	
+financeModule	object	finance	true		src/components/sections/Finance/module.ts	99	
 mountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	10	
 unmountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	22	
 MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	30	
 MyPayslipsOverview	function	payroll	true	component	src/components/sections/Finance/MyPayslipsOverview.tsx	34	
 PayslipRow	function	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	101	
 download	function	payroll	false		src/components/sections/Finance/MyPayslipsOverview.tsx	104	PayslipRow
+fmtDue	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	41	
+AGING_TONE	array	finance	false		src/components/sections/Finance/PayablesOverview.tsx	42	
+billTone	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	44	
+nextFriday	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	56	
+PayablesOverview	function	finance	true	component	src/components/sections/Finance/PayablesOverview.tsx	61	
+doApprove	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	120	PayablesOverview
+doReject	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	124	PayablesOverview
+doVoid	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	128	PayablesOverview
+doSubmit	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	132	PayablesOverview
+openPay	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	133	PayablesOverview
+exportBills	function	finance	false		src/components/sections/Finance/PayablesOverview.tsx	135	PayablesOverview
 PayCreateDisbursementDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	24	
 submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	35	PayCreateDisbursementDialog
 _AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	92	
@@ -8826,19 +9389,19 @@ PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44
 ctx	function	security	false	test	src/lib/permissions.test.ts	27	
 override	function	security	false	test	src/lib/permissions.test.ts	35	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	502	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	507	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	535	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	550	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	575	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1205	
-resolvePermission	function	security	true		src/lib/permissions.ts	1236	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1268	
-PermissionState	type	security	true		src/lib/permissions.ts	1274	
-permissionState	function	security	true		src/lib/permissions.ts	1280	
-permissionGroups	function	security	true		src/lib/permissions.ts	1290	
-can	function	security	true		src/lib/permissions.ts	1310	
-useCan	function	security	true	hook	src/lib/permissions.ts	1326	
+PermissionKey	type	security	true		src/lib/permissions.ts	532	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	537	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	565	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	580	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	605	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1295	
+resolvePermission	function	security	true		src/lib/permissions.ts	1326	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1358	
+PermissionState	type	security	true		src/lib/permissions.ts	1364	
+permissionState	function	security	true		src/lib/permissions.ts	1370	
+permissionGroups	function	security	true		src/lib/permissions.ts	1380	
+can	function	security	true		src/lib/permissions.ts	1400	
+useCan	function	security	true	hook	src/lib/permissions.ts	1416	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -9753,12 +10316,12 @@ then	method	payroll	false	test	tests/unit/backPay.test.ts	342	terminal
 extractSetKeys	function	testing	false	test	tests/unit/criticalGrants.sync.test.ts	19	
 BE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	30	
 FE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	31	
-COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
-OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	63	
-NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	65	
-superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	72	
-roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	81	
-roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	83	
+COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	57	
+OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
+NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
+superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	68	
+roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	77	
+roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	79	
 MaybeSingle	type	testing	false	test	tests/unit/loadRenderTemplate.test.ts	34	
 runRow	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	37	
 Loaded	interface	testing	false	test	tests/unit/loadRenderTemplate.test.ts	45	
@@ -9803,11 +10366,11 @@ freshImport	function	communications	false	test	tests/unit/realtimeAuth.test.ts	1
 makeKeypair	function	communications	false	test	tests/unit/realtimeAuth.test.ts	22	
 mockRoleScope	function	testing	false	test	tests/unit/scope.test.ts	23	
 KEYSET	variable	settings	false	test	tests/unit/settings.manifest.test.ts	15	
-ROOT	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	32	
-FUNCS_DIR	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	33	
-ALLOWLIST	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	35	
-walkTs	function	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	41	
-stripComments	function	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	59	
+ROOT	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	34	
+FUNCS_DIR	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	35	
+ALLOWLIST	variable	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	37	
+walkTs	function	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	45	
+stripComments	function	workflow	false	test	tests/unit/workflow.startForRecord.guard.test.ts	63	
 ctx	object	workflow	false	test	tests/unit/workflowEngine.resolvers.test.ts	9	
 binding	function	workflow	false	test	tests/unit/workflowEngine.resolvers.test.ts	16	
 step	function	workflow	false	test	tests/unit/workflowEngine.resolvers.test.ts	64	

@@ -1,7 +1,5 @@
 # SIOMAC Finance — Wave 2B Build Spec (deepen the 6 existing pages into Aurora)
 
-> **Partially superseded.** Budgeting references were retired on 2026-07-18. Active payroll, statutory, remittance, disbursement, and expense guidance remains historical context only. Product scope is controlled by `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
-
 > Authoritative, **reconciled**, file-chunked build plan for Wave 2B. Rolls the Codex "SIOMAC
 > Finance Wave 2B — Enterprise Build Spec" (2026-07-07) into the actual repo. The honest per-control
 > audit that drove it is `docs/FINANCE_WAVE2B_FEATURE_AUDIT.md` (the "why"); THIS doc is the

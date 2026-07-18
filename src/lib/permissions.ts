@@ -481,6 +481,15 @@ export const PERMISSION_KEYS = [
   'finance.expenses.reports.export', // export expense reports
   'finance.expenses.receipt.upload', // upload receipt files to expense claim lines (Wave 2B)
   'finance.expenses.handoff.create_reimbursement', // trigger the cross-module payroll reimbursement handoff for an approved claim (Wave 2B)
+  // -- Finance Budgeting & Budget-vs-Actual (F5) ----------------------------------
+  'finance.budgets.view',             // view budget lines and computed actuals/variance
+  'finance.budgets.manage',           // create, update, delete budget lines
+  'finance.budgets.reports.view',     // view budget variance and summary reports
+  'finance.budgets.reports.export',   // export budget reports (audited data egress)
+  'finance.budgets.bulk_upsert',       // bulk create/update budget lines in one submit (Wave 2B)
+  'finance.budgets.copy_last_year',     // copy prior-year budget lines into a new fiscal year (Wave 2B)
+  'finance.budgets.attachments.upload', // upload budget supporting documents (Wave 2B)
+  'finance.budgets.attachments.delete', // remove budget supporting documents (Wave 2B)
   // -- Finance Bank Accounts & Disbursements (F2) --------------------------------
   'finance.bank_accounts.view',       // view employee bank accounts (masked number)
   'finance.bank_accounts.manage',     // add/edit/deactivate own (employee) or any (finance+) bank account
@@ -488,8 +497,29 @@ export const PERMISSION_KEYS = [
   'finance.disbursement.manage',      // create disbursements from payroll runs + submit for approval
   'finance.disbursement.approve',     // approve / generate bank file / mark paid (SoD: creator cannot approve)
   'finance.disbursement.bank_file.download', // download the generated EFT/CSV bank file (sensitive) (Wave 2B)
-  // -- Shared Finance reference data ---------------------------------------------
-  'finance.overview.view',            // read shared cost-centre and employee references
+  // -- Finance Overview dashboard ------------------------------------------------
+  'finance.overview.view',            // view the finance overview command dashboard
+  'finance.overview.export',          // export dashboard data (CSV) — audited data egress
+  'finance.overview.kpi.drill',       // drill into KPI cards → filtered register
+  'finance.overview.approvals.inline',// inline approve/reject items in the overview approvals queue
+  // -- Finance Accounts Payable (vendor bills → approval → payment) --------------
+  'finance.ap.view',                  // view AP bills, vendors, payments, aging
+  'finance.ap.manage',                // legacy coarse alias — kept for role-bundle mapping; new routes use granular keys
+  'finance.ap.approve',               // legacy coarse alias — kept for role-bundle mapping; new routes use granular keys
+  // Granular AP keys (Wave 2A)
+  'finance.ap.vendors.create',        // create new vendors
+  'finance.ap.vendors.update',        // edit existing vendors
+  'finance.ap.bills.create',          // create bill drafts
+  'finance.ap.bills.edit',            // edit draft bills
+  'finance.ap.bills.submit',          // submit bills for approval
+  'finance.ap.bills.approve',         // approve/reject submitted bills (SoD: creator cannot approve)
+  'finance.ap.bills.void',            // void bills in any non-paid state (SoD)
+  'finance.ap.payment.record',        // record a payment against an approved bill
+  'finance.ap.payment.run.manage',    // create and manage payment runs (batch)
+  'finance.ap.payment.run.process',   // process/execute a payment run (SoD: creator cannot process)
+  'finance.ap.duplicate.resolve',     // resolve duplicate bill risk reviews
+  'finance.ap.reports.export',        // export AP registers / reports (audited data egress)
+  'finance.ap.bills.import',          // import bills from CSV/XLSX
 
   // ── Calendar & Tasks (platform) ──────────────────────────────────────────────
   'calendar.view',                    // see the calendar + own/team/org dated items (scope server-side)
@@ -638,11 +668,22 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.expenses.submit',
     'finance.expenses.manage',
     'finance.expenses.receipt.upload',
+    // Budgets (F5) -- staff: view only
+    'finance.budgets.view',
     // Bank Accounts & Disbursements (F2)
     'finance.bank_accounts.view',
     'finance.disbursement.view',
     'finance.disbursement.manage',
+    // Overview + Accounts Payable — staff: view + manage (create/submit bills, record payments)
     'finance.overview.view',
+    'finance.overview.export',
+    'finance.ap.view',
+    'finance.ap.manage',
+    'finance.ap.vendors.create',
+    'finance.ap.bills.create',
+    'finance.ap.bills.edit',
+    'finance.ap.bills.submit',
+    'finance.ap.payment.record',
   ]),
   finance_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
@@ -703,16 +744,44 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.expenses.reports.export',
     'finance.expenses.receipt.upload',
     'finance.expenses.handoff.create_reimbursement',
+    // Budgets (F5) -- manager: full
+    'finance.budgets.view',
+    'finance.budgets.manage',
+    'finance.budgets.reports.view',
+    'finance.budgets.reports.export',
     // Bank Accounts & Disbursements (F2) -- manager: all
     'finance.bank_accounts.view',
     'finance.bank_accounts.manage',
     'finance.disbursement.view',
     'finance.disbursement.manage',
     'finance.disbursement.approve',
+    // Wave 2B page-fleet keys (Statutory / Remittances / Disbursements / Budgets)
     'finance.statutory.nis_class.delete', 'finance.statutory.nis_class.import',
     'finance.remittances.mark_filed',
     'finance.disbursement.bank_file.download',
+    'finance.budgets.bulk_upsert', 'finance.budgets.copy_last_year',
+    'finance.budgets.attachments.upload', 'finance.budgets.attachments.delete',
+    // Overview + Accounts Payable — manager: full (incl. approve/reject/void/payment-run/SoD)
     'finance.overview.view',
+    'finance.overview.export',
+    'finance.overview.kpi.drill',
+    'finance.overview.approvals.inline',
+    'finance.ap.view',
+    'finance.ap.manage',
+    'finance.ap.approve',
+    'finance.ap.vendors.create',
+    'finance.ap.vendors.update',
+    'finance.ap.bills.create',
+    'finance.ap.bills.edit',
+    'finance.ap.bills.submit',
+    'finance.ap.bills.approve',
+    'finance.ap.bills.void',
+    'finance.ap.payment.record',
+    'finance.ap.payment.run.manage',
+    'finance.ap.payment.run.process',
+    'finance.ap.duplicate.resolve',
+    'finance.ap.reports.export',
+    'finance.ap.bills.import',
   ]),
 
   employee: new Set<PermissionKey>([
@@ -991,13 +1060,25 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.remittances.view', 'finance.remittances.manage',
     'finance.remittances.approve', 'finance.remittances.reports.view', 'finance.remittances.reports.export',
     'finance.remittances.receipt.upload',
+    // Budgets (F5) -- admin has all
+    'finance.budgets.view', 'finance.budgets.manage',
+    'finance.budgets.reports.view', 'finance.budgets.reports.export',
     // Bank Accounts & Disbursements (F2) -- admin: all
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
-    'finance.overview.view',
+    // Wave 2B page-fleet keys (Statutory / Remittances / Disbursements / Budgets)
     'finance.statutory.nis_class.delete', 'finance.statutory.nis_class.import',
     'finance.remittances.mark_filed',
     'finance.disbursement.bank_file.download',
+    'finance.budgets.bulk_upsert', 'finance.budgets.copy_last_year',
+    'finance.budgets.attachments.upload', 'finance.budgets.attachments.delete',
+    // Overview + Accounts Payable -- admin: all
+    'finance.overview.view', 'finance.overview.export', 'finance.overview.kpi.drill', 'finance.overview.approvals.inline',
+    'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',
+    'finance.ap.vendors.create', 'finance.ap.vendors.update',
+    'finance.ap.bills.create', 'finance.ap.bills.edit', 'finance.ap.bills.submit', 'finance.ap.bills.approve', 'finance.ap.bills.void',
+    'finance.ap.payment.record', 'finance.ap.payment.run.manage', 'finance.ap.payment.run.process',
+    'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
   ]),
 
   superadmin: new Set<PermissionKey>([
@@ -1191,10 +1272,19 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.finding.resolve',
     'finance.payroll.finding.waive',
     'finance.payroll.finding.reopen',
+    // Budgets (F5) -- superadmin has all
+    'finance.budgets.view', 'finance.budgets.manage',
+    'finance.budgets.reports.view', 'finance.budgets.reports.export',
     // Bank Accounts & Disbursements (F2) -- superadmin: all
     'finance.bank_accounts.view', 'finance.bank_accounts.manage',
     'finance.disbursement.view', 'finance.disbursement.manage', 'finance.disbursement.approve',
-    'finance.overview.view',
+    // Overview + Accounts Payable -- superadmin: all
+    'finance.overview.view', 'finance.overview.export', 'finance.overview.kpi.drill', 'finance.overview.approvals.inline',
+    'finance.ap.view', 'finance.ap.manage', 'finance.ap.approve',
+    'finance.ap.vendors.create', 'finance.ap.vendors.update',
+    'finance.ap.bills.create', 'finance.ap.bills.edit', 'finance.ap.bills.submit', 'finance.ap.bills.approve', 'finance.ap.bills.void',
+    'finance.ap.payment.record', 'finance.ap.payment.run.manage', 'finance.ap.payment.run.process',
+    'finance.ap.duplicate.resolve', 'finance.ap.reports.export', 'finance.ap.bills.import',
     // Calendar & Tasks (platform) — superadmin: all
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
   ]),

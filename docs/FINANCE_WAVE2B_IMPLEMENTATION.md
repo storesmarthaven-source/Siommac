@@ -1,7 +1,5 @@
 # SIOMAC Finance Wave 2B — Full Technical Implementation
 
-> **Partially superseded.** Budgeting was retired on 2026-07-18. Do not implement its routes, permissions, UI, or tests. Current authority: `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
-
 > **Status:** authoritative build spec for the Wave 2B per-page deepening (the 6 old Finance pages →
 > Aurora `.hrfin`). The user-authored standard is reproduced verbatim in §1–§20. **§0 (Reconciliation)
 > was added by the orchestrator after verifying the spec against the live tree on 2026-07-08 and

@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `5eed2f760fc64022a5660d78`
+Source fingerprint: `1a7cce14127da8a837615a91`
 
-Files: 88 | Symbols: 1158 | Widgets: 10 | Unique mounted endpoints: 96 | Route definitions: 96 mounted + 0 unmounted | API calls: 4 | DB objects: 176 | E2E suites: 6
+Files: 122 | Symbols: 1714 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 176 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -27,11 +27,42 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/finance/attachments/complete` | `UPLOAD_PERMS[v.data.entityType]!` | requirePermission | `CompleteSchema` | `netlify/functions/routes/financeAttachments.ts:125` | - | financeLookups |
-| `/api/finance/attachments/delete` | `MANAGE_PERMS[v.data.entityType]!` | requirePermission | `DeleteSchema` | `netlify/functions/routes/financeAttachments.ts:179` | - | financeLookups |
-| `/api/finance/attachments/list` | `VIEW_PERMS[v.data.entityType]!` | requirePermission | `ListSchema` | `netlify/functions/routes/financeAttachments.ts:149` | - | financeLookups |
-| `/api/finance/attachments/signed-url` | `VIEW_PERMS[v.data.entityType]!` | requirePermission | `SignedUrlSchema` | `netlify/functions/routes/financeAttachments.ts:167` | - | financeLookups |
-| `/api/finance/attachments/upload-url` | `UPLOAD_PERMS[v.data.entityType]!` | requirePermission | `UploadUrlSchema` | `netlify/functions/routes/financeAttachments.ts:107` | - | financeLookups |
+| `/api/finance/ap/aging` | `finance.ap.view` | requirePermission | `-` | `netlify/functions/routes/financeAccountsPayable.ts:100` | - | financeAp |
+| `/api/finance/ap/bills/approve` | `finance.ap.bills.approve` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:200` | - | financeAp |
+| `/api/finance/ap/bills/audit` | `finance.ap.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:238` | - | - |
+| `/api/finance/ap/bills/bulk-approve` | `finance.ap.bills.approve` | requirePermission | `z.object({     billIds: z.array(z.string().uuid()).min(1).max(50),   })` | `netlify/functions/routes/financeAccountsPayable.ts:281` | - | financeAp |
+| `/api/finance/ap/bills/check-duplicate` | `finance.ap.view` | requirePermission | `z.object({     vendorId: z.string().uuid(), vendorInvoiceNo: z.string().optional(),     totalAmount: z.number().nonnegative().optional(), billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:183` | - | - |
+| `/api/finance/ap/bills/comments/create` | `finance.ap.manage` | requirePermission | `z.object({ id: z.string().uuid(), body: z.string().trim().min(1).max(2000), isInternal: z.boolean().optional() })` | `netlify/functions/routes/financeAccountsPayable.ts:252` | - | - |
+| `/api/finance/ap/bills/comments/list` | `finance.ap.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:245` | - | - |
+| `/api/finance/ap/bills/create` | `finance.ap.bills.create, finance.ap.bills.submit` | requirePermission | `z.object({     vendorId: z.string().uuid(),     billDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     dueDate:  z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     description: z.string().max(500).optional(),     vendorInvoiceNo: z.string().max(80).optional(),     reference: z.string().max(120).optional(),     currency: z.string().length(3).optional(),     paymentTermsDays: z.number().int().min(0).max(365).optional(),     glAccountCode: z.string().optional(),     lines: z.array(z.object({       description: z.string().min(1).max(300),       quantity: z.number().positive().optional(),       unitPrice: z.number().nonnegative().optional(),       amount: z.number().nonnegative().optional(),       glAccountCode: z.string().optional(),       costCenterId: z.string().uuid().nullable().optional(),       taxCode: z.string().max(30).optional(),       projectId: z.string().uuid().nullable().optional(),     })).min(1, 'At least one line is required.'),     taxIncluded: z.boolean().optional(),     taxAmount: z.number().nonnegative().optional(),     withholdingTaxCode: z.string().max(30).optional(),     submitForApproval: z.boolean().optional(),     duplicateOverrideReason: z.string().max(500).optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:150` | - | financeAp |
+| `/api/finance/ap/bills/get` | `finance.ap.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:47` | - | financeAp |
+| `/api/finance/ap/bills/import` | `finance.ap.bills.import` | requirePermission | `z.object({     rows: z.array(z.object({       rowIndex:       z.number().int().min(0),       vendorName:     z.string().max(200),       vendorInvoiceNo: z.string().max(80).optional().default(''),       billDate:       z.string(),       dueDate:        z.string().optional().default(''),       description:    z.string().max(500),       amount:         z.string(),       glAccountCode:  z.string().max(30).optional().default(''),       currency:       z.string().length(3).optional().default('TTD'),     })).min(1).max(500),   })` | `netlify/functions/routes/financeAccountsPayable.ts:342` | - | financeAp |
+| `/api/finance/ap/bills/list` | `finance.ap.view` | requirePermission | `z.object({     status: z.enum(BILL_FILTER_STATUS).optional(), vendorId: z.string().uuid().optional(), search: z.string().optional(),     dueFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(), dueTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     amountMin: z.number().nonnegative().optional(), amountMax: z.number().nonnegative().optional(),     glAccountCode: z.string().max(30).optional(), approverId: z.string().optional(),     page: z.number().int().min(0).optional(), pageSize: z.number().int().min(1).max(100).optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:34` | - | financeAp |
+| `/api/finance/ap/bills/record-payment` | `finance.ap.payment.record` | requirePermission | `z.object({     id:              z.string().uuid(),     amount:          z.number().positive(),     method:          z.enum(PAYMENT_METHOD).optional(),     paymentDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),     reference:       z.string().max(120).optional(),     memo:            z.string().max(500).optional(),     sourceAccountId: z.string().uuid().optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:214` | - | financeAp |
+| `/api/finance/ap/bills/reject` | `finance.ap.bills.approve` | requirePermission | `z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(500) })` | `netlify/functions/routes/financeAccountsPayable.ts:207` | - | - |
+| `/api/finance/ap/bills/submit` | `finance.ap.bills.submit` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:193` | - | financeAp |
+| `/api/finance/ap/bills/void` | `finance.ap.bills.void` | requirePermission | `z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(500) })` | `netlify/functions/routes/financeAccountsPayable.ts:230` | - | - |
+| `/api/finance/ap/duplicate-risks/list` | `finance.ap.view` | requirePermission | `z.object({ billId: z.string().uuid().optional() })` | `netlify/functions/routes/financeAccountsPayable.ts:261` | - | financeAp |
+| `/api/finance/ap/duplicate-risks/resolve` | `finance.ap.duplicate.resolve` | requirePermission | `z.object({     reviewId:       z.string().uuid(),     resolution:     z.enum(['resolved_duplicate', 'resolved_distinct']),     resolutionNote: z.string().max(500).optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:268` | - | financeAp |
+| `/api/finance/ap/kpis` | `finance.ap.view` | requirePermission | `-` | `netlify/functions/routes/financeAccountsPayable.ts:95` | - | financeAp |
+| `/api/finance/ap/payment-runs/create` | `finance.ap.payment.run.manage` | requirePermission | `z.object({     billIds:         z.array(z.string().uuid()).min(1).max(200),     paymentMethod:   z.enum(PAYMENT_METHOD),     payDate:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     currency:        z.string().length(3).optional(),     notes:           z.string().max(500).optional(),     sourceAccountId: z.string().uuid().optional(),   })` | `netlify/functions/routes/financeAccountsPayable.ts:312` | - | financeAp |
+| `/api/finance/ap/payment-runs/get` | `finance.ap.payment.run.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:301` | - | financeAp |
+| `/api/finance/ap/payment-runs/list` | `finance.ap.payment.run.manage` | requirePermission | `z.object({ status: z.enum(PAYMENT_RUN_STATUS).optional() })` | `netlify/functions/routes/financeAccountsPayable.ts:294` | - | financeAp |
+| `/api/finance/ap/payment-runs/process` | `finance.ap.payment.run.process` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:326` | - | financeAp |
+| `/api/finance/ap/payment-runs/void` | `finance.ap.payment.run.manage` | requirePermission | `z.object({ id: z.string().uuid(), reason: z.string().trim().min(1).max(500) })` | `netlify/functions/routes/financeAccountsPayable.ts:333` | - | financeAp |
+| `/api/finance/ap/payments/list` | `finance.ap.view` | requirePermission | `-` | `netlify/functions/routes/financeAccountsPayable.ts:90` | - | financeAp |
+| `/api/finance/ap/trend` | `finance.ap.view` | requirePermission | `-` | `netlify/functions/routes/financeAccountsPayable.ts:105` | - | financeAp |
+| `/api/finance/ap/vendors/bills` | `finance.ap.view` | requirePermission | `z.object({ vendorId: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:76` | - | financeAp |
+| `/api/finance/ap/vendors/create` | `finance.ap.vendors.create` | requirePermission | `VendorCoreSchema` | `netlify/functions/routes/financeAccountsPayable.ts:135` | - | financeAp |
+| `/api/finance/ap/vendors/get` | `finance.ap.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:65` | - | financeAp |
+| `/api/finance/ap/vendors/list` | `finance.ap.view` | requirePermission | `z.object({ status: z.enum(VENDOR_STATUS).optional() })` | `netlify/functions/routes/financeAccountsPayable.ts:58` | - | financeAp |
+| `/api/finance/ap/vendors/payments` | `finance.ap.view` | requirePermission | `z.object({ vendorId: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:83` | - | financeAp |
+| `/api/finance/ap/vendors/update` | `finance.ap.vendors.update` | requirePermission | `VendorCoreSchema.partial().extend({ id: z.string().uuid() })` | `netlify/functions/routes/financeAccountsPayable.ts:142` | - | financeAp |
+| `/api/finance/attachments/complete` | `UPLOAD_PERMS[v.data.entityType]!` | requirePermission | `CompleteSchema` | `netlify/functions/routes/financeAttachments.ts:164` | - | financeLookups |
+| `/api/finance/attachments/delete` | `MANAGE_PERMS[v.data.entityType]!` | requirePermission | `DeleteSchema` | `netlify/functions/routes/financeAttachments.ts:220` | - | financeLookups |
+| `/api/finance/attachments/list` | `VIEW_PERMS[v.data.entityType]!` | requirePermission | `ListSchema` | `netlify/functions/routes/financeAttachments.ts:189` | - | financeLookups |
+| `/api/finance/attachments/signed-url` | `VIEW_PERMS[v.data.entityType]!` | requirePermission | `SignedUrlSchema` | `netlify/functions/routes/financeAttachments.ts:208` | - | financeLookups |
+| `/api/finance/attachments/upload-url` | `UPLOAD_PERMS[v.data.entityType]!` | requirePermission | `UploadUrlSchema` | `netlify/functions/routes/financeAttachments.ts:145` | - | financeLookups |
 | `/api/finance/bank-accounts/deactivate` | `finance.bank_accounts.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBankAccounts.ts:56` | - | financeDisbursements |
 | `/api/finance/bank-accounts/get` | `finance.bank_accounts.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBankAccounts.ts:30` | - | financeDisbursements |
 | `/api/finance/bank-accounts/list` | `finance.bank_accounts.view` | requirePermission | `z.object({ employeeId: z.string().optional(), includeInactive: z.boolean().optional() })` | `netlify/functions/routes/financeBankAccounts.ts:17` | - | financeDisbursements |
@@ -39,6 +70,24 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/bridges/create-disbursement` | `finance.disbursement.manage` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     metadata:     z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financeBridges.ts:51` | - | financeLookups, financePayroll |
 | `/api/finance/bridges/create-reimbursement` | `finance.expenses.handoff.create_reimbursement` | requirePermission | `z.object({     expenseClaimId: z.string().uuid(),     payrollRunId:   z.string().uuid().optional().nullable(),   })` | `netlify/functions/routes/financeBridges.ts:104` | - | financeLookups |
 | `/api/finance/bridges/create-remittance` | `finance.remittances.manage` | requirePermission | `z.object({     payrollRunId: z.string().uuid(),     authority:    z.enum(['paye_bir', 'nis_nibtt', 'health_surcharge']),     dueDate:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional().nullable(),     metadata:     z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/financeBridges.ts:73` | - | financeLookups, financePayroll |
+| `/api/finance/budgets/actuals` | `finance.budgets.view` | requirePermission | `z.object({     fiscalYear:   z.number().int().min(2000).max(2100),     costCenterId: z.string().uuid().optional(),   })` | `netlify/functions/routes/financeBudgets.ts:187` | - | financeBudgets |
+| `/api/finance/budgets/approvals` | `finance.budgets.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:233` | - | financeBudgets |
+| `/api/finance/budgets/attachments/complete` | `finance.budgets.attachments.upload` | requirePermission | `z.object({     budgetLineId: z.string().uuid(),     fileName:     z.string().min(1).max(255),     storagePath:  z.string().min(1),     mimeType:     z.string().max(120).nullable().optional(),     fileSize:     z.number().int().positive().nullable().optional(),   })` | `netlify/functions/routes/financeBudgets.ts:281` | - | - |
+| `/api/finance/budgets/attachments/delete` | `finance.budgets.attachments.delete` | requirePermission | `z.object({     id:           z.string().uuid(),     budgetLineId: z.string().uuid(),   })` | `netlify/functions/routes/financeBudgets.ts:324` | - | - |
+| `/api/finance/budgets/attachments/list` | `finance.budgets.view` | requirePermission | `z.object({ budgetLineId: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:302` | - | - |
+| `/api/finance/budgets/attachments/signed-url` | `finance.budgets.view` | requirePermission | `z.object({ storagePath: z.string().min(1) })` | `netlify/functions/routes/financeBudgets.ts:313` | - | - |
+| `/api/finance/budgets/attachments/upload-url` | `finance.budgets.attachments.upload` | requirePermission | `z.object({     budgetLineId: z.string().uuid(),     fileName:     z.string().min(1).max(255),     mimeType:     z.string().min(1).max(120),   })` | `netlify/functions/routes/financeBudgets.ts:265` | - | - |
+| `/api/finance/budgets/audit-log` | `finance.budgets.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:248` | - | financeBudgets |
+| `/api/finance/budgets/bulk-upsert` | `finance.budgets.bulk_upsert` | requirePermission | `z.object({     lines: z.array(BulkLineSchema).min(1).max(200),   })` | `netlify/functions/routes/financeBudgets.ts:107` | - | financeBudgets |
+| `/api/finance/budgets/copy-last-year` | `finance.budgets.copy_last_year` | requirePermission | `z.object({     sourceFiscalYear: z.number().int().min(2000).max(2100),     targetFiscalYear: z.number().int().min(2000).max(2100),     costCenterId:     z.string().uuid().nullable().optional(),     category:         z.string().max(100).nullable().optional(),     adjustmentPct:    z.number().min(-99).max(200).optional(),     roundingRule:     z.enum(['none', 'hundred', 'thousand']).optional(),   })` | `netlify/functions/routes/financeBudgets.ts:134` | - | financeBudgets |
+| `/api/finance/budgets/delete` | `finance.budgets.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:95` | - | financeBudgets |
+| `/api/finance/budgets/get` | `finance.budgets.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:60` | - | financeBudgets |
+| `/api/finance/budgets/line-actuals` | `finance.budgets.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeBudgets.ts:175` | - | financeBudgets |
+| `/api/finance/budgets/list` | `finance.budgets.view` | requirePermission | `z.object({     costCenterId: z.string().uuid().optional(),     fiscalYear: z.number().int().min(2000).max(2100).optional(),     category: z.string().optional(),   })` | `netlify/functions/routes/financeBudgets.ts:45` | - | financeBudgets |
+| `/api/finance/budgets/reports/list` | `finance.budgets.reports.view` | requirePermission | `-` | `netlify/functions/routes/financeBudgets.ts:205` | - | financeBudgets |
+| `/api/finance/budgets/reports/run` | `finance.budgets.reports.view` | requirePermission | `z.object({     reportKey:    z.string().min(1),     fiscalYear:   z.number().int().min(2000).max(2100).optional(),     costCenterId: z.string().uuid().optional(),   })` | `netlify/functions/routes/financeBudgets.ts:214` | - | financeBudgets |
+| `/api/finance/budgets/upsert` | `finance.budgets.manage` | requirePermission | `z.object({     costCenterId: z.string().uuid(),     fiscalYear: z.number().int().min(2000).max(2100),     category: z.string().min(1).max(100),     label: z.string().max(200).nullable().optional(),     notes: z.string().max(2000).nullable().optional(),     budgeted: z.number().nonnegative(),     currency: z.enum(['TTD']).optional(),   })` | `netlify/functions/routes/financeBudgets.ts:76` | - | financeBudgets |
+| `/api/finance/budgets/variance` | `finance.budgets.view` | requirePermission | `z.object({     fiscalYear: z.number().int().min(2000).max(2100),     costCenterId: z.string().uuid().optional(),   })` | `netlify/functions/routes/financeBudgets.ts:156` | - | financeBudgets |
 | `/api/finance/disbursements/approve` | `finance.disbursement.approve` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:215` | - | financeDisbursements |
 | `/api/finance/disbursements/audit-log` | `finance.disbursement.view` | requirePermission | `z.object({ disbursementId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:351` | - | - |
 | `/api/finance/disbursements/bank-file/signed-url` | `finance.disbursement.bank_file.download` | requirePermission | `z.object({ disbursementId: z.string().uuid() })` | `netlify/functions/routes/financeDisbursements.ts:312` | - | financeDisbursements |
@@ -81,10 +130,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/expenses/reports/run` | `finance.expenses.reports.view` | requirePermission | `z.object({     report:     z.enum(REPORT_TYPES).optional(),     // legacy alias for backwards compat     claimantId: z.string().optional(),     status:     z.enum(STATUS_VALUES).optional(),     category:   z.enum(CATEGORY_VALUES).optional(),     fiscalYear: z.number().int().optional(),   })` | `netlify/functions/routes/financeExpenses.ts:444` | - | financeExpenses |
 | `/api/finance/expenses/submit` | `finance.expenses.submit` | requirePermission | `z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/financeExpenses.ts:199` | - | financeExpenses |
 | `/api/finance/expenses/trend` | `finance.expenses.view` | requirePermission | `-` | `netlify/functions/routes/financeExpenses.ts:417` | - | financeExpenses |
-| `/api/finance/lookups/authorities` | `finance.remittances.view` | requirePermission | `-` | `netlify/functions/routes/financeLookups.ts:81` | - | financeLookups |
-| `/api/finance/lookups/employees` | `finance.overview.view` | requirePermission | `z.object({     search: z.string().max(100).optional(),   })` | `netlify/functions/routes/financeLookups.ts:51` | - | financeLookups |
-| `/api/finance/lookups/resolve-employees` | `finance.overview.view` | requirePermission | `z.object({     ids: z.array(z.string().max(128)).max(200),   })` | `netlify/functions/routes/financeLookups.ts:36` | - | financeLookups |
-| `/api/finance/pickers/cost-centres` | `finance.overview.view` | requirePermission | `z.object({ search: z.string().max(100).optional() })` | `netlify/functions/routes/financePickers.ts:16` | - | - |
+| `/api/finance/lookups/authorities` | `finance.ap.view` | requirePermission | `-` | `netlify/functions/routes/financeLookups.ts:84` | - | financeLookups |
+| `/api/finance/lookups/budget-categories` | `finance.ap.view` | requirePermission | `z.object({     search: z.string().max(100).optional(),   })` | `netlify/functions/routes/financeLookups.ts:95` | - | financeLookups |
+| `/api/finance/lookups/employees` | `finance.ap.view` | requirePermission | `z.object({     search: z.string().max(100).optional(),   })` | `netlify/functions/routes/financeLookups.ts:54` | - | financeLookups |
+| `/api/finance/lookups/resolve-employees` | `finance.ap.view` | requirePermission | `z.object({     ids: z.array(z.string().max(128)).max(200),   })` | `netlify/functions/routes/financeLookups.ts:39` | - | financeLookups |
+| `/api/finance/overview/approvals/act` | `finance.overview.approvals.inline` | requirePermission | `z.object({     id: z.string().uuid(),     type: z.enum(['Bill', 'Expense', 'Remittance', 'Disbursement']),     action: z.enum(['approve', 'reject']),     reason: z.string().max(1000).optional(),   })` | `netlify/functions/routes/financeOverview.ts:87` | - | financeOverview |
+| `/api/finance/overview/approvals/list` | `finance.overview.approvals.inline` | requirePermission | `z.object({     type: z.enum(['Bill', 'Expense', 'Remittance', 'Disbursement']).optional(),     minAgeDays: z.number().int().min(0).optional(),     minAmount: z.number().nonnegative().optional(),     priority: z.enum(['high', 'normal']).optional(),   })` | `netlify/functions/routes/financeOverview.ts:71` | - | financeOverview |
+| `/api/finance/overview/export` | `finance.overview.export` | requirePermission | `z.object({     type: z.enum(['dashboard', 'approvals', 'spend-budget', 'cost-centre', 'all']).optional().default('all'),   })` | `netlify/functions/routes/financeOverview.ts:44` | - | financeOverview |
+| `/api/finance/overview/kpi-drilldown` | `finance.overview.kpi.drill` | requirePermission | `z.object({     kpiType: z.enum(['spend', 'pending-approvals', 'budget-variance', 'cash-out']),     period: z.string().max(20).optional().default('mtd'),   })` | `netlify/functions/routes/financeOverview.ts:57` | - | financeOverview |
+| `/api/finance/overview/spend-budget-series` | `finance.overview.view` | requirePermission | `z.object({     period: z.enum(['MTD', 'Monthly', 'Quarterly']).optional().default('Monthly'),   })` | `netlify/functions/routes/financeOverview.ts:111` | - | financeOverview |
+| `/api/finance/overview/summary` | `finance.overview.view` | requirePermission | `-` | `netlify/functions/routes/financeOverview.ts:35` | - | financeOverview |
+| `/api/finance/pickers/cost-centres` | `finance.ap.view` | requirePermission | `z.object({ search: z.string().max(100).optional() })` | `netlify/functions/routes/financePickers.ts:37` | - | financeAp |
+| `/api/finance/pickers/gl-accounts` | `finance.ap.view` | requirePermission | `z.object({ search: z.string().max(100).optional() })` | `netlify/functions/routes/financePickers.ts:26` | - | financeAp |
+| `/api/finance/pickers/payment-terms` | `finance.ap.view` | requirePermission | `z.object({})` | `netlify/functions/routes/financePickers.ts:59` | - | financeAp |
+| `/api/finance/pickers/tax-codes` | `finance.ap.view` | requirePermission | `z.object({})` | `netlify/functions/routes/financePickers.ts:48` | - | financeAp |
+| `/api/finance/pickers/vendors` | `finance.ap.view` | requirePermission | `z.object({ search: z.string().max(100).optional() })` | `netlify/functions/routes/financePickers.ts:70` | - | financeAp |
 | `/api/finance/remittances/approve` | `finance.remittances.approve` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeRemittances.ts:186` | - | financeRemittances |
 | `/api/finance/remittances/audit/list` | `finance.remittances.view` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financeRemittances.ts:288` | - | financeRemittances |
 | `/api/finance/remittances/cancel` | `finance.remittances.manage` | requirePermission | `z.object({     id:     z.string().uuid(),     reason: z.string().trim().min(1, 'A reason is required to cancel a remittance.').max(500),   })` | `netlify/functions/routes/financeRemittances.ts:251` | - | financePayroll, financeRemittances |
@@ -137,21 +197,70 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Symbol | Kind/tags | Location | Container |
 |---|---|---|---|
+| `ApKpis` | interface / ui-tile | `netlify/functions/lib/finance/accountsPayable.ts:172` | `-` |
+| `getApKpis` | function / ui-tile | `netlify/functions/lib/finance/accountsPayable.ts:178` | `-` |
 | `DisbursementKpis` | interface / ui-tile | `netlify/functions/lib/finance/disbursements.ts:683` | `-` |
 | `getDisbursementKpis` | function / ui-tile | `netlify/functions/lib/finance/disbursements.ts:694` | `-` |
 | `ExpenseKpis` | interface / ui-tile | `netlify/functions/lib/finance/expenses.ts:1116` | `-` |
 | `getExpenseKpis` | function / ui-tile | `netlify/functions/lib/finance/expenses.ts:1127` | `-` |
-| `useFinanceAttachments` | function / hook | `src/api/finance/attachments.ts:78` | `-` |
-| `useFinanceAttachmentUploadUrl` | function / hook | `src/api/finance/attachments.ts:106` | `-` |
-| `useCompleteFinanceAttachment` | function / hook | `src/api/finance/attachments.ts:121` | `-` |
-| `useFinanceAttachmentSignedUrl` | function / hook | `src/api/finance/attachments.ts:142` | `-` |
-| `useDeleteFinanceAttachment` | function / hook | `src/api/finance/attachments.ts:159` | `-` |
+| `FinanceOverviewKpis` | interface / ui-tile | `netlify/functions/lib/finance/overview.ts:21` | `-` |
+| `KpiType` | type / ui-tile | `netlify/functions/lib/finance/overview.ts:325` | `-` |
+| `KpiDrilldownRow` | interface / ui-tile | `netlify/functions/lib/finance/overview.ts:327` | `-` |
+| `KpiDrilldownResult` | interface / ui-tile | `netlify/functions/lib/finance/overview.ts:339` | `-` |
+| `getFinanceKpiDrilldown` | function / ui-tile | `netlify/functions/lib/finance/overview.ts:347` | `-` |
+| `ApKpis` | interface / ui-tile | `src/api/finance/accountsPayable.ts:49` | `-` |
+| `useApBills` | function / hook | `src/api/finance/accountsPayable.ts:69` | `-` |
+| `useApBillDetail` | function / hook | `src/api/finance/accountsPayable.ts:76` | `-` |
+| `useApVendors` | function / hook | `src/api/finance/accountsPayable.ts:85` | `-` |
+| `useApVendorDetail` | function / hook | `src/api/finance/accountsPayable.ts:93` | `-` |
+| `useApVendorBills` | function / hook | `src/api/finance/accountsPayable.ts:102` | `-` |
+| `useApVendorPayments` | function / hook | `src/api/finance/accountsPayable.ts:111` | `-` |
+| `useApPayments` | function / hook | `src/api/finance/accountsPayable.ts:120` | `-` |
+| `useApKpis` | function / hook, ui-tile | `src/api/finance/accountsPayable.ts:128` | `-` |
+| `useApAging` | function / hook | `src/api/finance/accountsPayable.ts:136` | `-` |
+| `useApTrend` | function / hook | `src/api/finance/accountsPayable.ts:144` | `-` |
+| `useCreateBill` | function / hook | `src/api/finance/accountsPayable.ts:177` | `-` |
+| `useCheckBillDuplicate` | function / hook | `src/api/finance/accountsPayable.ts:184` | `-` |
+| `useSubmitBill` | function / hook | `src/api/finance/accountsPayable.ts:191` | `-` |
+| `useApproveBill` | function / hook | `src/api/finance/accountsPayable.ts:192` | `-` |
+| `useRejectBill` | function / hook | `src/api/finance/accountsPayable.ts:193` | `-` |
+| `useVoidBill` | function / hook | `src/api/finance/accountsPayable.ts:194` | `-` |
+| `useRecordPayment` | function / hook | `src/api/finance/accountsPayable.ts:196` | `-` |
+| `useCreateVendor` | function / hook | `src/api/finance/accountsPayable.ts:218` | `-` |
+| `useUpdateVendor` | function / hook | `src/api/finance/accountsPayable.ts:230` | `-` |
+| `useBillAudit` | function / hook | `src/api/finance/accountsPayable.ts:251` | `-` |
+| `useBillComments` | function / hook | `src/api/finance/accountsPayable.ts:258` | `-` |
+| `useCreateBillComment` | function / hook | `src/api/finance/accountsPayable.ts:265` | `-` |
+| `useApDuplicateRisks` | function / hook | `src/api/finance/accountsPayable.ts:286` | `-` |
+| `useResolveDuplicateRisk` | function / hook | `src/api/finance/accountsPayable.ts:294` | `-` |
+| `useBulkApproveBills` | function / hook | `src/api/finance/accountsPayable.ts:314` | `-` |
+| `useApPaymentRuns` | function / hook | `src/api/finance/accountsPayable.ts:344` | `-` |
+| `useApPaymentRunDetail` | function / hook | `src/api/finance/accountsPayable.ts:352` | `-` |
+| `useCreatePaymentRun` | function / hook | `src/api/finance/accountsPayable.ts:361` | `-` |
+| `useProcessPaymentRun` | function / hook | `src/api/finance/accountsPayable.ts:374` | `-` |
+| `useVoidPaymentRun` | function / hook | `src/api/finance/accountsPayable.ts:387` | `-` |
+| `useImportBills` | function / hook | `src/api/finance/accountsPayable.ts:414` | `-` |
+| `useFinanceAttachments` | function / hook | `src/api/finance/attachments.ts:99` | `-` |
+| `useFinanceAttachmentUploadUrl` | function / hook | `src/api/finance/attachments.ts:127` | `-` |
+| `useCompleteFinanceAttachment` | function / hook | `src/api/finance/attachments.ts:142` | `-` |
+| `useFinanceAttachmentSignedUrl` | function / hook | `src/api/finance/attachments.ts:163` | `-` |
+| `useDeleteFinanceAttachment` | function / hook | `src/api/finance/attachments.ts:180` | `-` |
 | `useBankAccounts` | function / hook | `src/api/finance/bankAccounts.ts:59` | `-` |
 | `useBankAccount` | function / hook | `src/api/finance/bankAccounts.ts:66` | `-` |
 | `useBankAccountMutation` | function / hook | `src/api/finance/bankAccounts.ts:74` | `-` |
 | `useCreateDisbursementFromRun` | function / hook | `src/api/finance/bridges.ts:63` | `-` |
 | `useCreateRemittanceFromRun` | function / hook | `src/api/finance/bridges.ts:87` | `-` |
 | `useCreateReimbursementHandoff` | function / hook | `src/api/finance/bridges.ts:113` | `-` |
+| `useBudgets` | function / hook | `src/api/finance/budgets.ts:216` | `-` |
+| `useBudgetDetail` | function / hook | `src/api/finance/budgets.ts:223` | `-` |
+| `useBudgetVariance` | function / hook | `src/api/finance/budgets.ts:231` | `-` |
+| `useBudgetLineActuals` | function / hook | `src/api/finance/budgets.ts:238` | `-` |
+| `useBudgetActuals` | function / hook | `src/api/finance/budgets.ts:246` | `-` |
+| `useBudgetReports` | function / hook | `src/api/finance/budgets.ts:253` | `-` |
+| `useBudgetLineApprovals` | function / hook | `src/api/finance/budgets.ts:260` | `-` |
+| `useBudgetLineAuditLog` | function / hook | `src/api/finance/budgets.ts:268` | `-` |
+| `useBudgetLineAttachments` | function / hook | `src/api/finance/budgets.ts:276` | `-` |
+| `useBudgetMutation` | function / hook | `src/api/finance/budgets.ts:287` | `-` |
 | `DisbursementKpis` | interface / ui-tile | `src/api/finance/disbursements.ts:77` | `-` |
 | `useDisbursements` | function / hook | `src/api/finance/disbursements.ts:193` | `-` |
 | `useDisbursement` | function / hook | `src/api/finance/disbursements.ts:200` | `-` |
@@ -178,11 +287,26 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useExpenseKpis` | function / hook, ui-tile | `src/api/finance/expenses.ts:356` | `-` |
 | `useExpenseMutation` | function / hook | `src/api/finance/expenses.ts:366` | `-` |
 | `useExpenseComment` | function / hook | `src/api/finance/expenses.ts:378` | `-` |
-| `useEmployeeNames` | function / hook | `src/api/finance/lookups.ts:94` | `-` |
-| `useEmployeePicker` | function / hook | `src/api/finance/lookups.ts:124` | `-` |
-| `useApprovedRunPicker` | function / hook | `src/api/finance/lookups.ts:138` | `-` |
-| `useAuthorityPicker` | function / hook | `src/api/finance/lookups.ts:152` | `-` |
-| `useCostCentres` | function / hook | `src/api/finance/pickers.ts:36` | `-` |
+| `useEmployeeNames` | function / hook | `src/api/finance/lookups.ts:101` | `-` |
+| `useEmployeePicker` | function / hook | `src/api/finance/lookups.ts:131` | `-` |
+| `useApprovedRunPicker` | function / hook | `src/api/finance/lookups.ts:145` | `-` |
+| `useAuthorityPicker` | function / hook | `src/api/finance/lookups.ts:159` | `-` |
+| `useBudgetCategoryPicker` | function / hook | `src/api/finance/lookups.ts:169` | `-` |
+| `FinanceOverviewKpis` | interface / ui-tile | `src/api/finance/overview.ts:15` | `-` |
+| `useFinanceOverview` | function / hook | `src/api/finance/overview.ts:58` | `-` |
+| `useExportOverview` | function / hook | `src/api/finance/overview.ts:78` | `-` |
+| `KpiType` | type / ui-tile | `src/api/finance/overview.ts:87` | `-` |
+| `KpiDrilldownRow` | interface / ui-tile | `src/api/finance/overview.ts:89` | `-` |
+| `KpiDrilldownResult` | interface / ui-tile | `src/api/finance/overview.ts:94` | `-` |
+| `useKpiDrilldown` | function / hook, ui-tile | `src/api/finance/overview.ts:102` | `-` |
+| `useApprovalsQueue` | function / hook | `src/api/finance/overview.ts:130` | `-` |
+| `useActOnApproval` | function / hook | `src/api/finance/overview.ts:146` | `-` |
+| `useSpendBudgetSeries` | function / hook | `src/api/finance/overview.ts:170` | `-` |
+| `useGlAccounts` | function / hook | `src/api/finance/pickers.ts:64` | `-` |
+| `useCostCentres` | function / hook | `src/api/finance/pickers.ts:74` | `-` |
+| `useTaxCodes` | function / hook | `src/api/finance/pickers.ts:84` | `-` |
+| `usePaymentTerms` | function / hook | `src/api/finance/pickers.ts:94` | `-` |
+| `useVendorPicker` | function / hook | `src/api/finance/pickers.ts:104` | `-` |
 | `useRemittances` | function / hook | `src/api/finance/remittances.ts:173` | `-` |
 | `useRemittance` | function / hook | `src/api/finance/remittances.ts:188` | `-` |
 | `useRemittanceLines` | function / hook | `src/api/finance/remittances.ts:196` | `-` |
@@ -210,12 +334,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useStatutoryFormMutation` | function / hook | `src/api/finance/statutoryForms.ts:87` | `-` |
 | `EmployeeCellResolved` | function / component | `src/components/sections/Finance/_shared/EmployeeCell.tsx:58` | `-` |
 | `EmployeeCell` | function / component | `src/components/sections/Finance/_shared/EmployeeCell.tsx:107` | `-` |
-| `EmployeePicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:74` | `-` |
-| `CostCentrePicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:123` | `-` |
-| `ApprovedRunPicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:173` | `-` |
-| `AuthorityPicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:220` | `-` |
-| `ReportDataTable` | function / component | `src/components/sections/Finance/_shared/reports.tsx:115` | `-` |
-| `ReportPanel` | function / component | `src/components/sections/Finance/_shared/reports.tsx:216` | `-` |
+| `EmployeePicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:76` | `-` |
+| `CostCentrePicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:125` | `-` |
+| `ApprovedRunPicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:175` | `-` |
+| `AuthorityPicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:222` | `-` |
+| `BudgetCategoryPicker` | function / component | `src/components/sections/Finance/_shared/pickers.tsx:262` | `-` |
+| `ReportDataTable` | function / component | `src/components/sections/Finance/_shared/reports.tsx:116` | `-` |
+| `ReportPanel` | function / component | `src/components/sections/Finance/_shared/reports.tsx:217` | `-` |
 | `IconFile` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:21` | `-` |
 | `IconDoc` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:22` | `-` |
 | `IconLayers` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:23` | `-` |
@@ -232,40 +357,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconClock` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:46` | `-` |
 | `IconShield` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:47` | `-` |
 | `IconEye` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:48` | `-` |
-| `IconUpload` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:49` | `-` |
-| `IconAlert` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:50` | `-` |
-| `IconTrash` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:51` | `-` |
-| `IconGavel` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:52` | `-` |
-| `IconSpark` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:53` | `-` |
-| `StatusPill` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:66` | `-` |
-| `StatFormShell` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:79` | `-` |
-| `TextField` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:127` | `-` |
-| `MoneyField` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:152` | `-` |
-| `SelectField` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:175` | `-` |
-| `ToggleField` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:200` | `-` |
-| `DisbComputeWizard` | function / component | `src/components/sections/Finance/DisbComputeWizard.tsx:241` | `-` |
-| `DisbDrawer` | function / component | `src/components/sections/Finance/DisbDrawer.tsx:634` | `-` |
-| `DisbursementsOverview` | function / component | `src/components/sections/Finance/DisbursementsOverview.tsx:1139` | `-` |
-| `ExpClaimDrawer` | function / component | `src/components/sections/Finance/ExpClaimDrawer.tsx:89` | `-` |
-| `ExpensesOverview` | function / component | `src/components/sections/Finance/ExpensesOverview.tsx:146` | `-` |
-| `ExpMarkReimbursedDialog` | function / component | `src/components/sections/Finance/ExpMarkReimbursedDialog.tsx:67` | `-` |
-| `ExpNewClaimWizard` | function / component | `src/components/sections/Finance/ExpNewClaimWizard.tsx:150` | `-` |
-| `FinanceSection` | function / component | `src/components/sections/Finance/FinanceSection.tsx:47` | `-` |
-| `PayCreateDisbursementDialog` | function / component | `src/components/sections/Finance/PayBridgeDialog.tsx:24` | `-` |
-| `PayCreateRemittanceDialog` | function / component | `src/components/sections/Finance/PayBridgeDialog.tsx:98` | `-` |
-| `PayNewRunWizard` | function / component | `src/components/sections/Finance/PayNewRunWizard.tsx:498` | `-` |
-| `PayRunDrawer` | function / component | `src/components/sections/Finance/PayRunDrawer.tsx:1496` | `-` |
-| `PayWarningResolveDialog` | function / component | `src/components/sections/Finance/PayWarningResolveDialog.tsx:21` | `-` |
-| `RemittancesOverview` | function / component | `src/components/sections/Finance/RemittancesOverview.tsx:102` | `-` |
-| `StatNewVersionPage` | function / component | `src/components/sections/Finance/StatNewVersionPage.tsx:52` | `-` |
-| `StatNisBandPage` | function / component | `src/components/sections/Finance/StatNisBandPage.tsx:101` | `-` |
-| `StatNisImportPage` | function / component | `src/components/sections/Finance/StatNisImportPage.tsx:137` | `-` |
-| `StatPayComponentPage` | function / component | `src/components/sections/Finance/StatPayComponentPage.tsx:35` | `-` |
-| `StatBadge` | function / component | `src/components/sections/Finance/StatTable.tsx:59` | `-` |
-| `StatTable` | function / component | `src/components/sections/Finance/StatTable.tsx:73` | `-` |
-| `StatutoryConfigOverview` | function / component | `src/components/sections/Finance/StatutoryConfigOverview.tsx:99` | `-` |
-| `StatutoryDashboard` | function / component | `src/components/sections/Finance/StatutoryDashboard.tsx:201` | `-` |
-| `StatutoryFormsOverview` | function / component | `src/components/sections/Finance/StatutoryFormsOverview.tsx:253` | `-` |
+| ... | 55 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -351,9 +443,12 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
+| Finance — Accounts Payable | 71 | 30 | `scripts/e2e/suites/financeAp.mjs` |
+| Finance — Budgeting & Budget-vs-Actual (F5) | 50 | 13 | `scripts/e2e/suites/financeBudgets.mjs` |
 | Finance -- Bank Accounts & Payroll Bank Disbursements (F2) | 48 | 21 | `scripts/e2e/suites/financeDisbursements.mjs` |
 | Finance -- Expense Claims (F4) | 53 | 19 | `scripts/e2e/suites/financeExpenses.mjs` |
 | Finance — Phase-0 Lookups + Attachments + Bridges | 30 | 13 | `scripts/e2e/suites/financeLookups.mjs` |
+| Finance — Overview | 41 | 6 | `scripts/e2e/suites/financeOverview.mjs` |
 | Finance — Pay Component Maker-Checker (Phase 2) | 32 | 6 | `scripts/e2e/suites/financePayComponents.mjs` |
 | Finance — Statutory Remittances & Filing (F1) | 41 | 12 | `scripts/e2e/suites/financeRemittances.mjs` |
 | Finance — Statutory Configuration (Phase 1) | 73 | 18 | `scripts/e2e/suites/financeStatutory.mjs` |
@@ -364,34 +459,59 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/financeAttachments.ts` | 195 |
+| backend-route | `netlify/functions/routes/financeAccountsPayable.ts` | 362 |
+| backend-route | `netlify/functions/routes/financeAttachments.ts` | 237 |
 | backend-route | `netlify/functions/routes/financeBankAccounts.ts` | 68 |
 | backend-route | `netlify/functions/routes/financeBridges.ts` | 129 |
+| backend-route | `netlify/functions/routes/financeBudgets.ts` | 338 |
 | backend-route | `netlify/functions/routes/financeDisbursements.ts` | 404 |
 | backend-route | `netlify/functions/routes/financeExpenses.ts` | 468 |
-| backend-route | `netlify/functions/routes/financeLookups.ts` | 90 |
+| backend-route | `netlify/functions/routes/financeLookups.ts` | 108 |
 | backend-route | `netlify/functions/routes/financeNis.ts` | 109 |
-| backend-route | `netlify/functions/routes/financePickers.ts` | 34 |
+| backend-route | `netlify/functions/routes/financeOverview.ts` | 124 |
+| backend-route | `netlify/functions/routes/financePickers.ts` | 81 |
 | backend-route | `netlify/functions/routes/financeRemittances.ts` | 324 |
 | backend-route | `netlify/functions/routes/financeStatutory.ts` | 435 |
 | backend-route | `netlify/functions/routes/financeStatutoryForms.ts` | 139 |
+| e2e-suite | `scripts/e2e/suites/financeAp.mjs` | 950 |
+| e2e-suite | `scripts/e2e/suites/financeBudgets.mjs` | 641 |
 | e2e-suite | `scripts/e2e/suites/financeDisbursements.mjs` | 705 |
 | e2e-suite | `scripts/e2e/suites/financeExpenses.mjs` | 750 |
 | e2e-suite | `scripts/e2e/suites/financeLookups.mjs` | 524 |
+| e2e-suite | `scripts/e2e/suites/financeOverview.mjs` | 447 |
 | e2e-suite | `scripts/e2e/suites/financePayComponents.mjs` | 578 |
 | e2e-suite | `scripts/e2e/suites/financeRemittances.mjs` | 621 |
 | e2e-suite | `scripts/e2e/suites/financeStatutory.mjs` | 1202 |
-| frontend-api | `src/api/finance/attachments.ts` | 172 |
+| frontend-api | `src/api/finance/accountsPayable.ts` | 424 |
+| frontend-api | `src/api/finance/attachments.ts` | 193 |
 | frontend-api | `src/api/finance/bankAccounts.ts` | 83 |
 | frontend-api | `src/api/finance/bridges.ts` | 125 |
+| frontend-api | `src/api/finance/budgets.ts` | 294 |
 | frontend-api | `src/api/finance/disbursements.ts` | 294 |
 | frontend-api | `src/api/finance/expenses.ts` | 389 |
-| frontend-api | `src/api/finance/keys.ts` | 82 |
-| frontend-api | `src/api/finance/lookups.ts` | 160 |
-| frontend-api | `src/api/finance/pickers.ts` | 44 |
+| frontend-api | `src/api/finance/keys.ts` | 160 |
+| frontend-api | `src/api/finance/lookups.ts` | 181 |
+| frontend-api | `src/api/finance/overview.ts` | 178 |
+| frontend-api | `src/api/finance/pickers.ts` | 112 |
 | frontend-api | `src/api/finance/remittances.ts` | 279 |
 | frontend-api | `src/api/finance/statutory.ts` | 325 |
 | frontend-api | `src/api/finance/statutoryForms.ts` | 94 |
+| frontend-page | `src/components/sections/Finance/ApAdvancedFilterPanel.tsx` | 77 |
+| frontend-page | `src/components/sections/Finance/ApBillDrawer.tsx` | 164 |
+| frontend-page | `src/components/sections/Finance/ApBulkApprovalQueue.tsx` | 182 |
+| frontend-page | `src/components/sections/Finance/ApDuplicateReviewDrawer.tsx` | 168 |
+| frontend-page | `src/components/sections/Finance/ApDuplicateRiskBanner.tsx` | 30 |
+| frontend-page | `src/components/sections/Finance/ApImportWizard.tsx` | 250 |
+| frontend-page | `src/components/sections/Finance/ApNewBillWizard.tsx` | 176 |
+| frontend-page | `src/components/sections/Finance/ApPaymentRunBuilder.tsx` | 317 |
+| frontend-page | `src/components/sections/Finance/ApRecordPaymentDialog.tsx` | 238 |
+| frontend-page | `src/components/sections/Finance/ApStatusFilterMenu.tsx` | 58 |
+| frontend-page | `src/components/sections/Finance/ApVendorDialog.tsx` | 464 |
+| frontend-page | `src/components/sections/Finance/ApVendorDrawer.tsx` | 235 |
+| frontend-page | `src/components/sections/Finance/BudBulkUpsertWizard.tsx` | 505 |
+| frontend-page | `src/components/sections/Finance/BudCopyLastYearDialog.tsx` | 302 |
+| frontend-page | `src/components/sections/Finance/BudLineDrawer.tsx` | 665 |
+| frontend-page | `src/components/sections/Finance/BudgetsOverview.tsx` | 1067 |
 | frontend-page | `src/components/sections/Finance/DisbComputeWizard.tsx` | 388 |
 | frontend-page | `src/components/sections/Finance/DisbDrawer.tsx` | 739 |
 | frontend-page | `src/components/sections/Finance/DisbursementsOverview.tsx` | 1339 |
@@ -399,11 +519,17 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/ExpMarkReimbursedDialog.tsx` | 273 |
 | frontend-page | `src/components/sections/Finance/ExpNewClaimWizard.tsx` | 798 |
 | frontend-page | `src/components/sections/Finance/ExpensesOverview.tsx` | 574 |
-| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 85 |
+| frontend-page | `src/components/sections/Finance/FinanceApprovalActionModal.tsx` | 75 |
+| frontend-page | `src/components/sections/Finance/FinanceApprovalsInbox.tsx` | 185 |
+| frontend-page | `src/components/sections/Finance/FinanceExportDialog.tsx` | 108 |
+| frontend-page | `src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx` | 108 |
+| frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
+| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 91 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 610 |
 | frontend-page | `src/components/sections/Finance/PayRunDrawer.tsx` | 1615 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
+| frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
 | frontend-page | `src/components/sections/Finance/StatNewVersionPage.tsx` | 357 |
 | frontend-page | `src/components/sections/Finance/StatNisBandPage.tsx` | 371 |
@@ -414,12 +540,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/StatutoryDashboard.tsx` | 786 |
 | frontend-page | `src/components/sections/Finance/StatutoryFormsOverview.tsx` | 286 |
 | frontend-page | `src/components/sections/Finance/_shared/EmployeeCell.tsx` | 133 |
-| frontend-page | `src/components/sections/Finance/_shared/pickers.tsx` | 253 |
-| frontend-page | `src/components/sections/Finance/_shared/reports.tsx` | 338 |
+| frontend-page | `src/components/sections/Finance/_shared/pickers.tsx` | 301 |
+| frontend-page | `src/components/sections/Finance/_shared/reports.tsx` | 339 |
 | frontend-page | `src/components/sections/Finance/_shared/sfpKit.tsx` | 216 |
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
-| frontend-page | `src/components/sections/Finance/module.ts` | 94 |
+| frontend-page | `src/components/sections/Finance/module.ts` | 114 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 

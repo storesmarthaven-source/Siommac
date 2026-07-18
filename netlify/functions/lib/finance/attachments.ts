@@ -6,6 +6,7 @@
  *   - Expense claim attachments    (finance_expense_attachments)
  *   - Remittance attachments       (finance_remittance_attachments)
  *   - Disbursement attachments     (finance_disbursement_attachments)
+ *   - Budget-line attachments      (finance_budget_attachments)
  *   - Payroll-run attachments      (finance_payroll_attachments)
  *
  * All file bytes go directly from the browser to Supabase Storage via a
@@ -39,6 +40,11 @@
  *   commitDisbursementAttachment(disbursementId, input, actorId)
  *   listDisbursementAttachments(disbursementId)
  *   deleteDisbursementAttachment(id, disbursementId, actorId)
+ *   --- Budget ---
+ *   getBudgetAttachmentUploadUrl(fileName, mimeType)
+ *   commitBudgetAttachment(budgetLineId, input, actorId)
+ *   listBudgetAttachments(budgetLineId)
+ *   deleteBudgetAttachment(id, budgetLineId, actorId)
  *   --- Payroll ---
  *   getPayrollAttachmentUploadUrl(fileName, mimeType)
  *   commitPayrollAttachment(runId, input, actorId)
@@ -569,6 +575,111 @@ export async function deleteDisbursementAttachment(
   await writeHrAudit({
     submoduleKey: 'finance_disbursements', recordId: disbursementId, actorId,
     action: 'disbursement.attachment_removed',
+    previousState: { attachmentId: id, storagePath: existing.storage_path }, newState: null,
+  });
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// Budget-line attachments — finance_budget_attachments
+// (table created by 20260917000050_finance_2b_attachment_tables.sql)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface DbBudgetAttachment {
+  id: string; budget_line_id: string; file_name: string; file_size: number | null;
+  content_type: string | null; storage_path: string;
+  uploaded_by: string | null; created_at: string;
+}
+
+export async function getBudgetAttachmentUploadUrl(
+  fileName: string,
+  mimeType: string,
+): Promise<AttachmentUploadUrlResult> {
+  return getAttachmentUploadUrl(fileName, mimeType);
+}
+
+export async function commitBudgetAttachment(
+  budgetLineId: string,
+  input: CommitAttachmentInput,
+  actorId: string,
+): Promise<AttachmentDto> {
+  const { data, error } = await sb
+    .from('finance_budget_attachments')
+    .insert({
+      budget_line_id: budgetLineId,
+      file_name:      input.fileName,
+      file_size:      input.fileSize ?? null,
+      content_type:   input.mimeType ?? null,
+      storage_path:   input.storagePath,
+      uploaded_by:    actorId,
+    })
+    .select()
+    .single<DbBudgetAttachment>();
+
+  if (error) {
+    throw Object.assign(new Error(`commitBudgetAttachment: ${error.message}`), { status: 500 });
+  }
+
+  const row = toAttachmentDto(data);
+
+  void emitAppEvent({
+    eventType: 'finance.budget.attachment_added', sourceModule: 'finance_budgets',
+    sourceEntityType: 'budget_line', sourceEntityId: budgetLineId,
+    actorUserId: actorId, severity: 'info',
+    payload: { attachmentId: row.id, fileName: row.fileName },
+  });
+  await writeHrAudit({
+    submoduleKey: 'finance_budgets', recordId: budgetLineId, actorId,
+    action: 'budget.attachment_added',
+    previousState: null,
+    newState: { attachmentId: row.id, fileName: row.fileName, storagePath: row.storagePath },
+  });
+
+  return row;
+}
+
+export async function listBudgetAttachments(budgetLineId: string): Promise<AttachmentDto[]> {
+  const { data, error } = await sb
+    .from('finance_budget_attachments')
+    .select('*')
+    .eq('budget_line_id', budgetLineId)
+    .order('created_at', { ascending: false })
+    .returns<DbBudgetAttachment[]>();
+
+  if (error) throw Object.assign(new Error(`listBudgetAttachments: ${error.message}`), { status: 500 });
+  return (data ?? []).map(toAttachmentDto);
+}
+
+export async function deleteBudgetAttachment(
+  id: string,
+  budgetLineId: string,
+  actorId: string,
+): Promise<void> {
+  const { data: existing, error: fetchErr } = await sb
+    .from('finance_budget_attachments')
+    .select('id, storage_path, file_name')
+    .eq('id', id).eq('budget_line_id', budgetLineId)
+    .maybeSingle<Pick<DbBudgetAttachment, 'id' | 'storage_path' | 'file_name'>>();
+
+  if (fetchErr) throw Object.assign(new Error(`deleteBudgetAttachment: ${fetchErr.message}`), { status: 500 });
+  if (!existing) throw Object.assign(new Error('Attachment not found on this budget line.'), { status: 404 });
+
+  const { error: storageErr } = await sb.storage.from(FINANCE_ATTACHMENT_BUCKET).remove([existing.storage_path]);
+  if (storageErr) throw Object.assign(new Error(`Failed to remove file from storage: ${storageErr.message}`), { status: 500 });
+
+  const { error: delErr } = await sb
+    .from('finance_budget_attachments').delete()
+    .eq('id', id).eq('budget_line_id', budgetLineId);
+  if (delErr) throw Object.assign(new Error(`deleteBudgetAttachment DB: ${delErr.message}`), { status: 500 });
+
+  void emitAppEvent({
+    eventType: 'finance.budget.attachment_removed', sourceModule: 'finance_budgets',
+    sourceEntityType: 'budget_line', sourceEntityId: budgetLineId,
+    actorUserId: actorId, severity: 'info',
+    payload: { attachmentId: id, fileName: existing.file_name },
+  });
+  await writeHrAudit({
+    submoduleKey: 'finance_budgets', recordId: budgetLineId, actorId,
+    action: 'budget.attachment_removed',
     previousState: { attachmentId: id, storagePath: existing.storage_path }, newState: null,
   });
 }

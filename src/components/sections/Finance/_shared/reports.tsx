@@ -1,13 +1,13 @@
 /**
  * src/components/sections/Finance/_shared/reports.tsx
  *
- * Shared report-surface layer for active Finance pages.
+ * Shared report-surface layer for all six Finance Wave 2B pages.
  * Wires the existing per-module reports endpoints + exportCsv into a
  * reusable panel so each page builds its reports tab without duplicating
  * selector / preview / export UI.
  *
  * The backend already ships report endpoints (payroll, statutory, remittances,
- * expenses, and disbursements). This layer is purely presentational +
+ * expenses, budgets, disbursements). This layer is purely presentational +
  * export plumbing — no new backend required.
  *
  * Exported:
@@ -18,14 +18,15 @@
  * Usage:
  *   <ReportPanel
  *     reports={[
- *       { key: 'filing', label: 'Filing Status' },
- *       { key: 'history', label: 'Remittance History' },
+ *       { key: 'variance',     label: 'Budget vs Actual' },
+ *       { key: 'summary',      label: 'Budget Summary' },
  *     ]}
  *     selectedReport={reportKey}
  *     onSelectReport={setReportKey}
+ *     params={<BudgetReportParams value={params} onChange={setParams} />}
  *     result={reportResult}
- *     columns={REPORT_COLUMNS}
- *     exportFilename="remittance-report"
+ *     columns={VARIANCE_COLUMNS}
+ *     exportFilename="budget-report"
  *     loading={isLoading}
  *     error={error?.message}
  *   />

@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `5eed2f760fc64022a5660d78`
+Source fingerprint: `1a7cce14127da8a837615a91`
 
 Files: 92 | Symbols: 832 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 4
 
@@ -393,8 +393,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/communications.ts` | 1191 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
-| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1047 |
-| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 319 |
+| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1045 |
+| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 317 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | frontend-api | `src/api/communications.ts` | 885 |

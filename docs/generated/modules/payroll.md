@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `5eed2f760fc64022a5660d78`
+Source fingerprint: `1a7cce14127da8a837615a91`
 
 Files: 120 | Symbols: 1006 | Widgets: 0 | Unique mounted endpoints: 97 | Route definitions: 97 mounted + 0 unmounted | API calls: 5 | DB objects: 174 | E2E suites: 15
 
@@ -18,7 +18,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/finance/lookups/approved-payroll-runs` | `finance.payroll.view_all` | requirePermission | `z.object({     search: z.string().max(100).optional(),   })` | `netlify/functions/routes/financeLookups.ts:66` | - | financeLookups |
+| `/api/finance/lookups/approved-payroll-runs` | `finance.ap.view` | requirePermission | `z.object({     search: z.string().max(100).optional(),   })` | `netlify/functions/routes/financeLookups.ts:69` | - | financeLookups |
 | `/api/finance/payroll/back-pay/add` | `finance.payroll.worksheet.override` | requirePermission | `z.object({     currentRunId: z.string().uuid(),     employeeId: z.string().min(1),     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     correctedPeriodBase: z.number().positive(),     reason: z.string().min(1).max(500),     // When the salary correction became effective (YYYY-MM-DD).     // Defaults to fromPeriodMonth when omitted (backward-compatible).     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),   })` | `netlify/functions/routes/financePayroll.ts:760` | - | payrollBackPay |
 | `/api/finance/payroll/back-pay/preview` | `finance.payroll.worksheet.override` | requirePermission | `z.object({     currentRunId: z.string().uuid(),     employeeId: z.string().min(1),     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),     correctedPeriodBase: z.number().positive(),     // When the salary correction became effective (YYYY-MM-DD).     // Defaults to fromPeriodMonth when omitted (backward-compatible).     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),   })` | `netlify/functions/routes/financePayroll.ts:740` | - | payrollBackPay |
 | `/api/finance/payroll/calculations/attempts/get` | `finance.payroll.view_all` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:1087` | - | financePayroll |

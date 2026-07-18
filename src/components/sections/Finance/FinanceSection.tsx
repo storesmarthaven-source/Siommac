@@ -12,46 +12,50 @@ import { useState, useEffect } from 'preact/hooks';
 import { can } from '@lib/permissions';
 import { showSection } from '@components/nav/navCore';
 import { PayslipStudioSection }    from '../PayslipStudio/PayslipStudioSection';
+import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
 import { PayrollOverview }          from './PayrollOverview';
 import { PayrollSetupOverview }     from './PayrollSetupOverview';
 import { RemittancesOverview }      from './RemittancesOverview';
 import { MyPayslipsOverview }       from './MyPayslipsOverview';
 import { ExpensesOverview }         from './ExpensesOverview';
+import { BudgetsOverview }          from './BudgetsOverview';
 import { DisbursementsOverview }   from './DisbursementsOverview';
 import { StatutoryFormsOverview }  from './StatutoryFormsOverview';
+import { PayablesOverview }        from './PayablesOverview';
 
+const OVERVIEW_ID      = 's-finance-overview';
+const PAYABLES_ID      = 's-finance-payables';
 const STATUTORY_ID    = 's-finance-statutory';
 const PAYROLL_ID       = 's-finance-payroll';
 const PAYROLL_SETUP_ID = 's-finance-payroll-setup';
 const REMITTANCES_ID   = 's-finance-remittances';
 const MY_PAYSLIPS_ID   = 's-finance-my-payslips';
 const EXPENSES_ID      = 's-finance-expenses';
+const BUDGETS_ID       = 's-finance-budgets';
 const DISBURSEMENTS_ID  = 's-finance-disbursements';
 const STATUTORY_FORMS_ID = 's-finance-statutory-forms';
 const PAYSLIP_DESIGNER_ID = 's-finance-payslip-designer';
 
 function isFinanceSection(id: string): boolean {
-  return id === STATUTORY_ID
+  return id === OVERVIEW_ID
+    || id === STATUTORY_ID
     || id === PAYROLL_ID
     || id === PAYROLL_SETUP_ID
     || id === REMITTANCES_ID
     || id === EXPENSES_ID
     || id === MY_PAYSLIPS_ID
+    || id === BUDGETS_ID
     || id === DISBURSEMENTS_ID
     || id === STATUTORY_FORMS_ID
     || id === PAYSLIP_DESIGNER_ID
+    || id === PAYABLES_ID
    ;
 }
 
 export function FinanceSection(): VNode {
   const [sectionId, setSectionId] = useState<string>(() => {
-    try {
-      const stored = localStorage.getItem('siomac_finance_section');
-      return stored && isFinanceSection(stored) ? stored : PAYROLL_ID;
-    } catch {
-      return PAYROLL_ID;
-    }
+    try { return localStorage.getItem('siomac_finance_section') ?? OVERVIEW_ID; } catch { return OVERVIEW_ID; }
   });
 
   useEffect(() => {
@@ -72,13 +76,15 @@ export function FinanceSection(): VNode {
   if (sectionId === PAYROLL_SETUP_ID) return <PayrollSetupOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === MY_PAYSLIPS_ID)  return <MyPayslipsOverview />;
+  if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;
   if (sectionId === DISBURSEMENTS_ID) return <DisbursementsOverview />;
   if (sectionId === STATUTORY_FORMS_ID) return <StatutoryFormsOverview />;
   if (sectionId === PAYSLIP_DESIGNER_ID)
     return can('finance.payroll.templates.manage')
-      ? <PayslipStudioSection onBack={() => showSection(PAYROLL_ID)} />
+      ? <PayslipStudioSection onBack={() => showSection('s-finance-overview')} />
       : <div style="padding:48px;text-align:center;color:var(--muted,#8a93ab);font-size:14px;">
           You don't have permission to manage payslip templates.
         </div>;
-  return <PayrollOverview />;
+  if (sectionId === PAYABLES_ID)      return <PayablesOverview />;
+  return <FinanceOverview />;
 }

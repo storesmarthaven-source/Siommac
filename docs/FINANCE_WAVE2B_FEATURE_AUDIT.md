@@ -1,7 +1,5 @@
 # SIOMAC Finance — Wave 2B Feature Audit (for Codex)
 
-> **Partially superseded.** Budgeting was retired on 2026-07-18. Use this audit only for still-active Finance surfaces and defer to `docs/module-contracts/FINANCE_PRODUCT_SCOPE.md`.
-
 Honest, per-control audit of the **6 existing Finance pages** to be deepened into the Aurora `.hrfin`
 language. Same purpose + shape as `docs/FINANCE_FEATURE_AUDIT.md` (which covered AP/Overview): turn
 every basic dialog / free-text FK / dead control / thin report into a real enterprise feature. Nothing
