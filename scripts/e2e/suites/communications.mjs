@@ -991,7 +991,9 @@ export default async function run(h) {
   // Setup:
   //   sadmin  = MAKER (requests compliance_read for themselves) + compliance caller
   //   sadmin2 = CHECKER (approves the grant; must be a distinct user — server enforces SoD)
-  const { actors: [sadmin, sadmin2], createdIds: sadminIds } = await h.acquireActors('superadmin', 2);
+  const { actors: [sadmin, sadmin2], createdIds: sadminIds } = await h.acquireActors(
+    'superadmin', 2, {}, {}, { forceSynthetic: true },
+  );
   h.onCleanup(async () => {
     if (sadminIds.length) await sb.from('app_users').delete().in('id', sadminIds);
   });

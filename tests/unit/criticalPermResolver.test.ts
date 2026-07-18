@@ -4,8 +4,8 @@
  * Slice 1 Part C.2 — resolver matrix for the COMPLIANCE_GATED_KEYS carve-out.
  *
  * The tests cover the pure resolveWithSet() function (which auth.ts calls for
- * EVERY permission check after the Slice-1 change) AND the fail-closed behaviour
- * of loadUserOverrides() on DB error.
+ * EVERY permission check after the Slice-1 change) and the authoritative
+ * permission loaders' fail-closed behaviour on DB errors.
  *
  * Slice-1 narrowing (decision 2026-07-18):
  *   Only communications.compliance_read and communications.compliance_export are
@@ -47,7 +47,11 @@ import {
   resolveWithSet,
   CRITICAL_GRANT_KEYS,
   COMPLIANCE_GATED_KEYS,
+  invalidateRolePermissions,
+  loadRolePermissions,
 } from '../../netlify/functions/lib/permissions';
+import { loadUserOverrides } from '../../netlify/functions/lib/auth';
+import { sb } from '../../netlify/functions/lib/db';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -166,12 +170,44 @@ describe('compliance key resolver — 6-state matrix', () => {
   });
 
   // ── State 6: DB query failure ──────────────────────────────────────────────
-  it('DENY (DB failure path): empty overrides + role-set-without-compliance = deny compliance key', () => {
-    // Simulate what happens when loadUserOverrides() catches a DB error and returns []:
-    const overridesOnDbError: { permission: string; granted: boolean }[] = [];
-    // The superadmin role set (post-Slice-1) excludes compliance keys.
-    for (const key of COMPLIANCE_GATED_KEYS) {
-      expect(resolveWithSet(key, superadminRoleSetNarrow, overridesOnDbError)).toBe(false);
+  it('does not reinterpret a DB failure as an empty override list', async () => {
+    const from = sb.from as unknown as jest.Mock;
+    const error = { code: 'XX000', message: 'simulated permission-store failure' };
+    from.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({ data: null, error }),
+      }),
+    });
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await expect(loadUserOverrides('test-user')).rejects.toMatchObject({
+        status: 503,
+        code: 'authorization_unavailable',
+      });
+    } finally {
+      log.mockRestore();
+    }
+  });
+});
+
+describe('role permission store failure', () => {
+  it('does not restore hardcoded role grants when the DB lookup fails', async () => {
+    const from = sb.from as unknown as jest.Mock;
+    const error = { code: 'XX000', message: 'simulated role-store failure' };
+    from.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({ data: null, error }),
+      }),
+    });
+    invalidateRolePermissions('authorization_failure_test_role');
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await expect(loadRolePermissions('authorization_failure_test_role')).rejects.toMatchObject({
+        status: 503,
+        code: 'authorization_unavailable',
+      });
+    } finally {
+      log.mockRestore();
     }
   });
 });

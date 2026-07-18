@@ -683,16 +683,8 @@ router.post('/getMyPermissionOverrides', async c => {
   // to anon/authenticated (review finding #4 — the old USING(true) policy let anyone with
   // the anon key enumerate every user's allow/deny exceptions).
   const actor = await requireUser(c);
-  const { data, error } = await sb
-    .from('user_permissions')
-    .select('user_id, permission, granted, set_by, set_at')
-    .eq('user_id', actor.id);
-  if (error) {
-    // Table absent (pre-migration) → no overrides, fall back to role defaults.
-    if ((error as { code?: string }).code === '42P01') return c.json({ success: true, data: [] });
-    return c.json({ success: false, message: error.message });
-  }
-  return c.json({ success: true, data: data ?? [] });
+  const overrides = await loadUserOverrides(actor.id);
+  return c.json({ success: true, data: overrides });
 });
 
 router.post('/verifyPassword', async c => {

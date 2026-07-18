@@ -263,6 +263,30 @@ export class Harness {
 
   // ── Critical-grant helpers (Slice 1 — maker-checker flow) ───────────────────
 
+  readPermissionOverride = async (userId, permissionKey) => {
+    const { data, error } = await this.sb.from('user_permissions')
+      .select('user_id, permission, granted, set_by, set_at')
+      .eq('user_id', userId)
+      .eq('permission', permissionKey)
+      .maybeSingle();
+    if (error) throw new Error(`readPermissionOverride(${permissionKey}, ${userId}): ${error.message}`);
+    return data ?? null;
+  };
+
+  restorePermissionOverride = async (userId, permissionKey, previous) => {
+    if (previous) {
+      const { error } = await this.sb.from('user_permissions').upsert(previous, {
+        onConflict: 'user_id,permission',
+      });
+      if (error) throw new Error(`restorePermissionOverride(${permissionKey}, ${userId}): ${error.message}`);
+      return;
+    }
+    await this.mustDelete(
+      'user_permissions',
+      q => q.eq('user_id', userId).eq('permission', permissionKey),
+    );
+  };
+
   /**
    * Seed a critical-permission row directly via the service-role client.
    *
@@ -271,18 +295,18 @@ export class Harness {
    * in the real maker-checker flow.  The production bootstrap migration
    * (20260919000431) does the same thing for existing superadmins.
    *
-   * Registers cleanup so the row is removed after the suite.
+   * Registers cleanup that restores the exact prior row, including explicit
+   * denies. Tests must never erase or rewrite a real user's permission state.
    */
   seedCriticalPermViaServiceRole = async (userId, permissionKey) => {
+    const previous = await this.readPermissionOverride(userId, permissionKey);
     const { error } = await this.sb.from('user_permissions').upsert(
       { user_id: userId, permission: permissionKey, granted: true,
         set_by: `e2e_bootstrap_${this.TAG}`, set_at: new Date().toISOString() },
       { onConflict: 'user_id,permission' },
     );
     if (error) throw new Error(`seedCriticalPerm(${permissionKey}, ${userId}): ${error.message}`);
-    this.onCleanup(() =>
-      this.mustDelete('user_permissions', q => q.eq('user_id', userId).eq('permission', permissionKey)),
-    );
+    this.onCleanup(() => this.restorePermissionOverride(userId, permissionKey, previous));
   };
 
   /**
@@ -298,12 +322,13 @@ export class Harness {
    * at the user_permissions level (this is a known gap; the permission_grant_approvals
    * window is 7 days for the APPROVAL REQUEST only, not the resulting grant).
    *
-   * Registers cleanup that revokes the grant (via clearUserPermission) AFTER the
-   * suite, using the checker's token (also has permissions.manage).
+   * Registers cleanup that restores the exact pre-test override. A borrowed
+   * roster actor may already hold an explicit grant or deny.
    *
    * @returns approvalId for further assertions.
    */
   grantCriticalPerm = async (makerUser, checkerUser, targetUserId, permissionKey, reason) => {
+    const previous = await this.readPermissionOverride(targetUserId, permissionKey);
     // Step 1 — MAKER requests the grant (creates a pending approval row)
     const makerToken = this.mint(makerUser);
     const reqRes = await this.api('superadmin/setUserPermission', makerToken, {
@@ -328,12 +353,9 @@ export class Harness {
       );
     }
 
-    // Register cleanup — clearUserPermission is immediate (no maker-checker for removal)
-    const revokerToken = this.mint(checkerUser);
+    // Restore the exact pre-test state; never blindly delete a borrowed actor's row.
     this.onCleanup(async () => {
-      await this.api('superadmin/clearUserPermission', revokerToken, {
-        userId: targetUserId, permission: permissionKey,
-      });
+      await this.restorePermissionOverride(targetUserId, permissionKey, previous);
       // Also clean the approval row itself
       await this.mustDelete('permission_grant_approvals', q => q.eq('id', approvalId));
     });

@@ -61,9 +61,11 @@ export default async function run(h) {
 
   // ── Superadmin actors ──────────────────────────────────────────────────────
   // Both must be distinct users (server enforces maker ≠ checker on SoD).
-  // acquireActors prefers real superadmins from the roster; creates synthetic
-  // ones only when the roster doesn't have enough.
-  const { actors: [sadmin, sadmin2], createdIds: sadminCreatedIds } = await h.acquireActors('superadmin', 2);
+  // Compliance tests mutate critical grants, so they must never borrow real
+  // superadmins from the roster.
+  const { actors: [sadmin, sadmin2], createdIds: sadminCreatedIds } = await h.acquireActors(
+    'superadmin', 2, {}, {}, { forceSynthetic: true },
+  );
   h.onCleanup(async () => {
     if (sadminCreatedIds.length) {
       await h.mustDelete('app_users', q => q.in('id', sadminCreatedIds));
