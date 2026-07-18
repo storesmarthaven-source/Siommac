@@ -231,6 +231,7 @@ export const PAYROLL_PERIOD_SALTS = Object.freeze({
   financeDisbursements:     Object.freeze({ mainRun: 13, draftRun: 14, staffRun: 16, cancelRun: 17 }),
   financePayslipsEss:       Object.freeze({ run: 15 }),
   financeLookups:           Object.freeze({ run: 23 }),
+  payrollControlCenter:     Object.freeze({ run: 26 }),
   // gl/overrides were salts 25/44, whose year-windows (~2040 / ~2091) overlapped
   // payrollStatutoryForms' year band [2040,2099]. Moved into the low cluster
   // (~2019/2022, well below any year band). The disjointness assertion enforces this.
