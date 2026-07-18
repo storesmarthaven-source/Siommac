@@ -229,12 +229,8 @@ body[data-theme="dark"] .overview-title-section i {
   color: #fff; background: rgba(255,255,255,0.12);
 }
 body[data-theme="dark"] .overview-title-section h2 { color: #fff; }
-body[data-theme="dark"] .profile-notif-pill {
-  background: rgba(10,20,40,0.55);
-  border: 1px solid rgba(86,99,129,0.8);
-  box-shadow: 0 8px 18px rgba(0,0,0,0.2);
-}
-body[data-theme="dark"] .profile-notif-pill:hover { background: rgba(20,40,65,0.7); }
+/* Dark-mode UserPill blends into the navy bar — no darker island box (duplicate
+   of the views.css copy; that layer is the effective one). */
 body[data-theme="dark"] .pnp-icon-btn:hover { background: rgba(100,115,148,0.7); transform: scale(1.06); }
 body[data-theme="dark"] .pnp-badge { border-color: rgba(255,255,255,0.85); }
 body[data-theme="dark"] .pnp-badge-gold { border-color: rgba(255,255,255,0.85); }
