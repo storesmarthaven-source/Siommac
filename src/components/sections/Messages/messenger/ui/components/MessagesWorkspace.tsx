@@ -17,8 +17,8 @@ import type { ActivityEntry, Attachment, CollaborationCard, Queue, Thread } from
 import { DetailsPanel } from "./DetailsPanel";
 import { MessageThread, ThreadHeader } from "./MessageThread";
 import { QueueHeader, ThreadSidebar, threadInQueue } from "./ThreadSidebar";
-import { ShieldCheck } from "./icons";
 import { ComplianceView } from "./ComplianceView";
+import { ComplianceStateProvider, ComplianceSubnav } from "../compliance";
 import { ActivityDialog, CollaborationDialog, InviteDialog, PreviewDialog } from "./WorkspaceDialogs";
 import { AppearanceDialog } from "./AppearanceDialog";
 import { notifyCollaborationStarted } from "../../integration/messagingNotifications";
@@ -109,22 +109,30 @@ export function MessagesWorkspace() {
   }
 
   // The pill's footer band is the messenger's chrome row, mirroring the shell
-  // columns below it: queue tabs (above the list) · the ACTIVE thread's header
-  // (above the messages) · Compliance (above the rail). Portalled into
-  // #topbar-nav-slot — context flows through portals — and gated on the ACTIVE
-  // panel (the messenger stays mounted while hidden; an ungated portal would
-  // leave this chrome on every other page).
-  const bandThread = active && queue !== "compliance" ? active : null;
+  // columns below it: queue tabs + Compliance entry (above the list) · the
+  // active thread's header OR the compliance subview tabs (above the messages) ·
+  // an empty rail-aligned column. Portalled into #topbar-nav-slot — context
+  // (incl. ComplianceStateProvider) flows through portals — and gated on the
+  // ACTIVE panel (the messenger stays mounted while hidden; an ungated portal
+  // would leave this chrome on every other page). Compliance is an icon-only
+  // tab in the queue row: the 300px column is pinned to align with the sidebar
+  // and is already full with the three labelled queue tabs.
+  const inCompliance = queue === "compliance" && canCompliance;
+  const bandThread = active && !inCompliance ? active : null;
   const pageHeader = isMessagesActive && navSlot
     ? createPortal(
         <>
-          <div className="sm-band-queues"><QueueHeader queue={queue} onQueue={selectQueue} /></div>
+          <div className="sm-band-queues">
+            <QueueHeader queue={queue} onQueue={selectQueue} />
+          </div>
           <div className="sm-band-thread">
-            {bandThread ? <ThreadHeader thread={bandThread} onOpenDetails={() => setDetailsInfo(true)} onOpenAppearance={() => setAppearanceOpen(true)} onInvite={() => setInviteOpen(true)} /> : null}
+            {inCompliance
+              ? <ComplianceSubnav />
+              : bandThread
+                ? <ThreadHeader thread={bandThread} onOpenDetails={() => setDetailsInfo(true)} onOpenAppearance={() => setAppearanceOpen(true)} onInvite={() => setInviteOpen(true)} canCompliance={canCompliance} onCompliance={() => selectQueue("compliance")} />
+                : null}
           </div>
-          <div className="sm-band-right">
-            {canCompliance ? <button className={`app-topbar-nav-btn${queue === "compliance" ? " active" : ""}`} type="button" onClick={() => selectQueue("compliance")}><ShieldCheck />Compliance</button> : null}
-          </div>
+          <div className="sm-band-right" />
         </>,
         navSlot,
       )
@@ -144,11 +152,16 @@ export function MessagesWorkspace() {
   );
 
   if (queue === "compliance" && canCompliance) {
-    return <main className="sm-workspace" style={appearanceStyle}>
-      {pageHeader}
-      <ComplianceView />
-      {composeDialog}
-    </main>;
+    // The provider wraps BOTH the portalled band (ComplianceSubnav) and the body
+    // (ComplianceView) so they share one subview selection — context reaches the
+    // portal because it's mounted inside this subtree.
+    return <ComplianceStateProvider>
+      <main className="sm-workspace" style={appearanceStyle}>
+        {pageHeader}
+        <ComplianceView />
+        {composeDialog}
+      </main>
+    </ComplianceStateProvider>;
   }
 
   if (!active) {

@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `786bed31af08edecaec7b4b8`
 
-Files: 269 | Symbols: 2341 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 237 | E2E suites: 0
+Files: 275 | Symbols: 2502 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -382,6 +382,9 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.messaging_toggle_reaction_tx` | `supabase/migrations/20260919000363_messaging_reactions.sql:28` |
 | function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:30` |
 | function | `public.messaging_search_posts_page` | `supabase/migrations/20260919000410_messaging_pagination_search.sql:94` |
+| function | `public.block_compliance_access_event_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1023` |
+| function | `public.guard_compliance_export_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1118` |
+| function | `msg_internal._write_compliance_evidence` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:10` |
 
 ## E2E Suites
 
@@ -462,5 +465,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
 | shared-types | `types/messaging.ts` | 281 |
+| shared-types | `types/messagingCompliance.ts` | 316 |
 | shared-types | `types/supabase.ts` | 135 |
 

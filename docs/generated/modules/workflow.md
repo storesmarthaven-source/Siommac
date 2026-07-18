@@ -2,7 +2,7 @@
 
 # workflow Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `786bed31af08edecaec7b4b8`
 
 Files: 47 | Symbols: 320 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
 
@@ -40,7 +40,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/workflow-engine/bindings/list` | `workflow.bindings.view` | requirePermission | `z.object({ moduleKey: z.string().optional() })` | `netlify/functions/routes/workflowEngine.ts:296` | - | workflowAdmin |
 | `/api/workflow-engine/bindings/set-active` | `v.ok && v.data.active ? 'workflow.bindings.activate' : 'workflow.bindings.deactivate'` | requirePermission | `z.object({ bindingId: z.uuid(), active: z.boolean() })` | `netlify/functions/routes/workflowEngine.ts:335` | - | workflowAdmin |
 | `/api/workflow-engine/cancel` | `workflow.instances.cancel` | requirePermission | `z.object({     workflowId: z.uuid(), reason: z.string().min(1).max(500),     idempotencyKey: z.uuid(),   }).strict()` | `netlify/functions/routes/workflowEngine.ts:131` | - | workflow-engine, workflowAdmin |
-| `/api/workflow-engine/decide` | `-` | requireUser, userCan | `z.object({     workflowId: z.uuid(), taskId: z.uuid(),     decision: z.enum(['approved','returned','rejected']), comment: z.string().max(2000).optional(),     attachmentIds: z.array(z.string()).optional(),     overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions   })` | `netlify/functions/routes/workflowEngine.ts:77` | - | financePayroll, payrollLoans, payrollScale, payslipRender, workflow-engine |
+| `/api/workflow-engine/decide` | `-` | requireUser, userCan | `z.object({     workflowId: z.uuid(), taskId: z.uuid(),     decision: z.enum(['approved','returned','rejected']), comment: z.string().max(2000).optional(),     attachmentIds: z.array(z.string()).optional(),     overrideReason: z.string().max(500).optional(),   // required by the RPC for elevated-not-assigned decisions   })` | `netlify/functions/routes/workflowEngine.ts:77` | - | financePayroll, payrollControlCenter, payrollLoans, payrollScale, payslipRender, workflow-engine |
 | `/api/workflow-engine/delegate` | `workflow.tasks.delegate` | requirePermission | `z.object({     taskId: z.uuid(), delegateTo: z.string().min(1),     reason: z.string().min(1).max(500), idempotencyKey: z.uuid(),   }).strict()` | `netlify/functions/routes/workflowEngine.ts:99` | - | workflowAdmin |
 | `/api/workflow-engine/get` | `workflow.instances.view` | requirePermission | `z.object({ workflowId: z.uuid() })` | `netlify/functions/routes/workflowEngine.ts:178` | - | workflow-engine, workflowAdmin |
 | `/api/workflow-engine/my-tasks` | `workflow.my_tasks.view` | requirePermission | `-` | `netlify/functions/routes/workflowEngine.ts:149` | - | workflow-engine, workflowAdmin |

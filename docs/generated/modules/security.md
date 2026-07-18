@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `786bed31af08edecaec7b4b8`
 
-Files: 42 | Symbols: 358 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 58 | E2E suites: 3
+Files: 42 | Symbols: 358 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 3
 
 ## Widgets and Tiles
 
@@ -20,7 +20,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|---|---|---|
 | `/api/admin/approvals/approve` | `permissions.manage` | requirePermission | `ApproveSchema` | `netlify/functions/routes/permissionApprovals.ts:132` | - | communicationsCompliance, rbacConsole |
 | `/api/admin/approvals/cancel` | `permissions.manage` | requirePermission | `CancelSchema` | `netlify/functions/routes/permissionApprovals.ts:258` | - | - |
-| `/api/admin/approvals/list` | `permissions.manage` | requirePermission | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:69` | - | communicationsCompliance |
+| `/api/admin/approvals/list` | `permissions.manage` | requirePermission | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:69` | - | - |
 | `/api/admin/approvals/reject` | `permissions.manage` | requirePermission | `RejectSchema` | `netlify/functions/routes/permissionApprovals.ts:213` | - | - |
 | `/api/admin/security/policy/update` | `auth.security.manage_policy` | requirePermission | `PolicyUpdateSchema` | `netlify/functions/routes/adminSecurity.ts:225` | useUpdateSecurityPolicy @ src/api/security.ts:452 | accountSecurity, securityPolicy |
 | `/api/admin/security/users/passkeys/revoke-all` | `auth.passkeys.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:92` | useAdminRevokeUserPasskeys @ src/api/security.ts:373 | accountSecurity |
@@ -47,7 +47,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:594` | logoutApi @ src/components/auth/api.ts:109 | - |
 | `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:571` | - | - |
 | `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:436` | setup2faApi @ src/components/auth/api.ts:94 | - |
-| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:203` | - | communicationsCompliance, rbacConsole |
+| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:203` | - | rbacConsole |
 | `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:447` | - | rbacConsole |
 | `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:152` | - | rbacConsole |
 | `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:602` | - | rbacConsole |
@@ -161,6 +161,12 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.reject_permission_grant_tx` | `supabase/migrations/20260918000150_permission_grant_reject_cancel_tx.sql:15` |
 | function | `public.cancel_permission_grant_tx` | `supabase/migrations/20260918000150_permission_grant_reject_cancel_tx.sql:59` |
 | function | `public.auth_revoke_user_sessions_tx` | `supabase/migrations/20260919000404_auth_revoke_user_sessions_tx.sql:21` |
+| function | `msg_internal._has_active_compliance_permission` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:73` |
+| function | `public.approve_permission_grant_tx` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:111` |
+| function | `public.reject_permission_grant_tx` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:336` |
+| function | `public.cancel_permission_grant_tx` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:419` |
+| function | `public.request_compliance_permission_grant_tx` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:506` |
+| function | `public.revoke_compliance_permission_grant_tx` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:671` |
 
 ## E2E Suites
 

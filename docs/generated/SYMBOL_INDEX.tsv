@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	84	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	97	
-app	variable	platform	false		netlify/functions/api.ts	106	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	257	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	288	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	297	
-handler	function	platform	true		netlify/functions/api.ts	301	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	85	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	98	
+app	variable	platform	false		netlify/functions/api.ts	107	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	259	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	290	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	299	
+handler	function	platform	true		netlify/functions/api.ts	303	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -70,9 +70,9 @@ jwtMiddleware	function	security	false		netlify/functions/lib/auth.ts	334
 requireUser	function	security	false		netlify/functions/lib/auth.ts	348	
 requireRole	function	security	false		netlify/functions/lib/auth.ts	373	
 loadUserOverrides	function	security	false		netlify/functions/lib/auth.ts	384	
-requirePermission	function	security	false		netlify/functions/lib/auth.ts	402	
-userCan	function	security	false		netlify/functions/lib/auth.ts	428	
-log_	function	security	false		netlify/functions/lib/auth.ts	440	
+requirePermission	function	security	false		netlify/functions/lib/auth.ts	412	
+userCan	function	security	false		netlify/functions/lib/auth.ts	438	
+log_	function	security	false		netlify/functions/lib/auth.ts	450	
 AdapterContext	interface	platform	true		netlify/functions/lib/calendarAdapters.ts	20	
 MONTHS	array	platform	false		netlify/functions/lib/calendarAdapters.ts	28	
 deadline	function	platform	false		netlify/functions/lib/calendarAdapters.ts	31	
@@ -639,6 +639,37 @@ assignEmployee	function	payroll	true		netlify/functions/lib/finance/payGroups.ts
 listGroupMemberIds	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	163	
 PayGroupMemberDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	180	
 listGroupMembers	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	182	
+ControlCenterServiceInput	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenter.ts	34	
+money	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	43	
+num	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	47	
+str	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	51	
+Rec	type	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	56	
+assertRpcShape	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	63	
+err	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	64	assertRpcShape
+obj	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	69	assertRpcShape
+reqNum	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	74	assertRpcShape
+getPayrollControlCenter	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenter.ts	96	
+mapRegisterItem	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	349	
+RegisterCursorTuple	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	7	
+hashStr	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	15	
+filterFingerprint	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	22	
+encodeCursor	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	38	
+decodeCursor	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	44	
+malformed	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	45	decodeCursor
+todayIso	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	15	
+classifyDeadline	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	20	
+HealthInput	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	42	
+healthScore	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	49	
+healthState	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	61	
+fundingKpiState	function	payroll	true	ui-tile	netlify/functions/lib/finance/payroll/controlCenterDerive.ts	70	
+ACTIVITY_LABELS	object	payroll	false		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	82	
+activityLabel	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	94	
+TERMINAL_RELEASED	variable	payroll	false		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	103	
+registerReadinessState	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	105	
+PREFLIGHT_CODE_TO_GATE	object	payroll	false		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	119	
+GATE_ORDER	array	payroll	false		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	140	
+PreflightReadinessInput	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	150	
+evaluateReadinessGates	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterDerive.ts	157	
 PayrollRunType	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	6	
 PayrollRunStatus	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	12	
 CreatePayrollRunCommand	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	25	
@@ -1749,6 +1780,132 @@ err	function	hr	false		netlify/functions/lib/hr/timesheetService.ts	16
 buildTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	18	
 submitTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	72	
 reopenTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	147	
+EVIDENCE_DOMAIN	variable	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	5	
+evidencePepper	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	7	
+hashEvidence	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	18	
+complianceEvidenceContext	function	platform	true		netlify/functions/lib/messaging/complianceEvidence.ts	26	
+BUCKET	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	24	
+SERIALIZER_VERSION	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	25	
+MAX_ARTIFACT_BYTES	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	26	
+DOWNLOAD_TTL_SECONDS	variable	platform	false		netlify/functions/lib/messaging/complianceExport.ts	27	
+ExportStateRow	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	29	
+ExportDownloadRow	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	43	
+DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceExport.ts	64	
+ComplianceExportBuildResult	interface	platform	true		netlify/functions/lib/messaging/complianceExport.ts	69	
+httpError	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	74	
+ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	81	
+sha256	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	85	
+storagePath	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	89	
+loadExportState	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	93	
+readyFromState	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	107	
+uploadOrVerifyExisting	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	131	
+recordFailure	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	155	
+failureStateUnavailable	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	193	
+recordFailureAndRethrow	function	platform	false		netlify/functions/lib/messaging/complianceExport.ts	212	
+createComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExport.ts	229	
+downloadComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExport.ts	442	
+SERIALIZER_VERSION	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	11	
+DELETED_MESSAGE_MARKER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	12	
+EMPTY_MESSAGE_MARKER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	13	
+PDF_MARGIN	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	14	
+PDF_NAVY	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	15	
+PDF_TEXT	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	16	
+PDF_MUTED	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	17	
+PDF_BORDER	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	18	
+PDF_SUBTLE	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	19	
+CASE_TYPES	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	20	
+CASE_STATUSES	variable	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	27	
+ComplianceExportCaseSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	34	
+ComplianceExportThreadSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	43	
+ComplianceExportRange	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	53	
+ComplianceExportSnapshot	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	58	
+ComplianceExportRenderFormat	type	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	67	
+ComplianceExportRenderResult	interface	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	69	
+SafeAttachment	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	76	
+SafeMessage	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	85	
+SafeExportSnapshot	interface	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	97	
+fail	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	108	
+requiredText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	112	
+nullableText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	117	
+normalizeText	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	123	
+isoInstant	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	127	
+nullableIsoInstant	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	134	
+actorRef	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	139	
+attachmentMetadata	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	148	
+messageSnapshot	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	165	
+compareMessages	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	197	
+normalizeMessagingComplianceExportSnapshot	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	206	
+canonicalJsonString	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	256	
+renderMessagingComplianceJson	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	286	
+renderSafeJson	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	291	
+formatRange	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	295	
+drawPageHeader	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	299	
+ensureVerticalSpace	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	316	
+drawLabelValue	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	326	
+attachmentSummary	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	341	
+drawMessage	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	352	
+renderSafePdf	function	platform	false		netlify/functions/lib/messaging/complianceExportRenderer.ts	396	
+renderMessagingCompliancePdf	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	436	
+renderMessagingComplianceExport	function	platform	true		netlify/functions/lib/messaging/complianceExportRenderer.ts	440	
+RpcError	interface	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	18	
+RpcResponse	interface	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	23	
+unwrap	function	platform	false		netlify/functions/lib/messaging/complianceRpc.ts	28	
+ComplianceEvidenceContext	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	37	
+ComplianceCaseMutationResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	42	
+ComplianceReadRpcResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	52	
+ComplianceGrantRevokeResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	72	
+ComplianceExportRequestResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	83	
+ComplianceExportFinalizeResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	99	
+ComplianceExportPreparedResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	111	
+ComplianceExportFailureResult	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	125	
+ComplianceExportDownloadMetadata	interface	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	135	
+requestComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	150	
+decideComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	168	
+readComplianceConversationTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	184	
+revokeComplianceGrantTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	205	
+closeComplianceCaseTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	224	
+requestComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	241	
+loadComplianceExportSnapshot	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	261	
+prepareComplianceExportUploadTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	273	
+finalizeComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	299	
+failComplianceExportTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	324	
+prepareComplianceExportDownload	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	344	
+recordComplianceExportDownloadTx	function	platform	true		netlify/functions/lib/messaging/complianceRpc.ts	356	
+Actor	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	33	
+PermissionContext	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	38	
+CaseRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	43	
+GrantRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	66	
+CaseThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	81	
+ThreadRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	90	
+UserRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	100	
+ExportRow	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	106	
+DbResult	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	127	
+CursorPayload	interface	platform	false		netlify/functions/lib/messaging/complianceService.ts	132	
+CASE_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	138	
+GRANT_SELECT	variable	platform	false		netlify/functions/lib/messaging/complianceService.ts	146	
+httpError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	152	
+ensureNoError	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	156	
+fingerprint	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	160	
+encodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	164	
+decodeCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	169	
+permissionContext	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	186	
+actorRef	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	194	
+nonEmptyTrimmed	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	199	
+isComplianceSummary	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	204	
+getComplianceSummary	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	219	
+loadNames	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	228	
+grantStatus	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	242	
+caseCapabilities	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	248	
+activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	271	
+applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	285	
+queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	294	
+listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	317	
+getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	429	
+searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	562	
+listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	632	
+listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	714	
+getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	793	
+listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	857	
 MSG_SQLSTATE_HTTP	object	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	20	
 msgRpcHttpError	function	platform	true		netlify/functions/lib/messaging/messagingRpc.ts	29	
 RpcResponse	interface	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	41	
@@ -1851,22 +2008,22 @@ PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	452
 CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	460	
 isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	472	
 COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	492	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	502	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	954	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	967	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	981	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	991	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	992	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	995	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1045	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1057	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1058	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1061	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1071	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1084	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1092	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1103	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	501	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	953	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	969	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	994	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1004	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1005	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1008	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1024	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1059	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1071	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1072	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1075	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1085	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1098	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1106	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1117	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2476,6 +2633,24 @@ CreateTicketSchema	variable	communications	false		netlify/functions/routes/commu
 TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1068	
 CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1117	
 UpdateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1159	
+router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
+args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	37	
+CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	40	
+ACCESS_EVENT_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	48	
+SummaryGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	61	
+CasesListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	63	
+CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	70	
+CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	72	
+CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	84	
+ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	91	
+ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	110	
+GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	118	
+CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	124	
+AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	130	
+ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	149	
+ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	155	
+ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	182	
+notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	187	
 router	variable	hr	false		netlify/functions/routes/departments.ts	7	
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
@@ -2529,9 +2704,9 @@ b	function	finance	false		netlify/functions/routes/financeNis.ts	25
 router	variable	finance	false		netlify/functions/routes/financeOverview.ts	24	
 b	function	finance	false		netlify/functions/routes/financeOverview.ts	26	
 fail	function	finance	false		netlify/functions/routes/financeOverview.ts	29	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	108	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	111	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	115	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	109	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	112	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	116	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3036,14 +3211,14 @@ SALT_DATE_BASE_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	2
 SALT_WINDOW_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	219	
 seedDateFromTag	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	220	
 PAYROLL_PERIOD_SALTS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	229	
-PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	252	
-yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	260	
-saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	267	
-assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	279	
-overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	280	assertPayrollPeriodAllocatorDisjoint
-payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	327	
-payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	338	
-payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	351	
+PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	253	
+yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	261	
+saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	268	
+assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	280	
+overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	281	assertPayrollPeriodAllocatorDisjoint
+payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	328	
+payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	339	
+payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	352	
 here	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	18	
 defaultSuitesDir	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	19	
 escapeRegExp	function	payroll	false		scripts/e2e/payroll-contract-gate.mjs	21	
@@ -3063,6 +3238,17 @@ selected	variable	testing	false		scripts/e2e/run.mjs	62
 f	variable	testing	false		scripts/e2e/run.mjs	73	
 sweepFailed	variable	testing	false		scripts/e2e/run.mjs	101	
 fail	variable	testing	false		scripts/e2e/run.mjs	111	
+N	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	16	
+YEAR	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	17	
+CHUNK	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	18	
+env	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	20	
+sb	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	23	
+TAG	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	24	
+pct	function	testing	false		scripts/e2e/scale-controlCenter.mjs	25	
+cleanupFailed	variable	testing	false		scripts/e2e/scale-controlCenter.mjs	26	
+del	function	testing	false		scripts/e2e/scale-controlCenter.mjs	27	
+main	function	testing	false		scripts/e2e/scale-controlCenter.mjs	34	
+ins	function	testing	false		scripts/e2e/scale-controlCenter.mjs	43	main
 title	variable	security	true	test	scripts/e2e/suites/accountSecurity.mjs	29	
 run	function	security	true	test	scripts/e2e/suites/accountSecurity.mjs	31	
 uid	function	security	false	test	scripts/e2e/suites/accountSecurity.mjs	36	run
@@ -3094,8 +3280,28 @@ sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	52
 waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	525	run
 unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	668	run
 threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	669	run
-title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	31	
-run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
+title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	24	
+CASE_DETAIL_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	26	
+CASE_SUMMARY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
+CAPABILITY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	39	
+GRANT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	44	
+EXPORT_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	50	
+MESSAGE_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	57	
+SUMMARY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	62	
+sortedKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	67	
+exactKeys	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	71	
+assertNoMessagePayload	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	78	
+expectStatus	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	92	
+sha256	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	99	
+rows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	103	
+countRows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	109	
+fetchArtifact	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	113	
+run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	126	
+requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	184	run
+approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	206	run
+readSummary	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	211	run
+assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	220	run
+requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	260	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -3229,6 +3435,19 @@ title	variable	workflow	true	test	scripts/e2e/suites/orchestration.mjs	6
 run	function	workflow	true	test	scripts/e2e/suites/orchestration.mjs	8	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollBackPay.mjs	18	
 run	function	payroll	true	test	scripts/e2e/suites/payrollBackPay.mjs	26	
+title	variable	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	22	
+BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	24	
+run	function	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	31	
+waitFor	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	53	run
+seedRun	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	121	run
+seedCalcChain	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	133	run
+seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	147	run
+seedFunding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	154	run
+driveToPendingApproval	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	163	run
+getA	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	238	run
+WIN	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	239	run
+getB	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	240	run
+snap	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	410	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollGl.mjs	24	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	26	
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	37	
@@ -3416,6 +3635,27 @@ URL	variable	security	false		scripts/recover-2fa.mjs	27
 KEY	variable	security	false		scripts/recover-2fa.mjs	28	
 username	variable	security	false		scripts/recover-2fa.mjs	34	
 sb	variable	security	false		scripts/recover-2fa.mjs	35	
+ROOT	variable	payroll	false		scripts/seed-payroll-command-center.mjs	20	
+env	variable	payroll	false		scripts/seed-payroll-command-center.mjs	21	
+sb	variable	payroll	false		scripts/seed-payroll-command-center.mjs	25	
+SUPERADMIN	variable	payroll	false		scripts/seed-payroll-command-center.mjs	27	
+SEED	variable	payroll	false		scripts/seed-payroll-command-center.mjs	28	
+die	function	payroll	false		scripts/seed-payroll-command-center.mjs	29	
+okOr	function	payroll	false		scripts/seed-payroll-command-center.mjs	30	
+now	variable	payroll	false		scripts/seed-payroll-command-center.mjs	33	
+M	variable	payroll	false		scripts/seed-payroll-command-center.mjs	34	
+Y	variable	payroll	false		scripts/seed-payroll-command-center.mjs	34	
+d	function	payroll	false		scripts/seed-payroll-command-center.mjs	35	
+lastDay	function	payroll	false		scripts/seed-payroll-command-center.mjs	36	
+clamp	function	payroll	false		scripts/seed-payroll-command-center.mjs	37	
+nextM	variable	payroll	false		scripts/seed-payroll-command-center.mjs	38	
+nextY	variable	payroll	false		scripts/seed-payroll-command-center.mjs	38	
+soon	variable	payroll	false		scripts/seed-payroll-command-center.mjs	41	
+soonPay	variable	payroll	false		scripts/seed-payroll-command-center.mjs	42	
+soonCut	variable	payroll	false		scripts/seed-payroll-command-center.mjs	43	
+main	function	payroll	false		scripts/seed-payroll-command-center.mjs	45	
+pick	function	payroll	false		scripts/seed-payroll-command-center.mjs	58	main
+ago	function	payroll	false		scripts/seed-payroll-command-center.mjs	171	main
 ES256_PEM	variable	communications	false		scripts/verify-realtime-auth.mjs	35	
 svc	variable	communications	false		scripts/verify-realtime-auth.mjs	41	
 USER_ID	variable	communications	false		scripts/verify-realtime-auth.mjs	43	
@@ -3522,6 +3762,21 @@ CommentTicketArgs	interface	communications	true		src/api/communications.ts	845
 useCommentTicket	function	communications	true	hook	src/api/communications.ts	851	
 UpdateTicketArgs	interface	communications	true		src/api/communications.ts	865	
 useUpdateTicket	function	communications	true	hook	src/api/communications.ts	872	
+asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
+complianceKeys	variable	communications	true		src/api/communicationsCompliance.ts	37	
+useComplianceSummary	function	communications	true	hook	src/api/communicationsCompliance.ts	53	
+useComplianceCases	function	communications	true	hook	src/api/communicationsCompliance.ts	64	
+useComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	75	
+useComplianceConversationSearch	function	communications	true	hook	src/api/communicationsCompliance.ts	87	
+useComplianceConversation	function	communications	true	hook	src/api/communicationsCompliance.ts	101	
+useComplianceAccessEvents	function	communications	true	hook	src/api/communicationsCompliance.ts	117	
+useComplianceExports	function	communications	true	hook	src/api/communicationsCompliance.ts	128	
+useRequestComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	142	
+useDecideComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	155	
+useCloseComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	169	
+useRevokeComplianceGrant	function	communications	true	hook	src/api/communicationsCompliance.ts	183	
+useCreateComplianceExport	function	communications	true	hook	src/api/communicationsCompliance.ts	194	
+downloadComplianceExport	function	communications	true		src/api/communicationsCompliance.ts	210	
 SignalOpt	type	hr	false		src/api/employees.ts	22	
 opt	function	hr	false		src/api/employees.ts	23	
 unwrap	function	hr	false		src/api/employees.ts	25	
@@ -3805,6 +4060,15 @@ useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	553
 payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	561	
 usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	571	
 useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	582	
+PayrollControlCenterParams	interface	payroll	true		src/api/finance/payroll/controlCenter.ts	42	
+defaultControlCenterWindow	function	payroll	true		src/api/finance/payroll/controlCenter.ts	54	
+iso	function	payroll	false		src/api/finance/payroll/controlCenter.ts	55	defaultControlCenterWindow
+payrollControlCenterQueryKey	function	payroll	true		src/api/finance/payroll/controlCenter.ts	63	
+post	function	payroll	false		src/api/finance/payroll/controlCenter.ts	81	
+getPayrollControlCenter	function	payroll	true		src/api/finance/payroll/controlCenter.ts	87	
+isControlCenterDenied	function	payroll	true		src/api/finance/payroll/controlCenter.ts	106	
+isTerminalError	function	payroll	false		src/api/finance/payroll/controlCenter.ts	111	
+usePayrollControlCenter	function	payroll	true	hook	src/api/finance/payroll/controlCenter.ts	118	
 STALE_5M	variable	finance	false		src/api/finance/pickers.ts	15	
 GlAccountOption	interface	finance	true		src/api/finance/pickers.ts	19	
 CostCentreOption	interface	finance	true		src/api/finance/pickers.ts	25	
@@ -5937,6 +6201,58 @@ Step5Review	function	finance	false	component	src/components/sections/Finance/Pay
 STEP_LABELS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	489	
 PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	498	
 handlePrimary	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	529	PayNewRunWizard
+PAGE_KEY	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	42	
+BOARD_COLS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	43	
+KPI_PAGE_KEY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	44	
+W_ASSIGNED	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	45	
+W_DEADLINES	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	46	
+W_READINESS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	47	
+W_IMPACT	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	48	
+W_REGISTER	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	49	
+W_KPI_NEXTPAY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	50	
+W_KPI_ACTIVE	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	51	
+W_KPI_EMPLOYEES	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	52	
+W_KPI_GROSS	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	53	
+W_KPI_NET	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	54	
+CELL	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	55	
+defInst	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	57	
+defaultKpiLayout	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	62	
+defaultLayout	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	76	
+floor	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	93	
+REGISTER_TABS	array	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	96	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	104	
+fmtTTDc	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	105	
+fmtDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	111	
+fmtDayShort	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	117	
+relDate	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	123	
+timeOf	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	135	
+initials	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	139	
+READINESS_PROGRESS	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	142	
+READINESS_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	145	
+DEADLINE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	150	
+DEADLINE_PILL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	153	
+ACTIVITY_VISUAL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	160	
+activityVisual	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	171	
+GATE_STATE	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	175	
+HEALTH_STATE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	182	
+HEALTH_ICON	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	185	
+ReadinessDoughnut	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	190	
+SkeletonPage	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	220	
+PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	232	
+placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	263	PayrollCommandCenter
+promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	265	PayrollCommandCenter
+runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	282	PayrollCommandCenter
+submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	288	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	482	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	525	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	557	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	616	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	636	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	684	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	688	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	689	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	740	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	797	
 PAGE_SIZE	variable	payroll	false	component	src/components/sections/Finance/PayrollOverview.tsx	53	
 paginate	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	55	
 runStatusTone	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	63	
@@ -8026,6 +8342,59 @@ listeners	variable	communications	false		src/components/sections/Messages/messen
 emitMessagesSignal	function	communications	true		src/components/sections/Messages/messenger/integration/messengerSignalBus.ts	14	
 onMessagesSignal	function	communications	true		src/components/sections/Messages/messenger/integration/messengerSignalBus.ts	19	
 MessengerWorkspace	function	communications	true	component	src/components/sections/Messages/messenger/MessengerWorkspace.tsx	18	
+EVENT_META	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	16	
+EVENT_FILTERS	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	29	
+fmtDateTime	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	39	
+ComplianceAccessLogView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	44	
+fmtDetails	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	117	
+AccessEventRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx	123	
+errText	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	22	
+DecideComplianceCaseDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	27	
+submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	37	DecideComplianceCaseDialog
+CloseComplianceCaseDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	66	
+submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	74	CloseComplianceCaseDialog
+RevokeComplianceGrantDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	100	
+submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	109	RevokeComplianceGrantDialog
+ComplianceExportDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	135	
+submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	151	ComplianceExportDialog
+StatusFilter	type	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	18	
+STATUS_FILTER_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	19	
+TYPE_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	23	
+STATUS_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	31	
+STATUS_ICON	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	35	
+statusTone	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	39	
+fmtDate	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	46	
+relShort	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	52	
+isExpiringSoon	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	64	
+ComplianceCasesView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	69	
+StatusPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	187	
+CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	192	
+ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	202	
+GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	279	
+fmtClock	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	25	
+fmtDay	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	28	
+fmtExpiry	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	31	
+fmtSize	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	36	
+ComplianceConversationsView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	43	
+ConversationRailItem	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	216	
+ComplianceTimeline	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	237	
+ComplianceMessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	254	
+ComplianceSubview	type	communications	true		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	13	
+ComplianceStateValue	interface	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	15	
+ComplianceStateContext	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	26	
+ComplianceStateProvider	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	28	
+useComplianceState	function	communications	true	hook	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	47	
+TABS	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	24	
+ComplianceSubnav	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	36	
+ComplianceWorkspace	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	66	
+WIZARD_STEPS	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	19	
+CASE_TYPES	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	25	
+Picked	interface	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	33	
+NewComplianceCaseDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	35	
+iso	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	51	NewComplianceCaseDialog
+toggle	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	63	NewComplianceCaseDialog
+setNote	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	68	NewComplianceCaseDialog
+submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	72	NewComplianceCaseDialog
 accentPresets	variable	communications	false		src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx	7	
 surfaces	array	communications	false		src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx	13	
 receivedPresets	variable	communications	false		src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx	20	
@@ -8036,10 +8405,7 @@ AccessibilitySwitch	function	communications	false	component	src/components/secti
 initials	function	communications	false		src/components/sections/Messages/messenger/ui/components/Avatar.tsx	5	
 Avatar	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Avatar.tsx	12	
 GroupAvatarStack	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Avatar.tsx	23	
-LoadedThread	interface	communications	false		src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	20	
-ComplianceView	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	25	
-open	function	communications	false		src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	33	ComplianceView
-ComplianceMessage	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	100	
+ComplianceView	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx	11	
 emojis	array	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	22	
 urlPattern	variable	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	23	
 FormatCommand	type	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	24	
@@ -8120,22 +8486,27 @@ PenSquare	variable	communications	true	component	src/components/sections/Message
 Paperclip	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	60	
 Pin	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	61	
 PinOff	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	62	
-Presentation	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	63	
-Reply	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	64	
-RotateCcw	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	65	
-Search	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	66	
-Send	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	67	
-Settings2	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	68	
-ShieldCheck	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	69	
-Smile	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	70	
-SmilePlus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	71	
-Star	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	72	
-Trash2	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	73	
-UploadCloud	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	74	
-UserMinus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	75	
-UserPlus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	76	
-Users	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	77	
-X	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	78	
+Plus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	63	
+ScrollText	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	64	
+FolderLock	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	65	
+ShieldX	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	66	
+FilePlus2	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	67	
+Presentation	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	68	
+Reply	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	69	
+RotateCcw	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	70	
+Search	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	71	
+Send	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	72	
+Settings2	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	73	
+ShieldCheck	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	74	
+Smile	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	75	
+SmilePlus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	76	
+Star	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	77	
+Trash2	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	78	
+UploadCloud	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	79	
+UserMinus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	80	
+UserPlus	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	81	
+Users	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	82	
+X	variable	communications	true	component	src/components/sections/Messages/messenger/ui/components/icons.tsx	83	
 attachmentIcon	function	communications	true		src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	12	
 FileGlyph	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	23	
 AttachmentCardProps	type	communications	false	ui-tile	src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	29	
@@ -8154,19 +8525,19 @@ selectThread	function	communications	false		src/components/sections/Messages/mes
 selectQueue	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	99	MessagesWorkspace
 jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	105	MessagesWorkspace
 openCollaboration	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	106	MessagesWorkspace
-openActivity	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	162	MessagesWorkspace
+openActivity	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	175	MessagesWorkspace
 emojiOnly	variable	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	21	
 documentKinds	variable	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	22	
 ThreadHeader	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	30	
-MessageThread	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	57	
-markIfVisible	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	97	MessageThread
-handleListScroll	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	174	MessageThread
-jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	181	MessageThread
-SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	267	
-MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	271	
-MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	311	
-RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	317	
-renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	323	
+MessageThread	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	62	
+markIfVisible	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	102	MessageThread
+handleListScroll	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	179	MessageThread
+jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	186	MessageThread
+SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	272	
+MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	276	
+MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	316	
+RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	322	
+renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	328	
 tabs	array	communications	false		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	17	
 threadInQueue	function	communications	true		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	23	
 QueueHeader	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	31	
@@ -8177,9 +8548,9 @@ create	function	communications	false		src/components/sections/Messages/messenger
 PreviewDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx	89	
 ActivityDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx	102	
 CollaborationDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx	110	
-mountMessageCenterSection	function	communications	true		src/components/sections/Messages/mount.ts	15	
-unmountMessageCenterSection	function	communications	true		src/components/sections/Messages/mount.ts	27	
-mountMessageDropdown	function	communications	true		src/components/sections/Messages/mount.ts	32	
+mountMessageCenterSection	function	communications	true		src/components/sections/Messages/mount.ts	16	
+unmountMessageCenterSection	function	communications	true		src/components/sections/Messages/mount.ts	31	
+mountMessageDropdown	function	communications	true		src/components/sections/Messages/mount.ts	36	
 me	object	communications	false	test	src/components/sections/Messages/threadDisplay.test.ts	4	
 alice	object	communications	false	test	src/components/sections/Messages/threadDisplay.test.ts	5	
 bob	object	communications	false	test	src/components/sections/Messages/threadDisplay.test.ts	6	
@@ -10316,22 +10687,26 @@ then	method	payroll	false	test	tests/unit/backPay.test.ts	342	terminal
 extractSetKeys	function	testing	false	test	tests/unit/criticalGrants.sync.test.ts	19	
 BE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	30	
 FE	variable	testing	false	test	tests/unit/criticalGrants.sync.test.ts	31	
-COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	57	
-OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
-NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
-superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	68	
-roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	77	
-roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	79	
+COMPLIANCE_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	59	
+OPERATIONAL_CRIT_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	61	
+NONCRITICAL_KEY	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	63	
+NOW	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	64	
+activeComplianceOverride	function	testing	false	test	tests/unit/criticalPermResolver.test.ts	66	
+superadminRoleSetNarrow	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	81	
+roleSetWithCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	90	
+roleSetWithoutCompliance	variable	testing	false	test	tests/unit/criticalPermResolver.test.ts	92	
 MaybeSingle	type	testing	false	test	tests/unit/loadRenderTemplate.test.ts	34	
 runRow	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	37	
 Loaded	interface	testing	false	test	tests/unit/loadRenderTemplate.test.ts	45	
 load	function	testing	false	test	tests/unit/loadRenderTemplate.test.ts	52	
+snapshot	object	testing	false	test	tests/unit/messagingComplianceExport.test.ts	7	
 rule	function	hr	false	test	tests/unit/overtimeRules.test.ts	4	
 RULES	array	hr	false	test	tests/unit/overtimeRules.test.ts	16	
 r2	function	payroll	false	test	tests/unit/payroll-calc.test.js	6	
 TT	object	payroll	false	test	tests/unit/payroll-calc.test.js	8	
 hsThreshold	function	payroll	false	test	tests/unit/payroll-calc.test.js	35	
 calcPayslip	function	payroll	false	test	tests/unit/payroll-calc.test.js	40	
+pf	function	payroll	false	test	tests/unit/payrollControlCenter.test.ts	150	
 WEEKS	variable	payroll	false	test	tests/unit/payrollStatutory.test.ts	30	
 cls	function	payroll	false	test	tests/unit/payrollStatutory.test.ts	36	
 ALL_CLASSES	array	payroll	false	test	tests/unit/payrollStatutory.test.ts	58	
@@ -10688,6 +11063,58 @@ MessageRealtimeReason	type	platform	true		types/messaging.ts	246
 MessageThreadDetail	interface	platform	true		types/messaging.ts	253	
 MessageRecipient	interface	platform	true		types/messaging.ts	258	
 ComplianceThread	interface	platform	true		types/messaging.ts	269	
+ComplianceCaseType	type	platform	true		types/messagingCompliance.ts	9	
+ComplianceCaseStatus	type	platform	true		types/messagingCompliance.ts	16	
+ComplianceAccessEventType	type	platform	true		types/messagingCompliance.ts	22	
+ComplianceExportFormat	type	platform	true		types/messagingCompliance.ts	34	
+ComplianceExportStatus	type	platform	true		types/messagingCompliance.ts	35	
+ComplianceCapabilities	interface	platform	true		types/messagingCompliance.ts	37	
+ComplianceSummary	interface	platform	true		types/messagingCompliance.ts	50	
+ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	58	
+ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	63	
+ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	77	
+ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	94	
+ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	111	
+ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	123	
+ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	132	
+ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	144	
+ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	156	
+ComplianceExport	interface	platform	true		types/messagingCompliance.ts	170	
+ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	194	
+ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	199	
+ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	206	
+ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	212	
+ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	216	
+ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	225	
+ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	232	
+ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	238	
+ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	249	
+ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	254	
+ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	262	
+ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	268	
+ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	279	
+ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	284	
+ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	290	
+ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	295	
+ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	306	
+ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	311	
+PayrollRunRegisterTab	type	payroll	true		types/payrollControlCenter.ts	8	
+PayrollControlCenterRequest	interface	payroll	true		types/payrollControlCenter.ts	10	
+HealthState	type	payroll	true		types/payrollControlCenter.ts	23	
+ReadinessState	type	payroll	true		types/payrollControlCenter.ts	24	
+PayrollRunType	type	payroll	true		types/payrollControlCenter.ts	25	
+MoneyValue	interface	payroll	true		types/payrollControlCenter.ts	27	
+PayrollControlCenterCapabilities	interface	payroll	true		types/payrollControlCenter.ts	32	
+PayrollPortfolioHealth	interface	payroll	true		types/payrollControlCenter.ts	41	
+PayrollCommandCenterKpis	interface	payroll	true	ui-tile	types/payrollControlCenter.ts	58	
+PayrollAssignedWork	interface	payroll	true		types/payrollControlCenter.ts	72	
+PayrollActivityItem	interface	payroll	true		types/payrollControlCenter.ts	89	
+PayrollDeadlineItem	interface	payroll	true		types/payrollControlCenter.ts	99	
+PayrollReadinessGate	interface	payroll	true		types/payrollControlCenter.ts	109	
+PayrollRunRegisterItem	interface	payroll	true		types/payrollControlCenter.ts	124	
+PayrollNextRun	interface	payroll	true		types/payrollControlCenter.ts	145	
+PayrollRunRegisterPage	interface	payroll	true		types/payrollControlCenter.ts	163	
+PayrollControlCenterResponse	interface	payroll	true		types/payrollControlCenter.ts	170	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	

@@ -6,7 +6,7 @@
 //     bubble (is-self + is-admin classes drive the ported CSS unchanged).
 import {
   Archive, ArchiveRestore, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, LockKeyhole, MessageSquareText, MoreHorizontal, Pin, PinOff,
-  Reply, Settings2, SmilePlus, Star, Trash2, UserPlus, Users,
+  Reply, Settings2, ShieldCheck, SmilePlus, Star, Trash2, UserPlus, Users,
 } from "./icons";
 import type { ComponentChildren } from "preact";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
@@ -27,11 +27,13 @@ const documentKinds = new Set<Attachment["kind"]>(["pdf", "word", "excel", "powe
  * inside the thread column. Context flows through portals, so useMessaging
  * works here.
  */
-export function ThreadHeader({ thread, onOpenDetails, onOpenAppearance, onInvite }: {
+export function ThreadHeader({ thread, onOpenDetails, onOpenAppearance, onInvite, canCompliance, onCompliance }: {
   thread: Thread;
   onOpenDetails: () => void;
   onOpenAppearance: () => void;
   onInvite: () => void;
+  canCompliance?: boolean;
+  onCompliance?: () => void;
 }) {
   const { snapshot, actions } = useMessaging();
   if (!snapshot) return null;
@@ -49,6 +51,9 @@ export function ThreadHeader({ thread, onOpenDetails, onOpenAppearance, onInvite
             opposite actions made unarchiving undiscoverable. */}
         <button className="sm-icon-button" type="button" title={thread.queue === "archived" ? "Restore to Inbox" : "Archive thread"} aria-label={thread.queue === "archived" ? "Restore to Inbox" : "Archive thread"} onClick={() => void actions.setArchived(thread.id, thread.queue !== "archived")}>{thread.queue === "archived" ? <ArchiveRestore /> : <Archive />}</button>
         <button className="sm-icon-button" type="button" title="Thread information" aria-label="Thread information" onClick={onOpenDetails}><Info /></button>
+        {/* Compliance is a workspace mode switch (not a thread action) — set
+            apart at the end of the row by a hairline separator, permission-gated. */}
+        {canCompliance && onCompliance ? <button className="sm-icon-button sm-thread-header__compliance" type="button" title="Compliance" aria-label="Compliance" onClick={onCompliance}><ShieldCheck /></button> : null}
       </nav>
     </header>
   );

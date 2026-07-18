@@ -1,0 +1,344 @@
+/*
+ * compliance.css — Messenger Compliance V1 workspace styles.
+ * Scoped under `.smc-workspace`. Light surfaces with navy accents to match the
+ * approved mockup IA/density. Colours are routed through local vars so they can
+ * later be mapped to the app's adaptive theme tokens (handoff §10).
+ */
+
+.smc-workspace {
+  --smc-card:   #ffffff;
+  --smc-line:   #e4e8ef;
+  --smc-line-2: #eef1f6;
+  --smc-text:   #1b2536;
+  --smc-muted:  #64748b;
+  --smc-navy:   #1b2d54;
+  --smc-navy-2: #2a4270;
+
+  display: flex;
+  flex-direction: column;
+  height: calc(100vh - 108px);
+  min-height: 620px;
+  background: transparent;
+  color: var(--smc-text);
+  font-size: 14px;
+}
+
+/* ── Header ─────────────────────────────────────────────────────────────── */
+.smc-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+  padding: 12px 20px;
+  background: var(--smc-card);
+  border-bottom: 1px solid var(--smc-line);
+  border-left: 1px solid var(--smc-line);
+  border-right: 1px solid var(--smc-line);
+}
+.smc-header__brand { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.smc-header__badge {
+  display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px;
+  background: #e8edf6; color: var(--smc-navy);
+}
+.smc-header__badge svg { width: 18px; height: 18px; }
+.smc-header__titles { display: grid; min-width: 0; }
+.smc-header__titles strong { font-size: 15px; font-weight: 700; }
+.smc-header__titles span { font-size: 12px; color: var(--smc-muted); }
+.smc-header__actions { display: flex; justify-content: flex-end; gap: 8px; }
+
+.smc-icon-btn {
+  display: grid; place-items: center; width: 36px; height: 36px; border-radius: 8px;
+  border: 1px solid var(--smc-line); background: var(--smc-card); color: var(--smc-muted); cursor: pointer;
+}
+.smc-icon-btn:hover { background: var(--smc-line-2); color: var(--smc-text); }
+.smc-icon-btn svg { width: 16px; height: 16px; }
+
+/* ── Body ───────────────────────────────────────────────────────────────── */
+.smc-body { flex: 1; min-height: 0; display: flex; overflow: hidden; }
+
+/* ── Cases layout ───────────────────────────────────────────────────────── */
+.smc-cases { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; display: grid; grid-template-columns: minmax(0, 1fr) 360px; gap: 18px; align-items: start; }
+.smc-cases__main { display: grid; gap: 16px; min-width: 0; }
+
+/* KPI strip — the app-wide standard @ui KpiTile (.ui-kpi), matching the
+   Finance ▸ Statutory Configuration page. Small bottom padding gives the
+   metric tiles the same breathing room they get in the statutory RGL cells. */
+.smc-stats { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 12px; }
+/* Match the Statutory KPI board exactly: h:6 units × 6px rowHeight + 5 × 12px
+   margin = 96px. The fixed height lets .ui-kpi-link's margin-top:auto pin the
+   footer to the bottom (with the divider above it), like the statutory tiles. */
+.smc-stats .ui-kpi { height: 96px; }
+/* The messenger `.sm-workspace button { font: inherit }` reset (0,1,1) out-specifies
+   the KpiTile's own `.ui-kpi-link { font-size:11px }` (0,1,0), so the footer link
+   inherits the workspace's larger font. Restore the KpiTile sizing above the reset;
+   likewise its ArrowRight svg, shrunk/thinned by `.sm-workspace svg`. */
+.smc-stats .ui-kpi-link { font-size: 11px; font-weight: 600; }
+.smc-stats .ui-kpi-link svg { width: 14px; height: 14px; stroke-width: 2; }
+/* Tone link colours live in @layer sections (uikit); the messenger's UNLAYERED
+   `:where(button){color:inherit}` reset beats any layer regardless of specificity,
+   so re-declare them here (compliance.css is also unlayered) to restore the tone. */
+.smc-stats .ui-kpi--blue    .ui-kpi-link { color: #3b82f6; }
+.smc-stats .ui-kpi--purple  .ui-kpi-link { color: #8b5cf6; }
+.smc-stats .ui-kpi--teal    .ui-kpi-link { color: #12b3a6; }
+.smc-stats .ui-kpi--amber   .ui-kpi-link { color: #f59e0b; }
+.smc-stats .ui-kpi--coral   .ui-kpi-link { color: #f0736f; }
+.smc-stats .ui-kpi--green   .ui-kpi-link { color: #16a34a; }
+.smc-stats .ui-kpi--red     .ui-kpi-link { color: #dc2626; }
+.smc-stats .ui-kpi--neutral .ui-kpi-link { color: #475569; }
+
+.smc-panel { background: var(--smc-card); border: 1px solid var(--smc-line); border-radius: 8px; overflow: hidden; }
+.smc-panel__head {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 16px; border-bottom: 1px solid var(--smc-line);
+}
+.smc-panel__head strong { display: block; font-size: 14px; font-weight: 700; }
+.smc-panel__head span { font-size: 12px; color: var(--smc-muted); }
+
+.smc-panel__tools { display: flex; align-items: center; gap: 10px; }
+.smc-filterchip { display: inline-flex; align-items: center; gap: 6px; padding: 6px 8px 6px 11px; border: 1px solid #cdd8ef; border-radius: 999px; background: #eef3fb; color: var(--smc-navy); font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap; }
+.smc-filterchip:hover { background: #e3ebf9; }
+.smc-filterchip svg { width: 13px; height: 13px; }
+.smc-search { display: inline-flex; align-items: center; gap: 8px; padding: 7px 11px; border: 1px solid var(--smc-line); border-radius: 8px; background: var(--smc-card); min-width: 260px; }
+.smc-search svg { width: 15px; height: 15px; color: var(--smc-muted); }
+.smc-search input { border: 0; outline: 0; background: transparent; font-size: 13px; width: 100%; color: var(--smc-text); }
+
+/* ── Table ──────────────────────────────────────────────────────────────── */
+.smc-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+.smc-table thead th {
+  text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 700; letter-spacing: .04em;
+  text-transform: uppercase; color: var(--smc-muted); border-bottom: 1px solid var(--smc-line);
+}
+.smc-table th.smc-num, .smc-table td.smc-num { text-align: center; }
+.smc-row td { padding: 12px 16px; border-bottom: 1px solid var(--smc-line-2); vertical-align: middle; }
+.smc-row { cursor: pointer; }
+.smc-row:hover { background: #f6f8fb; }
+.smc-row.is-selected { background: #eef3fb; }
+.smc-row:focus-visible { outline: 2px solid var(--smc-navy); outline-offset: -2px; }
+.smc-cell-case strong { display: block; font-weight: 700; font-size: 13px; }
+.smc-cell-case span { font-size: 12px; color: var(--smc-muted); }
+.smc-muted { color: var(--smc-muted); }
+
+/* ── Pills ──────────────────────────────────────────────────────────────── */
+.smc-pill { display: inline-flex; align-items: center; gap: 5px; padding: 3px 10px; border-radius: 999px; font-size: 12px; font-weight: 600; white-space: nowrap; }
+.smc-pill svg { width: 13px; height: 13px; }
+.smc-pill--ok   { background: #e5f4ec; color: #1a7f4b; }
+.smc-pill--warn { background: #fdf1dd; color: #9a6a12; }
+.smc-pill--bad  { background: #fbe6e6; color: #b3322e; }
+.smc-pill--muted{ background: #eef1f6; color: #5a6a82; }
+
+/* ── Detail rail ────────────────────────────────────────────────────────── */
+.smc-detail {
+  background: var(--smc-card); border: 1px solid var(--smc-line); border-radius: 8px; padding: 16px;
+  display: grid; gap: 14px; align-content: start; position: sticky; top: 0;
+}
+.smc-detail--empty { place-items: center; text-align: center; gap: 8px; padding: 40px 16px; color: var(--smc-muted); }
+.smc-detail--empty strong { color: var(--smc-text); font-size: 14px; }
+.smc-detail--empty .smc-detail__emptyicon svg { width: 26px; height: 26px; color: #9aa7bd; }
+/* The status pill is a direct grid child of .smc-detail — without this it
+   inherits justify-self:stretch and spans the whole column (long + narrow). */
+.smc-detail > .smc-pill { justify-self: start; }
+.smc-detail__no { margin: 0; font-size: 18px; font-weight: 700; }
+.smc-detail__summary { margin: 0; font-size: 13px; color: #46536b; line-height: 1.45; }
+.smc-detail__block { display: grid; gap: 8px; border-top: 1px solid var(--smc-line-2); padding-top: 12px; }
+.smc-detail__block h4 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--smc-muted); }
+
+.smc-kv { display: grid; grid-template-columns: auto 1fr; gap: 6px 14px; margin: 0; font-size: 13px; }
+.smc-kv dt { color: var(--smc-muted); }
+.smc-kv dd { margin: 0; font-weight: 600; text-align: right; }
+
+.smc-scoped { list-style: none; margin: 0; padding: 0; display: grid; gap: 1px; }
+.smc-scoped li { display: grid; grid-template-columns: 16px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 4px 0; }
+.smc-scoped__ic { display: grid; place-items: center; color: #94a3b8; }
+.smc-workspace .smc-scoped__ic svg { width: 14px; height: 14px; }
+.smc-scoped__title { min-width: 0; font-size: 12.5px; font-weight: 500; color: var(--smc-text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.smc-gpill { display: inline-flex; align-items: center; gap: 3px; padding: 1px 7px; border-radius: 999px; font-size: 10.5px; font-weight: 600; white-space: nowrap; }
+.smc-workspace .smc-gpill svg { width: 11px; height: 11px; }
+.smc-gpill--ok   { background: #e5f4ec; color: #1a7f4b; }
+.smc-gpill--warn { background: #fdf1dd; color: #9a6a12; }
+.smc-gpill--bad  { background: #fbe6e6; color: #b3322e; }
+.smc-gpill--muted{ background: #eef1f6; color: #5a6a82; }
+
+/* ── Buttons ────────────────────────────────────────────────────────────── */
+/* Secondary is the default: a branded navy-tinted button (never bare black text
+   on white — on the light cards/dialogs that read as an unstyled label). */
+.smc-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 10px 14px; border-radius: 8px; border: 1px solid #d5dced; background: #eef2f8; color: var(--smc-navy); font-size: 13.5px; font-weight: 600; cursor: pointer; }
+.smc-btn:hover:not(:disabled):not(.smc-btn--primary):not(.smc-btn--danger) { background: #e2e9f4; border-color: #c4cee2; }
+.smc-btn svg { width: 16px; height: 16px; }
+.smc-btn--primary { background: var(--smc-navy); border-color: var(--smc-navy); color: #fff; }
+.smc-btn--primary:hover { background: var(--smc-navy-2); }
+
+/* The messenger reset `.sm-workspace :where(button){color:inherit}` is (0,1,0) and
+   TIES with single-class .smc-btn / .smc-btn--primary; when it loads after this
+   file it wins on source order and buttons inherit near-black body text (navy fill
+   + black text on primary). Scoping the colours under .smc-workspace lifts them to
+   (0,2,0) so they win regardless of load order. */
+.smc-workspace .smc-btn { color: var(--smc-navy); }
+.smc-workspace .smc-btn--primary { color: #fff; }
+.smc-workspace .smc-btn--danger { color: #b3322e; }
+.smc-workspace .smc-state button { color: var(--smc-navy); }
+.smc-detail__open { width: 100%; }
+
+/* ── States ─────────────────────────────────────────────────────────────── */
+.smc-state { display: grid; gap: 8px; place-items: center; text-align: center; padding: 40px 16px; color: var(--smc-muted); }
+.smc-state strong { color: var(--smc-text); font-size: 14px; }
+.smc-state--error button, .smc-search + * { }
+.smc-state button { padding: 7px 14px; border-radius: 8px; border: 1px solid #d5dced; background: #eef2f8; color: var(--smc-navy); cursor: pointer; font-weight: 600; }
+
+.smc-skeleton { display: grid; gap: 1px; padding: 8px 0; }
+.smc-skeleton__row { height: 46px; margin: 0 16px; border-radius: 6px; background: linear-gradient(90deg, #eef1f6 25%, #f6f8fb 37%, #eef1f6 63%); background-size: 400% 100%; animation: smc-shimmer 1.3s ease infinite; }
+@keyframes smc-shimmer { 0% { background-position: 100% 0; } 100% { background-position: 0 0; } }
+
+.smc-placeholder { display: grid; gap: 8px; place-items: center; text-align: center; padding: 64px 16px; color: var(--smc-muted); }
+.smc-placeholder__icon svg { width: 30px; height: 30px; color: #9aa7bd; }
+.smc-placeholder strong { color: var(--smc-text); font-size: 15px; }
+
+/* ── Access Log ─────────────────────────────────────────────────────────── */
+.smc-accesslog { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; display: grid; gap: 14px; align-content: start; }
+.smc-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }
+.smc-filters .smc-search { min-width: 280px; flex: 1; }
+.smc-filters select { padding: 8px 11px; border: 1px solid var(--smc-line); border-radius: 8px; background: var(--smc-card); font-size: 13px; color: var(--smc-text); }
+.smc-table--log td { padding: 12px 16px; }
+.smc-evpill { display: inline-flex; align-items: center; gap: 6px; font-weight: 600; }
+.smc-evpill svg { width: 14px; height: 14px; }
+.smc-evpill--ok    { color: #1a7f4b; }
+.smc-evpill--warn  { color: #9a6a12; }
+.smc-evpill--bad   { color: #b3322e; }
+.smc-evpill--info  { color: #2d5bb8; }
+.smc-evpill--muted { color: #5a6a82; }
+.smc-row--static { cursor: default; }
+.smc-row--static:hover { background: transparent; }
+
+/* ── Conversations (3-column read-only) ─────────────────────────────────── */
+.smc-conv { flex: 1; min-height: 0; display: grid; grid-template-columns: minmax(250px, 0.78fr) minmax(520px, 1.65fr) minmax(280px, 0.9fr); background: var(--smc-card); }
+.smc-conv__rail { min-width: 0; min-height: 0; overflow: auto; border-right: 1px solid var(--smc-line); padding: 14px; display: grid; gap: 10px; align-content: start; }
+.smc-conv__raillabel { font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--smc-muted); display: flex; align-items: center; justify-content: space-between; }
+.smc-conv__caseselect { width: 100%; padding: 9px 11px; border: 1px solid var(--smc-line); border-radius: 8px; background: var(--smc-card); font-size: 13px; font-weight: 600; color: var(--smc-text); }
+.smc-conv__grantline { display: flex; align-items: center; justify-content: space-between; font-size: 12px; }
+.smc-conv__list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.smc-conv__listitem { width: 100%; text-align: left; display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 9px; align-items: start; padding: 10px; border: 1px solid transparent; border-radius: 8px; background: var(--smc-card); cursor: pointer; }
+.smc-conv__listitem:hover { background: #f6f8fb; }
+.smc-conv__listitem.is-active { background: #eef3fb; border-color: #c3d3ee; }
+.smc-conv__listmain .smc-gpill { justify-self: start; }
+.smc-conv__listic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: #eef1f6; color: #58718b; }
+.smc-conv__listic svg { width: 15px; height: 15px; }
+.smc-conv__listmain { min-width: 0; display: grid; gap: 3px; }
+.smc-conv__listmain strong { font-size: 13px; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.smc-conv__listmain small { font-size: 11px; color: var(--smc-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.smc-conv__main { min-width: 0; min-height: 0; display: flex; flex-direction: column; border-right: 1px solid var(--smc-line); }
+.smc-conv__header { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 16px; border-bottom: 1px solid var(--smc-line); }
+.smc-conv__title { display: flex; align-items: center; gap: 10px; min-width: 0; }
+.smc-conv__avatar { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 8px; background: #eef1f6; color: #58718b; }
+.smc-conv__title strong { display: block; font-size: 14px; font-weight: 700; }
+.smc-conv__title span { font-size: 12px; color: var(--smc-muted); }
+.smc-conv__headeractions { display: flex; align-items: center; gap: 10px; }
+.smc-conv__audited { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; color: #6941c6; background: #f2edfb; padding: 7px 11px; border: 1px solid transparent; border-radius: 8px; }
+.smc-conv__audited svg { width: 14px; height: 14px; }
+.smc-conv__banner { display: flex; align-items: center; gap: 11px; min-height: 56px; padding: 9px 16px; background: #fdf6e7; border-bottom: 1px solid #f0e2bb; color: #8a6a1a; font-size: 12.5px; }
+.smc-conv__banner > span:first-of-type { flex: 1; min-width: 0; }
+.smc-conv__remaining { flex: none; color: var(--smc-muted); font-size: 11.5px; white-space: nowrap; }
+.smc-workspace .smc-conv__banner svg { flex: 0 0 auto; width: 34px; height: 34px; padding: 8px; border: 1px solid #ecd8a3; border-radius: 50%; color: #b57e12; background: #fff; }
+.smc-conv__remaining { margin-left: auto; color: #5a6a82; }
+.smc-conv__timeline { flex: 1; min-height: 0; overflow: auto; padding: 16px 22px; background: #fbfcfe; }
+.smc-conv__divider { text-align: center; margin: 14px 0; }
+.smc-conv__divider span { font-size: 11px; color: var(--smc-muted); }
+.smc-conv__msg { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 10px; margin-bottom: 16px; }
+.smc-conv__msgav { width: 34px; height: 34px; border-radius: 50%; background: #d7e0ec; color: #33456b; display: grid; place-items: center; font-size: 13px; font-weight: 700; }
+.smc-conv__msgbody { min-width: 0; }
+.smc-conv__msgbody header { display: flex; align-items: baseline; gap: 8px; margin-bottom: 4px; }
+.smc-conv__msgbody header strong { font-size: 13px; font-weight: 700; }
+.smc-conv__msgbody header time { font-size: 11px; color: var(--smc-muted); }
+.smc-conv__edited { font-size: 11px; color: var(--smc-muted); font-style: normal; }
+.smc-conv__bubble { background: var(--smc-card); border: 1px solid var(--smc-line); border-radius: 8px; padding: 10px 12px; font-size: 13.5px; line-height: 1.5; color: #26324a; }
+.smc-conv__deleted { font-size: 12.5px; color: var(--smc-muted); font-style: italic; }
+.smc-conv__attach { display: grid; grid-template-columns: 34px minmax(0,1fr); gap: 9px; align-items: center; margin-top: 8px; padding: 8px 10px; border: 1px solid var(--smc-line); border-radius: 8px; background: var(--smc-card); }
+.smc-conv__attachic { display: grid; place-items: center; width: 34px; height: 34px; border-radius: 7px; background: #fbe9e7; color: #b3322e; }
+.smc-conv__attachic svg { width: 15px; height: 15px; }
+.smc-conv__attachmain { min-width: 0; display: grid; gap: 1px; }
+.smc-conv__attachmain strong { font-size: 12.5px; font-weight: 600; }
+.smc-conv__attachmain small { font-size: 11px; color: var(--smc-muted); }
+.smc-conv__footer { display: flex; align-items: center; justify-content: space-between; padding: 10px 16px; border-top: 1px solid var(--smc-line); font-size: 12px; color: var(--smc-muted); }
+.smc-conv__footer span { display: inline-flex; align-items: center; gap: 6px; }
+.smc-conv__footer svg { width: 14px; height: 14px; }
+
+.smc-conv__context { min-width: 0; min-height: 0; overflow: auto; padding: 16px; display: grid; gap: 14px; align-content: start; }
+.smc-conv__ctxhead { display: flex; align-items: center; justify-content: space-between; }
+.smc-conv__ctxhead h4 { margin: 0; font-size: 11px; font-weight: 700; letter-spacing: .05em; text-transform: uppercase; color: var(--smc-muted); }
+.smc-conv__ctxhead svg { width: 15px; height: 15px; color: var(--smc-muted); }
+.smc-conv__grantcard { border: 1px solid #cfe7d8; background: #eef7f1; border-radius: 8px; padding: 12px; display: grid; gap: 6px; }
+.smc-conv__grantcard strong { display: inline-flex; align-items: center; gap: 6px; font-size: 13px; color: #1a7f4b; }
+.smc-conv__grantcard strong svg { width: 15px; height: 15px; }
+.smc-conv__grantcard span { font-size: 12px; color: #46536b; }
+.smc-conv__events { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.smc-conv__events li { display: grid; grid-template-columns: 26px minmax(0,1fr); gap: 9px; align-items: center; }
+.smc-conv__evic { display: grid; place-items: center; color: #58718b; }
+.smc-conv__evic svg { width: 15px; height: 15px; }
+.smc-conv__evmain { min-width: 0; display: grid; gap: 1px; }
+.smc-conv__evmain strong { font-size: 12.5px; font-weight: 600; }
+.smc-conv__evmain small { font-size: 11px; color: var(--smc-muted); }
+.smc-conv__revoke { width: 100%; }
+.smc-btn--sm { padding: 7px 11px; font-size: 12.5px; }
+.smc-btn--danger { color: #b3322e; border-color: #f0cfcc; background: var(--smc-card); }
+.smc-btn--danger:hover:not(:disabled) { background: #fbe9e7; }
+.smc-btn:disabled { opacity: .55; cursor: not-allowed; }
+.smc-detail__actions { display: grid; gap: 8px; }
+
+/* ── Dialog forms + New Case wizard ─────────────────────────────────────── */
+.smc-form { display: grid; gap: 16px; }
+.smc-form__grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+.smc-field { display: grid; gap: 6px; font-size: 13px; }
+.smc-field--full { grid-column: 1 / -1; }
+.smc-field > span { font-weight: 600; color: var(--smc-text); }
+.smc-field em { font-style: normal; font-weight: 400; color: var(--smc-muted); }
+.smc-form input[type=text], .smc-form input[type=search], .smc-form input[type=date], .smc-form textarea, .smc-form select {
+  width: 100%; padding: 9px 11px; border: 1px solid var(--smc-line); border-radius: 8px; background: #fff; font-size: 13px; color: var(--smc-text); resize: vertical; font-family: inherit;
+}
+.smc-field--inline { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; border: 0; padding: 0; margin: 0; }
+.smc-field--inline > span { font-weight: 600; }
+.smc-field--inline label { display: inline-flex; align-items: center; gap: 6px; font-weight: 400; }
+.smc-field--check { display: grid; grid-template-columns: auto 1fr; align-items: start; gap: 9px; }
+.smc-field--check input { margin-top: 2px; }
+.smc-field--check span { font-weight: 400; color: #46536b; }
+.smc-form__ro { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; padding: 12px; background: var(--smc-line-2); border-radius: 8px; }
+.smc-form__ro span { display: block; font-size: 11px; color: var(--smc-muted); }
+.smc-form__ro strong { font-size: 13px; }
+.smc-form__note { display: flex; align-items: center; gap: 7px; margin: 0; font-size: 12px; color: var(--smc-muted); }
+.smc-form__note svg { width: 14px; height: 14px; flex: none; }
+.smc-form__actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 4px; }
+
+/* The wizard stepper is the shared @ui <Stepper> (.ui-stepper) — same as the
+   Statutory Configuration wizards. Restore its marker check svg size, which the
+   messenger `.sm-workspace svg { width:1em }` reset would otherwise shrink. */
+.smc-workspace .ui-stepper-marker svg { width: 15px; height: 15px; stroke-width: 2.6; }
+.smc-wiz__pick { display: grid; gap: 12px; }
+.smc-wiz__results { display: grid; gap: 6px; max-height: 220px; overflow: auto; }
+.smc-wiz__row { display: grid; grid-template-columns: 30px minmax(0,1fr) 24px; gap: 9px; align-items: center; padding: 9px 10px; border: 1px solid var(--smc-line); border-radius: 8px; background: #fff; cursor: pointer; text-align: left; }
+.smc-wiz__row:hover { background: #f6f8fb; }
+.smc-wiz__row.is-on { border-color: var(--smc-navy); background: #eef3fb; }
+.smc-wiz__rowic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: #eef1f6; color: #58718b; }
+.smc-wiz__rowic svg { width: 15px; height: 15px; }
+.smc-wiz__rowmain { min-width: 0; display: grid; }
+.smc-wiz__rowmain strong { font-size: 13px; font-weight: 600; }
+.smc-wiz__rowmain small { font-size: 11px; color: var(--smc-muted); }
+.smc-wiz__rowtick { color: var(--smc-navy); }
+.smc-wiz__rowtick svg { width: 16px; height: 16px; }
+.smc-wiz__selected { display: grid; gap: 8px; padding-top: 8px; border-top: 1px solid var(--smc-line-2); }
+.smc-wiz__sel { border: 1px solid var(--smc-line); border-radius: 8px; padding: 10px; display: grid; gap: 8px; }
+.smc-wiz__selhead { display: flex; align-items: center; justify-content: space-between; }
+.smc-wiz__selhead strong { font-size: 13px; }
+.smc-wiz__selhead button { border: 0; background: transparent; cursor: pointer; color: var(--smc-muted); padding: 2px; }
+.smc-wiz__selhead button svg { width: 15px; height: 15px; }
+.smc-wiz__review { display: grid; gap: 14px; }
+.smc-wiz__reviewlist { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.smc-wiz__reviewlist li { border: 1px solid var(--smc-line); border-radius: 8px; padding: 10px; display: grid; gap: 2px; }
+.smc-wiz__reviewlist strong { font-size: 13px; }
+.smc-wiz__reviewlist small { font-size: 12px; color: var(--smc-muted); }
+
+@media (max-width: 1200px) {
+  .smc-cases { grid-template-columns: minmax(0, 1fr); }
+  .smc-detail { position: static; }
+  .smc-stats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .smc-conv { grid-template-columns: minmax(220px, 0.9fr) minmax(0, 1.6fr); }
+  .smc-conv__context { display: none; }
+}

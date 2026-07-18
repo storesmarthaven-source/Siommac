@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `1a7cce14127da8a837615a91`
+Source fingerprint: `786bed31af08edecaec7b4b8`
 
-Files: 92 | Symbols: 832 | Widgets: 0 | Unique mounted endpoints: 62 | Route definitions: 63 mounted + 2 unmounted | API calls: 77 | DB objects: 88 | E2E suites: 4
+Files: 102 | Symbols: 940 | Widgets: 0 | Unique mounted endpoints: 75 | Route definitions: 76 mounted + 2 unmounted | API calls: 90 | DB objects: 120 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -20,6 +20,19 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|---|---|---|
 | `/api/clearAllNotifications` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:181` | res @ src/api/notifications.ts:111 | - |
 | `/api/clearClosedTickets` | `-` | requireUser | `-` | `netlify/functions/routes/tickets.ts:144` | res @ src/api/tickets.ts:89<br>clearClosedTickets @ src/components/nav/api.ts:38 | - |
+| `/api/communications/compliance/access-events/list` | `communications.compliance_read` | requirePermission | `AccessEventsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:442` | res @ src/api/communicationsCompliance.ts:121 | communicationsCompliance |
+| `/api/communications/compliance/cases/close` | `communications.compliance_read` | requirePermission | `CaseCloseSchema` | `netlify/functions/routes/communicationsCompliance.ts:424` | useCloseComplianceCase @ src/api/communicationsCompliance.ts:173 | communicationsCompliance |
+| `/api/communications/compliance/cases/decide` | `communications.compliance_read` | requirePermission | `CaseDecisionSchema` | `netlify/functions/routes/communicationsCompliance.ts:287` | useDecideComplianceCase @ src/api/communicationsCompliance.ts:159 | communicationsCompliance |
+| `/api/communications/compliance/cases/get` | `communications.compliance_read` | requirePermission | `CaseGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:245` | res @ src/api/communicationsCompliance.ts:80 | communicationsCompliance |
+| `/api/communications/compliance/cases/list` | `communications.compliance_read` | requirePermission | `CasesListSchema` | `netlify/functions/routes/communicationsCompliance.ts:235` | res @ src/api/communicationsCompliance.ts:68 | communicationsCompliance |
+| `/api/communications/compliance/cases/request` | `communications.compliance_read` | requirePermission | `CaseRequestSchema` | `netlify/functions/routes/communicationsCompliance.ts:255` | useRequestComplianceCase @ src/api/communicationsCompliance.ts:146 | communicationsCompliance |
+| `/api/communications/compliance/conversations/read` | `communications.compliance_read` | requirePermission | `ConversationReadSchema` | `netlify/functions/routes/communicationsCompliance.ts:329` | res @ src/api/communicationsCompliance.ts:110 | communicationsCompliance |
+| `/api/communications/compliance/conversations/search` | `communications.compliance_read` | requirePermission | `ConversationSearchSchema` | `netlify/functions/routes/communicationsCompliance.ts:319` | res @ src/api/communicationsCompliance.ts:92 | communicationsCompliance |
+| `/api/communications/compliance/exports/create` | `communications.compliance_export` | requirePermission | `ExportCreateSchema` | `netlify/functions/routes/communicationsCompliance.ts:462` | useCreateComplianceExport @ src/api/communicationsCompliance.ts:198 | communicationsCompliance |
+| `/api/communications/compliance/exports/download` | `communications.compliance_export` | requirePermission | `ExportDownloadSchema` | `netlify/functions/routes/communicationsCompliance.ts:478` | res @ src/api/communicationsCompliance.ts:211 | communicationsCompliance |
+| `/api/communications/compliance/exports/list` | `communications.compliance_read` | requirePermission | `ExportsListSchema` | `netlify/functions/routes/communicationsCompliance.ts:452` | res @ src/api/communicationsCompliance.ts:133 | communicationsCompliance |
+| `/api/communications/compliance/grants/revoke` | `communications.compliance_read` | requirePermission | `GrantRevokeSchema` | `netlify/functions/routes/communicationsCompliance.ts:382` | useRevokeComplianceGrant @ src/api/communicationsCompliance.ts:188 | communicationsCompliance |
+| `/api/communications/compliance/summary/get` | `communications.compliance_read` | requirePermission | `SummaryGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:225` | res @ src/api/communicationsCompliance.ts:57 | communicationsCompliance |
 | `/api/communications/messages/activity` | `communications.view` | requirePermission | `z.object({ threadId: z.uuid() })` | `netlify/functions/routes/communications.ts:438` | - | communications |
 | `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:704` | useArchiveThread @ src/api/communications.ts:617<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279 | communications |
 | `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:664` | useCreateMessageAttachment @ src/api/communications.ts:370<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
@@ -41,18 +54,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/messages/pins/pin` | `communications.view` | requirePermission | `PinSchema` | `netlify/functions/routes/communications.ts:871` | usePinMessage @ src/api/communications.ts:532 | communications, messaging |
 | `/api/communications/messages/pins/pinned-summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:972` | res @ src/api/communications.ts:509 | communications |
 | `/api/communications/messages/pins/unpin` | `communications.view` | requirePermission | `UnpinSchema` | `netlify/functions/routes/communications.ts:895` | useUnpinMessage @ src/api/communications.ts:545 | communications, messaging |
-| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:605` | usePostMessage @ src/api/communications.ts:332<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199 | communications, messaging, messagingReactions, messengerPagination, messengerRealtime |
-| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:394` | res @ src/api/communications.ts:308<br>res @ src/api/communications.ts:470<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117 | communications, messaging, messagingReactions, messengerPagination |
+| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:605` | usePostMessage @ src/api/communications.ts:332<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination, messengerRealtime |
+| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:394` | res @ src/api/communications.ts:308<br>res @ src/api/communications.ts:470<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination |
 | `/api/communications/messages/presence/update` | `communications.view` | requirePermission | `PresenceSchema` | `netlify/functions/routes/communications.ts:1027` | - | communications |
 | `/api/communications/messages/reactions/toggle` | `communications.view` | requirePermission | `ToggleReactionSchema` | `netlify/functions/routes/communications.ts:943` | - | messagingReactions |
 | `/api/communications/messages/recipients` | `communications.view` | requirePermission | `RecipientsSchema` | `netlify/functions/routes/communications.ts:826` | res @ src/api/communications.ts:770 | communications |
 | `/api/communications/messages/recordExport` | `communications.compliance_export` | requirePermission | `RecordExportSchema` | `netlify/functions/routes/communications.ts:489` | - | - |
 | `/api/communications/messages/recordThread` | `communications.thread_create` | requirePermission | `RecordThreadSchema` | `netlify/functions/routes/communications.ts:529` | useResolveRecordThread @ src/api/communications.ts:738 | communications |
-| `/api/communications/messages/requestThreadAccess` | `communications.compliance_read` | requirePermission | `RequestAccessSchema` | `netlify/functions/routes/communications.ts:466` | useRequestThreadAccess @ src/api/communications.ts:698 | communications, communicationsCompliance |
+| `/api/communications/messages/requestThreadAccess` | `communications.compliance_read` | requirePermission | `RequestAccessSchema` | `netlify/functions/routes/communications.ts:466` | useRequestThreadAccess @ src/api/communications.ts:698 | communications |
 | `/api/communications/messages/search` | `communications.view` | requirePermission | `MessageSearchSchema` | `netlify/functions/routes/communications.ts:422` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
 | `/api/communications/messages/search` | `communications.view` | requirePermission | `SearchSchema` | `netlify/functions/routes/communications.ts:811` | res @ src/api/communications.ts:753<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
-| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:365` | res @ src/api/communications.ts:443 | communications |
-| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:341` | res @ src/api/communications.ts:293<br>res @ src/api/communications.ts:427<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143 | communications, communicationsCompliance, messaging, messagingFavourites, messengerPagination |
+| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:365` | res @ src/api/communications.ts:443 | communications, communicationsCompliance |
+| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:341` | res @ src/api/communications.ts:293<br>res @ src/api/communications.ts:427<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143 | communications, messaging, messagingFavourites, messengerPagination |
 | `/api/communications/notifications/archive` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:167` | useArchiveNotification @ src/api/communications.ts:275 | communications |
 | `/api/communications/notifications/broadcast` | `communications.admin` | requirePermission | `BroadcastSchema` | `netlify/functions/routes/communications.ts:286` | useBroadcastNotification @ src/api/communications.ts:234 | communications |
 | `/api/communications/notifications/list` | `communications.view` | requirePermission | `NotifListSchema` | `netlify/functions/routes/communications.ts:106` | res @ src/api/communications.ts:177 | communications |
@@ -90,6 +103,19 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|
 | `/api/clearAllNotifications` | `apiPost` | `res` | `src/api/notifications.ts:111` |
 | `/api/clearClosedTickets` | `apiPost` | `res` | `src/api/tickets.ts:89` |
+| `/api/communications/compliance/access-events/list` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:121` |
+| `/api/communications/compliance/cases/close` | `apiPost` | `useCloseComplianceCase` | `src/api/communicationsCompliance.ts:173` |
+| `/api/communications/compliance/cases/decide` | `apiPost` | `useDecideComplianceCase` | `src/api/communicationsCompliance.ts:159` |
+| `/api/communications/compliance/cases/get` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:80` |
+| `/api/communications/compliance/cases/list` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:68` |
+| `/api/communications/compliance/cases/request` | `apiPost` | `useRequestComplianceCase` | `src/api/communicationsCompliance.ts:146` |
+| `/api/communications/compliance/conversations/read` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:110` |
+| `/api/communications/compliance/conversations/search` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:92` |
+| `/api/communications/compliance/exports/create` | `apiPost` | `useCreateComplianceExport` | `src/api/communicationsCompliance.ts:198` |
+| `/api/communications/compliance/exports/download` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:211` |
+| `/api/communications/compliance/exports/list` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:133` |
+| `/api/communications/compliance/grants/revoke` | `apiPost` | `useRevokeComplianceGrant` | `src/api/communicationsCompliance.ts:188` |
+| `/api/communications/compliance/summary/get` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:57` |
 | `/api/communications/messages/archive` | `apiPost` | `useArchiveThread` | `src/api/communications.ts:617` |
 | `/api/communications/messages/archive` | `apiPost` | `setArchived` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279` |
 | `/api/communications/messages/attachments/create` | `apiPost` | `useCreateMessageAttachment` | `src/api/communications.ts:370` |
@@ -212,6 +238,18 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useCreateTicket` | function / hook | `src/api/communications.ts:831` | `-` |
 | `useCommentTicket` | function / hook | `src/api/communications.ts:851` | `-` |
 | `useUpdateTicket` | function / hook | `src/api/communications.ts:872` | `-` |
+| `useComplianceSummary` | function / hook | `src/api/communicationsCompliance.ts:53` | `-` |
+| `useComplianceCases` | function / hook | `src/api/communicationsCompliance.ts:64` | `-` |
+| `useComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:75` | `-` |
+| `useComplianceConversationSearch` | function / hook | `src/api/communicationsCompliance.ts:87` | `-` |
+| `useComplianceConversation` | function / hook | `src/api/communicationsCompliance.ts:101` | `-` |
+| `useComplianceAccessEvents` | function / hook | `src/api/communicationsCompliance.ts:117` | `-` |
+| `useComplianceExports` | function / hook | `src/api/communicationsCompliance.ts:128` | `-` |
+| `useRequestComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:142` | `-` |
+| `useDecideComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:155` | `-` |
+| `useCloseComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:169` | `-` |
+| `useRevokeComplianceGrant` | function / hook | `src/api/communicationsCompliance.ts:183` | `-` |
+| `useCreateComplianceExport` | function / hook | `src/api/communicationsCompliance.ts:194` | `-` |
 | `NotificationPreferences` | function / component | `src/components/notifications/NotificationPreferences.tsx:182` | `-` |
 | `AccessThreadDialog` | function / component | `src/components/sections/Messages/AccessThreadDialog.tsx:19` | `-` |
 | `ComplianceBrowser` | function / component | `src/components/sections/Messages/ComplianceBrowser.tsx:54` | `-` |
@@ -223,10 +261,22 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useMessaging` | function / hook | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:571` | `-` |
 | `CollaborationCard` | interface / ui-tile | `src/components/sections/Messages/messenger/domain/models.ts:53` | `-` |
 | `MessengerWorkspace` | function / component | `src/components/sections/Messages/messenger/MessengerWorkspace.tsx:18` | `-` |
+| `ComplianceAccessLogView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx:44` | `-` |
+| `DecideComplianceCaseDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:27` | `-` |
+| `CloseComplianceCaseDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:66` | `-` |
+| `RevokeComplianceGrantDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:100` | `-` |
+| `ComplianceExportDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx:135` | `-` |
+| `ComplianceCasesView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx:69` | `-` |
+| `ComplianceConversationsView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx:43` | `-` |
+| `ComplianceStateProvider` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx:28` | `-` |
+| `useComplianceState` | function / hook | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx:47` | `-` |
+| `ComplianceSubnav` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx:36` | `-` |
+| `ComplianceWorkspace` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx:66` | `-` |
+| `NewComplianceCaseDialog` | function / component | `src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx:35` | `-` |
 | `AppearanceDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx:28` | `-` |
 | `Avatar` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:12` | `-` |
 | `GroupAvatarStack` | function / component | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx:23` | `-` |
-| `ComplianceView` | function / component | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx:25` | `-` |
+| `ComplianceView` | function / component | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx:11` | `-` |
 | `Composer` | function / component | `src/components/sections/Messages/messenger/ui/components/Composer.tsx:28` | `-` |
 | `DetailsPanel` | function / component | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx:27` | `-` |
 | `Dialog` | function / component | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx:16` | `-` |
@@ -276,22 +326,27 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Paperclip` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:60` | `-` |
 | `Pin` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:61` | `-` |
 | `PinOff` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:62` | `-` |
-| `Presentation` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:63` | `-` |
-| `Reply` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:64` | `-` |
-| `RotateCcw` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:65` | `-` |
-| `Search` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:66` | `-` |
-| `Send` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:67` | `-` |
-| `Settings2` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:68` | `-` |
-| `ShieldCheck` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:69` | `-` |
-| `Smile` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:70` | `-` |
-| `SmilePlus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:71` | `-` |
-| `Star` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:72` | `-` |
-| `Trash2` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:73` | `-` |
-| `UploadCloud` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:74` | `-` |
-| `UserMinus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:75` | `-` |
-| `UserPlus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:76` | `-` |
-| `Users` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:77` | `-` |
-| `X` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:78` | `-` |
+| `Plus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:63` | `-` |
+| `ScrollText` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:64` | `-` |
+| `FolderLock` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:65` | `-` |
+| `ShieldX` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:66` | `-` |
+| `FilePlus2` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:67` | `-` |
+| `Presentation` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:68` | `-` |
+| `Reply` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:69` | `-` |
+| `RotateCcw` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:70` | `-` |
+| `Search` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:71` | `-` |
+| `Send` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:72` | `-` |
+| `Settings2` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:73` | `-` |
+| `ShieldCheck` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:74` | `-` |
+| `Smile` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:75` | `-` |
+| `SmilePlus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:76` | `-` |
+| `Star` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:77` | `-` |
+| `Trash2` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:78` | `-` |
+| `UploadCloud` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:79` | `-` |
+| `UserMinus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:80` | `-` |
+| `UserPlus` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:81` | `-` |
+| `Users` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:82` | `-` |
+| `X` | variable / component | `src/components/sections/Messages/messenger/ui/components/icons.tsx:83` | `-` |
 | `AttachmentCard` | function / component, ui-tile | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx:33` | `-` |
 | `LinkCard` | function / component, ui-tile | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx:58` | `-` |
 | `cardTone` | object / ui-tile | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx:71` | `-` |
@@ -301,36 +356,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `CollaborationRecordCard` | function / component, ui-tile | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx:99` | `-` |
 | `MessagesWorkspace` | function / component | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx:26` | `-` |
 | `ThreadHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:30` | `-` |
-| `MessageThread` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:57` | `-` |
-| `RichMessage` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:317` | `-` |
-| `QueueHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:31` | `-` |
-| `ThreadSidebar` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:54` | `-` |
-| `InviteDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx:18` | `-` |
-| `PreviewDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx:89` | `-` |
-| `ActivityDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx:102` | `-` |
-| `CollaborationDialog` | function / component | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx:110` | `-` |
-| `BroadcastComposer` | function / component | `src/components/sections/NotificationCenter/BroadcastComposer.tsx:21` | `-` |
-| `NotificationCenter` | function / component | `src/components/sections/NotificationCenter/NotificationCenter.tsx:61` | `-` |
-| `NotificationDropdown` | function / component | `src/components/sections/NotificationCenter/NotificationDropdown.tsx:37` | `-` |
-| `NotificationDropdownItem` | function / component | `src/components/sections/NotificationCenter/NotificationDropdownItem.tsx:14` | `-` |
-| `NotificationItem` | function / component | `src/components/sections/NotificationCenter/NotificationItem.tsx:14` | `-` |
-| `NotificationPreferencesPanel` | function / component | `src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx:94` | `-` |
-| `useTicketRealtime` | function / hook | `src/components/sections/Tickets/hooks.ts:39` | `-` |
-| `useTickets` | function / hook | `src/components/sections/Tickets/hooks.ts:56` | `-` |
-| `useCreateTicket` | function / hook | `src/components/sections/Tickets/hooks.ts:71` | `-` |
-| `useSendReply` | function / hook | `src/components/sections/Tickets/hooks.ts:85` | `-` |
-| `useUpdateStatus` | function / hook | `src/components/sections/Tickets/hooks.ts:135` | `-` |
-| `useDeleteTicket` | function / hook | `src/components/sections/Tickets/hooks.ts:154` | `-` |
-| `useClearClosed` | function / hook | `src/components/sections/Tickets/hooks.ts:167` | `-` |
-| `TicketCompose` | function / component | `src/components/sections/Tickets/TicketCompose.tsx:20` | `-` |
-| `TicketDetail` | function / component | `src/components/sections/Tickets/TicketDetail.tsx:91` | `-` |
-| `TicketPanel` | function / component | `src/components/sections/Tickets/TicketPanel.tsx:36` | `-` |
-| `TicketQueue` | function / component | `src/components/sections/Tickets/TicketQueue.tsx:172` | `-` |
-| `useSeenReplies` | function / hook | `src/components/sections/Tickets/useSeenReplies.ts:34` | `-` |
-| `useCommunicationSummary` | function / hook | `src/hooks/useCommunicationSummary.ts:26` | `-` |
-| `useRealtimeSignals` | function / hook | `src/hooks/useRealtimeSignals.ts:32` | `-` |
-| `useMyNotifications` | function / hook | `src/lib/notifications.ts:108` | `-` |
-| ... | 12 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 41 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -374,13 +400,33 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.message_thread_favourites` | `supabase/migrations/20260919000364_messaging_favourites.sql:13` |
 | function | `msg_internal.is_message_thread_participant` | `supabase/migrations/20260919000365_realtime_typing_presence_authorization.sql:26` |
 | function | `msg_internal.is_message_thread_participant` | `supabase/migrations/20260919000402_realtime_private_participant_helper.sql:7` |
+| table | `public.message_compliance_cases` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:819` |
+| trigger | `trg_message_compliance_cases_updated_at` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:888` |
+| table | `public.message_compliance_case_threads` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:893` |
+| table | `public.message_compliance_access_events` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:958` |
+| trigger | `trg_message_compliance_access_events_immutable` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1035` |
+| table | `public.message_compliance_exports` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1040` |
+| trigger | `trg_message_compliance_exports_guard` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1171` |
+| function | `public.message_compliance_case_request_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:93` |
+| function | `public.message_compliance_case_decide_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:305` |
+| function | `public.message_compliance_thread_read_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:477` |
+| function | `public.message_compliance_grant_revoke_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:765` |
+| function | `public.message_compliance_case_close_tx` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:910` |
+| function | `public.message_compliance_export_request_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:13` |
+| function | `public.message_compliance_export_snapshot` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:197` |
+| function | `public.message_compliance_export_prepare_upload_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:336` |
+| function | `public.message_compliance_export_finalize_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:481` |
+| function | `public.message_compliance_export_fail_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:682` |
+| function | `public.message_compliance_export_download_prepare` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:819` |
+| function | `public.message_compliance_export_download_record_tx` | `supabase/migrations/20260919000435_messaging_compliance_v1_exports.sql:906` |
+| function | `public.message_compliance_summary` | `supabase/migrations/20260919000436_messaging_compliance_summary.sql:16` |
 
 ## E2E Suites
 
 | Suite | Tests | API paths | Location |
 |---|---:|---:|---|
 | Communications (Notifications · Messages · Tickets) | 106 | 42 | `scripts/e2e/suites/communications.mjs` |
-| Communications — Compliance Critical-Grant (Slice 1) | 20 | 7 | `scripts/e2e/suites/communicationsCompliance.mjs` |
+| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 43 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
 | Messenger — two-session realtime verification | 8 | 4 | `scripts/e2e/suites/messengerRealtime.mjs` |
 
@@ -391,13 +437,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/communications.ts` | 1191 |
+| backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 495 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
 | e2e-suite | `scripts/e2e/suites/communications.mjs` | 1045 |
-| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 317 |
+| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1166 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | frontend-api | `src/api/communications.ts` | 885 |
+| frontend-api | `src/api/communicationsCompliance.ts` | 217 |
 | frontend-api | `src/api/notifications.ts` | 160 |
 | frontend-api | `src/api/schemas/notification.ts` | 106 |
 | frontend-api | `src/api/schemas/ticket.ts` | 107 |
@@ -425,21 +473,29 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/domain/preferences.ts` | 34 |
 | frontend-page | `src/components/sections/Messages/messenger/integration/messagingNotifications.ts` | 52 |
 | frontend-page | `src/components/sections/Messages/messenger/integration/messengerSignalBus.ts` | 23 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx` | 137 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx` | 191 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx` | 290 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx` | 280 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx` | 52 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx` | 117 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx` | 176 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/compliance/index.ts` | 5 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx` | 105 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Avatar.tsx` | 34 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx` | 119 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx` | 14 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Composer.tsx` | 308 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx` | 173 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx` | 45 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx` | 138 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 337 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx` | 188 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 342 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx` | 201 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx` | 125 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx` | 125 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/composerLogic.test.ts` | 60 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/composerLogic.ts` | 42 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/icons.tsx` | 79 |
-| frontend-page | `src/components/sections/Messages/mount.ts` | 43 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/icons.tsx` | 84 |
+| frontend-page | `src/components/sections/Messages/mount.ts` | 47 |
 | frontend-page | `src/components/sections/Messages/threadDisplay.test.ts` | 47 |
 | frontend-page | `src/components/sections/Messages/threadDisplay.ts` | 43 |
 | frontend-page | `src/components/sections/NotificationCenter/BroadcastComposer.tsx` | 106 |
