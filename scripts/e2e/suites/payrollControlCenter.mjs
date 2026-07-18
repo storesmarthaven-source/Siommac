@@ -306,11 +306,17 @@ export default async function run(h) {
     expect(f.required.amount === 13500 && f.confirmed.amount === 6800 && f.gap.amount === 6700 && f.state === 'partial',
       `funding ${JSON.stringify(f)}`);
   });
-  await test('F2: openBlockerCount = blocker FINDINGS (2), not blocker runs; score uses run count', async () => {
+  await test('F2: openBlockerCount = blocker FINDINGS (2), not blocker runs; one at-risk run', async () => {
     const p = (await getB()).body.data.portfolioHealth;
     expect(p.openBlockerCount === 2, `openBlockerCount ${p.openBlockerCount} !== 2 (findings on current version)`);
-    expect(p.score === 80, `score ${p.score} !== 80 (1 blocker RUN → −20)`); // blockerRunCount=1
-    expect(p.state === 'attention', `state ${p.state}`);
+    // The single blocker run has NO calculation attempt and is not due-soon → it must classify as
+    // at-risk (regression lock: `att.status = 'failed'` is NULL for a no-attempt run and once poisoned
+    // the criticalCount/atRiskCount filters, so a blocker run silently counted as neither).
+    expect(p.atRiskCount === 1, `atRiskCount ${p.atRiskCount} !== 1 (no-attempt blocker run must be at-risk)`);
+    expect(p.criticalCount === 0, `criticalCount ${p.criticalCount} !== 0 (not failed, not due-soon)`);
+    expect(p.score === 80, `score ${p.score} !== 80 (1 at-risk RUN → −20)`);
+    // State is count-driven, so it can never contradict the counts the band shows: 1 at-risk run → at_risk.
+    expect(p.state === 'at_risk', `state ${p.state} !== at_risk`);
     expect(p.primaryIntervention && p.primaryIntervention.kind === 'finding', 'primaryIntervention finding');
   });
   await test('F5: an inactive (cancelled) run blocker is NOT the primary intervention', async () => {
@@ -371,8 +377,17 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
   await test('finance_manager sees the real A1 approval task', async () => {
     const d = (await getA()).body.data;
-    expect(d.assignedToYou && d.assignedToYou.runId === ctx.a1RunId, `assignedToYou ${d.assignedToYou?.runId} !== A1`);
-    expect(d.assignedToYou.action === 'review_approval', 'action');
+    const at = d.assignedToYou;
+    expect(at && at.runId === ctx.a1RunId, `assignedToYou ${at?.runId} !== A1`);
+    expect(at.action === 'review_approval', 'action');
+    // The card resolves the run to human values (pay-group label, population, net) instead of leaking the
+    // raw run id into every slot (mockup: "Weekly Field · 84 employees · Net TTD …"). The pay-group value
+    // is the run's stored pay_group — create_run_tx writes the group CODE there (same field the register
+    // shows); resolving code→NAME page-wide is a separate follow-up. What matters here: it is NOT the run no.
+    expect(at.payGroupName === `CCA-${TAG.slice(-8)}`, `payGroupName ${at.payGroupName} (expected group code)`);
+    expect(at.payGroupName !== at.runNo, 'pay-group slot must not be the raw run number');
+    expect(typeof at.employeeCount === 'number' && at.employeeCount >= 0, `employeeCount ${at.employeeCount}`);
+    expect(at.netPayroll && typeof at.netPayroll.amount === 'number' && at.netPayroll.currency === 'TTD', `netPayroll ${JSON.stringify(at.netPayroll)}`);
   });
   await test("finance_staff does not see the finance_manager task", async () => {
     const d = (await api('finance/payroll/control-center/get', T.fstaff, { window: WIN(), payGroupIds: [ctx.payGroupA] })).body.data;

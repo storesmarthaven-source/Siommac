@@ -24,26 +24,44 @@ export function classifyDeadline(dueAt: string, today: string): 'overdue' | 'tod
   return 'upcoming';
 }
 
-// ── Health score (deterministic; display summary only, never a release authority) ──
-// Approved §4 + user decision: near-due missing-funding is ONE portfolio −10 penalty.
-//   100 − min(20·blockerRuns,60) − min(10·overdueActorTasks,20) − (nearDueUnfunded ? 10 : 0), clamp 0..100.
+// ── Health score + state (deterministic; a display summary, never a release authority) ──
+// Both the numeric score AND the discrete state derive from the SAME concrete risk signals, so the
+// portfolio-health band can never contradict itself (the bug this replaced: state came from `score`
+// while the headline came from criticalCount+atRiskCount — two independent definitions of "at risk"
+// that disagreed, e.g. rail "At Risk" + headline "Portfolio is on track").
+//
+// Risk signals (all supplied by the SQL read model, already de-duplicated — a due-soon blocker run is
+// counted as critical, NOT also as at-risk):
+//   · criticalRunCount — runs with a failed latest calculation OR an open blocker that is due within 3d
+//   · atRiskRunCount   — runs with an open blocker finding that are not yet critical
+//   · overdueTaskCount — the actor's own overdue approval/workflow tasks
+//   · nearDueUnfunded  — ≥1 fundable run is due within 3d with funding still short (ONE portfolio flag)
+//
+// Score: 100 − min(40·critical,80) − min(20·atRisk,60) − min(10·overdue,20) − (nearDueUnfunded ? 10 : 0).
 
-export function healthScore(input: {
-  blockerRunCount: number;
+export interface HealthInput {
+  criticalRunCount: number;
+  atRiskRunCount: number;
   overdueTaskCount: number;
   nearDueUnfunded: boolean;
-}): number {
+}
+
+export function healthScore(input: HealthInput): number {
   let s = 100;
-  s -= Math.min(input.blockerRunCount * 20, 60);
+  s -= Math.min(input.criticalRunCount * 40, 80);
+  s -= Math.min(input.atRiskRunCount * 20, 60);
   s -= Math.min(input.overdueTaskCount * 10, 20);
   s -= input.nearDueUnfunded ? 10 : 0;
   return Math.max(0, Math.min(100, s));
 }
 
-export function healthState(score: number): HealthState {
-  if (score < 50) return 'critical';
-  if (score < 70) return 'at_risk';
-  if (score < 90) return 'attention';
+// State is derived from the risk signals directly (NOT bucketed from the numeric score), so it is an
+// exact, gap-free classification: 'healthy' is reachable ONLY with zero risk of any kind, and the
+// severity ordering (critical › at-risk › attention › healthy) always matches the counts the band shows.
+export function healthState(input: HealthInput): HealthState {
+  if (input.criticalRunCount > 0) return 'critical';
+  if (input.atRiskRunCount > 0) return 'at_risk';
+  if (input.overdueTaskCount > 0 || input.nearDueUnfunded) return 'attention';
   return 'healthy';
 }
 

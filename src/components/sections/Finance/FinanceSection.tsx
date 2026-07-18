@@ -14,7 +14,7 @@ import { showSection } from '@components/nav/navCore';
 import { PayslipStudioSection }    from '../PayslipStudio/PayslipStudioSection';
 import { FinanceOverview }         from './FinanceOverview';
 import { StatutoryConfigOverview } from './StatutoryConfigOverview';
-import { PayrollOverview }          from './PayrollOverview';
+import { PayrollCommandCenter }     from './PayrollCommandCenter';
 import { PayrollSetupOverview }     from './PayrollSetupOverview';
 import { RemittancesOverview }      from './RemittancesOverview';
 import { MyPayslipsOverview }       from './MyPayslipsOverview';
@@ -72,7 +72,7 @@ export function FinanceSection(): VNode {
 
   if (sectionId === STATUTORY_ID)    return <StatutoryConfigOverview />;
   if (sectionId === EXPENSES_ID)     return <ExpensesOverview />;
-  if (sectionId === PAYROLL_ID)      return <PayrollOverview />;
+  if (sectionId === PAYROLL_ID)      return <PayrollCommandCenter />;
   if (sectionId === PAYROLL_SETUP_ID) return <PayrollSetupOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === MY_PAYSLIPS_ID)  return <MyPayslipsOverview />;

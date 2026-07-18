@@ -74,6 +74,11 @@ export interface PayrollAssignedWork {
   workflowId: string;
   runId: string;
   runNo: string;
+  /** Human pay-group name for the run — the card shows THIS, never the raw run number. */
+  payGroupName: string | null;
+  /** Population + net payroll the approval covers (mockup: "84 employees" / "Net payroll TTD …"). */
+  employeeCount: number;
+  netPayroll: MoneyValue;
   title: string;
   dueAt: string | null;
   isOverdue: boolean;

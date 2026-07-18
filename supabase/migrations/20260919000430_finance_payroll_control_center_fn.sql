@@ -16,6 +16,12 @@
 -- explicitly ordered; assignedToYou/primaryIntervention exclude inactive runs; deadlines keep overdue
 -- dates even before window.from. The TS service composes the authoritative 7 readiness gates from ONE
 -- finance_payroll_release_preflight() call for the selected next run.
+--
+-- 2026-07-18 fix: `latest_attempt_failed` used `att.status = 'failed'`, which is NULL (not false) for a
+-- run with NO calculation attempt. That NULL poisoned the `criticalCount`/`atRiskCount`/`tab_attention`
+-- boolean filters (`not (NULL or …)` → NULL → the row is silently NOT counted), so blocker runs never
+-- landed in atRiskCount and the portfolio-health band read "on track" while the rail showed risk. Now
+-- `att.status is not distinct from 'failed'` yields a proper boolean (false when there is no attempt).
 
 -- Access-path indexes (validated with EXPLAIN ANALYZE). Per-run evidence (findings, funding, cert,
 -- release, tasks, latest attempt, missing-bank) is gathered via LATERAL index lookups keyed by
@@ -117,7 +123,7 @@ with win as (
       (rel.hit is not null)      as release_evidence,
       coalesce(tsk.open_tasks, 0) as open_tasks,
       coalesce(tsk.any_overdue, false) as task_overdue,
-      (att.status = 'failed')    as latest_attempt_failed,
+      (att.status is not distinct from 'failed') as latest_attempt_failed,
       coalesce(bank.missing, 0)  as missing_bank,
       w.gl_posted,
       w.match_search,
@@ -127,7 +133,7 @@ with win as (
       (w.eff_net > 0 and w.status not in ('released', 'exported', 'cancelled')
         and w.current_calculation_version_id is not null) as fundable,
       (w.status <> 'cancelled') as tab_all,
-      (w.status <> 'cancelled' and (coalesce(fnd.blockers, 0) > 0 or (att.status = 'failed')
+      (w.status <> 'cancelled' and (coalesce(fnd.blockers, 0) > 0 or (att.status is not distinct from 'failed')
         or w.status = 'returned' or coalesce(tsk.any_overdue, false))) as tab_attention,
       (w.status = 'pending_approval' or coalesce(tsk.open_tasks, 0) > 0) as tab_approval,
       (w.status in ('approved', 'locked') and coalesce(fnd.blockers, 0) = 0 and w.current_calculation_version_id is not null

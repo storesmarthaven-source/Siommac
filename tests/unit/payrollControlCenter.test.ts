@@ -19,16 +19,21 @@ import {
   type RegisterCursorTuple,
 } from '../../netlify/functions/lib/finance/payroll/controlCenterCursor';
 
-describe('healthScore (single portfolio -10 near-due-funding penalty)', () => {
-  const base = { blockerRunCount: 0, overdueTaskCount: 0, nearDueUnfunded: false };
+describe('healthScore (score + state derive from the SAME concrete risk counts)', () => {
+  const base = { criticalRunCount: 0, atRiskRunCount: 0, overdueTaskCount: 0, nearDueUnfunded: false };
   it('perfect portfolio scores 100', () => {
     expect(healthScore(base)).toBe(100);
   });
-  it('subtracts 20 per blocker run, capped at 60', () => {
-    expect(healthScore({ ...base, blockerRunCount: 1 })).toBe(80);
-    expect(healthScore({ ...base, blockerRunCount: 2 })).toBe(60);
-    expect(healthScore({ ...base, blockerRunCount: 3 })).toBe(40);
-    expect(healthScore({ ...base, blockerRunCount: 5 })).toBe(40); // cap 60
+  it('subtracts 40 per critical run, capped at 80', () => {
+    expect(healthScore({ ...base, criticalRunCount: 1 })).toBe(60);
+    expect(healthScore({ ...base, criticalRunCount: 2 })).toBe(20);
+    expect(healthScore({ ...base, criticalRunCount: 3 })).toBe(20); // cap 80
+  });
+  it('subtracts 20 per at-risk run, capped at 60', () => {
+    expect(healthScore({ ...base, atRiskRunCount: 1 })).toBe(80);
+    expect(healthScore({ ...base, atRiskRunCount: 2 })).toBe(60);
+    expect(healthScore({ ...base, atRiskRunCount: 3 })).toBe(40);
+    expect(healthScore({ ...base, atRiskRunCount: 5 })).toBe(40); // cap 60
   });
   it('subtracts 10 per overdue task, capped at 20', () => {
     expect(healthScore({ ...base, overdueTaskCount: 1 })).toBe(90);
@@ -39,20 +44,27 @@ describe('healthScore (single portfolio -10 near-due-funding penalty)', () => {
     expect(healthScore({ ...base, nearDueUnfunded: true })).toBe(90);
   });
   it('combines and clamps to 0..100', () => {
-    expect(healthScore({ blockerRunCount: 1, overdueTaskCount: 1, nearDueUnfunded: true })).toBe(60);
-    expect(healthScore({ blockerRunCount: 9, overdueTaskCount: 9, nearDueUnfunded: true })).toBe(10);
+    expect(healthScore({ criticalRunCount: 1, atRiskRunCount: 1, overdueTaskCount: 1, nearDueUnfunded: true })).toBe(20);
+    expect(healthScore({ criticalRunCount: 9, atRiskRunCount: 9, overdueTaskCount: 9, nearDueUnfunded: true })).toBe(0);
   });
 });
 
-describe('healthState thresholds', () => {
-  it('maps score to state at the exact boundaries', () => {
-    expect(healthState(49)).toBe('critical');
-    expect(healthState(50)).toBe('at_risk');
-    expect(healthState(69)).toBe('at_risk');
-    expect(healthState(70)).toBe('attention');
-    expect(healthState(89)).toBe('attention');
-    expect(healthState(90)).toBe('healthy');
-    expect(healthState(100)).toBe('healthy');
+describe('healthState (count-driven — gap-free; never contradicts the counts the band shows)', () => {
+  const base = { criticalRunCount: 0, atRiskRunCount: 0, overdueTaskCount: 0, nearDueUnfunded: false };
+  it('critical when any run is critical (dominates everything else)', () => {
+    expect(healthState({ ...base, criticalRunCount: 1 })).toBe('critical');
+    expect(healthState({ criticalRunCount: 1, atRiskRunCount: 5, overdueTaskCount: 5, nearDueUnfunded: true })).toBe('critical');
+  });
+  it('at_risk when there are at-risk runs but none critical', () => {
+    expect(healthState({ ...base, atRiskRunCount: 1 })).toBe('at_risk');
+    expect(healthState({ ...base, atRiskRunCount: 3 })).toBe('at_risk');
+  });
+  it('attention for overdue tasks or near-due unfunded only (no at-risk/critical runs)', () => {
+    expect(healthState({ ...base, overdueTaskCount: 1 })).toBe('attention');
+    expect(healthState({ ...base, nearDueUnfunded: true })).toBe('attention');
+  });
+  it('healthy ONLY with zero risk of any kind', () => {
+    expect(healthState(base)).toBe('healthy');
   });
 });
 

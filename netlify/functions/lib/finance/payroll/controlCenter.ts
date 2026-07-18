@@ -135,12 +135,16 @@ export async function getPayrollControlCenter(
   const fundingConfirmed = num(k.fundingConfirmed);
 
   // ── Health ──────────────────────────────────────────────────────────────────
+  // Score AND state derive from the same concrete risk counts (see controlCenterDerive) so the band is
+  // internally consistent — the rail state can never contradict the criticalCount/atRiskCount the FE shows.
   const h = (raw.health ?? {}) as Rec;
-  const score = healthScore({
-    blockerRunCount: num(h.blockerRunCount), // runs with ≥1 blocker (openBlockerCount is the FINDINGS total)
+  const healthInput = {
+    criticalRunCount: num(h.criticalCount),
+    atRiskRunCount: num(h.atRiskCount),
     overdueTaskCount: num(h.overdueActionCount),
     nearDueUnfunded: h.nearDueUnfunded === true,
-  });
+  };
+  const score = healthScore(healthInput);
   const pi = (raw.primaryIntervention ?? null) as Rec | null;
 
   // ── Register ────────────────────────────────────────────────────────────────
@@ -162,24 +166,48 @@ export async function getPayrollControlCenter(
   const tc = (raw.tabCounts ?? {}) as Rec;
 
   // ── Assigned to you ─────────────────────────────────────────────────────────
+  // The RPC returns the task identity only; the card displays HUMAN run values (pay-group NAME — never
+  // the raw run id — plus population and net payroll), so resolve them from the run with one indexed
+  // lookup, and ONLY when a task is actually assigned. Effective totals mirror the read model's eff_*
+  // rule (the published calculation version wins over the run's own summary columns).
   const at = (raw.assignedToYou ?? null) as Rec | null;
-  const assignedToYou = at
-    ? {
-        taskId: str(at.taskId),
-        workflowId: str(at.workflowId),
-        runId: str(at.runId),
-        runNo: str(at.runNo),
-        title: str(at.title),
-        dueAt: (at.dueAt as string | null) ?? null,
-        isOverdue: at.dueAt != null && String(at.dueAt).slice(0, 10) < today,
-        assignee: {
-          id: str(at.assigneeId),
-          displayName: (at.assigneeName as string | null) ?? 'You',
-          photoUrl: (at.assigneePhoto as string | null) ?? null,
-        },
-        action: 'review_approval' as const,
-      }
-    : null;
+  let assignedToYou: PayrollControlCenterResponse['assignedToYou'] = null;
+  if (at) {
+    const runId = str(at.runId);
+    const { data: rr } = await sb
+      .from('finance_payroll_runs')
+      .select('pay_group, employee_count, net_total, current_calculation_version_id')
+      .eq('id', runId)
+      .maybeSingle();
+    let employeeCount = num(rr?.employee_count);
+    let netAmount = num(rr?.net_total);
+    if (rr?.current_calculation_version_id) {
+      const { data: cv } = await sb
+        .from('finance_payroll_calculation_versions')
+        .select('employee_count, net_total')
+        .eq('id', rr.current_calculation_version_id as string)
+        .maybeSingle();
+      if (cv) { employeeCount = num(cv.employee_count); netAmount = num(cv.net_total); }
+    }
+    assignedToYou = {
+      taskId: str(at.taskId),
+      workflowId: str(at.workflowId),
+      runId,
+      runNo: str(at.runNo),
+      payGroupName: (rr?.pay_group as string | null) ?? null,
+      employeeCount,
+      netPayroll: money(netAmount),
+      title: str(at.title),
+      dueAt: (at.dueAt as string | null) ?? null,
+      isOverdue: at.dueAt != null && String(at.dueAt).slice(0, 10) < today,
+      assignee: {
+        id: str(at.assigneeId),
+        displayName: (at.assigneeName as string | null) ?? 'You',
+        photoUrl: (at.assigneePhoto as string | null) ?? null,
+      },
+      action: 'review_approval' as const,
+    };
+  }
 
   // ── Recent activity ─────────────────────────────────────────────────────────
   const rawActivity = Array.isArray(raw.activity) ? (raw.activity as Rec[]) : [];
@@ -254,7 +282,7 @@ export async function getPayrollControlCenter(
     appliedFilters: { payGroupIds: input.payGroupIds },
     capabilities: input.capabilities,
     portfolioHealth: {
-      state: healthState(score),
+      state: healthState(healthInput),
       score,
       criticalCount: num(h.criticalCount),
       atRiskCount: num(h.atRiskCount),
