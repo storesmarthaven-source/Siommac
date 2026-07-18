@@ -1,0 +1,77 @@
+/*
+ * assets/styles/theme-dark.css — reusable, OPT-IN adaptive theme layer.
+ *
+ * Loaded in @layer base, immediately after base.css (see src/styles/index.css),
+ * so the semantic surface tokens sit with the base :root palette and any
+ * section (@layer sections) that consumes them wins for the consuming property
+ * while these definitions supply the value.
+ *
+ * ── HOW IT WORKS ────────────────────────────────────────────────────────────
+ * A section opts in by putting  data-theme-scope="adaptive"  on its ROOT element.
+ * That subtree then reads its surfaces from the --surface-* tokens below:
+ *   • light mode  → tokens resolve to the base.css light palette,
+ *   • dark switch on (body[data-theme="dark"]) → the SAME tokens flip to dark.
+ * Nothing outside an opted-in subtree changes — there is NO global dark mode.
+ * The switch is the existing one (store/ui.ts setTheme → body[data-theme]).
+ *
+ * ── ADOPTING A SECTION (BOTH steps are required) ────────────────────────────
+ *   1. Put  data-theme-scope="adaptive"  on the section root.
+ *   2. Make the section CONSUME the tokens — background: var(--surface),
+ *      color: var(--surface-text), border-color: var(--surface-border), etc. —
+ *      and REMOVE fixed surface colors (hardcoded #fff / navy / greys).
+ *   The attribute ALONE does nothing: any surface left hardcoded will not adapt.
+ *
+ * ── PORTALS ─────────────────────────────────────────────────────────────────
+ * Dialogs / menus / tooltips / popovers rendered OUTSIDE the subtree (via a
+ * portal) do NOT inherit these tokens. Put data-theme-scope on the portal root
+ * too, or let the portal use the application theme directly.
+ *
+ * Target WCAG AA (≥4.5:1) for normal text — muted text and borders especially.
+ */
+
+[data-theme-scope="adaptive"] {
+  /* neutral surfaces */
+  --surface:            var(--bg-card);      /* the panel/section background     */
+  --surface-subtle:     var(--bg-subtle);    /* recessed area within the surface */
+  --surface-raised:     #ffffff;             /* cards / rows sitting ON the panel */
+  --surface-hover:      #f3f6fa;
+  --surface-active:     #e8eef7;             /* selected / pressed                */
+  --surface-border:     var(--border);       /* dividers + control borders        */
+  --surface-text:       var(--text-primary);
+  --surface-muted:      var(--text-muted);   /* secondary / caption text          */
+  --surface-disabled:   #9aa8bd;             /* disabled control text             */
+  --surface-focus:      #2563eb;             /* focus-visible ring                */
+  /* primary action ON the surface (e.g. Invite) */
+  --surface-accent-text:   #173960;
+  --surface-accent-bg:     #dcecff;
+  --surface-accent-border: #dcecff;
+  /* positive / online status */
+  --surface-ok:         #1e7d4f;
+  --surface-ok-bg:      rgb(31 167 104 / 14%);
+  --surface-ok-solid:   #31a872;             /* switch "on" track                 */
+  /* neutral toggle / track control */
+  --surface-control:    #cfd9e6;
+}
+
+body[data-theme="dark"] [data-theme-scope="adaptive"] {
+  --surface:            #18365f;
+  --surface-subtle:     #1d355e;
+  --surface-raised:     rgb(255 255 255 / 7%);
+  --surface-hover:      #234570;
+  --surface-active:     #2a507e;
+  --surface-border:     rgb(255 255 255 / 12%);
+  --surface-text:       #edf5ff;
+  --surface-muted:      #a9bdd7;
+  --surface-disabled:   #6d829e;
+  --surface-focus:      #7db4ff;
+  --surface-accent-text:   #f8fbff;
+  --surface-accent-bg:     rgb(255 255 255 / 13%);
+  --surface-accent-border: rgb(191 219 254 / 28%);
+  --surface-ok:         #86e5b8;
+  --surface-ok-bg:      rgb(31 167 104 / 20%);
+  --surface-ok-solid:   #31a872;
+  --surface-control:    rgb(255 255 255 / 24%);
+  /* Tells the UA to render native affordances (scrollbars, form controls,
+     spellcheck underlines) dark inside the opted-in subtree. */
+  color-scheme: dark;
+}

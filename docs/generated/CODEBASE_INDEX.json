@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1ad7a6df87617b1591bae0eec4b7b050507f71d4",
+    "head": "a52824ff39c02cba6a2dcc4eb8b3243631e4262c",
     "branch": "main",
-    "fingerprint": "7461b99c4ef55adc6711b7d7",
+    "fingerprint": "e96c6b2d4457674a6a76b00d",
     "indexedFiles": 1384
   },
   "summary": {
@@ -5202,7 +5202,7 @@
       "module": "communications",
       "role": "frontend-page",
       "lines": 173,
-      "hash": "279fc060faf75256"
+      "hash": "5ddd925e32236db2"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/Dialog.tsx",

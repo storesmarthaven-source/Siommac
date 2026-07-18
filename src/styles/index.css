@@ -24,6 +24,10 @@
 
 /* ── Base: tokens + layout primitives ─────────────────────────────────────── */
 @import '../../assets/styles/base.css'   layer(base);
+/* Reusable OPT-IN adaptive theme tokens (data-theme-scope="adaptive").
+   After base.css so it can reference the base palette; still in `base` so any
+   section that consumes the tokens wins for the property. */
+@import '../../assets/styles/theme-dark.css' layer(base);
 @import '../../assets/styles/layout.css' layer(base);
 
 /* ── Shared component styles ──────────────────────────────────────────────── */

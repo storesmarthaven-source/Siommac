@@ -52,7 +52,7 @@ export function DetailsPanel({ thread, infoOpen, onCloseInfo, onInvite, onPrevie
   const createdDate = new Intl.DateTimeFormat(undefined, { year: "numeric", month: "long", day: "numeric" }).format(new Date(messages[0]?.createdAt ?? thread.lastActivityAt));
 
   return (
-    <aside className={`sm-details-panel${infoOpen ? " is-info-open" : ""}`}>
+    <aside className={`sm-details-panel${infoOpen ? " is-info-open" : ""}`} data-theme-scope="adaptive">
       {infoOpen ? (
         <>
           <header className="sm-details-panel__takeover">
