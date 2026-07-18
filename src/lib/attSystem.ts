@@ -1218,22 +1218,8 @@ function setupEventListeners(): void {
     if (dashDay) dashDay.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
   }
 
-  // Dashboard theme toggle
-  (function(): void {
-    const btnLight = document.getElementById('dashThemeLight');
-    const btnDark  = document.getElementById('dashThemeDark');
-    if (!btnLight || !btnDark) return;
-    function applyTheme(t: string): void {
-      document.body.setAttribute('data-theme', t);
-      btnLight!.classList.toggle('active', t === 'light');
-      btnDark!.classList.toggle('active',  t === 'dark');
-      localStorage.setItem('siomac-theme', t);
-    }
-    const saved = localStorage.getItem('siomac-theme') ?? 'light';
-    applyTheme(saved);
-    btnLight.addEventListener('click', () => applyTheme('light'));
-    btnDark.addEventListener('click',  () => applyTheme('dark'));
-  })();
+  // Dashboard theme toggle — REMOVED. Per-user light/dark is owned by the
+  // AccountPill (store → system.user_theme, DB-persisted). No duplicate here.
 
   // Sidebar click
   document.getElementById('sidebarMenu')?.addEventListener('click', (e) => {

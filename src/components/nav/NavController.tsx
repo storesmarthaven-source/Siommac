@@ -211,30 +211,9 @@ export function NavController(): h.JSX.Element {
       if (dashDay) dashDay.textContent = new Intl.DateTimeFormat('en-US', { weekday: 'long' }).format(now);
     }
 
-    // ── 11. Theme toggle (light / dark) ──────────────────────────────────────
-    const btnLight = document.getElementById('dashThemeLight');
-    const btnDark  = document.getElementById('dashThemeDark');
-
-    function applyTheme(t: string): void {
-      document.body.setAttribute('data-theme', t);
-      btnLight?.classList.toggle('active', t === 'light');
-      btnDark?.classList.toggle('active',  t === 'dark');
-      localStorage.setItem('siomac-theme', t);
-    }
-
-    if (btnLight && btnDark) {
-      const saved = localStorage.getItem('siomac-theme') ?? 'light';
-      applyTheme(saved);
-
-      function onThemeLight(): void { applyTheme('light'); }
-      function onThemeDark():  void { applyTheme('dark');  }
-      btnLight.addEventListener('click', onThemeLight);
-      btnDark.addEventListener('click',  onThemeDark);
-      cleanups.push(() => {
-        btnLight.removeEventListener('click', onThemeLight);
-        btnDark.removeEventListener('click',  onThemeDark);
-      });
-    }
+    // ── 11. Theme toggle — REMOVED. Per-user light/dark is owned by the
+    //    AccountPill (store setTheme → system.user_theme in the DB). The old
+    //    #dashThemeLight/#dashThemeDark buttons and their localStorage path are gone.
 
     // ── 12. Mount the panel systems ───────────────────────────────────────────
     //    Notifications render via Preact <NotificationDropdown> (main.tsx) — retired.

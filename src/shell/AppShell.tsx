@@ -33,7 +33,9 @@ import MessageModal             from './modals/MessageModal';
 import TicketModal              from './modals/TicketModal';
 import EmployeeModals           from './modals/EmployeeModals';
 import ProjectSiteModal         from './modals/ProjectSiteModal';
+import { useEffect }                      from 'preact/hooks';
 import { useSessionStore, selectUserId } from '@store/session';
+import { initUserTheme, resetThemeToDefault } from '@store/ui';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
 import { StepUpProvider }                from '@/hooks/useStepUp';
@@ -55,6 +57,19 @@ function CommsBridge() {
   const userId = useSessionStore(selectUserId);
   if (!userId) return null;
   return <CommsBridgeInner />;
+}
+
+// ── Theme bridge ──────────────────────────────────────────────────────────────
+// Headless: loads the per-user theme (system.user_theme) from the DB on sign-in
+// and whenever the signed-in user changes; resets to default on sign-out. Keyed
+// by userId so switching users never inherits the previous user's theme.
+function ThemeBridge() {
+  const userId = useSessionStore(selectUserId);
+  useEffect(() => {
+    if (userId) void initUserTheme(userId);
+    else resetThemeToDefault();
+  }, [userId]);
+  return null;
 }
 
 // ── Sidebar ───────────────────────────────────────────────────────────────────
@@ -122,6 +137,9 @@ export default function AppShell() {
 
       {/* Comms bridge: realtime signals + summary refresh (no DOM output) */}
       <CommsBridge />
+
+      {/* Theme bridge: loads the per-user light/dark preference (no DOM output) */}
+      <ThemeBridge />
 
       {/* App shell (sidebar + main content) — hidden class removed by attSystem after login */}
       <div id="appShell" class="app-container hidden">

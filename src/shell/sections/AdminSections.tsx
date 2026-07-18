@@ -453,10 +453,7 @@ function AdminDashboardSection() {
           </div>
           <div id="dashHiddenWidgets" class="dash-hidden-list" style="display:none;" />
           <div style="display:flex;align-items:center;gap:8px;">
-            <div class="dash-theme-toggle">
-              <button class="dash-theme-btn" id="dashThemeLight" title="Light mode"><i class="fas fa-sun" /></button>
-              <button class="dash-theme-btn" id="dashThemeDark" title="Dark mode"><i class="fas fa-moon" /></button>
-            </div>
+            {/* Light/dark toggle moved to the AccountPill (per-user, DB-persisted). */}
             <button class="dash-layout-btn admin-only" id="dashEditBtn">
               <i class="fas fa-edit" /> Edit Layout
             </button>

@@ -36,6 +36,12 @@ import './styles/index.css';
 import { initTheme } from '@ui/theme/applyTheme';
 initTheme();
 
+// ③b Light/dark: apply the current user's anti-flash cache to <body> before the
+//     first paint (the store's initial value is the user-keyed cache). The
+//     ThemeBridge reconciles with the authoritative DB value after auth.
+import { useUiStore } from '@store/ui';
+try { document.body.setAttribute('data-theme', useUiStore.getState().theme); } catch { /* no DOM */ }
+
 import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';

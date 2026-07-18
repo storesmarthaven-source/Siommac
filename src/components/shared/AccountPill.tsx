@@ -27,6 +27,7 @@
 import { type VNode, type ComponentChildren } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import { useSessionStore, selectFullName, selectRole } from '@store/session';
+import { useUiStore, selectTheme } from '@store/ui';
 import { dialog } from '@lib/dialog';
 
 // ── Lucide line-icons (the app's icon language) ───────────────────────────────
@@ -90,9 +91,9 @@ export function AccountPill({
   const initial = (name.trim()[0] ?? 'U').toUpperCase();
 
   const [menuOpen, setMenuOpen] = useState(false);
-  // Appearance switch (PLACEHOLDER) — flips its own state only; the theming system
-  // (light mode + navy dark mode) is a future build. Menu stays open on toggle.
-  const [darkMode, setDarkMode] = useState(false);
+  // Appearance: the authoritative per-user theme (store → DB via system.user_theme).
+  // Menu stays open on toggle so the switch flip is visible.
+  const darkMode = useUiStore(selectTheme) === 'dark';
   const [menuPos, setMenuPos] = useState<{ top: number; left: number; width: number }>({ top: 0, left: 0, width: 0 });
   const wrapRef = useRef<HTMLDivElement>(null);
 
@@ -168,7 +169,7 @@ export function AccountPill({
           <div class="pnp-menu-sep" />
           <div class="pnp-menu-group">
             <button type="button" class="pnp-menu-item" role="menuitemcheckbox" aria-checked={darkMode}
-              onClick={() => setDarkMode(v => !v)}>
+              onClick={() => useUiStore.getState().toggleTheme()}>
               <IcMoon /><span>Dark Mode</span>
               <span class={`pnp-switch${darkMode ? ' on' : ''}`} aria-hidden="true" />
             </button>
