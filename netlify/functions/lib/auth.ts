@@ -380,13 +380,23 @@ async function requireRole(
   return u;
 }
 
-/** Load a user's per-user permission overrides (best-effort; [] if table absent). */
+/** Load a user's per-user permission overrides from the authoritative DB store. */
 async function loadUserOverrides(userId: string): Promise<PermissionOverrideRow[]> {
   const { data, error } = await sb
     .from('user_permissions')
-    .select('permission, granted')
+    .select('permission, granted, valid_from, valid_until, revoked_at')
     .eq('user_id', userId);
-  if (error) return [];
+  if (error) {
+    console.error('[auth] user permission lookup failed', {
+      userId,
+      code: error.code,
+      message: error.message,
+    });
+    throw Object.assign(new Error('Authorization service unavailable'), {
+      status: 503,
+      code: 'authorization_unavailable',
+    });
+  }
   return data;
 }
 
@@ -406,8 +416,8 @@ async function requirePermission(
   const u = await requireUser(c);
   // Superadmin is allow-all EXCEPT for COMPLIANCE_GATED_KEYS. Those keys require
   // an explicit user_permissions row (approved via the maker-checker workflow).
-  // On DB failure loadUserOverrides returns [] and the role set excludes gated keys
-  // → fail-closed DENY for compliance endpoints.
+  // Permission-store failures propagate as 503. Treating a failed override lookup
+  // as "no overrides" could discard an explicit deny and restore a role grant.
   if (u.role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return u;
   const [roleSet, overrides] = await Promise.all([
     loadRolePermissions(u.role),

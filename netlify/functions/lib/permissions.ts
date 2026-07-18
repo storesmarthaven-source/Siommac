@@ -496,9 +496,8 @@ export const COMPLIANCE_GATED_KEYS = new Set<string>([
 
 // ── Role defaults ─────────────────────────────────────────────────────────────
 // Source of truth for role→permissions is now the `role_permissions` table
-// (phase 12). This constant is the SEED + a safe fallback used only if the DB
-// is unreachable or a role has no rows yet. The sync test asserts it still
-// mirrors the frontend catalogue.
+// (phase 12). This constant remains the seed and the pure resolver's reference
+// catalogue; runtime DB failures never restore grants from it.
 const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   // HR module staff roles (flat; employee baseline + HR keys).
   // Mirrors 20260802000007_hr_compensation_overtime_permissions.sql.
@@ -952,8 +951,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
 
 // ── Per-user override row (mirrors PermissionOverrideSchema) ──────────────────
 export interface PermissionOverrideRow {
-  permission: string;
-  granted:    boolean;
+  permission:  string;
+  granted:     boolean;
+  valid_from?: string | null;
+  valid_until?: string | null;
+  revoked_at?: string | null;
 }
 
 /**
@@ -968,9 +970,20 @@ export function resolveWithSet(
   key: string,
   roleSet: ReadonlySet<string>,
   overrides: PermissionOverrideRow[],
+  now = new Date(),
 ): boolean {
   const override = overrides.find(o => o.permission === key);
-  if (override !== undefined) return override.granted;
+  if (override !== undefined) {
+    if (!override.granted) return false;
+    if (!COMPLIANCE_GATED_KEYS.has(key)) return true;
+
+    if (override.revoked_at || !override.valid_from || !override.valid_until) return false;
+    const validFrom = Date.parse(override.valid_from);
+    const validUntil = Date.parse(override.valid_until);
+    if (!Number.isFinite(validFrom) || !Number.isFinite(validUntil)) return false;
+    return validFrom <= now.getTime() && validUntil > now.getTime();
+  }
+  if (COMPLIANCE_GATED_KEYS.has(key)) return false;
   return roleSet.has(key);
 }
 
@@ -1005,7 +1018,8 @@ export function invalidateRolePermissions(roleName?: string): void {
  * enforcing the fail-closed compliance-access grant model introduced in Slice 1.
  * Operational critical keys (permissions.manage, roles.manage, auth.*, etc.) remain
  * in the set — they are inherent superadmin capabilities.
- * Falls back to the hardcoded seed if the DB is unreachable for built-in roles.
+ * A failed lookup raises a 503-class error. An empty role has no permissions;
+ * neither condition may restore hardcoded grants.
  */
 export async function loadRolePermissions(roleName: string): Promise<Set<string>> {
   if (roleName === 'superadmin') {
@@ -1017,22 +1031,22 @@ export async function loadRolePermissions(roleName: string): Promise<Set<string>
   const cached = _roleCache.get(roleName);
   if (cached && Date.now() - cached.at < ROLE_CACHE_TTL_MS) return cached.set;
 
-  let set: Set<string>;
-  try {
-    const { data, error } = await sb
-      .from('role_permissions')
-      .select('permission')
-      .eq('role_name', roleName);
-    if (error) throw error;
-    if (data.length > 0) {
-      set = new Set(data.map(r => r.permission as string));
-    } else {
-      // No rows — fall back to the seed for built-ins; empty for unknown custom.
-      set = new Set<string>(ROLE_PERMISSIONS[roleName] ?? []);
-    }
-  } catch {
-    set = new Set<string>(ROLE_PERMISSIONS[roleName] ?? []);
+  const { data, error } = await sb
+    .from('role_permissions')
+    .select('permission')
+    .eq('role_name', roleName);
+  if (error) {
+    console.error('[permissions] role permission lookup failed', {
+      roleName,
+      code: error.code,
+      message: error.message,
+    });
+    throw Object.assign(new Error('Authorization service unavailable'), {
+      status: 503,
+      code: 'authorization_unavailable',
+    });
   }
+  const set = new Set(data.map(r => r.permission as string));
   _roleCache.set(roleName, { set, at: Date.now() });
   return set;
 }

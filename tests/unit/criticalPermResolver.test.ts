@@ -4,8 +4,8 @@
  * Slice 1 Part C.2 — resolver matrix for the COMPLIANCE_GATED_KEYS carve-out.
  *
  * The tests cover the pure resolveWithSet() function (which auth.ts calls for
- * EVERY permission check after the Slice-1 change) AND the fail-closed behaviour
- * of loadUserOverrides() on DB error.
+ * EVERY permission check after the Slice-1 change) and the authoritative
+ * permission loaders' fail-closed behaviour on DB errors.
  *
  * Slice-1 narrowing (decision 2026-07-18):
  *   Only communications.compliance_read and communications.compliance_export are
@@ -19,7 +19,7 @@
  *   1. approved-active grant (user_permissions row, granted=true)  → ALLOW
  *   2. no grant, no role-set entry (superadmin post-Slice-1)       → DENY
  *   3. pending approval (no user_permissions row yet)               → DENY (same as 2)
- *   4. revoked grant (user_permissions row deleted)                 → DENY (same as 2)
+ *   4. revoked grant (retained row with revoked_at)                  → DENY
  *   5. explicit user-deny (user_permissions row, granted=false)     → DENY even if role set has it
  *   6. permission-table query FAILURE                               → DENY compliance key
  *
@@ -28,13 +28,11 @@
  *      even without a user_permissions row → ALLOW via role set
  *   8. superadmin auto-holds a non-critical key → ALLOW via role set
  *
- * Note on state 3 (pending) and 4 (revoked): both manifest identically in the
- * resolver — no user_permissions row → no override → role-set fallback → DENY.
+ * Pending requests have no active user_permissions row. Revoked grants retain
+ * their row as evidence but carry revoked_at. Both resolve to DENY.
  *
- * Note on expiry: user_permissions has no expires_at column; grant expiry is
- * NOT supported at the user_permissions level. Expiry of the underlying
- * permission_grant_approvals request row (7-day window) is separate. This is a
- * known gap reported in the Slice-1 deliverable.
+ * Dated compliance grants are active only while valid_from <= now < valid_until
+ * and revoked_at is null. Role membership cannot restore either gated key.
  */
 
 jest.mock('../../netlify/functions/lib/db', () => ({
@@ -47,7 +45,11 @@ import {
   resolveWithSet,
   CRITICAL_GRANT_KEYS,
   COMPLIANCE_GATED_KEYS,
+  invalidateRolePermissions,
+  loadRolePermissions,
 } from '../../netlify/functions/lib/permissions';
+import { loadUserOverrides } from '../../netlify/functions/lib/auth';
+import { sb } from '../../netlify/functions/lib/db';
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -59,6 +61,17 @@ const COMPLIANCE_KEY      = 'communications.compliance_read';
 const OPERATIONAL_CRIT_KEY = 'permissions.manage';
 /** A plain non-critical key — always in the superadmin set. */
 const NONCRITICAL_KEY     = 'communications.view';
+const NOW = new Date('2026-07-18T12:00:00.000Z');
+
+function activeComplianceOverride(granted = true) {
+  return {
+    permission: COMPLIANCE_KEY,
+    granted,
+    valid_from: '2026-07-18T11:00:00.000Z',
+    valid_until: '2026-07-18T13:00:00.000Z',
+    revoked_at: null,
+  };
+}
 
 /**
  * Post-Slice-1 superadmin role set: excludes COMPLIANCE_GATED_KEYS but retains
@@ -127,16 +140,16 @@ describe('COMPLIANCE_GATED_KEYS is a proper subset of CRITICAL_GRANT_KEYS', () =
 // 6-state matrix for a COMPLIANCE_GATED key (compliance_read)
 // ---------------------------------------------------------------------------
 
-describe('compliance key resolver — 6-state matrix', () => {
+describe('compliance key resolver — dated fail-closed matrix', () => {
   // ── State 1: approved-active grant ────────────────────────────────────────
   it('ALLOW when user_permissions has granted=true override', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: true }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides)).toBe(true);
+    const overrides = [activeComplianceOverride()];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides, NOW)).toBe(true);
   });
 
   it('ALLOW: override takes priority over missing role-set entry', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: true }];
-    expect(resolveWithSet(COMPLIANCE_KEY, new Set<string>(), overrides)).toBe(true);
+    const overrides = [activeComplianceOverride()];
+    expect(resolveWithSet(COMPLIANCE_KEY, new Set<string>(), overrides, NOW)).toBe(true);
   });
 
   // ── State 2: no grant, no role-set entry (post-Slice-1 superadmin default) ──
@@ -154,24 +167,94 @@ describe('compliance key resolver — 6-state matrix', () => {
     expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, [])).toBe(false);
   });
 
+  it('DENY a future-dated compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      valid_from: '2026-07-18T12:00:01.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY an expired compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      valid_until: '2026-07-18T12:00:00.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY a revoked compliance grant', () => {
+    const overrides = [{
+      ...activeComplianceOverride(),
+      revoked_at: '2026-07-18T11:30:00.000Z',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY undated or malformed compliance grants', () => {
+    const undated = [{ permission: COMPLIANCE_KEY, granted: true }];
+    const malformed = [{
+      ...activeComplianceOverride(),
+      valid_until: 'not-a-date',
+    }];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, undated, NOW)).toBe(false);
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, malformed, NOW)).toBe(false);
+  });
+
   // ── State 5: explicit user-deny ───────────────────────────────────────────
   it('DENY when user_permissions has granted=false override', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: false }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides)).toBe(false);
+    const overrides = [activeComplianceOverride(false)];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithoutCompliance, overrides, NOW)).toBe(false);
   });
 
   it('DENY: explicit user-deny wins even when compliance key IS in the role set', () => {
-    const overrides = [{ permission: COMPLIANCE_KEY, granted: false }];
-    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides)).toBe(false);
+    const overrides = [activeComplianceOverride(false)];
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, overrides, NOW)).toBe(false);
+  });
+
+  it('DENY a stale role grant without an active per-user compliance grant', () => {
+    expect(resolveWithSet(COMPLIANCE_KEY, roleSetWithCompliance, [], NOW)).toBe(false);
   });
 
   // ── State 6: DB query failure ──────────────────────────────────────────────
-  it('DENY (DB failure path): empty overrides + role-set-without-compliance = deny compliance key', () => {
-    // Simulate what happens when loadUserOverrides() catches a DB error and returns []:
-    const overridesOnDbError: { permission: string; granted: boolean }[] = [];
-    // The superadmin role set (post-Slice-1) excludes compliance keys.
-    for (const key of COMPLIANCE_GATED_KEYS) {
-      expect(resolveWithSet(key, superadminRoleSetNarrow, overridesOnDbError)).toBe(false);
+  it('does not reinterpret a DB failure as an empty override list', async () => {
+    const from = sb.from as unknown as jest.Mock;
+    const error = { code: 'XX000', message: 'simulated permission-store failure' };
+    from.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({ data: null, error }),
+      }),
+    });
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await expect(loadUserOverrides('test-user')).rejects.toMatchObject({
+        status: 503,
+        code: 'authorization_unavailable',
+      });
+    } finally {
+      log.mockRestore();
+    }
+  });
+});
+
+describe('role permission store failure', () => {
+  it('does not restore hardcoded role grants when the DB lookup fails', async () => {
+    const from = sb.from as unknown as jest.Mock;
+    const error = { code: 'XX000', message: 'simulated role-store failure' };
+    from.mockReturnValue({
+      select: jest.fn().mockReturnValue({
+        eq: jest.fn().mockResolvedValue({ data: null, error }),
+      }),
+    });
+    invalidateRolePermissions('authorization_failure_test_role');
+    const log = jest.spyOn(console, 'error').mockImplementation(() => undefined);
+    try {
+      await expect(loadRolePermissions('authorization_failure_test_role')).rejects.toMatchObject({
+        status: 503,
+        code: 'authorization_unavailable',
+      });
+    } finally {
+      log.mockRestore();
     }
   });
 });
