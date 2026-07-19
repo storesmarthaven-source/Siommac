@@ -203,6 +203,14 @@ export interface MaybeToastArgs {
 }
 
 export function maybeToastNotification({ notification, domain, prefs, coalesce = true }: MaybeToastArgs): void {
+  // Direct path — compliance/security notifications fire the rich action-toast
+  // IMMEDIATELY. It is deliberately BEFORE the guards below: those compare the
+  // browser epoch (Date.now at page-load) with the server-assigned created_at, and
+  // that cross-machine comparison can misjudge under clock skew. The compliance
+  // caller owns a clock-free, id-based historical watermark instead, and these are
+  // security events, so mute/quiet-hours are bypassed too. Never coalesced.
+  if (!coalesce) { fireNotificationToast(notification, domain); return; }
+
   // 1. No-backfill guard: ignore signals that arrived before page-load epoch
   if (_sessionEpoch !== null) {
     const createdMs = new Date(notification.created_at).getTime();
@@ -211,9 +219,6 @@ export function maybeToastNotification({ notification, domain, prefs, coalesce =
 
   // 2. Mute / quiet-hours guard
   if (isMutedByPreferences(prefs)) return;
-
-  // 2b. Direct path — compliance/security: fire the rich toast now, no burst.
-  if (!coalesce) { fireNotificationToast(notification, domain); return; }
 
   // 3. Burst coalescing
   const existing = _bursts.get(domain);

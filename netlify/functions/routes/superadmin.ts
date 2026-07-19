@@ -179,14 +179,13 @@ async function requestCriticalGrant(
     }
 
     // Notify eligible reviewers that a compliance access request needs review
-    // (nav bubble + targeted rich toast → Access Control ▸ Approvals). Fire-and-
-    // forget; dedupe-keyed so a re-emit for the same request never doubles.
+    // (nav bubble + targeted rich toast → Access Control ▸ Approvals). AWAITED so
+    // delivery finishes before this serverless handler returns (the process can
+    // freeze on return); wrapped best-effort so a delivery failure never fails the
+    // committed request. Reuse the preflight's eligible-approver set (non-empty
+    // here); dedupe-keyed so a re-emit for the same request never doubles.
     const requestApprovalId = result.approval_id;
-    void (async () => {
-      // Reuse the eligible-approver set already computed for the preflight above
-      // (guaranteed non-empty here). No second query, and the notification targets
-      // exactly the reviewers who can act on this request.
-      const approvers = eligibleApprovers;
+    try {
       await deliverEventNotifications({
         eventType: 'iam.permission.compliance_grant_requested',
         sourceModule: 'platform',
@@ -194,7 +193,7 @@ async function requestCriticalGrant(
         sourceEntityId: requestApprovalId,
         actorUserId: actor.id,
         severity: 'warning',
-        explicitRecipients: approvers.map(userId => ({ userId, reason: 'explicit' as const })),
+        explicitRecipients: eligibleApprovers.map(userId => ({ userId, reason: 'explicit' as const })),
         notification: {
           title: 'Compliance access request',
           body: `${actor.username} requested compliance access — review and approve or reject.`,
@@ -203,7 +202,9 @@ async function requestCriticalGrant(
         },
         dedupeKey: `iam.permission.compliance_grant_requested:${requestApprovalId}`,
       }, null);
-    })().catch((err: unknown) => console.warn('[requestCriticalGrant] approver notification failed:', err));
+    } catch (err: unknown) {
+      console.warn('[requestCriticalGrant] approver notification failed:', err);
+    }
 
     return { ok: true, approvalId: result.approval_id };
   }
@@ -380,7 +381,8 @@ router.post('/setUserPermission', async c => {
     actorUserId: actor.id, severity: 'warning', payload: { permission, granted },
   });
   // Nudge the affected user's live session to re-pull its permission snapshot.
-  void emitSignal([userId], 'permissions');
+  // Awaited (serverless can freeze on return); best-effort so it can't fail the write.
+  await emitSignal([userId], 'permissions').catch(err => console.warn('[setUserPermission] signal failed:', err));
   return c.json({ success: true });
 });
 
@@ -433,29 +435,32 @@ router.post('/clearUserPermission', async c => {
         && result.status !== 'deny_cleared') {
       return c.json({ success: false, message: 'Unexpected revocation state.' }, 500);
     }
-    // Nudge the affected user so the revoked compliance grant drops from their
-    // live session (the shield disappears) without waiting for a reload.
-    void emitSignal([userId], 'permissions');
-
-    // Notify the grantee ONLY on a real revocation ('revoked'); a retry returns
-    // 'already_revoked' (no-op) and 'deny_cleared' is not an access revocation,
-    // so neither re-notifies.
-    if (result.status === 'revoked') {
-      void deliverEventNotifications({
-        eventType: 'communications.compliance.access_revoked',
-        sourceModule: 'communications',
-        sourceEntityType: 'user',
-        sourceEntityId: userId,
-        actorUserId: actor.id,
-        severity: 'warning',
-        explicitRecipients: [{ userId, reason: 'explicit' }],
-        notification: {
-          title: 'Compliance access revoked',
-          body: 'Your Messenger compliance access has been revoked.',
-          actionRoute: 's-messages',
-          type: 'communications.compliance.access_revoked',
-        },
-      }, null);
+    // Post-commit delivery, AWAITED so it finishes before this serverless handler
+    // returns (the process can freeze on return); best-effort so a delivery failure
+    // never fails the committed revocation. The signal drops the revoked grant from
+    // the grantee's live session (shield disappears). Notify ONLY on a real
+    // revocation ('revoked'); a retry ('already_revoked') / 'deny_cleared' don't.
+    try {
+      await emitSignal([userId], 'permissions');
+      if (result.status === 'revoked') {
+        await deliverEventNotifications({
+          eventType: 'communications.compliance.access_revoked',
+          sourceModule: 'communications',
+          sourceEntityType: 'user',
+          sourceEntityId: userId,
+          actorUserId: actor.id,
+          severity: 'warning',
+          explicitRecipients: [{ userId, reason: 'explicit' }],
+          notification: {
+            title: 'Compliance access revoked',
+            body: 'Your Messenger compliance access has been revoked.',
+            actionRoute: 's-messages',
+            type: 'communications.compliance.access_revoked',
+          },
+        }, null);
+      }
+    } catch (err: unknown) {
+      console.warn('[clearUserPermission] post-commit delivery failed:', err);
     }
     return c.json({ success: true, status: result.status });
   }
@@ -477,7 +482,8 @@ router.post('/clearUserPermission', async c => {
     actorUserId: actor.id, severity: 'info', payload: { permission },
   });
   // Nudge the affected user's live session to re-pull its permission snapshot.
-  void emitSignal([userId], 'permissions');
+  // Awaited (serverless can freeze on return); best-effort so it can't fail the write.
+  await emitSignal([userId], 'permissions').catch(err => console.warn('[clearUserPermission] signal failed:', err));
   return c.json({ success: true });
 });
 

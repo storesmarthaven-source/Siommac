@@ -48,31 +48,31 @@ export function scheduleHdrBadgeSync(): void {
 }
 
 export async function doHdrBadgeSync(): Promise<void> {
-  try {
-    const res = await apiPost<{ success: boolean; data: CommsSummary }>(
-      'communications/summary', { args: {} },
-    );
-    if (!res.success) return;
-    const c = res.data;
+  // The header/leave badges and the Approvals badge come from INDEPENDENT endpoints.
+  // Run them concurrently and settle both — a failing communications/summary must
+  // not stop the Approvals badge (or vice-versa) from refreshing.
+  await Promise.allSettled([syncHeaderBadges(), syncApprovalNavBadge()]);
+}
 
-    // Profile-pill badges — id-free, matched by data-pill-badge on every pill.
-    document.querySelectorAll('[data-pill-badge="notif"]').forEach(el =>
-      setHdrBadge(el, c.notificationsUnread),
-    );
-    document.querySelectorAll('[data-pill-badge="msg"]').forEach(el =>
-      setHdrBadge(el, c.messagesUnread),
-    );
-    document.querySelectorAll('[data-pill-badge="ticket"]').forEach(el =>
-      setHdrBadge(el, c.ticketsOpen),
-    );
+async function syncHeaderBadges(): Promise<void> {
+  const res = await apiPost<{ success: boolean; data: CommsSummary }>(
+    'communications/summary', { args: {} },
+  );
+  if (!res.success) return;
+  const c = res.data;
 
-    // Leave badge is not part of the comms summary — keep existing nav refresh
-    // with 0 as a pass-through until leave counts are added to summary.
-    refreshNavBadges(0);
+  // Profile-pill badges — id-free, matched by data-pill-badge on every pill.
+  document.querySelectorAll('[data-pill-badge="notif"]').forEach(el =>
+    setHdrBadge(el, c.notificationsUnread),
+  );
+  document.querySelectorAll('[data-pill-badge="msg"]').forEach(el =>
+    setHdrBadge(el, c.messagesUnread),
+  );
+  document.querySelectorAll('[data-pill-badge="ticket"]').forEach(el =>
+    setHdrBadge(el, c.ticketsOpen),
+  );
 
-    // Approvals nav badge — pending grant requests this actor can act on.
-    // Fire-and-forget: it has its own scope gate + error handling, and this
-    // pass runs on every realtime signal (incl. permissions/notifications).
-    void syncApprovalNavBadge();
-  } catch (_) { /* empty */ }
+  // Leave badge is not part of the comms summary — keep existing nav refresh
+  // with 0 as a pass-through until leave counts are added to summary.
+  refreshNavBadges(0);
 }

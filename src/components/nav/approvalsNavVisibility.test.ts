@@ -88,3 +88,27 @@ describe('Approvals nav stays visible through the full lifecycle (integration)',
     expect(approvalsButton(), 'gate closes only when compliance_approve is lost').toBeNull();
   });
 });
+
+describe('Badge survives a sidebar DOM rebuild (per-button cache, not stale section-id cache)', () => {
+  const badgeText = () =>
+    document.querySelector('#sidebarMenu button[data-section="s-ac-approvals"] .sb-nav-badge')?.textContent ?? null;
+  const buildRow = () => {
+    document.body.innerHTML =
+      '<ul id="sidebarMenu"><li><button data-section="s-ac-approvals">Approvals</button></li></ul>';
+  };
+
+  it('re-renders the badge on the replacement button even when the count is unchanged', () => {
+    buildRow();
+    setNavSectionBadge('s-ac-approvals', 3);
+    expect(badgeText()).toBe('3');
+
+    // NavController replaces the whole sidebar DOM on a permission refresh: the new
+    // button has NO badge, but the OLD (section-id) cache still says "3" and would
+    // suppress recreating it. The per-button WeakMap cache does not.
+    buildRow();
+    expect(document.querySelector('#sidebarMenu .sb-nav-badge'), 'fresh button starts with no badge').toBeNull();
+
+    setNavSectionBadge('s-ac-approvals', 3);   // same count as before the rebuild
+    expect(badgeText(), 'badge re-rendered on the replacement button').toBe('3');
+  });
+});

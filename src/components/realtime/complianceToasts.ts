@@ -50,25 +50,23 @@ export function needsWatermarkSeed(userId: string): boolean {
 }
 
 /**
- * Seed the mount watermark from the rows present at mount: only rows created
- * STRICTLY BEFORE `sessionStartedAt` are marked historical (already-seen). Rows at
- * or after the boundary are genuinely new — they arrived while the seed fetch was
- * in flight — and are intentionally left unseeded so they still surface as a toast.
+ * Seed the mount watermark from the rows present when the session initializes: every
+ * fetched notification id is marked historical (already-seen). The boundary is the
+ * SERVER's own result set (an id cursor), NOT a browser timestamp — we never compare
+ * `Date.now()` with a server `created_at`, so clock skew can't misclassify a new
+ * notification as historical.
  *
- * The caller captures `sessionStartedAt` BEFORE issuing the fetch, and calls this
- * ONLY on a successful fetch (a failed seed must not mark init complete). Re-seeding
- * for a different user clears the previous session's watermark first.
+ * The caller drives ordering (subscribe → queue signals → seed here → drain queue),
+ * so anything that arrives after this seed surfaces via the drained/subsequent
+ * signals rather than being (mis)judged by time. Re-seeding for a different user
+ * clears the previous session's watermark first.
  */
 export function seedComplianceToastWatermark(
   userId: string,
   rows: readonly ComplianceNotifRow[],
-  sessionStartedAt: number,
 ): void {
   if (_seededForUser !== userId) _seen.clear();
-  for (const r of rows) {
-    const t = r.created_at ? Date.parse(r.created_at) : NaN;
-    if (Number.isFinite(t) && t < sessionStartedAt) _seen.add(r.id);
-  }
+  for (const r of rows) _seen.add(r.id);
   _seededForUser = userId;
 }
 

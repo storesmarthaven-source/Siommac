@@ -34,16 +34,29 @@ export function AcApprovalsPage(): VNode {
   const cancel = useCancelGrant();
   const rows = q.data ?? [];
 
-  // Acknowledge the queue only AFTER the pending list has loaded successfully, by the
-  // exact ids that were rendered. Receipts cover precisely what was shown — a request
-  // that was NOT in this list stays unseen (no acknowledgement race, clock-free). Then
-  // refresh the nav badge (unseen → 0). The pending backlog and the durable
-  // communications.compliance_approve nav gate are unchanged, so the page stays visible.
+  // Is the Approvals page the ACTIVE (visible) section? Every module mounts at
+  // startup, so this component can render while its Access Control panel is hidden
+  // (a compliance-only approver renders it unconditionally). We must NOT acknowledge
+  // the queue on that hidden mount — it would clear the badge at login so it never
+  // appears. Only a real `s-ac-approvals` navigation makes it active; navigating to
+  // any other section clears it.
+  const [active, setActive] = useState(false);
   useEffect(() => {
-    if (status !== 'pending' || !q.isSuccess) return;
+    const onSection = (e: Event) => setActive((e as CustomEvent<string>).detail === 's-ac-approvals');
+    window.addEventListener('siomac:section', onSection);
+    return () => window.removeEventListener('siomac:section', onSection);
+  }, []);
+
+  // Acknowledge the pending queue ONLY while actually viewing it, by the exact ids
+  // rendered — a request not in this list stays unseen (no acknowledgement race,
+  // clock-free). Re-runs when a fresh request arrives while viewing. Never fires for
+  // a hidden mount or a background refetch after navigating away. Then refresh the
+  // nav badge (unseen → 0); the backlog + durable compliance_approve gate are unchanged.
+  useEffect(() => {
+    if (!active || status !== 'pending' || !q.isSuccess) return;
     const ids = q.data.map(a => a.id);   // isSuccess ⇒ data is defined
     void markApprovalsSeenApi(ids).finally(() => scheduleHdrBadgeSync());
-  }, [status, q.isSuccess, q.dataUpdatedAt]);
+  }, [active, status, q.isSuccess, q.dataUpdatedAt]);
 
   const doReject = async (id: string) => {
     const reason = await dialog.prompt({ title: 'Reject request', text: 'Reason (optional)', placeholder: 'Why is this being rejected?' });

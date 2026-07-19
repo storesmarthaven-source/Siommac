@@ -69,6 +69,10 @@ export function NavController(): h.JSX.Element {
     if (!role) return;
     buildSidebar(role);
     if (getLayout() === 'tabs') buildTopTabs(role);
+    // The rebuild replaced the sidebar DOM, dropping every badge. Re-sync so counts
+    // (leave, Approvals, …) reappear on the new buttons immediately, not after the
+    // next poll — the per-button badge cache no longer suppresses this (WeakMap).
+    scheduleHdrBadgeSync();
   }), []);
 
   useEffect(() => {

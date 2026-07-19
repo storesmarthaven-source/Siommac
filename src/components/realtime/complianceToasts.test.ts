@@ -1,10 +1,11 @@
 /**
- * complianceToasts.test.ts — mount watermark + no-burst behaviour.
+ * complianceToasts.test.ts — id-based (clock-free) watermark + no burst.
  *
- * Compliance notifications must (1) never replay historical rows present at mount,
- * (2) NOT swallow a genuinely-new notification that arrives while the initial seed
- * fetch is in flight (seed only rows older than the session boundary), and (3) fire
- * the rich action-toast DIRECTLY (coalesce:false), never as an "N new" burst.
+ * The historical watermark is the SET OF IDS present at seed time — never a
+ * browser↔server timestamp comparison — so clock skew can't misclassify a row.
+ * Compliance notifications fire the rich action-toast directly (coalesce:false),
+ * never as an "N new" burst. Headline case: four old notifications must not become
+ * a burst when one new one arrives.
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
@@ -22,11 +23,6 @@ import {
 
 const mockToast = vi.mocked(maybeToastNotification);
 
-// Session boundary; "historical" rows are created before it, "new" rows at/after.
-const BOUNDARY = Date.parse('2026-07-19T12:00:00.000Z');
-const BEFORE   = '2026-07-19T00:00:00.000Z';
-const AFTER    = '2026-07-19T18:00:00.000Z';
-
 const row = (id: string, over: Partial<ComplianceNotifRow> = {}): ComplianceNotifRow => ({
   id,
   type:       'communications.compliance.access_granted',
@@ -34,23 +30,19 @@ const row = (id: string, over: Partial<ComplianceNotifRow> = {}): ComplianceNoti
   body:       null,
   is_read:    false,
   link:       's-messages',
-  created_at: BEFORE,
+  created_at: '2026-07-19T00:00:00.000Z',
   ...over,
 });
 
-describe('complianceToasts — mount watermark + no burst', () => {
+describe('complianceToasts — id-based watermark + no burst', () => {
   beforeEach(() => {
     mockToast.mockReset();
     __resetComplianceToastState();
   });
 
   it('four old notifications do NOT become a burst toast when one new one arrives', () => {
-    // Watermark: four historical notifications already present at mount.
-    seedComplianceToastWatermark('u1', [row('n1'), row('n2'), row('n3'), row('n4')], BOUNDARY);
-    // A signal fires; the fetch returns the 4 old rows + 1 genuinely-new compliance row.
-    surfaceComplianceToasts([row('n1'), row('n2'), row('n3'), row('n4'), row('n5', { created_at: AFTER })]);
-    // Only the NEW one toasts. The 4 historical rows never reach the toast engine,
-    // so they can never coalesce into an "N new" burst.
+    seedComplianceToastWatermark('u1', [row('n1'), row('n2'), row('n3'), row('n4')]);
+    surfaceComplianceToasts([row('n1'), row('n2'), row('n3'), row('n4'), row('n5')]);
     expect(mockToast).toHaveBeenCalledTimes(1);
     const arg = mockToast.mock.calls[0]![0];
     expect(arg.notification.id).toBe('n5');
@@ -58,35 +50,39 @@ describe('complianceToasts — mount watermark + no burst', () => {
     expect(arg.domain).toBe('notifications');
   });
 
-  it('does NOT swallow a compliance notification created after the session boundary', () => {
-    // The seed fetch returns an old row AND one that landed while the fetch was in
-    // flight (created at/after the boundary). Only the old one is historical.
-    const rows = [row('old', { created_at: BEFORE }), row('duringSeed', { created_at: AFTER })];
-    seedComplianceToastWatermark('u1', rows, BOUNDARY);
-    surfaceComplianceToasts(rows);
-    // The row created during seeding is treated as new and still toasts.
+  it('seeds by ID, not by timestamp — a FUTURE-dated seeded row stays suppressed (skew-safe)', () => {
+    // Server clock ahead of the browser → created_at is "in the future". It must
+    // STILL be historical because it was in the seed set; no time comparison.
+    seedComplianceToastWatermark('u1', [row('future', { created_at: '2099-01-01T00:00:00.000Z' })]);
+    surfaceComplianceToasts([row('future', { created_at: '2099-01-01T00:00:00.000Z' })]);
+    expect(mockToast).not.toHaveBeenCalled();
+  });
+
+  it('surfaces any id NOT in the seed, regardless of its timestamp (even an old one)', () => {
+    seedComplianceToastWatermark('u1', [row('old')]);
+    surfaceComplianceToasts([row('fresh', { created_at: '2000-01-01T00:00:00.000Z' })]);
     expect(mockToast).toHaveBeenCalledTimes(1);
-    expect(mockToast.mock.calls[0]![0].notification.id).toBe('duringSeed');
+    expect(mockToast.mock.calls[0]![0].notification.id).toBe('fresh');
   });
 
   it('does not re-toast a notification it already surfaced (repeat signal)', () => {
-    seedComplianceToastWatermark('u1', [], BOUNDARY);
-    surfaceComplianceToasts([row('n5', { created_at: AFTER })]);
-    surfaceComplianceToasts([row('n5', { created_at: AFTER })]);
+    seedComplianceToastWatermark('u1', []);
+    surfaceComplianceToasts([row('n5')]);
+    surfaceComplianceToasts([row('n5')]);
     expect(mockToast).toHaveBeenCalledTimes(1);
   });
 
   it('ignores non-compliance notification types', () => {
-    seedComplianceToastWatermark('u1', [], BOUNDARY);
+    seedComplianceToastWatermark('u1', []);
     surfaceComplianceToasts([row('x1', { type: 'workflow.task.assigned' })]);
     expect(mockToast).not.toHaveBeenCalled();
   });
 
   it('maps the notification through the rich shape (route from link, severity from type)', () => {
-    seedComplianceToastWatermark('u1', [], BOUNDARY);
+    seedComplianceToastWatermark('u1', []);
     surfaceComplianceToasts([
-      row('g1', { type: 'communications.compliance.access_granted', link: 's-messages', created_at: AFTER }),
-      row('r1', { type: 'communications.compliance.access_revoked', created_at: AFTER }),
+      row('g1', { type: 'communications.compliance.access_granted', link: 's-messages' }),
+      row('r1', { type: 'communications.compliance.access_revoked' }),
     ]);
     const granted = mockToast.mock.calls[0]![0].notification;
     const revoked = mockToast.mock.calls[1]![0].notification;
@@ -96,11 +92,10 @@ describe('complianceToasts — mount watermark + no burst', () => {
   });
 
   it('re-seeds the watermark for a different user (re-login)', () => {
-    seedComplianceToastWatermark('u1', [row('n1')], BOUNDARY);
+    seedComplianceToastWatermark('u1', [row('n1')]);
     expect(needsWatermarkSeed('u1')).toBe(false);
     expect(needsWatermarkSeed('u2')).toBe(true);
-    // Re-login as u2 clears u1's watermark, so u1's old id is no longer suppressed.
-    seedComplianceToastWatermark('u2', [], BOUNDARY);
+    seedComplianceToastWatermark('u2', []);
     surfaceComplianceToasts([row('n1')]);
     expect(mockToast).toHaveBeenCalledTimes(1);
   });

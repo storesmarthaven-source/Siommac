@@ -30,29 +30,27 @@ type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
 
 /**
- * Seed the compliance-toast watermark for the current user, ONCE per session.
- * Everything that already exists at mount is historical and must never surface as
- * a realtime toast. Idempotent per user (needsWatermarkSeed gates re-seeding).
+ * Seed the compliance-toast watermark for the current user, ONCE per session, from
+ * the SERVER's current notification set (an id cursor). Everything fetched is
+ * historical and must never surface as a realtime toast. No browser-vs-server time
+ * comparison. Returns true when the watermark is seeded (or already was); false on a
+ * fetch failure so the caller can retry on the next signal. Idempotent per user.
  */
-async function seedComplianceWatermark(): Promise<void> {
-  const [{ getMyNotifications }, { needsWatermarkSeed, seedComplianceToastWatermark, surfaceComplianceToasts }, { useSessionStore }] =
+async function seedComplianceWatermark(): Promise<boolean> {
+  const [{ getMyNotifications }, { needsWatermarkSeed, seedComplianceToastWatermark }, { useSessionStore }] =
     await Promise.all([
       import('@api/notifications'),
       import('@components/realtime/complianceToasts'),
       import('@store/session'),
     ]);
   const userId = useSessionStore.getState().userId;
-  if (!userId || !needsWatermarkSeed(userId)) return;
-  // Capture the session boundary BEFORE fetching: a notification created while this
-  // request is in flight is at/after the boundary → treated as new (surfaced below),
-  // never swallowed into the historical watermark.
-  const sessionStartedAt = Date.now();
+  if (!userId) return false;
+  if (!needsWatermarkSeed(userId)) return true;   // already seeded this session
   let rows;
   try { rows = await getMyNotifications(userId); }
-  catch { return; }   // fetch failed → do NOT mark init complete → retry on next signal
-  // Seed rows older than the boundary as historical; toast the newer ones normally.
-  seedComplianceToastWatermark(userId, rows, sessionStartedAt);
-  surfaceComplianceToasts(rows);
+  catch { return false; }                          // retry on the next signal
+  seedComplianceToastWatermark(userId, rows);
+  return true;
 }
 
 /**
@@ -109,14 +107,31 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
 
   useEffect(() => {
     if (!channelKey) return;
-    // Seed the compliance-toast watermark once per session (channelKey is only set
-    // when logged in). Everything present now is historical → never toasted; only
-    // rows arriving after this seed can surface as a realtime toast.
-    void seedComplianceWatermark();
     // `window.supabase` is typed as always-present, but this guard defends at
     // runtime against the Supabase UMD not having loaded yet (a real SPA race).
     // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (typeof window === 'undefined' || !window.supabase) return;
+
+    // Compliance-toast init state machine (per subscription). We ESTABLISH the
+    // subscription first and only seed the historical watermark AFTER it is
+    // confirmed (SUBSCRIBED). Any notification signal that arrives before the
+    // watermark is seeded is QUEUED (not toasted — it might be historical) and
+    // DRAINED once seeding completes. This closes both the clock-skew misclassify
+    // and the fetch-vs-subscribe gap.
+    let disposed = false;
+    let ready   = false;   // watermark seeded → safe to surface toasts
+    let seeding = false;   // a seed attempt is in flight (avoid concurrent fetches)
+    let pending = false;   // a notification signal arrived while not ready
+
+    const attemptSeedAndDrain = async (): Promise<void> => {
+      if (ready || seeding) return;
+      seeding = true;
+      const ok = await seedComplianceWatermark();
+      seeding = false;
+      if (disposed || !ok) return;   // seed failed → retry on the next signal
+      ready = true;
+      if (pending) { pending = false; void surfaceComplianceFromNotifications(); }
+    };
 
     // Tear down any existing subscription
     if (channelRef.current && clientRef.current) {
@@ -157,9 +172,11 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
           if (domain === 'notifications') {
             void qc.invalidateQueries({ queryKey: notificationKeys.all });
             // The notifications table isn't published for realtime, so this working
-            // signal is where the compliance toast fires — surface new compliance
-            // rows directly (watermark skips historical; no burst coalescing).
-            void surfaceComplianceFromNotifications();
+            // signal is where the compliance toast fires. Only surface once the
+            // watermark is seeded; otherwise queue (and kick a seed) so a historical
+            // row can never toast during initialization.
+            if (ready) void surfaceComplianceFromNotifications();
+            else { pending = true; void attemptSeedAndDrain(); }
           } else if (domain === 'messages') {
             void qc.invalidateQueries({ queryKey: messageKeys.all });
             emitMessagesSignal();   // Messenger workspace refetch bridge (no-op when unmounted)
@@ -176,11 +193,18 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
           }
         },
       )
-      .subscribe();
+      .subscribe((status: unknown) => {
+        // Seed the watermark only AFTER the subscription is confirmed, so anything
+        // created after this boundary arrives via the channel (queued → drained)
+        // instead of racing the seed fetch.
+        // eslint-disable-next-line @typescript-eslint/no-base-to-string
+        if (String(status) === 'SUBSCRIBED') void attemptSeedAndDrain();
+      });
 
     channelRef.current = channel;
 
     return () => {
+      disposed = true;
       if (channelRef.current && clientRef.current) {
         void clientRef.current.removeChannel(channelRef.current);
         channelRef.current = null;

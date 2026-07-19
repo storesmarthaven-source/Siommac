@@ -371,15 +371,15 @@ router.post('/approve', async c => {
   // re-pulls their permission snapshot so the grant reflects in their live session
   // without a reload. Fire-and-forget; login/token-refresh/focus are the fallbacks.
   if (result.request_type === 'user_override' && result.target_user_id) {
-    void emitSignal([result.target_user_id], 'permissions');
-
-    // Real state change (status='applied' → we're past the switch) on a compliance
-    // access grant → notify the grantee (nav bubble + notification centre). Reaching
-    // here means the grant was actually applied, so a retry (→ 'not_pending') never
-    // re-notifies; the dedupeKey also guards double-delivery.
-    if (isComplianceAccessGrant(result.permission_key ?? '')) {
-      const grantee = result.target_user_id;
-      void (async () => {
+    const grantee = result.target_user_id;
+    // Post-commit delivery. In a serverless handler the process can freeze the
+    // moment we return, so we AWAIT the signal + notification (they must finish
+    // within the invocation) — but wrapped so a delivery failure never fails the
+    // already-committed grant. Reaching here means status='applied', so a retry
+    // (→ 'not_pending') never re-notifies; the dedupeKey guards double-delivery.
+    try {
+      await emitSignal([grantee], 'permissions');
+      if (isComplianceAccessGrant(result.permission_key ?? '')) {
         const { data: appr } = await sb
           .from('permission_grant_approvals')
           .select('grant_valid_until')
@@ -403,7 +403,9 @@ router.post('/approve', async c => {
           },
           dedupeKey: `communications.compliance.access_granted:${approvalId}`,
         }, null);
-      })().catch((err: unknown) => console.warn('[approvals/approve] compliance grant notification failed:', err));
+      }
+    } catch (err: unknown) {
+      console.warn('[approvals/approve] post-commit delivery failed:', err);
     }
   }
 

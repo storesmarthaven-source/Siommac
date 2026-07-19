@@ -762,14 +762,21 @@ export function setHdrBadge(badge: Element | null, count: number, dot?: boolean)
 // ── Nav leave badges ──────────────────────────────────────────────────────────
 
 const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
-const _sbBadgeLastLabel = new Map<string, string>();
+
+// Keyed by the BUTTON ELEMENT (not the section id) so a rebuilt sidebar — the DOM
+// is replaced wholesale on a permission refresh (NavController) — starts fresh: a
+// re-created button is not in this map, so it never inherits a stale "already has
+// badge N" state that would suppress re-rendering the badge. WeakMap so replaced
+// buttons are garbage-collected.
+const _sbBadgeLabelByBtn = new WeakMap<HTMLButtonElement, string>();
 
 function _setSbBadge(btn: HTMLButtonElement, count: number) {
-  const key   = btn.dataset.section ?? btn.id;
   const label = count > 0 ? (count > 99 ? '99+' : String(count)) : '';
-  if (_sbBadgeLastLabel.get(key) === label) return;
-  _sbBadgeLastLabel.set(key, label);
   let b = btn.querySelector<HTMLElement>('.sb-nav-badge');
+  // Early-out only when the cache AND the live DOM already reflect this label — so a
+  // badge removed out-of-band (or a fresh button) still gets (re)rendered.
+  if (_sbBadgeLabelByBtn.get(btn) === label && (b?.textContent ?? '') === label) return;
+  _sbBadgeLabelByBtn.set(btn, label);
   if (count > 0) {
     if (!b) {
       b = document.createElement('span');
