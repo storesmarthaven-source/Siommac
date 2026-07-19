@@ -52,6 +52,14 @@ import {
 } from '../lib/finance/payroll/releases';
 import { getPayrollRunWorkspace } from '../lib/finance/payroll/workspace';
 import { getPayrollControlCenter } from '../lib/finance/payroll/controlCenter';
+import { listPayrollRunsRegister } from '../lib/finance/payroll/runRegister';
+import {
+  listRunViews,
+  createRunView,
+  updateRunView,
+  deleteRunView,
+} from '../lib/finance/payroll/runViews';
+import { getPayrollRunCalendar } from '../lib/finance/payroll/runCalendar';
 import {
   generatePayslips,
   getMyPayslips,
@@ -126,17 +134,31 @@ function routeErr(c: { json: (v: unknown, s: number) => Response }, e: unknown):
 // ─────────────────────────────────────────────────────────────────────────────
 
 // POST /api/finance/payroll/runs/list
-// view_all → all runs; view_own → only relevant to self (future payslip scope)
+// §15.2 keyset register — replaces the old status/limit/offset basic list.
+// Permission: finance.payroll.view_all. Returns PayrollRunListResult.
 router.post('/payroll/runs/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
   const v = zv(c, z.object({
-    status: z.string().optional(),
-    limit:  z.number().int().min(1).max(200).optional(),
-    offset: z.number().int().min(0).optional(),
+    cursor:      z.string().max(2000).optional(),
+    limit:       z.number().int().min(1).max(100).optional(),
+    search:      z.string().trim().max(200).optional(),
+    states:      z.array(z.enum([
+      'draft','input_locked','calculation_failed','calculated',
+      'pending_approval','returned','approved','locked','released','exported','cancelled',
+    ])).optional(),
+    runTypes:    z.array(z.enum(['scheduled','off_cycle','correction','final_pay'])).optional(),
+    payGroupIds: z.array(z.string().uuid()).max(50).optional(),
+    periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),
+    periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),
+    sort:        z.enum(['pay_date_desc','pay_date_asc','updated_desc']).optional(),
+    tab:         z.enum(['all','in_progress','approval','attention','released']).optional(),
+  }).refine(d => !d.periodFrom || !d.periodTo || d.periodFrom <= d.periodTo, {
+    message: 'periodFrom must not be after periodTo',
   }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await listPayrollRuns(v.data);
+    const data = await listPayrollRunsRegister(v.data);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -1347,6 +1369,89 @@ router.post('/payroll/exports/download', async c => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // POST /api/finance/payroll/reports/list
+// ─────────────────────────────────────────────────────────────────────────────
+// Payroll Run — Saved Views (§15.2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/run-views/list
+// Returns the caller's personal views + all team-scope views.
+router.post('/payroll/run-views/list', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  try {
+    const data = await listRunViews(actor.id);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/run-views/create
+// Personal scope: any view_all holder. Team scope: also requires run_views.manage_team.
+router.post('/payroll/run-views/create', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    name:    z.string().trim().min(1).max(80),
+    scope:   z.enum(['personal', 'team']),
+    filters: z.record(z.string(), z.unknown()).optional().default({}),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const canManageTeam = await userCan(actor, 'finance.payroll.run_views.manage_team');
+    const data = await createRunView(v.data, actor.id, canManageTeam);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/run-views/update
+// Owner, or team-manage for team views.
+router.post('/payroll/run-views/update', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    id:      z.string().uuid(),
+    name:    z.string().trim().min(1).max(80).optional(),
+    filters: z.record(z.string(), z.unknown()).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const canManageTeam = await userCan(actor, 'finance.payroll.run_views.manage_team');
+    const data = await updateRunView(v.data, actor.id, canManageTeam);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/run-views/delete
+// Owner, or team-manage for team views.
+router.post('/payroll/run-views/delete', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const canManageTeam = await userCan(actor, 'finance.payroll.run_views.manage_team');
+    await deleteRunView(v.data.id, actor.id, canManageTeam);
+    return c.json({ success: true });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Payroll Run Calendar (§15.2)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/runs/calendar
+// Derives scheduled instances from pay-group schedules; links existing runs.
+// Window capped at 186 days (400 if wider).
+router.post('/payroll/runs/calendar', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const v = zv(c, z.object({
+    from:        z.string().regex(DATE, 'from must be YYYY-MM-DD'),
+    to:          z.string().regex(DATE, 'to must be YYYY-MM-DD'),
+    payGroupIds: z.array(z.string().uuid()).max(50).optional(),
+  }).refine(d => d.from <= d.to, { message: 'from must not be after to' }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollRunCalendar(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
 // List available report keys (for the UI to build the report picker).
 router.post('/payroll/reports/list', async c => {
   await requirePermission(c, 'finance.payroll.reports.view');

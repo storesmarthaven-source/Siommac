@@ -1327,6 +1327,12 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create payroll runs, lock inputs, and trigger the calculation step. Stage-3 actions (approve, lock, export) require additional keys added in stage 3.',
     risk: 'high',
   },
+  'finance.payroll.run_views.manage_team': {
+    module: 'Finance', group: 'Payroll Runs',
+    label: 'Manage Team Saved Views',
+    description: 'Create, update, and delete team-scope saved filter views in the payroll runs register. Personal views are managed by their owners without this key.',
+    risk: 'low',
+  },
   'finance.payroll.reports.view': {
     module: 'Finance', group: 'Payroll Runs',
     label: 'View Payroll Reports',

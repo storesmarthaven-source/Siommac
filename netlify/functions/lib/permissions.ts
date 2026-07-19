@@ -357,7 +357,8 @@ export const PERMISSION_KEYS = [
   // ── Finance Payroll Runs (Phase 3 Stage 2) ───────────────────────────────────
   'finance.payroll.view_own',       // employee: view own payslip line (self-scope enforced server-side)
   'finance.payroll.view_all',       // finance staff/manager: view all payroll run data
-  'finance.payroll.run.manage',     // finance staff/manager: create, lock-inputs, calculate runs
+  'finance.payroll.run.manage',          // finance staff/manager: create, lock-inputs, calculate runs
+  'finance.payroll.run_views.manage_team', // finance manager: publish/edit/delete team-scope saved filter views
   'finance.payroll.reports.view',   // finance staff/manager: view payroll reports
   'finance.payroll.reports.export', // finance manager/admin: export payroll reports
   // ── Finance Payroll Runs (Phase 3 Stage 3 — approve / lock / export) ─────────
@@ -662,10 +663,11 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.payroll.nis.view',
     'finance.payroll.nis.verify',
     'finance.payroll.nis.manage',
-    // payroll run keys (stage 2 + stage 3) — all eight
+    // payroll run keys (stage 2 + stage 3) — all eight + run-views team management
     'finance.payroll.view_own',
     'finance.payroll.view_all',
     'finance.payroll.run.manage',
+    'finance.payroll.run_views.manage_team',
     'finance.payroll.payslips.generate',
     'finance.payroll.payslips.distribute',
     'finance.payroll.gl.preview',
