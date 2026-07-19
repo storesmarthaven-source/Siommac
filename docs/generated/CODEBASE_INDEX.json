@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1ea98f951b0be5a087460f656c1f39c15eb3b371",
+    "head": "3fc71db53a5ec8bc6f788c92b965274de578edc5",
     "branch": "main",
-    "fingerprint": "786bed31af08edecaec7b4b8",
+    "fingerprint": "49fd7bb11b646dbacec1c820",
     "indexedFiles": 1422
   },
   "summary": {
     "files": 1119,
-    "symbols": 11121,
+    "symbols": 11122,
     "widgets": 32,
     "routes": 872,
     "routeDefinitions": 873,
@@ -75,7 +75,7 @@
       "id": "communications",
       "counts": {
         "files": 102,
-        "symbols": 940,
+        "symbols": 941,
         "widgets": 0,
         "routes": 75,
         "routeDefinitions": 78,
@@ -2737,8 +2737,8 @@
       "path": "src/api/communicationsCompliance.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 217,
-      "hash": "e9b9440465ab20c7"
+      "lines": 218,
+      "hash": "d656f9083767bbf5"
     },
     {
       "path": "src/api/employees.ts",
@@ -4130,8 +4130,8 @@
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 832,
-      "hash": "99d805c685eb57a8"
+      "lines": 838,
+      "hash": "f198e66b41d8b7c6"
     },
     {
       "path": "src/components/sections/Finance/PayrollOverview.tsx",
@@ -5299,15 +5299,15 @@
       "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 290,
-      "hash": "7a80d568caf92046"
+      "lines": 296,
+      "hash": "a801b74ea0120466"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 280,
-      "hash": "36381fde0358229e"
+      "lines": 302,
+      "hash": "607e84a0407a1767"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
@@ -46413,7 +46413,7 @@
       "name": "useComplianceConversation",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 101,
+      "line": 102,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46425,7 +46425,7 @@
       "name": "useComplianceAccessEvents",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 117,
+      "line": 118,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46437,7 +46437,7 @@
       "name": "useComplianceExports",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 128,
+      "line": 129,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46449,7 +46449,7 @@
       "name": "useRequestComplianceCase",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 142,
+      "line": 143,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46461,7 +46461,7 @@
       "name": "useDecideComplianceCase",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 155,
+      "line": 156,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46473,7 +46473,7 @@
       "name": "useCloseComplianceCase",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 169,
+      "line": 170,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46485,7 +46485,7 @@
       "name": "useRevokeComplianceGrant",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 183,
+      "line": 184,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46497,7 +46497,7 @@
       "name": "useCreateComplianceExport",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 194,
+      "line": 195,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46509,7 +46509,7 @@
       "name": "downloadComplianceExport",
       "kind": "function",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 210,
+      "line": 211,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -72778,7 +72778,7 @@
       "name": "MetricsRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 525,
+      "line": 531,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72790,7 +72790,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 557,
+      "line": 563,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72802,7 +72802,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 616,
+      "line": 622,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72814,7 +72814,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 636,
+      "line": 642,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72827,7 +72827,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 684,
+      "line": 690,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72840,7 +72840,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 688,
+      "line": 694,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -72850,7 +72850,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 689,
+      "line": 695,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -72860,7 +72860,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 740,
+      "line": 746,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72873,7 +72873,7 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 797,
+      "line": 803,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -95221,10 +95221,20 @@
       "tags": []
     },
     {
-      "name": "ComplianceCasesView",
+      "name": "isExpired",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
       "line": 69,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCasesView",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 73,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -95236,7 +95246,7 @@
       "name": "StatusPill",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 187,
+      "line": 193,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95248,7 +95258,7 @@
       "name": "CaseTableSkeleton",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 192,
+      "line": 198,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95260,7 +95270,7 @@
       "name": "ComplianceCaseDetailRail",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 202,
+      "line": 208,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95272,7 +95282,7 @@
       "name": "GrantPill",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 279,
+      "line": 285,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95336,7 +95346,7 @@
       "name": "ConversationRailItem",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
-      "line": 216,
+      "line": 230,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95348,7 +95358,7 @@
       "name": "ComplianceTimeline",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
-      "line": 237,
+      "line": 259,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95360,7 +95370,7 @@
       "name": "ComplianceMessageRow",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
-      "line": 254,
+      "line": 276,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -136585,7 +136595,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 121,
+      "line": 122,
       "module": "communications"
     },
     {
@@ -136593,7 +136603,7 @@
       "helper": "apiPost",
       "caller": "useCloseComplianceCase",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 173,
+      "line": 174,
       "module": "communications"
     },
     {
@@ -136601,7 +136611,7 @@
       "helper": "apiPost",
       "caller": "useDecideComplianceCase",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 159,
+      "line": 160,
       "module": "communications"
     },
     {
@@ -136625,7 +136635,7 @@
       "helper": "apiPost",
       "caller": "useRequestComplianceCase",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 146,
+      "line": 147,
       "module": "communications"
     },
     {
@@ -136633,7 +136643,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 110,
+      "line": 111,
       "module": "communications"
     },
     {
@@ -136649,7 +136659,7 @@
       "helper": "apiPost",
       "caller": "useCreateComplianceExport",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 198,
+      "line": 199,
       "module": "communications"
     },
     {
@@ -136657,7 +136667,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 211,
+      "line": 212,
       "module": "communications"
     },
     {
@@ -136665,7 +136675,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 133,
+      "line": 134,
       "module": "communications"
     },
     {
@@ -136673,7 +136683,7 @@
       "helper": "apiPost",
       "caller": "useRevokeComplianceGrant",
       "file": "src/api/communicationsCompliance.ts",
-      "line": 188,
+      "line": 189,
       "module": "communications"
     },
     {

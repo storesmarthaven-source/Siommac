@@ -3768,15 +3768,15 @@ useComplianceSummary	function	communications	true	hook	src/api/communicationsCom
 useComplianceCases	function	communications	true	hook	src/api/communicationsCompliance.ts	64	
 useComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	75	
 useComplianceConversationSearch	function	communications	true	hook	src/api/communicationsCompliance.ts	87	
-useComplianceConversation	function	communications	true	hook	src/api/communicationsCompliance.ts	101	
-useComplianceAccessEvents	function	communications	true	hook	src/api/communicationsCompliance.ts	117	
-useComplianceExports	function	communications	true	hook	src/api/communicationsCompliance.ts	128	
-useRequestComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	142	
-useDecideComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	155	
-useCloseComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	169	
-useRevokeComplianceGrant	function	communications	true	hook	src/api/communicationsCompliance.ts	183	
-useCreateComplianceExport	function	communications	true	hook	src/api/communicationsCompliance.ts	194	
-downloadComplianceExport	function	communications	true		src/api/communicationsCompliance.ts	210	
+useComplianceConversation	function	communications	true	hook	src/api/communicationsCompliance.ts	102	
+useComplianceAccessEvents	function	communications	true	hook	src/api/communicationsCompliance.ts	118	
+useComplianceExports	function	communications	true	hook	src/api/communicationsCompliance.ts	129	
+useRequestComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	143	
+useDecideComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	156	
+useCloseComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	170	
+useRevokeComplianceGrant	function	communications	true	hook	src/api/communicationsCompliance.ts	184	
+useCreateComplianceExport	function	communications	true	hook	src/api/communicationsCompliance.ts	195	
+downloadComplianceExport	function	communications	true		src/api/communicationsCompliance.ts	211	
 SignalOpt	type	hr	false		src/api/employees.ts	22	
 opt	function	hr	false		src/api/employees.ts	23	
 unwrap	function	hr	false		src/api/employees.ts	25	
@@ -6244,15 +6244,15 @@ promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCo
 runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	282	PayrollCommandCenter
 submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	288	PayrollCommandCenter
 PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	482	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	525	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	557	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	616	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	636	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	684	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	688	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	689	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	740	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	797	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	531	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	563	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	622	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	642	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	690	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	694	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	695	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	746	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	803	
 PAGE_SIZE	variable	payroll	false	component	src/components/sections/Finance/PayrollOverview.tsx	53	
 paginate	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	55	
 runStatusTone	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	63	
@@ -8366,19 +8366,20 @@ statusTone	function	communications	false		src/components/sections/Messages/messe
 fmtDate	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	46	
 relShort	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	52	
 isExpiringSoon	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	64	
-ComplianceCasesView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	69	
-StatusPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	187	
-CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	192	
-ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	202	
-GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	279	
+isExpired	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	69	
+ComplianceCasesView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	73	
+StatusPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	193	
+CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	198	
+ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	208	
+GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	285	
 fmtClock	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	25	
 fmtDay	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	28	
 fmtExpiry	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	31	
 fmtSize	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	36	
 ComplianceConversationsView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	43	
-ConversationRailItem	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	216	
-ComplianceTimeline	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	237	
-ComplianceMessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	254	
+ConversationRailItem	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	230	
+ComplianceTimeline	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	259	
+ComplianceMessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	276	
 ComplianceSubview	type	communications	true		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	13	
 ComplianceStateValue	interface	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	15	
 ComplianceStateContext	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	26	

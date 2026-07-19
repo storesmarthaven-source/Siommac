@@ -96,8 +96,9 @@ export function useComplianceConversationSearch(filters: ComplianceConversationS
   });
 }
 
-/** Read-only conversation page. The read records an audited `page_read`, so the
- *  request is idempotency-keyed (stable per case+thread+cursor). */
+/** Read-only conversation page. Each actual read records fresh audited evidence
+ *  (`page_read`), so the request carries a NEW uuid idempotency key per fetch —
+ *  the backend deliberately does not suppress legitimate re-reads. */
 export function useComplianceConversation(caseId: string | null, threadId: string | null, cursor?: string | null) {
   return useQuery({
     queryKey: complianceKeys.conversation(caseId ?? '', threadId ?? '', cursor),
@@ -105,7 +106,7 @@ export function useComplianceConversation(caseId: string | null, threadId: strin
     queryFn: async (): Promise<ComplianceMessagePage> => {
       const req: ComplianceConversationReadRequest = {
         caseId: caseId!, threadId: threadId!, cursor,
-        idempotencyKey: `read:${caseId}:${threadId}:${cursor ?? 'first'}`,
+        idempotencyKey: crypto.randomUUID(),
       };
       const res = await apiPost<{ success: boolean; data: ComplianceMessagePage }>(
         'communications/compliance/conversations/read', asArgs(req));
@@ -210,7 +211,7 @@ export function useCreateComplianceExport() {
 export async function downloadComplianceExport(exportId: string): Promise<ComplianceExportDownloadResponse> {
   const res = await apiPost<{ success: boolean; data: ComplianceExportDownloadResponse }>(
     'communications/compliance/exports/download',
-    { exportId, idempotencyKey: `download:${exportId}` },
+    { exportId, idempotencyKey: crypto.randomUUID() },
     { retryable: false });
   return res.data;
 }

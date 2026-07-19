@@ -66,6 +66,10 @@ function isExpiringSoon(expiresAt: string | null): boolean {
   return new Date(expiresAt).getTime() - Date.now() < 24 * 3600_000;
 }
 
+function isExpired(validUntil: string): boolean {
+  return new Date(validUntil).getTime() <= Date.now();
+}
+
 export function ComplianceCasesView() {
   const { selectedCaseId, setSelectedCaseId, setSubview } = useComplianceState();
   const [search, setSearch] = useState('');
@@ -80,8 +84,10 @@ export function ComplianceCasesView() {
       const matchesText = !q || c.caseNo.toLowerCase().includes(q) || c.title.toLowerCase().includes(q);
       const matchesStatus =
         statusFilter === 'pending'  ? c.status === 'pending_approval' :
-        statusFilter === 'approved' ? c.status === 'approved' :
-        statusFilter === 'expiring' ? isExpiringSoon(c.validUntil) :
+        // "Active Cases" KPI semantics: approved AND unexpired (server counts the
+        // full dataset; this client filter only sees the loaded page — see #6).
+        statusFilter === 'approved' ? (c.status === 'approved' && !isExpired(c.validUntil)) :
+        statusFilter === 'expiring' ? (c.status === 'approved' && isExpiringSoon(c.validUntil)) :
         true;
       return matchesText && matchesStatus;
     });

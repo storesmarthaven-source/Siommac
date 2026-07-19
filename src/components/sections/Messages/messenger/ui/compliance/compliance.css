@@ -219,6 +219,8 @@
 .smc-conv__listitem { width: 100%; text-align: left; display: grid; grid-template-columns: 30px minmax(0,1fr); gap: 9px; align-items: start; padding: 10px; border: 1px solid transparent; border-radius: 8px; background: var(--smc-card); cursor: pointer; }
 .smc-conv__listitem:hover { background: #f6f8fb; }
 .smc-conv__listitem.is-active { background: #eef3fb; border-color: #c3d3ee; }
+.smc-conv__listitem.is-locked { opacity: .6; cursor: not-allowed; }
+.smc-conv__listitem.is-locked:hover { background: var(--smc-card); }
 .smc-conv__listmain .smc-gpill { justify-self: start; }
 .smc-conv__listic { display: grid; place-items: center; width: 30px; height: 30px; border-radius: 7px; background: #eef1f6; color: #58718b; }
 .smc-conv__listic svg { width: 15px; height: 15px; }

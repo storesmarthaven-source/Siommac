@@ -46,12 +46,13 @@ export function ComplianceConversationsView() {
   const [exportOpen, setExportOpen] = useState(false);
   const [revokeOpen, setRevokeOpen] = useState(false);
 
+  // Only cases whose capability says at least one thread is readable.
   const openCases = useMemo(
-    () => (casesData?.items ?? []).filter(c => c.status === 'approved'),
+    () => (casesData?.items ?? []).filter(c => c.status === 'approved' && c.capabilities.canReadConversation),
     [casesData],
   );
 
-  // Auto-select the first approved case when arriving without a selection.
+  // Auto-select the first readable case when arriving without a selection.
   useEffect(() => {
     if (!selectedCaseId && openCases.length > 0) setSelectedCaseId(openCases[0]!.id);
   }, [selectedCaseId, openCases, setSelectedCaseId]);
@@ -59,14 +60,25 @@ export function ComplianceConversationsView() {
   const { data: detail } = useComplianceCase(selectedCaseId);
   const threads = detail?.threads ?? [];
 
-  // Auto-select the first conversation once a case's detail loads.
-  useEffect(() => {
-    if (detail && threads.length > 0 && !threads.some(t => t.threadId === selectedThreadId)) {
-      setSelectedThreadId(threads[0]!.threadId);
-    }
-  }, [detail, threads, selectedThreadId, setSelectedThreadId]);
+  // A thread is readable only when ITS grant carries canReadConversation. A
+  // case-level capability just means SOME grant exists, not one per thread.
+  const readableThreadIds = useMemo(
+    () => threads
+      .filter(t => detail?.grants.find(g => g.threadId === t.threadId)?.capabilities.canReadConversation)
+      .map(t => t.threadId),
+    [detail, threads],
+  );
 
-  const { data: page, isLoading: pageLoading } = useComplianceConversation(selectedCaseId, selectedThreadId);
+  // Auto-select the first READABLE conversation once a case's detail loads.
+  useEffect(() => {
+    if (detail && readableThreadIds.length > 0 && !(selectedThreadId && readableThreadIds.includes(selectedThreadId))) {
+      setSelectedThreadId(readableThreadIds[0]!);
+    }
+  }, [detail, readableThreadIds, selectedThreadId, setSelectedThreadId]);
+
+  // Never attempt a read on a locked/revoked thread — it would 403.
+  const readableSelected = selectedThreadId && readableThreadIds.includes(selectedThreadId) ? selectedThreadId : null;
+  const { data: page, isLoading: pageLoading } = useComplianceConversation(readableSelected ? selectedCaseId : null, readableSelected);
   const { data: eventsData } = useComplianceAccessEvents(selectedCaseId ? { caseId: selectedCaseId } : {});
   const activeThread = threads.find(t => t.threadId === selectedThreadId) ?? null;
   const activeTitle = page?.thread.subject ?? activeThread?.subject ?? 'Conversation';
@@ -104,14 +116,16 @@ export function ComplianceConversationsView() {
         <ul className="smc-conv__list">
           {threads.map(t => {
             const grant = detail?.grants.find(g => g.threadId === t.threadId);
+            const readable = readableThreadIds.includes(t.threadId);
             return (
               <ConversationRailItem
                 key={t.id}
                 title={t.subject ?? 'Untitled conversation'}
                 subtitle={[t.threadType, t.sourceModule].filter(Boolean).join(' · ')}
                 grantStatus={grant?.status ?? 'none'}
+                readable={readable}
                 active={t.threadId === selectedThreadId}
-                onSelect={() => setSelectedThreadId(t.threadId)}
+                onSelect={() => { if (readable) setSelectedThreadId(t.threadId); }}
               />
             );
           })}
@@ -214,19 +228,27 @@ export function ComplianceConversationsView() {
 }
 
 function ConversationRailItem(
-  { title, subtitle, grantStatus, active, onSelect }:
-  { title: string; subtitle: string; grantStatus: string; active: boolean; onSelect: () => void },
+  { title, subtitle, grantStatus, readable, active, onSelect }:
+  { title: string; subtitle: string; grantStatus: string; readable: boolean; active: boolean; onSelect: () => void },
 ) {
-  const state = grantStatus === 'active' ? 'Access active' : grantStatus === 'expired' ? 'Expired' : grantStatus === 'revoked' ? 'Revoked' : 'No grant';
+  const state = !readable ? 'Locked' : grantStatus === 'active' ? 'Access active' : grantStatus === 'expired' ? 'Expired' : grantStatus === 'revoked' ? 'Revoked' : 'No grant';
+  const tone = !readable ? 'muted' : grantStatus === 'active' ? 'ok' : grantStatus === 'expired' ? 'warn' : 'muted';
   return (
     <li>
-      <button type="button" className={`smc-conv__listitem${active ? ' is-active' : ''}`} onClick={onSelect} aria-current={active}>
-        <span className="smc-conv__listic"><MessageSquare /></span>
+      <button
+        type="button"
+        className={`smc-conv__listitem${active ? ' is-active' : ''}${readable ? '' : ' is-locked'}`}
+        onClick={onSelect}
+        disabled={!readable}
+        aria-current={active}
+        title={readable ? undefined : 'No active grant for this conversation'}
+      >
+        <span className="smc-conv__listic">{readable ? <MessageSquare /> : <LockKeyhole />}</span>
         <span className="smc-conv__listmain">
           <strong>{title}</strong>
           <small>{subtitle}</small>
-          <span className={`smc-gpill smc-gpill--${grantStatus === 'active' ? 'ok' : grantStatus === 'expired' ? 'warn' : 'muted'}`}>
-            {grantStatus === 'active' ? <CheckCircle2 /> : <Clock3 />} {state}
+          <span className={`smc-gpill smc-gpill--${tone}`}>
+            {!readable ? <LockKeyhole /> : grantStatus === 'active' ? <CheckCircle2 /> : <Clock3 />} {state}
           </span>
         </span>
       </button>
