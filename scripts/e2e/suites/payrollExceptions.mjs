@@ -270,16 +270,23 @@ export default async function run(h) {
     expect((notif ?? []).length >= 1, 'assignee notified');
   });
 
-  await test('escalate — same idempotencyKey returns original, no 2nd activity', async () => {
+  await test('escalate — same idempotencyKey returns original, no duplicate side-effects', async () => {
+    // The command route returns the finding object (not a {duplicate} envelope), so assert the
+    // real replay invariants: same finding, unchanged version, and no 2nd activity/event row.
     const sameKey = key('esc-idem');
     const v0 = await curVer(ctx.f.warning.id);
     const r1 = await api('finance/payroll/findings/escalate', T.mgr, { findingId: ctx.f.warning.id, expectedVersion: v0, idempotencyKey: sameKey, assigneeId: fmgr2.id });
     ok(r1, `first escalate: ${r1.body.message}`);
-    const { count: c1 } = await sb.from('finance_payroll_finding_activity').select('id', { count: 'exact', head: true }).eq('finding_id', ctx.f.warning.id).eq('activity_type', 'escalate');
+    const actCount = async () => (await sb.from('finance_payroll_finding_activity').select('id', { count: 'exact', head: true }).eq('finding_id', ctx.f.warning.id).eq('activity_type', 'escalate')).count;
+    const evCount  = async () => (await sb.from('app_events').select('id', { count: 'exact', head: true }).eq('event_type', 'finance.payroll.finding.escalate').eq('source_entity_id', ctx.f.warning.id)).count;
+    const a1 = await actCount(), e1 = await evCount();
     const r2 = await api('finance/payroll/findings/escalate', T.mgr, { findingId: ctx.f.warning.id, expectedVersion: v0, idempotencyKey: sameKey, assigneeId: fmgr2.id });
-    ok(r2, 'replay ok'); expect(r2.body.data.version === r1.body.data.version, 'replay returns same version (no 2nd bump)');
-    const { count: c2 } = await sb.from('finance_payroll_finding_activity').select('id', { count: 'exact', head: true }).eq('finding_id', ctx.f.warning.id).eq('activity_type', 'escalate');
-    expect(c1 === c2, `no new activity on replay (${c1} -> ${c2})`);
+    ok(r2, 'replay is success');
+    expect(r2.body.data.id === r1.body.data.id, 'replay returns the same finding id');
+    expect(r2.body.data.version === r1.body.data.version, `replay version unchanged (${r1.body.data.version} vs ${r2.body.data.version})`);
+    const a2 = await actCount(), e2 = await evCount();
+    expect(a1 === a2, `no new escalate activity on replay (${a1} -> ${a2})`);
+    expect(e1 === e2, `no duplicate escalate event on replay (${e1} -> ${e2})`);
   });
 
   await test('escalate — stale expectedVersion → 409', async () => {
