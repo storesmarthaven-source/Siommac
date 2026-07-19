@@ -245,6 +245,7 @@ export const PAYROLL_PERIOD_SALTS = Object.freeze({
   payrollOvertimeRules:     Object.freeze({ run: 55 }),
   payrollStatutorySnapshot: Object.freeze({ run: 66 }),
   payslipRender:            Object.freeze({ run: 71 }),
+  payrollExceptions:        Object.freeze({ runA: 21, runB: 22 }),
   payrollRunsRegister:      Object.freeze({ runA: 72, runB: 73, runC: 74, runD: 75, runE: 76 }),
 });
 

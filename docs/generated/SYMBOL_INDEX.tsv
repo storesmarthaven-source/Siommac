@@ -702,6 +702,17 @@ listAllPayrollFindings	function	payroll	true		netlify/functions/lib/finance/payr
 getPayrollFinding	function	payroll	true		netlify/functions/lib/finance/payroll/findings.ts	158	
 commandPayrollFinding	function	payroll	true		netlify/functions/lib/finance/payroll/findings.ts	172	
 findRunOwner	function	payroll	false		netlify/functions/lib/finance/payroll/findings.ts	229	
+getPayrollWorkQueue	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	24	
+DbActivityRow	interface	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	46	
+toActivity	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	59	
+ACTIVITY_SELECT	variable	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	77	
+listFindingActivity	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	81	
+kindOf	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	111	
+queueSeverityOf	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	114	
+allowedActionsFor	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	117	
+getPayrollFindingDetail	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	125	
+nameOf	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	144	getPayrollFindingDetail
+commentPayrollFinding	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	182	
 PayrollCertification	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	4	
 PayrollFundingConfirmation	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	20	
 PayrollReleaseCertificate	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	37	
@@ -2697,9 +2708,9 @@ b	function	finance	false		netlify/functions/routes/financeNis.ts	25
 router	variable	finance	false		netlify/functions/routes/financeOverview.ts	24	
 b	function	finance	false		netlify/functions/routes/financeOverview.ts	26	
 fail	function	finance	false		netlify/functions/routes/financeOverview.ts	29	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	109	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	112	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	116	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	114	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	117	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	121	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3208,14 +3219,14 @@ SALT_DATE_BASE_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	2
 SALT_WINDOW_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	219	
 seedDateFromTag	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	220	
 PAYROLL_PERIOD_SALTS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	229	
-PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	253	
-yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	261	
-saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	268	
-assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	280	
-overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	281	assertPayrollPeriodAllocatorDisjoint
-payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	328	
-payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	339	
-payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	352	
+PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	254	
+yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	262	
+saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	269	
+assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	281	
+overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	282	assertPayrollPeriodAllocatorDisjoint
+payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	329	
+payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	340	
+payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	353	
 here	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	18	
 defaultSuitesDir	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	19	
 escapeRegExp	function	payroll	false		scripts/e2e/payroll-contract-gate.mjs	21	
@@ -3445,6 +3456,15 @@ getA	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	238
 WIN	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	239	run
 getB	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	240	run
 snap	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	410	run
+title	variable	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	15	
+run	function	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	17	
+key	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	39	run
+seedRun	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	70	run
+seedCalcChain	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	82	run
+seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	95	run
+wq	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	118	run
+findRow	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	119	run
+curVer	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	122	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollGl.mjs	24	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	26	
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	37	
@@ -3549,15 +3569,15 @@ waitFor	function	workflow	false	test	scripts/e2e/suites/workflowAdmin.mjs	55	run
 MARKER	variable	testing	false		scripts/e2e/sweep-orphans.mjs	40	
 serviceClient	function	testing	true		scripts/e2e/sweep-orphans.mjs	43	
 USER_KEYED	array	testing	false		scripts/e2e/sweep-orphans.mjs	60	
-BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	112	
-TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	134	
-sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	152	
-vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	154	sweepOrphans
-chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	159	sweepOrphans
-sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	165	sweepOrphans
-collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	185	sweepOrphans
-sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	204	sweepOrphans
-sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	214	sweepOrphans
+BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	116	
+TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	138	
+sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	156	
+vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	158	sweepOrphans
+chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	163	sweepOrphans
+sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	169	sweepOrphans
+collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	189	sweepOrphans
+sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	208	sweepOrphans
+sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	218	sweepOrphans
 REQ	array	finance	false		scripts/e2e/verify-finance-ui.mjs	11	
 env	object	finance	false		scripts/e2e/verify-finance-ui.mjs	12	
 line	variable	finance	false		scripts/e2e/verify-finance-ui.mjs	13	
@@ -11128,6 +11148,26 @@ PayrollRunRegisterItem	interface	payroll	true		types/payrollControlCenter.ts	124
 PayrollNextRun	interface	payroll	true		types/payrollControlCenter.ts	145	
 PayrollRunRegisterPage	interface	payroll	true		types/payrollControlCenter.ts	163	
 PayrollControlCenterResponse	interface	payroll	true		types/payrollControlCenter.ts	170	
+PayrollFindingKind	type	payroll	true		types/payrollFindings.ts	10	
+PayrollFindingQueueSeverity	type	payroll	true		types/payrollFindings.ts	14	
+PayrollFindingQueueState	type	payroll	true		types/payrollFindings.ts	17	
+PayrollFindingActivityType	type	payroll	true		types/payrollFindings.ts	20	
+PayrollFindingAllowedAction	type	payroll	true		types/payrollFindings.ts	25	
+PayrollWorkQueueTab	type	payroll	true		types/payrollFindings.ts	28	
+PayrollPageResult	interface	payroll	true		types/payrollFindings.ts	31	
+PayrollFindingOwner	interface	payroll	true		types/payrollFindings.ts	38	
+PayrollFindingRunRef	interface	payroll	true		types/payrollFindings.ts	44	
+PayrollFindingImpact	interface	payroll	true		types/payrollFindings.ts	52	
+PayrollFindingQueueItem	interface	payroll	true		types/payrollFindings.ts	60	
+PayrollFindingActivity	interface	payroll	true		types/payrollFindings.ts	79	
+PayrollFindingEvidenceRef	interface	payroll	true		types/payrollFindings.ts	92	
+PayrollFindingResolution	interface	payroll	true		types/payrollFindings.ts	99	
+PayrollFindingDetail	interface	payroll	true		types/payrollFindings.ts	106	
+PayrollWorkQueueRequest	interface	payroll	true		types/payrollFindings.ts	116	
+PayrollWorkQueueResult	interface	payroll	true		types/payrollFindings.ts	133	
+PayrollFindingEscalateRequest	interface	payroll	true		types/payrollFindings.ts	143	
+PayrollFindingCommentRequest	interface	payroll	true		types/payrollFindings.ts	152	
+PayrollFindingCommentResult	interface	payroll	true		types/payrollFindings.ts	160	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	

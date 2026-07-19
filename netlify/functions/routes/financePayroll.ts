@@ -37,6 +37,11 @@ import {
   listPayrollFindings,
 } from '../lib/finance/payroll/findings';
 import {
+  getPayrollWorkQueue,
+  getPayrollFindingDetail,
+  commentPayrollFinding,
+} from '../lib/finance/payroll/findingsWorkQueue';
+import {
   compareCalculationVersions,
   getCalculationAttempt,
   getCalculationVersion,
@@ -1318,6 +1323,111 @@ router.post('/payroll/findings/reopen', async c => {
       command: 'reopen',
       idempotencyKey: v.data.idempotencyKey,
       note: v.data.reason,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Exceptions & Approvals work-queue (spec §15.3)
+// ─────────────────────────────────────────────────────────────────────────────
+
+// POST /api/finance/payroll/findings/work-queue — combined findings + approval-task
+// stream (strict DB keyset union). Read-only; view_all.
+router.post('/payroll/findings/work-queue', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    cursor:        z.string().max(200).optional(),
+    limit:         z.number().int().min(1).max(100).default(25),
+    tab:           z.enum(['all', 'approvals', 'blockers', 'warnings', 'resolved']).optional(),
+    kinds:         z.array(z.enum(['approval', 'blocker', 'warning'])).optional(),
+    severities:    z.array(z.enum(['critical', 'high', 'medium', 'low'])).optional(),
+    states:        z.array(z.enum(['open', 'in_progress', 'resolved', 'waived'])).optional(),
+    runIds:        z.array(z.string().uuid()).optional(),
+    ownerId:       z.string().max(200).optional(),
+    search:        z.string().trim().max(200).optional(),
+    selectedId:    z.string().max(220).optional(),
+    activityCursor: z.string().max(200).optional(),
+    activityLimit: z.number().int().min(1).max(100).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollWorkQueue(v.data);
+    // Hydrate the optional selected detail — findings only; approval "task:" rows
+    // deep-link to the workflow decision path and carry no finding detail here.
+    if (v.data.selectedId && !v.data.selectedId.startsWith('task:')) {
+      data.selected = await getPayrollFindingDetail(v.data.selectedId, {
+        cursor: v.data.activityCursor,
+        limit: v.data.activityLimit,
+      });
+    }
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/findings/detail — one finding + its activity feed.
+// NEW route (does not change the existing findings/get contract). view_all.
+router.post('/payroll/findings/detail', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    findingId:     z.string().uuid(),
+    activityCursor: z.string().max(200).optional(),
+    activityLimit: z.number().int().min(1).max(100).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPayrollFindingDetail(v.data.findingId, {
+      cursor: v.data.activityCursor,
+      limit: v.data.activityLimit,
+    });
+    if (!data) return c.json({ success: false, message: 'Payroll finding not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/findings/escalate — reassign/escalate ownership (v1: no
+// severity change). Reuses finance.payroll.finding.assign (DEC-EXC-007).
+router.post('/payroll/findings/escalate', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.finding.assign');
+  const v = zv(c, z.object({
+    findingId:       z.string().uuid(),
+    expectedVersion: z.number().int().positive(),
+    idempotencyKey:  z.string().trim().min(1).max(200),
+    assigneeId:      z.string().min(1).max(200),
+    note:            z.string().trim().max(1000).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commandPayrollFinding({
+      findingId: v.data.findingId,
+      actorId: actor.id,
+      expectedVersion: v.data.expectedVersion,
+      command: 'escalate',
+      idempotencyKey: v.data.idempotencyKey,
+      assigneeId: v.data.assigneeId,
+      note: v.data.note,
+    });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/findings/comment — append-only annotation (no state
+// change, allowed on submitted runs). view_all (DEC-EXC-007).
+router.post('/payroll/findings/comment', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    findingId:       z.string().uuid(),
+    idempotencyKey:  z.string().trim().min(1).max(200),
+    body:            z.string().trim().min(1).max(4000),
+    expectedVersion: z.number().int().positive().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await commentPayrollFinding({
+      findingId: v.data.findingId,
+      actorId: actor.id,
+      idempotencyKey: v.data.idempotencyKey,
+      body: v.data.body,
     });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
