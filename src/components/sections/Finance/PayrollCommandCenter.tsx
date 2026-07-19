@@ -17,7 +17,8 @@ import { type VNode } from 'preact';
 import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks';
 import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, useInstalledWidgetPackages,
+  WIDGET_REGISTRY, commitPreviewWidget,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { PageHeader, KpiTile } from '@ui';
@@ -217,15 +218,53 @@ function ReadinessDoughnut({ passed, applicable, state }: { passed: number; appl
   );
 }
 
-// ── Skeleton (preserve final geometry) ─────────────────────────────────────────
-function SkeletonPage(): VNode {
+// ── Ready gate ──────────────────────────────────────────────────────────────
+// The page reveals as ONE unit only when EVERY initial dependency has resolved: the
+// control-center payload AND both widget-board layouts AND the installed-widget registry.
+// Gating on the payload alone (the old behaviour) let the boards mount into an EMPTY
+// layout — `useBoardLayout` returns an empty board while its own query loads — so the
+// portfolio painted, then the KPI/operational tiles filled in a beat later ("KPI card
+// loads last"). Each input is an independently-keyed query, so observing them at the page
+// costs no extra fetch (they dedupe with the boards' own subscriptions). A settled-but-
+// errored layout or registry query reports not-loading, so a backend hiccup reveals the
+// page (local widgets still render) rather than trapping it on the skeleton forever.
+export function commandCenterReady(s: {
+  hasData: boolean;
+  mainLayoutLoading: boolean;
+  kpiLayoutLoading: boolean;
+  registryLoading: boolean;
+}): boolean {
+  return s.hasData && !s.mainLayoutLoading && !s.kpiLayoutLoading && !s.registryLoading;
+}
+
+// ── Skeleton (mirrors the final CC geometry so the reveal doesn't shift) ───────
+// Body only — the header-shaped placeholder is rendered in the header's slot (outside
+// `.pcc`) so the real PageHeader reveals in place without pushing the body down.
+function SkeletonBody(): VNode {
   return (
     <>
       <div class="pcc-skel-band pcc-skel-anim" />
-      <div class="pcc-skel-metrics">{Array.from({ length: 6 }).map((_, i) => <div key={i} class="pcc-skel-metric pcc-skel-anim" />)}</div>
+      <div class="pcc-skel-kpis">{Array.from({ length: 5 }).map((_, i) => <div key={i} class="pcc-skel-kpi pcc-skel-anim" />)}</div>
       <div class="pcc-skel-board">{Array.from({ length: 3 }).map((_, i) => <div key={i} class="pcc-skel-card pcc-skel-anim" />)}</div>
-      <div class="pcc-skel-register pcc-skel-anim" />
+      <div class="pcc-skel-lower">
+        <div class="pcc-skel-register pcc-skel-anim" />
+        <div class="pcc-skel-rail pcc-skel-anim" />
+      </div>
     </>
+  );
+}
+// Header-shaped placeholder — same box metrics as `.ui-page-header` (48px icon chip +
+// text stack, matching margins/padding) so revealing the real header causes no shift.
+function SkeletonHeader(): VNode {
+  return (
+    <div class="pcc-skel-head" aria-hidden="true">
+      <div class="pcc-skel-head-icon pcc-skel-anim" />
+      <div class="pcc-skel-head-text">
+        <div class="pcc-skel-head-crumb pcc-skel-anim" />
+        <div class="pcc-skel-head-title pcc-skel-anim" />
+        <div class="pcc-skel-head-sub pcc-skel-anim" />
+      </div>
+    </div>
   );
 }
 
@@ -257,13 +296,26 @@ export function PayrollCommandCenter(): VNode {
   const [editing, setEditing] = useState(false);
   const [libOpen, setLibOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, setAsDefault, resetLayout, isDefaultDirty } = useBoardLayout(PAGE_KEY, defaultLayout());
+  const { layout, addWidget, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
+  // Observe the KPI board's own layout query + the installed-widget registry at the PAGE
+  // level so the reveal can wait for them. Both dedupe by query key with the boards' own
+  // subscriptions (WidgetBoardZone → useBoardLayout, WidgetBoard → useInstalledWidgetPackages),
+  // so this adds no network cost — it only lets the page gate on their loading state.
+  const kpiLayoutLoading = useBoardLayout(KPI_PAGE_KEY, defaultKpiLayout()).isLoading;
+  const pkgQuery = useInstalledWidgetPackages();
   const [savingDefault, setSavingDefault] = useState(false);
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
   const userPermissions = useMemo(() => Array.from(new Set(WIDGET_REGISTRY.flatMap(w => w.dataSource.permissions))).filter(can), []);
   const promoteDefault = async (): Promise<void> => { if (savingDefault) return; setSavingDefault(true); try { await setAsDefault(); } finally { setSavingDefault(false); } };
+
+  // The whole page reveals as one unit once data + both board layouts + the registry are ready.
+  const ready = commandCenterReady({ hasData: !!data, mainLayoutLoading, kpiLayoutLoading, registryLoading: pkgQuery.isLoading });
+  // Chrome = the real PageHeader (with its data-dependent New-Run action + board toolbar). It
+  // shows on reveal AND on the error state; during the initial load a header-shaped skeleton
+  // reserves its space so revealing the header never shifts the body down.
+  const showChrome = ready || (q.isError && !denied);
 
   // ── Lifecycle actions → the real run drawer + create wizard (contract §8) ──
   const [drawerRunId, setDrawerRunId] = useState<string | null>(null);
@@ -416,9 +468,9 @@ export function PayrollCommandCenter(): VNode {
 
   return (
     <>
-      {header}
+      {showChrome ? header : <SkeletonHeader />}
       <div class="pcc">
-      {/* ── Error / loading gate ── */}
+      {/* ── Error / loading gate ── everything below the header reveals atomically once `ready` ── */}
       {q.isError && !denied ? (
         <div class="pcc-state pcc-state--error">
           <i class="fa-solid fa-triangle-exclamation" />
@@ -426,8 +478,8 @@ export function PayrollCommandCenter(): VNode {
           <p>{(q.error)?.message ?? 'Please try again.'}</p>
           <button type="button" class="pcc-hbtn pcc-hbtn--primary" onClick={refresh}>Retry</button>
         </div>
-      ) : (!data && q.isLoading) ? (
-        <SkeletonPage />
+      ) : !ready ? (
+        <SkeletonBody />
       ) : (
         <>
           <PortfolioBand data={data} onOpen={openRun} />

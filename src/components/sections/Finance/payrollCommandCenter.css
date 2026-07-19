@@ -377,15 +377,26 @@
 .pcc .pcc-state i{font-size:38px;color:#aeb7c5;}
 .pcc .pcc-state--denied i{color:#c9a24a;}
 
-/* ── Skeletons (preserve geometry) ───────────────────────────────────────────── */
+/* ── Skeletons (mirror the final CC geometry so the reveal doesn't shift) ─────── */
 .pcc-skel-anim{background:linear-gradient(90deg,#eef1f6 25%,#f6f8fb 37%,#eef1f6 63%);background-size:400% 100%;animation:pcc-shimmer 1.4s ease infinite;border-radius:8px;}
 @keyframes pcc-shimmer{0%{background-position:100% 0;}100%{background-position:-100% 0;}}
+/* Header placeholder — rendered OUTSIDE `.pcc` in the PageHeader slot, so unscoped. Matches
+   `.ui-page-header` box metrics (48px icon chip, margins, padding) to avoid a reveal shift. */
+.pcc-skel-head{display:flex;align-items:center;gap:16px;margin-top:var(--space-10);margin-bottom:32px;padding-bottom:22px;border-bottom:1px solid #eef1f6;}
+.pcc-skel-head-icon{width:48px;height:48px;flex:none;border-radius:13px;}
+.pcc-skel-head-text{display:flex;flex-direction:column;gap:8px;min-width:0;}
+.pcc-skel-head-crumb{width:120px;height:9px;}
+.pcc-skel-head-title{width:230px;height:17px;}
+.pcc-skel-head-sub{width:360px;height:11px;max-width:60vw;}
+/* Body — band · 5 KPI tiles · 3 top widgets (9/7/8) · register + rail (mirrors defaultLayout). */
 .pcc .pcc-skel-band{height:80px;}
-.pcc .pcc-skel-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;}
-.pcc .pcc-skel-metric{height:76px;}
-.pcc .pcc-skel-board{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.pcc .pcc-skel-kpis{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px;margin-top:16px;}
+.pcc .pcc-skel-kpi{height:92px;}
+.pcc .pcc-skel-board{display:grid;grid-template-columns:9fr 7fr 8fr;gap:12px;margin-top:16px;}
 .pcc .pcc-skel-card{height:260px;}
+.pcc .pcc-skel-lower{display:grid;grid-template-columns:2fr 1fr;gap:12px;margin-top:12px;}
 .pcc .pcc-skel-register{height:320px;}
+.pcc .pcc-skel-rail{height:320px;}
 
 .pcc .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap;border:0;}
 
@@ -402,6 +413,7 @@
   .pcc .portfolio-health{grid-template-columns:42px minmax(0,1fr);}
   .pcc .health-stats,.pcc .health-actions{grid-column:1/-1;border-left:0;border-top:1px solid var(--border-soft);}
   .pcc .payroll-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
-  .pcc .pcc-skel-metrics{grid-template-columns:repeat(2,minmax(0,1fr));}
+  .pcc .pcc-skel-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}
   .pcc .pcc-skel-board{grid-template-columns:1fr;}
+  .pcc .pcc-skel-lower{grid-template-columns:1fr;}
 }
