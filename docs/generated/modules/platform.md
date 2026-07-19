@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `f2f7aade63ab98d4c9ad2242`
+Source fingerprint: `cf36c783768e4fb8f0b1e866`
 
-Files: 275 | Symbols: 2507 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
+Files: 275 | Symbols: 2511 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -152,7 +152,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `LiveMapController` | function / component | `src/components/sections/LiveMap/LiveMapController.tsx:65` | `-` |
 | `MyProfileSection` | function / component | `src/components/sections/Profile/MyProfileSection.tsx:1025` | `-` |
 | `ProjectSitesSection` | function / component | `src/components/sections/ProjectSites/ProjectSitesSection.tsx:790` | `-` |
-| `CriticalGrantDialog` | function / component | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx:16` | `-` |
+| `CriticalGrantDialog` | function / component | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx:26` | `-` |
 | `useConsoleUsers` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:31` | `-` |
 | `useUserPermissions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:44` | `-` |
 | `useSetUserPermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:67` | `-` |
@@ -455,7 +455,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/ProjectSites/index.ts` | 11 |
 | frontend-page | `src/components/sections/ProjectSites/mount.ts` | 31 |
 | frontend-page | `src/components/sections/ProjectSites/types.ts` | 69 |
-| frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 57 |
+| frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 119 |
 | frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 349 |
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
 | frontend-page | `src/components/sections/index.ts` | 20 |

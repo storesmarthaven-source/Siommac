@@ -9189,7 +9189,11 @@ SWZ_ICONS	object	settings	true		src/components/sections/Settings/swzIcons.tsx	10
 SwzIcon	function	settings	true	component	src/components/sections/Settings/swzIcons.tsx	34	
 CARD_CYCLE	array	settings	false	ui-tile	src/components/sections/Settings/swzIcons.tsx	39	
 swzCardIconName	function	settings	true	ui-tile	src/components/sections/Settings/swzIcons.tsx	40	
-CriticalGrantDialog	function	platform	true	component	src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	16	
+GrantValidity	interface	platform	true		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	18	
+toLocalInput	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	21	
+pad	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	22	toLocalInput
+CriticalGrantDialog	function	platform	true	component	src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	26	
+submit	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	54	CriticalGrantDialog
 useConsoleUsers	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	31	
 useUserPermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	44	
 refreshIfSelf	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	63	
@@ -9850,7 +9854,7 @@ approveGrantApi	function	platform	true		src/lib/superadminApi.ts	265
 rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	274	
 cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	283	
 setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	294	
-setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	303	
+setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	304	
 THEME_SETTING_KEY	variable	platform	true		src/lib/themePreference.ts	14	
 CACHE_PREFIX	variable	platform	false		src/lib/themePreference.ts	15	
 cacheKey	function	platform	false		src/lib/themePreference.ts	17	

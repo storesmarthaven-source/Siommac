@@ -293,10 +293,11 @@ export async function cancelGrantApi(approvalId: string): Promise<{
  */
 export async function setUserPermissionWithReasonApi(
   userId: string, permission: string, granted: boolean, reason?: string,
+  validity?: { validFrom: string; validUntil: string },
 ): Promise<{ success: boolean; pending?: boolean; approvalId?: string; message?: string; code?: string }> {
   return apiFetch('superadmin/setUserPermission', {
     method: 'POST',
-    body:   { args: { userId, permission, granted, reason } },
+    body:   { args: { userId, permission, granted, reason, ...(validity ?? {}) } },
   });
 }
 

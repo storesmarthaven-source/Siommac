@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "91db9f36b0bb97058425cb9ec38aa2535c05b8d9",
+    "head": "a7eb044139f91925c7c598116007e70e58dcaa58",
     "branch": "main",
-    "fingerprint": "f2f7aade63ab98d4c9ad2242",
+    "fingerprint": "cf36c783768e4fb8f0b1e866",
     "indexedFiles": 1424
   },
   "summary": {
     "files": 1120,
-    "symbols": 11122,
+    "symbols": 11126,
     "widgets": 32,
     "routes": 869,
     "routeDefinitions": 870,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 275,
-        "symbols": 2507,
+        "symbols": 2511,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 41,
@@ -3564,7 +3564,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 469,
-      "hash": "a78388c6d8bd8ec9"
+      "hash": "502d57200dc2f116"
     },
     {
       "path": "src/components/sections/AdminDashboard/AdminDashboardController.tsx",
@@ -6118,8 +6118,8 @@
       "path": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 57,
-      "hash": "aeb7f895d5472101"
+      "lines": 119,
+      "hash": "4a4a2fc5327cdf88"
     },
     {
       "path": "src/components/sections/SuperadminConsole/hooks.ts",
@@ -6560,7 +6560,7 @@
       "module": "security",
       "role": "frontend",
       "lines": 1703,
-      "hash": "1abcc507ac49cfec"
+      "hash": "3cbdf01df7c9079e"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -6615,8 +6615,8 @@
       "path": "src/lib/superadminApi.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 311,
-      "hash": "3190551154c246ae"
+      "lines": 312,
+      "hash": "75e263fdbf0d3e5a"
     },
     {
       "path": "src/lib/themePreference.ts",
@@ -104073,16 +104073,56 @@
       ]
     },
     {
+      "name": "GrantValidity",
+      "kind": "interface",
+      "file": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
+      "line": 18,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "toLocalInput",
+      "kind": "function",
+      "file": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
+      "line": 21,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pad",
+      "kind": "function",
+      "file": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "toLocalInput",
+      "tags": []
+    },
+    {
       "name": "CriticalGrantDialog",
       "kind": "function",
       "file": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
-      "line": 16,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx",
+      "line": 54,
+      "module": "platform",
+      "exported": false,
+      "container": "CriticalGrantDialog",
+      "tags": []
     },
     {
       "name": "useConsoleUsers",
@@ -110890,7 +110930,7 @@
       "name": "setRolePermissionWithReasonApi",
       "kind": "function",
       "file": "src/lib/superadminApi.ts",
-      "line": 303,
+      "line": 304,
       "module": "platform",
       "exported": true,
       "container": "",

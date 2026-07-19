@@ -173,10 +173,10 @@ export function AcUsersPage(): VNode {
     } finally { setSaving(false); }
   };
 
-  const submitCritical = async (reason: string) => {
+  const submitCritical = async (reason: string, validity?: { validFrom: string; validUntil: string }) => {
     const key = criticalKey; setCriticalKey(null);
     if (!key || !selId) return;
-    const res = await setUserPermissionWithReasonApi(selId, key, true, reason);
+    const res = await setUserPermissionWithReasonApi(selId, key, true, reason, validity);
     if (!res.success) toast.error(res.message ?? 'Failed to submit request.');
     else if (res.pending) { setLocal(prev => new Set([...prev, key])); void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') }); toast.success("Submitted for a different authorized reviewer's approval."); }
     else { toast.success(`${key} granted.`); void permsQ.refetch(); }
@@ -455,7 +455,7 @@ export function AcUsersPage(): VNode {
         <CriticalGrantDialog
           permKey={criticalKey}
           targetLabel={user?.fullName ?? ''}
-          onConfirm={r => void submitCritical(r)}
+          onConfirm={(r, v) => void submitCritical(r, v)}
           onCancel={() => setCriticalKey(null)}
         />
       )}
