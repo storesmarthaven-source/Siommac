@@ -37,6 +37,7 @@ export type ComplianceExportStatus = 'requested' | 'uploading' | 'ready' | 'fail
 export interface ComplianceCapabilities {
   canRequestCase: boolean;
   canApproveCase: boolean;
+  canCloseCase: boolean;
   canReadConversation: boolean;
   canRevokeGrant: boolean;
   canExport: boolean;
@@ -198,6 +199,7 @@ export interface ComplianceCaseThreadInput {
 
 export interface ComplianceCasesListRequest {
   status?: ComplianceCaseStatus | 'all';
+  scope?: 'active' | 'expiring_24h';
   search?: string;
   limit?: number;
   cursor?: string | null;

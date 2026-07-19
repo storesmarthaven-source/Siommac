@@ -1887,16 +1887,16 @@ getComplianceSummary	function	platform	true		netlify/functions/lib/messaging/com
 loadNames	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	228	
 grantStatus	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	242	
 caseCapabilities	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	248	
-activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	271	
-applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	285	
-queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	294	
-listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	317	
-getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	429	
-searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	562	
-listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	632	
-listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	714	
-getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	793	
-listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	857	
+activeGrantsForCases	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	274	
+applyCaseCursor	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	288	
+queryCasePage	function	platform	false		netlify/functions/lib/messaging/complianceService.ts	297	
+listComplianceCases	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	331	
+getComplianceCase	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	461	
+searchComplianceConversations	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	594	
+listComplianceAccessEvents	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	664	
+listComplianceExports	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	746	
+getComplianceExportById	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	825	
+listActiveCompliancePermissionHolders	function	platform	true		netlify/functions/lib/messaging/complianceService.ts	889	
 MSG_SQLSTATE_HTTP	object	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	20	
 msgRpcHttpError	function	platform	true		netlify/functions/lib/messaging/messagingRpc.ts	29	
 RpcResponse	interface	platform	false		netlify/functions/lib/messaging/messagingRpc.ts	41	
@@ -2627,18 +2627,18 @@ CASE_TYPES	variable	communications	false		netlify/functions/routes/communication
 ACCESS_EVENT_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	48	
 SummaryGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	61	
 CasesListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	63	
-CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	70	
-CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	72	
-CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	84	
-ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	91	
-ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	110	
-GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	118	
-CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	124	
-AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	130	
-ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	149	
-ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	155	
-ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	182	
-notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	187	
+CaseGetSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	79	
+CaseRequestSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	81	
+CaseDecisionSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	93	
+ConversationSearchSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	100	
+ConversationReadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	119	
+GrantRevokeSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	127	
+CaseCloseSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	133	
+AccessEventsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	139	
+ExportsListSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	158	
+ExportCreateSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	164	
+ExportDownloadSchema	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	191	
+notifyCompliance	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	196	
 router	variable	hr	false		netlify/functions/routes/departments.ts	7	
 DeptRow	interface	hr	false		netlify/functions/routes/departments.ts	9	
 UserRow	interface	hr	false		netlify/functions/routes/departments.ts	17	
@@ -8345,21 +8345,21 @@ RevokeComplianceGrantDialog	function	communications	true	component	src/component
 submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	109	RevokeComplianceGrantDialog
 ComplianceExportDialog	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	135	
 submit	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx	151	ComplianceExportDialog
-StatusFilter	type	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	18	
-STATUS_FILTER_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	19	
-TYPE_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	23	
-STATUS_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	31	
-STATUS_ICON	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	35	
-statusTone	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	39	
-fmtDate	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	46	
-relShort	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	52	
-isExpiringSoon	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	64	
-isExpired	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	69	
-ComplianceCasesView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	73	
-StatusPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	193	
-CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	198	
-ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	208	
-GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	285	
+StatusFilter	type	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	19	
+STATUS_FILTER_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	20	
+TYPE_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	24	
+STATUS_LABEL	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	32	
+STATUS_ICON	object	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	36	
+statusTone	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	40	
+fmtDate	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	47	
+relShort	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	53	
+isExpiringSoon	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	65	
+isExpired	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	70	
+ComplianceCasesView	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	74	
+StatusPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	198	
+CaseTableSkeleton	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	203	
+ComplianceCaseDetailRail	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	213	
+GrantPill	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx	290	
 fmtClock	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	25	
 fmtDay	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	28	
 fmtExpiry	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx	31	
@@ -11058,35 +11058,35 @@ ComplianceAccessEventType	type	platform	true		types/messagingCompliance.ts	22
 ComplianceExportFormat	type	platform	true		types/messagingCompliance.ts	34	
 ComplianceExportStatus	type	platform	true		types/messagingCompliance.ts	35	
 ComplianceCapabilities	interface	platform	true		types/messagingCompliance.ts	37	
-ComplianceSummary	interface	platform	true		types/messagingCompliance.ts	50	
-ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	58	
-ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	63	
-ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	77	
-ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	94	
-ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	111	
-ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	123	
-ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	132	
-ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	144	
-ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	156	
-ComplianceExport	interface	platform	true		types/messagingCompliance.ts	170	
-ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	194	
-ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	199	
-ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	206	
-ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	212	
-ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	216	
-ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	225	
-ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	232	
-ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	238	
-ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	249	
-ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	254	
-ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	262	
-ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	268	
-ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	279	
-ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	284	
-ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	290	
-ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	295	
-ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	306	
-ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	311	
+ComplianceSummary	interface	platform	true		types/messagingCompliance.ts	51	
+ComplianceActorRef	interface	platform	true		types/messagingCompliance.ts	59	
+ComplianceCaseThread	interface	platform	true		types/messagingCompliance.ts	64	
+ComplianceGrant	interface	platform	true		types/messagingCompliance.ts	78	
+ComplianceCaseSummary	interface	platform	true		types/messagingCompliance.ts	95	
+ComplianceCaseDetail	interface	platform	true		types/messagingCompliance.ts	112	
+ComplianceAttachmentMetadata	interface	platform	true		types/messagingCompliance.ts	124	
+ComplianceMessage	interface	platform	true		types/messagingCompliance.ts	133	
+ComplianceMessagePage	interface	platform	true		types/messagingCompliance.ts	145	
+ComplianceAccessEvent	interface	platform	true		types/messagingCompliance.ts	157	
+ComplianceExport	interface	platform	true		types/messagingCompliance.ts	171	
+ComplianceCaseThreadInput	interface	platform	true		types/messagingCompliance.ts	195	
+ComplianceCasesListRequest	interface	platform	true		types/messagingCompliance.ts	200	
+ComplianceCasesListResponse	interface	platform	true		types/messagingCompliance.ts	208	
+ComplianceCaseGetRequest	interface	platform	true		types/messagingCompliance.ts	214	
+ComplianceCaseRequest	interface	platform	true		types/messagingCompliance.ts	218	
+ComplianceCaseDecisionRequest	interface	platform	true		types/messagingCompliance.ts	227	
+ComplianceCaseCloseRequest	interface	platform	true		types/messagingCompliance.ts	234	
+ComplianceConversationSearchRequest	interface	platform	true		types/messagingCompliance.ts	240	
+ComplianceConversationSearchResponse	interface	platform	true		types/messagingCompliance.ts	251	
+ComplianceConversationReadRequest	interface	platform	true		types/messagingCompliance.ts	256	
+ComplianceGrantRevokeRequest	interface	platform	true		types/messagingCompliance.ts	264	
+ComplianceAccessEventsListRequest	interface	platform	true		types/messagingCompliance.ts	270	
+ComplianceAccessEventsListResponse	interface	platform	true		types/messagingCompliance.ts	281	
+ComplianceExportsListRequest	interface	platform	true		types/messagingCompliance.ts	286	
+ComplianceExportsListResponse	interface	platform	true		types/messagingCompliance.ts	292	
+ComplianceExportCreateRequest	interface	platform	true		types/messagingCompliance.ts	297	
+ComplianceExportDownloadRequest	interface	platform	true		types/messagingCompliance.ts	308	
+ComplianceExportDownloadResponse	interface	platform	true		types/messagingCompliance.ts	313	
 PayrollRunRegisterTab	type	payroll	true		types/payrollControlCenter.ts	8	
 PayrollControlCenterRequest	interface	payroll	true		types/payrollControlCenter.ts	10	
 HealthState	type	payroll	true		types/payrollControlCenter.ts	23	

@@ -7,6 +7,7 @@
  * server-authored capabilities (never inferred).
  */
 
+import type { VNode } from 'preact';
 import { useMemo, useState } from 'preact/hooks';
 import { useComplianceCases, useComplianceCase, useComplianceSummary } from '@api/communicationsCompliance';
 import type { ComplianceCaseSummary, ComplianceCaseStatus, ComplianceCaseType } from '../../../../../../../types/messagingCompliance';
@@ -15,9 +16,9 @@ import { useComplianceState } from './ComplianceState';
 import { DecideComplianceCaseDialog, CloseComplianceCaseDialog } from './ComplianceActionDialogs';
 import { Search, MessageSquare, Clock3, CheckCircle2, ShieldCheck, ShieldX, LockKeyhole, X, type IconProps } from '../components/icons';
 
-type StatusFilter = 'all' | 'pending' | 'approved' | 'expiring';
+type StatusFilter = 'all' | 'pending' | 'active' | 'expiring';
 const STATUS_FILTER_LABEL: Record<Exclude<StatusFilter, 'all'>, string> = {
-  pending: 'Pending approval', approved: 'Approved', expiring: 'Expiring soon',
+  pending: 'Pending approval', active: 'Active', expiring: 'Expiring soon',
 };
 
 const TYPE_LABEL: Record<ComplianceCaseType, string> = {
@@ -70,23 +71,27 @@ function isExpired(validUntil: string): boolean {
   return new Date(validUntil).getTime() <= Date.now();
 }
 
-export function ComplianceCasesView() {
+export function ComplianceCasesView(): VNode {
   const { selectedCaseId, setSelectedCaseId, setSubview } = useComplianceState();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
-  const { data, isLoading, isError, refetch } = useComplianceCases({});
+  const listFilters = useMemo(() => (
+    statusFilter === 'pending' ? { status: 'pending_approval' as const } :
+    statusFilter === 'active' ? { scope: 'active' as const } :
+    statusFilter === 'expiring' ? { scope: 'expiring_24h' as const } :
+    {}
+  ), [statusFilter]);
+  const { data, isLoading, isError, refetch } = useComplianceCases(listFilters);
   const { data: summary, isLoading: summaryLoading } = useComplianceSummary();
 
-  const cases = data?.items ?? [];
+  const cases = useMemo(() => data?.items ?? [], [data?.items]);
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     return cases.filter(c => {
       const matchesText = !q || c.caseNo.toLowerCase().includes(q) || c.title.toLowerCase().includes(q);
       const matchesStatus =
         statusFilter === 'pending'  ? c.status === 'pending_approval' :
-        // "Active Cases" KPI semantics: approved AND unexpired (server counts the
-        // full dataset; this client filter only sees the loaded page — see #6).
-        statusFilter === 'approved' ? (c.status === 'approved' && !isExpired(c.validUntil)) :
+        statusFilter === 'active' ? (c.status === 'approved' && !isExpired(c.validUntil)) :
         statusFilter === 'expiring' ? (c.status === 'approved' && isExpiringSoon(c.validUntil)) :
         true;
       return matchesText && matchesStatus;
@@ -104,7 +109,7 @@ export function ComplianceCasesView() {
       <div className="smc-cases__main">
         <div className="smc-stats">
           <KpiTile icon="fa-folder-open" tone="blue" label="Active Cases" value={summary?.activeCases ?? 0} sub="Approved & active" loading={kpiLoading}
-            link={{ label: 'View active', onClick: () => setStatusFilter('approved') }} />
+            link={{ label: 'View active', onClick: () => setStatusFilter('active') }} />
           <KpiTile icon="fa-clock" tone="amber" label="Pending Approval" value={summary?.pendingApprovalCases ?? 0} sub="Awaiting decision" loading={kpiLoading}
             link={{ label: 'Review pending', onClick: () => setStatusFilter('pending') }} />
           <KpiTile icon="fa-triangle-exclamation" tone="coral" label="Expiring Within 24h" value={summary?.expiringWithin24Hours ?? 0} sub="Grants ending soon" loading={kpiLoading}
@@ -224,7 +229,7 @@ function ComplianceCaseDetailRail({ summary }: { summary: ComplianceCaseSummary 
   // Commands are derived from server-authored capabilities + status only.
   const caps = summary.capabilities;
   const canApprove = caps.canApproveCase && summary.status === 'pending_approval';
-  const canClose = caps.canApproveCase && summary.status === 'approved';
+  const canClose = caps.canCloseCase;
   const canOpen = caps.canReadConversation && summary.status === 'approved';
 
   return (

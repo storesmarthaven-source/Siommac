@@ -526,6 +526,15 @@ Every route:
 - never accepts and drops fields;
 - never falls back to ordinary participant message reads.
 
+`cases/list` supports semantic scopes whose definitions must remain identical to
+the summary cards:
+
+- `active`: approved and `valid_until` is in the future;
+- `expiring_24h`: approved, unexpired, and `valid_until` is within 24 hours.
+
+The semantic scope is part of the cursor fingerprint. It may only be combined
+with status `all` or `approved`; contradictory status/scope inputs return 400.
+
 Conversation discovery searches metadata only:
 
 - thread title;
@@ -555,12 +564,15 @@ Server-authored capabilities:
 
 - `canRequestCase`
 - `canApproveCase`
+- `canCloseCase`
 - `canReadConversation`
 - `canRevokeGrant`
 - `canExport`
 - `canViewAccessLog`
 
 The UI must use these flags and must not infer authority from role names.
+`canCloseCase` is true only for an approved case when the actor is its requester
+or independent approver, matching `message_compliance_case_close_tx`.
 
 No message body appears in list, case, grant, export-list, or access-log DTOs.
 

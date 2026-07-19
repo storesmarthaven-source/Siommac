@@ -32,19 +32,19 @@ path	module	permission	guards	schema	file	line
 /api/calendar/update	platform	calendar.view	requirePermission,userCan	UpdateSchema	netlify/functions/routes/calendar.ts	599
 /api/clearAllNotifications	communications		requireUser		netlify/functions/routes/notify.ts	181
 /api/clearClosedTickets	communications		requireUser		netlify/functions/routes/tickets.ts	144
-/api/communications/compliance/access-events/list	communications	communications.compliance_read	requirePermission	AccessEventsListSchema	netlify/functions/routes/communicationsCompliance.ts	442
-/api/communications/compliance/cases/close	communications	communications.compliance_read	requirePermission	CaseCloseSchema	netlify/functions/routes/communicationsCompliance.ts	424
-/api/communications/compliance/cases/decide	communications	communications.compliance_read	requirePermission	CaseDecisionSchema	netlify/functions/routes/communicationsCompliance.ts	287
-/api/communications/compliance/cases/get	communications	communications.compliance_read	requirePermission	CaseGetSchema	netlify/functions/routes/communicationsCompliance.ts	245
-/api/communications/compliance/cases/list	communications	communications.compliance_read	requirePermission	CasesListSchema	netlify/functions/routes/communicationsCompliance.ts	235
-/api/communications/compliance/cases/request	communications	communications.compliance_read	requirePermission	CaseRequestSchema	netlify/functions/routes/communicationsCompliance.ts	255
-/api/communications/compliance/conversations/read	communications	communications.compliance_read	requirePermission	ConversationReadSchema	netlify/functions/routes/communicationsCompliance.ts	329
-/api/communications/compliance/conversations/search	communications	communications.compliance_read	requirePermission	ConversationSearchSchema	netlify/functions/routes/communicationsCompliance.ts	319
-/api/communications/compliance/exports/create	communications	communications.compliance_export	requirePermission	ExportCreateSchema	netlify/functions/routes/communicationsCompliance.ts	462
-/api/communications/compliance/exports/download	communications	communications.compliance_export	requirePermission	ExportDownloadSchema	netlify/functions/routes/communicationsCompliance.ts	478
-/api/communications/compliance/exports/list	communications	communications.compliance_read	requirePermission	ExportsListSchema	netlify/functions/routes/communicationsCompliance.ts	452
-/api/communications/compliance/grants/revoke	communications	communications.compliance_read	requirePermission	GrantRevokeSchema	netlify/functions/routes/communicationsCompliance.ts	382
-/api/communications/compliance/summary/get	communications	communications.compliance_read	requirePermission	SummaryGetSchema	netlify/functions/routes/communicationsCompliance.ts	225
+/api/communications/compliance/access-events/list	communications	communications.compliance_read	requirePermission	AccessEventsListSchema	netlify/functions/routes/communicationsCompliance.ts	451
+/api/communications/compliance/cases/close	communications	communications.compliance_read	requirePermission	CaseCloseSchema	netlify/functions/routes/communicationsCompliance.ts	433
+/api/communications/compliance/cases/decide	communications	communications.compliance_read	requirePermission	CaseDecisionSchema	netlify/functions/routes/communicationsCompliance.ts	296
+/api/communications/compliance/cases/get	communications	communications.compliance_read	requirePermission	CaseGetSchema	netlify/functions/routes/communicationsCompliance.ts	254
+/api/communications/compliance/cases/list	communications	communications.compliance_read	requirePermission	CasesListSchema	netlify/functions/routes/communicationsCompliance.ts	244
+/api/communications/compliance/cases/request	communications	communications.compliance_read	requirePermission	CaseRequestSchema	netlify/functions/routes/communicationsCompliance.ts	264
+/api/communications/compliance/conversations/read	communications	communications.compliance_read	requirePermission	ConversationReadSchema	netlify/functions/routes/communicationsCompliance.ts	338
+/api/communications/compliance/conversations/search	communications	communications.compliance_read	requirePermission	ConversationSearchSchema	netlify/functions/routes/communicationsCompliance.ts	328
+/api/communications/compliance/exports/create	communications	communications.compliance_export	requirePermission	ExportCreateSchema	netlify/functions/routes/communicationsCompliance.ts	471
+/api/communications/compliance/exports/download	communications	communications.compliance_export	requirePermission	ExportDownloadSchema	netlify/functions/routes/communicationsCompliance.ts	487
+/api/communications/compliance/exports/list	communications	communications.compliance_read	requirePermission	ExportsListSchema	netlify/functions/routes/communicationsCompliance.ts	461
+/api/communications/compliance/grants/revoke	communications	communications.compliance_read	requirePermission	GrantRevokeSchema	netlify/functions/routes/communicationsCompliance.ts	391
+/api/communications/compliance/summary/get	communications	communications.compliance_read	requirePermission	SummaryGetSchema	netlify/functions/routes/communicationsCompliance.ts	234
 /api/communications/messages/activity	communications	communications.view	requirePermission	z.object({ threadId: z.uuid() })	netlify/functions/routes/communications.ts	435
 /api/communications/messages/archive	communications	communications.view	requirePermission	ArchiveSchema	netlify/functions/routes/communications.ts	638
 /api/communications/messages/attachments/create	communications	communications.view	requirePermission	AttachCreateSchema	netlify/functions/routes/communications.ts	598

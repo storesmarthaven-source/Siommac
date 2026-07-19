@@ -258,6 +258,9 @@ function caseCapabilities(params: {
     canApproveCase: permissions.canRead
       && row.status === 'pending_approval'
       && row.requested_by !== actor.id,
+    canCloseCase: permissions.canRead
+      && row.status === 'approved'
+      && (row.requested_by === actor.id || row.approved_by === actor.id),
     canReadConversation: permissions.canRead
       && row.status === 'approved'
       && Date.parse(row.valid_until) > Date.now()
@@ -293,10 +296,13 @@ function applyCaseCursor<T>(query: T, cursor: CursorPayload | null): T {
 
 async function queryCasePage(params: {
   status: ComplianceCasesListRequest['status'];
+  scope: ComplianceCasesListRequest['scope'];
   searchField?: 'case_no' | 'title';
   search?: string;
   cursor: CursorPayload | null;
   limit: number;
+  now: string;
+  expiringBefore: string;
 }): Promise<CaseRow[]> {
   let query = sb
     .from('message_compliance_cases')
@@ -305,6 +311,14 @@ async function queryCasePage(params: {
     .order('id', { ascending: false })
     .limit(params.limit + 1);
   if (params.status && params.status !== 'all') query = query.eq('status', params.status);
+  if (params.scope) {
+    query = query
+      .eq('status', 'approved')
+      .gt('valid_until', params.now);
+    if (params.scope === 'expiring_24h') {
+      query = query.lte('valid_until', params.expiringBefore);
+    }
+  }
   if (params.searchField && params.search) {
     query = query.ilike(params.searchField, `%${params.search}%`);
   }
@@ -320,25 +334,42 @@ export async function listComplianceCases(
 ): Promise<ComplianceCasesListResponse> {
   const limit = Math.min(Math.max(input.limit ?? 25, 1), 50);
   const search = nonEmptyTrimmed(input.search) ?? undefined;
-  const filters = { status: input.status ?? 'all', search: search ?? null };
+  if (input.scope && input.status && input.status !== 'all' && input.status !== 'approved') {
+    throw httpError('A semantic case scope can only be combined with status all or approved.', 422);
+  }
+  const filters = {
+    status: input.status ?? 'all',
+    scope: input.scope ?? null,
+    search: search ?? null,
+  };
   const cursor = decodeCursor(input.cursor, filters);
   const permissions = await permissionContext(actor);
+  const nowDate = new Date();
+  const now = nowDate.toISOString();
+  const expiringBefore = new Date(nowDate.getTime() + 24 * 60 * 60 * 1_000).toISOString();
 
   const rows = search
     ? await Promise.all([
-        queryCasePage({ status: input.status, searchField: 'case_no', search, cursor, limit }),
-        queryCasePage({ status: input.status, searchField: 'title', search, cursor, limit }),
+        queryCasePage({
+          status: input.status, scope: input.scope, searchField: 'case_no', search,
+          cursor, limit, now, expiringBefore,
+        }),
+        queryCasePage({
+          status: input.status, scope: input.scope, searchField: 'title', search,
+          cursor, limit, now, expiringBefore,
+        }),
       ]).then(groups => {
         const deduped = new Map<string, CaseRow>();
         for (const row of groups.flat()) deduped.set(row.id, row);
         return [...deduped.values()].sort((a, b) =>
           b.requested_at.localeCompare(a.requested_at) || b.id.localeCompare(a.id));
       })
-    : await queryCasePage({ status: input.status, cursor, limit });
+    : await queryCasePage({
+        status: input.status, scope: input.scope, cursor, limit, now, expiringBefore,
+      });
 
   const page = rows.slice(0, limit);
   const caseIds = page.map(row => row.id);
-  const now = new Date().toISOString();
   const [names, ownGrants, activeGrantCasesResult, eventsResult, threadCountsResult] = await Promise.all([
     loadNames(page.flatMap(row => [row.requested_by, row.approved_by])),
     activeGrantsForCases(caseIds, actor.id),
@@ -418,6 +449,7 @@ export async function listComplianceCases(
     capabilities: {
       canRequestCase: permissions.canRead,
       canApproveCase: permissions.canRead,
+      canCloseCase: false,
       canReadConversation: false,
       canRevokeGrant: false,
       canExport: permissions.canExport,

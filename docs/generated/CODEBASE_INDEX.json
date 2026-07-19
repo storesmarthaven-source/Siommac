@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "6c60d87ec13d4d55dc93222f23962de110914e5f",
+    "head": "d4f57a34c5b2c151f7d61e10bd365b9c56751b30",
     "branch": "Codex/wonderful-panini-34b331",
-    "fingerprint": "d505d99b84873464944367a1",
+    "fingerprint": "b6813bc5b09ed089422a7947",
     "indexedFiles": 1422
   },
   "summary": {
@@ -16,7 +16,7 @@
     "apiCalls": 381,
     "databaseObjects": 1167,
     "e2eSuites": 65,
-    "e2eTests": 2164
+    "e2eTests": 2165
   },
   "modules": [
     {
@@ -1092,8 +1092,8 @@
       "path": "netlify/functions/lib/messaging/complianceService.ts",
       "module": "platform",
       "role": "backend-lib",
-      "lines": 880,
-      "hash": "2b056fa722da8272"
+      "lines": 912,
+      "hash": "d88dd06a68f5a878"
     },
     {
       "path": "netlify/functions/lib/messaging/messagingRpc.ts",
@@ -1708,8 +1708,8 @@
       "path": "netlify/functions/routes/communicationsCompliance.ts",
       "module": "communications",
       "role": "backend-route",
-      "lines": 495,
-      "hash": "33007b7811c14147"
+      "lines": 504,
+      "hash": "f552d97be5aa50fa"
     },
     {
       "path": "netlify/functions/routes/departments.ts",
@@ -2226,8 +2226,8 @@
       "path": "scripts/e2e/suites/communicationsCompliance.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 1166,
-      "hash": "3bc095b4203733e4"
+      "lines": 1218,
+      "hash": "26498df88a7f210a"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -5299,8 +5299,8 @@
       "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 296,
-      "hash": "a801b74ea0120466"
+      "lines": 301,
+      "hash": "e46baec072e56573"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
@@ -7980,8 +7980,8 @@
       "path": "types/messagingCompliance.ts",
       "module": "platform",
       "role": "shared-types",
-      "lines": 316,
-      "hash": "b5248e1413c532ae"
+      "lines": 318,
+      "hash": "2331ad56cff5d212"
     },
     {
       "path": "types/payrollControlCenter.ts",
@@ -26907,7 +26907,7 @@
       "name": "activeGrantsForCases",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 271,
+      "line": 274,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -26917,7 +26917,7 @@
       "name": "applyCaseCursor",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 285,
+      "line": 288,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -26927,7 +26927,7 @@
       "name": "queryCasePage",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 294,
+      "line": 297,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -26937,7 +26937,7 @@
       "name": "listComplianceCases",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 317,
+      "line": 331,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26947,7 +26947,7 @@
       "name": "getComplianceCase",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 429,
+      "line": 461,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26957,7 +26957,7 @@
       "name": "searchComplianceConversations",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 562,
+      "line": 594,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26967,7 +26967,7 @@
       "name": "listComplianceAccessEvents",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 632,
+      "line": 664,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26977,7 +26977,7 @@
       "name": "listComplianceExports",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 714,
+      "line": 746,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26987,7 +26987,7 @@
       "name": "getComplianceExportById",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 793,
+      "line": 825,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26997,7 +26997,7 @@
       "name": "listActiveCompliancePermissionHolders",
       "kind": "function",
       "file": "netlify/functions/lib/messaging/complianceService.ts",
-      "line": 857,
+      "line": 889,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -34307,7 +34307,7 @@
       "name": "CaseGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 70,
+      "line": 79,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34317,7 +34317,7 @@
       "name": "CaseRequestSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 72,
+      "line": 81,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34327,7 +34327,7 @@
       "name": "CaseDecisionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 84,
+      "line": 93,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34337,7 +34337,7 @@
       "name": "ConversationSearchSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 91,
+      "line": 100,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34347,7 +34347,7 @@
       "name": "ConversationReadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 110,
+      "line": 119,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34357,7 +34357,7 @@
       "name": "GrantRevokeSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 118,
+      "line": 127,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34367,7 +34367,7 @@
       "name": "CaseCloseSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 124,
+      "line": 133,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34377,7 +34377,7 @@
       "name": "AccessEventsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 130,
+      "line": 139,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34387,7 +34387,7 @@
       "name": "ExportsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 149,
+      "line": 158,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34397,7 +34397,7 @@
       "name": "ExportCreateSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 155,
+      "line": 164,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34407,7 +34407,7 @@
       "name": "ExportDownloadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 182,
+      "line": 191,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -34417,7 +34417,7 @@
       "name": "notifyCompliance",
       "kind": "function",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 187,
+      "line": 196,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95014,7 +95014,7 @@
       "name": "StatusFilter",
       "kind": "type",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 18,
+      "line": 19,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95024,7 +95024,7 @@
       "name": "STATUS_FILTER_LABEL",
       "kind": "object",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 19,
+      "line": 20,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95034,7 +95034,7 @@
       "name": "TYPE_LABEL",
       "kind": "object",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 23,
+      "line": 24,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95044,7 +95044,7 @@
       "name": "STATUS_LABEL",
       "kind": "object",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 31,
+      "line": 32,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95054,7 +95054,7 @@
       "name": "STATUS_ICON",
       "kind": "object",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 35,
+      "line": 36,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95064,7 +95064,7 @@
       "name": "statusTone",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 39,
+      "line": 40,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95074,7 +95074,7 @@
       "name": "fmtDate",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 46,
+      "line": 47,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95084,7 +95084,7 @@
       "name": "relShort",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 52,
+      "line": 53,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95094,7 +95094,7 @@
       "name": "isExpiringSoon",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 64,
+      "line": 65,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95104,7 +95104,7 @@
       "name": "isExpired",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 69,
+      "line": 70,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95114,7 +95114,7 @@
       "name": "ComplianceCasesView",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 73,
+      "line": 74,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -95126,7 +95126,7 @@
       "name": "StatusPill",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 193,
+      "line": 198,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95138,7 +95138,7 @@
       "name": "CaseTableSkeleton",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 198,
+      "line": 203,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95150,7 +95150,7 @@
       "name": "ComplianceCaseDetailRail",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 208,
+      "line": 213,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -95162,7 +95162,7 @@
       "name": "GrantPill",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
-      "line": 285,
+      "line": 290,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -123754,7 +123754,7 @@
       "name": "ComplianceSummary",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 50,
+      "line": 51,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123764,7 +123764,7 @@
       "name": "ComplianceActorRef",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 58,
+      "line": 59,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123774,7 +123774,7 @@
       "name": "ComplianceCaseThread",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 63,
+      "line": 64,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123784,7 +123784,7 @@
       "name": "ComplianceGrant",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 77,
+      "line": 78,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123794,7 +123794,7 @@
       "name": "ComplianceCaseSummary",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 94,
+      "line": 95,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123804,7 +123804,7 @@
       "name": "ComplianceCaseDetail",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 111,
+      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123814,7 +123814,7 @@
       "name": "ComplianceAttachmentMetadata",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 123,
+      "line": 124,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123824,7 +123824,7 @@
       "name": "ComplianceMessage",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 132,
+      "line": 133,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123834,7 +123834,7 @@
       "name": "ComplianceMessagePage",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 144,
+      "line": 145,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123844,7 +123844,7 @@
       "name": "ComplianceAccessEvent",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 156,
+      "line": 157,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123854,7 +123854,7 @@
       "name": "ComplianceExport",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 170,
+      "line": 171,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123864,7 +123864,7 @@
       "name": "ComplianceCaseThreadInput",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 194,
+      "line": 195,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123874,7 +123874,7 @@
       "name": "ComplianceCasesListRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 199,
+      "line": 200,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123884,7 +123884,7 @@
       "name": "ComplianceCasesListResponse",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 206,
+      "line": 208,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123894,7 +123894,7 @@
       "name": "ComplianceCaseGetRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 212,
+      "line": 214,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123904,7 +123904,7 @@
       "name": "ComplianceCaseRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 216,
+      "line": 218,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123914,7 +123914,7 @@
       "name": "ComplianceCaseDecisionRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 225,
+      "line": 227,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123924,7 +123924,7 @@
       "name": "ComplianceCaseCloseRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 232,
+      "line": 234,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123934,7 +123934,7 @@
       "name": "ComplianceConversationSearchRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 238,
+      "line": 240,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123944,7 +123944,7 @@
       "name": "ComplianceConversationSearchResponse",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 249,
+      "line": 251,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123954,7 +123954,7 @@
       "name": "ComplianceConversationReadRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 254,
+      "line": 256,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123964,7 +123964,7 @@
       "name": "ComplianceGrantRevokeRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 262,
+      "line": 264,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123974,7 +123974,7 @@
       "name": "ComplianceAccessEventsListRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 268,
+      "line": 270,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123984,7 +123984,7 @@
       "name": "ComplianceAccessEventsListResponse",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 279,
+      "line": 281,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -123994,7 +123994,7 @@
       "name": "ComplianceExportsListRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 284,
+      "line": 286,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -124004,7 +124004,7 @@
       "name": "ComplianceExportsListResponse",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 290,
+      "line": 292,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -124014,7 +124014,7 @@
       "name": "ComplianceExportCreateRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 295,
+      "line": 297,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -124024,7 +124024,7 @@
       "name": "ComplianceExportDownloadRequest",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 306,
+      "line": 308,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -124034,7 +124034,7 @@
       "name": "ComplianceExportDownloadResponse",
       "kind": "interface",
       "file": "types/messagingCompliance.ts",
-      "line": 311,
+      "line": 313,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -125027,7 +125027,7 @@
       ],
       "schema": "AccessEventsListSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 442,
+      "line": 451,
       "module": "communications"
     },
     {
@@ -125040,7 +125040,7 @@
       ],
       "schema": "CaseCloseSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 424,
+      "line": 433,
       "module": "communications"
     },
     {
@@ -125053,7 +125053,7 @@
       ],
       "schema": "CaseDecisionSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 287,
+      "line": 296,
       "module": "communications"
     },
     {
@@ -125066,7 +125066,7 @@
       ],
       "schema": "CaseGetSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 245,
+      "line": 254,
       "module": "communications"
     },
     {
@@ -125079,7 +125079,7 @@
       ],
       "schema": "CasesListSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 235,
+      "line": 244,
       "module": "communications"
     },
     {
@@ -125092,7 +125092,7 @@
       ],
       "schema": "CaseRequestSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 255,
+      "line": 264,
       "module": "communications"
     },
     {
@@ -125105,7 +125105,7 @@
       ],
       "schema": "ConversationReadSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 329,
+      "line": 338,
       "module": "communications"
     },
     {
@@ -125118,7 +125118,7 @@
       ],
       "schema": "ConversationSearchSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 319,
+      "line": 328,
       "module": "communications"
     },
     {
@@ -125131,7 +125131,7 @@
       ],
       "schema": "ExportCreateSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 462,
+      "line": 471,
       "module": "communications"
     },
     {
@@ -125144,7 +125144,7 @@
       ],
       "schema": "ExportDownloadSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 478,
+      "line": 487,
       "module": "communications"
     },
     {
@@ -125157,7 +125157,7 @@
       ],
       "schema": "ExportsListSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 452,
+      "line": 461,
       "module": "communications"
     },
     {
@@ -125170,7 +125170,7 @@
       ],
       "schema": "GrantRevokeSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 382,
+      "line": 391,
       "module": "communications"
     },
     {
@@ -125183,7 +125183,7 @@
       ],
       "schema": "SummaryGetSchema",
       "file": "netlify/functions/routes/communicationsCompliance.ts",
-      "line": 225,
+      "line": 234,
       "module": "communications"
     },
     {
@@ -148189,119 +148189,123 @@
         },
         {
           "name": "message read is denied before independent case approval",
-          "line": 513
+          "line": 514
         },
         {
           "name": "case requester cannot approve their own case",
-          "line": 537
+          "line": 538
         },
         {
           "name": "independent checker cannot decide a case without fresh step-up",
-          "line": 547
+          "line": 548
         },
         {
           "name": "independent checker approves and creates one scoped grant",
-          "line": 556
+          "line": 557
+        },
+        {
+          "name": "close capability and semantic KPI scopes match the approved case policy",
+          "line": 592
         },
         {
           "name": "case decision retry is idempotent and divergent reuse is 409",
-          "line": 589
+          "line": 625
         },
         {
           "name": "ordinary Messenger thread and posts remain denied despite scoped compliance grant",
-          "line": 614
+          "line": 650
         },
         {
           "name": "approved scoped read returns only the first exact message page",
-          "line": 635
+          "line": 671
         },
         {
           "name": "same-key read retry returns the same page and records each disclosure",
-          "line": 657
+          "line": 693
         },
         {
           "name": "same read key with a divergent limit is rejected with 409",
-          "line": 678
+          "line": 714
         },
         {
           "name": "next scoped page completes the exact body set and records page_read",
-          "line": 688
+          "line": 724
         },
         {
           "name": "access log is metadata-only and exposes the expected response shape",
-          "line": 719
+          "line": 755
         },
         {
           "name": "access evidence rejects service-role UPDATE and DELETE",
-          "line": 738
+          "line": 774
         },
         {
           "name": "export creation is denied without fresh step-up",
-          "line": 768
+          "line": 804
         },
         {
           "name": "export requires explicit compliance_export authority",
-          "line": 779
+          "line": 815
         },
         {
           "name": "creates and finalizes a real JSON export with metadata-only response",
-          "line": 795
+          "line": 831
         },
         {
           "name": "JSON export retry is idempotent and divergent purpose is 409",
-          "line": 813
+          "line": 849
         },
         {
           "name": "export download requires a current step-up token",
-          "line": 844
-        },
-        {
-          "name": "downloads JSON through a five-minute private signed URL and verifies checksum/body set",
-          "line": 853
-        },
-        {
-          "name": "JSON download retry records each signed-URL disclosure",
           "line": 880
         },
         {
+          "name": "downloads JSON through a five-minute private signed URL and verifies checksum/body set",
+          "line": 889
+        },
+        {
+          "name": "JSON download retry records each signed-URL disclosure",
+          "line": 916
+        },
+        {
           "name": "creates and downloads a valid PDF export with matching SHA-256",
-          "line": 899
+          "line": 935
         },
         {
           "name": "export list is metadata-only and the storage bucket is private",
-          "line": 951
-        },
-        {
-          "name": "grantee revokes their own scoped grant",
           "line": 987
         },
         {
+          "name": "grantee revokes their own scoped grant",
+          "line": 1023
+        },
+        {
           "name": "grant revoke retry is idempotent and divergent reason is 409",
-          "line": 1001
+          "line": 1037
         },
         {
           "name": "revocation immediately denies scoped read and export download",
-          "line": 1022
+          "line": 1058
         },
         {
           "name": "requester closes the approved case with step-up",
-          "line": 1049
+          "line": 1085
         },
         {
           "name": "case close retry is idempotent and divergent reason is 409",
-          "line": 1062
+          "line": 1098
         },
         {
           "name": "closed case remains metadata-visible but denies message reads",
-          "line": 1083
+          "line": 1119
         },
         {
           "name": "creates and approves a short-lived independent case",
-          "line": 1109
+          "line": 1161
         },
         {
           "name": "case validity expiry denies a new scoped read without changing case evidence",
-          "line": 1142
+          "line": 1194
         }
       ],
       "apiPaths": [

@@ -62,9 +62,18 @@ const SummaryGetSchema = z.object({}).strict();
 
 const CasesListSchema = z.object({
   status: z.enum(['all', 'pending_approval', 'approved', 'rejected', 'closed']).optional(),
+  scope: z.enum(['active', 'expiring_24h']).optional(),
   search: z.string().trim().max(160).optional(),
   limit: z.number().int().min(1).max(50).optional(),
   cursor: z.string().max(2_000).nullable().optional(),
+}).superRefine((value, context) => {
+  if (value.scope && value.status && value.status !== 'all' && value.status !== 'approved') {
+    context.addIssue({
+      code: 'custom',
+      path: ['status'],
+      message: 'A semantic case scope can only be combined with status all or approved',
+    });
+  }
 });
 
 const CaseGetSchema = z.object({ caseId: z.uuid() });

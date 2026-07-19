@@ -37,7 +37,7 @@ const CASE_SUMMARY_KEYS = [
 ];
 
 const CAPABILITY_KEYS = [
-  'canApproveCase', 'canExport', 'canReadConversation', 'canRequestCase',
+  'canApproveCase', 'canCloseCase', 'canExport', 'canReadConversation', 'canRequestCase',
   'canRevokeGrant', 'canViewAccessLog',
 ];
 
@@ -500,6 +500,7 @@ export default async function run(h) {
     const item = list.body.data.items.find(value => value.id === state.caseId);
     expect(item, 'requested case absent from list');
     exactKeys(expect, item, CASE_SUMMARY_KEYS, 'case summary');
+    expect(item.capabilities.canCloseCase === false, 'pending case unexpectedly closable');
     assertNoMessagePayload(expect, list.body.data, 'cases/list');
 
     const detail = await api('communications/compliance/cases/get', investigatorToken, {
@@ -564,6 +565,8 @@ export default async function run(h) {
     assertNoMessagePayload(expect, response.body.data, 'case decision response');
     expect(response.body.data.status === 'approved', 'case was not approved');
     expect(response.body.data.approvedBy.id === checker.id, 'case checker mismatch');
+    expect(response.body.data.capabilities.canCloseCase === true,
+      'case approver did not receive close authority');
     expect(response.body.data.grants.length === 1, 'approval did not create one scoped grant');
     const grant = response.body.data.grants[0];
     exactKeys(expect, grant, GRANT_KEYS, 'compliance grant');
@@ -584,6 +587,39 @@ export default async function run(h) {
       summary.expiringWithin24Hours === state.summaryBaseline.expiringWithin24Hours + 1,
       'near-expiry approved case did not reconcile to expiry summary',
     );
+  });
+
+  await test('close capability and semantic KPI scopes match the approved case policy', async () => {
+    const detail = await api('communications/compliance/cases/get', investigatorToken, {
+      caseId: state.caseId,
+    });
+    ok(detail, 'requester case detail failed');
+    expect(detail.body.data.capabilities.canCloseCase === true,
+      'case requester did not receive close authority');
+
+    const active = await api('communications/compliance/cases/list', investigatorToken, {
+      scope: 'active',
+      search: state.caseNo,
+      limit: 10,
+    });
+    ok(active, 'active semantic scope failed');
+    expect(active.body.data.items.some(value => value.id === state.caseId),
+      'approved unexpired case absent from active scope');
+
+    const expiring = await api('communications/compliance/cases/list', investigatorToken, {
+      scope: 'expiring_24h',
+      search: state.caseNo,
+      limit: 10,
+    });
+    ok(expiring, 'expiring semantic scope failed');
+    expect(expiring.body.data.items.some(value => value.id === state.caseId),
+      'near-expiry case absent from expiring_24h scope');
+
+    const contradictory = await api('communications/compliance/cases/list', investigatorToken, {
+      status: 'rejected',
+      scope: 'active',
+    });
+    expectStatus(expect, contradictory, 400, 'contradictory semantic scope');
   });
 
   await test('case decision retry is idempotent and divergent reuse is 409', async () => {
@@ -1086,7 +1122,23 @@ export default async function run(h) {
     });
     ok(detail, 'closed case detail failed');
     expect(detail.body.data.status === 'closed', 'closed case did not remain visible');
+    expect(detail.body.data.capabilities.canCloseCase === false,
+      'closed case retained close authority');
     assertNoMessagePayload(expect, detail.body.data, 'closed case detail');
+    const active = await api('communications/compliance/cases/list', investigatorToken, {
+      scope: 'active',
+      search: state.caseNo,
+    });
+    ok(active, 'active scope after closure failed');
+    expect(!active.body.data.items.some(value => value.id === state.caseId),
+      'closed case remained in active scope');
+    const expiring = await api('communications/compliance/cases/list', investigatorToken, {
+      scope: 'expiring_24h',
+      search: state.caseNo,
+    });
+    ok(expiring, 'expiring scope after closure failed');
+    expect(!expiring.body.data.items.some(value => value.id === state.caseId),
+      'closed case remained in expiring_24h scope');
     const read = await api(
       'communications/compliance/conversations/read',
       investigatorToken,

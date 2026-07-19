@@ -195,6 +195,7 @@ Required behaviors:
 
 - server pagination or cursor behavior from the shared contract
 - filters for status and case type
+- semantic `active` and `expiring_24h` filters backed by `cases/list`
 - search only fields supported by the backend
 - open selected case
 - request case
@@ -418,6 +419,7 @@ Render commands from DTO capabilities only:
 
 - `canRequestCase`
 - `canApproveCase`
+- `canCloseCase`
 - `canReadConversation`
 - `canRevokeGrant`
 - `canExport`

@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `6c60d87ec13d4d55dc93222f23962de110914e5f`  
-Source fingerprint: `d505d99b84873464944367a1`  
+Source HEAD: `d4f57a34c5b2c151f7d61e10bd365b9c56751b30`  
+Source fingerprint: `b6813bc5b09ed089422a7947`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1119 | 11110 | 32 | 869 | 870 | 17 | 381 | 1167 | 65 | 2164 |
+| 1119 | 11110 | 32 | 869 | 870 | 17 | 381 | 1167 | 65 | 2165 |
 
 ## Modules
 
