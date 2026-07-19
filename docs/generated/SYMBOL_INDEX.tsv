@@ -3484,6 +3484,9 @@ makeDraft	function	payroll	false	test	scripts/e2e/suites/payslipTemplateApproval
 title	variable	payroll	true	test	scripts/e2e/suites/payslipTemplates.mjs	22	
 sampleDesign	function	payroll	false	test	scripts/e2e/suites/payslipTemplates.mjs	24	
 run	function	payroll	true	test	scripts/e2e/suites/payslipTemplates.mjs	38	
+title	variable	security	true	test	scripts/e2e/suites/permissionPropagation.mjs	15	
+pollSignal	function	security	false	test	scripts/e2e/suites/permissionPropagation.mjs	17	
+run	function	security	true	test	scripts/e2e/suites/permissionPropagation.mjs	28	
 title	variable	hse	true	test	scripts/e2e/suites/ptw.mjs	29	
 run	function	hse	true	test	scripts/e2e/suites/ptw.mjs	31	
 track	function	hse	false	test	scripts/e2e/suites/ptw.mjs	38	run

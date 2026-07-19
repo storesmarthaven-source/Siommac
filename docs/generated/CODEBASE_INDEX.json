@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a95e23b0c628b115febe0e0f7e93f04c8156a31e",
+    "head": "1c498535aeef4a36628e6eab06bb99fb1d16d83f",
     "branch": "main",
-    "fingerprint": "155794f6f82582b6be532635",
-    "indexedFiles": 1421
+    "fingerprint": "b2070584096b9916f7fe19a0",
+    "indexedFiles": 1422
   },
   "summary": {
-    "files": 1117,
-    "symbols": 11105,
+    "files": 1118,
+    "symbols": 11108,
     "widgets": 32,
     "routes": 869,
     "routeDefinitions": 870,
     "unmountedRoutes": 17,
     "apiCalls": 379,
     "databaseObjects": 1167,
-    "e2eSuites": 65,
-    "e2eTests": 2165
+    "e2eSuites": 66,
+    "e2eTests": 2172
   },
   "modules": [
     {
@@ -100,14 +100,14 @@
     {
       "id": "security",
       "counts": {
-        "files": 42,
-        "symbols": 359,
+        "files": 43,
+        "symbols": 362,
         "widgets": 0,
         "routes": 49,
         "routeDefinitions": 49,
         "apiCalls": 31,
         "databaseObjects": 65,
-        "e2eSuites": 3
+        "e2eSuites": 4
       }
     },
     {
@@ -2585,6 +2585,13 @@
       "role": "e2e-suite",
       "lines": 271,
       "hash": "488a633400f976ef"
+    },
+    {
+      "path": "scripts/e2e/suites/permissionPropagation.mjs",
+      "module": "security",
+      "role": "e2e-suite",
+      "lines": 124,
+      "hash": "a78e3415df915e7b"
     },
     {
       "path": "scripts/e2e/suites/ptw.mjs",
@@ -43353,6 +43360,42 @@
       "file": "scripts/e2e/suites/payslipTemplates.mjs",
       "line": 38,
       "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "line": 15,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "pollSignal",
+      "kind": "function",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "line": 17,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "line": 28,
+      "module": "security",
       "exported": true,
       "container": "",
       "tags": [
@@ -155793,6 +155836,46 @@
         "/api/finance/payroll/payslip-templates/set-default",
         "/api/finance/payroll/payslip-templates/submit",
         "/api/finance/payroll/payslip-templates/update"
+      ]
+    },
+    {
+      "name": "permissionPropagation",
+      "title": "Permission Propagation (compliance grant -> permissions signal + snapshot)",
+      "module": "security",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "tests": [
+        {
+          "name": "migration 437: communication_signals accepts domain=permissions",
+          "line": 62
+        },
+        {
+          "name": "target holds NO compliance_read before grant (shield hidden)",
+          "line": 68
+        },
+        {
+          "name": "maker-checker approve applies compliance_read",
+          "line": 77
+        },
+        {
+          "name": "a permissions signal is emitted to the target on approval",
+          "line": 84
+        },
+        {
+          "name": "snapshot now returns compliance_read WITH its validity window",
+          "line": 89
+        },
+        {
+          "name": "compliance revoke emits a permissions signal",
+          "line": 103
+        },
+        {
+          "name": "snapshot no longer grants compliance_read after revoke",
+          "line": 113
+        }
+      ],
+      "apiPaths": [
+        "/api/getMyPermissionOverrides",
+        "/api/superadmin/clearUserPermission"
       ]
     },
     {

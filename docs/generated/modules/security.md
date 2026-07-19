@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `155794f6f82582b6be532635`
+Source fingerprint: `b2070584096b9916f7fe19a0`
 
-Files: 42 | Symbols: 359 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 3
+Files: 43 | Symbols: 362 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -41,13 +41,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/confirm2faSetup` | `-` | - | `Setup2faConfirmSchema` | `netlify/functions/routes/auth.ts:479` | confirm2faSetupApi @ src/components/auth/api.ts:101 | - |
 | `/api/disable2fa` | `-` | requireUser | `Disable2faSchema` | `netlify/functions/routes/auth.ts:549` | - | - |
 | `/api/get2faStatus` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:536` | - | - |
-| `/api/getMyPermissionOverrides` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:685` | res @ src/api/auth.ts:32 | accountSecurity |
+| `/api/getMyPermissionOverrides` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:685` | res @ src/api/auth.ts:32 | accountSecurity, permissionPropagation |
 | `/api/getMyRecentActivity` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:670` | res @ src/components/sections/Profile/api.ts:73 | - |
 | `/api/login` | `-` | - | `LoginSchema` | `netlify/functions/routes/auth.ts:165` | loginApi @ src/components/auth/api.ts:79 | - |
 | `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:600` | logoutApi @ src/components/auth/api.ts:109 | - |
 | `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:577` | - | - |
 | `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:442` | setup2faApi @ src/components/auth/api.ts:94 | - |
-| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:292` | - | rbacConsole |
+| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:292` | - | permissionPropagation, rbacConsole |
 | `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:572` | - | rbacConsole |
 | `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:224` | - | rbacConsole |
 | `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:727` | - | rbacConsole |
@@ -174,6 +174,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 |---|---:|---:|---|
 | Account Security (trusted devices, passkeys, step-up, admin) | 35 | 23 | `scripts/e2e/suites/accountSecurity.mjs` |
 | Auth Session (refresh cookie) | 6 | 0 | `scripts/e2e/suites/authSession.mjs` |
+| Permission Propagation (compliance grant -> permissions signal + snapshot) | 7 | 2 | `scripts/e2e/suites/permissionPropagation.mjs` |
 | Security Policy | 7 | 2 | `scripts/e2e/suites/securityPolicy.mjs` |
 
 ## Navigation Files
@@ -191,6 +192,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/webauthn.ts` | 421 |
 | e2e-suite | `scripts/e2e/suites/accountSecurity.mjs` | 459 |
 | e2e-suite | `scripts/e2e/suites/authSession.mjs` | 164 |
+| e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 124 |
 | e2e-suite | `scripts/e2e/suites/securityPolicy.mjs` | 93 |
 | frontend-api | `src/api/auth.ts` | 53 |
 | frontend-api | `src/api/schemas/auth.ts` | 122 |
