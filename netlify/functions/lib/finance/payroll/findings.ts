@@ -173,7 +173,7 @@ export async function commandPayrollFinding(command: {
   findingId: string;
   actorId: string;
   expectedVersion: number;
-  command: 'assign' | 'resolve' | 'waive' | 'reopen';
+  command: 'assign' | 'escalate' | 'resolve' | 'waive' | 'reopen';
   idempotencyKey: string;
   assigneeId?: string;
   note?: string;
@@ -201,7 +201,7 @@ export async function commandPayrollFinding(command: {
   const finding = toFinding(result.finding);
 
   if (!result.duplicate) {
-    const recipientId = command.command === 'assign'
+    const recipientId = command.command === 'assign' || command.command === 'escalate'
       ? finding.assigneeId
       : await findRunOwner(finding.runId);
     if (recipientId && recipientId !== command.actorId) {

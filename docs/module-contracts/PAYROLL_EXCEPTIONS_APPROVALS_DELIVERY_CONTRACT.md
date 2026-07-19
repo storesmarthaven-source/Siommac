@@ -38,9 +38,14 @@ and §15.3 (Findings Work Queue). Precedence: Spec → CLAUDE.md → this contra
   notification; no finding-state change).
 - New append-only table `finance_payroll_finding_activity` backing the detail activity feed and
   persisting comments (Decision DEC-EXC-001).
-- Extension of the existing `finance_payroll_finding_command_tx` RPC to (a) accept `escalate` +
-  `comment` and (b) write an activity row for **every** command (assign/escalate/comment/resolve/
-  waive/reopen) so the feed is complete.
+- Extension of the existing `finance_payroll_finding_command_tx` RPC to accept `escalate` (merged
+  into the assign branch — same effect: assignee + `in_progress` + version bump, differing only in
+  event/audit/activity label) and to write an activity row for every **state-changing** command
+  (assign/escalate/resolve/waive/reopen).
+- A **separate** `finance_payroll_finding_comment_tx` RPC for `comment` — deliberately NOT routed
+  through the command RPC because comments are non-state-change annotations that must be allowed on
+  **frozen** (submitted / pending-approval) runs for cross-run triage; the command RPC freezes
+  findings after submission. Comment writes activity+audit+event+receipt, no version bump, no freeze.
 - Shared DTOs in `types/payrollFindings.ts` (`PayrollFindingQueueItem`, `PayrollFindingDetail`,
   `PayrollFindingActivity`, request/result types).
 - Live E2E suite `scripts/e2e/suites/payrollExceptions.mjs`.
@@ -87,7 +92,7 @@ here; none may be marked "done" until the FE slice ships its own contract addend
 | ID | Method/path | Route file | Permission | Record gate | Request schema | Response schema | Errors | E2E IDs |
 |---|---|---|---|---|---|---|---|---|
 | API-EXC-001 | POST `/api/finance/payroll/findings/work-queue` | `financePayroll.ts` | `finance.payroll.view_all` | view_all scope | `PayrollWorkQueueRequest` (keyset) | `PayrollWorkQueueResult` (+ optional `selected`) | 401/403/422 | APIE-EXC-001 |
-| API-EXC-002 | POST `/api/finance/payroll/findings/get` (REUSE, extended) | `financePayroll.ts` | `finance.payroll.view_all` | view_all | `{ findingId, activityCursor?, activityLimit? }` | `PayrollFindingDetail` | 401/403/404/422 | APIE-EXC-002 |
+| API-EXC-002 | POST `/api/finance/payroll/findings/detail` (NEW — `findings/get` left unchanged, DEC-EXC-009) | `financePayroll.ts` | `finance.payroll.view_all` | view_all | `{ findingId, activityCursor?, activityLimit? }` | `PayrollFindingDetail` (+ activity feed) | 401/403/404/422 | APIE-EXC-002 |
 | API-EXC-003 | POST `/api/finance/payroll/findings/escalate` (NEW) | `financePayroll.ts` | `finance.payroll.finding.assign` (REUSED — escalate is a reassignment; confirmed 2026-07-19, no new key) | run manage | `{ findingId, expectedVersion, idempotencyKey, assigneeId, note? }` | `PayrollControlFinding` | 401/403/404/409/422 | APIE-EXC-003 |
 | API-EXC-004 | POST `/api/finance/payroll/findings/comment` (NEW) | `financePayroll.ts` | `finance.payroll.view_all` | view_all | `{ findingId, idempotencyKey, body, expectedVersion? }` | `PayrollFindingActivity` | 401/403/404/422 | APIE-EXC-004 |
 | API-EXC-R01..R04 | `findings/list|assign|resolve|waive|reopen` (REUSE, unchanged contract) | `financePayroll.ts` | existing gates | existing | existing | existing | existing | covered by existing rbac/payroll suites + regression |
@@ -171,6 +176,13 @@ interface PayrollWorkQueueResult {
 
 "Reopened" is an **action/history event only** (activity row `activity_type='reopen'`); the persisted
 state returns to `open` (Decision DEC-EXC-003).
+
+**`escalate` semantics (v1) — ownership/routing escalation ONLY.** Escalate reassigns the finding to a
+target owner (`assigneeId` is REQUIRED) and moves it to `in_progress`; it is recorded distinctly
+(`activity_type='escalate'`, `event_type=finance.payroll.finding.escalate`, `audit action=payroll_finding.escalate`,
+`receipt.command='escalate'`) and gated by `finance.payroll.finding.assign`. It **does NOT** change the
+finding's `severity`/urgency or introduce a new state in v1. Raising urgency/priority is an explicit
+v2 behaviour change, not implied by this command.
 
 Illegal transitions that must be tested:
 
@@ -276,6 +288,8 @@ Traceability matrix: `docs/module-contracts/PAYROLL_EXCEPTIONS_APPROVALS_E2E_MAT
 | DEC-EXC-006 | FE `PayrollExceptionQueuePage` deferred to a following slice | backend-first; mirrors runs-register | med (page not shipped) | payroll | next slice | **Yes (FE after)** |
 | DEC-EXC-007 | Reads gate `finance.payroll.view_all`; commands reuse existing granular `finance.payroll.finding.{assign,resolve,waive,reopen}`; escalate reuses `finding.assign`; comment gates `view_all` | confirmed against `financePayroll.ts:1104-1283` — no new permission introduced | low | payroll | confirmed 2026-07-19 | **Yes** |
 | DEC-EXC-008 | Severity/kind mapping: blocker→kind`blocker`/sev`critical`; warning→kind`warning`/sev`medium`; info→kind`warning`/sev`low`; approval→kind`approval`/sev`high` | §15.3 splits `kind` (source) vs `severity` (priority); DB has only info/warning/blocker | low | payroll | this slice | **Yes** |
+| DEC-EXC-009 | **Compatibility:** `findings/get` is left UNCHANGED (returns `PayrollControlFinding`; consumed by existing payroll pages). The Exceptions detail is a NEW `findings/detail` route returning `PayrollFindingDetail` + activity feed; the work-queue `selected` hydrates via the same detail function | changing `findings/get`'s response shape would break existing consumers | low | payroll | this slice | **Yes** |
+| DEC-EXC-010 | `impact` object present on EVERY row (stable FE shape): findings → `{amount:null, employeeCount:null, label:null}`; approval rows → run `net_total`/`employee_count` + label `"Run net pay"` | consistent DTO beats omitting the object | low | payroll | this slice | **Yes** |
 
 ## 15. Approval
 

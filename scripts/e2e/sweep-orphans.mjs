@@ -72,6 +72,10 @@ const USER_KEYED = [
   ['hr_requests', 'requested_by'],
   ['finance_payroll_run_lines', 'employee_id'], ['finance_remittance_lines', 'employee_id'],
   ['hr_shift_assignments', 'employee_id'],
+  // Payroll finding activity: actor_id is ON DELETE SET NULL (no update trigger), so it never
+  // blocks the user delete — but sweep a test author's rows explicitly so they don't linger
+  // with a null actor on any finding the run-cascade didn't reach (defense-in-depth, §15.3).
+  ['finance_payroll_finding_activity', 'actor_id'],
   // notifications.user_id and workflow_events.actor_user_id are NOT listed:
   // both FKs are ON DELETE CASCADE / SET NULL, so they never block the user delete
   // (TAG-titled notifications are swept via TEXT_PATTERNS below). workflow_handoffs
