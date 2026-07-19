@@ -1,10 +1,15 @@
--- Fix: finance_pay_policy_preflight digest() type mismatch
+-- Fix: finance_pay_policy_preflight checksum — use pg built-in sha256()
 --
 -- Root cause: the initial apply of migration 20260919000600 contained
 --   encode(digest(manifest::text,'sha256'),'hex')
--- PostgreSQL resolves 'sha256' as unknown, but digest(bytea,text) is the
--- only overload available (pgcrypto text overload absent on this instance),
--- so digest(text,unknown) raises "function does not exist".
+-- and the first corrective deploy changed it to
+--   encode(digest(convert_to(manifest::text,'UTF8'),'sha256'),'hex')
+-- Both fail because PostgreSQL resolves the 'sha256' literal as type unknown
+-- and there is no digest(bytea,unknown) overload on this Supabase instance.
+--
+-- Fix: replace with the PostgreSQL 11+ built-in sha256(bytea), which has no
+-- overload ambiguity and does not depend on pgcrypto being in the search path:
+--   encode(sha256(convert_to(manifest::text,'UTF8')),'hex')
 --
 -- Source migration 20260919000600 was corrected in-place on the branch.
 -- This file re-deploys the function to the already-running live database.
@@ -52,7 +57,7 @@ begin
       from public.finance_pay_policy_source_rules where policy_version_id=v.id),
     'costing',jsonb_build_object('dimension','cost_centre','resolutionSource','employee_assignment','missingOutcome','block_input_lock'),
     'statutoryVersionId',statutory_id);
-  checksum:=encode(digest(convert_to(manifest::text,'UTF8'),'sha256'),'hex');
+  checksum:=encode(sha256(convert_to(manifest::text,'UTF8')),'hex');
   return jsonb_build_object('ready',jsonb_array_length(blockers)=0,'blockers',blockers,'warnings',warnings,
     'checksum',checksum,'statutoryVersionId',statutory_id,
     'counts',jsonb_build_object('components',component_count,'requiredSources',source_count,'costingRules',costing_count));
