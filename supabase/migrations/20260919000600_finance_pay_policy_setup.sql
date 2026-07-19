@@ -201,6 +201,31 @@ insert into public.role_permissions (role_name, permission) values
   ('superadmin','finance.payroll.policies.assign')
 on conflict do nothing;
 
+-- Workflow task capability grants for the roles this migration introduces as
+-- workflow approvers. The central workflow seed (20260704000002) only covers
+-- the generic roles (employee/manager/admin/superadmin). This workflow template
+-- assigns step 1 to hr_manager (HR source review) and step 2 to finance_manager
+-- (Finance statutory review). Both roles must be able to call /workflow-engine/decide.
+-- finance_staff submits policies → must also be able to view and claim tasks.
+insert into public.role_permissions (role_name, permission) values
+  ('hr_manager','workflow.my_tasks.view'),
+  ('hr_manager','workflow.tasks.approve'),
+  ('hr_manager','workflow.tasks.return'),
+  ('hr_manager','workflow.tasks.reject'),
+  ('hr_manager','workflow.view'),
+  ('finance_manager','workflow.my_tasks.view'),
+  ('finance_manager','workflow.tasks.approve'),
+  ('finance_manager','workflow.tasks.return'),
+  ('finance_manager','workflow.tasks.reject'),
+  ('finance_manager','workflow.view'),
+  ('finance_staff','workflow.my_tasks.view'),
+  ('finance_staff','workflow.submit'),
+  ('finance_staff','workflow.tasks.approve'),
+  ('finance_staff','workflow.tasks.return'),
+  ('finance_staff','workflow.tasks.reject'),
+  ('finance_staff','workflow.view')
+on conflict do nothing;
+
 -- Two workflow-native reviews. Activation is the third, independent Finance approval.
 do $seed$
 declare v_template uuid; v_version uuid;
