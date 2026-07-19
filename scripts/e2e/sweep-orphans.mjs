@@ -102,9 +102,11 @@ const USER_KEYED = [
  * are intentionally NOT listed.
  *
  * Known non-sweepable blockers (surfaced by the failure log, on purpose):
- *  · finance_payroll_runs.statutory_version_id is ON DELETE RESTRICT — a payroll
- *    run pinned to a test statutory version must be removed by the payroll suite's
- *    own cleanup; deleting payroll runs here would be too destructive for a sweeper.
+ *  · Payroll runs whose ownership is PROVEN (created_by ∈ the discovered test users)
+ *    are cleaned by the strict, fail-closed payroll phase below (`sweepPayrollRunsOwnedBy`),
+ *    which walks the full evidence/downstream chain in FK order. A payroll run merely
+ *    pinned to a test statutory_version_id but NOT owned by a test user is still left
+ *    for its suite's own cleanup — deleting that here would be too destructive.
  *  · wf_internal.workflow_request_receipts is NOT exposed via PostgREST (private
  *    schema) so it can't be swept — its workflow_id FK is ON DELETE SET NULL
  *    (migration 20260919000213), so it never blocks the instance delete.
@@ -223,6 +225,153 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
     }
   };
 
+  /**
+   * STRICT, fail-closed payroll-run cleanup. The sweeper historically skipped payroll
+   * runs (a blind delete is too destructive). We now clean ONLY runs whose ownership is
+   * PROVEN — created_by ∈ the discovered synthetic test users — walking the full
+   * FK-ordered evidence/downstream chain from payrollControlCenter.mjs onCleanup.
+   *
+   * Unlike the permissive helpers above, every step THROWS on any lookup / unlink /
+   * delete / verify failure, so the sweep aborts (the users are NOT then deleted)
+   * instead of silently leaking or over-deleting. Candidate discovery NEVER matches on
+   * run_no text. Auto-cleanup is safe precisely because ownership is strictly proven.
+   * Returns the distinct owner user ids for the post-delete verification.
+   */
+  const sweepPayrollRunsOwnedBy = async (uids) => {
+    const countWhere = async (table, build) => {
+      const { count, error } = await build(sb.from(table).select('*', { count: 'exact', head: true }));
+      if (error) throw new Error(`[payroll-sweep] COUNT ${table}: ${error.message}`);
+      return count ?? 0;
+    };
+    const delWhere = async (table, build) => {
+      const found = await countWhere(table, build);
+      if (found && apply) {
+        const { error } = await build(sb.from(table).delete());
+        if (error) throw new Error(`[payroll-sweep] DELETE ${table}: ${error.message}`);
+        deleted += found;
+      }
+      return found;
+    };
+    const delIn = async (table, column, ids) => {
+      let found = 0;
+      for (const part of chunk(ids)) found += await delWhere(table, q => q.in(column, part));
+      return found;
+    };
+    const selIn = async (table, sel, column, ids) => {
+      const out = [];
+      for (const part of chunk(ids)) {
+        const { data, error } = await sb.from(table).select(sel).in(column, part);
+        if (error) throw new Error(`[payroll-sweep] SELECT ${table}: ${error.message}`);
+        out.push(...(data ?? []));
+      }
+      return out;
+    };
+
+    // Discover candidates STRICTLY by created_by (never run_no).
+    const runRows = await selIn('finance_payroll_runs',
+      'id, run_no, status, created_by, workflow_id, source_run_id', 'created_by', uids);
+    if (!runRows.length) return [];
+    const runIds  = runRows.map(r => r.id);
+    const runNos  = runRows.map(r => r.run_no);
+    const ownerIds = [...new Set(runRows.map(r => r.created_by))];
+
+    log(`payroll runs owned by test users: ${runRows.length}`);
+    for (const r of runRows) log(`   - ${r.run_no}  [${r.status}]  ${r.id}`);
+
+    // Preflight (fail-closed): a correction run OUTSIDE the candidate set that
+    // references a candidate via source_run_id (self-ref, ON DELETE RESTRICT). Abort —
+    // deleting the candidate would either be blocked or strand an external run.
+    const referrers = await selIn('finance_payroll_runs', 'id, run_no, source_run_id', 'source_run_id', runIds);
+    const external = referrers.filter(r => !runIds.includes(r.id));
+    if (external.length)
+      throw new Error(`[payroll-sweep] ABORT: external correction run(s) reference candidates — ` +
+        external.map(r => `${r.run_no}(${r.id})`).join(', '));
+
+    // Child-row visibility — every non-zero count prints (this IS the dry-run report).
+    const CHAIN = [
+      ['finance_payroll_export_command_receipts', 'run_id'], ['finance_payroll_exports', 'run_id'],
+      ['finance_payroll_release_command_receipts', 'run_id'], ['finance_payroll_gl_command_receipts', 'run_id'],
+      ['finance_payroll_lifecycle_command_receipts', 'run_id'], ['finance_payroll_input_lock_receipts', 'run_id'],
+      ['finance_payroll_release_certificates', 'run_id'], ['finance_remittances', 'payroll_run_id'],
+      ['finance_disbursements', 'payroll_run_id'], ['finance_payroll_funding_confirmations', 'run_id'],
+      ['finance_payroll_certifications', 'run_id'], ['finance_payslip_deliveries', 'run_id'],
+      ['finance_payslips', 'run_id'], ['finance_payroll_control_findings', 'run_id'],
+      ['finance_payroll_run_warnings', 'run_id'], ['finance_payroll_run_lines', 'run_id'],
+      ['finance_payroll_run_inputs', 'run_id'], ['finance_payroll_calculation_version_lines', 'run_id'],
+      ['finance_payroll_calculation_versions', 'run_id'], ['finance_payroll_calculation_attempts', 'run_id'],
+      ['finance_payroll_input_snapshot_lines', 'run_id'], ['finance_payroll_input_snapshots', 'run_id'],
+    ];
+    for (const [t, c] of CHAIN) {
+      let n = 0;
+      for (const part of chunk(runIds)) n += await countWhere(t, q => q.in(c, part));
+      if (n) log(`     ${t}.${c}: ${n}`);
+    }
+    const glN = await countWhere('finance_gl_journals', q => q.eq('source_module', 'finance_payroll').in('source_ref', runNos));
+    if (glN) log(`     finance_gl_journals(source_ref): ${glN}`);
+    const wfIds = runRows.map(r => r.workflow_id).filter(Boolean);
+
+    if (!apply) return ownerIds;   // dry-run: report only, never unlink or delete
+
+    // 1. Unlink run self-pointers first — a SET NULL onto an immutable evidence FK
+    //    (published_by, current_*_id) raises PR409, so break the pointer here instead.
+    for (const part of chunk(runIds)) {
+      const { error } = await sb.from('finance_payroll_runs').update({
+        release_certificate_id: null, approval_certification_id: null, gl_journal_id: null,
+        current_calculation_version_id: null, current_input_snapshot_id: null,
+      }).in('id', part);
+      if (error) throw new Error(`[payroll-sweep] UNLINK runs: ${error.message}`);
+    }
+    // 2. Command receipts + exports.
+    for (const t of ['finance_payroll_export_command_receipts', 'finance_payroll_exports',
+      'finance_payroll_release_command_receipts', 'finance_payroll_gl_command_receipts',
+      'finance_payroll_lifecycle_command_receipts', 'finance_payroll_input_lock_receipts'])
+      await delIn(t, 'run_id', runIds);
+    // 3. Release satellites + remittances.
+    const certIds = (await selIn('finance_payroll_release_certificates', 'id', 'run_id', runIds)).map(r => r.id);
+    await delIn('finance_payroll_release_remittances', 'release_certificate_id', certIds);
+    await delIn('finance_payroll_release_certificates', 'run_id', runIds);
+    await delIn('finance_remittances', 'payroll_run_id', runIds);
+    // 4. Disbursements (bank files → lines → disbursement).
+    const disbIds = (await selIn('finance_disbursements', 'id', 'payroll_run_id', runIds)).map(r => r.id);
+    await delIn('finance_disbursement_bank_files', 'disbursement_id', disbIds);
+    await delIn('finance_disbursement_lines', 'disbursement_id', disbIds);
+    await delIn('finance_disbursements', 'id', disbIds);
+    // 5. Funding, certifications, GL journals.
+    await delIn('finance_payroll_funding_confirmations', 'run_id', runIds);
+    await delIn('finance_payroll_certifications', 'run_id', runIds);
+    await delWhere('finance_gl_journals', q => q.eq('source_module', 'finance_payroll').in('source_ref', runNos));
+    // 6. Payslips.
+    await delIn('finance_payslip_deliveries', 'run_id', runIds);
+    await delIn('finance_payslips', 'run_id', runIds);
+    // 7. Evidence (DELETE is allowed; only UPDATE is PR409-locked).
+    for (const t of ['finance_payroll_control_findings', 'finance_payroll_run_warnings',
+      'finance_payroll_run_lines', 'finance_payroll_run_inputs',
+      'finance_payroll_calculation_version_lines', 'finance_payroll_calculation_versions',
+      'finance_payroll_calculation_attempts', 'finance_payroll_input_snapshot_lines',
+      'finance_payroll_input_snapshots'])
+      await delIn(t, 'run_id', runIds);
+    // 8. Workflow chain the run started (decisions/audit/tasks → instance).
+    if (wfIds.length) {
+      await delIn('workflow_decisions', 'workflow_id', wfIds);
+      await delIn('workflow_audit_log', 'workflow_id', wfIds);
+      await delIn('workflow_tasks', 'workflow_id', wfIds);
+      await delIn('workflow_instances', 'id', wfIds);
+    }
+    // 9. Platform side-effects + the runs themselves.
+    await delIn('notifications', 'source_id', runIds);
+    await delIn('handoff_outbox', 'source_entity_id', runIds);
+    await delIn('hr_audit_log', 'record_id', runIds);
+    await delIn('app_events', 'source_entity_id', runIds);
+    await delIn('finance_payroll_runs', 'id', runIds);
+
+    // Verify (fail-closed): candidate runs MUST be gone before any user is deleted.
+    let survivors = 0;
+    for (const part of chunk(runIds)) survivors += await countWhere('finance_payroll_runs', q => q.in('id', part));
+    if (survivors) throw new Error(`[payroll-sweep] ABORT: ${survivors} candidate run(s) survived deletion`);
+    log(`  payroll: cleared ${runRows.length} run(s) + evidence owned by ${ownerIds.length} test user(s)`);
+    return ownerIds;
+  };
+
   // 1 ── every synthetic app_user left behind (marker in username, OR "(E2E" full_name).
   const { data: users, error: uErr } = await sb.from('app_users')
     .select('id, username, full_name')
@@ -288,6 +437,12 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
   vlog('TAG-stamped text columns:');
   for (const [table, column] of TEXT_PATTERNS) await sweepPattern(table, column);
 
+  // 4c ── payroll runs owned by the discovered test users (strict, fail-closed chain).
+  //  Must precede the user delete: run evidence FK-references the users (published_by
+  //  SET NULL → PR409, snapshot/line employee_id RESTRICT) and would otherwise block it.
+  let payrollOwnerIds = [];
+  if (userIds.length) payrollOwnerIds = await sweepPayrollRunsOwnedBy(userIds);
+
   // 5 ── finally the users themselves (cascades whatever DOES have a cascade FK).
   if (userIds.length) {
     log(`app_users: ${apply ? 'deleting' : 'would delete'} ${userIds.length} row(s)`);
@@ -300,6 +455,20 @@ export async function sweepOrphans(sb, { apply = false, verbose = false, log = (
       if (failed.length) { log('  ! still FK-blocked:'); failed.forEach(f => log(`    · ${f}`)); }
     }
   }
+
+  // Fail-closed verification: the test users that OWNED payroll runs must now be gone.
+  // A survivor means an evidence/downstream row was missed and silently FK-blocked the
+  // delete — throw so the sweep aborts loudly instead of reporting a false-clean.
+  if (apply && payrollOwnerIds.length) {
+    let survivors = 0;
+    for (const part of chunk(payrollOwnerIds)) {
+      const { count, error } = await sb.from('app_users').select('*', { count: 'exact', head: true }).in('id', part);
+      if (error) throw new Error(`[payroll-sweep] user re-verify: ${error.message}`);
+      survivors += count ?? 0;
+    }
+    if (survivors) throw new Error(`[payroll-sweep] ABORT: ${survivors} payroll-owning test user(s) survived — an evidence row was missed`);
+  }
+
   return { users: userIds.length, deleted };
 }
 

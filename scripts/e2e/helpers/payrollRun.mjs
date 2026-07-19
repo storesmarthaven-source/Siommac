@@ -245,6 +245,7 @@ export const PAYROLL_PERIOD_SALTS = Object.freeze({
   payrollOvertimeRules:     Object.freeze({ run: 55 }),
   payrollStatutorySnapshot: Object.freeze({ run: 66 }),
   payslipRender:            Object.freeze({ run: 71 }),
+  payrollRunsRegister:      Object.freeze({ runA: 72, runB: 73, runC: 74, runD: 75, runE: 76 }),
 });
 
 // [minYear, maxYear] inclusive. Bands are mutually disjoint AND disjoint from
