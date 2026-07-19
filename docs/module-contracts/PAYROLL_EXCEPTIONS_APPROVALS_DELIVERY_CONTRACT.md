@@ -230,10 +230,15 @@ Illegal transitions that must be tested:
 
 | Persona/role | Read WQ | Comment | Assign | Escalate | Resolve | Waive | Reopen | Record scope | Negative E2E ID |
 |---|---:|---:|---:|---:|---:|---:|---:|---|---|
-| finance_staff (view_all) | Y | Y | N | N | N | N | N | view_all | AUTH-EXC-001 (staff escalate → 403) |
-| finance_manager (run.manage) | Y | Y | Y | Y | Y | Y | Y | view_all | AUTH-EXC-002 |
-| employee | N | N | N | N | N | N | N | none | AUTH-EXC-003 (employee WQ → 403) |
+| finance_staff (view_all + run.manage) | Y | Y | Y | Y | Y | **N** | Y | view_all | AUTH-EXC-004 (staff waive → 403) |
+| finance_manager (+ approve) | Y | Y | Y | Y | Y | Y | Y | view_all | AUTH-EXC-002 |
+| employee | N | N | N | N | N | N | N | none | AUTH-EXC-001 (employee escalate/WQ → 403) |
 | superadmin | Y | Y | Y | Y | Y | Y | Y | all | — |
+
+**Live-verified correction (2026-07-19):** `finance_staff` holds `run.manage`, and migration `20260919000422`
+grants `finance.payroll.finding.{assign,resolve,reopen}` to every `run.manage` holder — so staff CAN
+assign/escalate/resolve/reopen; only `waive` (granted to `approve` holders) is manager-only. The negative
+path for escalate is therefore `employee`, not staff.
 
 Segregation-of-duties: findings commands are operational (not maker-checker); the **approval**
 decisions they link to keep their workflow-engine SoD (creator ≠ approver) and are NOT executed here.
