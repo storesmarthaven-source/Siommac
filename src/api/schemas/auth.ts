@@ -103,11 +103,19 @@ export const PermissionKeySchema = z.string().regex(
 export type PermissionKey = z.infer<typeof PermissionKeySchema>;
 
 export const PermissionOverrideSchema = z.object({
-  user_id:    z.uuid(),
+  // app_users.id is TEXT (not a UUID) — e.g. 'admin'. Never tighten to z.uuid()
+  // or real user ids get rejected and the override is silently dropped.
+  user_id:    z.string(),
   permission: PermissionKeySchema,
   granted:    z.boolean(),   // true = explicitly granted, false = explicitly denied
-  set_by:     z.string(),    // username of superadmin who set this
-  set_at:     z.iso.datetime({ offset: true }),
+  // Time-boxing + revocation for grant-required (compliance) keys. Null for the
+  // ordinary allow/deny overrides that have no validity window.
+  valid_from:  z.string().nullable().optional(),
+  valid_until: z.string().nullable().optional(),
+  revoked_at:  z.string().nullable().optional(),
+  // Provenance (optional — not sent by the refresh path, unused by the resolver).
+  set_by:     z.string().optional(),                    // username of the setter
+  set_at:     z.iso.datetime({ offset: true }).optional(),
 });
 
 export type PermissionOverride = z.infer<typeof PermissionOverrideSchema>;

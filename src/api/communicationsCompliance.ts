@@ -33,6 +33,33 @@ import type {
  *  interfaces (assignable to `object`, which safely narrows to the Record). */
 const asArgs = (body: object): Record<string, unknown> => body as Record<string, unknown>;
 
+/**
+ * Raised when a compliance read is refused by the backend. `apiPost` never throws
+ * (it resolves to `{ success:false, message, code }`), so the read hooks translate a
+ * refusal into this typed error — otherwise the query would resolve to `undefined`
+ * and the workspace would silently empty instead of showing an access gate.
+ *
+ * `code === 'authorization_unavailable'` marks the fail-closed 503 (permission store
+ * unavailable — a retryable/transient condition); any other refusal (403 `Forbidden`)
+ * means the actor holds no active `communications.compliance_read` grant.
+ */
+export class ComplianceAccessError extends Error {
+  readonly code?: string;
+  constructor(message: string, code?: string) {
+    super(message);
+    this.name = 'ComplianceAccessError';
+    this.code = code;
+  }
+  /** True when the refusal is a missing grant (not a transient service outage). */
+  get isGrantRequired(): boolean {
+    return this.code !== 'authorization_unavailable';
+  }
+}
+
+/** Narrow an unknown TanStack `error` to the compliance access refusal. */
+export const asComplianceAccessError = (error: unknown): ComplianceAccessError | null =>
+  error instanceof ComplianceAccessError ? error : null;
+
 // ── Query keys (compliance-scoped; local per contract §7) ────────────────────────
 export const complianceKeys = {
   all:     ['communications', 'compliance'] as const,
@@ -64,9 +91,16 @@ export function useComplianceSummary() {
 export function useComplianceCases(filters: ComplianceCasesListRequest = {}) {
   return useQuery({
     queryKey: complianceKeys.cases(filters),
+    // A missing grant is a stable 403 — retrying cannot change the outcome, and
+    // it would delay the access gate. Let a transient 503 retry once.
+    retry: (count, error) =>
+      asComplianceAccessError(error)?.code === 'authorization_unavailable' && count < 1,
     queryFn: async (): Promise<ComplianceCasesListResponse> => {
-      const res = await apiPost<{ success: boolean; data: ComplianceCasesListResponse }>(
+      const res = await apiPost<{ success: boolean; data?: ComplianceCasesListResponse; message?: string; code?: string }>(
         'communications/compliance/cases/list', asArgs(filters));
+      if (!res.success || !res.data) {
+        throw new ComplianceAccessError(res.message ?? 'Compliance access is unavailable.', res.code);
+      }
       return res.data;
     },
   });

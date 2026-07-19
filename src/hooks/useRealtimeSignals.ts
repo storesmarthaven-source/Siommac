@@ -34,19 +34,38 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
   const clientRef    = useRef<SupabaseClient | null>(null);
   const channelRef   = useRef<SupabaseChannel | null>(null);
   const tokenRef     = useRef<string | null>(realtimeToken);
-  tokenRef.current   = realtimeToken;
 
-  // Token rotation: re-authorize the LIVE connection without resubscribing
-  // (the summary poll re-mints the token; churning the channel would drop
-  // signal delivery windows). Channel lifecycle stays keyed on channelKey.
+  // Token rotation: keep the ref in sync and re-authorize the LIVE connection
+  // without resubscribing (the summary poll re-mints the token; churning the
+  // channel would drop signal delivery windows). Ref writes live in the effect,
+  // never during render. Channel lifecycle stays keyed on channelKey.
   useEffect(() => {
+    tokenRef.current = realtimeToken;
     if (realtimeToken && clientRef.current) {
       (clientRef.current as unknown as { realtime: { setAuth(t: string): void } }).realtime.setAuth(realtimeToken);
     }
   }, [realtimeToken]);
 
+  // Window-focus fallback: on returning to the tab, re-pull the permission
+  // snapshot (throttled) so a grant approved/revoked while the tab was
+  // backgrounded reflects promptly even if the realtime signal was missed.
+  useEffect(() => {
+    let last = 0;
+    const onFocus = () => {
+      const now = Date.now();
+      if (now - last < 15_000) return;
+      last = now;
+      void import('@lib/auth').then(m => m.refreshPermissionOverrides());
+    };
+    window.addEventListener('focus', onFocus);
+    return () => window.removeEventListener('focus', onFocus);
+  }, []);
+
   useEffect(() => {
     if (!channelKey) return;
+    // `window.supabase` is typed as always-present, but this guard defends at
+    // runtime against the Supabase UMD not having loaded yet (a real SPA race).
+    // eslint-disable-next-line @typescript-eslint/no-unnecessary-condition
     if (typeof window === 'undefined' || !window.supabase) return;
 
     // Tear down any existing subscription
@@ -92,6 +111,12 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
             emitMessagesSignal();   // Messenger workspace refetch bridge (no-op when unmounted)
           } else if (domain === 'tickets') {
             void qc.invalidateQueries({ queryKey: ticketKeys.all });
+          } else if (domain === 'permissions') {
+            // A grant for THIS user changed (approved/revoked/set/cleared). Re-pull
+            // the permission snapshot so can()/useCan() reflect it live — the
+            // cross-session propagation path, since maker-checker means the approver
+            // is never the affected user.
+            void import('@lib/auth').then(m => m.refreshPermissionOverrides());
           }
         },
       )

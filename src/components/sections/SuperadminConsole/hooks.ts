@@ -11,6 +11,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { toast } from '@store/ui';
 import { useSessionStore } from '@store/session';
+import { refreshPermissionOverrides } from '@lib/auth';
 import {
   listUsersApi, getUserPermissionsApi, setUserPermissionApi, clearUserPermissionApi,
   getActiveSessionsApi, revokeSessionApi,
@@ -53,6 +54,16 @@ export function useUserPermissions(userId: string | null) {
   });
 }
 
+/**
+ * When a permission mutation targets the CURRENT user, refresh their own
+ * permission snapshot immediately (their session won't get a cross-user realtime
+ * signal for its own change). Cross-user changes propagate via the backend
+ * `permissions` realtime signal + token-refresh/focus fallbacks instead.
+ */
+function refreshIfSelf(targetUserId: string): void {
+  if (targetUserId === useSessionStore.getState().userId) void refreshPermissionOverrides();
+}
+
 export function useSetUserPermission() {
   const qc = useQueryClient();
   return useMutation({
@@ -63,6 +74,7 @@ export function useSetUserPermission() {
       if (!res.success) { toast.error(res.message ?? 'Failed to update permission.'); return; }
       toast.success(`${vars.permission} ${vars.granted ? 'granted' : 'denied'}.`);
       void qc.invalidateQueries({ queryKey: consoleKeys.userPerms(vars.userId) });
+      refreshIfSelf(vars.userId);
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -78,6 +90,7 @@ export function useClearUserPermission() {
       if (!res.success) { toast.error(res.message ?? 'Failed to clear override.'); return; }
       toast.success(`${vars.permission} reverted to role default.`);
       void qc.invalidateQueries({ queryKey: consoleKeys.userPerms(vars.userId) });
+      refreshIfSelf(vars.userId);
     },
     onError: () => toast.error('Network error. Try again.'),
   });

@@ -18,6 +18,7 @@ import {
   isCriticalGrant,
 } from '../lib/permissions';
 import { emitAppEvent }                   from '../lib/appEvents';
+import { emitSignal }                     from '../lib/communications';
 import { msgRpcHttpError }                from '../lib/messaging/messagingRpc';
 import { getProfileSignedUrl }            from '../lib/photos';
 import { requireStepUp }                  from '../lib/stepUp';
@@ -282,6 +283,8 @@ router.post('/setUserPermission', async c => {
     sourceModule: 'platform', sourceEntityType: 'user', sourceEntityId: userId,
     actorUserId: actor.id, severity: 'warning', payload: { permission, granted },
   });
+  // Nudge the affected user's live session to re-pull its permission snapshot.
+  void emitSignal([userId], 'permissions');
   return c.json({ success: true });
 });
 
@@ -320,6 +323,9 @@ router.post('/clearUserPermission', async c => {
         && result.status !== 'deny_cleared') {
       return c.json({ success: false, message: 'Unexpected revocation state.' }, 500);
     }
+    // Nudge the affected user so the revoked compliance grant drops from their
+    // live session (the shield disappears) without waiting for a reload.
+    void emitSignal([userId], 'permissions');
     return c.json({ success: true, status: result.status });
   }
 
@@ -339,6 +345,8 @@ router.post('/clearUserPermission', async c => {
     sourceModule: 'platform', sourceEntityType: 'user', sourceEntityId: userId,
     actorUserId: actor.id, severity: 'info', payload: { permission },
   });
+  // Nudge the affected user's live session to re-pull its permission snapshot.
+  void emitSignal([userId], 'permissions');
   return c.json({ success: true });
 });
 

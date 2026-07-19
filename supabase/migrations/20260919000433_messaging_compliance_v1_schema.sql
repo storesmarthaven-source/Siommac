@@ -520,6 +520,7 @@ declare
   v_now timestamptz := now();
   v_event_id uuid;
   v_constraint_name text;
+  v_expired_approval_id text;
 begin
   if p_request_id is null or btrim(p_request_id) = ''
      or p_actor_id is null or btrim(p_actor_id) = ''

@@ -193,6 +193,27 @@
 .smc-placeholder__icon svg { width: 30px; height: 30px; color: #9aa7bd; }
 .smc-placeholder strong { color: var(--smc-text); font-size: 15px; }
 
+/* ── Access-required gate ───────────────────────────────────────────────── */
+.smc-gate { flex: 1; min-height: 0; overflow: auto; display: grid; place-content: center; justify-items: center; padding: 40px 20px; }
+/* Bordered, slightly-darker container around the gate content. */
+.smc-gate__panel { display: grid; gap: 16px; justify-items: center; text-align: center; max-width: 540px; padding: 40px 40px 34px; border: 1px solid var(--smc-line-2); border-radius: 18px; background: #e9eef6; }
+.smc-gate__panel--warn { background: #fbf1e2; border-color: #eecfa0; }
+/* Icon: larger, no container/box around it. */
+.smc-gate__icon { color: var(--smc-navy); line-height: 0; }
+.smc-workspace .smc-gate__icon svg { width: 52px; height: 52px; stroke-width: 1.6; }
+.smc-gate__panel--warn .smc-gate__icon { color: #a5651a; }
+.smc-gate__title { color: var(--smc-text); font-size: 17px; font-weight: 700; }
+.smc-gate__body { max-width: 440px; margin: 0; color: var(--smc-muted); font-size: 13.5px; line-height: 1.55; }
+.smc-gate code { font-family: ui-monospace, SFMono-Regular, Menlo, monospace; font-size: 12.5px; background: #dfe6f1; border: 1px solid var(--smc-line-2); border-radius: 5px; padding: 1px 5px; color: var(--smc-navy); }
+.smc-gate__steps { max-width: 440px; margin: 2px 0 4px; padding-left: 20px; text-align: left; display: grid; gap: 7px; color: var(--smc-text); font-size: 13px; line-height: 1.5; }
+.smc-gate__steps strong { font-weight: 600; }
+/* Footer band: full-width separator inside the panel, flush to its bottom edge. */
+.smc-gate__footer { width: calc(100% + 80px); margin: 8px -40px -34px; padding: 18px 40px; border-top: 1px solid var(--smc-line-2); display: flex; justify-content: center; }
+.smc-gate__panel--warn .smc-gate__footer { border-top-color: #eecfa0; }
+.smc-gate--checking { gap: 12px; }
+.smc-gate__spinner { width: 22px; height: 22px; border-radius: 50%; border: 2.5px solid var(--smc-line); border-top-color: var(--smc-navy); animation: smc-spin .7s linear infinite; }
+@keyframes smc-spin { to { transform: rotate(360deg); } }
+
 /* ── Access Log ─────────────────────────────────────────────────────────── */
 .smc-accesslog { flex: 1; min-height: 0; overflow: auto; padding: 18px 20px; display: grid; gap: 14px; align-content: start; }
 .smc-filters { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; }

@@ -18,6 +18,7 @@ import { sb }                        from '../lib/db';
 import { requirePermission }         from '../lib/auth';
 import { requireStepUp }             from '../lib/stepUp';
 import { invalidateRolePermissions } from '../lib/permissions';
+import { emitSignal }                from '../lib/communications';
 import { z, zv }                     from '../lib/validate';
 import type { HonoVariables }        from '../../../types/api';
 
@@ -204,6 +205,13 @@ router.post('/approve', async c => {
   // grants so the new grant resolves immediately on the next authorization check.
   if (result.request_type === 'role_permission' && result.target_role) {
     invalidateRolePermissions(result.target_role);
+  }
+
+  // Targeted realtime nudge: the affected user (never the approver — maker-checker)
+  // re-pulls their permission snapshot so the grant reflects in their live session
+  // without a reload. Fire-and-forget; login/token-refresh/focus are the fallbacks.
+  if (result.request_type === 'user_override' && result.target_user_id) {
+    void emitSignal([result.target_user_id], 'permissions');
   }
 
   return c.json({ success: true });

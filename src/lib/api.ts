@@ -103,6 +103,13 @@ async function _doRefresh(): Promise<string | null> {
     // in the shared cookie jar — nothing else to sync)
     _broadcastTokens(json.token, expiresAt);
 
+    // Re-sync permission overrides on refresh so a grant that was approved/revoked
+    // (or expired) mid-session is reflected in can()/useCan(). Fire-and-forget +
+    // dynamic import to avoid coupling the low-level fetch layer to the auth service.
+    void import('@lib/auth')
+      .then(m => m.refreshPermissionOverrides())
+      .catch(() => { /* non-fatal: falls back to the prior snapshot */ });
+
     return json.token;
   } catch (err) {
     logger.error('Token refresh network error', err);

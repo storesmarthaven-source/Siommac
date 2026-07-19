@@ -110,6 +110,17 @@ async function applyPermissionOverrides(): Promise<void> {
   }
 }
 
+/**
+ * Re-fetch the current user's permission overrides and apply them to the store.
+ * Call this whenever a grant may have changed for THIS user — after a compliance
+ * grant is approved/revoked, on token refresh, or when the user retries the
+ * compliance access gate — so `can()`/`useCan()` reflect the new grant state
+ * without a full page reload. Safe no-op if unauthenticated (returns []).
+ */
+export async function refreshPermissionOverrides(): Promise<void> {
+  await applyPermissionOverrides();
+}
+
 // ── Public API ────────────────────────────────────────────────────────────────
 
 /**

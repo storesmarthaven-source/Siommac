@@ -1,6 +1,9 @@
 # Messenger Compliance V1 - Build-Ready Technical Implementation
 
-Status: APPROVED V1 DELIVERY CONTRACT
+Status: APPROVED V1 DELIVERY CONTRACT — built + statically verified; migrations
+432–436 applied (433 patched). Live E2E acceptance: **BLOCKED BY ENVIRONMENT**
+(needs a disposable DB with migrations 432–436 + `COMPLIANCE_EVIDENCE_PEPPER_V1`;
+must never run against the shared dev DB — see §11.0).
 
 Scope: A deliberately small, secure compliance workflow for approved,
 time-limited access to specific conversations and basic evidence export.
@@ -749,8 +752,54 @@ Conversation participants are not notified of compliance access in V1.
 
 Create `scripts/e2e/suites/communicationsCompliance.mjs`.
 
-The suite uses the live HTTP stack and real database. It must pass twice
-consecutively with complete cleanup.
+The suite uses the live HTTP stack over a **disposable database only** (see §11.0).
+It must pass twice consecutively with complete cleanup.
+
+### 11.0 Disposable-database requirement (MANDATORY)
+
+This suite writes **immutable / append-only evidence rows** —
+`message_compliance_access_events` and `message_compliance_exports` carry
+`block_*` / `guard_*` triggers (migration `20260919000433`) that reject `UPDATE`
+and `DELETE`. The normal tagged-row sweeper (`h.mustDelete`) **cannot remove
+them**. Running this suite therefore permanently pollutes any database it touches.
+
+To enforce this, the suite refuses to run unless `E2E_DISPOSABLE_DB=1` is set
+(hard guard at `scripts/e2e/suites/communicationsCompliance.mjs` top of `run`).
+
+Rules:
+
+- **Never set `E2E_DISPOSABLE_DB=1` against the shared development database.**
+  It is a shared, non-resettable environment; the un-sweepable evidence rows
+  would accumulate there permanently.
+- Run only against a **throwaway database copy / branch** that is
+  **owner-reset after each run**.
+- That database must have migrations **432–436 applied** and the backend must be
+  started with **`COMPLIANCE_EVIDENCE_PEPPER_V1` configured** (the export/evidence
+  SHA-256 hashing reads it; exports fail without it).
+
+Operator sequence for a live acceptance run:
+
+1. Provision a disposable DB copy (or branch); apply migrations 432–436.
+2. Set env: `E2E_DISPOSABLE_DB=1` **and** `COMPLIANCE_EVIDENCE_PEPPER_V1=<value>`.
+3. `npm run build:backend`, start `dev:netlify` pointed at the disposable DB.
+4. `npm run test:e2e -- communicationsCompliance`.
+5. Owner-reset (drop/recreate) the disposable DB afterward.
+
+### 11.-status Live E2E acceptance status: BLOCKED BY ENVIRONMENT
+
+As of 2026-07-18, live compliance E2E acceptance is **BLOCKED BY ENVIRONMENT —
+not passed, not failed.** The suite has never been executed against a valid target
+because no disposable database with migrations 432–436 and
+`COMPLIANCE_EVIDENCE_PEPPER_V1` has been provisioned. It must **not** be run against
+the shared development database (see §11.0).
+
+- Static verification is **complete**: backend + frontend typecheck clean; the
+  compliance route is mounted and compiled (returns 401 unauthenticated on
+  `/api/communications/compliance/cases/list`); migrations 432–436 apply cleanly
+  after the `20260919000433` patch (added the missing `v_expired_approval_id`
+  declaration to `request_compliance_permission_grant_tx`).
+- Final compliance acceptance remains **pending exactly one disposable-DB run**
+  as described above.
 
 ### 11.1 Critical permission behavior
 
@@ -913,6 +962,28 @@ Not part of V1:
 
 Do not add hidden placeholders or accept inputs for deferred features.
 
+### 14.1 Deferred: targeted `compliance.changed` thread-grant signal
+
+Cross-session propagation of **capability-level** changes (the `communications.compliance_read`
+grant that controls the Compliance shield) is implemented via a `permissions` realtime signal —
+see §16. **Thread-level** grant grant/revoke has no realtime signal yet; this is the one deferred
+piece:
+
+- **Deferred:** a targeted `compliance.changed` realtime signal emitted on thread-grant
+  **grant/revoke** (`message_thread_access_grants`), delivered to the affected user by channel_key.
+- **Purpose:** invalidate that user's compliance **case**, **conversation**, **grant**, and
+  **export-capability** queries so revoked/added thread access closes (or opens) in the UI without
+  a manual refresh.
+- **Not:** a `permissions.changed` event, and **not** a permission-snapshot refresh
+  (`refreshPermissionOverrides()`). Thread-grant scope is distinct from the capability grant; the
+  two must never be conflated.
+- **Security:** backend authorization remains immediate and authoritative — every compliance read
+  is already gated by an approved case + active scoped grant server-side. This signal only removes
+  **stale UI state** faster; it is a UX improvement, never a security boundary.
+
+Until this lands, a revoked thread grant simply stops returning data on the next read (the backend
+denies it); the stale UI closes on the user's next navigation/refetch.
+
 ## 15. Definition of Done
 
 V1 is done only when:
@@ -932,3 +1003,32 @@ V1 is done only when:
 - the focused suite passes twice;
 - affected security and communications regressions pass;
 - an independent review reports no P0/P1 finding.
+
+## 16. Realtime permission propagation (capability-level)
+
+The Compliance shield and every compliance command are a UI mirror of the backend
+`communications.compliance_read` grant. The client resolver enforces the same time-boxed /
+revocation rules as the backend (`resolveWithSet`), so the frontend permission snapshot must stay
+in sync with grant changes. Because maker-checker means the approver is never the affected user,
+and approvals usually target another user's live session, propagation is signal-driven:
+
+- **Emit:** `emitSignal([affectedUserId], 'permissions')` on every capability-level
+  (`user_permissions`) change — grant approval (`permissionApprovals /approve`, `user_override`),
+  and override set/clear/compliance-revoke (`superadmin/setUserPermission`,
+  `superadmin/clearUserPermission`). Never on thread-grant changes (§14.1).
+- **Receive:** the affected user's client (subscribed by channel_key) handles the `permissions`
+  domain in `useRealtimeSignals` and calls `refreshPermissionOverrides()` to re-pull its snapshot.
+- **Fallbacks:** login, token-refresh, window-focus, and the access-gate Reload also refresh the
+  snapshot; a next-boundary timer re-evaluates at each grant's `valid_from` and `valid_until` so
+  future-dated activation and expiry flip the UI on time.
+- **Observability:** `emitSignal` is fire-and-forget (a signal failure never fails the caller's
+  mutation) but logs every failure at error level with context — it is never silently swallowed.
+- **Security:** unchanged — every compliance route enforces the grant server-side. The signal only
+  shortens the stale-UI window.
+
+**Operational gate:** the `'permissions'` signal domain requires migration
+`20260919000437` (adds `'permissions'` to the `communication_signals.domain` CHECK, discovering the
+existing constraint by name via `pg_constraint`). Until that migration is applied, the emit fails
+the CHECK (logged at error) and the system relies on the login / token-refresh / window-focus /
+Reload fallbacks. **Do not treat realtime permission propagation as operational until migration
+`20260919000437` is applied.**

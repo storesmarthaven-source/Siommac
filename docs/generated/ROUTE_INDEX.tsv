@@ -2,10 +2,10 @@ path	module	permission	guards	schema	file	line
 /api/addDepartment	hr	departments.add	requirePermission	AddDepartmentSchema	netlify/functions/routes/departments.ts	51
 /api/addEmployee	hr	employees.add	requirePermission	AddEmployeeSchema	netlify/functions/routes/employees.ts	63
 /api/addProjectSite	platform	sites.add	requirePermission	AddSiteSchema	netlify/functions/routes/sites.ts	81
-/api/admin/approvals/approve	security	permissions.manage	requirePermission	ApproveSchema	netlify/functions/routes/permissionApprovals.ts	139
-/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	249
-/api/admin/approvals/list	security	permissions.manage	requirePermission	ListSchema	netlify/functions/routes/permissionApprovals.ts	70
-/api/admin/approvals/reject	security	permissions.manage	requirePermission	RejectSchema	netlify/functions/routes/permissionApprovals.ts	214
+/api/admin/approvals/approve	security	permissions.manage	requirePermission	ApproveSchema	netlify/functions/routes/permissionApprovals.ts	140
+/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	257
+/api/admin/approvals/list	security	permissions.manage	requirePermission	ListSchema	netlify/functions/routes/permissionApprovals.ts	71
+/api/admin/approvals/reject	security	permissions.manage	requirePermission	RejectSchema	netlify/functions/routes/permissionApprovals.ts	222
 /api/admin/security/policy/update	security	auth.security.manage_policy	requirePermission	PolicyUpdateSchema	netlify/functions/routes/adminSecurity.ts	225
 /api/admin/security/users/passkeys/revoke-all	security	auth.passkeys.admin_revoke	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	92
 /api/admin/security/users/status	security	auth.security.view	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	42
@@ -16,7 +16,7 @@ path	module	permission	guards	schema	file	line
 /api/auth/2fa/disable	security		requireUser	DisableSchema	netlify/functions/routes/auth2fa.ts	164
 /api/auth/2fa/setup	security		requireUser		netlify/functions/routes/auth2fa.ts	80
 /api/auth/2fa/status	security		requireUser		netlify/functions/routes/auth2fa.ts	59
-/api/auth/password/change	security		requireUser	ChangePasswordSchema	netlify/functions/routes/auth.ts	703
+/api/auth/password/change	security		requireUser	ChangePasswordSchema	netlify/functions/routes/auth.ts	722
 /api/auth/security/policy	security		requireUser		netlify/functions/routes/adminSecurity.ts	201
 /api/auth/step-up/options	security		requireUser		netlify/functions/routes/authStepUp.ts	45
 /api/auth/step-up/verify	security		requireUser	VerifySchema	netlify/functions/routes/authStepUp.ts	85
@@ -89,14 +89,14 @@ path	module	permission	guards	schema	file	line
 /api/communications/tickets/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1030
 /api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1009
 /api/communications/tickets/update	communications	tickets.manage	requirePermission	UpdateTicketSchema	netlify/functions/routes/communications.ts	1100
-/api/confirm2faSetup	security			Setup2faConfirmSchema	netlify/functions/routes/auth.ts	473
+/api/confirm2faSetup	security			Setup2faConfirmSchema	netlify/functions/routes/auth.ts	479
 /api/createTicket	communications		requireUser	CreateTicketSchema	netlify/functions/routes/tickets.ts	20
 /api/deleteDepartment	hr	departments.delete	requirePermission	DeleteDepartmentSchema	netlify/functions/routes/departments.ts	78
 /api/deleteEmployee	hr	employees.delete	assertInScope,requirePermission	DeleteEmployeeSchema	netlify/functions/routes/employees.ts	200
 /api/deleteNotification	communications		requireUser	MarkReadSchema	netlify/functions/routes/notify.ts	164
 /api/deleteProjectSite	platform	sites.delete	assertInScope,requirePermission	DeleteSiteSchema	netlify/functions/routes/sites.ts	122
 /api/deleteTicket	communications		requireUser	GetTicketSchema	netlify/functions/routes/tickets.ts	126
-/api/disable2fa	security		requireUser	Disable2faSchema	netlify/functions/routes/auth.ts	543
+/api/disable2fa	security		requireUser	Disable2faSchema	netlify/functions/routes/auth.ts	549
 /api/finance/ap/aging	finance	finance.ap.view	requirePermission		netlify/functions/routes/financeAccountsPayable.ts	100
 /api/finance/ap/bills/approve	finance	finance.ap.bills.approve	requirePermission	z.object({ id: z.string().uuid() })	netlify/functions/routes/financeAccountsPayable.ts	200
 /api/finance/ap/bills/audit	finance	finance.ap.view	requirePermission	z.object({ id: z.string().uuid() })	netlify/functions/routes/financeAccountsPayable.ts	238
@@ -351,7 +351,7 @@ path	module	permission	guards	schema	file	line
 /api/finance/statutory/versions/retire	finance	finance.statutory.manage	requirePermission	z.object({ id: z.string().uuid() })	netlify/functions/routes/financeStatutory.ts	177
 /api/finance/statutory/versions/submit	finance	finance.statutory.manage	requirePermission	z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })	netlify/functions/routes/financeStatutory.ts	133
 /api/finance/statutory/versions/update	finance	finance.statutory.manage	requirePermission	z.object({     id: z.string().uuid(),     label: z.string().min(1).max(200).optional(),     payePersonalAllowance: z.number().nonnegative().optional(),     payeBand1Ceiling: z.number().nonnegative().optional(),     payeBand1Rate: z.number().min(0).max(1).optional(),     payeBand2Rate: z.number().min(0).max(1).optional(),     hsMonthlyThreshold: z.number().nonnegative().optional(),     hsWeeklyHigh: z.number().nonnegative().optional(),     hsWeeklyLow: z.number().nonnegative().optional(),     nisMonthyCeiling: z.number().nonnegative().nullable().optional(),   })	netlify/functions/routes/financeStatutory.ts	111
-/api/get2faStatus	security		requireUser		netlify/functions/routes/auth.ts	530
+/api/get2faStatus	security		requireUser		netlify/functions/routes/auth.ts	536
 /api/getAdminStats	hr		requireRole		netlify/functions/routes/attendance.ts	197
 /api/getDashboardCharts	hr		requireRole		netlify/functions/routes/attendance.ts	448
 /api/getDeptEmployees	hr		requireRole	GetDeptStatsSchema	netlify/functions/routes/attendance.ts	528
@@ -361,9 +361,9 @@ path	module	permission	guards	schema	file	line
 /api/getMyChart	hr		requireUser	GetMyChartSchema	netlify/functions/routes/attendance.ts	176
 /api/getMyHistory	hr		requireUser	GetMyHistorySchema	netlify/functions/routes/attendance.ts	160
 /api/getMyNotifications	communications		requireUser	GetNotifSchema	netlify/functions/routes/notify.ts	58
-/api/getMyPermissionOverrides	security		requireUser		netlify/functions/routes/auth.ts	679
+/api/getMyPermissionOverrides	security		requireUser		netlify/functions/routes/auth.ts	685
 /api/getMyPreferences	platform		requireUser		netlify/functions/routes/notify.ts	113
-/api/getMyRecentActivity	security		requireUser		netlify/functions/routes/auth.ts	664
+/api/getMyRecentActivity	security		requireUser		netlify/functions/routes/auth.ts	670
 /api/getMyStatus	hr		requireUser	GetMyStatusSchema	netlify/functions/routes/attendance.ts	135
 /api/getPublicBranding	settings				netlify/functions/routes/settings.ts	15
 /api/getRecentAttendance	hr		requireRole	GetRecentAttendanceSchema	netlify/functions/routes/attendance.ts	224
@@ -768,8 +768,8 @@ path	module	permission	guards	schema	file	line
 /api/listManagers	hr		requireRole		netlify/functions/routes/employees.ts	283
 /api/listProjectSites	platform		requireUser		netlify/functions/routes/sites.ts	58
 /api/listUserOptions	hr		requireUser		netlify/functions/routes/employees.ts	316
-/api/login	security			LoginSchema	netlify/functions/routes/auth.ts	159
-/api/logout	security		requireUser		netlify/functions/routes/auth.ts	594
+/api/login	security			LoginSchema	netlify/functions/routes/auth.ts	165
+/api/logout	security		requireUser		netlify/functions/routes/auth.ts	600
 /api/markAllNotificationsRead	communications		requireUser		netlify/functions/routes/notify.ts	99
 /api/markAttendance	hr		requireUser	MarkAttendanceSchema	netlify/functions/routes/attendance.ts	34
 /api/markNotificationRead	communications		requireUser	MarkReadSchema	netlify/functions/routes/notify.ts	82
@@ -781,7 +781,7 @@ path	module	permission	guards	schema	file	line
 /api/profile-photo/enhance	settings		requireUser		netlify/functions/routes/settings.ts	232
 /api/profile-photo/remove	settings		requireUser		netlify/functions/routes/settings.ts	187
 /api/profile-photo/upload-url	settings		requireUser		netlify/functions/routes/settings.ts	85
-/api/refreshToken	security				netlify/functions/routes/auth.ts	571
+/api/refreshToken	security				netlify/functions/routes/auth.ts	577
 /api/replyTicket	communications		requireUser	ReplyTicketSchema	netlify/functions/routes/tickets.ts	89
 /api/saveWorkHours	settings		requireRole	SaveWorkHoursSchema	netlify/functions/routes/settings.ts	53
 /api/sendNotification	communications		requireRole	SendNotifSchema	netlify/functions/routes/notify.ts	195
@@ -801,38 +801,38 @@ path	module	permission	guards	schema	file	line
 /api/settings/resolve	settings		requireUser	z.object({ settingKey: z.string().min(1), moduleKey: z.string().min(1) })	netlify/functions/routes/settingsCatalog.ts	165
 /api/settings/values/reset	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	233
 /api/settings/values/set	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	181
-/api/setup2fa	security			Setup2faInitSchema	netlify/functions/routes/auth.ts	436
-/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	289
-/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	583
-/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	674
-/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	632
-/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	704
-/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	356
-/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	443
-/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	564
-/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	223
-/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	662
-/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	539
-/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	173
-/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	405
-/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	719
-/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	239
-/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	603
-/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	691
+/api/setup2fa	security			Setup2faInitSchema	netlify/functions/routes/auth.ts	442
+/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	292
+/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	591
+/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	682
+/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	640
+/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	712
+/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	364
+/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	451
+/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	572
+/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	224
+/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	670
+/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	547
+/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	174
+/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	413
+/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	727
+/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	240
+/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	611
+/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	699
 /api/theme/get	widgets				netlify/functions/routes/uiPrefs.ts	48
 /api/theme/save	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	53
-/api/updateColorScheme	security		requireUser	UpdateColorSchemeSchema	netlify/functions/routes/auth.ts	610
+/api/updateColorScheme	security		requireUser	UpdateColorSchemeSchema	netlify/functions/routes/auth.ts	616
 /api/updateDepartment	hr	departments.edit	requirePermission	UpdateDepartmentSchema	netlify/functions/routes/departments.ts	64
 /api/updateEmployee	hr	employees.edit	assertInScope,requirePermission	UpdateEmployeeSchema	netlify/functions/routes/employees.ts	130
-/api/updateLayoutMode	security		requireUser	UpdateLayoutModeSchema	netlify/functions/routes/auth.ts	619
+/api/updateLayoutMode	security		requireUser	UpdateLayoutModeSchema	netlify/functions/routes/auth.ts	625
 /api/updateMyPreference	platform		requireUser	UpdatePrefSchema	netlify/functions/routes/notify.ts	127
-/api/updateMyProfile	security		requireUser	UpdateMyProfileSchema	netlify/functions/routes/auth.ts	628
+/api/updateMyProfile	security		requireUser	UpdateMyProfileSchema	netlify/functions/routes/auth.ts	634
 /api/updateProjectSite	platform	sites.edit	assertInScope,requirePermission	UpdateSiteSchema	netlify/functions/routes/sites.ts	97
 /api/updateSetting	settings		requireRole	UpdateSettingSchema	netlify/functions/routes/settings.ts	33
 /api/updateTicketStatus	communications		requireUser	UpdateTicketSchema	netlify/functions/routes/tickets.ts	105
 /api/uploadLogo	settings		requireRole	UploadLogoSchema	netlify/functions/routes/settings.ts	66
-/api/verify2fa	security			Verify2faExtSchema	netlify/functions/routes/auth.ts	350
-/api/verifyPassword	security		requireUser	VerifyPasswordSchema	netlify/functions/routes/auth.ts	690
+/api/verify2fa	security			Verify2faExtSchema	netlify/functions/routes/auth.ts	356
+/api/verifyPassword	security		requireUser	VerifyPasswordSchema	netlify/functions/routes/auth.ts	709
 /api/webauthn/auth/options	security			AuthOptionsSchema	netlify/functions/routes/webauthn.ts	289
 /api/webauthn/auth/verify	security			AuthVerifySchema	netlify/functions/routes/webauthn.ts	321
 /api/webauthn/credentials/delete	security			CredentialIdSchema	netlify/functions/routes/webauthn.ts	251

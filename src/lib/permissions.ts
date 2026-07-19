@@ -1339,13 +1339,26 @@ export function resolvePermission(
   //    remain auto-granted — only compliance data-access is gated.
   if (ctx.role === 'superadmin' && !COMPLIANCE_GATED_KEYS.has(key)) return true;
 
-  // 2. Per-user override wins.
+  // 2. Per-user override wins. Mirror the backend resolveWithSet() exactly so the
+  //    UI never diverges from the server's authorization decision:
   const override = ctx.overrides.find((o) => o.permission === key);
   if (override !== undefined) {
-    return override.granted;
+    if (!override.granted) return false;              // explicit deny
+    if (!COMPLIANCE_GATED_KEYS.has(key)) return true; // ordinary grant — no window
+    // Compliance grant: enforce the time-box + revocation. A granted row that is
+    // revoked, undated, or outside its [valid_from, valid_until) window does NOT
+    // grant — so the shield hides the moment a grant is revoked or expires.
+    if (override.revoked_at || !override.valid_from || !override.valid_until) return false;
+    const from  = Date.parse(override.valid_from);
+    const until = Date.parse(override.valid_until);
+    if (!Number.isFinite(from) || !Number.isFinite(until)) return false;
+    const now = Date.now();
+    return from <= now && until > now;
   }
 
-  // 3. Role default (DB-loaded set).
+  // 3. Role default (DB-loaded set) — but compliance keys are NEVER role-granted;
+  //    they require an explicit per-user grant (matches resolveWithSet()).
+  if (COMPLIANCE_GATED_KEYS.has(key)) return false;
   return ctx.rolePermissions.includes(key);
 }
 

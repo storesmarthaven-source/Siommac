@@ -111,71 +111,71 @@ ResolveRecordThreadInput	interface	communications	true		netlify/functions/lib/co
 ResolveRecordThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	182	
 resolveRecordThread	function	communications	true		netlify/functions/lib/communications.ts	190	
 emitSignal	function	communications	true		netlify/functions/lib/communications.ts	292	
-CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	321	
-getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	345	
-NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	393	getCommsSummary
-_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	415	
-_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	421	
-_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	439	
-tsMs	function	communications	false		netlify/functions/lib/communications.ts	478	
-_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	480	
-CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	518	
-CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	533	
-createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	543	
-PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	624	
-PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	636	
-postMessage	function	communications	true		netlify/functions/lib/communications.ts	646	
-ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	713	
-ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	715	
-ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	724	
-ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	725	
-ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	727	
-parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	736	
-formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	746	
-listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	750	
-ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	755	listThreadsForUser
-ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	784	listThreadsForUser
-GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	975	
-getThread	function	communications	true		netlify/functions/lib/communications.ts	986	
-PostRow	type	communications	true		netlify/functions/lib/communications.ts	1083	
-AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1084	
-GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1086	
-getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1094	
-RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1111	getThreadPosts
-MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1297	
-MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1306	
-searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1317	
-Row	interface	communications	false		netlify/functions/lib/communications.ts	1326	searchMessagePosts
-SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1354	
-s	function	communications	false		netlify/functions/lib/communications.ts	1361	
-SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1366	
-resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1394	
-sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1421	
-ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1432	
-listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1445	
-PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1458	listThreadActivity
-PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1459	listThreadActivity
-PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1460	listThreadActivity
-MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1526	
-createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1539	
-CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1547	
-createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1560	
-getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1596	
-markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1637	
-archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1657	
-muteThread	function	communications	true		netlify/functions/lib/communications.ts	1669	
-setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1684	
-addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1714	
-removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1770	
-SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	1801	
-searchMessages	function	communications	true		netlify/functions/lib/communications.ts	1810	
-PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	1822	searchMessages
-RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	1857	
-getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	1859	
-UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1861	getMessageRecipients
-CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	1895	
-CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	1906	
-createTicket	function	communications	true		netlify/functions/lib/communications.ts	1912	
+CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	336	
+getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	360	
+NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	408	getCommsSummary
+_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	430	
+_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	436	
+_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	454	
+tsMs	function	communications	false		netlify/functions/lib/communications.ts	493	
+_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	495	
+CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	533	
+CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	548	
+createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	558	
+PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	639	
+PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	651	
+postMessage	function	communications	true		netlify/functions/lib/communications.ts	661	
+ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	728	
+ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	730	
+ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	739	
+ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	740	
+ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	742	
+parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	751	
+formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	761	
+listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	765	
+ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	770	listThreadsForUser
+ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	799	listThreadsForUser
+GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	990	
+getThread	function	communications	true		netlify/functions/lib/communications.ts	1001	
+PostRow	type	communications	true		netlify/functions/lib/communications.ts	1098	
+AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1099	
+GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1101	
+getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1109	
+RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1126	getThreadPosts
+MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1312	
+MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1321	
+searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1332	
+Row	interface	communications	false		netlify/functions/lib/communications.ts	1341	searchMessagePosts
+SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1369	
+s	function	communications	false		netlify/functions/lib/communications.ts	1376	
+SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1381	
+resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1409	
+sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1436	
+ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1447	
+listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1460	
+PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1473	listThreadActivity
+PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1474	listThreadActivity
+PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1475	listThreadActivity
+MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1541	
+createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1554	
+CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1562	
+createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1575	
+getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1611	
+markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1652	
+archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1672	
+muteThread	function	communications	true		netlify/functions/lib/communications.ts	1684	
+setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1699	
+addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1729	
+removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1785	
+SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	1816	
+searchMessages	function	communications	true		netlify/functions/lib/communications.ts	1825	
+PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	1837	searchMessages
+RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	1872	
+getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	1874	
+UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1876	getMessageRecipients
+CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	1910	
+CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	1921	
+createTicket	function	communications	true		netlify/functions/lib/communications.ts	1927	
 SUPABASE_URL	variable	platform	false		netlify/functions/lib/db.ts	3	
 SUPABASE_SERVICE_ROLE_KEY	variable	platform	false		netlify/functions/lib/db.ts	4	
 SUPABASE_ANON_KEY	variable	platform	false		netlify/functions/lib/db.ts	5	
@@ -2548,8 +2548,8 @@ deviceFrom	function	security	false		netlify/functions/routes/auth.ts	58
 PASSKEY_PROMPT_INTERVAL_MS	variable	security	false		netlify/functions/routes/auth.ts	67	
 shouldPromptForPasskey	function	security	false		netlify/functions/routes/auth.ts	74	
 buildSessionPayload	function	security	true		netlify/functions/routes/auth.ts	84	
-Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	343	
-checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	701	
+Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	349	
+checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	720	
 router	variable	security	false		netlify/functions/routes/auth2fa.ts	29	
 zAnyTotpCode	variable	security	false		netlify/functions/routes/auth2fa.ts	34	
 ConfirmSchema	variable	security	false		netlify/functions/routes/auth2fa.ts	38	
@@ -2969,12 +2969,12 @@ LinkCreateSchema	variable	workflow	false		netlify/functions/routes/orchestration
 LinkListSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	48	
 LinkDeleteSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	49	
 handle	function	workflow	false		netlify/functions/routes/orchestration.ts	52	
-router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	24	
-ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	28	
-ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	32	
-RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	36	
-CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	41	
-ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	47	
+router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	25	
+ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	29	
+ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	33	
+RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	37	
+CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	42	
+ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	48	
 router	variable	settings	false		netlify/functions/routes/settings.ts	12	
 ALLOWED_AVATAR_MIME	variable	settings	false		netlify/functions/routes/settings.ts	83	
 ProfilePhotoCommitSchema	variable	settings	false		netlify/functions/routes/settings.ts	119	
@@ -2997,25 +2997,25 @@ SiteRow	interface	platform	false		netlify/functions/routes/sites.ts	10
 AssignmentRow	interface	platform	false		netlify/functions/routes/sites.ts	16	
 PickerUser	interface	platform	false		netlify/functions/routes/sites.ts	24	
 _listProjectSites	function	platform	false		netlify/functions/routes/sites.ts	29	
-router	variable	platform	false		netlify/functions/routes/superadmin.ts	27	
-PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	33	
-requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	46	
-GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	155	
-SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	156	
-ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	164	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	348	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	427	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	512	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	515	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	516	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	522	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	529	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	530	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	536	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	656	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	657	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	658	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	659	
+router	variable	platform	false		netlify/functions/routes/superadmin.ts	28	
+PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	34	
+requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	47	
+GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	156	
+SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	157	
+ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	165	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	356	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	435	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	520	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	523	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	524	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	530	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	537	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	538	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	544	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	664	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	665	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	666	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	667	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -3745,20 +3745,22 @@ useCommentTicket	function	communications	true	hook	src/api/communications.ts	795
 UpdateTicketArgs	interface	communications	true		src/api/communications.ts	809	
 useUpdateTicket	function	communications	true	hook	src/api/communications.ts	816	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
-complianceKeys	variable	communications	true		src/api/communicationsCompliance.ts	37	
-useComplianceSummary	function	communications	true	hook	src/api/communicationsCompliance.ts	53	
-useComplianceCases	function	communications	true	hook	src/api/communicationsCompliance.ts	64	
-useComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	75	
-useComplianceConversationSearch	function	communications	true	hook	src/api/communicationsCompliance.ts	87	
-useComplianceConversation	function	communications	true	hook	src/api/communicationsCompliance.ts	102	
-useComplianceAccessEvents	function	communications	true	hook	src/api/communicationsCompliance.ts	118	
-useComplianceExports	function	communications	true	hook	src/api/communicationsCompliance.ts	129	
-useRequestComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	143	
-useDecideComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	156	
-useCloseComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	170	
-useRevokeComplianceGrant	function	communications	true	hook	src/api/communicationsCompliance.ts	184	
-useCreateComplianceExport	function	communications	true	hook	src/api/communicationsCompliance.ts	195	
-downloadComplianceExport	function	communications	true		src/api/communicationsCompliance.ts	211	
+ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
+asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	
+complianceKeys	variable	communications	true		src/api/communicationsCompliance.ts	64	
+useComplianceSummary	function	communications	true	hook	src/api/communicationsCompliance.ts	80	
+useComplianceCases	function	communications	true	hook	src/api/communicationsCompliance.ts	91	
+useComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	109	
+useComplianceConversationSearch	function	communications	true	hook	src/api/communicationsCompliance.ts	121	
+useComplianceConversation	function	communications	true	hook	src/api/communicationsCompliance.ts	136	
+useComplianceAccessEvents	function	communications	true	hook	src/api/communicationsCompliance.ts	152	
+useComplianceExports	function	communications	true	hook	src/api/communicationsCompliance.ts	163	
+useRequestComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	177	
+useDecideComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	190	
+useCloseComplianceCase	function	communications	true	hook	src/api/communicationsCompliance.ts	204	
+useRevokeComplianceGrant	function	communications	true	hook	src/api/communicationsCompliance.ts	218	
+useCreateComplianceExport	function	communications	true	hook	src/api/communicationsCompliance.ts	229	
+downloadComplianceExport	function	communications	true		src/api/communicationsCompliance.ts	245	
 SignalOpt	type	hr	false		src/api/employees.ts	22	
 opt	function	hr	false		src/api/employees.ts	23	
 unwrap	function	hr	false		src/api/employees.ts	25	
@@ -4727,7 +4729,7 @@ TwoFactorSetupRequiredSchema	variable	security	true		src/api/schemas/auth.ts	85
 PermissionKeySchema	variable	security	true		src/api/schemas/auth.ts	98	
 PermissionKey	type	security	true		src/api/schemas/auth.ts	103	
 PermissionOverrideSchema	variable	security	true		src/api/schemas/auth.ts	105	
-PermissionOverride	type	security	true		src/api/schemas/auth.ts	113	
+PermissionOverride	type	security	true		src/api/schemas/auth.ts	121	
 uuid	variable	hr	false		src/api/schemas/employee.ts	26	
 isoTimestamp	variable	hr	false		src/api/schemas/employee.ts	27	
 isoDate	variable	hr	false		src/api/schemas/employee.ts	28	
@@ -8359,9 +8361,11 @@ ComplianceStateValue	interface	communications	false		src/components/sections/Mes
 ComplianceStateContext	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	26	
 ComplianceStateProvider	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	28	
 useComplianceState	function	communications	true	hook	src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx	47	
-TABS	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	24	
-ComplianceSubnav	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	36	
-ComplianceWorkspace	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	66	
+TABS	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	25	
+ComplianceSubnav	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	37	
+ComplianceWorkspace	function	communications	true	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	71	
+refresh	function	communications	false		src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	88	ComplianceWorkspace
+ComplianceAccessGate	function	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx	155	
 WIZARD_STEPS	variable	communications	false	component	src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	19	
 CASE_TYPES	array	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	25	
 Picked	interface	communications	false		src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx	33	
@@ -9170,26 +9174,27 @@ SwzIcon	function	settings	true	component	src/components/sections/Settings/swzIco
 CARD_CYCLE	array	settings	false	ui-tile	src/components/sections/Settings/swzIcons.tsx	39	
 swzCardIconName	function	settings	true	ui-tile	src/components/sections/Settings/swzIcons.tsx	40	
 CriticalGrantDialog	function	platform	true	component	src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	16	
-useConsoleUsers	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	30	
-useUserPermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	43	
-useSetUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	56	
-useClearUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	71	
-useActiveSessions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	88	
-useRevokeSession	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	102	
-useAuditLogs	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	118	
-useRoles	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	139	
-useRolePermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	152	
-useRoleCategories	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	165	
-useRoleCategoryMutations	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	179	
-invalidate	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	181	useRoleCategoryMutations
-useCreateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	200	
-useUpdateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	214	
-useDeleteRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	229	
-useSetRolePermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	243	
-usePermissionApprovals	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	260	
-useApproveGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	273	
-useRejectGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	300	
-useCancelGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	323	
+useConsoleUsers	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	31	
+useUserPermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	44	
+refreshIfSelf	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	63	
+useSetUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	67	
+useClearUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	83	
+useActiveSessions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	101	
+useRevokeSession	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	115	
+useAuditLogs	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	131	
+useRoles	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	152	
+useRolePermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	165	
+useRoleCategories	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	178	
+useRoleCategoryMutations	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	192	
+invalidate	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	194	useRoleCategoryMutations
+useCreateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	213	
+useUpdateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	227	
+useDeleteRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	242	
+useSetRolePermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	256	
+usePermissionApprovals	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	273	
+useApproveGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	286	
+useRejectGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	313	
+useCancelGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	336	
 consoleKeys	object	platform	true		src/components/sections/SuperadminConsole/queryKeys.ts	10	
 PolicyForm	interface	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	30	
 DEFAULT_FORM	object	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	43	
@@ -9374,6 +9379,7 @@ useCommunicationSummary	function	communications	true	hook	src/hooks/useCommunica
 SupabaseClient	type	communications	false		src/hooks/useRealtimeSignals.ts	29	
 SupabaseChannel	type	communications	false		src/hooks/useRealtimeSignals.ts	30	
 useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	32	
+onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	54	useRealtimeSignals
 StepUpOptions	interface	platform	false		src/hooks/useStepUp.tsx	23	
 StepUpVerifyResponse	interface	platform	false		src/hooks/useStepUp.tsx	29	
 ResolveFn	type	platform	false		src/hooks/useStepUp.tsx	37	
@@ -9389,26 +9395,26 @@ _shouldRetry	function	platform	false		src/lib/api.ts	56
 _retryDelay	function	platform	false		src/lib/api.ts	60	
 _refreshPromise	variable	platform	false		src/lib/api.ts	67	
 _doRefresh	function	platform	false		src/lib/api.ts	69	
-_refreshToken	function	platform	false		src/lib/api.ts	113	
-CHANNEL_NAME	variable	platform	false		src/lib/api.ts	122	
-TokenBroadcast	interface	platform	false		src/lib/api.ts	124	
-_channel	variable	platform	false		src/lib/api.ts	130	
-_getChannel	function	platform	false		src/lib/api.ts	132	
-_broadcastTokens	function	platform	false		src/lib/api.ts	152	
-_broadcastExpiry	function	platform	false		src/lib/api.ts	156	
-_onAuthExpiredFn	variable	platform	false		src/lib/api.ts	165	
-registerAuthExpiredHandler	function	platform	true		src/lib/api.ts	168	
-_onAuthExpired	function	platform	false		src/lib/api.ts	172	
-_tokenNeedsRefresh	function	platform	false		src/lib/api.ts	179	
-ensureFreshToken	function	platform	true		src/lib/api.ts	191	
-ApiFetchOptions	interface	platform	true		src/lib/api.ts	197	
-apiFetch	function	platform	true		src/lib/api.ts	229	
-apiGet	function	platform	true		src/lib/api.ts	335	
-apiPost	function	platform	true		src/lib/api.ts	344	
-apiPatch	function	platform	true		src/lib/api.ts	350	
-apiDelete	function	platform	true		src/lib/api.ts	356	
-authPost	function	platform	true		src/lib/api.ts	366	
-apiAction	function	platform	true		src/lib/api.ts	382	
+_refreshToken	function	platform	false		src/lib/api.ts	120	
+CHANNEL_NAME	variable	platform	false		src/lib/api.ts	129	
+TokenBroadcast	interface	platform	false		src/lib/api.ts	131	
+_channel	variable	platform	false		src/lib/api.ts	137	
+_getChannel	function	platform	false		src/lib/api.ts	139	
+_broadcastTokens	function	platform	false		src/lib/api.ts	159	
+_broadcastExpiry	function	platform	false		src/lib/api.ts	163	
+_onAuthExpiredFn	variable	platform	false		src/lib/api.ts	172	
+registerAuthExpiredHandler	function	platform	true		src/lib/api.ts	175	
+_onAuthExpired	function	platform	false		src/lib/api.ts	179	
+_tokenNeedsRefresh	function	platform	false		src/lib/api.ts	186	
+ensureFreshToken	function	platform	true		src/lib/api.ts	198	
+ApiFetchOptions	interface	platform	true		src/lib/api.ts	204	
+apiFetch	function	platform	true		src/lib/api.ts	236	
+apiGet	function	platform	true		src/lib/api.ts	342	
+apiPost	function	platform	true		src/lib/api.ts	351	
+apiPatch	function	platform	true		src/lib/api.ts	357	
+apiDelete	function	platform	true		src/lib/api.ts	363	
+authPost	function	platform	true		src/lib/api.ts	373	
+apiAction	function	platform	true		src/lib/api.ts	389	
 SESSION_KEY	variable	platform	false		src/lib/apiLegacy.ts	31	
 _getSessionToken	function	platform	false		src/lib/apiLegacy.ts	33	
 ApiResult	interface	platform	true		src/lib/apiLegacy.ts	44	
@@ -9558,13 +9564,14 @@ Auth2faSetupRequired	interface	security	true		src/lib/auth.ts	68
 SignInResult	type	security	true		src/lib/auth.ts	75	
 parseSession	function	security	false		src/lib/auth.ts	83	
 applyPermissionOverrides	function	security	false		src/lib/auth.ts	102	
-signIn	function	security	true		src/lib/auth.ts	123	
-verify2fa	function	security	true		src/lib/auth.ts	158	
-begin2faSetup	function	security	true		src/lib/auth.ts	176	
-confirm2faSetup	function	security	true		src/lib/auth.ts	196	
-signOut	function	security	true		src/lib/auth.ts	222	
-getSession	function	security	true		src/lib/auth.ts	270	
-_applyFullSession	function	security	false		src/lib/auth.ts	307	
+refreshPermissionOverrides	function	security	true		src/lib/auth.ts	120	
+signIn	function	security	true		src/lib/auth.ts	134	
+verify2fa	function	security	true		src/lib/auth.ts	169	
+begin2faSetup	function	security	true		src/lib/auth.ts	187	
+confirm2faSetup	function	security	true		src/lib/auth.ts	207	
+signOut	function	security	true		src/lib/auth.ts	233	
+getSession	function	security	true		src/lib/auth.ts	281	
+_applyFullSession	function	security	false		src/lib/auth.ts	318	
 makeSession	function	platform	false	test	src/lib/boot.test.ts	39	
 buildShellDom	function	platform	false	test	src/lib/boot.test.ts	58	
 teardownShellDom	function	platform	false	test	src/lib/boot.test.ts	72	
@@ -9742,12 +9749,12 @@ EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	580
 ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	605	
 PermissionContext	interface	security	true		src/lib/permissions.ts	1295	
 resolvePermission	function	security	true		src/lib/permissions.ts	1326	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1358	
-PermissionState	type	security	true		src/lib/permissions.ts	1364	
-permissionState	function	security	true		src/lib/permissions.ts	1370	
-permissionGroups	function	security	true		src/lib/permissions.ts	1380	
-can	function	security	true		src/lib/permissions.ts	1400	
-useCan	function	security	true	hook	src/lib/permissions.ts	1416	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1371	
+PermissionState	type	security	true		src/lib/permissions.ts	1377	
+permissionState	function	security	true		src/lib/permissions.ts	1383	
+permissionGroups	function	security	true		src/lib/permissions.ts	1393	
+can	function	security	true		src/lib/permissions.ts	1413	
+useCan	function	security	true	hook	src/lib/permissions.ts	1429	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -9995,27 +10002,29 @@ SessionState	interface	platform	true		src/store/session.ts	38
 payloadToState	function	platform	false		src/store/session.ts	118	
 stateFromPersisted	function	platform	false		src/store/session.ts	144	
 LOGGED_OUT	object	platform	false		src/store/session.ts	165	
-_persisted	variable	platform	false		src/store/session.ts	190	
-useSessionStore	variable	platform	true	hook	src/store/session.ts	192	
-login	method	platform	false		src/store/session.ts	221	useSessionStore
-verify	method	platform	false		src/store/session.ts	262	useSessionStore
-setPreAuthToken	method	platform	false		src/store/session.ts	267	useSessionStore
-setProfileImage	method	platform	false		src/store/session.ts	271	useSessionStore
-setColorScheme	method	platform	false		src/store/session.ts	278	useSessionStore
-setLayoutMode	method	platform	false		src/store/session.ts	284	useSessionStore
-refreshTokens	method	platform	false		src/store/session.ts	290	useSessionStore
-setPermissionOverrides	method	platform	false		src/store/session.ts	296	useSessionStore
-setPasskeyCount	method	platform	false		src/store/session.ts	300	useSessionStore
-expire	method	platform	false		src/store/session.ts	304	useSessionStore
-logout	method	platform	false		src/store/session.ts	310	useSessionStore
-selectIsAdmin	function	platform	true		src/store/session.ts	322	
-selectIsSuperAdmin	function	platform	true		src/store/session.ts	323	
-selectIsManager	function	platform	true		src/store/session.ts	324	
-selectUserId	function	platform	true		src/store/session.ts	325	
-selectRole	function	platform	true		src/store/session.ts	326	
-selectFullName	function	platform	true		src/store/session.ts	327	
-selectPermissions	function	platform	true		src/store/session.ts	328	
-selectTrustedDeviceUsed	function	platform	true		src/store/session.ts	330	
+_permBoundaryTimer	variable	platform	false		src/store/session.ts	194	
+MAX_TIMEOUT_MS	variable	platform	false		src/store/session.ts	195	
+_persisted	variable	platform	false		src/store/session.ts	198	
+useSessionStore	variable	platform	true	hook	src/store/session.ts	200	
+login	method	platform	false		src/store/session.ts	229	useSessionStore
+verify	method	platform	false		src/store/session.ts	270	useSessionStore
+setPreAuthToken	method	platform	false		src/store/session.ts	275	useSessionStore
+setProfileImage	method	platform	false		src/store/session.ts	279	useSessionStore
+setColorScheme	method	platform	false		src/store/session.ts	286	useSessionStore
+setLayoutMode	method	platform	false		src/store/session.ts	292	useSessionStore
+refreshTokens	method	platform	false		src/store/session.ts	298	useSessionStore
+setPermissionOverrides	method	platform	false		src/store/session.ts	304	useSessionStore
+setPasskeyCount	method	platform	false		src/store/session.ts	331	useSessionStore
+expire	method	platform	false		src/store/session.ts	335	useSessionStore
+logout	method	platform	false		src/store/session.ts	341	useSessionStore
+selectIsAdmin	function	platform	true		src/store/session.ts	353	
+selectIsSuperAdmin	function	platform	true		src/store/session.ts	354	
+selectIsManager	function	platform	true		src/store/session.ts	355	
+selectUserId	function	platform	true		src/store/session.ts	356	
+selectRole	function	platform	true		src/store/session.ts	357	
+selectFullName	function	platform	true		src/store/session.ts	358	
+selectPermissions	function	platform	true		src/store/session.ts	359	
+selectTrustedDeviceUsed	function	platform	true		src/store/session.ts	361	
 bodyTheme	function	platform	false	test	src/store/theme.test.ts	17	
 flush	function	platform	false	test	src/store/theme.test.ts	18	
 setSession	function	platform	false	test	src/store/theme.test.ts	19	

@@ -291,28 +291,43 @@ export async function resolveRecordThread(input: ResolveRecordThreadInput): Prom
  */
 export async function emitSignal(
   userIds: string[],
-  domain:  'summary' | 'notifications' | 'messages' | 'tickets' | 'workflow' | 'handoffs',
+  domain:  'summary' | 'notifications' | 'messages' | 'tickets' | 'workflow' | 'handoffs' | 'permissions',
 ): Promise<void> {
   if (userIds.length === 0) return;
 
+  // Fire-and-forget: a signal failure must NOT fail the caller's mutation, but it
+  // must be OBSERVABLE (error-level, structured) — a silently-dropped signal leaves
+  // a client stale with no trace. Every failure path below logs with context.
   try {
-    // Fetch channel_keys for these users
-    const { data: channels } = await sb
+    // Fetch channel_keys for these users (surface the query error, not just null).
+    const { data: channels, error: chanErr } = await sb
       .from('user_realtime_channels')
       .select('user_id, channel_key')
       .in('user_id', userIds)
       .gt('expires_at', new Date().toISOString()) as {
-        data: { user_id: string; channel_key: string }[] | null
+        data: { user_id: string; channel_key: string }[] | null;
+        error: { message: string } | null;
       };
 
+    if (chanErr) {
+      console.error('[communications] emitSignal channel lookup failed', {
+        domain, userCount: userIds.length, error: chanErr.message,
+      });
+      return;
+    }
     if (!channels || channels.length === 0) return;
 
     const signals = channels.map(c => ({ channel_key: c.channel_key, domain }));
-    await sb.from('communication_signals').insert(signals).then(({ error }) => {
-      if (error) console.warn('[communications] signal insert failed:', error.message);
-    });
+    const { error: insErr } = await sb.from('communication_signals').insert(signals);
+    if (insErr) {
+      console.error('[communications] emitSignal insert failed', {
+        domain, signalCount: signals.length, error: insErr.message,
+      });
+    }
   } catch (e) {
-    console.warn('[communications] emitSignal failed:', e);
+    console.error('[communications] emitSignal threw', {
+      domain, userCount: userIds.length, error: e instanceof Error ? e.message : String(e),
+    });
   }
 }
 

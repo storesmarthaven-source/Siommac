@@ -121,15 +121,15 @@ function payloadToState(p: LoginResponse | Verify2faResponse): Partial<SessionSt
     userId:          p.userId        ?? null,
     username:        p.username      ?? null,
     fullName:        p.fullName      ?? null,
-    role:            (p.role as UserRole) ?? null,
+    role:            (p.role as UserRole | undefined) ?? null,
     departmentId:    p.departmentId  ?? null,
     position:        p.position      ?? null,
     profileImage:    p.profileImage  ?? null,
     token:           p.token         ?? null,
     // Prefer the server-authoritative expiry; fall back to the client constant.
     expiresAt:       p.token ? (p.expiresAt ?? Date.now() + ACCESS_TOKEN_TTL_MS) : null,
-    colorScheme:     (p.colorScheme  as ColorScheme) ?? 'navy',
-    layoutMode:      (p.layoutMode   as LayoutMode)  ?? 'sidebar',
+    colorScheme:     (p.colorScheme  as ColorScheme | undefined) ?? 'navy',
+    layoutMode:      (p.layoutMode   as LayoutMode | undefined)  ?? 'sidebar',
     companyName:     p.companyName   ?? null,
     companyLogoUrl:  p.companyLogoUrl ?? null,
     permissionOverrides: p.permissionOverrides ?? [],
@@ -185,6 +185,14 @@ const LOGGED_OUT: Partial<SessionState> = {
 };
 
 // ── Store ─────────────────────────────────────────────────────────────────────
+
+// Timer that re-evaluates permissions at the nearest grant BOUNDARY — both
+// valid_from (a future-dated grant becomes visible) and valid_until (the grant
+// lapses and the affordance hides). Only compliance grants carry a validity
+// window, so this fires exactly at those instants; re-setting the overrides makes
+// useCan() recompute against the current clock (no full refresh needed).
+let _permBoundaryTimer: ReturnType<typeof setTimeout> | null = null;
+const MAX_TIMEOUT_MS = 2_147_483_000; // setTimeout ceiling (~24.8 days)
 
 // Hydrate from localStorage immediately so the first render is not blank
 const _persisted = loadSession();
@@ -295,6 +303,29 @@ export const useSessionStore = create<SessionState>()((set) => ({
 
   setPermissionOverrides(overrides) {
     set({ permissionOverrides: overrides });
+    // Schedule a re-evaluation at the nearest future grant boundary — valid_from
+    // (future-dated grant activates) OR valid_until (grant lapses) — so the UI
+    // reflects the change on time without a reload.
+    if (_permBoundaryTimer) { clearTimeout(_permBoundaryTimer); _permBoundaryTimer = null; }
+    const now = Date.now();
+    const nextBoundary = overrides.reduce<number | null>((min, o) => {
+      if (!o.granted || o.revoked_at) return min; // revoked never (re)activates
+      let next = min;
+      for (const iso of [o.valid_from, o.valid_until]) {
+        if (!iso) continue;
+        const t = Date.parse(iso);
+        if (Number.isFinite(t) && t > now && (next === null || t < next)) next = t;
+      }
+      return next;
+    }, null);
+    if (nextBoundary !== null) {
+      _permBoundaryTimer = setTimeout(() => {
+        // Fresh array reference → useCan() subscribers recompute against the
+        // current clock; a grant that just activated/lapsed flips accordingly.
+        const s = useSessionStore.getState();
+        s.setPermissionOverrides([...s.permissionOverrides]);
+      }, Math.min(nextBoundary - now, MAX_TIMEOUT_MS));
+    }
   },
 
   setPasskeyCount(count) {

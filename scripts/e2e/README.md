@@ -33,11 +33,25 @@ Exit code is `0` only when every test passes (CI-friendly).
 
 `communicationsCompliance` creates intentionally immutable access evidence and
 completed export records. It refuses to run unless `E2E_DISPOSABLE_DB=1`.
-Do not point that suite at a shared development or production database. The
-required verification sequence is:
+
+**Do not set `E2E_DISPOSABLE_DB=1` against the shared development database (or any
+production database).** It is a shared, non-resettable environment; the immutable
+`message_compliance_access_events` / `message_compliance_exports` rows (protected by
+`block_*` / `guard_*` triggers from migration `20260919000433`) cannot be swept and
+would accumulate there permanently. This suite runs **only** against a throwaway
+database that its owner resets after each run.
+
+Required environment for a live run:
+
+- migrations **432–436** applied to the disposable database;
+- **`COMPLIANCE_EVIDENCE_PEPPER_V1`** configured on the backend (the export/evidence
+  SHA-256 hashing reads it — exports fail without it);
+- `E2E_DISPOSABLE_DB=1`.
+
+Required verification sequence:
 
 1. provision an isolated disposable database;
-2. apply the current migrations;
+2. apply migrations 432–436 and start the backend with `COMPLIANCE_EVIDENCE_PEPPER_V1` set;
 3. run the suite once;
 4. reset the database as its owner;
 5. re-apply migrations and run the suite a second time;
@@ -45,6 +59,15 @@ required verification sequence is:
 
 There is deliberately no service-role cleanup bypass for immutable compliance
 evidence.
+
+**Live E2E acceptance status (2026-07-18): BLOCKED BY ENVIRONMENT — not passed,
+not failed.** The suite has not been executed against a valid target because no
+disposable database with migrations 432–436 and `COMPLIANCE_EVIDENCE_PEPPER_V1` has
+been provisioned; it must not run against the shared dev DB. Static verification is
+**complete** (backend + frontend typecheck clean; compliance route mounted and
+compiled — `/api/communications/compliance/cases/list` returns 401 unauthenticated;
+migrations 432–436 apply cleanly after the `20260919000433` patch). Final compliance
+acceptance remains **pending exactly one disposable-DB run** per the sequence above.
 
 ## Recovering from an interrupted run — `sweep-orphans.mjs`
 

@@ -95,10 +95,12 @@ export async function buildSessionPayload(
     setting('companyLogoUrl', ''),
     setting('companyName', 'My Company'),
     issueRefreshToken(u.id, device, amr),
-    // superadmin needs no overrides (role default already grants everything)
-    u.role === 'superadmin'
-      ? Promise.resolve([] as { permission: string; granted: boolean }[])
-      : loadUserOverrides(u.id),
+    // Load per-user overrides for EVERY role, including superadmin. Compliance
+    // access (communications.compliance_read/_export) is an explicit, time-boxed,
+    // grant-required capability even for superadmins, so the client permission
+    // snapshot must carry the actual grant rows (with their validity window) to
+    // mirror the backend fail-closed model — never a blanket allow-all shortcut.
+    loadUserOverrides(u.id),
     resolveIdleTimeoutMs(u.role),
     loadRolePermissions(u.role),
     loadRoleIsEmployee(u.role),
@@ -142,12 +144,16 @@ export async function buildSessionPayload(
     // hint scoped views; the backend filter remains authoritative regardless.
     roleScope,
     // Per-user RBAC grants/denials — consumed by the session store + can()/useCan().
+    // Validity fields (valid_from/valid_until/revoked_at) are required so the client
+    // resolver can enforce the same time-boxed/revocation rules as the backend for
+    // compliance-gated keys — a granted-but-expired/revoked row must not grant.
     permissionOverrides: overrides.map(o => ({
-      user_id:    u.id,
-      permission: o.permission,
-      granted:    o.granted,
-      set_by:     '',
-      set_at:     new Date(0).toISOString(),
+      user_id:     u.id,
+      permission:  o.permission,
+      granted:     o.granted,
+      valid_from:  o.valid_from  ?? null,
+      valid_until: o.valid_until ?? null,
+      revoked_at:  o.revoked_at  ?? null,
     })),
     // ── Passkey prompt signal (optional — UI shows a setup nudge) ───────────
     hasPasskey,
@@ -684,7 +690,20 @@ router.post('/getMyPermissionOverrides', async c => {
   // the anon key enumerate every user's allow/deny exceptions).
   const actor = await requireUser(c);
   const overrides = await loadUserOverrides(actor.id);
-  return c.json({ success: true, data: overrides });
+  // Same shape as the login payload's permissionOverrides (incl. validity window)
+  // so the client parses both paths with one schema and the resolver can enforce
+  // time-boxing/revocation for compliance-gated grants.
+  return c.json({
+    success: true,
+    data: overrides.map(o => ({
+      user_id:     actor.id,
+      permission:  o.permission,
+      granted:     o.granted,
+      valid_from:  o.valid_from  ?? null,
+      valid_until: o.valid_until ?? null,
+      revoked_at:  o.revoked_at  ?? null,
+    })),
+  });
 });
 
 router.post('/verifyPassword', async c => {
