@@ -33,6 +33,26 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 
+/**
+ * Eligible reviewers for a compliance access grant request: superadmins (hold
+ * permissions.manage by role) + explicit compliance_approve / permissions.manage
+ * holders. Excludes the requester (maker ≠ checker). Used to notify approvers so a
+ * pending request surfaces without them polling the queue.
+ */
+async function listComplianceGrantApprovers(excludeUserId: string): Promise<string[]> {
+  const [superadmins, holders] = await Promise.all([
+    sb.from('app_users').select('id').eq('role', 'superadmin').eq('status', 'active'),
+    sb.from('user_permissions').select('user_id')
+      .in('permission', ['communications.compliance_approve', 'permissions.manage'])
+      .eq('granted', true).is('revoked_at', null),
+  ]);
+  const ids = new Set<string>();
+  for (const u of (superadmins.data ?? []) as { id: string }[]) ids.add(u.id);
+  for (const r of (holders.data ?? []) as { user_id: string }[]) ids.add(r.user_id);
+  ids.delete(excludeUserId);
+  return [...ids];
+}
+
 // The APPROVED-grant apply path lives in the DB now: routes/permissionApprovals.ts
 // calls the approve_permission_grant_tx() RPC, which applies the grant and marks
 // the approval row in ONE atomic transaction (migration 20260917000300). There is
@@ -109,6 +129,32 @@ async function requestCriticalGrant(
     if (result.status !== 'requested' || !result.approval_id) {
       return { ok: false, status: 500, code: 'unexpected_result', message: 'Failed to create the approval request.' };
     }
+
+    // Notify eligible reviewers that a compliance access request needs review
+    // (nav bubble + targeted rich toast → Access Control ▸ Approvals). Fire-and-
+    // forget; dedupe-keyed so a re-emit for the same request never doubles.
+    const requestApprovalId = result.approval_id;
+    void (async () => {
+      const approvers = await listComplianceGrantApprovers(actor.id);
+      if (approvers.length === 0) return;
+      await deliverEventNotifications({
+        eventType: 'iam.permission.compliance_grant_requested',
+        sourceModule: 'platform',
+        sourceEntityType: 'permission_grant_approval',
+        sourceEntityId: requestApprovalId,
+        actorUserId: actor.id,
+        severity: 'warning',
+        explicitRecipients: approvers.map(userId => ({ userId, reason: 'explicit' as const })),
+        notification: {
+          title: 'Compliance access request',
+          body: `${actor.username} requested compliance access — review and approve or reject.`,
+          actionRoute: 's-ac-approvals',
+          type: 'iam.permission.compliance_grant_requested',
+        },
+        dedupeKey: `iam.permission.compliance_grant_requested:${requestApprovalId}`,
+      }, null);
+    })().catch((err: unknown) => console.warn('[requestCriticalGrant] approver notification failed:', err));
+
     return { ok: true, approvalId: result.approval_id };
   }
 
@@ -342,7 +388,7 @@ router.post('/clearUserPermission', async c => {
         notification: {
           title: 'Compliance access revoked',
           body: 'Your Messenger compliance access has been revoked.',
-          actionRoute: 'messages/compliance',
+          actionRoute: 's-messages',
           type: 'communications.compliance.access_revoked',
         },
       }, null);

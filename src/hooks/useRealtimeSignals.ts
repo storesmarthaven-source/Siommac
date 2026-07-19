@@ -115,30 +115,10 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
             // A grant for THIS user changed (approved/revoked/set/cleared). Re-pull
             // the permission snapshot so can()/useCan() reflect it live — the
             // cross-session propagation path, since maker-checker means the approver
-            // is never the affected user. Toast ONLY on a compliance access delta.
-            void (async () => {
-              const [{ can }, { refreshPermissionOverrides }] = await Promise.all([
-                import('@lib/permissions'),
-                import('@lib/auth'),
-              ]);
-              const complianceBefore =
-                can('communications.compliance_read') || can('communications.compliance_export');
-              await refreshPermissionOverrides();
-              const complianceAfter =
-                can('communications.compliance_read') || can('communications.compliance_export');
-              if (complianceBefore !== complianceAfter) {
-                const { toast } = await import('@ui/toast');
-                if (complianceAfter) {
-                  toast.success('Compliance access granted', {
-                    description: 'You can now open the Compliance workspace.',
-                  });
-                } else {
-                  toast.info('Compliance access revoked', {
-                    description: 'Your compliance access has ended.',
-                  });
-                }
-              }
-            })();
+            // is never the affected user. NO toast here: the user-facing compliance
+            // toast comes from the notification stream (single source) to avoid a
+            // duplicate; this signal is snapshot-refresh only.
+            void import('@lib/auth').then(m => m.refreshPermissionOverrides());
           }
         },
       )

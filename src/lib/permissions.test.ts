@@ -28,7 +28,7 @@ function ctx(
   role: PermissionContext['role'],
   overrides: PermissionOverride[] = [],
 ): PermissionContext {
-  const rolePermissions = [...((ROLE_PERMISSIONS[role] as readonly string[] | undefined) ?? [])];
+  const rolePermissions = [...((ROLE_PERMISSIONS[role] as ReadonlySet<string> | undefined) ?? [])];
   return { role, rolePermissions, overrides };
 }
 

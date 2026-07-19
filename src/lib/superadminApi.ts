@@ -69,11 +69,11 @@ export async function setUserPermissionApi(
 
 /** Remove an override for one user + permission (revert to role default). */
 export async function clearUserPermissionApi(
-  userId: string, permission: string,
-): Promise<{ success: boolean; message?: string }> {
+  userId: string, permission: string, reason?: string,
+): Promise<{ success: boolean; message?: string; code?: string; status?: string }> {
   return apiFetch('superadmin/clearUserPermission', {
     method: 'POST',
-    body:   { args: { userId, permission } },
+    body:   { args: { userId, permission, ...(reason ? { reason } : {}) } },
   });
 }
 

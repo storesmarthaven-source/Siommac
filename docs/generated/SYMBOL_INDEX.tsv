@@ -3007,23 +3007,24 @@ PickerUser	interface	platform	false		netlify/functions/routes/sites.ts	24
 _listProjectSites	function	platform	false		netlify/functions/routes/sites.ts	29	
 router	variable	platform	false		netlify/functions/routes/superadmin.ts	28	
 PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	34	
-requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	47	
-GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	156	
-SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	157	
-ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	165	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	377	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	456	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	541	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	544	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	545	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	551	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	558	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	559	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	565	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	685	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	686	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	687	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	688	
+listComplianceGrantApprovers	function	platform	false		netlify/functions/routes/superadmin.ts	42	
+requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	67	
+GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	202	
+SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	203	
+ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	211	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	423	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	502	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	587	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	590	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	591	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	597	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	604	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	605	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	611	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	731	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	732	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	733	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	734	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -5433,22 +5434,24 @@ ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessi
 device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	17	
 AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	25	
 doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	31	AcSessionsPage
-MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	29	
-moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	35	
-OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	37	
-PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	38	
-AVATAR_BG	array	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
-bgFor	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	41	
-initials	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	42	
-timeAgo	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	45	
-CapCell	function	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	57	
-AcUsersPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	61	
-cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	136	AcUsersPage
-clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	146	AcUsersPage
-onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	152	AcUsersPage
-save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	164	AcUsersPage
-submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	176	AcUsersPage
-toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	185	AcUsersPage
+MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	31	
+moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	37	
+OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	39	
+PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
+AVATAR_BG	array	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	42	
+bgFor	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	43	
+initials	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	44	
+timeAgo	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	47	
+CapCell	function	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	59	
+AcUsersPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	63	
+cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	140	AcUsersPage
+clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	150	AcUsersPage
+onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	156	AcUsersPage
+save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	175	AcUsersPage
+submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	187	AcUsersPage
+submitRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	198	AcUsersPage
+toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	212	AcUsersPage
+ComplianceRevokeDialog	function	platform	true	component	src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx	16	
 fmtTime	function	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	23	
 StatusKey	type	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	30	
 STATUS_COLOR	object	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	32	
@@ -9748,17 +9751,20 @@ setOrder	function	platform	true		src/lib/navVisibility.ts	133
 resetVisibility	function	platform	true		src/lib/navVisibility.ts	139	
 UUID_1	variable	communications	false	test	src/lib/notifications.test.ts	55	
 UUID_2	variable	communications	false	test	src/lib/notifications.test.ts	56	
-_notifChannel	variable	communications	false		src/lib/notifications.ts	48	
-initNotificationsRealtime	function	communications	true		src/lib/notifications.ts	58	
-teardownNotificationsRealtime	function	communications	true		src/lib/notifications.ts	90	
-useMyNotifications	function	communications	true	hook	src/lib/notifications.ts	108	
-useUnreadCount	function	communications	true	hook	src/lib/notifications.ts	123	
-useMyNotificationPreferences	function	communications	true	hook	src/lib/notifications.ts	138	
-useMarkAsRead	function	communications	true	hook	src/lib/notifications.ts	151	
-useMarkAllAsRead	function	communications	true	hook	src/lib/notifications.ts	165	
-useDeleteNotification	function	communications	true	hook	src/lib/notifications.ts	182	
-useClearAllNotifications	function	communications	true	hook	src/lib/notifications.ts	196	
-useUpdateNotificationPreference	function	communications	true	hook	src/lib/notifications.ts	212	
+_notifChannel	variable	communications	false		src/lib/notifications.ts	49	
+NotificationRow	interface	communications	false		src/lib/notifications.ts	52	
+COMPLIANCE_TOAST_TYPES	variable	communications	false		src/lib/notifications.ts	61	
+fireComplianceAccessToast	function	communications	false		src/lib/notifications.ts	72	
+initNotificationsRealtime	function	communications	true		src/lib/notifications.ts	101	
+teardownNotificationsRealtime	function	communications	true		src/lib/notifications.ts	138	
+useMyNotifications	function	communications	true	hook	src/lib/notifications.ts	156	
+useUnreadCount	function	communications	true	hook	src/lib/notifications.ts	171	
+useMyNotificationPreferences	function	communications	true	hook	src/lib/notifications.ts	186	
+useMarkAsRead	function	communications	true	hook	src/lib/notifications.ts	199	
+useMarkAllAsRead	function	communications	true	hook	src/lib/notifications.ts	213	
+useDeleteNotification	function	communications	true	hook	src/lib/notifications.ts	230	
+useClearAllNotifications	function	communications	true	hook	src/lib/notifications.ts	244	
+useUpdateNotificationPreference	function	communications	true	hook	src/lib/notifications.ts	260	
 PermissionRisk	type	security	true		src/lib/permissionMeta.ts	24	
 PermissionMeta	interface	security	true		src/lib/permissionMeta.ts	26	
 PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44	

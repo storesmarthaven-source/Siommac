@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `60c4136726d08349e280199d`
+Source fingerprint: `93db700d9c8bf2fcba4e439c`
 
 Files: 45 | Symbols: 372 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -47,11 +47,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:600` | logoutApi @ src/components/auth/api.ts:109 | - |
 | `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:577` | - | - |
 | `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:442` | setup2faApi @ src/components/auth/api.ts:94 | - |
-| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:292` | - | permissionPropagation, rbacConsole |
-| `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:593` | - | rbacConsole |
-| `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:224` | - | rbacConsole |
-| `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:748` | - | rbacConsole |
-| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:240` | - | communicationsCompliance, rbacConsole |
+| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:338` | - | permissionPropagation, rbacConsole |
+| `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:639` | - | rbacConsole |
+| `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:270` | - | rbacConsole |
+| `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:794` | - | rbacConsole |
+| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:286` | - | communicationsCompliance, rbacConsole |
 | `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:616` | updateColorScheme @ src/components/nav/api.ts:41 | - |
 | `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:625` | updateLayoutMode @ src/components/nav/api.ts:44 | - |
 | `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:634` | res @ src/components/sections/Profile/api.ts:108 | - |
@@ -174,7 +174,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 |---|---:|---:|---|
 | Account Security (trusted devices, passkeys, step-up, admin) | 35 | 23 | `scripts/e2e/suites/accountSecurity.mjs` |
 | Auth Session (refresh cookie) | 6 | 0 | `scripts/e2e/suites/authSession.mjs` |
-| Permission Propagation (compliance grant -> permissions signal + snapshot) | 10 | 3 | `scripts/e2e/suites/permissionPropagation.mjs` |
+| Permission Propagation (compliance grant -> permissions signal + snapshot) | 14 | 3 | `scripts/e2e/suites/permissionPropagation.mjs` |
 | Security Policy | 7 | 2 | `scripts/e2e/suites/securityPolicy.mjs` |
 
 ## Navigation Files
@@ -192,7 +192,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/webauthn.ts` | 421 |
 | e2e-suite | `scripts/e2e/suites/accountSecurity.mjs` | 459 |
 | e2e-suite | `scripts/e2e/suites/authSession.mjs` | 164 |
-| e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 173 |
+| e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 212 |
 | e2e-suite | `scripts/e2e/suites/securityPolicy.mjs` | 93 |
 | frontend-api | `src/api/auth.ts` | 53 |
 | frontend-api | `src/api/schemas/auth.ts` | 122 |

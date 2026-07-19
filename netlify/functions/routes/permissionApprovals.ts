@@ -301,7 +301,7 @@ router.post('/approve', async c => {
           notification: {
             title: 'Compliance access granted',
             body: `You can now view Messenger compliance conversations${untilCopy}.`,
-            actionRoute: 'messages/compliance',
+            actionRoute: 's-messages',
             type: 'communications.compliance.access_granted',
           },
           dedupeKey: `communications.compliance.access_granted:${approvalId}`,

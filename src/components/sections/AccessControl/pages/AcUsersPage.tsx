@@ -16,9 +16,11 @@ import {
 } from '@sections/SuperadminConsole/hooks';
 import { consoleKeys } from '@sections/SuperadminConsole/queryKeys';
 import { CriticalGrantDialog } from '@sections/SuperadminConsole/CriticalGrantDialog';
-import { setUserPermissionWithReasonApi } from '@lib/superadminApi';
-import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
+import { ComplianceRevokeDialog } from './ComplianceRevokeDialog';
+import { setUserPermissionWithReasonApi, clearUserPermissionApi } from '@lib/superadminApi';
+import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, COMPLIANCE_GATED_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
+import { useStepUp, withStepUp } from '@/hooks/useStepUp';
 import { LucideIcon, type LucideName } from '@ui/LucideIcon';
 import { TableSearch, FilterDropdown, AdvancedFilter, useFilterDropdowns, PageHeader } from '@ui';
 import { toast } from '@store/ui';
@@ -73,7 +75,9 @@ export function AcUsersPage(): VNode {
   // Start with every module collapsed.
   const [collapsed, setCollapsed] = useState<Set<string>>(() => new Set(PERMISSION_KEYS.map(k => PERMISSION_META[k]?.module).filter(Boolean) as string[]));
   const [criticalKey, setCriticalKey] = useState<string | null>(null);
+  const [revokeKey, setRevokeKey] = useState<string | null>(null);
   const [saving, setSaving]     = useState(false);
+  const { ensureStepUp } = useStepUp();
   const [showExport, setShowExport] = useState(false);
   const [creatingRole, setCreatingRole] = useState(false);
 
@@ -150,6 +154,13 @@ export function AcUsersPage(): VNode {
   const pendDeny  = [...pending.values()].filter(v => v === 'deny').length;
 
   const onSelect = (key: string, value: OvState) => {
+    // Compliance read/export are grant/revoke, not allow/deny/inherit toggles.
+    // Route through the dedicated flows and never stage them as plain overrides.
+    if (COMPLIANCE_GATED_KEYS.has(key)) {
+      if (value === 'allow' && !effGranted(key)) { setCriticalKey(key); return; }
+      if ((value === 'deny' || value === 'inherit') && effGranted(key)) { setRevokeKey(key); return; }
+      return; // deny/inherit on a non-granted key, or allow on a granted one → no-op
+    }
     if (value === 'allow' && CRITICAL_GRANT_KEYS.has(key) && !effGranted(key)) { setCriticalKey(key); return; }
     setPending(prev => {
       const n = new Map(prev);
@@ -180,6 +191,22 @@ export function AcUsersPage(): VNode {
     if (!res.success) toast.error(res.message ?? 'Failed to submit request.');
     else if (res.pending) { setLocal(prev => new Set([...prev, key])); void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') }); toast.success("Submitted for a different authorized reviewer's approval."); }
     else { toast.success(`${key} granted.`); void permsQ.refetch(); }
+  };
+
+  // Compliance revocation: reason (from the dialog) + fresh step-up, then the
+  // dedicated clearUserPermission path. The backend guard is the real boundary.
+  const submitRevoke = async (reason: string) => {
+    const key = revokeKey; setRevokeKey(null);
+    if (!key || !selId) return;
+    const run = withStepUp(ensureStepUp, () => clearUserPermissionApi(selId, key, reason));
+    const res = await run();
+    if (!res.success) {
+      // step_up_required back means the user cancelled the step-up prompt — stay quiet.
+      if (res.code !== 'step_up_required') toast.error(res.message ?? 'Failed to revoke access.');
+      return;
+    }
+    toast.success('Compliance access revoked.');
+    void permsQ.refetch();
   };
 
   const toggleMod = (m: string) => setCollapsed(prev => { const n = new Set(prev); n.has(m) ? n.delete(m) : n.add(m); return n; });
@@ -457,6 +484,15 @@ export function AcUsersPage(): VNode {
           targetLabel={user?.fullName ?? ''}
           onConfirm={(r, v) => void submitCritical(r, v)}
           onCancel={() => setCriticalKey(null)}
+        />
+      )}
+
+      {revokeKey && (
+        <ComplianceRevokeDialog
+          permKey={revokeKey}
+          targetLabel={user?.fullName ?? ''}
+          onConfirm={(r) => void submitRevoke(r)}
+          onCancel={() => setRevokeKey(null)}
         />
       )}
 

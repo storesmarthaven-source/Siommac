@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d06cec5bf87f43aa8377e11675db254bad4d278a",
+    "head": "65c4689fb5e9078156a67a0960f128a9c4f963e0",
     "branch": "main",
-    "fingerprint": "60c4136726d08349e280199d",
-    "indexedFiles": 1424
+    "fingerprint": "93db700d9c8bf2fcba4e439c",
+    "indexedFiles": 1425
   },
   "summary": {
-    "files": 1120,
-    "symbols": 11128,
+    "files": 1121,
+    "symbols": 11134,
     "widgets": 32,
     "routes": 869,
     "routeDefinitions": 870,
@@ -16,7 +16,7 @@
     "apiCalls": 379,
     "databaseObjects": 1167,
     "e2eSuites": 66,
-    "e2eTests": 2182
+    "e2eTests": 2186
   },
   "modules": [
     {
@@ -75,7 +75,7 @@
       "id": "communications",
       "counts": {
         "files": 100,
-        "symbols": 920,
+        "symbols": 923,
         "widgets": 0,
         "routes": 72,
         "routeDefinitions": 75,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 275,
-        "symbols": 2511,
+        "files": 276,
+        "symbols": 2514,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 41,
@@ -2010,7 +2010,7 @@
       "module": "security",
       "role": "backend-route",
       "lines": 387,
-      "hash": "8d038cb4e956c395"
+      "hash": "fdc74a67f39a14de"
     },
     {
       "path": "netlify/functions/routes/settings.ts",
@@ -2037,8 +2037,8 @@
       "path": "netlify/functions/routes/superadmin.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 791,
-      "hash": "58ad76314efc6514"
+      "lines": 837,
+      "hash": "f89705140ab89860"
     },
     {
       "path": "netlify/functions/routes/tickets.ts",
@@ -2597,8 +2597,8 @@
       "path": "scripts/e2e/suites/permissionPropagation.mjs",
       "module": "security",
       "role": "e2e-suite",
-      "lines": 173,
-      "hash": "50ca8485fc69bc51"
+      "lines": 212,
+      "hash": "4ac0e09cc371c58d"
     },
     {
       "path": "scripts/e2e/suites/ptw.mjs",
@@ -3563,8 +3563,15 @@
       "path": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 469,
-      "hash": "502d57200dc2f116"
+      "lines": 505,
+      "hash": "1bbc182d329ef911"
+    },
+    {
+      "path": "src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 61,
+      "hash": "047b4722f3db1664"
     },
     {
       "path": "src/components/sections/AdminDashboard/AdminDashboardController.tsx",
@@ -6398,8 +6405,8 @@
       "path": "src/hooks/useRealtimeSignals.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 158,
-      "hash": "bab18216f6470ce2"
+      "lines": 138,
+      "hash": "44e535db22dc1aef"
     },
     {
       "path": "src/hooks/useStepUp.tsx",
@@ -6552,8 +6559,8 @@
       "path": "src/lib/notifications.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 227,
-      "hash": "0c385154096b8e9f"
+      "lines": 275,
+      "hash": "3edf9cc5b0c15c26"
     },
     {
       "path": "src/lib/permissionMeta.ts",
@@ -6567,7 +6574,7 @@
       "module": "security",
       "role": "frontend",
       "lines": 222,
-      "hash": "610ea3f4aa4d6d6d"
+      "hash": "fd8383eaa8771907"
     },
     {
       "path": "src/lib/permissions.ts",
@@ -6616,7 +6623,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 312,
-      "hash": "75e263fdbf0d3e5a"
+      "hash": "9edfca119dea0fe7"
     },
     {
       "path": "src/lib/themePreference.ts",
@@ -38111,10 +38118,20 @@
       "tags": []
     },
     {
+      "name": "listComplianceGrantApprovers",
+      "kind": "function",
+      "file": "netlify/functions/routes/superadmin.ts",
+      "line": 42,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "requestCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 47,
+      "line": 67,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38124,7 +38141,7 @@
       "name": "GetUserPermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 156,
+      "line": 202,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38134,7 +38151,7 @@
       "name": "SetUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 157,
+      "line": 203,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38144,7 +38161,7 @@
       "name": "ClearUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 165,
+      "line": 211,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38154,7 +38171,7 @@
       "name": "RevokeSessionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 377,
+      "line": 423,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38164,7 +38181,7 @@
       "name": "GetAuditLogsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 456,
+      "line": 502,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38174,7 +38191,7 @@
       "name": "RoleNameSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 541,
+      "line": 587,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38184,7 +38201,7 @@
       "name": "RoleCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 544,
+      "line": 590,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38194,7 +38211,7 @@
       "name": "CreateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 545,
+      "line": 591,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38204,7 +38221,7 @@
       "name": "UpdateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 551,
+      "line": 597,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38214,7 +38231,7 @@
       "name": "GetRolePermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 558,
+      "line": 604,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38224,7 +38241,7 @@
       "name": "SetRolePermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 559,
+      "line": 605,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38234,7 +38251,7 @@
       "name": "DeleteRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 565,
+      "line": 611,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38244,7 +38261,7 @@
       "name": "slugify",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 685,
+      "line": 731,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38254,7 +38271,7 @@
       "name": "CreateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 686,
+      "line": 732,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38264,7 +38281,7 @@
       "name": "UpdateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 687,
+      "line": 733,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38274,7 +38291,7 @@
       "name": "DeleteCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 688,
+      "line": 734,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64165,7 +64182,7 @@
       "name": "MODULE_LUCIDE",
       "kind": "object",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 29,
+      "line": 31,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64175,7 +64192,7 @@
       "name": "moduleLucide",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 35,
+      "line": 37,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64185,7 +64202,7 @@
       "name": "OvState",
       "kind": "type",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 37,
+      "line": 39,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64195,7 +64212,7 @@
       "name": "PAGE",
       "kind": "variable",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 38,
+      "line": 40,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64207,7 +64224,7 @@
       "name": "AVATAR_BG",
       "kind": "array",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 40,
+      "line": 42,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64217,7 +64234,7 @@
       "name": "bgFor",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 41,
+      "line": 43,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64227,7 +64244,7 @@
       "name": "initials",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 42,
+      "line": 44,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64237,7 +64254,7 @@
       "name": "timeAgo",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 45,
+      "line": 47,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64247,7 +64264,7 @@
       "name": "CapCell",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 57,
+      "line": 59,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -64259,7 +64276,7 @@
       "name": "AcUsersPage",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 61,
+      "line": 63,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -64271,7 +64288,7 @@
       "name": "cap",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 136,
+      "line": 140,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
@@ -64281,7 +64298,7 @@
       "name": "clearAllFilters",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 146,
+      "line": 150,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
@@ -64291,7 +64308,7 @@
       "name": "onSelect",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 152,
+      "line": 156,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
@@ -64301,7 +64318,7 @@
       "name": "save",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 164,
+      "line": 175,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
@@ -64311,7 +64328,17 @@
       "name": "submitCritical",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 176,
+      "line": 187,
+      "module": "platform",
+      "exported": false,
+      "container": "AcUsersPage",
+      "tags": []
+    },
+    {
+      "name": "submitRevoke",
+      "kind": "function",
+      "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
+      "line": 198,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
@@ -64321,11 +64348,23 @@
       "name": "toggleMod",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcUsersPage.tsx",
-      "line": 185,
+      "line": 212,
       "module": "platform",
       "exported": false,
       "container": "AcUsersPage",
       "tags": []
+    },
+    {
+      "name": "ComplianceRevokeDialog",
+      "kind": "function",
+      "file": "src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "fmtTime",
@@ -109850,7 +109889,37 @@
       "name": "_notifChannel",
       "kind": "variable",
       "file": "src/lib/notifications.ts",
-      "line": 48,
+      "line": 49,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NotificationRow",
+      "kind": "interface",
+      "file": "src/lib/notifications.ts",
+      "line": 52,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "COMPLIANCE_TOAST_TYPES",
+      "kind": "variable",
+      "file": "src/lib/notifications.ts",
+      "line": 61,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fireComplianceAccessToast",
+      "kind": "function",
+      "file": "src/lib/notifications.ts",
+      "line": 72,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -109860,7 +109929,7 @@
       "name": "initNotificationsRealtime",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 58,
+      "line": 101,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109870,7 +109939,7 @@
       "name": "teardownNotificationsRealtime",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 90,
+      "line": 138,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109880,7 +109949,7 @@
       "name": "useMyNotifications",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 108,
+      "line": 156,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109892,7 +109961,7 @@
       "name": "useUnreadCount",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 123,
+      "line": 171,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109904,7 +109973,7 @@
       "name": "useMyNotificationPreferences",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 138,
+      "line": 186,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109916,7 +109985,7 @@
       "name": "useMarkAsRead",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 151,
+      "line": 199,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109928,7 +109997,7 @@
       "name": "useMarkAllAsRead",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 165,
+      "line": 213,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109940,7 +110009,7 @@
       "name": "useDeleteNotification",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 182,
+      "line": 230,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109952,7 +110021,7 @@
       "name": "useClearAllNotifications",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 196,
+      "line": 244,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -109964,7 +110033,7 @@
       "name": "useUpdateNotificationPreference",
       "kind": "function",
       "file": "src/lib/notifications.ts",
-      "line": 212,
+      "line": 260,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -135247,7 +135316,7 @@
       ],
       "schema": "ClearUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 292,
+      "line": 338,
       "module": "security"
     },
     {
@@ -135260,7 +135329,7 @@
       ],
       "schema": "CreateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 612,
+      "line": 658,
       "module": "platform"
     },
     {
@@ -135273,7 +135342,7 @@
       ],
       "schema": "CreateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 703,
+      "line": 749,
       "module": "platform"
     },
     {
@@ -135286,7 +135355,7 @@
       ],
       "schema": "DeleteRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 661,
+      "line": 707,
       "module": "platform"
     },
     {
@@ -135299,7 +135368,7 @@
       ],
       "schema": "DeleteCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 733,
+      "line": 779,
       "module": "platform"
     },
     {
@@ -135312,7 +135381,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 385,
+      "line": 431,
       "module": "platform"
     },
     {
@@ -135325,7 +135394,7 @@
       ],
       "schema": "GetAuditLogsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 472,
+      "line": 518,
       "module": "platform"
     },
     {
@@ -135338,7 +135407,7 @@
       ],
       "schema": "GetRolePermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 593,
+      "line": 639,
       "module": "security"
     },
     {
@@ -135351,7 +135420,7 @@
       ],
       "schema": "GetUserPermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 224,
+      "line": 270,
       "module": "security"
     },
     {
@@ -135364,7 +135433,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 691,
+      "line": 737,
       "module": "platform"
     },
     {
@@ -135377,7 +135446,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 568,
+      "line": 614,
       "module": "platform"
     },
     {
@@ -135390,7 +135459,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 174,
+      "line": 220,
       "module": "platform"
     },
     {
@@ -135403,7 +135472,7 @@
       ],
       "schema": "RevokeSessionSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 434,
+      "line": 480,
       "module": "platform"
     },
     {
@@ -135416,7 +135485,7 @@
       ],
       "schema": "SetRolePermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 748,
+      "line": 794,
       "module": "security"
     },
     {
@@ -135429,7 +135498,7 @@
       ],
       "schema": "SetUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 240,
+      "line": 286,
       "module": "security"
     },
     {
@@ -135442,7 +135511,7 @@
       ],
       "schema": "UpdateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 632,
+      "line": 678,
       "module": "platform"
     },
     {
@@ -135455,7 +135524,7 @@
       ],
       "schema": "UpdateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 720,
+      "line": 766,
       "module": "platform"
     },
     {
@@ -156068,43 +156137,59 @@
       "tests": [
         {
           "name": "migration 437: communication_signals accepts domain=permissions",
-          "line": 80
-        },
-        {
-          "name": "target holds NO compliance_read before grant (shield hidden)",
           "line": 86
         },
         {
+          "name": "target holds NO compliance_read before grant (shield hidden)",
+          "line": 92
+        },
+        {
           "name": "maker-checker approve applies compliance_read",
-          "line": 96
+          "line": 101
         },
         {
-          "name": "a permissions signal is emitted to the target on approval",
-          "line": 103
-        },
-        {
-          "name": "snapshot now returns compliance_read WITH its validity window",
+          "name": "the compliance request notifies an eligible approver (nav bubble)",
           "line": 108
         },
         {
-          "name": "grant approval creates a notification for the grantee",
+          "name": "a permissions signal is emitted to the target on approval",
+          "line": 117
+        },
+        {
+          "name": "snapshot now returns compliance_read WITH its validity window",
           "line": 122
         },
         {
+          "name": "grant approval creates a notification for the grantee",
+          "line": 136
+        },
+        {
           "name": "retrying the same approval does NOT create a duplicate notification",
-          "line": 131
+          "line": 145
+        },
+        {
+          "name": "compliance revoke WITHOUT step-up is rejected",
+          "line": 157
+        },
+        {
+          "name": "compliance revoke WITHOUT a reason is rejected",
+          "line": 165
+        },
+        {
+          "name": "grant is still active after the rejected revokes",
+          "line": 173
         },
         {
           "name": "compliance revoke emits a permissions signal",
-          "line": 143
+          "line": 182
         },
         {
           "name": "snapshot no longer grants compliance_read after revoke",
-          "line": 153
+          "line": 192
         },
         {
           "name": "revoke creates a notification for the grantee",
-          "line": 164
+          "line": 203
         }
       ],
       "apiPaths": [

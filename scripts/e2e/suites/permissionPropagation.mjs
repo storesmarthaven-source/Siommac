@@ -40,8 +40,9 @@ async function pollNotification(sb, userId, type, timeoutMs) {
 }
 
 export default async function run(h) {
-  const { api, test, expect, ok, sb, mint, mintStepUp, TAG } = h;
+  const { api, test, expect, ok, fails, sb, mint, mintStepUp, TAG } = h;
   const KEY = 'communications.compliance_read';
+  const REQUESTED = 'iam.permission.compliance_grant_requested';
 
   // Two distinct superadmins (maker != checker for SoD) + a clean target.
   const { actors: [maker, checker], createdIds: adminIds } =
@@ -62,10 +63,15 @@ export default async function run(h) {
     { onConflict: 'user_id' },
   );
 
+  // Approval id of the grant request — captured in the grant test, read at cleanup
+  // to sweep the request notifications delivered to every eligible approver.
+  let approvalId = null;
+
   h.onCleanup(async () => {
     await h.mustDelete('communication_signals', q => q.eq('channel_key', channelKey));
     await h.mustDelete('user_realtime_channels', q => q.eq('user_id', target.id));
     await h.mustDelete('notifications', q => q.eq('user_id', target.id));
+    if (approvalId) await h.mustDelete('notifications', q => q.eq('source_id', approvalId));
     await h.mustDelete('user_permissions', q => q.in('user_id', [target.id, maker.id, checker.id]));
     await h.mustDelete('app_users', q => q.in('id', [...adminIds, ...targetIds]));
   });
@@ -92,12 +98,20 @@ export default async function run(h) {
 
   h.section('Permission Propagation > grant emits signal + updates snapshot');
 
-  let approvalId = null;
   await test('maker-checker approve applies compliance_read', async () => {
     // clear any pre-existing signals so we detect the NEW one from the approval
     await sb.from('communication_signals').delete().eq('channel_key', channelKey);
     approvalId = await h.grantCriticalPerm(maker, checker, target.id, KEY, `${TAG} verify grant`);
     expect(!!approvalId, 'grantCriticalPerm returned no approvalId');
+  });
+
+  await test('the compliance request notifies an eligible approver (nav bubble)', async () => {
+    // grantCriticalPerm ran the request (maker step) → approvers were notified.
+    const got = await pollNotification(sb, checker.id, REQUESTED, 4000);
+    expect(got, 'no compliance-request notification delivered to the approver (checker)');
+    const n = (await sb.from('notifications').select('title, action_route')
+      .eq('user_id', checker.id).eq('type', REQUESTED).limit(1)).data?.[0];
+    expect(n?.action_route === 's-ac-approvals', `request notification route: ${n?.action_route}`);
   });
 
   await test('a permissions signal is emitted to the target on approval', async () => {
@@ -125,7 +139,7 @@ export default async function run(h) {
     const n = (await sb.from('notifications').select('title, action_route, is_read')
       .eq('user_id', target.id).eq('type', GRANTED).limit(1)).data?.[0];
     expect(n?.title === 'Compliance access granted', `unexpected notification title: ${n?.title}`);
-    expect(n?.action_route === 'messages/compliance', `unexpected route: ${n?.action_route}`);
+    expect(n?.action_route === 's-messages', `unexpected route: ${n?.action_route}`);
   });
 
   await test('retrying the same approval does NOT create a duplicate notification', async () => {
@@ -136,6 +150,31 @@ export default async function run(h) {
     await new Promise(r => setTimeout(r, 1200)); // give any stray async notify time to land
     const after = await countNotifications(sb, target.id, GRANTED);
     expect(after === before, `duplicate notification created on retry (${before} -> ${after})`);
+  });
+
+  h.section('Permission Propagation > revoke requires reason + step-up');
+
+  await test('compliance revoke WITHOUT step-up is rejected', async () => {
+    // requireStepUp runs first in the compliance branch → a plain token fails.
+    const r = await api('superadmin/clearUserPermission', mint(checker), {
+      userId: target.id, permission: KEY, reason: `${TAG} no stepup`,
+    });
+    fails(r, 'revoke without step-up should be rejected');
+  });
+
+  await test('compliance revoke WITHOUT a reason is rejected', async () => {
+    const r = await api('superadmin/clearUserPermission', mintStepUp(checker), {
+      userId: target.id, permission: KEY,
+    });
+    fails(r, 'revoke without a reason should be rejected');
+    expect(r.body.code === 'reason_required', `expected reason_required, got ${r.body.code}`);
+  });
+
+  await test('grant is still active after the rejected revokes', async () => {
+    const r = await api('getMyPermissionOverrides', targetToken, {});
+    ok(r, 'getMyPermissionOverrides');
+    const row = (r.body.data ?? []).find(o => o.permission === KEY);
+    expect(row && row.granted === true && !row.revoked_at, 'grant was unexpectedly revoked by a rejected call');
   });
 
   h.section('Permission Propagation > revoke emits signal + clears snapshot');
@@ -167,6 +206,6 @@ export default async function run(h) {
     const n = (await sb.from('notifications').select('title, action_route')
       .eq('user_id', target.id).eq('type', REVOKED).limit(1)).data?.[0];
     expect(n?.title === 'Compliance access revoked', `unexpected notification title: ${n?.title}`);
-    expect(n?.action_route === 'messages/compliance', `unexpected route: ${n?.action_route}`);
+    expect(n?.action_route === 's-messages', `unexpected route: ${n?.action_route}`);
   });
 }
