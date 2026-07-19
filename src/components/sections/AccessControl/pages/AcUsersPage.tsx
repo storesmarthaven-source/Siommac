@@ -97,8 +97,27 @@ export function AcUsersPage(): VNode {
   const auditQ = useAuditLogs(selId ? { entity_id: selId, limit: 40 } : {}, !!selId);
 
   const roleSet = roleQ.data ?? [];
-  const dbOverride = useCallback((k: string): boolean | undefined => permsQ.data?.find(p => p.permission === k)?.granted, [permsQ.data]);
-  const roleDefault = useCallback((k: string) => user?.role === 'superadmin' || roleSet.includes(k), [user?.role, roleSet]);
+  const dbOverride = useCallback((k: string): boolean | undefined => {
+    const row = permsQ.data?.find(p => p.permission === k);
+    if (!row) return undefined;
+    // Compliance read/export are grant-only + time-boxed + soft-revoked: a row
+    // that is granted=true but revoked, undated, or outside its window is NOT an
+    // active override → show as Inherit (not Allowed). Mirrors the resolver.
+    if (COMPLIANCE_GATED_KEYS.has(k)) {
+      if (!row.granted || row.revoked_at || !row.valid_from || !row.valid_until) return undefined;
+      const now = Date.now();
+      const from = Date.parse(row.valid_from), until = Date.parse(row.valid_until);
+      const active = Number.isFinite(from) && Number.isFinite(until) && from <= now && until > now;
+      return active ? true : undefined;
+    }
+    return row.granted;
+  }, [permsQ.data]);
+  const roleDefault = useCallback((k: string) => {
+    // Compliance access is never a role default — not even for superadmin. It
+    // requires an explicit, active, time-boxed grant (fail-closed model).
+    if (COMPLIANCE_GATED_KEYS.has(k)) return false;
+    return user?.role === 'superadmin' || roleSet.includes(k);
+  }, [user?.role, roleSet]);
   const target = useCallback((k: string): OvState => {
     const p = pending.get(k); if (p) return p;
     const o = dbOverride(k); return o === true ? 'allow' : o === false ? 'deny' : 'inherit';

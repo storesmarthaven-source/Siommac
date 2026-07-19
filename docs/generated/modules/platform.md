@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `2546c2f6a46cf829ee13e844`
+Source fingerprint: `544c06ce1924b539d399bb95`
 
 Files: 276 | Symbols: 2514 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
@@ -426,7 +426,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx` | 562 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcRolesPage.tsx` | 734 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 76 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 505 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 524 |
 | frontend-page | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx` | 61 |
 | frontend-page | `src/components/sections/AdminDashboard/AdminDashboardController.tsx` | 155 |
 | frontend-page | `src/components/sections/AdminDashboard/api.ts` | 30 |

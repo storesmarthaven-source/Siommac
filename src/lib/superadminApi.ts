@@ -35,8 +35,13 @@ export interface ConsoleUser {
 
 /** An explicit per-user override row. */
 export interface UserPermissionRow {
-  permission: string;
-  granted:    boolean;
+  permission:   string;
+  granted:      boolean;
+  // Time-box + soft-revoke for grant-required (compliance) keys. A row can be
+  // granted=true yet revoked_at-set or outside its window → NOT effectively active.
+  valid_from?:  string | null;
+  valid_until?: string | null;
+  revoked_at?:  string | null;
 }
 
 /** List all non-superadmin active users for the permission matrix. */

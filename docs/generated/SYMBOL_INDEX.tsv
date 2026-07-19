@@ -5446,13 +5446,13 @@ initials	function	platform	false		src/components/sections/AccessControl/pages/Ac
 timeAgo	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	47	
 CapCell	function	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	59	
 AcUsersPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	63	
-cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	140	AcUsersPage
-clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	150	AcUsersPage
-onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	156	AcUsersPage
-save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	175	AcUsersPage
-submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	187	AcUsersPage
-submitRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	198	AcUsersPage
-toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	212	AcUsersPage
+cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	159	AcUsersPage
+clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	169	AcUsersPage
+onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	175	AcUsersPage
+save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	194	AcUsersPage
+submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	206	AcUsersPage
+submitRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	217	AcUsersPage
+toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	231	AcUsersPage
 ComplianceRevokeDialog	function	platform	true	component	src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx	16	
 fmtTime	function	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	23	
 StatusKey	type	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	30	
@@ -9832,37 +9832,37 @@ patchTokens	function	platform	true		src/lib/session.ts	105
 supabase	variable	platform	true		src/lib/supabase.ts	42	
 ConsoleUser	interface	platform	true		src/lib/superadminApi.ts	17	
 UserPermissionRow	interface	platform	true		src/lib/superadminApi.ts	37	
-listUsersApi	function	platform	true		src/lib/superadminApi.ts	43	
-getUserPermissionsApi	function	platform	true		src/lib/superadminApi.ts	52	
-setUserPermissionApi	function	platform	true		src/lib/superadminApi.ts	61	
-clearUserPermissionApi	function	platform	true		src/lib/superadminApi.ts	71	
-ActiveSession	interface	platform	true		src/lib/superadminApi.ts	83	
-getActiveSessionsApi	function	platform	true		src/lib/superadminApi.ts	95	
-revokeSessionApi	function	platform	true		src/lib/superadminApi.ts	104	
-AuditLogRow	interface	platform	true		src/lib/superadminApi.ts	112	
-AuditLogFilters	interface	platform	true		src/lib/superadminApi.ts	129	
-getAuditLogsApi	function	platform	true		src/lib/superadminApi.ts	147	
-RoleCategory	type	platform	true		src/lib/superadminApi.ts	162	
-RoleCategoryRow	interface	platform	true		src/lib/superadminApi.ts	165	
-RoleRow	interface	platform	true		src/lib/superadminApi.ts	173	
-listRolesApi	function	platform	true		src/lib/superadminApi.ts	186	
-getRolePermissionsApi	function	platform	true		src/lib/superadminApi.ts	191	
-createRoleApi	function	platform	true		src/lib/superadminApi.ts	198	
-updateRoleApi	function	platform	true		src/lib/superadminApi.ts	203	
-deleteRoleApi	function	platform	true		src/lib/superadminApi.ts	208	
-listRoleCategoriesApi	function	platform	true		src/lib/superadminApi.ts	213	
-createRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	216	
-updateRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	219	
-deleteRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	222	
-setRolePermissionApi	function	platform	true		src/lib/superadminApi.ts	227	
-PermissionApproval	interface	platform	true		src/lib/superadminApi.ts	233	
-ApprovalStatus	type	platform	true		src/lib/superadminApi.ts	253	
-listApprovalsApi	function	platform	true		src/lib/superadminApi.ts	256	
-approveGrantApi	function	platform	true		src/lib/superadminApi.ts	265	
-rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	274	
-cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	283	
-setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	294	
-setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	304	
+listUsersApi	function	platform	true		src/lib/superadminApi.ts	48	
+getUserPermissionsApi	function	platform	true		src/lib/superadminApi.ts	57	
+setUserPermissionApi	function	platform	true		src/lib/superadminApi.ts	66	
+clearUserPermissionApi	function	platform	true		src/lib/superadminApi.ts	76	
+ActiveSession	interface	platform	true		src/lib/superadminApi.ts	88	
+getActiveSessionsApi	function	platform	true		src/lib/superadminApi.ts	100	
+revokeSessionApi	function	platform	true		src/lib/superadminApi.ts	109	
+AuditLogRow	interface	platform	true		src/lib/superadminApi.ts	117	
+AuditLogFilters	interface	platform	true		src/lib/superadminApi.ts	134	
+getAuditLogsApi	function	platform	true		src/lib/superadminApi.ts	152	
+RoleCategory	type	platform	true		src/lib/superadminApi.ts	167	
+RoleCategoryRow	interface	platform	true		src/lib/superadminApi.ts	170	
+RoleRow	interface	platform	true		src/lib/superadminApi.ts	178	
+listRolesApi	function	platform	true		src/lib/superadminApi.ts	191	
+getRolePermissionsApi	function	platform	true		src/lib/superadminApi.ts	196	
+createRoleApi	function	platform	true		src/lib/superadminApi.ts	203	
+updateRoleApi	function	platform	true		src/lib/superadminApi.ts	208	
+deleteRoleApi	function	platform	true		src/lib/superadminApi.ts	213	
+listRoleCategoriesApi	function	platform	true		src/lib/superadminApi.ts	218	
+createRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	221	
+updateRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	224	
+deleteRoleCategoryApi	function	platform	true		src/lib/superadminApi.ts	227	
+setRolePermissionApi	function	platform	true		src/lib/superadminApi.ts	232	
+PermissionApproval	interface	platform	true		src/lib/superadminApi.ts	238	
+ApprovalStatus	type	platform	true		src/lib/superadminApi.ts	258	
+listApprovalsApi	function	platform	true		src/lib/superadminApi.ts	261	
+approveGrantApi	function	platform	true		src/lib/superadminApi.ts	270	
+rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	279	
+cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	288	
+setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	299	
+setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	309	
 THEME_SETTING_KEY	variable	platform	true		src/lib/themePreference.ts	14	
 CACHE_PREFIX	variable	platform	false		src/lib/themePreference.ts	15	
 cacheKey	function	platform	false		src/lib/themePreference.ts	17	
