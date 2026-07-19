@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `a7eb044139f91925c7c598116007e70e58dcaa58`  
-Source fingerprint: `cf36c783768e4fb8f0b1e866`  
+Source HEAD: `5770e43c0aa39caeb43f2c7cc8da70d50076c286`  
+Source fingerprint: `ccb4421b50e0a836187165f5`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1120 | 11126 | 32 | 869 | 870 | 17 | 379 | 1167 | 66 | 2179 |
+| 1120 | 11128 | 32 | 869 | 870 | 17 | 379 | 1167 | 66 | 2182 |
 
 ## Modules
 
@@ -31,7 +31,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 100 | 920 | 0 | 72 | 75 | 88 | 120 | 4 | [open](modules/communications.md) |
 | workflow | 47 | 320 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
-| security | 45 | 370 | 0 | 49 | 49 | 31 | 65 | 4 | [open](modules/security.md) |
+| security | 45 | 372 | 0 | 49 | 49 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 42 | 246 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 49 | 289 | 0 | 13 | 13 | 11 | 14 | 1 | [open](modules/widgets.md) |
 | platform | 275 | 2511 | 0 | 26 | 41 | 50 | 240 | 0 | [open](modules/platform.md) |

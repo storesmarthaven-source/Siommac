@@ -25,6 +25,20 @@ async function pollSignal(sb, channelKey, domain, timeoutMs) {
   return false;
 }
 
+async function countNotifications(sb, userId, type) {
+  const { data } = await sb.from('notifications').select('id').eq('user_id', userId).eq('type', type);
+  return data?.length ?? 0;
+}
+
+async function pollNotification(sb, userId, type, timeoutMs) {
+  const deadline = Date.now() + timeoutMs;
+  do {
+    if ((await countNotifications(sb, userId, type)) > 0) return true;
+    await new Promise(r => setTimeout(r, 200));
+  } while (Date.now() < deadline);
+  return false;
+}
+
 export default async function run(h) {
   const { api, test, expect, ok, sb, mint, mintStepUp, TAG } = h;
   const KEY = 'communications.compliance_read';
@@ -51,9 +65,13 @@ export default async function run(h) {
   h.onCleanup(async () => {
     await h.mustDelete('communication_signals', q => q.eq('channel_key', channelKey));
     await h.mustDelete('user_realtime_channels', q => q.eq('user_id', target.id));
+    await h.mustDelete('notifications', q => q.eq('user_id', target.id));
     await h.mustDelete('user_permissions', q => q.in('user_id', [target.id, maker.id, checker.id]));
     await h.mustDelete('app_users', q => q.in('id', [...adminIds, ...targetIds]));
   });
+
+  const GRANTED = 'communications.compliance.access_granted';
+  const REVOKED = 'communications.compliance.access_revoked';
 
   const targetToken = mint(target);
 
@@ -74,10 +92,11 @@ export default async function run(h) {
 
   h.section('Permission Propagation > grant emits signal + updates snapshot');
 
+  let approvalId = null;
   await test('maker-checker approve applies compliance_read', async () => {
     // clear any pre-existing signals so we detect the NEW one from the approval
     await sb.from('communication_signals').delete().eq('channel_key', channelKey);
-    const approvalId = await h.grantCriticalPerm(maker, checker, target.id, KEY, `${TAG} verify grant`);
+    approvalId = await h.grantCriticalPerm(maker, checker, target.id, KEY, `${TAG} verify grant`);
     expect(!!approvalId, 'grantCriticalPerm returned no approvalId');
   });
 
@@ -96,6 +115,27 @@ export default async function run(h) {
     expect(!row.revoked_at, 'grant unexpectedly carries revoked_at');
     const from = Date.parse(row.valid_from), until = Date.parse(row.valid_until);
     expect(from <= Date.now() && until > Date.now(), 'grant window is not currently active');
+  });
+
+  h.section('Permission Propagation > grant/revoke notify the grantee (nav bubble)');
+
+  await test('grant approval creates a notification for the grantee', async () => {
+    const got = await pollNotification(sb, target.id, GRANTED, 4000);
+    expect(got, 'no "Compliance access granted" notification created for the grantee');
+    const n = (await sb.from('notifications').select('title, action_route, is_read')
+      .eq('user_id', target.id).eq('type', GRANTED).limit(1)).data?.[0];
+    expect(n?.title === 'Compliance access granted', `unexpected notification title: ${n?.title}`);
+    expect(n?.action_route === 'messages/compliance', `unexpected route: ${n?.action_route}`);
+  });
+
+  await test('retrying the same approval does NOT create a duplicate notification', async () => {
+    const before = await countNotifications(sb, target.id, GRANTED);
+    // Re-approve the already-approved request → RPC returns not_pending (no-op).
+    const retry = await api('admin/approvals/approve', mintStepUp(checker), { approvalId });
+    expect(retry.body.success === false, `retry unexpectedly succeeded: ${JSON.stringify(retry.body)}`);
+    await new Promise(r => setTimeout(r, 1200)); // give any stray async notify time to land
+    const after = await countNotifications(sb, target.id, GRANTED);
+    expect(after === before, `duplicate notification created on retry (${before} -> ${after})`);
   });
 
   h.section('Permission Propagation > revoke emits signal + clears snapshot');
@@ -119,5 +159,14 @@ export default async function run(h) {
       && !!row.valid_from && !!row.valid_until
       && Date.parse(row.valid_from) <= Date.now() && Date.parse(row.valid_until) > Date.now();
     expect(!effective, `compliance_read still effective after revoke: ${JSON.stringify(row)}`);
+  });
+
+  await test('revoke creates a notification for the grantee', async () => {
+    const got = await pollNotification(sb, target.id, REVOKED, 4000);
+    expect(got, 'no "Compliance access revoked" notification created for the grantee');
+    const n = (await sb.from('notifications').select('title, action_route')
+      .eq('user_id', target.id).eq('type', REVOKED).limit(1)).data?.[0];
+    expect(n?.title === 'Compliance access revoked', `unexpected notification title: ${n?.title}`);
+    expect(n?.action_route === 'messages/compliance', `unexpected route: ${n?.action_route}`);
   });
 }

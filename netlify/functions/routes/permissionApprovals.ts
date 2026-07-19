@@ -23,9 +23,11 @@ import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { requireStepUp }             from '../lib/stepUp';
 import { invalidateRolePermissions } from '../lib/permissions';
 import { emitSignal }                from '../lib/communications';
+import { deliverEventNotifications } from '../lib/appEvents';
 import {
   COMPLIANCE_ACCESS_GRANT_KEYS,
   canReviewPermissionGrant,
+  isComplianceAccessGrant,
   resolvePermissionApprovalScope,
   type PermissionApprovalScope,
 } from '../lib/permissionApprovalScope';
@@ -273,6 +275,39 @@ router.post('/approve', async c => {
   // without a reload. Fire-and-forget; login/token-refresh/focus are the fallbacks.
   if (result.request_type === 'user_override' && result.target_user_id) {
     void emitSignal([result.target_user_id], 'permissions');
+
+    // Real state change (status='applied' → we're past the switch) on a compliance
+    // access grant → notify the grantee (nav bubble + notification centre). Reaching
+    // here means the grant was actually applied, so a retry (→ 'not_pending') never
+    // re-notifies; the dedupeKey also guards double-delivery.
+    if (isComplianceAccessGrant(result.permission_key ?? '')) {
+      const grantee = result.target_user_id;
+      void (async () => {
+        const { data: appr } = await sb
+          .from('permission_grant_approvals')
+          .select('grant_valid_until')
+          .eq('id', approvalId)
+          .maybeSingle<{ grant_valid_until: string | null }>();
+        const until = appr?.grant_valid_until;
+        const untilCopy = until ? ` until ${until.slice(0, 16).replace('T', ' ')} UTC` : '';
+        await deliverEventNotifications({
+          eventType: 'communications.compliance.access_granted',
+          sourceModule: 'communications',
+          sourceEntityType: 'user',
+          sourceEntityId: grantee,
+          actorUserId: actor.id,
+          severity: 'info',
+          explicitRecipients: [{ userId: grantee, reason: 'explicit' }],
+          notification: {
+            title: 'Compliance access granted',
+            body: `You can now view Messenger compliance conversations${untilCopy}.`,
+            actionRoute: 'messages/compliance',
+            type: 'communications.compliance.access_granted',
+          },
+          dedupeKey: `communications.compliance.access_granted:${approvalId}`,
+        }, null);
+      })().catch((err: unknown) => console.warn('[approvals/approve] compliance grant notification failed:', err));
+    }
   }
 
   return c.json({ success: true });

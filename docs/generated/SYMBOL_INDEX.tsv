@@ -2974,15 +2974,15 @@ LinkCreateSchema	variable	workflow	false		netlify/functions/routes/orchestration
 LinkListSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	48	
 LinkDeleteSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	49	
 handle	function	workflow	false		netlify/functions/routes/orchestration.ts	52	
-router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	35	
-ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	39	
-ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	43	
-RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	47	
-CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	52	
-ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	58	
-requireApprovalScope	function	security	false		netlify/functions/routes/permissionApprovals.ts	79	
-approvalPermissionKey	function	security	false		netlify/functions/routes/permissionApprovals.ts	92	
-enforceApprovalTarget	function	security	false		netlify/functions/routes/permissionApprovals.ts	107	
+router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	37	
+ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	41	
+ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	45	
+RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	49	
+CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	54	
+ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	60	
+requireApprovalScope	function	security	false		netlify/functions/routes/permissionApprovals.ts	81	
+approvalPermissionKey	function	security	false		netlify/functions/routes/permissionApprovals.ts	94	
+enforceApprovalTarget	function	security	false		netlify/functions/routes/permissionApprovals.ts	109	
 router	variable	settings	false		netlify/functions/routes/settings.ts	12	
 ALLOWED_AVATAR_MIME	variable	settings	false		netlify/functions/routes/settings.ts	83	
 ProfilePhotoCommitSchema	variable	settings	false		netlify/functions/routes/settings.ts	119	
@@ -3011,19 +3011,19 @@ requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmi
 GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	156	
 SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	157	
 ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	165	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	356	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	435	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	520	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	523	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	524	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	530	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	537	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	538	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	544	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	664	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	665	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	666	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	667	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	377	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	456	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	541	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	544	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	545	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	551	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	558	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	559	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	565	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	685	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	686	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	687	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	688	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -3494,7 +3494,9 @@ sampleDesign	function	payroll	false	test	scripts/e2e/suites/payslipTemplates.mjs
 run	function	payroll	true	test	scripts/e2e/suites/payslipTemplates.mjs	38	
 title	variable	security	true	test	scripts/e2e/suites/permissionPropagation.mjs	15	
 pollSignal	function	security	false	test	scripts/e2e/suites/permissionPropagation.mjs	17	
-run	function	security	true	test	scripts/e2e/suites/permissionPropagation.mjs	28	
+countNotifications	function	security	false	test	scripts/e2e/suites/permissionPropagation.mjs	28	
+pollNotification	function	security	false	test	scripts/e2e/suites/permissionPropagation.mjs	33	
+run	function	security	true	test	scripts/e2e/suites/permissionPropagation.mjs	42	
 title	variable	hse	true	test	scripts/e2e/suites/ptw.mjs	29	
 run	function	hse	true	test	scripts/e2e/suites/ptw.mjs	31	
 track	function	hse	false	test	scripts/e2e/suites/ptw.mjs	38	run

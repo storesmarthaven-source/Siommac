@@ -17,7 +17,7 @@ import {
   invalidateRolePermissions,
   isCriticalGrant,
 } from '../lib/permissions';
-import { emitAppEvent }                   from '../lib/appEvents';
+import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
 import { emitSignal }                     from '../lib/communications';
 import { msgRpcHttpError }                from '../lib/messaging/messagingRpc';
 import { getProfileSignedUrl }            from '../lib/photos';
@@ -326,6 +326,27 @@ router.post('/clearUserPermission', async c => {
     // Nudge the affected user so the revoked compliance grant drops from their
     // live session (the shield disappears) without waiting for a reload.
     void emitSignal([userId], 'permissions');
+
+    // Notify the grantee ONLY on a real revocation ('revoked'); a retry returns
+    // 'already_revoked' (no-op) and 'deny_cleared' is not an access revocation,
+    // so neither re-notifies.
+    if (result.status === 'revoked') {
+      void deliverEventNotifications({
+        eventType: 'communications.compliance.access_revoked',
+        sourceModule: 'communications',
+        sourceEntityType: 'user',
+        sourceEntityId: userId,
+        actorUserId: actor.id,
+        severity: 'warning',
+        explicitRecipients: [{ userId, reason: 'explicit' }],
+        notification: {
+          title: 'Compliance access revoked',
+          body: 'Your Messenger compliance access has been revoked.',
+          actionRoute: 'messages/compliance',
+          type: 'communications.compliance.access_revoked',
+        },
+      }, null);
+    }
     return c.json({ success: true, status: result.status });
   }
 

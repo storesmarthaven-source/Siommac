@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a7eb044139f91925c7c598116007e70e58dcaa58",
+    "head": "5770e43c0aa39caeb43f2c7cc8da70d50076c286",
     "branch": "main",
-    "fingerprint": "cf36c783768e4fb8f0b1e866",
+    "fingerprint": "ccb4421b50e0a836187165f5",
     "indexedFiles": 1424
   },
   "summary": {
     "files": 1120,
-    "symbols": 11126,
+    "symbols": 11128,
     "widgets": 32,
     "routes": 869,
     "routeDefinitions": 870,
@@ -16,7 +16,7 @@
     "apiCalls": 379,
     "databaseObjects": 1167,
     "e2eSuites": 66,
-    "e2eTests": 2179
+    "e2eTests": 2182
   },
   "modules": [
     {
@@ -101,7 +101,7 @@
       "id": "security",
       "counts": {
         "files": 45,
-        "symbols": 370,
+        "symbols": 372,
         "widgets": 0,
         "routes": 49,
         "routeDefinitions": 49,
@@ -2009,8 +2009,8 @@
       "path": "netlify/functions/routes/permissionApprovals.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 352,
-      "hash": "fc9384fce9324b26"
+      "lines": 387,
+      "hash": "8d038cb4e956c395"
     },
     {
       "path": "netlify/functions/routes/settings.ts",
@@ -2037,8 +2037,8 @@
       "path": "netlify/functions/routes/superadmin.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 770,
-      "hash": "1eb42225c72e8516"
+      "lines": 791,
+      "hash": "58ad76314efc6514"
     },
     {
       "path": "netlify/functions/routes/tickets.ts",
@@ -2597,8 +2597,8 @@
       "path": "scripts/e2e/suites/permissionPropagation.mjs",
       "module": "security",
       "role": "e2e-suite",
-      "lines": 124,
-      "hash": "a78e3415df915e7b"
+      "lines": 173,
+      "hash": "50ca8485fc69bc51"
     },
     {
       "path": "scripts/e2e/suites/ptw.mjs",
@@ -6398,8 +6398,8 @@
       "path": "src/hooks/useRealtimeSignals.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 136,
-      "hash": "bdcf704a0ff82a42"
+      "lines": 158,
+      "hash": "bab18216f6470ce2"
     },
     {
       "path": "src/hooks/useStepUp.tsx",
@@ -37784,7 +37784,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 35,
+      "line": 37,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37794,7 +37794,7 @@
       "name": "ListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 39,
+      "line": 41,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37804,7 +37804,7 @@
       "name": "ApproveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 43,
+      "line": 45,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37814,7 +37814,7 @@
       "name": "RejectSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 47,
+      "line": 49,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37824,7 +37824,7 @@
       "name": "CancelSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 52,
+      "line": 54,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37834,7 +37834,7 @@
       "name": "ApprovalRow",
       "kind": "interface",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 58,
+      "line": 60,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37844,7 +37844,7 @@
       "name": "requireApprovalScope",
       "kind": "function",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 79,
+      "line": 81,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37854,7 +37854,7 @@
       "name": "approvalPermissionKey",
       "kind": "function",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 92,
+      "line": 94,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37864,7 +37864,7 @@
       "name": "enforceApprovalTarget",
       "kind": "function",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 107,
+      "line": 109,
       "module": "security",
       "exported": false,
       "container": "",
@@ -38154,7 +38154,7 @@
       "name": "RevokeSessionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 356,
+      "line": 377,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38164,7 +38164,7 @@
       "name": "GetAuditLogsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 435,
+      "line": 456,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38174,7 +38174,7 @@
       "name": "RoleNameSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 520,
+      "line": 541,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38184,7 +38184,7 @@
       "name": "RoleCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 523,
+      "line": 544,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38194,7 +38194,7 @@
       "name": "CreateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 524,
+      "line": 545,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38204,7 +38204,7 @@
       "name": "UpdateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 530,
+      "line": 551,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38214,7 +38214,7 @@
       "name": "GetRolePermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 537,
+      "line": 558,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38224,7 +38224,7 @@
       "name": "SetRolePermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 538,
+      "line": 559,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38234,7 +38234,7 @@
       "name": "DeleteRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 544,
+      "line": 565,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38244,7 +38244,7 @@
       "name": "slugify",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 664,
+      "line": 685,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38254,7 +38254,7 @@
       "name": "CreateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 665,
+      "line": 686,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38264,7 +38264,7 @@
       "name": "UpdateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 666,
+      "line": 687,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38274,7 +38274,7 @@
       "name": "DeleteCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 667,
+      "line": 688,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43485,10 +43485,34 @@
       ]
     },
     {
-      "name": "run",
+      "name": "countNotifications",
       "kind": "function",
       "file": "scripts/e2e/suites/permissionPropagation.mjs",
       "line": 28,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "pollNotification",
+      "kind": "function",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "line": 33,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/permissionPropagation.mjs",
+      "line": 42,
       "module": "security",
       "exported": true,
       "container": "",
@@ -124810,7 +124834,7 @@
       "guards": [],
       "schema": "ApproveSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 200,
+      "line": 202,
       "module": "security"
     },
     {
@@ -124823,7 +124847,7 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 320,
+      "line": 355,
       "module": "security"
     },
     {
@@ -124834,7 +124858,7 @@
       "guards": [],
       "schema": "ListSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 128,
+      "line": 130,
       "module": "security"
     },
     {
@@ -124845,7 +124869,7 @@
       "guards": [],
       "schema": "RejectSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 283,
+      "line": 318,
       "module": "security"
     },
     {
@@ -135236,7 +135260,7 @@
       ],
       "schema": "CreateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 591,
+      "line": 612,
       "module": "platform"
     },
     {
@@ -135249,7 +135273,7 @@
       ],
       "schema": "CreateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 682,
+      "line": 703,
       "module": "platform"
     },
     {
@@ -135262,7 +135286,7 @@
       ],
       "schema": "DeleteRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 640,
+      "line": 661,
       "module": "platform"
     },
     {
@@ -135275,7 +135299,7 @@
       ],
       "schema": "DeleteCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 712,
+      "line": 733,
       "module": "platform"
     },
     {
@@ -135288,7 +135312,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 364,
+      "line": 385,
       "module": "platform"
     },
     {
@@ -135301,7 +135325,7 @@
       ],
       "schema": "GetAuditLogsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 451,
+      "line": 472,
       "module": "platform"
     },
     {
@@ -135314,7 +135338,7 @@
       ],
       "schema": "GetRolePermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 572,
+      "line": 593,
       "module": "security"
     },
     {
@@ -135340,7 +135364,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 670,
+      "line": 691,
       "module": "platform"
     },
     {
@@ -135353,7 +135377,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 547,
+      "line": 568,
       "module": "platform"
     },
     {
@@ -135379,7 +135403,7 @@
       ],
       "schema": "RevokeSessionSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 413,
+      "line": 434,
       "module": "platform"
     },
     {
@@ -135392,7 +135416,7 @@
       ],
       "schema": "SetRolePermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 727,
+      "line": 748,
       "module": "security"
     },
     {
@@ -135418,7 +135442,7 @@
       ],
       "schema": "UpdateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 611,
+      "line": 632,
       "module": "platform"
     },
     {
@@ -135431,7 +135455,7 @@
       ],
       "schema": "UpdateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 699,
+      "line": 720,
       "module": "platform"
     },
     {
@@ -156044,34 +156068,47 @@
       "tests": [
         {
           "name": "migration 437: communication_signals accepts domain=permissions",
-          "line": 62
+          "line": 80
         },
         {
           "name": "target holds NO compliance_read before grant (shield hidden)",
-          "line": 68
+          "line": 86
         },
         {
           "name": "maker-checker approve applies compliance_read",
-          "line": 77
+          "line": 96
         },
         {
           "name": "a permissions signal is emitted to the target on approval",
-          "line": 84
-        },
-        {
-          "name": "snapshot now returns compliance_read WITH its validity window",
-          "line": 89
-        },
-        {
-          "name": "compliance revoke emits a permissions signal",
           "line": 103
         },
         {
+          "name": "snapshot now returns compliance_read WITH its validity window",
+          "line": 108
+        },
+        {
+          "name": "grant approval creates a notification for the grantee",
+          "line": 122
+        },
+        {
+          "name": "retrying the same approval does NOT create a duplicate notification",
+          "line": 131
+        },
+        {
+          "name": "compliance revoke emits a permissions signal",
+          "line": 143
+        },
+        {
           "name": "snapshot no longer grants compliance_read after revoke",
-          "line": 113
+          "line": 153
+        },
+        {
+          "name": "revoke creates a notification for the grantee",
+          "line": 164
         }
       ],
       "apiPaths": [
+        "/api/admin/approvals/approve",
         "/api/getMyPermissionOverrides",
         "/api/superadmin/clearUserPermission"
       ]
