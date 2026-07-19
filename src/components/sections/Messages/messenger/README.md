@@ -4,9 +4,10 @@ The clean-architecture Messenger (from `Downloads/messenger-port2/`) ported onto
 the existing SIOMAC messaging backbone. **CUT OVER: this IS the Messages
 section** — the legacy `MessageCenter.tsx` and the feature-flag switch are
 deleted; `mount.ts` renders `MessengerWorkspace` directly. The standalone legacy
-pieces it REUSES: `ComposeThreadDialog` (New Message), `ComplianceBrowser` +
-`AccessThreadDialog` (the audited compliance surface), `MessageDropdown`
-(header dropdown, unchanged).
+pieces it REUSES: `ComposeThreadDialog` (New Message) and `MessageDropdown`
+(header dropdown, unchanged). Compliance access is the V1 `ComplianceWorkspace`
+(`ui/compliance/*`) — the legacy `ComplianceBrowser` + `AccessThreadDialog`
+self-grant surface was removed at cutover.
 
 ## What's here (Phase 2 — adapters, DONE)
 
@@ -78,9 +79,9 @@ gateway ignores typing/presence publishes.
 - **Queue model matches legacy**: every participant thread lives in
   Inbox/Archived (record/system threads keep the shield badge); the
   **Compliance tab** (gated by `communications.compliance_read`, hidden
-  otherwise) is the audited browser surface: `ComplianceView` = legacy
-  `ComplianceBrowser` + a READ-ONLY sm- conversation + `AccessThreadDialog`
-  on read-gate denial (compliance access is read access).
+  otherwise) is the V1 `ComplianceWorkspace` (`ui/compliance/*`): Cases ·
+  Conversations · Access Log · case-scoped export — approved, scoped,
+  time-limited, read-only. No inline self-grant; access is via an approved case.
 - **New Message** in the queue header opens the legacy `ComposeThreadDialog`
   (direct get-or-create + group + recipients picker); created thread is
   auto-selected via the pending-thread mechanism.

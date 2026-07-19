@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `49fd7bb11b646dbacec1c820`
+Source fingerprint: `2f52a9756637d3333249f076`
 
 Files: 122 | Symbols: 1714 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 176 | E2E suites: 9
 

@@ -1,19 +1,19 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "3fc71db53a5ec8bc6f788c92b965274de578edc5",
-    "branch": "main",
-    "fingerprint": "49fd7bb11b646dbacec1c820",
-    "indexedFiles": 1422
+    "head": "c1c78b5cbfd8c8abf091fba9147b6c2696a65960",
+    "branch": "frontend/compliance-legacy-removal",
+    "fingerprint": "2f52a9756637d3333249f076",
+    "indexedFiles": 1420
   },
   "summary": {
-    "files": 1119,
-    "symbols": 11122,
+    "files": 1117,
+    "symbols": 11108,
     "widgets": 32,
     "routes": 872,
     "routeDefinitions": 873,
     "unmountedRoutes": 17,
-    "apiCalls": 381,
+    "apiCalls": 379,
     "databaseObjects": 1167,
     "e2eSuites": 65,
     "e2eTests": 2167
@@ -74,12 +74,12 @@
     {
       "id": "communications",
       "counts": {
-        "files": 102,
-        "symbols": 941,
+        "files": 100,
+        "symbols": 927,
         "widgets": 0,
         "routes": 75,
         "routeDefinitions": 78,
-        "apiCalls": 90,
+        "apiCalls": 88,
         "databaseObjects": 120,
         "e2eSuites": 4
       }
@@ -2730,8 +2730,8 @@
       "path": "src/api/communications.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 885,
-      "hash": "09e6e2e6ae1b88de"
+      "lines": 829,
+      "hash": "5eee3fe9c5760c58"
     },
     {
       "path": "src/api/communicationsCompliance.ts",
@@ -4130,8 +4130,8 @@
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 838,
-      "hash": "f198e66b41d8b7c6"
+      "lines": 850,
+      "hash": "ce0ef663be36635a"
     },
     {
       "path": "src/components/sections/Finance/PayrollOverview.tsx",
@@ -5121,20 +5121,6 @@
       "hash": "479accb0b2a62b46"
     },
     {
-      "path": "src/components/sections/Messages/AccessThreadDialog.tsx",
-      "module": "communications",
-      "role": "frontend-page",
-      "lines": 112,
-      "hash": "31259390ec74a29f"
-    },
-    {
-      "path": "src/components/sections/Messages/ComplianceBrowser.tsx",
-      "module": "communications",
-      "role": "frontend-page",
-      "lines": 137,
-      "hash": "75ec8b10e04d89a3"
-    },
-    {
       "path": "src/components/sections/Messages/ComposeThreadDialog.tsx",
       "module": "communications",
       "role": "frontend-page",
@@ -5356,7 +5342,7 @@
       "module": "communications",
       "role": "frontend-page",
       "lines": 14,
-      "hash": "916f178e3c55b547"
+      "hash": "2156f84d6de9d834"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/Composer.tsx",
@@ -45578,20 +45564,10 @@
       "tags": []
     },
     {
-      "name": "ComplianceThreadRow",
-      "kind": "type",
-      "file": "src/api/communications.ts",
-      "line": 38,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
       "name": "CommsSummary",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 42,
+      "line": 41,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45601,7 +45577,7 @@
       "name": "CanonicalNotification",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 60,
+      "line": 59,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45611,7 +45587,7 @@
       "name": "NotificationPreference",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 78,
+      "line": 77,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45621,7 +45597,7 @@
       "name": "NotificationSnoozeState",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 85,
+      "line": 84,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45631,7 +45607,7 @@
       "name": "NotificationPreferencesData",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 89,
+      "line": 88,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45641,7 +45617,7 @@
       "name": "MessageThread",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 95,
+      "line": 94,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45651,7 +45627,7 @@
       "name": "MessagePost",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 110,
+      "line": 109,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45661,7 +45637,7 @@
       "name": "CanonicalTicket",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 118,
+      "line": 117,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45671,7 +45647,7 @@
       "name": "CanonicalTicketDetail",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 131,
+      "line": 130,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45681,7 +45657,7 @@
       "name": "useCommsSummary",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 145,
+      "line": 144,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45693,7 +45669,7 @@
       "name": "NotificationListArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 162,
+      "line": 161,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45703,7 +45679,7 @@
       "name": "useNotifications",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 173,
+      "line": 172,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45715,7 +45691,7 @@
       "name": "useNotificationPreferences",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 190,
+      "line": 189,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45727,7 +45703,7 @@
       "name": "useSetNotificationPreference",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 203,
+      "line": 202,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45739,7 +45715,7 @@
       "name": "useMuteNotifications",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 212,
+      "line": 211,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45751,7 +45727,7 @@
       "name": "BroadcastArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 221,
+      "line": 220,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45761,7 +45737,7 @@
       "name": "useBroadcastNotification",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 230,
+      "line": 229,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45773,7 +45749,7 @@
       "name": "useMarkNotificationRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 239,
+      "line": 238,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45785,7 +45761,7 @@
       "name": "useMarkAllNotificationsRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 255,
+      "line": 254,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45797,7 +45773,7 @@
       "name": "useArchiveNotification",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 271,
+      "line": 270,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45809,7 +45785,7 @@
       "name": "useMessageThreads",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 289,
+      "line": 288,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45821,7 +45797,7 @@
       "name": "useMessagePosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 304,
+      "line": 303,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45833,7 +45809,7 @@
       "name": "PostMessageArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 320,
+      "line": 319,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45843,7 +45819,7 @@
       "name": "usePostMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 328,
+      "line": 327,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45855,7 +45831,7 @@
       "name": "AttachmentUploadUrlResult",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 345,
+      "line": 344,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45865,7 +45841,7 @@
       "name": "useMessageAttachmentUploadUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 354,
+      "line": 353,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45877,7 +45853,7 @@
       "name": "useCreateMessageAttachment",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 367,
+      "line": 366,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45889,7 +45865,7 @@
       "name": "CreateThreadArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 379,
+      "line": 378,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45899,7 +45875,7 @@
       "name": "useCreateMessageThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 390,
+      "line": 389,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45911,7 +45887,7 @@
       "name": "ThreadFilters",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 415,
+      "line": 414,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45921,7 +45897,7 @@
       "name": "useMessageThreadsFull",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 423,
+      "line": 422,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45933,7 +45909,7 @@
       "name": "useThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 439,
+      "line": 438,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45945,7 +45921,7 @@
       "name": "ThreadAccessError",
       "kind": "class",
       "file": "src/api/communications.ts",
-      "line": 456,
+      "line": 455,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45955,7 +45931,7 @@
       "name": "useThreadPosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 466,
+      "line": 465,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45967,7 +45943,7 @@
       "name": "useMarkThreadRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 485,
+      "line": 484,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45979,7 +45955,7 @@
       "name": "OnlineUser",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 501,
+      "line": 500,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45989,7 +45965,7 @@
       "name": "PinnedThreadRow",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 502,
+      "line": 501,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -45999,7 +45975,7 @@
       "name": "usePinnedSummary",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 505,
+      "line": 504,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46011,7 +45987,7 @@
       "name": "usePins",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 517,
+      "line": 516,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46023,7 +45999,7 @@
       "name": "usePinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 528,
+      "line": 527,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46035,7 +46011,7 @@
       "name": "useUnpinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 541,
+      "line": 540,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46047,7 +46023,7 @@
       "name": "useDeleteMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 555,
+      "line": 554,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46059,7 +46035,7 @@
       "name": "useOnlineUsers",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 570,
+      "line": 569,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46071,7 +46047,7 @@
       "name": "useDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 583,
+      "line": 582,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46083,7 +46059,7 @@
       "name": "useSaveDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 594,
+      "line": 593,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46095,7 +46071,7 @@
       "name": "useAttachmentUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 604,
+      "line": 603,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46107,7 +46083,7 @@
       "name": "useArchiveThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 613,
+      "line": 612,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46119,7 +46095,7 @@
       "name": "useMuteThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 628,
+      "line": 627,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46131,7 +46107,7 @@
       "name": "useAddThreadParticipants",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 641,
+      "line": 640,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46143,61 +46119,7 @@
       "name": "useRemoveThreadParticipant",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 655,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "COMPLIANCE_REASON_OPTIONS",
-      "kind": "variable",
-      "file": "src/api/communications.ts",
-      "line": 670,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComplianceReason",
-      "kind": "type",
-      "file": "src/api/communications.ts",
-      "line": 679,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "RequestThreadAccessArgs",
-      "kind": "interface",
-      "file": "src/api/communications.ts",
-      "line": 681,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "useRequestThreadAccess",
-      "kind": "function",
-      "file": "src/api/communications.ts",
-      "line": 694,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useComplianceThreadSearch",
-      "kind": "function",
-      "file": "src/api/communications.ts",
-      "line": 713,
+      "line": 654,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46209,7 +46131,7 @@
       "name": "useResolveRecordThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 734,
+      "line": 678,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46221,7 +46143,7 @@
       "name": "useMessageSearch",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 749,
+      "line": 693,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46233,7 +46155,7 @@
       "name": "useMessageRecipients",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 766,
+      "line": 710,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46245,7 +46167,7 @@
       "name": "TicketListArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 784,
+      "line": 728,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46255,7 +46177,7 @@
       "name": "useMyTickets",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 790,
+      "line": 734,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46267,7 +46189,7 @@
       "name": "useTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 805,
+      "line": 749,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46279,7 +46201,7 @@
       "name": "CreateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 821,
+      "line": 765,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46289,7 +46211,7 @@
       "name": "useCreateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 831,
+      "line": 775,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46301,7 +46223,7 @@
       "name": "CommentTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 845,
+      "line": 789,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46311,7 +46233,7 @@
       "name": "useCommentTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 851,
+      "line": 795,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46323,7 +46245,7 @@
       "name": "UpdateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 865,
+      "line": 809,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -46333,7 +46255,7 @@
       "name": "useUpdateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 872,
+      "line": 816,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -72778,7 +72700,7 @@
       "name": "MetricsRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 531,
+      "line": 543,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72790,7 +72712,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 563,
+      "line": 575,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72802,7 +72724,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 622,
+      "line": 634,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72814,7 +72736,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 642,
+      "line": 654,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72827,7 +72749,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 690,
+      "line": 702,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72840,7 +72762,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 694,
+      "line": 706,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -72850,7 +72772,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 695,
+      "line": 707,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -72860,7 +72782,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 746,
+      "line": 758,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -72873,7 +72795,7 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 803,
+      "line": 815,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -93329,90 +93251,6 @@
       "exported": true,
       "container": "",
       "tags": []
-    },
-    {
-      "name": "AccessThreadDialog",
-      "kind": "function",
-      "file": "src/components/sections/Messages/AccessThreadDialog.tsx",
-      "line": 19,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "reset",
-      "kind": "function",
-      "file": "src/components/sections/Messages/AccessThreadDialog.tsx",
-      "line": 32,
-      "module": "communications",
-      "exported": false,
-      "container": "AccessThreadDialog",
-      "tags": []
-    },
-    {
-      "name": "handleClose",
-      "kind": "function",
-      "file": "src/components/sections/Messages/AccessThreadDialog.tsx",
-      "line": 36,
-      "module": "communications",
-      "exported": false,
-      "container": "AccessThreadDialog",
-      "tags": []
-    },
-    {
-      "name": "handleSubmit",
-      "kind": "function",
-      "file": "src/components/sections/Messages/AccessThreadDialog.tsx",
-      "line": 38,
-      "module": "communications",
-      "exported": false,
-      "container": "AccessThreadDialog",
-      "tags": []
-    },
-    {
-      "name": "complianceRowToThread",
-      "kind": "function",
-      "file": "src/components/sections/Messages/ComplianceBrowser.tsx",
-      "line": 16,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "typeLabel",
-      "kind": "function",
-      "file": "src/components/sections/Messages/ComplianceBrowser.tsx",
-      "line": 39,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "relTime",
-      "kind": "function",
-      "file": "src/components/sections/Messages/ComplianceBrowser.tsx",
-      "line": 43,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "ComplianceBrowser",
-      "kind": "function",
-      "file": "src/components/sections/Messages/ComplianceBrowser.tsx",
-      "line": 54,
-      "module": "communications",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
     },
     {
       "name": "Props",
@@ -136699,7 +136537,7 @@
       "helper": "apiPost",
       "caller": "useArchiveThread",
       "file": "src/api/communications.ts",
-      "line": 617,
+      "line": 616,
       "module": "communications"
     },
     {
@@ -136715,7 +136553,7 @@
       "helper": "apiPost",
       "caller": "useCreateMessageAttachment",
       "file": "src/api/communications.ts",
-      "line": 370,
+      "line": 369,
       "module": "communications"
     },
     {
@@ -136731,7 +136569,7 @@
       "helper": "apiPost",
       "caller": "useAttachmentUrl",
       "file": "src/api/communications.ts",
-      "line": 607,
+      "line": 606,
       "module": "communications"
     },
     {
@@ -136747,7 +136585,7 @@
       "helper": "apiPost",
       "caller": "useMessageAttachmentUploadUrl",
       "file": "src/api/communications.ts",
-      "line": 357,
+      "line": 356,
       "module": "communications"
     },
     {
@@ -136759,19 +136597,11 @@
       "module": "communications"
     },
     {
-      "path": "/api/communications/messages/compliance/search",
-      "helper": "apiPost",
-      "caller": "res",
-      "file": "src/api/communications.ts",
-      "line": 717,
-      "module": "communications"
-    },
-    {
       "path": "/api/communications/messages/createThread",
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 398,
+      "line": 397,
       "module": "communications"
     },
     {
@@ -136787,7 +136617,7 @@
       "helper": "apiPost",
       "caller": "useDeleteMessage",
       "file": "src/api/communications.ts",
-      "line": 559,
+      "line": 558,
       "module": "communications"
     },
     {
@@ -136795,7 +136625,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 587,
+      "line": 586,
       "module": "communications"
     },
     {
@@ -136811,7 +136641,7 @@
       "helper": "apiPost",
       "caller": "useSaveDraft",
       "file": "src/api/communications.ts",
-      "line": 598,
+      "line": 597,
       "module": "communications"
     },
     {
@@ -136827,7 +136657,7 @@
       "helper": "apiPost",
       "caller": "useMarkThreadRead",
       "file": "src/api/communications.ts",
-      "line": 489,
+      "line": 488,
       "module": "communications"
     },
     {
@@ -136843,7 +136673,7 @@
       "helper": "apiPost",
       "caller": "useMuteThread",
       "file": "src/api/communications.ts",
-      "line": 632,
+      "line": 631,
       "module": "communications"
     },
     {
@@ -136859,7 +136689,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 574,
+      "line": 573,
       "module": "communications"
     },
     {
@@ -136875,7 +136705,7 @@
       "helper": "apiPost",
       "caller": "useAddThreadParticipants",
       "file": "src/api/communications.ts",
-      "line": 645,
+      "line": 644,
       "module": "communications"
     },
     {
@@ -136883,7 +136713,7 @@
       "helper": "apiPost",
       "caller": "useRemoveThreadParticipant",
       "file": "src/api/communications.ts",
-      "line": 659,
+      "line": 658,
       "module": "communications"
     },
     {
@@ -136891,7 +136721,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 521,
+      "line": 520,
       "module": "communications"
     },
     {
@@ -136907,7 +136737,7 @@
       "helper": "apiPost",
       "caller": "usePinMessage",
       "file": "src/api/communications.ts",
-      "line": 532,
+      "line": 531,
       "module": "communications"
     },
     {
@@ -136915,7 +136745,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 509,
+      "line": 508,
       "module": "communications"
     },
     {
@@ -136923,7 +136753,7 @@
       "helper": "apiPost",
       "caller": "useUnpinMessage",
       "file": "src/api/communications.ts",
-      "line": 545,
+      "line": 544,
       "module": "communications"
     },
     {
@@ -136931,7 +136761,7 @@
       "helper": "apiPost",
       "caller": "usePostMessage",
       "file": "src/api/communications.ts",
-      "line": 332,
+      "line": 331,
       "module": "communications"
     },
     {
@@ -136947,7 +136777,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 308,
+      "line": 307,
       "module": "communications"
     },
     {
@@ -136955,7 +136785,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 470,
+      "line": 469,
       "module": "communications"
     },
     {
@@ -136979,7 +136809,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 770,
+      "line": 714,
       "module": "communications"
     },
     {
@@ -136987,15 +136817,7 @@
       "helper": "apiPost",
       "caller": "useResolveRecordThread",
       "file": "src/api/communications.ts",
-      "line": 738,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/requestThreadAccess",
-      "helper": "apiPost",
-      "caller": "useRequestThreadAccess",
-      "file": "src/api/communications.ts",
-      "line": 698,
+      "line": 682,
       "module": "communications"
     },
     {
@@ -137003,7 +136825,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 753,
+      "line": 697,
       "module": "communications"
     },
     {
@@ -137019,7 +136841,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 443,
+      "line": 442,
       "module": "communications"
     },
     {
@@ -137027,7 +136849,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 293,
+      "line": 292,
       "module": "communications"
     },
     {
@@ -137035,7 +136857,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 427,
+      "line": 426,
       "module": "communications"
     },
     {
@@ -137075,7 +136897,7 @@
       "helper": "apiPost",
       "caller": "useArchiveNotification",
       "file": "src/api/communications.ts",
-      "line": 275,
+      "line": 274,
       "module": "communications"
     },
     {
@@ -137083,7 +136905,7 @@
       "helper": "apiPost",
       "caller": "useBroadcastNotification",
       "file": "src/api/communications.ts",
-      "line": 234,
+      "line": 233,
       "module": "communications"
     },
     {
@@ -137091,7 +136913,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 177,
+      "line": 176,
       "module": "communications"
     },
     {
@@ -137099,7 +136921,7 @@
       "helper": "apiPost",
       "caller": "useMarkAllNotificationsRead",
       "file": "src/api/communications.ts",
-      "line": 259,
+      "line": 258,
       "module": "communications"
     },
     {
@@ -137107,7 +136929,7 @@
       "helper": "apiPost",
       "caller": "useMarkNotificationRead",
       "file": "src/api/communications.ts",
-      "line": 243,
+      "line": 242,
       "module": "communications"
     },
     {
@@ -137115,7 +136937,7 @@
       "helper": "apiPost",
       "caller": "useMuteNotifications",
       "file": "src/api/communications.ts",
-      "line": 216,
+      "line": 215,
       "module": "communications"
     },
     {
@@ -137123,7 +136945,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 194,
+      "line": 193,
       "module": "communications"
     },
     {
@@ -137131,7 +136953,7 @@
       "helper": "apiPost",
       "caller": "useSetNotificationPreference",
       "file": "src/api/communications.ts",
-      "line": 207,
+      "line": 206,
       "module": "communications"
     },
     {
@@ -137139,7 +136961,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 149,
+      "line": 148,
       "module": "communications"
     },
     {
@@ -137155,7 +136977,7 @@
       "helper": "apiPost",
       "caller": "useCommentTicket",
       "file": "src/api/communications.ts",
-      "line": 855,
+      "line": 799,
       "module": "communications"
     },
     {
@@ -137163,7 +136985,7 @@
       "helper": "apiPost",
       "caller": "useCreateTicket",
       "file": "src/api/communications.ts",
-      "line": 835,
+      "line": 779,
       "module": "communications"
     },
     {
@@ -137179,7 +137001,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 809,
+      "line": 753,
       "module": "communications"
     },
     {
@@ -137187,7 +137009,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 794,
+      "line": 738,
       "module": "communications"
     },
     {
@@ -137195,7 +137017,7 @@
       "helper": "apiPost",
       "caller": "useUpdateTicket",
       "file": "src/api/communications.ts",
-      "line": 876,
+      "line": 820,
       "module": "communications"
     },
     {

@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `49fd7bb11b646dbacec1c820`
+Source fingerprint: `2f52a9756637d3333249f076`
 
 Files: 129 | Symbols: 1150 | Widgets: 10 | Unique mounted endpoints: 98 | Route definitions: 98 mounted + 0 unmounted | API calls: 5 | DB objects: 182 | E2E suites: 16
 
@@ -361,7 +361,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/payroll.ts` | 132 |
 | frontend-api | `src/api/schemas/payroll.ts` | 88 |
 | frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 153 |
-| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 838 |
+| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 850 |
 | frontend-page | `src/components/sections/Finance/PayrollOverview.tsx` | 723 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 868 |
 | frontend-page | `src/components/sections/PayslipStudio/App.tsx` | 33 |

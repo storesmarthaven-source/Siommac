@@ -20,7 +20,7 @@ import type {
   MessageThread as MessageThreadDTO, MessageParticipant as MessageParticipantDTO,
   MessagePost as MessagePostDTO, MessageAttachment as MessageAttachmentDTO,
   MessageRecipient as MessageRecipientDTO, MessageThreadDetail as MessageThreadDetailDTO,
-  ComplianceThread as ComplianceThreadDTO, MessagePin as MessagePinDTO,
+  MessagePin as MessagePinDTO,
   PresenceStatus,
 } from '../../types/messaging';
 
@@ -35,7 +35,6 @@ export type MessagePostRow            = MessagePostDTO;
 export type MessageAttachment         = MessageAttachmentDTO;
 export type MessageRecipient          = MessageRecipientDTO;
 export type MessageThreadDetail       = MessageThreadDetailDTO;
-export type ComplianceThreadRow       = ComplianceThreadDTO;
 
 // ── Response types ─────────────────────────────────────────────────────────────
 
@@ -665,67 +664,12 @@ export function useRemoveThreadParticipant() {
   });
 }
 
-// ── Compliance access (audited, time-boxed) ─────────────────────────────────────
-
-export const COMPLIANCE_REASON_OPTIONS = [
-  { value: 'investigation',    label: 'Investigation' },
-  { value: 'safety_incident',  label: 'Safety incident' },
-  { value: 'hr_complaint',     label: 'HR complaint' },
-  { value: 'legal_compliance', label: 'Legal / compliance request' },
-  { value: 'security_review',  label: 'Security review' },
-  { value: 'other',            label: 'Other' },
-] as const;
-
-export type ComplianceReason = typeof COMPLIANCE_REASON_OPTIONS[number]['value'];
-
-export interface RequestThreadAccessArgs extends Record<string, unknown> {
-  threadId:      string;
-  reason:        ComplianceReason;
-  caseRef?:      string | null;
-  notes?:        string | null;
-  durationHours?: number;
-}
-
-/**
- * Request controlled, audited access to a private thread. Requires
- * communications.compliance_read. On success a time-boxed grant is created and
- * the thread becomes readable — invalidate the posts/thread queries to reload.
- */
-export function useRequestThreadAccess() {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (args: RequestThreadAccessArgs) =>
-      apiPost<{ success: boolean; data?: { grantId: string; expiresAt: string }; message?: string }>(
-        'communications/messages/requestThreadAccess', args, { retryable: false },
-      ),
-    onSuccess: (_r: unknown, args: RequestThreadAccessArgs) => {
-      void qc.invalidateQueries({ queryKey: messageKeys.posts(args.threadId) });
-      void qc.invalidateQueries({ queryKey: messageKeys.thread(args.threadId) });
-    },
-  });
-}
-
-/**
- * Compliance thread discovery — search ALL threads (not just yours). Requires
- * communications.compliance_read. Returns metadata only; reading a thread still
- * goes through the audited gate.
- */
-export function useComplianceThreadSearch(search: string, enabled = true) {
-  return useQuery({
-    queryKey: ['messages', 'compliance', 'search', search] as const,
-    queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: ComplianceThreadRow[] }>(
-        'communications/messages/compliance/search',
-        { search: search || undefined, limit: 40 },
-        { signal },
-      );
-      if (!res.success) throw new Error('Compliance search failed');
-      return res.data;
-    },
-    enabled,
-    staleTime: 15_000,
-  });
-}
+// Compliance access is no longer a self-service flow from the Messenger. Audited,
+// case-scoped, time-limited compliance reads/exports now live entirely in the
+// Compliance workspace (src/api/communicationsCompliance.ts + the compliance/*
+// components). The old self-grant request + all-thread search hooks were removed
+// at cutover; there is no inline "request access" dialog. A user who needs to
+// read another party's thread opens the Compliance workspace and files a case.
 
 /**
  * Find-or-create the discussion thread for a business record, joining the caller.
