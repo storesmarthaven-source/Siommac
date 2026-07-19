@@ -3,11 +3,11 @@ path	module	permission	guards	schema	file	line
 /api/addEmployee	hr	employees.add	requirePermission	AddEmployeeSchema	netlify/functions/routes/employees.ts	63
 /api/addProjectSite	platform	sites.add	requirePermission	AddSiteSchema	netlify/functions/routes/sites.ts	81
 /api/admin/approvals/approve	security			ApproveSchema	netlify/functions/routes/permissionApprovals.ts	299
-/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	452
+/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	454
 /api/admin/approvals/counts	security				netlify/functions/routes/permissionApprovals.ts	213
 /api/admin/approvals/list	security			ListSchema	netlify/functions/routes/permissionApprovals.ts	136
 /api/admin/approvals/markSeen	security			MarkSeenSchema	netlify/functions/routes/permissionApprovals.ts	260
-/api/admin/approvals/reject	security			RejectSchema	netlify/functions/routes/permissionApprovals.ts	415
+/api/admin/approvals/reject	security			RejectSchema	netlify/functions/routes/permissionApprovals.ts	417
 /api/admin/security/policy/update	security	auth.security.manage_policy	requirePermission	PolicyUpdateSchema	netlify/functions/routes/adminSecurity.ts	225
 /api/admin/security/users/passkeys/revoke-all	security	auth.passkeys.admin_revoke	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	92
 /api/admin/security/users/status	security	auth.security.view	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	42
@@ -290,6 +290,22 @@ path	module	permission	guards	schema	file	line
 /api/finance/payroll/payslips/render	payroll	finance.payroll.payslips.generate	requirePermission	z.object({ payslipId: z.string().uuid() })	netlify/functions/routes/financePayroll.ts	635
 /api/finance/payroll/payslips/render-run	payroll	finance.payroll.payslips.generate	requirePermission	z.object({ runId: z.string().uuid() })	netlify/functions/routes/financePayroll.ts	622
 /api/finance/payroll/payslips/signed-url	payroll	finance.payroll.view_own	requirePermission,userCan	z.object({ id: z.string().uuid() })	netlify/functions/routes/financePayroll.ts	1091
+/api/finance/payroll/policies/activate	payroll	finance.payroll.policies.activate	requirePermission	z.object({ policyId: z.string().uuid(), versionId: z.string().uuid(), idempotencyKey: requestKey }).strict()	netlify/functions/routes/financePayPolicies.ts	164
+/api/finance/payroll/policies/copy-version	payroll	finance.payroll.policies.draft	requirePermission	z.object({     policyId: z.string().uuid(), sourceVersionId: z.string().uuid(), effectiveFrom: date,     changeSummary: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()	netlify/functions/routes/financePayPolicies.ts	130
+/api/finance/payroll/policies/create-draft	payroll	finance.payroll.policies.draft	requirePermission	draft.and(z.object({ idempotencyKey: requestKey }).strict())	netlify/functions/routes/financePayPolicies.ts	110
+/api/finance/payroll/policies/get	payroll	finance.payroll.policies.view	requirePermission	z.object({ policyId: z.string().uuid(), versionId: z.string().uuid().optional() }).strict()	netlify/functions/routes/financePayPolicies.ts	100
+/api/finance/payroll/policies/list	payroll	finance.payroll.policies.view	requirePermission	z.object({     search: z.string().trim().max(120).optional(), status: z.enum(['draft', 'active', 'retired']).optional(),     cursor: z.string().max(100).optional(), limit: z.number().int().min(1).max(100).optional(),   }).strict()	netlify/functions/routes/financePayPolicies.ts	89
+/api/finance/payroll/policies/pay-groups/assign	payroll	finance.payroll.policies.assign	requirePermission	z.object({     policyId: z.string().uuid(), versionId: z.string().uuid(), payGroupId: z.string().uuid(),     effectiveFrom: date, effectiveTo: date.nullable().optional(), idempotencyKey: requestKey,   }).strict()	netlify/functions/routes/financePayPolicies.ts	230
+/api/finance/payroll/policies/pay-groups/end-assignment	payroll	finance.payroll.policies.assign	requirePermission	z.object({     policyId: z.string().uuid(), assignmentId: z.string().uuid(), effectiveTo: date,     reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()	netlify/functions/routes/financePayPolicies.ts	241
+/api/finance/payroll/policies/pay-groups/list	payroll	finance.payroll.policies.view	requirePermission	z.object({ policyId: z.string().uuid() }).strict()	netlify/functions/routes/financePayPolicies.ts	220
+/api/finance/payroll/policies/preflight	payroll	finance.payroll.policies.view	requirePermission	z.object({ versionId: z.string().uuid() }).strict()	netlify/functions/routes/financePayPolicies.ts	145
+/api/finance/payroll/policies/reject	payroll	finance.payroll.policies.view	requirePermission	z.object({     workflowId: z.string().uuid(), taskId: z.string().uuid(), reason: z.string().trim().min(3).max(500),   }).strict()	netlify/functions/routes/financePayPolicies.ts	172
+/api/finance/payroll/policies/retire	payroll	finance.payroll.policies.activate	requirePermission	z.object({     policyId: z.string().uuid(), effectiveTo: date, reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()	netlify/functions/routes/financePayPolicies.ts	182
+/api/finance/payroll/policies/submit	payroll	finance.payroll.policies.submit	requirePermission	z.object({     versionId: z.string().uuid(), idempotencyKey: requestKey,     certifications: z.object({ rulesReviewed: z.literal(true), sourcesOwned: z.literal(true), statutoryPaymentReady: z.literal(true) }).strict(),   }).strict()	netlify/functions/routes/financePayPolicies.ts	153
+/api/finance/payroll/policies/update-draft	payroll	finance.payroll.policies.draft	requirePermission	draft.and(z.object({     policyId: z.string().uuid(), versionId: z.string().uuid(), expectedLockVersion: z.number().int().min(1), idempotencyKey: requestKey,   }).strict())	netlify/functions/routes/financePayPolicies.ts	119
+/api/finance/payroll/policies/versions/compare	payroll	finance.payroll.policies.view	requirePermission	z.object({ policyId: z.string().uuid(), fromVersionId: z.string().uuid(), toVersionId: z.string().uuid() }).strict()	netlify/functions/routes/financePayPolicies.ts	212
+/api/finance/payroll/policies/versions/get	payroll	finance.payroll.policies.view	requirePermission	z.object({ policyId: z.string().uuid(), versionId: z.string().uuid() }).strict()	netlify/functions/routes/financePayPolicies.ts	202
+/api/finance/payroll/policies/versions/list	payroll	finance.payroll.policies.view	requirePermission	z.object({ policyId: z.string().uuid() }).strict()	netlify/functions/routes/financePayPolicies.ts	192
 /api/finance/payroll/releases/confirm-funding	payroll	finance.payroll.funding.approve	requirePermission	z.object({     runId: z.string().uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     confirmedAmount: z.number().finite().nonnegative(),     confirmationReference: z.string().trim().min(1).max(200),     accountReference: z.string().trim().min(1).max(100).optional(),     note: z.string().trim().max(2000).optional(),   })	netlify/functions/routes/financePayroll.ts	460
 /api/finance/payroll/releases/get-certificate	payroll	finance.payroll.view_all	requirePermission	z.object({ runId: z.string().uuid() })	netlify/functions/routes/financePayroll.ts	499
 /api/finance/payroll/releases/preflight	payroll	finance.payroll.view_all	requirePermission	z.object({ runId: z.string().uuid() })	netlify/functions/routes/financePayroll.ts	448
@@ -813,24 +829,24 @@ path	module	permission	guards	schema	file	line
 /api/settings/values/reset	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	233
 /api/settings/values/set	settings		requireUser,userCan	z.object({     settingKey: z.string().min(1), scopeType: z.enum(SCOPE_TYPES), scopeId: z.string().nullable().optional(),     value: z.unknown(), reason: z.string().max(500).optional(),   })	netlify/functions/routes/settingsCatalog.ts	181
 /api/setup2fa	security			Setup2faInitSchema	netlify/functions/routes/auth.ts	442
-/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	402
-/api/superadmin/complianceApproverAvailability	platform	permissions.manage	requirePermission	ApproverAvailabilitySchema	netlify/functions/routes/superadmin.ts	392
-/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	722
-/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	813
-/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	771
-/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	843
-/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	495
-/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	582
-/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	703
-/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	320
-/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	801
-/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	678
-/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	270
-/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	544
-/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	858
-/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	336
-/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	742
-/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	830
+/api/superadmin/clearUserPermission	security	permissions.manage	requirePermission	ClearUserPermSchema	netlify/functions/routes/superadmin.ts	404
+/api/superadmin/complianceApproverAvailability	platform	permissions.manage	requirePermission	ApproverAvailabilitySchema	netlify/functions/routes/superadmin.ts	394
+/api/superadmin/createRole	platform	roles.manage	requirePermission	CreateRoleSchema	netlify/functions/routes/superadmin.ts	728
+/api/superadmin/createRoleCategory	platform	roles.manage	requirePermission	CreateCategorySchema	netlify/functions/routes/superadmin.ts	819
+/api/superadmin/deleteRole	platform	roles.manage	requirePermission	DeleteRoleSchema	netlify/functions/routes/superadmin.ts	777
+/api/superadmin/deleteRoleCategory	platform	roles.manage	requirePermission	DeleteCategorySchema	netlify/functions/routes/superadmin.ts	849
+/api/superadmin/getActiveSessions	platform	sessions.manage	requirePermission		netlify/functions/routes/superadmin.ts	501
+/api/superadmin/getAuditLogs	platform	audit.view	requirePermission	GetAuditLogsSchema	netlify/functions/routes/superadmin.ts	588
+/api/superadmin/getRolePermissions	security	roles.manage	requirePermission	GetRolePermsSchema	netlify/functions/routes/superadmin.ts	709
+/api/superadmin/getUserPermissions	security	permissions.manage	requirePermission	GetUserPermsSchema	netlify/functions/routes/superadmin.ts	321
+/api/superadmin/listRoleCategories	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	807
+/api/superadmin/listRoles	platform	roles.manage	requirePermission		netlify/functions/routes/superadmin.ts	684
+/api/superadmin/listUsers	platform	permissions.manage	requirePermission		netlify/functions/routes/superadmin.ts	271
+/api/superadmin/revokeSession	platform	sessions.manage	requirePermission	RevokeSessionSchema	netlify/functions/routes/superadmin.ts	550
+/api/superadmin/setRolePermission	security	roles.manage	requirePermission	SetRolePermSchema	netlify/functions/routes/superadmin.ts	864
+/api/superadmin/setUserPermission	security	permissions.manage	requirePermission	SetUserPermSchema	netlify/functions/routes/superadmin.ts	337
+/api/superadmin/updateRole	platform	roles.manage	requirePermission	UpdateRoleSchema	netlify/functions/routes/superadmin.ts	748
+/api/superadmin/updateRoleCategory	platform	roles.manage	requirePermission	UpdateCategorySchema	netlify/functions/routes/superadmin.ts	836
 /api/theme/get	widgets				netlify/functions/routes/uiPrefs.ts	48
 /api/theme/save	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	53
 /api/updateColorScheme	security		requireUser	UpdateColorSchemeSchema	netlify/functions/routes/auth.ts	616

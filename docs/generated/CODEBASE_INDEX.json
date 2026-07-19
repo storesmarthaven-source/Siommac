@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "aef7aa02f1e1e82926cff68469fc5206d0310837",
-    "branch": "main",
-    "fingerprint": "beb540cef488bba3d5d82837",
-    "indexedFiles": 1444
+    "head": "a8087e5c13840b1e8007c857ea34d89ab0ffe7ae",
+    "branch": "codex/payroll-policy-setup",
+    "fingerprint": "5d3b39b519183096dd168ff3",
+    "indexedFiles": 1454
   },
   "summary": {
-    "files": 1135,
-    "symbols": 11294,
+    "files": 1144,
+    "symbols": 11389,
     "widgets": 32,
-    "routes": 881,
-    "routeDefinitions": 882,
+    "routes": 897,
+    "routeDefinitions": 898,
     "unmountedRoutes": 17,
     "apiCalls": 379,
-    "databaseObjects": 1180,
-    "e2eSuites": 68,
-    "e2eTests": 2258
+    "databaseObjects": 1205,
+    "e2eSuites": 69,
+    "e2eTests": 2271
   },
   "modules": [
     {
@@ -35,26 +35,26 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 138,
-        "symbols": 1264,
+        "files": 144,
+        "symbols": 1316,
         "widgets": 10,
-        "routes": 107,
-        "routeDefinitions": 107,
+        "routes": 123,
+        "routeDefinitions": 123,
         "apiCalls": 5,
         "databaseObjects": 192,
-        "e2eSuites": 18
+        "e2eSuites": 19
       }
     },
     {
       "id": "finance",
       "counts": {
-        "files": 122,
-        "symbols": 1714,
+        "files": 125,
+        "symbols": 1754,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
         "apiCalls": 4,
-        "databaseObjects": 176,
+        "databaseObjects": 201,
         "e2eSuites": 9
       }
     },
@@ -75,7 +75,7 @@
       "id": "communications",
       "counts": {
         "files": 103,
-        "symbols": 939,
+        "symbols": 937,
         "widgets": 0,
         "routes": 72,
         "routeDefinitions": 75,
@@ -88,7 +88,7 @@
       "id": "workflow",
       "counts": {
         "files": 47,
-        "symbols": 320,
+        "symbols": 321,
         "widgets": 0,
         "routes": 40,
         "routeDefinitions": 40,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 278,
-        "symbols": 2533,
+        "symbols": 2537,
         "widgets": 0,
         "routes": 27,
         "routeDefinitions": 42,
@@ -168,8 +168,8 @@
       "path": "netlify/functions/api.ts",
       "module": "platform",
       "role": "backend",
-      "lines": 341,
-      "hash": "9889e6ba9da17e95"
+      "lines": 343,
+      "hash": "bc50865706060624"
     },
     {
       "path": "netlify/functions/auto-checkout.ts",
@@ -424,6 +424,13 @@
       "hash": "11b44a0b7422e2ff"
     },
     {
+      "path": "netlify/functions/lib/finance/payPolicies.ts",
+      "module": "finance",
+      "role": "backend-lib",
+      "lines": 295,
+      "hash": "e4b53d4d727c2d14"
+    },
+    {
       "path": "netlify/functions/lib/finance/payrollComponents.ts",
       "module": "payroll",
       "role": "backend-lib",
@@ -490,8 +497,8 @@
       "path": "netlify/functions/lib/finance/payroll/controlCenter.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 372,
-      "hash": "a20f98921d8bb4b2"
+      "lines": 373,
+      "hash": "da8bbe287b127f55"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
@@ -1197,8 +1204,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1132,
-      "hash": "8aaff98309e7802b"
+      "lines": 1149,
+      "hash": "28aa8e15a7b9a453"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -1659,22 +1666,22 @@
       "path": "netlify/functions/lib/workflow/outboxWorker.ts",
       "module": "workflow",
       "role": "backend-lib",
-      "lines": 465,
-      "hash": "52d227c9ae6b3cf9"
+      "lines": 474,
+      "hash": "7195cfedeb243d85"
     },
     {
       "path": "netlify/functions/lib/workflow/service.ts",
       "module": "workflow",
       "role": "backend-lib",
-      "lines": 465,
-      "hash": "d0044e73fb48601a"
+      "lines": 466,
+      "hash": "e19083010806dda1"
     },
     {
       "path": "netlify/functions/lib/workflow/sourceContext.ts",
       "module": "workflow",
       "role": "backend-lib",
-      "lines": 242,
-      "hash": "1736d50f8ce94ac4"
+      "lines": 246,
+      "hash": "69b564b5539cdce7"
     },
     {
       "path": "netlify/functions/lib/workflow/transitions.ts",
@@ -1829,6 +1836,13 @@
       "role": "backend-route",
       "lines": 124,
       "hash": "d88c376f0df51fec"
+    },
+    {
+      "path": "netlify/functions/routes/financePayPolicies.ts",
+      "module": "finance",
+      "role": "backend-route",
+      "lines": 253,
+      "hash": "4464c4e95c65f229"
     },
     {
       "path": "netlify/functions/routes/financePayroll.ts",
@@ -2037,8 +2051,8 @@
       "path": "netlify/functions/routes/permissionApprovals.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 484,
-      "hash": "303cb4cb183cd83a"
+      "lines": 486,
+      "hash": "f135e69d6bfa3f72"
     },
     {
       "path": "netlify/functions/routes/settings.ts",
@@ -2065,8 +2079,8 @@
       "path": "netlify/functions/routes/superadmin.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 901,
-      "hash": "26f00ca7c0a4ef11"
+      "lines": 907,
+      "hash": "0a661817775a1fe5"
     },
     {
       "path": "netlify/functions/routes/tickets.ts",
@@ -2580,6 +2594,13 @@
       "hash": "2475b109385c38f7"
     },
     {
+      "path": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 268,
+      "hash": "13b887be138fe44d"
+    },
+    {
       "path": "scripts/e2e/suites/payrollRunsRegister.mjs",
       "module": "payroll",
       "role": "e2e-suite",
@@ -2872,6 +2893,13 @@
       "role": "frontend-api",
       "lines": 178,
       "hash": "ac591990a1ac609e"
+    },
+    {
+      "path": "src/api/finance/payPolicies.ts",
+      "module": "finance",
+      "role": "frontend-api",
+      "lines": 72,
+      "hash": "7ce9e9e249af7549"
     },
     {
       "path": "src/api/finance/payroll.ts",
@@ -3409,8 +3437,8 @@
       "path": "src/components/nav/NavController.tsx",
       "module": "platform",
       "role": "frontend",
-      "lines": 277,
-      "hash": "30d1a1e5da3eaa9a"
+      "lines": 281,
+      "hash": "aad9ee132f28567e"
     },
     {
       "path": "src/components/nav/NavCustomizer.tsx",
@@ -3437,8 +3465,8 @@
       "path": "src/components/nav/approvalsNavVisibility.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 91,
-      "hash": "c2a48cb40058a317"
+      "lines": 115,
+      "hash": "454c0d60fac6149d"
     },
     {
       "path": "src/components/nav/badgeSync.test.ts",
@@ -3452,7 +3480,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 79,
-      "hash": "5dc964999ffd7431"
+      "hash": "6a5aa3e50587f078"
     },
     {
       "path": "src/components/nav/index.ts",
@@ -3472,8 +3500,8 @@
       "path": "src/components/nav/navCore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 808,
-      "hash": "eabb88755cd3b108"
+      "lines": 815,
+      "hash": "f4eb2ecee86d8b62"
     },
     {
       "path": "src/components/nav/navIcons.ts",
@@ -3521,15 +3549,15 @@
       "path": "src/components/realtime/complianceToasts.test.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 108,
-      "hash": "b305ceda9b3eec22"
+      "lines": 103,
+      "hash": "8f7b7f440dfff482"
     },
     {
       "path": "src/components/realtime/complianceToasts.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 117,
-      "hash": "0952a2861d862d6f"
+      "lines": 115,
+      "hash": "b544ff1b327ffc35"
     },
     {
       "path": "src/components/realtime/index.ts",
@@ -3549,8 +3577,8 @@
       "path": "src/components/realtime/notificationToasts.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 251,
-      "hash": "9cd787f461f078ff"
+      "lines": 256,
+      "hash": "861dc60e35f07005"
     },
     {
       "path": "src/components/sections/AccessControl/AccessControlSection.tsx",
@@ -3584,8 +3612,8 @@
       "path": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 111,
-      "hash": "916acd11102c851e"
+      "lines": 124,
+      "hash": "b3c113480f397126"
     },
     {
       "path": "src/components/sections/AccessControl/pages/AcAuditPage.tsx",
@@ -4225,11 +4253,18 @@
       "hash": "f9ea2fc70cfe0648"
     },
     {
+      "path": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 157,
+      "hash": "df61f35fa4a31c8d"
+    },
+    {
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 832,
-      "hash": "99d805c685eb57a8"
+      "lines": 903,
+      "hash": "4802c58da54dd9c3"
     },
     {
       "path": "src/components/sections/Finance/PayrollOverview.tsx",
@@ -4242,8 +4277,8 @@
       "path": "src/components/sections/Finance/PayrollSetupOverview.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 868,
-      "hash": "547ab627440fdc15"
+      "lines": 869,
+      "hash": "5a3ffc69c559fa74"
     },
     {
       "path": "src/components/sections/Finance/RemittancesOverview.tsx",
@@ -4370,6 +4405,27 @@
       "role": "frontend-page",
       "lines": 25,
       "hash": "bc343b82ea6c0e66"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 403,
+      "hash": "ecf53fe54bc819d6"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 37,
+      "hash": "0559b48f5a097f91"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/payPolicyRules.ts",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 26,
+      "hash": "b321fe2d0db08949"
     },
     {
       "path": "src/components/sections/HR/ActionDialogs.tsx",
@@ -6482,8 +6538,8 @@
       "path": "src/hooks/useRealtimeSignals.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 192,
-      "hash": "8b3dc5abe6c8e476"
+      "lines": 216,
+      "hash": "5fcf92363cce42af"
     },
     {
       "path": "src/hooks/useStepUp.tsx",
@@ -6643,8 +6699,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1709,
-      "hash": "541955a6e43222e3"
+      "lines": 1744,
+      "hash": "1cc456c46dd6665a"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -6657,8 +6713,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1443,
-      "hash": "9d99ac43dcbe2d60"
+      "lines": 1460,
+      "hash": "20431ac635b70c65"
     },
     {
       "path": "src/lib/popup.ts",
@@ -8085,8 +8141,8 @@
       "path": "types/payrollControlCenter.ts",
       "module": "payroll",
       "role": "shared-types",
-      "lines": 183,
-      "hash": "2be54db65e60e934"
+      "lines": 185,
+      "hash": "61ddfcc22a77d828"
     },
     {
       "path": "types/payrollFindings.ts",
@@ -8094,6 +8150,13 @@
       "role": "shared-types",
       "lines": 164,
       "hash": "53879b62111790f0"
+    },
+    {
+      "path": "types/payrollPayPolicies.ts",
+      "module": "payroll",
+      "role": "shared-types",
+      "lines": 106,
+      "hash": "3ed203150456b685"
     },
     {
       "path": "types/payrollRuns.ts",
@@ -8115,7 +8178,7 @@
       "name": "ALLOWED_ORIGINS",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 85,
+      "line": 86,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8125,7 +8188,7 @@
       "name": "isAllowedOrigin",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 98,
+      "line": 99,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8135,7 +8198,7 @@
       "name": "app",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 107,
+      "line": 108,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8145,7 +8208,7 @@
       "name": "_legacyDispatch",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 259,
+      "line": 261,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8155,7 +8218,7 @@
       "name": "NetlifyV1Event",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 289,
+      "line": 291,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8165,7 +8228,7 @@
       "name": "NetlifyV1Context",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 298,
+      "line": 300,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8175,7 +8238,7 @@
       "name": "handler",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 302,
+      "line": 304,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -14444,6 +14507,256 @@
       "tags": []
     },
     {
+      "name": "Row",
+      "kind": "type",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 9,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "asText",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 10,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "hash",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 11,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "versionDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 13,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "policySummary",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 28,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rpcError",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 48,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dbPayload",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 54,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listPayPolicies",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 71,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decodePolicyCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 102,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getPayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 109,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "draftRpc",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 190,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createPayPolicyDraft",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 202,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "updatePayPolicyDraft",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 204,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "copyPayPolicyVersion",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 207,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "preflightPayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 222,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "submitPayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 228,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "admin",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 237,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activatePayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 250,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assignPayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 251,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "endPayPolicyAssignment",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 253,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "retirePayPolicy",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 255,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rejectPayPolicyReview",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 258,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "comparePayPolicyVersions",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 262,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "canonicalComponents",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 273,
+      "module": "finance",
+      "exported": false,
+      "container": "comparePayPolicyVersions",
+      "tags": []
+    },
+    {
+      "name": "canonicalSources",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payPolicies.ts",
+      "line": 278,
+      "module": "finance",
+      "exported": false,
+      "container": "comparePayPolicyVersions",
+      "tags": []
+    },
+    {
       "name": "ControlCenterServiceInput",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
@@ -14547,7 +14860,7 @@
       "name": "mapRegisterItem",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
-      "line": 349,
+      "line": 350,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -28759,7 +29072,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 454,
+      "line": 461,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28769,7 +29082,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 463,
+      "line": 470,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28779,7 +29092,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 475,
+      "line": 482,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28789,7 +29102,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 495,
+      "line": 502,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28799,7 +29112,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 504,
+      "line": 511,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28809,7 +29122,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 957,
+      "line": 974,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28819,7 +29132,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 973,
+      "line": 990,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28829,7 +29142,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 998,
+      "line": 1015,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28839,7 +29152,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1008,
+      "line": 1025,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28849,7 +29162,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1009,
+      "line": 1026,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28859,7 +29172,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1012,
+      "line": 1029,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28869,7 +29182,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1028,
+      "line": 1045,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28879,7 +29192,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1063,
+      "line": 1080,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28889,7 +29202,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1075,
+      "line": 1092,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28899,7 +29212,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1076,
+      "line": 1093,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28909,7 +29222,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1079,
+      "line": 1096,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28919,7 +29232,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1089,
+      "line": 1106,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28929,7 +29242,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1102,
+      "line": 1119,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28939,7 +29252,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1110,
+      "line": 1127,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28949,7 +29262,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1121,
+      "line": 1138,
       "module": "security",
       "exported": true,
       "container": "",
@@ -33476,10 +33789,20 @@
       "tags": []
     },
     {
+      "name": "commit",
+      "kind": "method",
+      "file": "netlify/functions/lib/workflow/outboxWorker.ts",
+      "line": 217,
+      "module": "workflow",
+      "exported": false,
+      "container": "RECEIPT_HANDLERS",
+      "tags": []
+    },
+    {
       "name": "runSourceTransition",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 220,
+      "line": 229,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33489,7 +33812,7 @@
       "name": "finalize",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 265,
+      "line": 274,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33499,7 +33822,7 @@
       "name": "finalizeCancel",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 281,
+      "line": 290,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33509,7 +33832,7 @@
       "name": "TERMINAL",
       "kind": "object",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 292,
+      "line": 301,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33519,7 +33842,7 @@
       "name": "processTerminal",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 302,
+      "line": 311,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33529,7 +33852,7 @@
       "name": "processCancel",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 339,
+      "line": 348,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33539,7 +33862,7 @@
       "name": "processAdvance",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 363,
+      "line": 372,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33549,7 +33872,7 @@
       "name": "taskStepKey",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 384,
+      "line": 393,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33559,7 +33882,7 @@
       "name": "OutboxRunSummary",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 393,
+      "line": 402,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33569,7 +33892,7 @@
       "name": "processWorkflowOutbox",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 399,
+      "line": 408,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33579,7 +33902,7 @@
       "name": "processTransitionInline",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/outboxWorker.ts",
-      "line": 460,
+      "line": 469,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33599,7 +33922,7 @@
       "name": "getModuleStartPermission",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 57,
+      "line": 58,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33609,7 +33932,7 @@
       "name": "WorkflowActor",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 61,
+      "line": 62,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33619,7 +33942,7 @@
       "name": "addHoursIso",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 64,
+      "line": 65,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33629,7 +33952,7 @@
       "name": "normalizePriority",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 71,
+      "line": 72,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33639,7 +33962,7 @@
       "name": "writeWorkflowAudit",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 75,
+      "line": 76,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33649,7 +33972,7 @@
       "name": "WfRecipient",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 86,
+      "line": 87,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33659,7 +33982,7 @@
       "name": "EmitWfOpts",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 88,
+      "line": 89,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33669,7 +33992,7 @@
       "name": "emitWf",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 95,
+      "line": 96,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33679,7 +34002,7 @@
       "name": "assigneeRecipients",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 106,
+      "line": 107,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33689,7 +34012,7 @@
       "name": "MODULE_ROUTE",
       "kind": "object",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 117,
+      "line": 118,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33699,7 +34022,7 @@
       "name": "moduleRoute",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 128,
+      "line": 129,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33709,7 +34032,7 @@
       "name": "ownerRecipients",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 136,
+      "line": 137,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33719,7 +34042,7 @@
       "name": "WorkflowRow",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 143,
+      "line": 144,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33729,7 +34052,7 @@
       "name": "getWorkflow",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 151,
+      "line": 152,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33739,7 +34062,7 @@
       "name": "resolveDefinition",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 157,
+      "line": 158,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33749,7 +34072,7 @@
       "name": "buildTaskRowForStep",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 171,
+      "line": 172,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33759,7 +34082,7 @@
       "name": "notifyTaskAssigned",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 184,
+      "line": 185,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33769,7 +34092,7 @@
       "name": "createTaskForStep",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 201,
+      "line": 202,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33779,7 +34102,7 @@
       "name": "UUID_RE",
       "kind": "variable",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 208,
+      "line": 209,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33789,7 +34112,7 @@
       "name": "resolveDefinitionByTemplateRef",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 214,
+      "line": 215,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33799,7 +34122,7 @@
       "name": "instantiateWorkflow",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 226,
+      "line": 227,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33809,7 +34132,7 @@
       "name": "startWorkflowForRecord",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 257,
+      "line": 258,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33819,7 +34142,7 @@
       "name": "startWorkflowExplicit",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 271,
+      "line": 272,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33829,7 +34152,7 @@
       "name": "startWorkflowByTemplate",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 320,
+      "line": 321,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33839,7 +34162,7 @@
       "name": "WF_SQLSTATE_HTTP",
       "kind": "object",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 349,
+      "line": 350,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33849,7 +34172,7 @@
       "name": "rpcHttpError",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 354,
+      "line": 355,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33859,7 +34182,7 @@
       "name": "decideTask",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 361,
+      "line": 362,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33869,7 +34192,7 @@
       "name": "commandKey",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 398,
+      "line": 399,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33879,7 +34202,7 @@
       "name": "publishWorkflowTemplateVersion",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 402,
+      "line": 403,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33889,7 +34212,7 @@
       "name": "cancelWorkflow",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 411,
+      "line": 412,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33899,7 +34222,7 @@
       "name": "delegateTask",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 435,
+      "line": 436,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33909,7 +34232,7 @@
       "name": "reassignTask",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 444,
+      "line": 445,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33919,7 +34242,7 @@
       "name": "workflowToContext",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/service.ts",
-      "line": 457,
+      "line": 458,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -33949,7 +34272,7 @@
       "name": "UUID_RE",
       "kind": "variable",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 96,
+      "line": 100,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33959,7 +34282,7 @@
       "name": "SENSITIVE_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 97,
+      "line": 101,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33969,7 +34292,7 @@
       "name": "SourceRow",
       "kind": "type",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 102,
+      "line": 106,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33979,7 +34302,7 @@
       "name": "workflowError",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 104,
+      "line": 108,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33989,7 +34312,7 @@
       "name": "asObject",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 108,
+      "line": 112,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -33999,7 +34322,7 @@
       "name": "firstText",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 114,
+      "line": 118,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34009,7 +34332,7 @@
       "name": "camelCase",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 124,
+      "line": 128,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34019,7 +34342,7 @@
       "name": "sourceSnapshot",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 128,
+      "line": 132,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34029,7 +34352,7 @@
       "name": "loadUser",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 140,
+      "line": 144,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34039,7 +34362,7 @@
       "name": "departmentManager",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 150,
+      "line": 154,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34049,7 +34372,7 @@
       "name": "siteManager",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 159,
+      "line": 163,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34059,7 +34382,7 @@
       "name": "hseManager",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 168,
+      "line": 172,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34069,7 +34392,7 @@
       "name": "CanonicalStartInput",
       "kind": "interface",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 177,
+      "line": 181,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -34079,7 +34402,7 @@
       "name": "sourcePriority",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 186,
+      "line": 190,
       "module": "workflow",
       "exported": false,
       "container": "",
@@ -34089,7 +34412,7 @@
       "name": "buildCanonicalStartContext",
       "kind": "function",
       "file": "netlify/functions/lib/workflow/sourceContext.ts",
-      "line": 198,
+      "line": 202,
       "module": "workflow",
       "exported": true,
       "container": "",
@@ -35720,6 +36043,86 @@
       "kind": "function",
       "file": "netlify/functions/routes/financeOverview.ts",
       "line": 29,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "router",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 11,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "body",
+      "kind": "function",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 12,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 16,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "date",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 20,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestKey",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 21,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "component",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 22,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sourceRule",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 45,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "draft",
+      "kind": "variable",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 54,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -38859,7 +39262,7 @@
       "name": "GetUserPermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 252,
+      "line": 253,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38869,7 +39272,7 @@
       "name": "SetUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 253,
+      "line": 254,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38879,7 +39282,7 @@
       "name": "ClearUserPermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 261,
+      "line": 262,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38889,7 +39292,7 @@
       "name": "ApproverAvailabilitySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 391,
+      "line": 393,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38899,7 +39302,7 @@
       "name": "RevokeSessionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 487,
+      "line": 493,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38909,7 +39312,7 @@
       "name": "GetAuditLogsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 566,
+      "line": 572,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38919,7 +39322,7 @@
       "name": "RoleNameSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 651,
+      "line": 657,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38929,7 +39332,7 @@
       "name": "RoleCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 654,
+      "line": 660,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38939,7 +39342,7 @@
       "name": "CreateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 655,
+      "line": 661,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38949,7 +39352,7 @@
       "name": "UpdateRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 661,
+      "line": 667,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38959,7 +39362,7 @@
       "name": "GetRolePermsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 668,
+      "line": 674,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38969,7 +39372,7 @@
       "name": "SetRolePermSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 669,
+      "line": 675,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38979,7 +39382,7 @@
       "name": "DeleteRoleSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 675,
+      "line": 681,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38989,7 +39392,7 @@
       "name": "slugify",
       "kind": "function",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 795,
+      "line": 801,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -38999,7 +39402,7 @@
       "name": "CreateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 796,
+      "line": 802,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -39009,7 +39412,7 @@
       "name": "UpdateCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 797,
+      "line": 803,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -39019,7 +39422,7 @@
       "name": "DeleteCategorySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 798,
+      "line": 804,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43985,6 +44388,66 @@
       "module": "payroll",
       "exported": true,
       "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "line": 1,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "uuid",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "line": 3,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "exactKeys",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "line": 4,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "line": 10,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "draft",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "line": 46,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
       "tags": [
         "test"
       ]
@@ -50034,6 +50497,82 @@
       "kind": "function",
       "file": "src/api/finance/overview.ts",
       "line": 170,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "post",
+      "kind": "function",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 9,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyListResult",
+      "kind": "interface",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 15,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payPolicyKeys",
+      "kind": "object",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 16,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payPoliciesApi",
+      "kind": "object",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 22,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "usePayPolicies",
+      "kind": "function",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 56,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "usePayPolicy",
+      "kind": "function",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 59,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "usePayPolicyMutation",
+      "kind": "function",
+      "file": "src/api/finance/payPolicies.ts",
+      "line": 65,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -61839,6 +62378,30 @@
       ]
     },
     {
+      "name": "badgeText",
+      "kind": "function",
+      "file": "src/components/nav/approvalsNavVisibility.test.ts",
+      "line": 93,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "buildRow",
+      "kind": "function",
+      "file": "src/components/nav/approvalsNavVisibility.test.ts",
+      "line": 95,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "mockCounts",
       "kind": "variable",
       "file": "src/components/nav/badgeSync.test.ts",
@@ -61933,6 +62496,16 @@
       "line": 50,
       "module": "platform",
       "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "syncHeaderBadges",
+      "kind": "function",
+      "file": "src/components/nav/badgeSync.ts",
+      "line": 57,
+      "module": "platform",
+      "exported": false,
       "container": "",
       "tags": []
     },
@@ -62126,7 +62699,7 @@
       "name": "setMobileOpen",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 99,
+      "line": 103,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62136,7 +62709,7 @@
       "name": "onMobileMenuClick",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 104,
+      "line": 108,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62146,7 +62719,7 @@
       "name": "onBackdropClick",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 107,
+      "line": 111,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62156,7 +62729,7 @@
       "name": "onSidebarMenuClick",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 119,
+      "line": 123,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62166,7 +62739,7 @@
       "name": "onTopTabsClick",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 132,
+      "line": 136,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62176,7 +62749,7 @@
       "name": "closeAllModals",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 141,
+      "line": 145,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62186,7 +62759,7 @@
       "name": "HdrKind",
       "kind": "type",
       "file": "src/components/nav/NavController.tsx",
-      "line": 146,
+      "line": 150,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62196,7 +62769,7 @@
       "name": "afterOpen",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 150,
+      "line": 154,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62206,7 +62779,7 @@
       "name": "toggleHdrModal",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 179,
+      "line": 183,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62216,7 +62789,7 @@
       "name": "onPillActionClick",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 204,
+      "line": 208,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62226,7 +62799,7 @@
       "name": "onDocClickForModals",
       "kind": "function",
       "file": "src/components/nav/NavController.tsx",
-      "line": 219,
+      "line": 223,
       "module": "platform",
       "exported": false,
       "container": "NavController",
@@ -62787,10 +63360,10 @@
       "tags": []
     },
     {
-      "name": "_sbBadgeLastLabel",
+      "name": "_sbBadgeLabelByBtn",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 765,
+      "line": 771,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -62800,7 +63373,7 @@
       "name": "_setSbBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 767,
+      "line": 773,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -62810,7 +63383,7 @@
       "name": "setNavSectionBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 796,
+      "line": 803,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -62820,7 +63393,7 @@
       "name": "refreshNavBadges",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 805,
+      "line": 812,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -63890,43 +64463,7 @@
       "name": "mockToast",
       "kind": "variable",
       "file": "src/components/realtime/complianceToasts.test.ts",
-      "line": 23,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "test"
-      ]
-    },
-    {
-      "name": "BOUNDARY",
-      "kind": "variable",
-      "file": "src/components/realtime/complianceToasts.test.ts",
-      "line": 26,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "test"
-      ]
-    },
-    {
-      "name": "BEFORE",
-      "kind": "variable",
-      "file": "src/components/realtime/complianceToasts.test.ts",
-      "line": 27,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "test"
-      ]
-    },
-    {
-      "name": "AFTER",
-      "kind": "variable",
-      "file": "src/components/realtime/complianceToasts.test.ts",
-      "line": 28,
+      "line": 24,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -63938,7 +64475,7 @@
       "name": "row",
       "kind": "function",
       "file": "src/components/realtime/complianceToasts.test.ts",
-      "line": 30,
+      "line": 26,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -64000,7 +64537,7 @@
       "name": "seedComplianceToastWatermark",
       "kind": "function",
       "file": "src/components/realtime/complianceToasts.ts",
-      "line": 62,
+      "line": 64,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -64010,7 +64547,7 @@
       "name": "severityFor",
       "kind": "function",
       "file": "src/components/realtime/complianceToasts.ts",
-      "line": 75,
+      "line": 73,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -64020,7 +64557,7 @@
       "name": "surfaceComplianceToasts",
       "kind": "function",
       "file": "src/components/realtime/complianceToasts.ts",
-      "line": 86,
+      "line": 84,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -64030,7 +64567,7 @@
       "name": "__resetComplianceToastState",
       "kind": "function",
       "file": "src/components/realtime/complianceToasts.ts",
-      "line": 113,
+      "line": 111,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -64481,10 +65018,20 @@
       ]
     },
     {
+      "name": "onSection",
+      "kind": "function",
+      "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "AcApprovalsPage",
+      "tags": []
+    },
+    {
       "name": "doReject",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
-      "line": 48,
+      "line": 61,
       "module": "platform",
       "exported": false,
       "container": "AcApprovalsPage",
@@ -73715,10 +74262,134 @@
       "tags": []
     },
     {
-      "name": "PAGE_KEY",
+      "name": "draft",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts",
+      "line": 4,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "buildPayPolicySources",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/payPolicyRules.ts",
+      "line": 3,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payPolicyDraftStepInvalid",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/payPolicyRules.ts",
+      "line": 13,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "today",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 16,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "key",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 17,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "title",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 18,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "detailTabs",
       "kind": "variable",
-      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 42,
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 19,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "replaceQueryValue",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 21,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "initialDraft",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicySetup",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 34,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "next",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 50,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicySetup",
+      "tags": []
+    },
+    {
+      "name": "previous",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 55,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicySetup",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyWizard",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 114,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73727,7 +74398,192 @@
       ]
     },
     {
-      "name": "BOARD_COLS",
+      "name": "addComponent",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 136,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyWizard",
+      "tags": []
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 147,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyWizard",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyDetail",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 213,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "runPreflight",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 235,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doSubmit",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 239,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doActivate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 247,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doAssign",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 254,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doCopyVersion",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 259,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doEndAssignment",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 287,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "doRetire",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 310,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayPolicyDetail",
+      "tags": []
+    },
+    {
+      "name": "PolicyTab",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 360,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "compareVersions",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx",
+      "line": 369,
+      "module": "payroll",
+      "exported": false,
+      "container": "PolicyTab",
+      "tags": []
+    },
+    {
+      "name": "H",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "line": 22,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "test"
+      ]
+    },
+    {
+      "name": "fullData",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "line": 59,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "setScenario",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "line": 74,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "skeletonShown",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "line": 81,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "renderPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
+      "line": 111,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "PAGE_KEY",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 43,
@@ -73739,10 +74595,22 @@
       ]
     },
     {
-      "name": "KPI_PAGE_KEY",
+      "name": "BOARD_COLS",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 44,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "KPI_PAGE_KEY",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 45,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73755,7 +74623,7 @@
       "name": "W_ASSIGNED",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 45,
+      "line": 46,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73767,7 +74635,7 @@
       "name": "W_DEADLINES",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 46,
+      "line": 47,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73779,7 +74647,7 @@
       "name": "W_READINESS",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 47,
+      "line": 48,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73791,7 +74659,7 @@
       "name": "W_IMPACT",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 48,
+      "line": 49,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73803,7 +74671,7 @@
       "name": "W_REGISTER",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 49,
+      "line": 50,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73813,19 +74681,6 @@
     },
     {
       "name": "W_KPI_NEXTPAY",
-      "kind": "variable",
-      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 50,
-      "module": "payroll",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component",
-        "ui-tile"
-      ]
-    },
-    {
-      "name": "W_KPI_ACTIVE",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 51,
@@ -73838,7 +74693,7 @@
       ]
     },
     {
-      "name": "W_KPI_EMPLOYEES",
+      "name": "W_KPI_ACTIVE",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 52,
@@ -73851,7 +74706,7 @@
       ]
     },
     {
-      "name": "W_KPI_GROSS",
+      "name": "W_KPI_EMPLOYEES",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 53,
@@ -73864,7 +74719,7 @@
       ]
     },
     {
-      "name": "W_KPI_NET",
+      "name": "W_KPI_GROSS",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 54,
@@ -73877,10 +74732,23 @@
       ]
     },
     {
-      "name": "CELL",
+      "name": "W_KPI_NET",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "line": 55,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "CELL",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 56,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73892,7 +74760,7 @@
       "name": "defInst",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 57,
+      "line": 58,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73902,7 +74770,7 @@
       "name": "defaultKpiLayout",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 62,
+      "line": 63,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73914,7 +74782,7 @@
       "name": "defaultLayout",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 76,
+      "line": 77,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73924,7 +74792,7 @@
       "name": "floor",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 93,
+      "line": 94,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73934,7 +74802,7 @@
       "name": "REGISTER_TABS",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 96,
+      "line": 97,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73944,7 +74812,7 @@
       "name": "fmtTTD",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 104,
+      "line": 105,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73954,7 +74822,7 @@
       "name": "fmtTTDc",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 105,
+      "line": 106,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73964,7 +74832,7 @@
       "name": "fmtDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 111,
+      "line": 112,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73974,7 +74842,7 @@
       "name": "fmtDayShort",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 117,
+      "line": 118,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73984,7 +74852,7 @@
       "name": "relDate",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 123,
+      "line": 124,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -73994,7 +74862,7 @@
       "name": "timeOf",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 135,
+      "line": 136,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74004,7 +74872,7 @@
       "name": "initials",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 139,
+      "line": 141,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74014,7 +74882,7 @@
       "name": "READINESS_PROGRESS",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 142,
+      "line": 144,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74024,7 +74892,7 @@
       "name": "READINESS_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 145,
+      "line": 147,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74034,7 +74902,7 @@
       "name": "DEADLINE_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 150,
+      "line": 152,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74044,7 +74912,7 @@
       "name": "DEADLINE_PILL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 153,
+      "line": 155,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74054,7 +74922,7 @@
       "name": "ACTIVITY_VISUAL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 160,
+      "line": 162,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74064,7 +74932,7 @@
       "name": "activityVisual",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 171,
+      "line": 173,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74074,7 +74942,7 @@
       "name": "GATE_STATE",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 175,
+      "line": 177,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74084,7 +74952,7 @@
       "name": "HEALTH_STATE_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 182,
+      "line": 184,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74094,7 +74962,7 @@
       "name": "HEALTH_ICON",
       "kind": "object",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 185,
+      "line": 187,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74104,7 +74972,7 @@
       "name": "ReadinessDoughnut",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 190,
+      "line": 192,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74113,10 +74981,32 @@
       ]
     },
     {
-      "name": "SkeletonPage",
+      "name": "commandCenterReady",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 220,
+      "line": 231,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SkeletonBody",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 243,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SkeletonHeader",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 258,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74128,7 +75018,7 @@
       "name": "PayrollCommandCenter",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 232,
+      "line": 272,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -74140,7 +75030,7 @@
       "name": "placeBottom",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 263,
+      "line": 309,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -74150,7 +75040,7 @@
       "name": "promoteDefault",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 265,
+      "line": 311,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -74160,7 +75050,7 @@
       "name": "runAction",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 282,
+      "line": 335,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -74170,7 +75060,7 @@
       "name": "submitRunStable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 288,
+      "line": 341,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -74180,7 +75070,7 @@
       "name": "PortfolioBand",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 482,
+      "line": 535,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74192,7 +75082,7 @@
       "name": "MetricsRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 525,
+      "line": 596,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74204,7 +75094,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 557,
+      "line": 628,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74216,7 +75106,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 616,
+      "line": 687,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74228,7 +75118,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 636,
+      "line": 707,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74241,7 +75131,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 684,
+      "line": 755,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74254,7 +75144,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 688,
+      "line": 759,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -74264,7 +75154,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 689,
+      "line": 760,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -74274,7 +75164,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 740,
+      "line": 811,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74287,7 +75177,7 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 797,
+      "line": 868,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74516,7 +75406,7 @@
       "name": "empName",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 54,
+      "line": 55,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74526,7 +75416,7 @@
       "name": "todayIso",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 57,
+      "line": 58,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74536,7 +75426,7 @@
       "name": "FREQUENCIES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 59,
+      "line": 60,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74546,7 +75436,7 @@
       "name": "OT_EVENT_TYPES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 66,
+      "line": 67,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74556,7 +75446,7 @@
       "name": "otEventLabel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 73,
+      "line": 74,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74566,7 +75456,7 @@
       "name": "PAGE_SIZE",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 75,
+      "line": 76,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74578,7 +75468,7 @@
       "name": "paginate",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 76,
+      "line": 77,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74588,7 +75478,7 @@
       "name": "SetupTab",
       "kind": "type",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 88,
+      "line": 89,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74598,7 +75488,7 @@
       "name": "PayrollSetupOverview",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 90,
+      "line": 91,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -74610,7 +75500,7 @@
       "name": "LOAN_TYPES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 130,
+      "line": 131,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74620,7 +75510,7 @@
       "name": "loanStatusTone",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 135,
+      "line": 136,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74630,7 +75520,7 @@
       "name": "LoansPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 147,
+      "line": 148,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74642,7 +75532,7 @@
       "name": "run",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 177,
+      "line": 178,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -74652,7 +75542,7 @@
       "name": "doSubmitLoan",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 184,
+      "line": 185,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -74662,7 +75552,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 207,
+      "line": 208,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -74672,7 +75562,7 @@
       "name": "NewLoanModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 273,
+      "line": 274,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74684,7 +75574,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 294,
+      "line": 295,
       "module": "payroll",
       "exported": false,
       "container": "NewLoanModal",
@@ -74694,7 +75584,7 @@
       "name": "PayGroupsPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 375,
+      "line": 376,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74706,7 +75596,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 411,
+      "line": 412,
       "module": "payroll",
       "exported": false,
       "container": "PayGroupsPanel",
@@ -74716,7 +75606,7 @@
       "name": "NewPayGroupModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 455,
+      "line": 456,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74728,7 +75618,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 475,
+      "line": 476,
       "module": "payroll",
       "exported": false,
       "container": "NewPayGroupModal",
@@ -74738,7 +75628,7 @@
       "name": "PayGroupMembersModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 553,
+      "line": 554,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74750,7 +75640,7 @@
       "name": "addMember",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 570,
+      "line": 571,
       "module": "payroll",
       "exported": false,
       "container": "PayGroupMembersModal",
@@ -74760,7 +75650,7 @@
       "name": "ruleWindowTone",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 651,
+      "line": 652,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74770,7 +75660,7 @@
       "name": "OvertimeRulesPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 659,
+      "line": 660,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74782,7 +75672,7 @@
       "name": "toggleActive",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 679,
+      "line": 680,
       "module": "payroll",
       "exported": false,
       "container": "OvertimeRulesPanel",
@@ -74792,7 +75682,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 707,
+      "line": 708,
       "module": "payroll",
       "exported": false,
       "container": "OvertimeRulesPanel",
@@ -74802,7 +75692,7 @@
       "name": "NewOvertimeRuleModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 763,
+      "line": 764,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -74814,7 +75704,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 782,
+      "line": 783,
       "module": "payroll",
       "exported": false,
       "container": "NewOvertimeRuleModal",
@@ -107713,7 +108603,7 @@
       "name": "seedComplianceWatermark",
       "kind": "function",
       "file": "src/hooks/useRealtimeSignals.ts",
-      "line": 37,
+      "line": 39,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -107723,7 +108613,7 @@
       "name": "surfaceComplianceFromNotifications",
       "kind": "function",
       "file": "src/hooks/useRealtimeSignals.ts",
-      "line": 65,
+      "line": 63,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -107733,7 +108623,7 @@
       "name": "useRealtimeSignals",
       "kind": "function",
       "file": "src/hooks/useRealtimeSignals.ts",
-      "line": 78,
+      "line": 76,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -107745,7 +108635,17 @@
       "name": "onFocus",
       "kind": "function",
       "file": "src/hooks/useRealtimeSignals.ts",
-      "line": 100,
+      "line": 98,
+      "module": "communications",
+      "exported": false,
+      "container": "useRealtimeSignals",
+      "tags": []
+    },
+    {
+      "name": "attemptSeedAndDrain",
+      "kind": "function",
+      "file": "src/hooks/useRealtimeSignals.ts",
+      "line": 126,
       "module": "communications",
       "exported": false,
       "container": "useRealtimeSignals",
@@ -111455,7 +112355,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 534,
+      "line": 541,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111465,7 +112365,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 539,
+      "line": 546,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111475,7 +112375,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 567,
+      "line": 574,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111485,7 +112385,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 582,
+      "line": 589,
       "module": "security",
       "exported": false,
       "container": "",
@@ -111495,7 +112395,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 607,
+      "line": 614,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111505,7 +112405,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1299,
+      "line": 1316,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111515,7 +112415,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1330,
+      "line": 1347,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111525,7 +112425,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1375,
+      "line": 1392,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111535,7 +112435,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1381,
+      "line": 1398,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111545,7 +112445,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1387,
+      "line": 1404,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111555,7 +112455,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1397,
+      "line": 1414,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111565,7 +112465,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1417,
+      "line": 1434,
       "module": "security",
       "exported": true,
       "container": "",
@@ -111575,7 +112475,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1433,
+      "line": 1450,
       "module": "security",
       "exported": true,
       "container": "",
@@ -125816,7 +126716,7 @@
       "name": "PayrollActivityItem",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 89,
+      "line": 91,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125826,7 +126726,7 @@
       "name": "PayrollDeadlineItem",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 99,
+      "line": 101,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125836,7 +126736,7 @@
       "name": "PayrollReadinessGate",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 109,
+      "line": 111,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125846,7 +126746,7 @@
       "name": "PayrollRunRegisterItem",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 124,
+      "line": 126,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125856,7 +126756,7 @@
       "name": "PayrollNextRun",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 145,
+      "line": 147,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125866,7 +126766,7 @@
       "name": "PayrollRunRegisterPage",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 163,
+      "line": 165,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -125876,7 +126776,7 @@
       "name": "PayrollControlCenterResponse",
       "kind": "interface",
       "file": "types/payrollControlCenter.ts",
-      "line": 170,
+      "line": 172,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -126077,6 +126977,156 @@
       "kind": "interface",
       "file": "types/payrollFindings.ts",
       "line": 160,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyType",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 1,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyStatus",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 2,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyVersionStatus",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 3,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayCalculationBasis",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 5,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayRateSource",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 6,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayEligibilitySource",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 7,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicySourceType",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 8,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayConflictOutcome",
+      "kind": "type",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 10,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyComponentInput",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 14,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicySourceRuleInput",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 24,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyDraftInput",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 34,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicySummary",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 48,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyVersionDto",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 63,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyPreflight",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 88,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayPolicyWorkspace",
+      "kind": "interface",
+      "file": "types/payrollPayPolicies.ts",
+      "line": 97,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -126312,7 +127362,7 @@
       "kind": "local",
       "render": "() => <ApprovalsWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 408
+      "line": 461
     },
     {
       "id": "finance.payroll.deadlines",
@@ -126322,7 +127372,7 @@
       "kind": "local",
       "render": "() => <DeadlinesWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 409
+      "line": 462
     },
     {
       "id": "finance.payroll.kpi.activeRuns",
@@ -126332,7 +127382,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-layer-group\" tone=\"teal\" label=\"Active Runs\" value={kk?.activeRuns ?? 0} sub=\"In the reporting window\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 390
+      "line": 443
     },
     {
       "id": "finance.payroll.kpi.employeesDue",
@@ -126342,7 +127392,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-users\" tone=\"blue\" label=\"Employees Due\" value={kk?.employeesDue ?? 0} sub=\"Current calc population\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 393
+      "line": 446
     },
     {
       "id": "finance.payroll.kpi.grossPayroll",
@@ -126352,7 +127402,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-coins\" tone=\"green\" label=\"Gross Payroll\" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 396
+      "line": 449
     },
     {
       "id": "finance.payroll.kpi.netPayroll",
@@ -126362,7 +127412,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-wallet\" tone=\"teal\" label=\"Net Payroll\" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 399
+      "line": 452
     },
     {
       "id": "finance.payroll.kpi.nextPay",
@@ -126372,7 +127422,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-calendar-day\" tone=\"blue\" label=\"Next Pay Date\"\n        value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}\n        sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}\n        link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 385
+      "line": 438
     },
     {
       "id": "finance.payroll.releaseImpact",
@@ -126382,7 +127432,7 @@
       "kind": "local",
       "render": "() => <ImpactWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 411
+      "line": 464
     },
     {
       "id": "finance.payroll.releaseReadiness",
@@ -126392,7 +127442,7 @@
       "kind": "local",
       "render": "() => <ReadinessWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 410
+      "line": 463
     },
     {
       "id": "finance.payroll.runRegister",
@@ -126402,7 +127452,7 @@
       "kind": "local",
       "render": "() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 412
+      "line": 465
     },
     {
       "id": "finance.statutory.deadlines",
@@ -126686,7 +127736,7 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 452,
+      "line": 454,
       "module": "security"
     },
     {
@@ -126730,7 +127780,7 @@
       "guards": [],
       "schema": "RejectSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 415,
+      "line": 417,
       "module": "security"
     },
     {
@@ -130406,6 +131456,214 @@
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
       "line": 1091,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/activate",
+      "localPath": "/payroll/policies/activate",
+      "router": "router",
+      "permission": "finance.payroll.policies.activate",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid(), versionId: z.string().uuid(), idempotencyKey: requestKey }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 164,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/copy-version",
+      "localPath": "/payroll/policies/copy-version",
+      "router": "router",
+      "permission": "finance.payroll.policies.draft",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    policyId: z.string().uuid(), sourceVersionId: z.string().uuid(), effectiveFrom: date,\n    changeSummary: z.string().trim().min(3).max(500), idempotencyKey: requestKey,\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 130,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/create-draft",
+      "localPath": "/payroll/policies/create-draft",
+      "router": "router",
+      "permission": "finance.payroll.policies.draft",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "draft.and(z.object({ idempotencyKey: requestKey }).strict())",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 110,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/get",
+      "localPath": "/payroll/policies/get",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid(), versionId: z.string().uuid().optional() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 100,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/list",
+      "localPath": "/payroll/policies/list",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    search: z.string().trim().max(120).optional(), status: z.enum(['draft', 'active', 'retired']).optional(),\n    cursor: z.string().max(100).optional(), limit: z.number().int().min(1).max(100).optional(),\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 89,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/pay-groups/assign",
+      "localPath": "/payroll/policies/pay-groups/assign",
+      "router": "router",
+      "permission": "finance.payroll.policies.assign",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    policyId: z.string().uuid(), versionId: z.string().uuid(), payGroupId: z.string().uuid(),\n    effectiveFrom: date, effectiveTo: date.nullable().optional(), idempotencyKey: requestKey,\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 230,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/pay-groups/end-assignment",
+      "localPath": "/payroll/policies/pay-groups/end-assignment",
+      "router": "router",
+      "permission": "finance.payroll.policies.assign",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    policyId: z.string().uuid(), assignmentId: z.string().uuid(), effectiveTo: date,\n    reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 241,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/pay-groups/list",
+      "localPath": "/payroll/policies/pay-groups/list",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 220,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/preflight",
+      "localPath": "/payroll/policies/preflight",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ versionId: z.string().uuid() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 145,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/reject",
+      "localPath": "/payroll/policies/reject",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    workflowId: z.string().uuid(), taskId: z.string().uuid(), reason: z.string().trim().min(3).max(500),\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 172,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/retire",
+      "localPath": "/payroll/policies/retire",
+      "router": "router",
+      "permission": "finance.payroll.policies.activate",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    policyId: z.string().uuid(), effectiveTo: date, reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 182,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/submit",
+      "localPath": "/payroll/policies/submit",
+      "router": "router",
+      "permission": "finance.payroll.policies.submit",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    versionId: z.string().uuid(), idempotencyKey: requestKey,\n    certifications: z.object({ rulesReviewed: z.literal(true), sourcesOwned: z.literal(true), statutoryPaymentReady: z.literal(true) }).strict(),\n  }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 153,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/update-draft",
+      "localPath": "/payroll/policies/update-draft",
+      "router": "router",
+      "permission": "finance.payroll.policies.draft",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "draft.and(z.object({\n    policyId: z.string().uuid(), versionId: z.string().uuid(), expectedLockVersion: z.number().int().min(1), idempotencyKey: requestKey,\n  }).strict())",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 119,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/versions/compare",
+      "localPath": "/payroll/policies/versions/compare",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid(), fromVersionId: z.string().uuid(), toVersionId: z.string().uuid() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 212,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/versions/get",
+      "localPath": "/payroll/policies/versions/get",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid(), versionId: z.string().uuid() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 202,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/policies/versions/list",
+      "localPath": "/payroll/policies/versions/list",
+      "router": "router",
+      "permission": "finance.payroll.policies.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({ policyId: z.string().uuid() }).strict()",
+      "file": "netlify/functions/routes/financePayPolicies.ts",
+      "line": 192,
       "module": "payroll"
     },
     {
@@ -137228,7 +138486,7 @@
       ],
       "schema": "ClearUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 402,
+      "line": 404,
       "module": "security"
     },
     {
@@ -137241,7 +138499,7 @@
       ],
       "schema": "ApproverAvailabilitySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 392,
+      "line": 394,
       "module": "platform"
     },
     {
@@ -137254,7 +138512,7 @@
       ],
       "schema": "CreateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 722,
+      "line": 728,
       "module": "platform"
     },
     {
@@ -137267,7 +138525,7 @@
       ],
       "schema": "CreateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 813,
+      "line": 819,
       "module": "platform"
     },
     {
@@ -137280,7 +138538,7 @@
       ],
       "schema": "DeleteRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 771,
+      "line": 777,
       "module": "platform"
     },
     {
@@ -137293,7 +138551,7 @@
       ],
       "schema": "DeleteCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 843,
+      "line": 849,
       "module": "platform"
     },
     {
@@ -137306,7 +138564,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 495,
+      "line": 501,
       "module": "platform"
     },
     {
@@ -137319,7 +138577,7 @@
       ],
       "schema": "GetAuditLogsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 582,
+      "line": 588,
       "module": "platform"
     },
     {
@@ -137332,7 +138590,7 @@
       ],
       "schema": "GetRolePermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 703,
+      "line": 709,
       "module": "security"
     },
     {
@@ -137345,7 +138603,7 @@
       ],
       "schema": "GetUserPermsSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 320,
+      "line": 321,
       "module": "security"
     },
     {
@@ -137358,7 +138616,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 801,
+      "line": 807,
       "module": "platform"
     },
     {
@@ -137371,7 +138629,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 678,
+      "line": 684,
       "module": "platform"
     },
     {
@@ -137384,7 +138642,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 270,
+      "line": 271,
       "module": "platform"
     },
     {
@@ -137397,7 +138655,7 @@
       ],
       "schema": "RevokeSessionSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 544,
+      "line": 550,
       "module": "platform"
     },
     {
@@ -137410,7 +138668,7 @@
       ],
       "schema": "SetRolePermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 858,
+      "line": 864,
       "module": "security"
     },
     {
@@ -137423,7 +138681,7 @@
       ],
       "schema": "SetUserPermSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 336,
+      "line": 337,
       "module": "security"
     },
     {
@@ -137436,7 +138694,7 @@
       ],
       "schema": "UpdateRoleSchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 742,
+      "line": 748,
       "module": "platform"
     },
     {
@@ -137449,7 +138707,7 @@
       ],
       "schema": "UpdateCategorySchema",
       "file": "netlify/functions/routes/superadmin.ts",
-      "line": 830,
+      "line": 836,
       "module": "platform"
     },
     {
@@ -139161,7 +140419,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/nav/badgeSync.ts",
-      "line": 52,
+      "line": 58,
       "module": "platform"
     },
     {
@@ -149609,6 +150867,181 @@
       "file": "supabase/migrations/20260919000460_approval_seen_receipts.sql",
       "line": 53,
       "module": "platform"
+    },
+    {
+      "name": "public.finance_pay_policies",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 8,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_versions",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 24,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_components",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 57,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_source_rules",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 79,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_costing_rules",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 98,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_group_policy_assignments",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 109,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_command_receipts",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 132,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policies_list_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 141,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_versions_policy_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 142,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_versions_workflow_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 143,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_components_version_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 144,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_sources_version_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 145,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_assignments_policy_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 146,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_assignments_group_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 147,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policies_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 164,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_versions_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 166,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_components_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 168,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_sources_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 170,
+      "module": "finance"
+    },
+    {
+      "name": "finance_pay_policy_assignments_updated_at",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 172,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_preflight",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 247,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_draft_command_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 291,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_copy_version_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 339,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_submit_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 393,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_workflow_transition_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 434,
+      "module": "finance"
+    },
+    {
+      "name": "public.finance_pay_policy_admin_command_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
+      "line": 476,
+      "module": "finance"
     }
   ],
   "e2eSuites": [
@@ -157601,6 +159034,85 @@
         "/api/finance/payroll/runs/calculate",
         "/api/finance/payroll/runs/create",
         "/api/finance/payroll/runs/lock-inputs"
+      ]
+    },
+    {
+      "name": "payrollPayPolicies",
+      "title": "Finance Payroll Setup - Pay Policies Phase A",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/payrollPayPolicies.mjs",
+      "tests": [
+        {
+          "name": "provision real roles and canonical dependencies",
+          "line": 64
+        },
+        {
+          "name": "all 16 endpoints require authentication and deny a real employee",
+          "line": 92
+        },
+        {
+          "name": "strict create rejects unknown fields and unsupported Phase B type",
+          "line": 103
+        },
+        {
+          "name": "create draft returns exact shape and exact business side effects",
+          "line": 109
+        },
+        {
+          "name": "same key/same payload returns original; changed payload conflicts with no duplicate effects",
+          "line": 121
+        },
+        {
+          "name": "update enforces optimistic concurrency and typed rule compatibility",
+          "line": 129
+        },
+        {
+          "name": "list/get/version/assignment reads return exact frontend contracts",
+          "line": 147
+        },
+        {
+          "name": "preflight returns exact proof and submit creates one central workflow",
+          "line": 158
+        },
+        {
+          "name": "non-assignee is denied; HR then Finance approve the two workflow steps",
+          "line": 173
+        },
+        {
+          "name": "preparer cannot activate; independent activation writes exact side effects",
+          "line": 187
+        },
+        {
+          "name": "new version is an atomic governed copy with exact idempotent effects",
+          "line": 202
+        },
+        {
+          "name": "assignment is effective-dated, idempotent, overlap-safe and endable",
+          "line": 238
+        },
+        {
+          "name": "retirement closes future use and is exactly once",
+          "line": 257
+        }
+      ],
+      "apiPaths": [
+        "/api/finance/payroll/policies/${...}",
+        "/api/finance/payroll/policies/activate",
+        "/api/finance/payroll/policies/copy-version",
+        "/api/finance/payroll/policies/create-draft",
+        "/api/finance/payroll/policies/get",
+        "/api/finance/payroll/policies/list",
+        "/api/finance/payroll/policies/pay-groups/assign",
+        "/api/finance/payroll/policies/pay-groups/end-assignment",
+        "/api/finance/payroll/policies/pay-groups/list",
+        "/api/finance/payroll/policies/preflight",
+        "/api/finance/payroll/policies/retire",
+        "/api/finance/payroll/policies/submit",
+        "/api/finance/payroll/policies/update-draft",
+        "/api/finance/payroll/policies/versions/compare",
+        "/api/finance/payroll/policies/versions/get",
+        "/api/finance/payroll/policies/versions/list",
+        "/api/workflow-engine/decide"
       ]
     },
     {

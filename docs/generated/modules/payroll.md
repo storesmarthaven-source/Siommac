@@ -2,24 +2,24 @@
 
 # payroll Module Map
 
-Source fingerprint: `beb540cef488bba3d5d82837`
+Source fingerprint: `5d3b39b519183096dd168ff3`
 
-Files: 138 | Symbols: 1264 | Widgets: 10 | Unique mounted endpoints: 107 | Route definitions: 107 mounted + 0 unmounted | API calls: 5 | DB objects: 192 | E2E suites: 18
+Files: 144 | Symbols: 1316 | Widgets: 10 | Unique mounted endpoints: 123 | Route definitions: 123 mounted + 0 unmounted | API calls: 5 | DB objects: 192 | E2E suites: 19
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `finance.payroll.assignedWork` | Approval and Activity | local | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:408` |
-| `finance.payroll.deadlines` | Upcoming Deadlines | local | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:409` |
-| `finance.payroll.kpi.activeRuns` | Active Runs | local | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:390` |
-| `finance.payroll.kpi.employeesDue` | Employees Due | local | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:393` |
-| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:396` |
-| `finance.payroll.kpi.netPayroll` | Net Payroll | local | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:399` |
-| `finance.payroll.kpi.nextPay` | Next Pay Date | local | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:385` |
-| `finance.payroll.releaseImpact` | Release Impact | local | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:411` |
-| `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:410` |
-| `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:412` |
+| `finance.payroll.assignedWork` | Approval and Activity | local | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:461` |
+| `finance.payroll.deadlines` | Upcoming Deadlines | local | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:462` |
+| `finance.payroll.kpi.activeRuns` | Active Runs | local | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:443` |
+| `finance.payroll.kpi.employeesDue` | Employees Due | local | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:446` |
+| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:449` |
+| `finance.payroll.kpi.netPayroll` | Net Payroll | local | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:452` |
+| `finance.payroll.kpi.nextPay` | Next Pay Date | local | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:438` |
+| `finance.payroll.releaseImpact` | Release Impact | local | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:464` |
+| `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:463` |
+| `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:465` |
 
 ## Route Definitions
 
@@ -105,6 +105,22 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/payslips/render` | `finance.payroll.payslips.generate` | requirePermission | `z.object({ payslipId: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:635` | - | payslipRender |
 | `/api/finance/payroll/payslips/render-run` | `finance.payroll.payslips.generate` | requirePermission | `z.object({ runId: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:622` | - | financePayroll, financePayslipsEss, payrollControlCenter, payslipRender |
 | `/api/finance/payroll/payslips/signed-url` | `finance.payroll.view_own` | requirePermission, userCan | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:1091` | - | financePayslipsEss |
+| `/api/finance/payroll/policies/activate` | `finance.payroll.policies.activate` | requirePermission | `z.object({ policyId: z.string().uuid(), versionId: z.string().uuid(), idempotencyKey: requestKey }).strict()` | `netlify/functions/routes/financePayPolicies.ts:164` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/copy-version` | `finance.payroll.policies.draft` | requirePermission | `z.object({     policyId: z.string().uuid(), sourceVersionId: z.string().uuid(), effectiveFrom: date,     changeSummary: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:130` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/create-draft` | `finance.payroll.policies.draft` | requirePermission | `draft.and(z.object({ idempotencyKey: requestKey }).strict())` | `netlify/functions/routes/financePayPolicies.ts:110` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/get` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid(), versionId: z.string().uuid().optional() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:100` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/list` | `finance.payroll.policies.view` | requirePermission | `z.object({     search: z.string().trim().max(120).optional(), status: z.enum(['draft', 'active', 'retired']).optional(),     cursor: z.string().max(100).optional(), limit: z.number().int().min(1).max(100).optional(),   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:89` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/pay-groups/assign` | `finance.payroll.policies.assign` | requirePermission | `z.object({     policyId: z.string().uuid(), versionId: z.string().uuid(), payGroupId: z.string().uuid(),     effectiveFrom: date, effectiveTo: date.nullable().optional(), idempotencyKey: requestKey,   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:230` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/pay-groups/end-assignment` | `finance.payroll.policies.assign` | requirePermission | `z.object({     policyId: z.string().uuid(), assignmentId: z.string().uuid(), effectiveTo: date,     reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:241` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/pay-groups/list` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:220` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/preflight` | `finance.payroll.policies.view` | requirePermission | `z.object({ versionId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:145` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/reject` | `finance.payroll.policies.view` | requirePermission | `z.object({     workflowId: z.string().uuid(), taskId: z.string().uuid(), reason: z.string().trim().min(3).max(500),   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:172` | - | - |
+| `/api/finance/payroll/policies/retire` | `finance.payroll.policies.activate` | requirePermission | `z.object({     policyId: z.string().uuid(), effectiveTo: date, reason: z.string().trim().min(3).max(500), idempotencyKey: requestKey,   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:182` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/submit` | `finance.payroll.policies.submit` | requirePermission | `z.object({     versionId: z.string().uuid(), idempotencyKey: requestKey,     certifications: z.object({ rulesReviewed: z.literal(true), sourcesOwned: z.literal(true), statutoryPaymentReady: z.literal(true) }).strict(),   }).strict()` | `netlify/functions/routes/financePayPolicies.ts:153` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/update-draft` | `finance.payroll.policies.draft` | requirePermission | `draft.and(z.object({     policyId: z.string().uuid(), versionId: z.string().uuid(), expectedLockVersion: z.number().int().min(1), idempotencyKey: requestKey,   }).strict())` | `netlify/functions/routes/financePayPolicies.ts:119` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/versions/compare` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid(), fromVersionId: z.string().uuid(), toVersionId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:212` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/versions/get` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid(), versionId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:202` | - | payrollPayPolicies |
+| `/api/finance/payroll/policies/versions/list` | `finance.payroll.policies.view` | requirePermission | `z.object({ policyId: z.string().uuid() }).strict()` | `netlify/functions/routes/financePayPolicies.ts:192` | - | payrollPayPolicies |
 | `/api/finance/payroll/releases/confirm-funding` | `finance.payroll.funding.approve` | requirePermission | `z.object({     runId: z.string().uuid(),     idempotencyKey: z.string().trim().min(1).max(200),     confirmedAmount: z.number().finite().nonnegative(),     confirmationReference: z.string().trim().min(1).max(200),     accountReference: z.string().trim().min(1).max(100).optional(),     note: z.string().trim().max(2000).optional(),   })` | `netlify/functions/routes/financePayroll.ts:460` | - | financePayroll, payrollControlCenter |
 | `/api/finance/payroll/releases/get-certificate` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:499` | - | financePayroll |
 | `/api/finance/payroll/releases/preflight` | `finance.payroll.view_all` | requirePermission | `z.object({ runId: z.string().uuid() })` | `netlify/functions/routes/financePayroll.ts:448` | - | financePayroll, payrollControlCenter |
@@ -173,9 +189,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:582` | `-` |
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
 | `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:34` | `-` |
-| `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:232` | `-` |
+| `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:34` | `-` |
+| `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:272` | `-` |
 | `PayrollOverview` | function / component | `src/components/sections/Finance/PayrollOverview.tsx:274` | `-` |
-| `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:90` | `-` |
+| `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:91` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
 | `Canvas` | function / component | `src/components/sections/PayslipStudio/components/canvas/Canvas.tsx:21` | `-` |
 | `ColumnGuides` | function / component | `src/components/sections/PayslipStudio/components/canvas/ColumnGuides.tsx:10` | `-` |
@@ -340,6 +357,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Finance Wave 4 - Worksheet overrides | 13 | 5 | `scripts/e2e/suites/payrollOverrides.mjs` |
 | Finance Wave 4 - Overtime rule engine | 5 | 4 | `scripts/e2e/suites/payrollOvertimeRules.mjs` |
 | Finance Wave 3 - Pay groups + period-correct PAYE | 11 | 6 | `scripts/e2e/suites/payrollPayGroups.mjs` |
+| Finance Payroll Setup - Pay Policies Phase A | 13 | 17 | `scripts/e2e/suites/payrollPayPolicies.mjs` |
 | Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 37 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
 | Payroll -- Scale (1000+ employee run) | 19 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
@@ -367,6 +385,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollOverrides.mjs` | 226 |
 | e2e-suite | `scripts/e2e/suites/payrollOvertimeRules.mjs` | 135 |
 | e2e-suite | `scripts/e2e/suites/payrollPayGroups.mjs` | 211 |
+| e2e-suite | `scripts/e2e/suites/payrollPayPolicies.mjs` | 268 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 837 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 394 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
@@ -380,9 +399,13 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/payroll.ts` | 132 |
 | frontend-api | `src/api/schemas/payroll.ts` | 88 |
 | frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 153 |
-| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 832 |
+| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
+| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 903 |
 | frontend-page | `src/components/sections/Finance/PayrollOverview.tsx` | 723 |
-| frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 868 |
+| frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 869 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 403 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts` | 37 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.ts` | 26 |
 | frontend-page | `src/components/sections/PayslipStudio/App.tsx` | 33 |
 | frontend-page | `src/components/sections/PayslipStudio/PayslipStudioSection.tsx` | 136 |
 | frontend-page | `src/components/sections/PayslipStudio/components/DesignsMenu.tsx` | 385 |
@@ -447,7 +470,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/PayslipStudio/templates/seed.ts` | 22 |
 | frontend-page | `src/components/sections/PayslipStudio/templates/siomac.ts` | 1250 |
 | frontend-page | `src/components/sections/PayslipStudio/types/index.ts` | 223 |
-| shared-types | `types/payrollControlCenter.ts` | 183 |
+| shared-types | `types/payrollControlCenter.ts` | 185 |
 | shared-types | `types/payrollFindings.ts` | 164 |
+| shared-types | `types/payrollPayPolicies.ts` | 106 |
 | shared-types | `types/payrollRuns.ts` | 161 |
 

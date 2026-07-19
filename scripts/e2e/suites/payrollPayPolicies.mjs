@@ -18,26 +18,29 @@ export default async function run(h) {
   let componentId;
 
   h.onCleanup(async () => {
-    try {
-      if (ids.workflow) {
-        await sb.from('workflow_decisions').delete().eq('workflow_id', ids.workflow);
-        await sb.from('workflow_audit_log').delete().eq('workflow_id', ids.workflow);
-        await sb.from('workflow_tasks').delete().eq('workflow_id', ids.workflow);
-        await sb.from('workflow_instances').delete().eq('id', ids.workflow);
-      }
-      if (ids.policy) {
-        const entityIds = [ids.policy, ids.version, ids.assignment].filter(Boolean);
-        await sb.from('notifications').delete().in('source_id', entityIds);
-        await sb.from('handoff_outbox').delete().eq('source_module', 'finance_pay_policy').in('source_entity_id', entityIds);
-        await sb.from('app_events').delete().eq('source_module', 'finance_pay_policy').in('source_entity_id', entityIds);
-        await sb.from('hr_audit_log').delete().eq('submodule_key', 'finance_pay_policy').in('record_id', entityIds);
-        await sb.from('finance_pay_policy_command_receipts').delete().eq('policy_id', ids.policy);
-        await sb.from('finance_pay_group_policy_assignments').delete().eq('policy_id', ids.policy);
-        await sb.from('finance_pay_policies').delete().eq('id', ids.policy);
-      }
-      if (ids.group) await sb.from('finance_pay_groups').delete().eq('id', ids.group);
-      await sb.from('app_users').delete().in('id', Object.values(users));
-    } catch {}
+    // Workflow cleanup: delete instances first — cascades to decisions, audit_log,
+    // tasks, transitions, source_receipts, and outbox in the correct FK order.
+    // Explicit tasks-before-instances fails silently because workflow_transitions
+    // references tasks via ON DELETE RESTRICT; instances→cascade removes transitions
+    // first, then tasks can be dropped without FK conflicts.
+    if (ids.workflow) {
+      await h.mustDelete('workflow_instances', q => q.eq('id', ids.workflow));
+    }
+    if (ids.policy) {
+      const entityIds = [ids.policy, ids.version, ids.assignment].filter(Boolean);
+      // notifications must precede app_events (event_id FK to app_events)
+      await h.mustDelete('notifications', q => q.in('source_id', entityIds));
+      await h.mustDelete('handoff_outbox', q => q.eq('source_module', 'finance_pay_policy').in('source_entity_id', entityIds));
+      await h.mustDelete('app_events', q => q.eq('source_module', 'finance_pay_policy').in('source_entity_id', entityIds));
+      await h.mustDelete('hr_audit_log', q => q.eq('submodule_key', 'finance_pay_policy').in('record_id', entityIds));
+      await h.mustDelete('finance_pay_policy_command_receipts', q => q.eq('policy_id', ids.policy));
+      // assignments reference versions via ON DELETE RESTRICT — must precede policies delete
+      await h.mustDelete('finance_pay_group_policy_assignments', q => q.eq('policy_id', ids.policy));
+      // policies cascade to versions → components/source_rules/costing_rules
+      await h.mustDelete('finance_pay_policies', q => q.eq('id', ids.policy));
+    }
+    if (ids.group) await h.mustDelete('finance_pay_groups', q => q.eq('id', ids.group));
+    await h.mustDelete('app_users', q => q.in('id', Object.values(users)));
   });
 
   const draft = () => ({
