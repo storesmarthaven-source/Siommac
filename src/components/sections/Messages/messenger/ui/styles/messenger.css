@@ -1001,6 +1001,21 @@ button.sm-related-record { cursor: pointer; }.sm-related-record small { color: v
 .sm-topbar-queues .app-topbar-nav-btn svg { width: 12px; height: 12px; stroke-width: 2.2; }
 .sm-topbar-queues .app-topbar-nav-btn b { font-size: 0.7rem; font-weight: 700; opacity: .75; }
 
+/* Compliance entry: a shield icon button at the end of the thread-header action
+   row (favourite · appearance · archive · info · Compliance). It's a workspace
+   mode switch, not a thread action, so a hairline separator sets it apart. */
+.sm-thread-header__compliance { position: relative; margin-left: 6px; }
+.sm-thread-header__compliance::before { content: ""; position: absolute; left: -4px; top: 6px; bottom: 6px; width: 1px; background: #e2e8f2; }
+
+/* Compliance subview tabs, lifted into the band's middle column (where a thread
+   header sits for the message queues). Navy-on-white to match the queue tabs;
+   the band lives outside .sm-workspace so the --sm-* tokens are out of scope. */
+.sm-band-compliance-nav { display: flex; align-items: center; gap: 3px; padding: 0 14px; }
+.sm-band-compliance-nav .app-topbar-nav-btn { height: 28px; gap: 7px; padding: 0 12px; color: #5d708c; font-size: 0.8rem; font-weight: 600; }
+.sm-band-compliance-nav .app-topbar-nav-btn:hover { background: #f2f6fc; color: #1b2d54; }
+.sm-band-compliance-nav .app-topbar-nav-btn.active { background: var(--siomac-navy, #1b2d54); color: #fff; }
+.sm-band-compliance-nav .app-topbar-nav-btn svg { width: 14px; height: 14px; stroke-width: 2.1; }
+
 
 /* Right-rail dark/light now driven by the [data-theme-scope="adaptive"]
    token layer (assets/styles/theme-dark.css) — the 48 :not([data-theme=dark])

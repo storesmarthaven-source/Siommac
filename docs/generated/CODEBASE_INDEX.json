@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "c287890073514d16a421663c539834159d683c02",
+    "head": "6c60d87ec13d4d55dc93222f23962de110914e5f",
     "branch": "Codex/wonderful-panini-34b331",
-    "fingerprint": "d32b23074798f3fa5c607892",
-    "indexedFiles": 1402
+    "fingerprint": "d505d99b84873464944367a1",
+    "indexedFiles": 1422
   },
   "summary": {
-    "files": 1100,
-    "symbols": 10884,
-    "widgets": 22,
-    "routes": 868,
-    "routeDefinitions": 869,
+    "files": 1119,
+    "symbols": 11110,
+    "widgets": 32,
+    "routes": 869,
+    "routeDefinitions": 870,
     "unmountedRoutes": 17,
-    "apiCalls": 368,
-    "databaseObjects": 1159,
-    "e2eSuites": 64,
-    "e2eTests": 2137
+    "apiCalls": 381,
+    "databaseObjects": 1167,
+    "e2eSuites": 65,
+    "e2eTests": 2164
   },
   "modules": [
     {
@@ -35,14 +35,14 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 120,
-        "symbols": 1006,
-        "widgets": 0,
-        "routes": 97,
-        "routeDefinitions": 97,
+        "files": 129,
+        "symbols": 1150,
+        "widgets": 10,
+        "routes": 98,
+        "routeDefinitions": 98,
         "apiCalls": 5,
-        "databaseObjects": 174,
-        "e2eSuites": 15
+        "databaseObjects": 182,
+        "e2eSuites": 16
       }
     },
     {
@@ -74,12 +74,12 @@
     {
       "id": "communications",
       "counts": {
-        "files": 93,
-        "symbols": 858,
+        "files": 102,
+        "symbols": 929,
         "widgets": 0,
         "routes": 72,
         "routeDefinitions": 75,
-        "apiCalls": 77,
+        "apiCalls": 90,
         "databaseObjects": 120,
         "e2eSuites": 4
       }
@@ -152,8 +152,8 @@
     {
       "id": "testing",
       "counts": {
-        "files": 23,
-        "symbols": 127,
+        "files": 24,
+        "symbols": 138,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -485,6 +485,27 @@
       "role": "backend-lib",
       "lines": 324,
       "hash": "3f90e5977bb71035"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 372,
+      "hash": "a20f98921d8bb4b2"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 79,
+      "hash": "9dd8b71486e298e8"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 194,
+      "hash": "715c3376c6b26dff"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/execution.ts",
@@ -1778,8 +1799,8 @@
       "path": "netlify/functions/routes/financePayroll.ts",
       "module": "payroll",
       "role": "backend-route",
-      "lines": 1319,
-      "hash": "cdd92bd6b4af6a9b"
+      "lines": 1377,
+      "hash": "0a83c4f3fda9fac2"
     },
     {
       "path": "netlify/functions/routes/financePayslipTemplates.ts",
@@ -2030,8 +2051,8 @@
       "path": "netlify/functions/routes/uiPrefs.ts",
       "module": "widgets",
       "role": "backend-route",
-      "lines": 239,
-      "hash": "614d80bf56d010b8"
+      "lines": 243,
+      "hash": "0a1187602902c24c"
     },
     {
       "path": "netlify/functions/routes/webauthn.ts",
@@ -2149,8 +2170,8 @@
       "path": "scripts/e2e/helpers/payrollRun.mjs",
       "module": "payroll",
       "role": "tooling",
-      "lines": 378,
-      "hash": "147ffc382118ef3b"
+      "lines": 379,
+      "hash": "90c158fc310be69a"
     },
     {
       "path": "scripts/e2e/payroll-contract-gate.mjs",
@@ -2165,6 +2186,13 @@
       "role": "tooling",
       "lines": 114,
       "hash": "ec9156f6e956cd10"
+    },
+    {
+      "path": "scripts/e2e/scale-controlCenter.mjs",
+      "module": "testing",
+      "role": "tooling",
+      "lines": 118,
+      "hash": "026d8c396ea926c2"
     },
     {
       "path": "scripts/e2e/suites/accountSecurity.mjs",
@@ -2468,6 +2496,13 @@
       "hash": "9e34754f7cc635a1"
     },
     {
+      "path": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 423,
+      "hash": "4c1cf6278475ce0a"
+    },
+    {
       "path": "scripts/e2e/suites/payrollGl.mjs",
       "module": "payroll",
       "role": "e2e-suite",
@@ -2650,6 +2685,13 @@
       "hash": "631e024c490e22cc"
     },
     {
+      "path": "scripts/seed-payroll-command-center.mjs",
+      "module": "payroll",
+      "role": "tooling",
+      "lines": 194,
+      "hash": "b91c0253b498c0ec"
+    },
+    {
       "path": "scripts/verify-realtime-auth.mjs",
       "module": "communications",
       "role": "tooling",
@@ -2690,6 +2732,13 @@
       "role": "frontend-api",
       "lines": 885,
       "hash": "09e6e2e6ae1b88de"
+    },
+    {
+      "path": "src/api/communicationsCompliance.ts",
+      "module": "communications",
+      "role": "frontend-api",
+      "lines": 218,
+      "hash": "d656f9083767bbf5"
     },
     {
       "path": "src/api/employees.ts",
@@ -2774,6 +2823,13 @@
       "role": "frontend-api",
       "lines": 592,
       "hash": "8fd0360b073b96f3"
+    },
+    {
+      "path": "src/api/finance/payroll/controlCenter.ts",
+      "module": "payroll",
+      "role": "frontend-api",
+      "lines": 133,
+      "hash": "7c158a813c1d9bf5"
     },
     {
       "path": "src/api/finance/pickers.ts",
@@ -4026,7 +4082,7 @@
       "module": "finance",
       "role": "frontend-page",
       "lines": 91,
-      "hash": "ff15c77f7d8e5325"
+      "hash": "387acdb4e1d97b5a"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -4069,6 +4125,13 @@
       "role": "frontend-page",
       "lines": 347,
       "hash": "f9ea2fc70cfe0648"
+    },
+    {
+      "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 832,
+      "hash": "99d805c685eb57a8"
     },
     {
       "path": "src/components/sections/Finance/PayrollOverview.tsx",
@@ -5219,6 +5282,62 @@
       "hash": "8a04ee554669a072"
     },
     {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 137,
+      "hash": "5d6ad0e8de37d0e3"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 191,
+      "hash": "f541e559f3051824"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 296,
+      "hash": "a801b74ea0120466"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 302,
+      "hash": "607e84a0407a1767"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 52,
+      "hash": "10d708b4db7ec90e"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 117,
+      "hash": "3224b2d36212873c"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 176,
+      "hash": "a7e20bfa20b50eb6"
+    },
+    {
+      "path": "src/components/sections/Messages/messenger/ui/compliance/index.ts",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 5,
+      "hash": "887046cb9416feab"
+    },
+    {
       "path": "src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx",
       "module": "communications",
       "role": "frontend-page",
@@ -5236,8 +5355,8 @@
       "path": "src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 119,
-      "hash": "3f646983de776dc1"
+      "lines": 14,
+      "hash": "916f178e3c55b547"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/Composer.tsx",
@@ -5271,15 +5390,15 @@
       "path": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 337,
-      "hash": "477f3502921f2765"
+      "lines": 342,
+      "hash": "b48cafd6e0caee4a"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 188,
-      "hash": "d124c3d61ab8f116"
+      "lines": 201,
+      "hash": "aec89e9f9adc59cc"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx",
@@ -5313,15 +5432,15 @@
       "path": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 79,
-      "hash": "d045274d53fcbccc"
+      "lines": 84,
+      "hash": "af1d59bca7e642dc"
     },
     {
       "path": "src/components/sections/Messages/mount.ts",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 43,
-      "hash": "dc2f74fa6588d732"
+      "lines": 47,
+      "hash": "cbd00bbb0b5efe6d"
     },
     {
       "path": "src/components/sections/Messages/threadDisplay.test.ts",
@@ -7655,6 +7774,13 @@
       "hash": "e0e448e5c0756e51"
     },
     {
+      "path": "tests/unit/payrollControlCenter.test.ts",
+      "module": "payroll",
+      "role": "test",
+      "lines": 219,
+      "hash": "9fe8f06ab42e96c3"
+    },
+    {
       "path": "tests/unit/payrollStatutory.test.ts",
       "module": "payroll",
       "role": "test",
@@ -7856,6 +7982,13 @@
       "role": "shared-types",
       "lines": 316,
       "hash": "b5248e1413c532ae"
+    },
+    {
+      "path": "types/payrollControlCenter.ts",
+      "module": "payroll",
+      "role": "shared-types",
+      "lines": 183,
+      "hash": "2be54db65e60e934"
     },
     {
       "path": "types/supabase.ts",
@@ -14193,6 +14326,318 @@
       "kind": "function",
       "file": "netlify/functions/lib/finance/payGroups.ts",
       "line": 182,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ControlCenterServiceInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 34,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "money",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 43,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "num",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 47,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "str",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 51,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Rec",
+      "kind": "type",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 56,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assertRpcShape",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 63,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "err",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 64,
+      "module": "payroll",
+      "exported": false,
+      "container": "assertRpcShape",
+      "tags": []
+    },
+    {
+      "name": "obj",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 69,
+      "module": "payroll",
+      "exported": false,
+      "container": "assertRpcShape",
+      "tags": []
+    },
+    {
+      "name": "reqNum",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 74,
+      "module": "payroll",
+      "exported": false,
+      "container": "assertRpcShape",
+      "tags": []
+    },
+    {
+      "name": "getPayrollControlCenter",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 96,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "mapRegisterItem",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenter.ts",
+      "line": 349,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RegisterCursorTuple",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 7,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "hashStr",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 15,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "filterFingerprint",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 22,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "encodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 38,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 44,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "malformed",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterCursor.ts",
+      "line": 45,
+      "module": "payroll",
+      "exported": false,
+      "container": "decodeCursor",
+      "tags": []
+    },
+    {
+      "name": "todayIso",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 15,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "classifyDeadline",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 20,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HealthInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 42,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "healthScore",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 49,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "healthState",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 61,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fundingKpiState",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 70,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "ACTIVITY_LABELS",
+      "kind": "object",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 82,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activityLabel",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 94,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TERMINAL_RELEASED",
+      "kind": "variable",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 103,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "registerReadinessState",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 105,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PREFLIGHT_CODE_TO_GATE",
+      "kind": "object",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 119,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GATE_ORDER",
+      "kind": "array",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 140,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PreflightReadinessInput",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 150,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "evaluateReadinessGates",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/controlCenterDerive.ts",
+      "line": 157,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -34512,7 +34957,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 108,
+      "line": 109,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -34522,7 +34967,7 @@
       "name": "b",
       "kind": "function",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 111,
+      "line": 112,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -34532,7 +34977,7 @@
       "name": "routeErr",
       "kind": "function",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 115,
+      "line": 116,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -39588,7 +40033,7 @@
       "name": "PAYROLL_PERIOD_YEAR_BANDS",
       "kind": "variable",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 252,
+      "line": 253,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39598,7 +40043,7 @@
       "name": "yearOfDayOffset",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 260,
+      "line": 261,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -39608,7 +40053,7 @@
       "name": "saltYearWindow",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 267,
+      "line": 268,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39618,7 +40063,7 @@
       "name": "assertPayrollPeriodAllocatorDisjoint",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 279,
+      "line": 280,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39628,7 +40073,7 @@
       "name": "overlaps",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 280,
+      "line": 281,
       "module": "payroll",
       "exported": false,
       "container": "assertPayrollPeriodAllocatorDisjoint",
@@ -39638,7 +40083,7 @@
       "name": "payrollPeriod",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 327,
+      "line": 328,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39648,7 +40093,7 @@
       "name": "payrollPeriodYear",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 338,
+      "line": 339,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39658,7 +40103,7 @@
       "name": "payrollRunSeed",
       "kind": "function",
       "file": "scripts/e2e/helpers/payrollRun.mjs",
-      "line": 351,
+      "line": 352,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -39852,6 +40297,116 @@
       "module": "testing",
       "exported": false,
       "container": "",
+      "tags": []
+    },
+    {
+      "name": "N",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 16,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "YEAR",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 17,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHUNK",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 18,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "env",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 20,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sb",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 23,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TAG",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 24,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pct",
+      "kind": "function",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 25,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanupFailed",
+      "kind": "variable",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 26,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "del",
+      "kind": "function",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 27,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 34,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ins",
+      "kind": "function",
+      "file": "scripts/e2e/scale-controlCenter.mjs",
+      "line": 43,
+      "module": "testing",
+      "exported": false,
+      "container": "main",
       "tags": []
     },
     {
@@ -42089,6 +42644,162 @@
     {
       "name": "title",
       "kind": "variable",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 22,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "BASE_GL_MAPPINGS",
+      "kind": "array",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 24,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 31,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "waitFor",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 53,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedRun",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 121,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedCalcChain",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 133,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedFinding",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 147,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "seedFunding",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 154,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "driveToPendingApproval",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 163,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "getA",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 238,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "WIN",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 239,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "getB",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 240,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "snap",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "line": 410,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
       "file": "scripts/e2e/suites/payrollGl.mjs",
       "line": 24,
       "module": "payroll",
@@ -44141,6 +44852,216 @@
       "tags": []
     },
     {
+      "name": "ROOT",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 20,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "env",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 21,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sb",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 25,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SUPERADMIN",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 27,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SEED",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "die",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 29,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "okOr",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 30,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "now",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 33,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "M",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 34,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Y",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 34,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "d",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 35,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "lastDay",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 36,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "clamp",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 37,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nextM",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 38,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "nextY",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 38,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "soon",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 41,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "soonPay",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 42,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "soonCut",
+      "kind": "variable",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 43,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "main",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 45,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pick",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 58,
+      "module": "payroll",
+      "exported": false,
+      "container": "main",
+      "tags": []
+    },
+    {
+      "name": "ago",
+      "kind": "function",
+      "file": "scripts/seed-payroll-command-center.mjs",
+      "line": 171,
+      "module": "payroll",
+      "exported": false,
+      "container": "main",
+      "tags": []
+    },
+    {
       "name": "ES256_PEM",
       "kind": "variable",
       "file": "scripts/verify-realtime-auth.mjs",
@@ -45299,6 +46220,180 @@
       "tags": [
         "hook"
       ]
+    },
+    {
+      "name": "asArgs",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 34,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "complianceKeys",
+      "kind": "variable",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 37,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "useComplianceSummary",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 53,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceCases",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 64,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceCase",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 75,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceConversationSearch",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 87,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceConversation",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 102,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceAccessEvents",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 118,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useComplianceExports",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 129,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRequestComplianceCase",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 143,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useDecideComplianceCase",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 156,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useCloseComplianceCase",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 170,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRevokeComplianceGrant",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 184,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useCreateComplianceExport",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 195,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "downloadComplianceExport",
+      "kind": "function",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 211,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
     },
     {
       "name": "SignalOpt",
@@ -48359,6 +49454,98 @@
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
       "line": 582,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "PayrollControlCenterParams",
+      "kind": "interface",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 42,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "defaultControlCenterWindow",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 54,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "iso",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 55,
+      "module": "payroll",
+      "exported": false,
+      "container": "defaultControlCenterWindow",
+      "tags": []
+    },
+    {
+      "name": "payrollControlCenterQueryKey",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 63,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "post",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 81,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getPayrollControlCenter",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 87,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isControlCenterDenied",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 106,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isTerminalError",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 111,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "usePayrollControlCenter",
+      "kind": "function",
+      "file": "src/api/finance/payroll/controlCenter.ts",
+      "line": 118,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -70994,6 +72181,588 @@
       "tags": []
     },
     {
+      "name": "PAGE_KEY",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 42,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "BOARD_COLS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 43,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "KPI_PAGE_KEY",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 44,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "W_ASSIGNED",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 45,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "W_DEADLINES",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 46,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "W_READINESS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 47,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "W_IMPACT",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 48,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "W_REGISTER",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 49,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "W_KPI_NEXTPAY",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 50,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "W_KPI_ACTIVE",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 51,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "W_KPI_EMPLOYEES",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 52,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "W_KPI_GROSS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 53,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "W_KPI_NET",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 54,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "CELL",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 55,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "defInst",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 57,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "defaultKpiLayout",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 62,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "defaultLayout",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 76,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "floor",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 93,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "REGISTER_TABS",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 96,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtTTD",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 104,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtTTDc",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 105,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDay",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 111,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDayShort",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 117,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "relDate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 123,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "timeOf",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 135,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "initials",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 139,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "READINESS_PROGRESS",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 142,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "READINESS_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 145,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEADLINE_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 150,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEADLINE_PILL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 153,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ACTIVITY_VISUAL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 160,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activityVisual",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 171,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "GATE_STATE",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 175,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HEALTH_STATE_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 182,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HEALTH_ICON",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 185,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ReadinessDoughnut",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 190,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SkeletonPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 220,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PayrollCommandCenter",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 232,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "placeBottom",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 263,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollCommandCenter",
+      "tags": []
+    },
+    {
+      "name": "promoteDefault",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 265,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollCommandCenter",
+      "tags": []
+    },
+    {
+      "name": "runAction",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 282,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollCommandCenter",
+      "tags": []
+    },
+    {
+      "name": "submitRunStable",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 288,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollCommandCenter",
+      "tags": []
+    },
+    {
+      "name": "PortfolioBand",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 482,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "MetricsRow",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 525,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "RunRegister",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 557,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "RunRow",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 616,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ApprovalsWidget",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 636,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "DeadlinesWidget",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 684,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "dayKey",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 688,
+      "module": "payroll",
+      "exported": false,
+      "container": "DeadlinesWidget",
+      "tags": []
+    },
+    {
+      "name": "onDay",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 689,
+      "module": "payroll",
+      "exported": false,
+      "container": "DeadlinesWidget",
+      "tags": []
+    },
+    {
+      "name": "ReadinessWidget",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 740,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "ImpactWidget",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 797,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
       "name": "PAGE_SIZE",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollOverview.tsx",
@@ -93080,6 +94849,590 @@
       ]
     },
     {
+      "name": "EVENT_META",
+      "kind": "object",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 16,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EVENT_FILTERS",
+      "kind": "array",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 29,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDateTime",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 39,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceAccessLogView",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 44,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "fmtDetails",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 117,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AccessEventRow",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx",
+      "line": 123,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "errText",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 22,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DecideComplianceCaseDialog",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 27,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 37,
+      "module": "communications",
+      "exported": false,
+      "container": "DecideComplianceCaseDialog",
+      "tags": []
+    },
+    {
+      "name": "CloseComplianceCaseDialog",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 66,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 74,
+      "module": "communications",
+      "exported": false,
+      "container": "CloseComplianceCaseDialog",
+      "tags": []
+    },
+    {
+      "name": "RevokeComplianceGrantDialog",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 100,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 109,
+      "module": "communications",
+      "exported": false,
+      "container": "RevokeComplianceGrantDialog",
+      "tags": []
+    },
+    {
+      "name": "ComplianceExportDialog",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 135,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceActionDialogs.tsx",
+      "line": 151,
+      "module": "communications",
+      "exported": false,
+      "container": "ComplianceExportDialog",
+      "tags": []
+    },
+    {
+      "name": "StatusFilter",
+      "kind": "type",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 18,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_FILTER_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 19,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "TYPE_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 23,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 31,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATUS_ICON",
+      "kind": "object",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 35,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "statusTone",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 39,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDate",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 46,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "relShort",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 52,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isExpiringSoon",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 64,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isExpired",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 69,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceCasesView",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 73,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "StatusPill",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 193,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CaseTableSkeleton",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 198,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceCaseDetailRail",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 208,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "GrantPill",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceCasesView.tsx",
+      "line": 285,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "fmtClock",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 25,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDay",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 28,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtExpiry",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 31,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtSize",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 36,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceConversationsView",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 43,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ConversationRailItem",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 230,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceTimeline",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 259,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceMessageRow",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceConversationsView.tsx",
+      "line": 276,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceSubview",
+      "kind": "type",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "line": 13,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceStateValue",
+      "kind": "interface",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "line": 15,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceStateContext",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "line": 26,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceStateProvider",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "line": 28,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "useComplianceState",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceState.tsx",
+      "line": 47,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "TABS",
+      "kind": "array",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx",
+      "line": 24,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ComplianceSubnav",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx",
+      "line": 36,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "ComplianceWorkspace",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/ComplianceWorkspace.tsx",
+      "line": 66,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "WIZARD_STEPS",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 19,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CASE_TYPES",
+      "kind": "array",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 25,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Picked",
+      "kind": "interface",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 33,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "NewComplianceCaseDialog",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 35,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "iso",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 51,
+      "module": "communications",
+      "exported": false,
+      "container": "NewComplianceCaseDialog",
+      "tags": []
+    },
+    {
+      "name": "toggle",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 63,
+      "module": "communications",
+      "exported": false,
+      "container": "NewComplianceCaseDialog",
+      "tags": []
+    },
+    {
+      "name": "setNote",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 68,
+      "module": "communications",
+      "exported": false,
+      "container": "NewComplianceCaseDialog",
+      "tags": []
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/ui/compliance/NewComplianceCaseDialog.tsx",
+      "line": 72,
+      "module": "communications",
+      "exported": false,
+      "container": "NewComplianceCaseDialog",
+      "tags": []
+    },
+    {
       "name": "accentPresets",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/AppearanceDialog.tsx",
@@ -93188,44 +95541,12 @@
       ]
     },
     {
-      "name": "LoadedThread",
-      "kind": "interface",
-      "file": "src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx",
-      "line": 20,
-      "module": "communications",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
       "name": "ComplianceView",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx",
-      "line": 25,
+      "line": 11,
       "module": "communications",
       "exported": true,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "open",
-      "kind": "function",
-      "file": "src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx",
-      "line": 33,
-      "module": "communications",
-      "exported": false,
-      "container": "ComplianceView",
-      "tags": []
-    },
-    {
-      "name": "ComplianceMessage",
-      "kind": "function",
-      "file": "src/components/sections/Messages/messenger/ui/components/ComplianceView.tsx",
-      "line": 100,
-      "module": "communications",
-      "exported": false,
       "container": "",
       "tags": [
         "component"
@@ -94140,7 +96461,7 @@
       ]
     },
     {
-      "name": "Presentation",
+      "name": "Plus",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 63,
@@ -94152,7 +96473,7 @@
       ]
     },
     {
-      "name": "Reply",
+      "name": "ScrollText",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 64,
@@ -94164,7 +96485,7 @@
       ]
     },
     {
-      "name": "RotateCcw",
+      "name": "FolderLock",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 65,
@@ -94176,7 +96497,7 @@
       ]
     },
     {
-      "name": "Search",
+      "name": "ShieldX",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 66,
@@ -94188,7 +96509,7 @@
       ]
     },
     {
-      "name": "Send",
+      "name": "FilePlus2",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 67,
@@ -94200,7 +96521,7 @@
       ]
     },
     {
-      "name": "Settings2",
+      "name": "Presentation",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 68,
@@ -94212,7 +96533,7 @@
       ]
     },
     {
-      "name": "ShieldCheck",
+      "name": "Reply",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 69,
@@ -94224,7 +96545,7 @@
       ]
     },
     {
-      "name": "Smile",
+      "name": "RotateCcw",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 70,
@@ -94236,7 +96557,7 @@
       ]
     },
     {
-      "name": "SmilePlus",
+      "name": "Search",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 71,
@@ -94248,7 +96569,7 @@
       ]
     },
     {
-      "name": "Star",
+      "name": "Send",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 72,
@@ -94260,7 +96581,7 @@
       ]
     },
     {
-      "name": "Trash2",
+      "name": "Settings2",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 73,
@@ -94272,7 +96593,7 @@
       ]
     },
     {
-      "name": "UploadCloud",
+      "name": "ShieldCheck",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 74,
@@ -94284,7 +96605,7 @@
       ]
     },
     {
-      "name": "UserMinus",
+      "name": "Smile",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 75,
@@ -94296,7 +96617,7 @@
       ]
     },
     {
-      "name": "UserPlus",
+      "name": "SmilePlus",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 76,
@@ -94308,7 +96629,7 @@
       ]
     },
     {
-      "name": "Users",
+      "name": "Star",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 77,
@@ -94320,10 +96641,70 @@
       ]
     },
     {
-      "name": "X",
+      "name": "Trash2",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
       "line": 78,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "UploadCloud",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
+      "line": 79,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "UserMinus",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
+      "line": 80,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "UserPlus",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
+      "line": 81,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Users",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
+      "line": 82,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "X",
+      "kind": "variable",
+      "file": "src/components/sections/Messages/messenger/ui/components/icons.tsx",
+      "line": 83,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -94538,7 +96919,7 @@
       "name": "openActivity",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx",
-      "line": 162,
+      "line": 175,
       "module": "communications",
       "exported": false,
       "container": "MessagesWorkspace",
@@ -94580,7 +96961,7 @@
       "name": "MessageThread",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 57,
+      "line": 62,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -94592,7 +96973,7 @@
       "name": "markIfVisible",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 97,
+      "line": 102,
       "module": "communications",
       "exported": false,
       "container": "MessageThread",
@@ -94602,7 +96983,7 @@
       "name": "handleListScroll",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 174,
+      "line": 179,
       "module": "communications",
       "exported": false,
       "container": "MessageThread",
@@ -94612,7 +96993,7 @@
       "name": "jumpTo",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 181,
+      "line": 186,
       "module": "communications",
       "exported": false,
       "container": "MessageThread",
@@ -94622,7 +97003,7 @@
       "name": "SystemEvent",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 267,
+      "line": 272,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -94634,7 +97015,7 @@
       "name": "MessageRow",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 271,
+      "line": 276,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -94646,7 +97027,7 @@
       "name": "MessageStatus",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 311,
+      "line": 316,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -94658,7 +97039,7 @@
       "name": "RichMessage",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 317,
+      "line": 322,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -94670,7 +97051,7 @@
       "name": "renderRichNode",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 323,
+      "line": 328,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -94792,7 +97173,7 @@
       "name": "mountMessageCenterSection",
       "kind": "function",
       "file": "src/components/sections/Messages/mount.ts",
-      "line": 15,
+      "line": 16,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -94802,7 +97183,7 @@
       "name": "unmountMessageCenterSection",
       "kind": "function",
       "file": "src/components/sections/Messages/mount.ts",
-      "line": 27,
+      "line": 31,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -94812,7 +97193,7 @@
       "name": "mountMessageDropdown",
       "kind": "function",
       "file": "src/components/sections/Messages/mount.ts",
-      "line": 32,
+      "line": 36,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -117650,6 +120031,18 @@
       ]
     },
     {
+      "name": "pf",
+      "kind": "function",
+      "file": "tests/unit/payrollControlCenter.test.ts",
+      "line": 150,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "WEEKS",
       "kind": "variable",
       "file": "tests/unit/payrollStatutory.test.ts",
@@ -121648,6 +124041,178 @@
       "tags": []
     },
     {
+      "name": "PayrollRunRegisterTab",
+      "kind": "type",
+      "file": "types/payrollControlCenter.ts",
+      "line": 8,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollControlCenterRequest",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 10,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HealthState",
+      "kind": "type",
+      "file": "types/payrollControlCenter.ts",
+      "line": 23,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ReadinessState",
+      "kind": "type",
+      "file": "types/payrollControlCenter.ts",
+      "line": 24,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollRunType",
+      "kind": "type",
+      "file": "types/payrollControlCenter.ts",
+      "line": 25,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MoneyValue",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 27,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollControlCenterCapabilities",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 32,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollPortfolioHealth",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 41,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollCommandCenterKpis",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 58,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "PayrollAssignedWork",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 72,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollActivityItem",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 89,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollDeadlineItem",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 99,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollReadinessGate",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 109,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollRunRegisterItem",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 124,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollNextRun",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 145,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollRunRegisterPage",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 163,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollControlCenterResponse",
+      "kind": "interface",
+      "file": "types/payrollControlCenter.ts",
+      "line": 170,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "Database",
       "kind": "interface",
       "file": "types/supabase.ts",
@@ -121699,6 +124264,106 @@
     }
   ],
   "widgets": [
+    {
+      "id": "finance.payroll.assignedWork",
+      "title": "Approval and Activity",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <ApprovalsWidget data={data} onOpen={openRun} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 408
+    },
+    {
+      "id": "finance.payroll.deadlines",
+      "title": "Upcoming Deadlines",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <DeadlinesWidget data={data} onOpen={openRun} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 409
+    },
+    {
+      "id": "finance.payroll.kpi.activeRuns",
+      "title": "Active Runs",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <KpiTile icon=\"fa-layer-group\" tone=\"teal\" label=\"Active Runs\" value={kk?.activeRuns ?? 0} sub=\"In the reporting window\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 390
+    },
+    {
+      "id": "finance.payroll.kpi.employeesDue",
+      "title": "Employees Due",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <KpiTile icon=\"fa-users\" tone=\"blue\" label=\"Employees Due\" value={kk?.employeesDue ?? 0} sub=\"Current calc population\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 393
+    },
+    {
+      "id": "finance.payroll.kpi.grossPayroll",
+      "title": "Gross Payroll",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <KpiTile icon=\"fa-coins\" tone=\"green\" label=\"Gross Payroll\" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 396
+    },
+    {
+      "id": "finance.payroll.kpi.netPayroll",
+      "title": "Net Payroll",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <KpiTile icon=\"fa-wallet\" tone=\"teal\" label=\"Net Payroll\" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 399
+    },
+    {
+      "id": "finance.payroll.kpi.nextPay",
+      "title": "Next Pay Date",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <KpiTile icon=\"fa-calendar-day\" tone=\"blue\" label=\"Next Pay Date\"\n        value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}\n        sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}\n        link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 385
+    },
+    {
+      "id": "finance.payroll.releaseImpact",
+      "title": "Release Impact",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <ImpactWidget data={data} onOpen={openRun} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 411
+    },
+    {
+      "id": "finance.payroll.releaseReadiness",
+      "title": "Release Readiness",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <ReadinessWidget data={data} onOpen={openRun} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 410
+    },
+    {
+      "id": "finance.payroll.runRegister",
+      "title": "Payroll Runs",
+      "module": "payroll",
+      "area": "",
+      "kind": "local",
+      "render": "() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />",
+      "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
+      "line": 412
+    },
     {
       "id": "finance.statutory.deadlines",
       "title": "Upcoming Deadlines",
@@ -124693,7 +127358,7 @@
       ],
       "schema": "z.object({\n    currentRunId: z.string().uuid(),\n    employeeId: z.string().min(1),\n    fromPeriodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    correctedPeriodBase: z.number().positive(),\n    reason: z.string().min(1).max(500),\n    // When the salary correction became effective (YYYY-MM-DD).\n    // Defaults to fromPeriodMonth when omitted (backward-compatible).\n    effectiveDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 760,
+      "line": 818,
       "module": "payroll"
     },
     {
@@ -124706,7 +127371,7 @@
       ],
       "schema": "z.object({\n    currentRunId: z.string().uuid(),\n    employeeId: z.string().min(1),\n    fromPeriodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    correctedPeriodBase: z.number().positive(),\n    // When the salary correction became effective (YYYY-MM-DD).\n    // Defaults to fromPeriodMonth when omitted (backward-compatible).\n    effectiveDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 740,
+      "line": 798,
       "module": "payroll"
     },
     {
@@ -124719,7 +127384,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1087,
+      "line": 1145,
       "module": "payroll"
     },
     {
@@ -124732,7 +127397,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    limit: z.number().int().min(1).max(200).optional(),\n    offset: z.number().int().min(0).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1073,
+      "line": 1131,
       "module": "payroll"
     },
     {
@@ -124745,7 +127410,7 @@
       ],
       "schema": "z.object({\n    fromVersionId: z.string().uuid(),\n    toVersionId: z.string().uuid(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1123,
+      "line": 1181,
       "module": "payroll"
     },
     {
@@ -124758,7 +127423,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1110,
+      "line": 1168,
       "module": "payroll"
     },
     {
@@ -124771,7 +127436,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1100,
+      "line": 1158,
       "module": "payroll"
     },
     {
@@ -124866,6 +127531,20 @@
       "module": "payroll"
     },
     {
+      "path": "/api/finance/payroll/control-center/get",
+      "localPath": "/payroll/control-center/get",
+      "router": "router",
+      "permission": "finance.payroll.view_all",
+      "guards": [
+        "requirePermission",
+        "userCan"
+      ],
+      "schema": "z.object({\n    window: z.object({\n      from: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n      to:   z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    })\n      .refine(w => w.from <= w.to, { message: 'window.from must be on or before window.to' })\n      .refine(w => (Date.parse(w.to) - Date.parse(w.from)) <= 366 * 86_400_000, {\n        message: 'window may not exceed 366 days',\n      }),\n    payGroupIds: z.array(z.string().uuid()).max(25).optional(),\n    register: z.object({\n      tab:    z.enum(['all', 'attention', 'approval', 'ready', 'released']).optional(),\n      search: z.string().trim().max(100).optional(),\n      cursor: z.string().max(1000).optional(),\n      limit:  z.number().int().min(1).max(25).optional(),\n    }).optional(),\n  })",
+      "file": "netlify/functions/routes/financePayroll.ts",
+      "line": 148,
+      "module": "payroll"
+    },
+    {
       "path": "/api/finance/payroll/exports/download",
       "localPath": "/payroll/exports/download",
       "router": "router",
@@ -124875,7 +127554,7 @@
       ],
       "schema": "z.object({\n    exportId: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1270,
+      "line": 1328,
       "module": "payroll"
     },
     {
@@ -124888,7 +127567,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 492,
+      "line": 550,
       "module": "payroll"
     },
     {
@@ -124901,7 +127580,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    assigneeId: z.string().min(1).max(200),\n    note: z.string().trim().max(1000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1152,
+      "line": 1210,
       "module": "payroll"
     },
     {
@@ -124914,7 +127593,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1139,
+      "line": 1197,
       "module": "payroll"
     },
     {
@@ -124927,7 +127606,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    calculationVersionId: z.string().uuid().optional(),\n    state: z.enum(['open', 'in_progress', 'resolved', 'waived']).optional(),\n    severity: z.enum(['info', 'warning', 'blocker']).optional(),\n    limit: z.number().int().min(1).max(200).optional(),\n    offset: z.number().int().min(0).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1046,
+      "line": 1104,
       "module": "payroll"
     },
     {
@@ -124940,7 +127619,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    reason: z.string().trim().min(1).max(2000),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1224,
+      "line": 1282,
       "module": "payroll"
     },
     {
@@ -124953,7 +127632,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    note: z.string().trim().min(1).max(2000),\n    evidence: z.record(z.string(), z.unknown()),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1176,
+      "line": 1234,
       "module": "payroll"
     },
     {
@@ -124966,7 +127645,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    reason: z.string().trim().min(1).max(2000),\n    expiresAt: z.string().datetime().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1200,
+      "line": 1258,
       "module": "payroll"
     },
     {
@@ -124979,7 +127658,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 952,
+      "line": 1010,
       "module": "payroll"
     },
     {
@@ -124992,7 +127671,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 911,
+      "line": 969,
       "module": "payroll"
     },
     {
@@ -125005,7 +127684,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 897,
+      "line": 955,
       "module": "payroll"
     },
     {
@@ -125018,7 +127697,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    reason: z.string().min(1),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 931,
+      "line": 989,
       "module": "payroll"
     },
     {
@@ -125031,7 +127710,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 215,
+      "line": 273,
       "module": "payroll"
     },
     {
@@ -125044,7 +127723,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid(), reason: z.string().max(500).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 705,
+      "line": 763,
       "module": "payroll"
     },
     {
@@ -125057,7 +127736,7 @@
       ],
       "schema": "z.object({\n    employeeId:        z.string().min(1),\n    loanType:          z.enum(['loan', 'advance']),\n    principal:         z.number().positive(),\n    interestAmount:    z.number().nonnegative().optional(),\n    installmentAmount: z.number().positive(),\n    startPeriod:       z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n    reason:            z.string().max(500).nullable().optional(),\n    notes:             z.string().max(1000).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 663,
+      "line": 721,
       "module": "payroll"
     },
     {
@@ -125070,7 +127749,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 651,
+      "line": 709,
       "module": "payroll"
     },
     {
@@ -125083,7 +127762,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().optional(), status: z.string().optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 640,
+      "line": 698,
       "module": "payroll"
     },
     {
@@ -125096,7 +127775,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 694,
+      "line": 752,
       "module": "payroll"
     },
     {
@@ -125109,7 +127788,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 683,
+      "line": 741,
       "module": "payroll"
     },
     {
@@ -125174,7 +127853,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    employeeId: z.string().min(1),\n    label: z.string().min(1).max(80),\n    amount: z.number().positive(),\n    kind: z.enum(['earning', 'deduction']),\n    isTaxable: z.boolean().optional(),\n    reducesChargeable: z.boolean().optional(),\n    reason: z.string().min(1).max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 719,
+      "line": 777,
       "module": "payroll"
     },
     {
@@ -125187,7 +127866,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    employeeIds: z.array(z.string().min(1)).min(1).max(BULK_OVERRIDE_MAX),\n    label: z.string().min(1).max(80),\n    amount: z.number().positive(),\n    kind: z.enum(['earning', 'deduction']),\n    isTaxable: z.boolean().optional(),\n    reducesChargeable: z.boolean().optional(),\n    reason: z.string().min(1).max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 781,
+      "line": 839,
       "module": "payroll"
     },
     {
@@ -125200,7 +127879,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 812,
+      "line": 870,
       "module": "payroll"
     },
     {
@@ -125213,7 +127892,7 @@
       ],
       "schema": "z.object({ overrideId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 801,
+      "line": 859,
       "module": "payroll"
     },
     {
@@ -125226,7 +127905,7 @@
       ],
       "schema": "z.object({\n    code: z.string().min(1).max(20),\n    eventType: z.enum(['regular_overtime', 'public_holiday', 'rest_day', 'callout', 'night_shift']),\n    multiplier: z.number().positive(),\n    minimumHours: z.number().positive().nullable().optional(),\n    effectiveFrom: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    effectiveTo: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 609,
+      "line": 667,
       "module": "payroll"
     },
     {
@@ -125239,7 +127918,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 600,
+      "line": 658,
       "module": "payroll"
     },
     {
@@ -125252,7 +127931,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid(), active: z.boolean() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 627,
+      "line": 685,
       "module": "payroll"
     },
     {
@@ -125265,7 +127944,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1),\n    payGroupId: z.string().uuid(),\n    effectiveFrom: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    effectiveTo: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 866,
+      "line": 924,
       "module": "payroll"
     },
     {
@@ -125278,7 +127957,7 @@
       ],
       "schema": "z.object({\n    code: z.string().min(1).max(20),\n    name: z.string().min(1).max(120),\n    frequency: z.enum(['weekly', 'fortnightly', 'semi_monthly', 'monthly']),\n    defaultPayDay: z.number().int().optional(),\n    defaultCutoffOffsetDays: z.number().int().optional(),\n    statutoryCountry: z.string().max(4).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 848,
+      "line": 906,
       "module": "payroll"
     },
     {
@@ -125291,7 +127970,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 836,
+      "line": 894,
       "module": "payroll"
     },
     {
@@ -125304,7 +127983,7 @@
       ],
       "schema": "z.object({ activeOnly: z.boolean().optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 825,
+      "line": 883,
       "module": "payroll"
     },
     {
@@ -125317,7 +127996,7 @@
       ],
       "schema": "z.object({ payGroupId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 882,
+      "line": 940,
       "module": "payroll"
     },
     {
@@ -125486,7 +128165,7 @@
       ],
       "schema": "z.object({ payslipId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 575,
+      "line": 633,
       "module": "payroll"
     },
     {
@@ -125499,7 +128178,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 563,
+      "line": 621,
       "module": "payroll"
     },
     {
@@ -125512,7 +128191,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 587,
+      "line": 645,
       "module": "payroll"
     },
     {
@@ -125525,7 +128204,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 523,
+      "line": 581,
       "module": "payroll"
     },
     {
@@ -125539,7 +128218,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 987,
+      "line": 1045,
       "module": "payroll"
     },
     {
@@ -125552,7 +128231,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 964,
+      "line": 1022,
       "module": "payroll"
     },
     {
@@ -125565,7 +128244,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 977,
+      "line": 1035,
       "module": "payroll"
     },
     {
@@ -125578,7 +128257,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 510,
+      "line": 568,
       "module": "payroll"
     },
     {
@@ -125591,7 +128270,7 @@
       ],
       "schema": "z.object({ payslipId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 550,
+      "line": 608,
       "module": "payroll"
     },
     {
@@ -125604,7 +128283,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 537,
+      "line": 595,
       "module": "payroll"
     },
     {
@@ -125618,7 +128297,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1006,
+      "line": 1064,
       "module": "payroll"
     },
     {
@@ -125631,7 +128310,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    confirmedAmount: z.number().finite().nonnegative(),\n    confirmationReference: z.string().trim().min(1).max(200),\n    accountReference: z.string().trim().min(1).max(100).optional(),\n    note: z.string().trim().max(2000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 375,
+      "line": 433,
       "module": "payroll"
     },
     {
@@ -125644,7 +128323,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 414,
+      "line": 472,
       "module": "payroll"
     },
     {
@@ -125657,7 +128336,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 363,
+      "line": 421,
       "module": "payroll"
     },
     {
@@ -125670,7 +128349,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 397,
+      "line": 455,
       "module": "payroll"
     },
     {
@@ -125683,7 +128362,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1293,
+      "line": 1351,
       "module": "payroll"
     },
     {
@@ -125696,7 +128375,7 @@
       ],
       "schema": "z.object({\n    report: z.string().min(1),\n    params: z.record(z.string(), z.unknown()).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1025,
+      "line": 1083,
       "module": "payroll"
     },
     {
@@ -125709,7 +128388,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 230,
+      "line": 288,
       "module": "payroll"
     },
     {
@@ -125722,7 +128401,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid(), comment: z.string().max(2000).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 317,
+      "line": 375,
       "module": "payroll"
     },
     {
@@ -125735,7 +128414,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 258,
+      "line": 316,
       "module": "payroll"
     },
     {
@@ -125748,7 +128427,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 197,
+      "line": 255,
       "module": "payroll"
     },
     {
@@ -125761,7 +128440,7 @@
       ],
       "schema": "z.object({\n    runId: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    attestations: z.object({\n      populationReconciled: z.literal(true),\n      inputsReviewed: z.literal(true),\n      statutoryReviewed: z.literal(true),\n      variancesReviewed: z.literal(true),\n      paymentReadinessReviewed: z.literal(true),\n      glReadinessReviewed: z.literal(true),\n    }),\n    note: z.string().trim().max(2000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 274,
+      "line": 332,
       "module": "payroll"
     },
     {
@@ -125774,7 +128453,7 @@
       ],
       "schema": "z.object({\n    idempotencyKey: z.string().trim().min(1).max(200),\n    runType:        z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']),\n    periodStart:    z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    periodEnd:      z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    sequenceNo:     z.number().int().positive().optional(),\n    sourceRunId:    z.string().uuid().optional(),\n    payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly']).optional(),\n    weeksInPeriod:  z.number().positive().optional(),\n    payGroupId:     z.string().uuid().optional(),\n    payDate:        z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n    cutOffDate:     z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 156,
+      "line": 214,
       "module": "payroll"
     },
     {
@@ -125787,7 +128466,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    format: z.enum(['csv', 'json']).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 468,
+      "line": 526,
       "module": "payroll"
     },
     {
@@ -125800,7 +128479,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 144,
+      "line": 202,
       "module": "payroll"
     },
     {
@@ -125813,7 +128492,7 @@
       ],
       "schema": "z.object({\n    status: z.string().optional(),\n    limit:  z.number().int().min(1).max(200).optional(),\n    offset: z.number().int().min(0).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 129,
+      "line": 130,
       "module": "payroll"
     },
     {
@@ -125826,7 +128505,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 348,
+      "line": 406,
       "module": "payroll"
     },
     {
@@ -125839,7 +128518,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 179,
+      "line": 237,
       "module": "payroll"
     },
     {
@@ -125852,7 +128531,7 @@
       ],
       "schema": "z.object({\n    periodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1252,
+      "line": 1310,
       "module": "payroll"
     },
     {
@@ -125865,7 +128544,7 @@
       ],
       "schema": "z.object({\n    id:     z.string().uuid(),\n    reason: z.string().min(1, 'Reason is required').max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 332,
+      "line": 390,
       "module": "payroll"
     },
     {
@@ -125878,7 +128557,7 @@
       ],
       "schema": "z.object({\n    id: z.string().uuid(),\n    reason: z.string().trim().min(1, 'Reason is required'),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 434,
+      "line": 492,
       "module": "payroll"
     },
     {
@@ -125891,7 +128570,7 @@
       ],
       "schema": "z.object({\n    runId:      z.string().uuid(),\n    templateId: z.string().uuid().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 452,
+      "line": 510,
       "module": "payroll"
     },
     {
@@ -125904,7 +128583,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 302,
+      "line": 360,
       "module": "payroll"
     },
     {
@@ -125917,7 +128596,7 @@
       ],
       "schema": "z.object({ id: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1063,
+      "line": 1121,
       "module": "payroll"
     },
     {
@@ -125930,7 +128609,7 @@
       ],
       "schema": "z.object({ runId: z.string().uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 245,
+      "line": 303,
       "module": "payroll"
     },
     {
@@ -131737,7 +134416,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 176,
+      "line": 180,
       "module": "widgets"
     },
     {
@@ -131750,7 +134429,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 226,
+      "line": 230,
       "module": "widgets"
     },
     {
@@ -131789,7 +134468,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 194,
+      "line": 198,
       "module": "widgets"
     },
     {
@@ -131802,7 +134481,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 209,
+      "line": 213,
       "module": "widgets"
     },
     {
@@ -133751,6 +136430,110 @@
       "file": "src/components/nav/api.ts",
       "line": 38,
       "module": "platform"
+    },
+    {
+      "path": "/api/communications/compliance/access-events/list",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 122,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/close",
+      "helper": "apiPost",
+      "caller": "useCloseComplianceCase",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 174,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/decide",
+      "helper": "apiPost",
+      "caller": "useDecideComplianceCase",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 160,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/get",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 80,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/list",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 68,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/cases/request",
+      "helper": "apiPost",
+      "caller": "useRequestComplianceCase",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 147,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/conversations/read",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 111,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/conversations/search",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 92,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/create",
+      "helper": "apiPost",
+      "caller": "useCreateComplianceExport",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 199,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/download",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 212,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/exports/list",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 134,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/grants/revoke",
+      "helper": "apiPost",
+      "caller": "useRevokeComplianceGrant",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 189,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/compliance/summary/get",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communicationsCompliance.ts",
+      "line": 57,
+      "module": "communications"
     },
     {
       "path": "/api/communications/messages/archive",
@@ -144207,6 +146990,62 @@
       "module": "payroll"
     },
     {
+      "name": "finance_payroll_runs_pay_date_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 47,
+      "module": "payroll"
+    },
+    {
+      "name": "finance_payroll_runs_period_window_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 49,
+      "module": "payroll"
+    },
+    {
+      "name": "finance_payroll_control_findings_run_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 52,
+      "module": "payroll"
+    },
+    {
+      "name": "finance_payroll_certifications_run_version_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 54,
+      "module": "payroll"
+    },
+    {
+      "name": "finance_payroll_release_certificates_run_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 56,
+      "module": "payroll"
+    },
+    {
+      "name": "finance_payroll_calc_attempts_run_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 58,
+      "module": "payroll"
+    },
+    {
+      "name": "workflow_tasks_workflow_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 60,
+      "module": "payroll"
+    },
+    {
+      "name": "public.finance_payroll_control_center",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000430_finance_payroll_control_center_fn.sql",
+      "line": 63,
+      "module": "payroll"
+    },
+    {
       "name": "authenticated read msg access grants",
       "kind": "policy",
       "file": "supabase/migrations/20260919000432_drop_grants_authenticated_read.sql",
@@ -151869,6 +154708,143 @@
         "/api/finance/payroll/back-pay/add",
         "/api/finance/payroll/back-pay/preview",
         "/api/finance/payroll/runs/calculate"
+      ]
+    },
+    {
+      "name": "payrollControlCenter",
+      "title": "Finance — Payroll Command Center (control-center/get)",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/payrollControlCenter.mjs",
+      "tests": [
+        {
+          "name": "active statutory version + payroll GL mappings exist",
+          "line": 186
+        },
+        {
+          "name": "create pay groups A (lifecycle) and B (aggregation)",
+          "line": 194
+        },
+        {
+          "name": "A1: real lifecycle to pending_approval (real approval task)",
+          "line": 203
+        },
+        {
+          "name": "A2: real lifecycle approve → lock → payslips → GL → funding → (Ready)",
+          "line": 210
+        },
+        {
+          "name": "A2 is release-ready → Ready tab (cert + funding + GL + bank); A1 is in Approval",
+          "line": 242
+        },
+        {
+          "name": "A2: release → Released tab; excluded from active KPIs",
+          "line": 250
+        },
+        {
+          "name": "seed pay-group-B evidence runs",
+          "line": 264
+        },
+        {
+          "name": "unauthenticated → rejected",
+          "line": 285
+        },
+        {
+          "name": "plain employee → 403",
+          "line": 286
+        },
+        {
+          "name": "finance_manager → 200 + full shape + capabilities",
+          "line": 287
+        },
+        {
+          "name": "KPIs reconcile to calc versions; released/cancelled excluded",
+          "line": 297
+        },
+        {
+          "name": "funding required/confirmed/gap reconcile",
+          "line": 304
+        },
+        {
+          "name": "F2: openBlockerCount = blocker FINDINGS (2), not blocker runs; one at-risk run",
+          "line": 309
+        },
+        {
+          "name": "F5: an inactive (cancelled) run blocker is NOT the primary intervention",
+          "line": 322
+        },
+        {
+          "name": "register row counts only current-version blockers",
+          "line": 326
+        },
+        {
+          "name": "tab counts exact (B: no ready/released — those are proven on real run A2)",
+          "line": 338
+        },
+        {
+          "name": "keyset pagination: no duplicate/missing rows",
+          "line": 344
+        },
+        {
+          "name": "malformed cursor → 422",
+          "line": 353
+        },
+        {
+          "name": "cursor with different filters → 422",
+          "line": 354
+        },
+        {
+          "name": "limit above max → 400",
+          "line": 358
+        },
+        {
+          "name": "next scheduled run readiness is a projection of the preflight (blocked, 7 gates)",
+          "line": 363
+        },
+        {
+          "name": "deadlines are persisted-date driven (≤5, classified)",
+          "line": 371
+        },
+        {
+          "name": "finance_manager sees the real A1 approval task",
+          "line": 380
+        },
+        {
+          "name": "finance_staff does not see the finance_manager task",
+          "line": 392
+        },
+        {
+          "name": "window from>to and >366d rejected (400)",
+          "line": 400
+        },
+        {
+          "name": "empty window → valid empty projection",
+          "line": 404
+        },
+        {
+          "name": "F7: the read writes NO business/event/audit/task/notification/handoff rows",
+          "line": 409
+        }
+      ],
+      "apiPaths": [
+        "/api/finance/payroll/calculations/versions/list",
+        "/api/finance/payroll/control-center/get",
+        "/api/finance/payroll/findings/list",
+        "/api/finance/payroll/findings/resolve",
+        "/api/finance/payroll/gl/post",
+        "/api/finance/payroll/pay-groups/assign",
+        "/api/finance/payroll/pay-groups/create",
+        "/api/finance/payroll/payslips/generate",
+        "/api/finance/payroll/payslips/render-run",
+        "/api/finance/payroll/releases/confirm-funding",
+        "/api/finance/payroll/releases/preflight",
+        "/api/finance/payroll/releases/release",
+        "/api/finance/payroll/runs/calculate",
+        "/api/finance/payroll/runs/certify",
+        "/api/finance/payroll/runs/create",
+        "/api/finance/payroll/runs/lock",
+        "/api/finance/payroll/runs/lock-inputs",
+        "/api/finance/payroll/runs/submit",
+        "/api/workflow-engine/decide"
       ]
     },
     {

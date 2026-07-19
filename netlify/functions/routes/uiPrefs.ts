@@ -24,7 +24,7 @@ type Ctx = Context<{ Variables: HonoVariables }>;
 const router = new Hono<{ Variables: HonoVariables }>();
 
 function getArgs(c: Ctx): Record<string, unknown> {
-  return ((c.get('body') as { args?: Record<string, unknown> } | undefined)?.args ?? {}) as Record<string, unknown>;
+  return ((c.get('body') as { args?: Record<string, unknown> } | undefined)?.args ?? {});
 }
 
 function cleanTokens(v: unknown): Record<string, string> | null {
@@ -40,7 +40,7 @@ function cleanTokens(v: unknown): Record<string, string> | null {
 
 function cleanOrder(v: unknown): string[] | null {
   if (!Array.isArray(v)) return null;
-  return v.filter(x => typeof x === 'string').map(x => (x as string).slice(0, 80)).slice(0, 24);
+  return v.filter(x => typeof x === 'string').map(x => (x).slice(0, 80)).slice(0, 24);
 }
 
 // ── Theme ───────────────────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ router.post('/layout/get', async c => {
   const { data } = await sb.from('ui_layout').select('user_id, card_order').eq('page_key', pageKey);
   let orgDefault: string[] | null = null;
   let override:   string[] | null = null;
-  for (const row of (data ?? []) as Array<{ user_id: string | null; card_order: string[] }>) {
+  for (const row of (data ?? []) as { user_id: string | null; card_order: string[] }[]) {
     if (row.user_id === null) orgDefault = row.card_order;
     else if (row.user_id === user.id) override = row.card_order;
   }
@@ -160,7 +160,11 @@ function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<stri
         instanceId, widgetId,
         pageKey: capStr(w.pageKey, 120) || pageKey,
         zoneId: capStr(w.zoneId, 80) || zId,
-        x: clampInt(w.x, 0, 11), y: clampInt(w.y, 0, 9999), w: clampInt(w.w, 1, 12), h: clampInt(w.h, 1, 40),
+        // Geometry bounds are a storage sanity-guard, NOT a grid model: boards choose their own
+        // column count (the payroll command center is 24-col; others are 12), so these ceilings must
+        // clear the WIDEST board or a save silently corrupts it — x capped at 11 + w at 12 collapsed
+        // every right-rail/full-width widget on the 24-col board, which read as the layout "resetting".
+        x: clampInt(w.x, 0, 63), y: clampInt(w.y, 0, 9999), w: clampInt(w.w, 1, 64), h: clampInt(w.h, 1, 200),
         sizeKey: capStr(w.sizeKey, 24) || 'standard',
         config: safeConfig(w.config),
         ...(typeof w.titleOverride === 'string' ? { titleOverride: capStr(w.titleOverride, 200) } : {}),

@@ -51,6 +51,7 @@ import {
   releasePayrollRun,
 } from '../lib/finance/payroll/releases';
 import { getPayrollRunWorkspace } from '../lib/finance/payroll/workspace';
+import { getPayrollControlCenter } from '../lib/finance/payroll/controlCenter';
 import {
   generatePayslips,
   getMyPayslips,
@@ -136,6 +137,63 @@ router.post('/payroll/runs/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listPayrollRuns(v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/control-center/get
+// Payroll Command Center projection (approved contract §4). Pure read; the SQL function aggregates
+// the complete dataset server-side. Fails as a unit (no partial dashboard). Malformed/mismatched
+// register cursor → 422 (surfaced via the service's decodeCursor).
+router.post('/payroll/control-center/get', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    window: z.object({
+      from: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+      to:   z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+      .refine(w => w.from <= w.to, { message: 'window.from must be on or before window.to' })
+      .refine(w => (Date.parse(w.to) - Date.parse(w.from)) <= 366 * 86_400_000, {
+        message: 'window may not exceed 366 days',
+      }),
+    payGroupIds: z.array(z.string().uuid()).max(25).optional(),
+    register: z.object({
+      tab:    z.enum(['all', 'attention', 'approval', 'ready', 'released']).optional(),
+      search: z.string().trim().max(100).optional(),
+      cursor: z.string().max(1000).optional(),
+      limit:  z.number().int().min(1).max(25).optional(),
+    }).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const [canManageRun, canApprove, canConfirmFunding, canRelease, canExport] = await Promise.all([
+      userCan(actor, 'finance.payroll.run.manage'),
+      userCan(actor, 'finance.payroll.approve'),
+      userCan(actor, 'finance.payroll.funding.approve'),
+      userCan(actor, 'finance.payroll.release'),
+      userCan(actor, 'finance.payroll.export'),
+    ]);
+    const search = v.data.register?.search?.length ? v.data.register.search : null;
+    const data = await getPayrollControlCenter({
+      actorId:     actor.id,
+      actorRole:   actor.role ?? null,
+      window:      v.data.window,
+      payGroupIds: [...new Set(v.data.payGroupIds ?? [])],
+      register: {
+        tab:    v.data.register?.tab ?? 'all',
+        search,
+        cursor: v.data.register?.cursor ?? null,
+        limit:  v.data.register?.limit ?? 10,
+      },
+      capabilities: {
+        canCreateRun: canManageRun,
+        canManageRun,
+        canApprove,
+        canConfirmFunding,
+        canRelease,
+        canExport,
+      },
+    });
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

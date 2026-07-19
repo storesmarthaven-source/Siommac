@@ -9,6 +9,7 @@
 import { h, render }           from 'preact';
 import { QueryClientProvider } from '@tanstack/preact-query';
 import type { QueryClient }    from '@tanstack/query-core';
+import { StepUpProvider }      from '@/hooks/useStepUp';
 import { MessengerWorkspace }  from './messenger/MessengerWorkspace';
 import { MessageDropdown }     from './MessageDropdown';
 
@@ -16,9 +17,12 @@ export function mountMessageCenterSection(
   container: Element,
   opts: { queryClient: QueryClient },
 ): void {
+  // Own render root (separate from AppShell), so it carries its own providers.
+  // StepUpProvider hosts the step-up dialog the compliance workspace needs via
+  // useStepUp() (Decide / Export run a fresh step-up before the mutation).
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(MessengerWorkspace, null),
+      h(StepUpProvider, null, h(MessengerWorkspace, null)),
     ),
     container,
   );

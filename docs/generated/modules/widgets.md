@@ -2,7 +2,7 @@
 
 # widgets Module Map
 
-Source fingerprint: `d32b23074798f3fa5c607892`
+Source fingerprint: `d505d99b84873464944367a1`
 
 Files: 49 | Symbols: 289 | Widgets: 0 | Unique mounted endpoints: 13 | Route definitions: 13 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
@@ -19,12 +19,12 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/layout/get` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:75` | res @ src/api/layout.ts:20 | - |
-| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:176` | res @ src/api/layout.ts:54 | widgets |
-| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:226` | res @ src/api/layout.ts:73 | widgets |
+| `/api/layout/getInstanceLayout` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:180` | res @ src/api/layout.ts:54 | widgets |
+| `/api/layout/resetInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:230` | res @ src/api/layout.ts:73 | widgets |
 | `/api/layout/resetOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:122` | resetLayoutOverride @ src/api/layout.ts:38 | - |
 | `/api/layout/saveDefault` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:90` | res @ src/api/layout.ts:32 | - |
-| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:194` | res @ src/api/layout.ts:61 | widgets |
-| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:209` | res @ src/api/layout.ts:67 | widgets |
+| `/api/layout/saveInstanceLayout` | `ui.layout.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:198` | res @ src/api/layout.ts:61 | widgets |
+| `/api/layout/saveInstanceLayoutDefault` | `ui.layout.default.manage` | requirePermission | `-` | `netlify/functions/routes/uiPrefs.ts:213` | res @ src/api/layout.ts:67 | widgets |
 | `/api/layout/saveOverride` | `-` | requireUser | `-` | `netlify/functions/routes/uiPrefs.ts:107` | res @ src/api/layout.ts:26 | - |
 | `/api/theme/get` | `-` | - | `-` | `netlify/functions/routes/uiPrefs.ts:48` | res @ src/api/theme.ts:14 | - |
 | `/api/theme/save` | `-` | requireRole | `-` | `netlify/functions/routes/uiPrefs.ts:53` | res @ src/api/theme.ts:20 | - |
@@ -171,7 +171,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/uiPrefs.ts` | 239 |
+| backend-route | `netlify/functions/routes/uiPrefs.ts` | 243 |
 | backend-route | `netlify/functions/routes/widgetPackages.ts` | 179 |
 | e2e-suite | `scripts/e2e/suites/widgets.mjs` | 148 |
 | frontend-api | `src/api/layout.ts` | 76 |
