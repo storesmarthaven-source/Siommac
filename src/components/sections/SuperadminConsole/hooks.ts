@@ -24,6 +24,7 @@ import {
   type RoleCategory,
 } from '@lib/superadminApi';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
+import { syncApprovalNavBadge } from '@components/nav/badgeSync';
 import { consoleKeys } from './queryKeys';
 
 // ── Permissions tab ───────────────────────────────────────────────────────────
@@ -305,6 +306,7 @@ export function useApproveGrant() {
       }
       toast.success('Permission grant approved and applied.');
       void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
+      void syncApprovalNavBadge();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -328,6 +330,7 @@ export function useRejectGrant() {
       void vars; // suppress unused warning
       toast.success('Permission grant request rejected.');
       void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
+      void syncApprovalNavBadge();
     },
     onError: () => toast.error('Network error. Try again.'),
   });
@@ -342,6 +345,7 @@ export function useCancelGrant() {
       if (!res.success) { toast.error(res.message ?? 'Failed to cancel request.'); return; }
       toast.success('Approval request cancelled.');
       void qc.invalidateQueries({ queryKey: consoleKeys.approvals() });
+      void syncApprovalNavBadge();
     },
     onError: () => toast.error('Network error. Try again.'),
   });

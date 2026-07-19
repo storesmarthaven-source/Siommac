@@ -10,10 +10,37 @@
  */
 
 import { apiPost }                        from '@lib/api';
-import { setHdrBadge, refreshNavBadges }  from './navCore';
+import { setHdrBadge, refreshNavBadges, setNavSectionBadge } from './navCore';
+import { getApprovalCountsApi }           from '@lib/superadminApi';
 import type { CommsSummary }              from '@api/communications';
 
+const APPROVALS_SECTION_ID = 's-ac-approvals';
+
 let _timer: ReturnType<typeof setTimeout> | null = null;
+
+/**
+ * Refresh the Approvals nav badge with the count of NEW-since-last-opened
+ * actionable grant requests (`unseenActionableCount`) — NOT the full pending
+ * backlog. Opening Access Control > Approvals stamps the server watermark, which
+ * clears the unseen count (badge → 0) while the backlog is unchanged.
+ *
+ * Scope + self-exclusion are done server-side (compliance approvers → compliance
+ * grants only; full permission managers → the whole queue; a reviewer's own
+ * requests never count). Gated on the nav item's presence: only approvers ever
+ * have `s-ac-approvals`, so a non-approver session never issues the request.
+ */
+export async function syncApprovalNavBadge(): Promise<void> {
+  const hasNav = document.querySelector(
+    `#sidebarMenu button[data-section="${APPROVALS_SECTION_ID}"], ` +
+    `#topTabs button[data-section="${APPROVALS_SECTION_ID}"]`,
+  );
+  if (!hasNav) return;
+  try {
+    const res = await getApprovalCountsApi();
+    if (!res.success) return;
+    setNavSectionBadge(APPROVALS_SECTION_ID, res.unseenActionableCount ?? 0);
+  } catch (_) { /* empty — badge sync is best-effort, retried on next signal */ }
+}
 
 export function scheduleHdrBadgeSync(): void {
   if (_timer !== null) clearTimeout(_timer);
@@ -42,5 +69,10 @@ export async function doHdrBadgeSync(): Promise<void> {
     // Leave badge is not part of the comms summary — keep existing nav refresh
     // with 0 as a pass-through until leave counts are added to summary.
     refreshNavBadges(0);
+
+    // Approvals nav badge — pending grant requests this actor can act on.
+    // Fire-and-forget: it has its own scope gate + error handling, and this
+    // pass runs on every realtime signal (incl. permissions/notifications).
+    void syncApprovalNavBadge();
   } catch (_) { /* empty */ }
 }

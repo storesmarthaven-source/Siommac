@@ -2057,6 +2057,9 @@ PermissionApprovalScope	type	security	true		netlify/functions/lib/permissionAppr
 resolvePermissionApprovalScope	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	8	
 isComplianceAccessGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	17	
 canReviewPermissionGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	21	
+COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissionApprovalScope.ts	33	
+ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
+selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
 PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	454	
 CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	463	
@@ -3034,13 +3037,14 @@ LinkDeleteSchema	variable	workflow	false		netlify/functions/routes/orchestration
 handle	function	workflow	false		netlify/functions/routes/orchestration.ts	52	
 router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	37	
 ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	41	
-ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	45	
-RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	49	
-CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	54	
-ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	60	
-requireApprovalScope	function	security	false		netlify/functions/routes/permissionApprovals.ts	81	
-approvalPermissionKey	function	security	false		netlify/functions/routes/permissionApprovals.ts	94	
-enforceApprovalTarget	function	security	false		netlify/functions/routes/permissionApprovals.ts	109	
+MarkSeenSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	45	
+ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	51	
+RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	55	
+CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	60	
+ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	66	
+requireApprovalScope	function	security	false		netlify/functions/routes/permissionApprovals.ts	87	
+approvalPermissionKey	function	security	false		netlify/functions/routes/permissionApprovals.ts	100	
+enforceApprovalTarget	function	security	false		netlify/functions/routes/permissionApprovals.ts	115	
 router	variable	settings	false		netlify/functions/routes/settings.ts	12	
 ALLOWED_AVATAR_MIME	variable	settings	false		netlify/functions/routes/settings.ts	83	
 ProfilePhotoCommitSchema	variable	settings	false		netlify/functions/routes/settings.ts	119	
@@ -3063,26 +3067,27 @@ SiteRow	interface	platform	false		netlify/functions/routes/sites.ts	10
 AssignmentRow	interface	platform	false		netlify/functions/routes/sites.ts	16	
 PickerUser	interface	platform	false		netlify/functions/routes/sites.ts	24	
 _listProjectSites	function	platform	false		netlify/functions/routes/sites.ts	29	
-router	variable	platform	false		netlify/functions/routes/superadmin.ts	28	
-PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	34	
-listComplianceGrantApprovers	function	platform	false		netlify/functions/routes/superadmin.ts	42	
-requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	67	
-GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	202	
-SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	203	
-ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	211	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	423	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	502	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	587	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	590	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	591	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	597	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	604	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	605	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	611	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	731	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	732	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	733	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	734	
+router	variable	platform	false		netlify/functions/routes/superadmin.ts	32	
+PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	38	
+listComplianceGrantApprovers	function	platform	false		netlify/functions/routes/superadmin.ts	54	
+requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	99	
+GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	252	
+SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	253	
+ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	261	
+ApproverAvailabilitySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	391	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	487	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	566	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	651	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	654	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	655	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	661	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	668	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	669	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	675	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	795	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	796	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	797	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	798	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -5187,9 +5192,19 @@ deleteTicket	function	platform	true		src/components/nav/api.ts	34
 clearClosedTickets	function	platform	true		src/components/nav/api.ts	37	
 updateColorScheme	function	platform	true		src/components/nav/api.ts	40	
 updateLayoutMode	function	platform	true		src/components/nav/api.ts	43	
-_timer	variable	platform	false		src/components/nav/badgeSync.ts	16	
-scheduleHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	18	
-doHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	23	
+APPROVE	variable	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	18	
+approvalsButton	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	19	
+registerApprovalsModule	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	22	
+expiredCompliance	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	32	
+mockCounts	variable	platform	false	test	src/components/nav/badgeSync.test.ts	18	
+buildSidebar	function	platform	false	test	src/components/nav/badgeSync.test.ts	21	
+badge	function	platform	false	test	src/components/nav/badgeSync.test.ts	25	
+button	function	platform	false	test	src/components/nav/badgeSync.test.ts	26	
+APPROVALS_SECTION_ID	variable	platform	false		src/components/nav/badgeSync.ts	17	
+_timer	variable	platform	false		src/components/nav/badgeSync.ts	19	
+syncApprovalNavBadge	function	platform	true		src/components/nav/badgeSync.ts	32	
+scheduleHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	45	
+doHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	50	
 PaletteEntry	interface	platform	false		src/components/nav/CommandPalette.tsx	23	
 cfg	function	platform	false		src/components/nav/CommandPalette.tsx	31	
 appState	function	platform	false		src/components/nav/CommandPalette.tsx	35	
@@ -5276,7 +5291,8 @@ setHdrBadge	function	platform	true		src/components/nav/navCore.ts	742
 LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	764	
 _sbBadgeLastLabel	variable	platform	false		src/components/nav/navCore.ts	765	
 _setSbBadge	function	platform	false		src/components/nav/navCore.ts	767	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	789	
+setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	796	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	805	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
@@ -5379,6 +5395,21 @@ SettingsViewShim	interface	communications	false		src/components/realtime/Brandin
 settingsView	function	communications	false		src/components/realtime/BrandingRealtimeBridge.ts	28	
 patchSessionCache	function	communications	false		src/components/realtime/BrandingRealtimeBridge.ts	33	
 applyBrandingPush	function	communications	true		src/components/realtime/BrandingRealtimeBridge.ts	48	
+mockToast	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	23	
+BOUNDARY	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	26	
+BEFORE	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	27	
+AFTER	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	28	
+row	function	communications	false	test	src/components/realtime/complianceToasts.test.ts	30	
+ComplianceNotifRow	interface	communications	true		src/components/realtime/complianceToasts.ts	25	
+COMPLIANCE_TOAST_TYPES	variable	communications	true		src/components/realtime/complianceToasts.ts	36	
+_seen	variable	communications	false		src/components/realtime/complianceToasts.ts	44	
+_seededForUser	variable	communications	false		src/components/realtime/complianceToasts.ts	45	
+needsWatermarkSeed	function	communications	true		src/components/realtime/complianceToasts.ts	48	
+seedComplianceToastWatermark	function	communications	true		src/components/realtime/complianceToasts.ts	62	
+severityFor	function	communications	false		src/components/realtime/complianceToasts.ts	75	
+surfaceComplianceToasts	function	communications	true		src/components/realtime/complianceToasts.ts	86	
+__resetComplianceToastState	function	communications	true		src/components/realtime/complianceToasts.ts	113	
+notif	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	64	
 _sessionEpoch	variable	communications	false		src/components/realtime/notificationToasts.ts	29	
 resetToastSessionClock	function	communications	true		src/components/realtime/notificationToasts.ts	32	
 isMutedByPreferences	function	communications	true		src/components/realtime/notificationToasts.ts	38	
@@ -5393,7 +5424,7 @@ mapSeverityToVariant	function	communications	false		src/components/realtime/noti
 fireNotificationToast	function	communications	false		src/components/realtime/notificationToasts.ts	121	
 fireBurstToast	function	communications	false		src/components/realtime/notificationToasts.ts	173	
 MaybeToastArgs	interface	communications	true		src/components/realtime/notificationToasts.ts	191	
-maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	197	
+maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	205	
 SupabaseClient	interface	communications	false		src/components/realtime/RealtimeController.ts	32	
 SupabaseChannel	interface	communications	false		src/components/realtime/RealtimeController.ts	37	
 SupabaseStatic	interface	communications	false		src/components/realtime/RealtimeController.ts	46	
@@ -5418,10 +5449,10 @@ ITEMS	array	platform	false		src/components/sections/AccessControl/module.ts	17
 accessControlModule	object	platform	true		src/components/sections/AccessControl/module.ts	28	
 mountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	14	
 unmountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	23	
-STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	20	
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	24	
-AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	26	
-doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	35	AcApprovalsPage
+STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	21	
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	25	
+AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	27	
+doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	48	AcApprovalsPage
 PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	14	
 dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	15	
 AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	17	
@@ -5518,23 +5549,25 @@ ago	function	platform	false		src/components/sections/AccessControl/pages/AcSessi
 device	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	17	
 AcSessionsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcSessionsPage.tsx	25	
 doRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcSessionsPage.tsx	31	AcSessionsPage
-MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	31	
-moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	37	
-OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	39	
-PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
-AVATAR_BG	array	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	42	
-bgFor	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	43	
-initials	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	44	
-timeAgo	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	47	
-CapCell	function	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	59	
-AcUsersPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	63	
-cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	159	AcUsersPage
-clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	169	AcUsersPage
-onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	175	AcUsersPage
-save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	194	AcUsersPage
-submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	206	AcUsersPage
-submitRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	217	AcUsersPage
-toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	231	AcUsersPage
+MODULE_LUCIDE	object	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	32	
+moduleLucide	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	38	
+OvState	type	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	40	
+PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	41	
+AVATAR_BG	array	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	43	
+bgFor	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	44	
+initials	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	45	
+timeAgo	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	48	
+CapCell	function	platform	false	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	60	
+AcUsersPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcUsersPage.tsx	64	
+cap	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	160	AcUsersPage
+clearAllFilters	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	170	AcUsersPage
+showApproverRequiredDialog	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	179	AcUsersPage
+beginComplianceGrant	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	192	AcUsersPage
+onSelect	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	202	AcUsersPage
+save	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	221	AcUsersPage
+submitCritical	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	233	AcUsersPage
+submitRevoke	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	249	AcUsersPage
+toggleMod	function	platform	false		src/components/sections/AccessControl/pages/AcUsersPage.tsx	263	AcUsersPage
 ComplianceRevokeDialog	function	platform	true	component	src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx	16	
 fmtTime	function	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	23	
 StatusKey	type	platform	false		src/components/sections/AdminDashboard/AdminDashboardController.tsx	30	
@@ -9283,27 +9316,27 @@ toLocalInput	function	platform	false		src/components/sections/SuperadminConsole/
 pad	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	22	toLocalInput
 CriticalGrantDialog	function	platform	true	component	src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	26	
 submit	function	platform	false		src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx	54	CriticalGrantDialog
-useConsoleUsers	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	31	
-useUserPermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	44	
-refreshIfSelf	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	63	
-useSetUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	67	
-useClearUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	83	
-useActiveSessions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	101	
-useRevokeSession	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	115	
-useAuditLogs	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	131	
-useRoles	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	152	
-useRolePermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	165	
-useRoleCategories	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	178	
-useRoleCategoryMutations	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	192	
-invalidate	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	194	useRoleCategoryMutations
-useCreateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	213	
-useUpdateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	227	
-useDeleteRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	242	
-useSetRolePermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	256	
-usePermissionApprovals	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	273	
-useApproveGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	286	
-useRejectGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	313	
-useCancelGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	336	
+useConsoleUsers	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	32	
+useUserPermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	45	
+refreshIfSelf	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	64	
+useSetUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	68	
+useClearUserPermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	84	
+useActiveSessions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	102	
+useRevokeSession	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	116	
+useAuditLogs	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	132	
+useRoles	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	153	
+useRolePermissions	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	166	
+useRoleCategories	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	179	
+useRoleCategoryMutations	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	193	
+invalidate	function	platform	false		src/components/sections/SuperadminConsole/hooks.ts	195	useRoleCategoryMutations
+useCreateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	214	
+useUpdateRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	228	
+useDeleteRole	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	243	
+useSetRolePermission	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	257	
+usePermissionApprovals	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	274	
+useApproveGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	287	
+useRejectGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	315	
+useCancelGrant	function	platform	true	hook	src/components/sections/SuperadminConsole/hooks.ts	339	
 consoleKeys	object	platform	true		src/components/sections/SuperadminConsole/queryKeys.ts	10	
 PolicyForm	interface	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	30	
 DEFAULT_FORM	object	security	false		src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx	43	
@@ -9487,9 +9520,8 @@ CommunicationCounts	interface	communications	true		src/hooks/useCommunicationSum
 useCommunicationSummary	function	communications	true	hook	src/hooks/useCommunicationSummary.ts	26	
 SupabaseClient	type	communications	false		src/hooks/useRealtimeSignals.ts	29	
 SupabaseChannel	type	communications	false		src/hooks/useRealtimeSignals.ts	30	
-COMPLIANCE_TOAST_TYPES	variable	communications	false		src/hooks/useRealtimeSignals.ts	33	
-_toastedNotifIds	variable	communications	false		src/hooks/useRealtimeSignals.ts	39	
-toastComplianceFromNotifications	function	communications	false		src/hooks/useRealtimeSignals.ts	49	
+seedComplianceWatermark	function	communications	false		src/hooks/useRealtimeSignals.ts	37	
+surfaceComplianceFromNotifications	function	communications	false		src/hooks/useRealtimeSignals.ts	65	
 useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	78	
 onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	100	useRealtimeSignals
 StepUpOptions	interface	platform	false		src/hooks/useStepUp.tsx	23	
@@ -9800,6 +9832,7 @@ warn	method	platform	false		src/lib/logger.ts	151	logger
 error	method	platform	false		src/lib/logger.ts	154	logger
 critical	method	platform	false		src/lib/logger.ts	158	logger
 makeModule	function	platform	false	test	src/lib/moduleRegistry.test.ts	12	
+granteeCan	function	platform	false	test	src/lib/moduleRegistry.test.ts	101	
 ModuleNavItem	interface	platform	true		src/lib/moduleRegistry.ts	28	
 ModuleNavGroup	interface	platform	true		src/lib/moduleRegistry.ts	44	
 ModuleMountContext	interface	platform	true		src/lib/moduleRegistry.ts	51	
@@ -9852,8 +9885,9 @@ useUpdateNotificationPreference	function	communications	true	hook	src/lib/notifi
 PermissionRisk	type	security	true		src/lib/permissionMeta.ts	24	
 PermissionMeta	interface	security	true		src/lib/permissionMeta.ts	26	
 PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44	
-ctx	function	security	false	test	src/lib/permissions.test.ts	27	
-override	function	security	false	test	src/lib/permissions.test.ts	35	
+ctx	function	security	false	test	src/lib/permissions.test.ts	28	
+override	function	security	false	test	src/lib/permissions.test.ts	36	
+expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
 PermissionKey	type	security	true		src/lib/permissions.ts	534	
 CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	539	
@@ -9942,11 +9976,14 @@ setRolePermissionApi	function	platform	true		src/lib/superadminApi.ts	232
 PermissionApproval	interface	platform	true		src/lib/superadminApi.ts	238	
 ApprovalStatus	type	platform	true		src/lib/superadminApi.ts	258	
 listApprovalsApi	function	platform	true		src/lib/superadminApi.ts	261	
-approveGrantApi	function	platform	true		src/lib/superadminApi.ts	270	
-rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	279	
-cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	288	
-setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	299	
-setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	309	
+complianceApproverAvailabilityApi	function	platform	true		src/lib/superadminApi.ts	274	
+getApprovalCountsApi	function	platform	true		src/lib/superadminApi.ts	289	
+markApprovalsSeenApi	function	platform	true		src/lib/superadminApi.ts	305	
+approveGrantApi	function	platform	true		src/lib/superadminApi.ts	314	
+rejectGrantApi	function	platform	true		src/lib/superadminApi.ts	323	
+cancelGrantApi	function	platform	true		src/lib/superadminApi.ts	332	
+setUserPermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	343	
+setRolePermissionWithReasonApi	function	platform	true		src/lib/superadminApi.ts	353	
 THEME_SETTING_KEY	variable	platform	true		src/lib/themePreference.ts	14	
 CACHE_PREFIX	variable	platform	false		src/lib/themePreference.ts	15	
 cacheKey	function	platform	false		src/lib/themePreference.ts	17	
@@ -10825,6 +10862,7 @@ TINY_JPEG_B64	variable	payroll	false	test	tests/unit/payslipPdf.test.ts	300
 imageDesign	function	payroll	false	test	tests/unit/payslipPdf.test.ts	360	
 snapshot	object	payroll	false	test	tests/unit/payslipTokens.test.ts	11	
 employer	object	payroll	false	test	tests/unit/payslipTokens.test.ts	32	
+cand	function	security	false	test	tests/unit/permissionApprovalScope.test.ts	54	
 ROOT	variable	security	false	test	tests/unit/permissionMeta.sync.test.ts	23	
 extractPermissionKeys	function	security	false	test	tests/unit/permissionMeta.sync.test.ts	26	
 extractMetaKeys	function	security	false	test	tests/unit/permissionMeta.sync.test.ts	35	

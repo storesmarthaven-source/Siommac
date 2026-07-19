@@ -8,14 +8,14 @@
 export { mountNavController, unmountNavController } from './mount';
 export { mountCommandPalette }                       from './CommandPalette';
 export { mountNavCustomizer }                        from './NavCustomizer';
-export { scheduleHdrBadgeSync, doHdrBadgeSync }     from './badgeSync';
+export { scheduleHdrBadgeSync, doHdrBadgeSync, syncApprovalNavBadge } from './badgeSync';
 export {
   buildSidebar, buildTopTabs,
   showSection, refreshSection,
   applyPalette, applyLayout,
   renderPalettes, renderLayouts,
   savePalette, saveLayout,
-  setHdrBadge, refreshNavBadges,
+  setHdrBadge, refreshNavBadges, setNavSectionBadge,
   getRole, getUser, getFullName, getProfileImage,
   getScheme, getLayout,
   allSectionItems,

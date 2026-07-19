@@ -9,13 +9,14 @@
  */
 
 import { type VNode } from 'preact';
-import { useState } from 'preact/hooks';
+import { useState, useEffect } from 'preact/hooks';
 import { usePermissionApprovals, useApproveGrant, useRejectGrant, useCancelGrant } from '@sections/SuperadminConsole/hooks';
 import { useSessionStore } from '@store/session';
 import { PERMISSION_META } from '@lib/permissionMeta';
 import { CRITICAL_GRANT_KEYS, type PermissionKey } from '@lib/permissions';
 import { dialog } from '@lib/dialog';
-import type { ApprovalStatus } from '@lib/superadminApi';
+import { markApprovalsSeenApi, type ApprovalStatus } from '@lib/superadminApi';
+import { scheduleHdrBadgeSync } from '@components/nav';
 
 const STATUSES: { key: ApprovalStatus; label: string }[] = [
   { key: 'pending', label: 'Pending' }, { key: 'approved', label: 'Approved' },
@@ -26,11 +27,23 @@ const dateLong = (iso: string) => new Date(iso).toLocaleString('en-US', { month:
 export function AcApprovalsPage(): VNode {
   const meId = useSessionStore(s => s.userId);
   const [status, setStatus] = useState<ApprovalStatus>('pending');
+
   const q = usePermissionApprovals(status);
   const approve = useApproveGrant();
   const reject = useRejectGrant();
   const cancel = useCancelGrant();
   const rows = q.data ?? [];
+
+  // Acknowledge the queue only AFTER the pending list has loaded successfully, by the
+  // exact ids that were rendered. Receipts cover precisely what was shown — a request
+  // that was NOT in this list stays unseen (no acknowledgement race, clock-free). Then
+  // refresh the nav badge (unseen → 0). The pending backlog and the durable
+  // communications.compliance_approve nav gate are unchanged, so the page stays visible.
+  useEffect(() => {
+    if (status !== 'pending' || !q.isSuccess) return;
+    const ids = q.data.map(a => a.id);   // isSuccess ⇒ data is defined
+    void markApprovalsSeenApi(ids).finally(() => scheduleHdrBadgeSync());
+  }, [status, q.isSuccess, q.dataUpdatedAt]);
 
   const doReject = async (id: string) => {
     const reason = await dialog.prompt({ title: 'Reject request', text: 'Reason (optional)', placeholder: 'Why is this being rejected?' });

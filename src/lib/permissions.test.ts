@@ -16,9 +16,10 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { resolvePermission, PERMISSION_KEYS, ROLE_PERMISSIONS, COMPLIANCE_GATED_KEYS } from './permissions';
+import { resolvePermission, can, PERMISSION_KEYS, ROLE_PERMISSIONS, COMPLIANCE_GATED_KEYS } from './permissions';
 import type { PermissionContext }                from './permissions';
 import type { PermissionOverride }               from '@api/schemas/auth';
+import { useSessionStore }                       from '@store/session';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -218,4 +219,58 @@ describe('resolvePermission — edge cases', () => {
     expect(resolvePermission('attendance.view_own', ctx('employee', []))).toBe(true);
   });
 
+});
+
+// ── Approvals durability vs compliance grant expiry ───────────────────────────
+
+describe('Approvals nav durability (compliance_approve) vs read/export grant expiry', () => {
+  const APPROVE = 'communications.compliance_approve';
+  const READ    = 'communications.compliance_read';
+  const EXPORT  = 'communications.compliance_export';
+
+  it('durable compliance_approve stays granted while an EXPIRED compliance_read grant lapses', () => {
+    const now = Date.now();
+    const expiredRead: PermissionOverride = {
+      user_id:     '00000000-0000-0000-0000-000000000001',
+      permission:  READ,
+      granted:     true,
+      valid_from:  new Date(now - 2 * 60 * 60_000).toISOString(),
+      valid_until: new Date(now - 60_000).toISOString(),   // window already ended
+      revoked_at:  null,
+    };
+    const context = ctx('admin', [override(APPROVE, true), expiredRead]);
+    // The time-boxed read grant has lapsed …
+    expect(resolvePermission(READ, context)).toBe(false);
+    // … but the DURABLE reviewer capability is unaffected, so the Approvals nav
+    // (gated only on compliance_approve) stays visible after read/export expiry.
+    expect(resolvePermission(APPROVE, context)).toBe(true);
+  });
+
+  it('a read/export grantee (expired read + export) is NOT auto-granted the approve gate', () => {
+    const now = Date.now();
+    const expired = (key: string): PermissionOverride => ({
+      user_id: '00000000-0000-0000-0000-000000000001', permission: key, granted: true,
+      valid_from: new Date(now - 2 * 60 * 60_000).toISOString(),
+      valid_until: new Date(now - 60_000).toISOString(), revoked_at: null,
+    });
+    const context = ctx('manager', [expired(READ), expired(EXPORT)]);
+    expect(resolvePermission(APPROVE, context)).toBe(false);   // grantee ≠ approver
+  });
+
+  it('compliance_approve is durable (never time-boxed): a plain grant with no window resolves', () => {
+    expect(resolvePermission(APPROVE, ctx('manager', [override(APPROVE, true)]))).toBe(true);
+  });
+
+  it('can() (nav rebuild resolver) and resolvePermission (snapshot resolver) AGREE on the approve gate', () => {
+    const overrides = [override(APPROVE, true)];
+    useSessionStore.setState({
+      role:               'manager',
+      rolePermissions:    [...((ROLE_PERMISSIONS.manager as ReadonlySet<string> | undefined) ?? [])],
+      permissionOverrides: overrides,
+    });
+    // The imperative nav rebuild gates on can(); the permission snapshot resolves
+    // via resolvePermission. They MUST return the same answer for the same inputs.
+    expect(can(APPROVE)).toBe(resolvePermission(APPROVE, ctx('manager', overrides)));
+    expect(can(APPROVE)).toBe(true);
+  });
 });

@@ -42,6 +42,12 @@ const ListSchema = z.object({
   status: z.enum(['pending', 'approved', 'rejected', 'cancelled']).optional(),
 });
 
+const MarkSeenSchema = z.object({
+  // The exact approval ids the reviewer just rendered. The ids ARE the snapshot —
+  // no client/DB clock comparison — and the backend revalidates each one.
+  approvalIds: z.array(z.string().min(1)).max(1000),
+});
+
 const ApproveSchema = z.object({
   approvalId: z.string().min(1),
 });
@@ -195,6 +201,97 @@ router.post('/list', async c => {
   }));
 
   return c.json({ success: true, approvals });
+});
+
+// ── POST /api/admin/approvals/counts ──────────────────────────────────────────
+// Actionable pending requests for this reviewer, split into the full backlog
+// (pendingActionableCount) and the NOT-yet-acknowledged subset
+// (unseenActionableCount = actionable pending with no per-reviewer seen receipt).
+// The badge shows unseen; the queue shows pending. Receipts are per-approval, so a
+// scope expansion (compliance-only → +permissions.manage) correctly surfaces older,
+// previously-invisible approvals as unseen (they were never receipted).
+router.post('/counts', async c => {
+  const { actor, scope } = await requireApprovalScope(c);
+
+  let query = sb
+    .from('permission_grant_approvals')
+    .select('id, requested_by')
+    .eq('status', 'pending');
+  if (scope === 'compliance') {
+    query = query.in('permission_key', [...COMPLIANCE_ACCESS_GRANT_KEYS]);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error('[approvals/counts] error:', error.message);
+    return c.json({ success: false, message: 'Failed to load approval counts.' }, 500);
+  }
+
+  // Maker ≠ checker: a reviewer's OWN requests are never actionable by them.
+  const actionable = (data as { id: string; requested_by: string }[])
+    .filter(r => r.requested_by !== actor.id);
+  const pendingActionableCount = actionable.length;
+
+  let seen = new Set<string>();
+  if (actionable.length > 0) {
+    const { data: receipts, error: rErr } = await sb
+      .from('approval_seen_receipts')
+      .select('approval_id')
+      .eq('user_id', actor.id)
+      .in('approval_id', actionable.map(r => r.id));
+    if (rErr) {
+      console.error('[approvals/counts] receipts error:', rErr.message);
+      return c.json({ success: false, message: 'Failed to load approval counts.' }, 500);
+    }
+    seen = new Set((receipts as { approval_id: string }[]).map(r => r.approval_id));
+  }
+  const unseenActionableCount = actionable.filter(r => !seen.has(r.id)).length;
+
+  return c.json({ success: true, pendingActionableCount, unseenActionableCount });
+});
+
+// ── POST /api/admin/approvals/markSeen ────────────────────────────────────────
+// Record a per-approval seen receipt for exactly the approval ids the reviewer
+// rendered (the ids ARE the snapshot — no client/DB clock comparison, so no
+// acknowledgement race). Each id is REVALIDATED server-side as still pending,
+// actionable (not the reviewer's own request), and in the reviewer's CURRENT scope
+// before a receipt is written — a client can only acknowledge what it can act on,
+// and a request committed after the render (absent from `approvalIds`) stays unseen.
+// Clears unseenActionableCount only; the pending backlog is unchanged.
+router.post('/markSeen', async c => {
+  const { actor, scope } = await requireApprovalScope(c);
+  const v = zv(c, MarkSeenSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+
+  const ids = [...new Set(v.data.approvalIds)];
+  if (ids.length === 0) return c.json({ success: true, receiptCount: 0 });
+
+  let query = sb
+    .from('permission_grant_approvals')
+    .select('id')
+    .in('id', ids)
+    .eq('status', 'pending')
+    .neq('requested_by', actor.id);          // maker ≠ checker
+  if (scope === 'compliance') {
+    query = query.in('permission_key', [...COMPLIANCE_ACCESS_GRANT_KEYS]);
+  }
+  const { data, error } = await query;
+  if (error) {
+    console.error('[approvals/markSeen] revalidation error:', error.message);
+    return c.json({ success: false, message: 'Failed to record approvals seen.' }, 500);
+  }
+
+  const rows = data as { id: string }[];
+  if (rows.length > 0) {
+    const receipts = rows.map(r => ({ user_id: actor.id, approval_id: r.id }));
+    const { error: upErr } = await sb
+      .from('approval_seen_receipts')
+      .upsert(receipts, { onConflict: 'user_id,approval_id', ignoreDuplicates: true });
+    if (upErr) {
+      console.error('[approvals/markSeen] receipt error:', upErr.message);
+      return c.json({ success: false, message: 'Failed to record approvals seen.' }, 500);
+    }
+  }
+  return c.json({ success: true, receiptCount: rows.length });
 });
 
 // ── POST /api/admin/approvals/approve ─────────────────────────────────────────

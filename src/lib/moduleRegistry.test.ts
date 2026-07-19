@@ -80,3 +80,26 @@ describe('canAccessModuleNavItem', () => {
     )).toBe(false);
   });
 });
+
+describe('Approvals nav visibility tracks the compliance_approve capability', () => {
+  // Mirrors the real gate in AccessControl/module.ts: s-ac-approvals is gated ONLY
+  // on communications.compliance_approve (no roles fallback).
+  const APPROVALS_ITEM = {
+    id: 's-ac-approvals', label: 'Approvals', icon: 'fa-clipboard-check',
+    permission: 'communications.compliance_approve',
+  } as const;
+
+  it('an approver (holds compliance_approve) sees the Approvals page', () => {
+    expect(canAccessModuleNavItem(
+      APPROVALS_ITEM, 'manager',
+      key => key === 'communications.compliance_approve',
+    )).toBe(true);
+  });
+
+  it('a read/export grantee does NOT automatically see the Approvals page', () => {
+    // Grantee holds the time-boxed access keys but NOT the reviewer key.
+    const granteeCan = (key: string) =>
+      key === 'communications.compliance_read' || key === 'communications.compliance_export';
+    expect(canAccessModuleNavItem(APPROVALS_ITEM, 'manager', granteeCan)).toBe(false);
+  });
+});

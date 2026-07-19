@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `498b5314176a7d8fa558b3c2`
+Source fingerprint: `beb540cef488bba3d5d82837`
 
-Files: 276 | Symbols: 2515 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
+Files: 278 | Symbols: 2533 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 243 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -30,18 +30,19 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
 | `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:51<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
-| `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:658` | - | rbacConsole |
-| `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:749` | - | rbacConsole |
-| `/api/superadmin/deleteRole` | `roles.manage` | requirePermission | `DeleteRoleSchema` | `netlify/functions/routes/superadmin.ts:707` | - | rbacConsole |
-| `/api/superadmin/deleteRoleCategory` | `roles.manage` | requirePermission | `DeleteCategorySchema` | `netlify/functions/routes/superadmin.ts:779` | - | rbacConsole |
-| `/api/superadmin/getActiveSessions` | `sessions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:431` | - | accountSecurity |
-| `/api/superadmin/getAuditLogs` | `audit.view` | requirePermission | `GetAuditLogsSchema` | `netlify/functions/routes/superadmin.ts:518` | - | rbacConsole |
-| `/api/superadmin/listRoleCategories` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:737` | - | rbacConsole |
-| `/api/superadmin/listRoles` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:614` | - | rbacConsole |
-| `/api/superadmin/listUsers` | `permissions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:220` | - | rbacConsole |
-| `/api/superadmin/revokeSession` | `sessions.manage` | requirePermission | `RevokeSessionSchema` | `netlify/functions/routes/superadmin.ts:480` | - | accountSecurity |
-| `/api/superadmin/updateRole` | `roles.manage` | requirePermission | `UpdateRoleSchema` | `netlify/functions/routes/superadmin.ts:678` | - | rbacConsole |
-| `/api/superadmin/updateRoleCategory` | `roles.manage` | requirePermission | `UpdateCategorySchema` | `netlify/functions/routes/superadmin.ts:766` | - | rbacConsole |
+| `/api/superadmin/complianceApproverAvailability` | `permissions.manage` | requirePermission | `ApproverAvailabilitySchema` | `netlify/functions/routes/superadmin.ts:392` | - | permissionPropagation |
+| `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:722` | - | rbacConsole |
+| `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:813` | - | rbacConsole |
+| `/api/superadmin/deleteRole` | `roles.manage` | requirePermission | `DeleteRoleSchema` | `netlify/functions/routes/superadmin.ts:771` | - | rbacConsole |
+| `/api/superadmin/deleteRoleCategory` | `roles.manage` | requirePermission | `DeleteCategorySchema` | `netlify/functions/routes/superadmin.ts:843` | - | rbacConsole |
+| `/api/superadmin/getActiveSessions` | `sessions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:495` | - | accountSecurity |
+| `/api/superadmin/getAuditLogs` | `audit.view` | requirePermission | `GetAuditLogsSchema` | `netlify/functions/routes/superadmin.ts:582` | - | rbacConsole |
+| `/api/superadmin/listRoleCategories` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:801` | - | rbacConsole |
+| `/api/superadmin/listRoles` | `roles.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:678` | - | rbacConsole |
+| `/api/superadmin/listUsers` | `permissions.manage` | requirePermission | `-` | `netlify/functions/routes/superadmin.ts:270` | - | rbacConsole |
+| `/api/superadmin/revokeSession` | `sessions.manage` | requirePermission | `RevokeSessionSchema` | `netlify/functions/routes/superadmin.ts:544` | - | accountSecurity |
+| `/api/superadmin/updateRole` | `roles.manage` | requirePermission | `UpdateRoleSchema` | `netlify/functions/routes/superadmin.ts:742` | - | rbacConsole |
+| `/api/superadmin/updateRoleCategory` | `roles.manage` | requirePermission | `UpdateCategorySchema` | `netlify/functions/routes/superadmin.ts:830` | - | rbacConsole |
 | `/api/updateMyPreference` | `-` | requireUser | `UpdatePrefSchema` | `netlify/functions/routes/notify.ts:127` | res @ src/api/notifications.ts:155 | - |
 | `/api/updateProjectSite` | `sites.edit` | assertInScope, requirePermission | `UpdateSiteSchema` | `netlify/functions/routes/sites.ts:97` | res @ src/api/sites.ts:143<br>updateProjectSiteApi @ src/components/sections/ProjectSites/api.ts:102 | - |
 | `UNMOUNTED:/contracts/activate` | `hr.contracts.manage` | requirePermission | `z.object({ contractId: z.string().uuid() })` | `netlify/functions/routes/hrContracts.ts:101` | - | - |
@@ -80,7 +81,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/task/status` | `apiPost` | `useTaskStatus` | `src/api/calendar.ts:109` |
 | `/api/calendar/update` | `apiPost` | `useUpdateEntry` | `src/api/calendar.ts:96` |
 | `/api/clearClosedTickets` | `apiPost` | `clearClosedTickets` | `src/components/nav/api.ts:38` |
-| `/api/communications/summary` | `apiPost` | `res` | `src/components/nav/badgeSync.ts:25` |
+| `/api/communications/summary` | `apiPost` | `res` | `src/components/nav/badgeSync.ts:52` |
 | `/api/createTicket` | `apiPost` | `createTicket` | `src/components/nav/api.ts:26` |
 | `/api/deleteProjectSite` | `apiPost` | `res` | `src/api/sites.ts:152` |
 | `/api/deleteProjectSite` | `apiPost` | `deleteProjectSiteApi` | `src/components/sections/ProjectSites/api.ts:115` |
@@ -134,7 +135,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:717` | `-` |
 | `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:724` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
-| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:26` | `-` |
+| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
 | `AcCoveragePage` | function / component | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx:39` | `-` |
 | `AcCreateRolePage` | function / component | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx:33` | `-` |
@@ -142,7 +143,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AcOverviewPage` | function / component | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx:152` | `-` |
 | `AcRolesPage` | function / component | `src/components/sections/AccessControl/pages/AcRolesPage.tsx:70` | `-` |
 | `AcSessionsPage` | function / component | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx:25` | `-` |
-| `AcUsersPage` | function / component | `src/components/sections/AccessControl/pages/AcUsersPage.tsx:63` | `-` |
+| `AcUsersPage` | function / component | `src/components/sections/AccessControl/pages/AcUsersPage.tsx:64` | `-` |
 | `ComplianceRevokeDialog` | function / component | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx:16` | `-` |
 | `AdminStatCards` | function / component, ui-tile | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:59` | `-` |
 | `AdminRecentTable` | function / component | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:99` | `-` |
@@ -154,25 +155,25 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `MyProfileSection` | function / component | `src/components/sections/Profile/MyProfileSection.tsx:1025` | `-` |
 | `ProjectSitesSection` | function / component | `src/components/sections/ProjectSites/ProjectSitesSection.tsx:790` | `-` |
 | `CriticalGrantDialog` | function / component | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx:26` | `-` |
-| `useConsoleUsers` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:31` | `-` |
-| `useUserPermissions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:44` | `-` |
-| `useSetUserPermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:67` | `-` |
-| `useClearUserPermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:83` | `-` |
-| `useActiveSessions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:101` | `-` |
-| `useRevokeSession` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:115` | `-` |
-| `useAuditLogs` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:131` | `-` |
-| `useRoles` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:152` | `-` |
-| `useRolePermissions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:165` | `-` |
-| `useRoleCategories` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:178` | `-` |
-| `useRoleCategoryMutations` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:192` | `-` |
-| `useCreateRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:213` | `-` |
-| `useUpdateRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:227` | `-` |
-| `useDeleteRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:242` | `-` |
-| `useSetRolePermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:256` | `-` |
-| `usePermissionApprovals` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:273` | `-` |
-| `useApproveGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:286` | `-` |
-| `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:313` | `-` |
-| `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:336` | `-` |
+| `useConsoleUsers` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:32` | `-` |
+| `useUserPermissions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:45` | `-` |
+| `useSetUserPermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:68` | `-` |
+| `useClearUserPermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:84` | `-` |
+| `useActiveSessions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:102` | `-` |
+| `useRevokeSession` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:116` | `-` |
+| `useAuditLogs` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:132` | `-` |
+| `useRoles` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:153` | `-` |
+| `useRolePermissions` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:166` | `-` |
+| `useRoleCategories` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:179` | `-` |
+| `useRoleCategoryMutations` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:193` | `-` |
+| `useCreateRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:214` | `-` |
+| `useUpdateRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:228` | `-` |
+| `useDeleteRole` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:243` | `-` |
+| `useSetRolePermission` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:257` | `-` |
+| `usePermissionApprovals` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:274` | `-` |
+| `useApproveGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:287` | `-` |
+| `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:315` | `-` |
+| `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:339` | `-` |
 | `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:77` | `-` |
 | `Avatar` | function / component | `src/components/shared/Avatar.tsx:78` | `-` |
 | `Badge` | function / component | `src/components/shared/Badge.tsx:112` | `-` |
@@ -385,6 +386,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.block_compliance_access_event_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1024` |
 | function | `public.guard_compliance_export_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1119` |
 | function | `msg_internal._write_compliance_evidence` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:10` |
+| table | `if` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:31` |
+| table | `public.approval_seen_receipts` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:44` |
 
 ## E2E Suites
 
@@ -406,7 +409,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/hseTraining.ts` | 558 |
 | backend-route | `netlify/functions/routes/notify.ts` | 213 |
 | backend-route | `netlify/functions/routes/sites.ts` | 163 |
-| backend-route | `netlify/functions/routes/superadmin.ts` | 837 |
+| backend-route | `netlify/functions/routes/superadmin.ts` | 901 |
 | frontend-api | `src/api/calendar.ts` | 130 |
 | frontend-api | `src/api/index.ts` | 35 |
 | frontend-api | `src/api/queryKeys.ts` | 291 |
@@ -418,7 +421,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
 | frontend-page | `src/components/sections/AccessControl/mount.ts` | 26 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 98 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 111 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 99 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx` | 200 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx` | 276 |
@@ -426,7 +429,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AccessControl/pages/AcOverviewPage.tsx` | 562 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcRolesPage.tsx` | 734 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcSessionsPage.tsx` | 76 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 524 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcUsersPage.tsx` | 556 |
 | frontend-page | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx` | 61 |
 | frontend-page | `src/components/sections/AdminDashboard/AdminDashboardController.tsx` | 155 |
 | frontend-page | `src/components/sections/AdminDashboard/api.ts` | 30 |
@@ -457,7 +460,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/ProjectSites/mount.ts` | 31 |
 | frontend-page | `src/components/sections/ProjectSites/types.ts` | 69 |
 | frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 119 |
-| frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 349 |
+| frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 353 |
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
 | frontend-page | `src/components/sections/index.ts` | 20 |
 | shared-types | `types/api.ts` | 149 |

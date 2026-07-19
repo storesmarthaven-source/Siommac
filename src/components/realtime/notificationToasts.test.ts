@@ -10,9 +10,14 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 vi.mock('@components/nav/navCore', () => ({ showSection: vi.fn() }));
+vi.mock('@ui/toast', () => {
+  const toast = Object.assign(vi.fn(), { rich: vi.fn(), action: vi.fn() });
+  return { toast };
+});
 
 import { showSection } from '@components/nav/navCore';
-import { navigateToRoute } from './notificationToasts';
+import { toast } from '@ui/toast';
+import { navigateToRoute, maybeToastNotification, type CanonicalNotification } from './notificationToasts';
 
 describe('navigateToRoute — toast engine navigation', () => {
   let assignMock: ReturnType<typeof vi.fn>;
@@ -49,5 +54,33 @@ describe('navigateToRoute — toast engine navigation', () => {
     navigateToRoute('https://example.com/report');
     expect(assignMock).toHaveBeenCalledWith('https://example.com/report');
     expect(showSection).not.toHaveBeenCalled();
+  });
+});
+
+describe('maybeToastNotification — compliance direct path (coalesce:false)', () => {
+  const richAction = vi.mocked(toast.action);
+  const richBurst  = vi.mocked(toast.rich);
+
+  const notif = (id: string): CanonicalNotification => ({
+    id, type: 'communications.compliance.access_granted', module: null, severity: 'success',
+    title: 'Compliance access granted', body: null, source_type: null, source_id: null,
+    action_route: 's-ac-approvals', metadata: null, is_read: false, action_required: false,
+    action_status: 'none', due_at: null, created_at: '2026-07-19T00:00:00.000Z',
+  });
+
+  beforeEach(() => { vi.clearAllMocks(); });
+
+  it('fires the rich action toast immediately, never a coalesced burst', () => {
+    maybeToastNotification({ notification: notif('n1'), domain: 'notifications', coalesce: false });
+    expect(richAction).toHaveBeenCalledTimes(1);   // direct rich action toast
+    expect(richBurst).not.toHaveBeenCalled();       // NOT the "N new" burst toast
+  });
+
+  it('multiple compliance notifications each fire directly — no "N new" burst', () => {
+    maybeToastNotification({ notification: notif('n1'), domain: 'notifications', coalesce: false });
+    maybeToastNotification({ notification: notif('n2'), domain: 'notifications', coalesce: false });
+    maybeToastNotification({ notification: notif('n3'), domain: 'notifications', coalesce: false });
+    expect(richAction).toHaveBeenCalledTimes(3);
+    expect(richBurst).not.toHaveBeenCalled();
   });
 });

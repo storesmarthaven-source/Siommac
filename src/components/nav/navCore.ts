@@ -786,12 +786,22 @@ function _setSbBadge(btn: HTMLButtonElement, count: number) {
   }
 }
 
-export function refreshNavBadges(unreadLeaveCount: number): void {
+/**
+ * Set (or clear) the `.sb-nav-badge` count on every nav button — sidebar AND
+ * top-tabs — whose `data-section` matches `sectionId`. A count of 0 (or less)
+ * removes the badge. Generalized from the leave-badge path so any section
+ * (Approvals, etc.) renders its count through the same `_setSbBadge` renderer
+ * and per-button dedupe.
+ */
+export function setNavSectionBadge(sectionId: string, count: number): void {
   ['#sidebarMenu', '#topTabs'].forEach(sel => {
-    document.querySelectorAll<HTMLButtonElement>(`${sel} button[data-section]`).forEach(btn => {
-      if (LEAVE_SECTION_IDS.includes(btn.dataset.section ?? '')) {
-        _setSbBadge(btn, unreadLeaveCount);
-      }
-    });
+    document
+      .querySelectorAll<HTMLButtonElement>(`${sel} button[data-section="${sectionId}"]`)
+      .forEach(btn => _setSbBadge(btn, count));
   });
+}
+
+/** Refresh the leave-request nav badges (admin / manager / employee sections). */
+export function refreshNavBadges(unreadLeaveCount: number): void {
+  LEAVE_SECTION_IDS.forEach(id => setNavSectionBadge(id, unreadLeaveCount));
 }

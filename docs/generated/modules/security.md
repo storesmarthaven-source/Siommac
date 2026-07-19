@@ -2,9 +2,9 @@
 
 # security Module Map
 
-Source fingerprint: `498b5314176a7d8fa558b3c2`
+Source fingerprint: `beb540cef488bba3d5d82837`
 
-Files: 45 | Symbols: 372 | Widgets: 0 | Unique mounted endpoints: 49 | Route definitions: 49 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
+Files: 45 | Symbols: 378 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -18,10 +18,12 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/admin/approvals/approve` | `-` | - | `ApproveSchema` | `netlify/functions/routes/permissionApprovals.ts:202` | - | communicationsCompliance, permissionPropagation, rbacConsole |
-| `/api/admin/approvals/cancel` | `permissions.manage` | requirePermission | `CancelSchema` | `netlify/functions/routes/permissionApprovals.ts:355` | - | - |
-| `/api/admin/approvals/list` | `-` | - | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:130` | - | rbacConsole |
-| `/api/admin/approvals/reject` | `-` | - | `RejectSchema` | `netlify/functions/routes/permissionApprovals.ts:318` | - | rbacConsole |
+| `/api/admin/approvals/approve` | `-` | - | `ApproveSchema` | `netlify/functions/routes/permissionApprovals.ts:299` | - | communicationsCompliance, permissionPropagation, rbacConsole |
+| `/api/admin/approvals/cancel` | `permissions.manage` | requirePermission | `CancelSchema` | `netlify/functions/routes/permissionApprovals.ts:452` | - | - |
+| `/api/admin/approvals/counts` | `-` | - | `-` | `netlify/functions/routes/permissionApprovals.ts:213` | - | permissionPropagation |
+| `/api/admin/approvals/list` | `-` | - | `ListSchema` | `netlify/functions/routes/permissionApprovals.ts:136` | - | permissionPropagation, rbacConsole |
+| `/api/admin/approvals/markSeen` | `-` | - | `MarkSeenSchema` | `netlify/functions/routes/permissionApprovals.ts:260` | - | permissionPropagation |
+| `/api/admin/approvals/reject` | `-` | - | `RejectSchema` | `netlify/functions/routes/permissionApprovals.ts:415` | - | rbacConsole |
 | `/api/admin/security/policy/update` | `auth.security.manage_policy` | requirePermission | `PolicyUpdateSchema` | `netlify/functions/routes/adminSecurity.ts:225` | useUpdateSecurityPolicy @ src/api/security.ts:452 | accountSecurity, securityPolicy |
 | `/api/admin/security/users/passkeys/revoke-all` | `auth.passkeys.admin_revoke` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:92` | useAdminRevokeUserPasskeys @ src/api/security.ts:373 | accountSecurity |
 | `/api/admin/security/users/status` | `auth.security.view` | requirePermission | `UserIdSchema` | `netlify/functions/routes/adminSecurity.ts:42` | useAdminUserSecurityStatus @ src/api/security.ts:359 | accountSecurity |
@@ -47,11 +49,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:600` | logoutApi @ src/components/auth/api.ts:109 | - |
 | `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:577` | - | - |
 | `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:442` | setup2faApi @ src/components/auth/api.ts:94 | - |
-| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:338` | - | permissionPropagation, rbacConsole |
-| `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:639` | - | rbacConsole |
-| `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:270` | - | rbacConsole |
-| `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:794` | - | rbacConsole |
-| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:286` | - | communicationsCompliance, rbacConsole |
+| `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:402` | - | permissionPropagation, rbacConsole |
+| `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:703` | - | rbacConsole |
+| `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:320` | - | rbacConsole |
+| `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:858` | - | rbacConsole |
+| `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:336` | - | communicationsCompliance, permissionPropagation, rbacConsole |
 | `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:616` | updateColorScheme @ src/components/nav/api.ts:41 | - |
 | `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:625` | updateLayoutMode @ src/components/nav/api.ts:44 | - |
 | `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:634` | res @ src/components/sections/Profile/api.ts:108 | - |
@@ -174,7 +176,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 |---|---:|---:|---|
 | Account Security (trusted devices, passkeys, step-up, admin) | 35 | 23 | `scripts/e2e/suites/accountSecurity.mjs` |
 | Auth Session (refresh cookie) | 6 | 0 | `scripts/e2e/suites/authSession.mjs` |
-| Permission Propagation (compliance grant -> permissions signal + snapshot) | 14 | 3 | `scripts/e2e/suites/permissionPropagation.mjs` |
+| Permission Propagation (compliance grant -> permissions signal + snapshot) | 20 | 8 | `scripts/e2e/suites/permissionPropagation.mjs` |
 | Security Policy | 7 | 2 | `scripts/e2e/suites/securityPolicy.mjs` |
 
 ## Navigation Files
@@ -187,12 +189,12 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/auth.ts` | 788 |
 | backend-route | `netlify/functions/routes/auth2fa.ts` | 277 |
 | backend-route | `netlify/functions/routes/authStepUp.ts` | 178 |
-| backend-route | `netlify/functions/routes/permissionApprovals.ts` | 387 |
+| backend-route | `netlify/functions/routes/permissionApprovals.ts` | 484 |
 | backend-route | `netlify/functions/routes/trustedDevices.ts` | 136 |
 | backend-route | `netlify/functions/routes/webauthn.ts` | 421 |
 | e2e-suite | `scripts/e2e/suites/accountSecurity.mjs` | 459 |
 | e2e-suite | `scripts/e2e/suites/authSession.mjs` | 164 |
-| e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 212 |
+| e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 332 |
 | e2e-suite | `scripts/e2e/suites/securityPolicy.mjs` | 93 |
 | frontend-api | `src/api/auth.ts` | 53 |
 | frontend-api | `src/api/schemas/auth.ts` | 122 |

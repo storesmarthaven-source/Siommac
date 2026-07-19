@@ -17,7 +17,8 @@ import {
 import { consoleKeys } from '@sections/SuperadminConsole/queryKeys';
 import { CriticalGrantDialog } from '@sections/SuperadminConsole/CriticalGrantDialog';
 import { ComplianceRevokeDialog } from './ComplianceRevokeDialog';
-import { setUserPermissionWithReasonApi, clearUserPermissionApi } from '@lib/superadminApi';
+import { setUserPermissionWithReasonApi, clearUserPermissionApi, complianceApproverAvailabilityApi } from '@lib/superadminApi';
+import { dialog } from '@lib/dialog';
 import { PERMISSION_KEYS, CRITICAL_GRANT_KEYS, COMPLIANCE_GATED_KEYS, type PermissionKey } from '@lib/permissions';
 import { PERMISSION_META, type PermissionRisk } from '@lib/permissionMeta';
 import { useStepUp, withStepUp } from '@/hooks/useStepUp';
@@ -172,11 +173,37 @@ export function AcUsersPage(): VNode {
   const pendAllow = [...pending.values()].filter(v => v === 'allow').length;
   const pendDeny  = [...pending.values()].filter(v => v === 'deny').length;
 
+  // Compliance access is maker-checker: an INDEPENDENT approver must exist before we
+  // even open the request dialog. Show the dependency up front (not only after a
+  // backend error). The backend request route enforces the same rule authoritatively.
+  const showApproverRequiredDialog = async () => {
+    const open = await dialog.confirm({
+      title: 'Compliance Approver Required',
+      text: 'Assign "Approve Compliance Requests" to another trusted administrator before requesting compliance access.',
+      icon: 'warning',
+      confirmText: 'Open Access Control',
+      cancelText: 'Close',
+    });
+    // Take them to Roles, where the "Approve Compliance Requests" capability can be
+    // assigned to a trusted role/administrator (reuses the existing section nav).
+    if (open) { try { window.dispatchEvent(new CustomEvent('siomac:section', { detail: 's-ac-roles' })); } catch (_) { /* ignore */ } }
+  };
+
+  const beginComplianceGrant = async (key: string) => {
+    if (!selId) return;
+    // Pre-submit eligibility check (authoritative check still runs on submit).
+    const avail = await complianceApproverAvailabilityApi(selId);
+    // Only BLOCK on a definitive "no approver". On a check failure, fall through and
+    // let the backend preflight be the authority (never silently allow on FE error).
+    if (avail.success && avail.eligible === false) { await showApproverRequiredDialog(); return; }
+    setCriticalKey(key);
+  };
+
   const onSelect = (key: string, value: OvState) => {
     // Compliance read/export are grant/revoke, not allow/deny/inherit toggles.
     // Route through the dedicated flows and never stage them as plain overrides.
     if (COMPLIANCE_GATED_KEYS.has(key)) {
-      if (value === 'allow' && !effGranted(key)) { setCriticalKey(key); return; }
+      if (value === 'allow' && !effGranted(key)) { void beginComplianceGrant(key); return; }
       if ((value === 'deny' || value === 'inherit') && effGranted(key)) { setRevokeKey(key); return; }
       return; // deny/inherit on a non-granted key, or allow on a granted one → no-op
     }
@@ -207,7 +234,12 @@ export function AcUsersPage(): VNode {
     const key = criticalKey; setCriticalKey(null);
     if (!key || !selId) return;
     const res = await setUserPermissionWithReasonApi(selId, key, true, reason, validity);
-    if (!res.success) toast.error(res.message ?? 'Failed to submit request.');
+    if (!res.success) {
+      // Race fallback: the last approver was removed between the pre-submit check and
+      // submit. Surface the same guided dependency rather than a generic error.
+      if (res.code === 'no_eligible_approver') { await showApproverRequiredDialog(); return; }
+      toast.error(res.message ?? 'Failed to submit request.');
+    }
     else if (res.pending) { setLocal(prev => new Set([...prev, key])); void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') }); toast.success("Submitted for a different authorized reviewer's approval."); }
     else { toast.success(`${key} granted.`); void permsQ.refetch(); }
   };

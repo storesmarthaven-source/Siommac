@@ -192,9 +192,17 @@ export interface MaybeToastArgs {
   notification: CanonicalNotification;
   domain:       string;
   prefs?:       NotificationPreferencesData | null;
+  /**
+   * When false, bypass burst coalescing and fire the rich action-toast
+   * IMMEDIATELY. Compliance/security notifications are individually important and
+   * must never be collapsed into an "N new" burst. The caller owns the mount
+   * watermark that keeps historical/unread rows out (see complianceToasts.ts).
+   * The no-backfill + mute guards still apply. Default true (coalesced).
+   */
+  coalesce?:    boolean;
 }
 
-export function maybeToastNotification({ notification, domain, prefs }: MaybeToastArgs): void {
+export function maybeToastNotification({ notification, domain, prefs, coalesce = true }: MaybeToastArgs): void {
   // 1. No-backfill guard: ignore signals that arrived before page-load epoch
   if (_sessionEpoch !== null) {
     const createdMs = new Date(notification.created_at).getTime();
@@ -203,6 +211,9 @@ export function maybeToastNotification({ notification, domain, prefs }: MaybeToa
 
   // 2. Mute / quiet-hours guard
   if (isMutedByPreferences(prefs)) return;
+
+  // 2b. Direct path — compliance/security: fire the rich toast now, no burst.
+  if (!coalesce) { fireNotificationToast(notification, domain); return; }
 
   // 3. Burst coalescing
   const existing = _bursts.get(domain);

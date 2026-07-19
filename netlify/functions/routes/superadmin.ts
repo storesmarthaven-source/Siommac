@@ -10,13 +10,17 @@
 
 import { Hono }                           from 'hono';
 import { sb }                             from '../lib/db';
-import { requirePermission, revokeUserSessions, log_ } from '../lib/auth';
+import { requirePermission, revokeUserSessions, log_, userCan } from '../lib/auth';
 import {
   COMPLIANCE_GATED_KEYS,
   PERMISSION_KEYS,
   invalidateRolePermissions,
   isCriticalGrant,
 } from '../lib/permissions';
+import {
+  COMPLIANCE_APPROVER_KEYS,
+  selectEligibleApprovers,
+} from '../lib/permissionApprovalScope';
 import { emitAppEvent, deliverEventNotifications } from '../lib/appEvents';
 import { emitSignal }                     from '../lib/communications';
 import { msgRpcHttpError }                from '../lib/messaging/messagingRpc';
@@ -34,23 +38,51 @@ const router = new Hono<{ Variables: HonoVariables }>();
 const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 
 /**
- * Eligible reviewers for a compliance access grant request: superadmins (hold
- * permissions.manage by role) + explicit compliance_approve / permissions.manage
- * holders. Excludes the requester (maker ≠ checker). Used to notify approvers so a
- * pending request surfaces without them polling the queue.
+ * Eligible INDEPENDENT reviewers for a compliance access grant request. A user may
+ * approve if the resolver grants either COMPLIANCE_APPROVER_KEYS capability
+ * (communications.compliance_approve or permissions.manage) — via superadmin
+ * allow-all, a role default, or a per-user grant — AND they are active AND they are
+ * not in `excludeIds` (maker ≠ checker: neither the requester nor the grantee can
+ * satisfy their own approver requirement).
+ *
+ * Candidate pool = users whose ROLE carries either key (incl. superadmin) + users
+ * with an explicit grant override of either key. Each candidate is then confirmed
+ * through the real `userCan` resolver so an explicit deny correctly disqualifies a
+ * role-holder. Returned list drives both the maker-checker preflight (block when
+ * empty) and the approver notifications, so the two never disagree.
  */
-async function listComplianceGrantApprovers(excludeUserId: string): Promise<string[]> {
-  const [superadmins, holders] = await Promise.all([
-    sb.from('app_users').select('id').eq('role', 'superadmin').eq('status', 'active'),
+async function listComplianceGrantApprovers(excludeIds: string[]): Promise<string[]> {
+  const keys = [...COMPLIANCE_APPROVER_KEYS];
+  const [rolePerms, overrideHolders] = await Promise.all([
+    sb.from('role_permissions').select('role_name').in('permission', keys),
     sb.from('user_permissions').select('user_id')
-      .in('permission', ['communications.compliance_approve', 'permissions.manage'])
-      .eq('granted', true).is('revoked_at', null),
+      .in('permission', keys).eq('granted', true).is('revoked_at', null),
   ]);
-  const ids = new Set<string>();
-  for (const u of (superadmins.data ?? []) as { id: string }[]) ids.add(u.id);
-  for (const r of (holders.data ?? []) as { user_id: string }[]) ids.add(r.user_id);
-  ids.delete(excludeUserId);
-  return [...ids];
+
+  const approverRoles = new Set<string>(['superadmin']);   // superadmin holds both by allow-all
+  for (const r of (rolePerms.data ?? []) as { role_name: string }[]) approverRoles.add(r.role_name);
+
+  const candidateIds = new Set<string>();
+  for (const r of (overrideHolders.data ?? []) as { user_id: string }[]) candidateIds.add(r.user_id);
+  const { data: roleUsers } = await sb.from('app_users')
+    .select('id').eq('status', 'active').in('role', [...approverRoles]);
+  for (const u of (roleUsers ?? []) as { id: string }[]) candidateIds.add(u.id);
+
+  const ids = [...candidateIds];
+  if (ids.length === 0) return [];
+
+  const { data: users } = await sb.from('app_users').select('id, role, status').in('id', ids);
+  const candidates = await Promise.all(
+    ((users ?? []) as { id: string; role: string; status: string }[]).map(async u => ({
+      id: u.id,
+      active: u.status === 'active',
+      // Resolve through the real permission resolver — an explicit deny override on
+      // a role-holder returns false here and disqualifies them.
+      canApprove: (await userCan(u, COMPLIANCE_APPROVER_KEYS[0]))
+               || (await userCan(u, COMPLIANCE_APPROVER_KEYS[1])),
+    })),
+  );
+  return selectEligibleApprovers(candidates, excludeIds);
 }
 
 // The APPROVED-grant apply path lives in the DB now: routes/permissionApprovals.ts
@@ -97,6 +129,22 @@ async function requestCriticalGrant(
       };
     }
 
+    // Maker-checker precondition (AUTHORITATIVE — the FE mirrors this pre-submit,
+    // but this is the boundary): at least one OTHER active user — never the
+    // requester, never the grantee — must be able to approve compliance access
+    // (communications.compliance_approve or permissions.manage). Compute the
+    // eligible set ONCE and reuse it to notify the approvers below, so the block
+    // and the notifications can never disagree.
+    const eligibleApprovers = await listComplianceGrantApprovers([actor.id, req.targetUserId]);
+    if (eligibleApprovers.length === 0) {
+      return {
+        ok: false,
+        status: 409,
+        code: 'no_eligible_approver',
+        message: 'No independent compliance approver is available. Assign "Approve Compliance Requests" to another trusted administrator before requesting compliance access.',
+      };
+    }
+
     const approvalId = `PGA-${crypto.randomUUID()}`;
     const { data, error } = await sb.rpc('request_compliance_permission_grant_tx', {
       p_request_id:        approvalId,
@@ -135,8 +183,10 @@ async function requestCriticalGrant(
     // forget; dedupe-keyed so a re-emit for the same request never doubles.
     const requestApprovalId = result.approval_id;
     void (async () => {
-      const approvers = await listComplianceGrantApprovers(actor.id);
-      if (approvers.length === 0) return;
+      // Reuse the eligible-approver set already computed for the preflight above
+      // (guaranteed non-empty here). No second query, and the notification targets
+      // exactly the reviewers who can act on this request.
+      const approvers = eligibleApprovers;
       await deliverEventNotifications({
         eventType: 'iam.permission.compliance_grant_requested',
         sourceModule: 'platform',
@@ -332,6 +382,20 @@ router.post('/setUserPermission', async c => {
   // Nudge the affected user's live session to re-pull its permission snapshot.
   void emitSignal([userId], 'permissions');
   return c.json({ success: true });
+});
+
+// POST /superadmin/complianceApproverAvailability — does an INDEPENDENT compliance
+// approver exist for a would-be grant to `userId`? Drives the pre-submit guard in
+// User Access so the dependency is shown BEFORE the grant dialog opens; the request
+// route enforces the same precondition authoritatively (this is UX, not the boundary).
+const ApproverAvailabilitySchema = z.object({ userId: z.string().min(1) });
+router.post('/complianceApproverAvailability', async c => {
+  const actor = await requirePermission(c, 'permissions.manage');
+  const v = zv(c, ApproverAvailabilitySchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  // Exclude requester + grantee (maker ≠ checker) — same rule as the request route.
+  const approvers = await listComplianceGrantApprovers([actor.id, v.data.userId]);
+  return c.json({ success: true, eligible: approvers.length > 0, approverCount: approvers.length });
 });
 
 // POST /superadmin/clearUserPermission — remove an override (revert to role default).

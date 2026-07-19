@@ -266,6 +266,50 @@ export async function listApprovalsApi(status?: ApprovalStatus): Promise<{
   return apiFetch('admin/approvals/list', { method: 'POST', body: { args: status ? { status } : {} } });
 }
 
+/**
+ * Does an INDEPENDENT maker-checker approver exist for a compliance grant to
+ * `userId`? Drives the pre-submit guard in User Access — the request route enforces
+ * the same precondition authoritatively, so a false here is UX, not the boundary.
+ */
+export async function complianceApproverAvailabilityApi(userId: string): Promise<{
+  success:       boolean;
+  eligible?:     boolean;
+  approverCount?: number;
+  message?:      string;
+}> {
+  return apiFetch('superadmin/complianceApproverAvailability', { method: 'POST', body: { args: { userId } } });
+}
+
+/**
+ * Actionable pending-approval counts for the current reviewer: the full backlog
+ * (`pendingActionableCount`) and the NEW-since-last-opened subset
+ * (`unseenActionableCount`, which drives the sidebar badge). Server-scoped to the
+ * reviewer's visibility and excludes their own requests (maker ≠ checker).
+ */
+export async function getApprovalCountsApi(): Promise<{
+  success:                boolean;
+  pendingActionableCount?: number;
+  unseenActionableCount?:  number;
+  message?:               string;
+}> {
+  return apiFetch('admin/approvals/counts', { method: 'POST', body: { args: {} } });
+}
+
+/**
+ * Record per-approval seen receipts for exactly the approval ids the reviewer just
+ * rendered. Call ONLY after the queue has loaded, passing those ids. The backend
+ * revalidates each (still pending, actionable, in scope) before writing a receipt.
+ * Clears the unseen count only; the pending backlog is unchanged, and a request
+ * that was not in the rendered list stays unseen.
+ */
+export async function markApprovalsSeenApi(approvalIds: string[]): Promise<{
+  success:       boolean;
+  receiptCount?: number;
+  message?:      string;
+}> {
+  return apiFetch('admin/approvals/markSeen', { method: 'POST', body: { args: { approvalIds } } });
+}
+
 /** Approve a pending critical-grant request (step-up required, maker ≠ checker). */
 export async function approveGrantApi(approvalId: string): Promise<{
   success: boolean;
