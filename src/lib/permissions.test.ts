@@ -16,7 +16,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { resolvePermission, PERMISSION_KEYS, ROLE_PERMISSIONS } from './permissions';
+import { resolvePermission, PERMISSION_KEYS, ROLE_PERMISSIONS, COMPLIANCE_GATED_KEYS } from './permissions';
 import type { PermissionContext }                from './permissions';
 import type { PermissionOverride }               from '@api/schemas/auth';
 
@@ -28,7 +28,7 @@ function ctx(
   role: PermissionContext['role'],
   overrides: PermissionOverride[] = [],
 ): PermissionContext {
-  const rolePermissions = [...(ROLE_PERMISSIONS[role] ?? [])];
+  const rolePermissions = [...((ROLE_PERMISSIONS[role] as readonly string[] | undefined) ?? [])];
   return { role, rolePermissions, overrides };
 }
 
@@ -104,12 +104,51 @@ describe('resolvePermission — role defaults', () => {
   });
 
   describe('superadmin', () => {
-    it('has all registered permissions', () => {
+    it('has all registered permissions EXCEPT the compliance-gated ones', () => {
       for (const key of PERMISSION_KEYS) {
+        // Compliance read/export are NOT auto-held — they require an explicit,
+        // time-boxed, maker-checker grant even for superadmin (fail-closed model).
+        if (COMPLIANCE_GATED_KEYS.has(key)) continue;
         expect(
           resolvePermission(key, ctx('superadmin')),
           `superadmin should have "${key}"`
         ).toBe(true);
+      }
+    });
+    it('does NOT auto-hold the compliance-gated keys without a grant', () => {
+      for (const key of COMPLIANCE_GATED_KEYS) {
+        expect(
+          resolvePermission(key, ctx('superadmin')),
+          `superadmin must NOT auto-hold "${key}"`
+        ).toBe(false);
+      }
+    });
+    it('holds a compliance-gated key WITH an active time-boxed grant', () => {
+      const now = new Date();
+      for (const key of COMPLIANCE_GATED_KEYS) {
+        const grant: PermissionOverride = {
+          user_id: '00000000-0000-0000-0000-000000000001',
+          permission: key,
+          granted: true,
+          valid_from: new Date(now.getTime() - 60_000).toISOString(),
+          valid_until: new Date(now.getTime() + 60 * 60_000).toISOString(),
+          revoked_at: null,
+        };
+        expect(resolvePermission(key, ctx('superadmin', [grant]))).toBe(true);
+      }
+    });
+    it('does NOT hold a compliance-gated key once the grant has expired', () => {
+      const now = new Date();
+      for (const key of COMPLIANCE_GATED_KEYS) {
+        const expired: PermissionOverride = {
+          user_id: '00000000-0000-0000-0000-000000000001',
+          permission: key,
+          granted: true,
+          valid_from: new Date(now.getTime() - 120 * 60_000).toISOString(),
+          valid_until: new Date(now.getTime() - 60_000).toISOString(),
+          revoked_at: null,
+        };
+        expect(resolvePermission(key, ctx('superadmin', [expired]))).toBe(false);
       }
     });
     it('can manage permissions', () => {

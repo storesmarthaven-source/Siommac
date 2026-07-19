@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "5770e43c0aa39caeb43f2c7cc8da70d50076c286",
+    "head": "d06cec5bf87f43aa8377e11675db254bad4d278a",
     "branch": "main",
-    "fingerprint": "ccb4421b50e0a836187165f5",
+    "fingerprint": "60c4136726d08349e280199d",
     "indexedFiles": 1424
   },
   "summary": {
@@ -6566,8 +6566,8 @@
       "path": "src/lib/permissions.test.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 183,
-      "hash": "53ace36c9ea0dfad"
+      "lines": 222,
+      "hash": "610ea3f4aa4d6d6d"
     },
     {
       "path": "src/lib/permissions.ts",
