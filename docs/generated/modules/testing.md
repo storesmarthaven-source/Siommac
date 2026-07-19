@@ -2,9 +2,9 @@
 
 # testing Module Map
 
-Source fingerprint: `b2070584096b9916f7fe19a0`
+Source fingerprint: `f2f7aade63ab98d4c9ad2242`
 
-Files: 24 | Symbols: 138 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 9
+Files: 24 | Symbols: 142 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -51,7 +51,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Messaging — Favourites slice | 9 | 3 | `scripts/e2e/suites/messagingFavourites.mjs` |
 | Messaging — Reactions slice | 13 | 5 | `scripts/e2e/suites/messagingReactions.mjs` |
 | Messenger — cursor pagination + content search | 16 | 5 | `scripts/e2e/suites/messengerPagination.mjs` |
-| RBAC Console | 30 | 16 | `scripts/e2e/suites/rbacConsole.mjs` |
+| RBAC Console | 37 | 18 | `scripts/e2e/suites/rbacConsole.mjs` |
 | HSE Training / Competency | 29 | 19 | `scripts/e2e/suites/training.mjs` |
 
 ## Navigation Files
@@ -67,6 +67,6 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/messagingFavourites.mjs` | 112 |
 | e2e-suite | `scripts/e2e/suites/messagingReactions.mjs` | 180 |
 | e2e-suite | `scripts/e2e/suites/messengerPagination.mjs` | 210 |
-| e2e-suite | `scripts/e2e/suites/rbacConsole.mjs` | 424 |
+| e2e-suite | `scripts/e2e/suites/rbacConsole.mjs` | 531 |
 | e2e-suite | `scripts/e2e/suites/training.mjs` | 255 |
 

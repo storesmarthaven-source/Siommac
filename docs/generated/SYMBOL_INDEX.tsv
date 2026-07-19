@@ -1994,27 +1994,32 @@ recordViewPermission	function	workflow	true		netlify/functions/lib/orchestration
 byNewestFirst	function	workflow	false		netlify/functions/lib/orchestration/timelineService.ts	62	
 humanizeEventType	function	workflow	false		netlify/functions/lib/orchestration/timelineService.ts	71	
 getRecordTimeline	function	workflow	true		netlify/functions/lib/orchestration/timelineService.ts	78	
+COMPLIANCE_ACCESS_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissionApprovalScope.ts	1	
+PermissionApprovalScope	type	security	true		netlify/functions/lib/permissionApprovalScope.ts	6	
+resolvePermissionApprovalScope	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	8	
+isComplianceAccessGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	17	
+canReviewPermissionGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	21	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	452	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	460	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	472	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	492	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	501	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	953	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	969	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	994	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1004	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1005	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1008	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1024	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1059	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1071	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1072	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1075	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1085	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1098	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1106	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1117	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	453	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	462	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	474	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	494	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	503	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	955	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	971	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	996	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1006	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1007	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1026	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1061	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1073	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1074	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1077	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1087	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1100	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1108	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1119	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2969,12 +2974,15 @@ LinkCreateSchema	variable	workflow	false		netlify/functions/routes/orchestration
 LinkListSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	48	
 LinkDeleteSchema	variable	workflow	false		netlify/functions/routes/orchestration.ts	49	
 handle	function	workflow	false		netlify/functions/routes/orchestration.ts	52	
-router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	25	
-ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	29	
-ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	33	
-RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	37	
-CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	42	
-ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	48	
+router	variable	security	false		netlify/functions/routes/permissionApprovals.ts	35	
+ListSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	39	
+ApproveSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	43	
+RejectSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	47	
+CancelSchema	variable	security	false		netlify/functions/routes/permissionApprovals.ts	52	
+ApprovalRow	interface	security	false		netlify/functions/routes/permissionApprovals.ts	58	
+requireApprovalScope	function	security	false		netlify/functions/routes/permissionApprovals.ts	79	
+approvalPermissionKey	function	security	false		netlify/functions/routes/permissionApprovals.ts	92	
+enforceApprovalTarget	function	security	false		netlify/functions/routes/permissionApprovals.ts	107	
 router	variable	settings	false		netlify/functions/routes/settings.ts	12	
 ALLOWED_AVATAR_MIME	variable	settings	false		netlify/functions/routes/settings.ts	83	
 ProfilePhotoCommitSchema	variable	settings	false		netlify/functions/routes/settings.ts	119	
@@ -3496,11 +3504,15 @@ waitFor	function	hse	false	test	scripts/e2e/suites/ptw.mjs	58	run
 status	function	hse	false	test	scripts/e2e/suites/ptw.mjs	66	run
 title	variable	testing	true	test	scripts/e2e/suites/rbacConsole.mjs	21	
 PERM	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	25	
-CRIT	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	28	
-run	function	testing	true	test	scripts/e2e/suites/rbacConsole.mjs	30	
-findRole	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	114	run
-auditHas	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	118	run
-denied	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	396	run
+CRIT_COMPLIANCE_READ	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	28	
+CRIT_COMPLIANCE_EXPORT	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	29	
+CRIT_GENERAL	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	32	
+COMPLIANCE_APPROVER	variable	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	33	
+run	function	testing	true	test	scripts/e2e/suites/rbacConsole.mjs	35	
+validityWindow	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	88	run
+findRole	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	138	run
+auditHas	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	142	run
+denied	function	testing	false	test	scripts/e2e/suites/rbacConsole.mjs	503	run
 title	variable	hse	true	test	scripts/e2e/suites/riskjsa.mjs	26	
 run	function	hse	true	test	scripts/e2e/suites/riskjsa.mjs	28	
 baseHazard	function	hse	false	test	scripts/e2e/suites/riskjsa.mjs	115	run
@@ -5122,64 +5134,64 @@ afterOpen	function	platform	false		src/components/nav/NavController.tsx	119	NavC
 toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	148	NavController
 onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	173	NavController
 onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	188	NavController
-cfg	function	platform	false		src/components/nav/navCore.ts	20	
-moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	30	
-allItemsForRole	function	platform	false		src/components/nav/navCore.ts	41	
-REQUIRED_MODULE_IDS	variable	platform	true		src/components/nav/navCore.ts	53	
-GlobalChildEntry	interface	platform	true		src/components/nav/navCore.ts	59	
-GlobalModuleEntry	interface	platform	true		src/components/nav/navCore.ts	68	
-NavGlobalGroup	interface	platform	true		src/components/nav/navCore.ts	82	
-NavGlobalCatalog	interface	platform	true		src/components/nav/navCore.ts	88	
-groupDisplayLabel	function	platform	false		src/components/nav/navCore.ts	99	
-navGlobalCatalog	function	platform	true		src/components/nav/navCore.ts	114	
-applyCustomization	function	platform	false		src/components/nav/navCore.ts	185	
-mergeModuleGroups	function	platform	true		src/components/nav/navCore.ts	200	
-allSectionItems	function	platform	true		src/components/nav/navCore.ts	213	
-appState	function	platform	false		src/components/nav/navCore.ts	220	
-getRole	function	platform	true		src/components/nav/navCore.ts	224	
-getUser	function	platform	true		src/components/nav/navCore.ts	225	
-getFullName	function	platform	true		src/components/nav/navCore.ts	226	
-getProfileImage	function	platform	true		src/components/nav/navCore.ts	227	
-getScheme	function	platform	true		src/components/nav/navCore.ts	228	
-getLayout	function	platform	true		src/components/nav/navCore.ts	229	
-esc	function	platform	true		src/components/nav/navCore.ts	233	
-isEmployeeRole	function	platform	false		src/components/nav/navCore.ts	243	
-renderNavItem	function	platform	false		src/components/nav/navCore.ts	251	
-renderNavTreeItem	function	platform	false		src/components/nav/navCore.ts	263	
-renderGroupItems	function	platform	false		src/components/nav/navCore.ts	284	
-_groupTitle	function	platform	false		src/components/nav/navCore.ts	298	
-NAV_EXPAND_KEY	function	platform	false		src/components/nav/navCore.ts	303	
-loadExpandedGroups	function	platform	false		src/components/nav/navCore.ts	306	
-saveExpandedGroups	function	platform	false		src/components/nav/navCore.ts	315	
-NAV_PARENT_KEY	function	platform	false		src/components/nav/navCore.ts	320	
-loadExpandedParents	function	platform	false		src/components/nav/navCore.ts	322	
-saveExpandedParents	function	platform	false		src/components/nav/navCore.ts	330	
-_wireParentToggles	function	platform	false		src/components/nav/navCore.ts	335	
-activeSectionId	function	platform	false		src/components/nav/navCore.ts	364	
-buildSidebar	function	platform	true		src/components/nav/navCore.ts	380	
-topCount	function	platform	false		src/components/nav/navCore.ts	400	buildSidebar
-_wireGroupToggles	function	platform	false		src/components/nav/navCore.ts	456	
-buildTopTabs	function	platform	true		src/components/nav/navCore.ts	471	
-applyPalette	function	platform	true		src/components/nav/navCore.ts	488	
-renderPalettes	function	platform	true		src/components/nav/navCore.ts	501	
-applyLayout	function	platform	true		src/components/nav/navCore.ts	521	
-renderLayouts	function	platform	true		src/components/nav/navCore.ts	530	
-savePalette	function	platform	true		src/components/nav/navCore.ts	542	
-saveLayout	function	platform	true		src/components/nav/navCore.ts	565	
-showSection	function	platform	true		src/components/nav/navCore.ts	584	
-refreshSection	function	platform	true		src/components/nav/navCore.ts	643	
-setSkel	function	platform	true		src/components/nav/navCore.ts	692	
-skelStatValues	function	platform	true		src/components/nav/navCore.ts	697	
-skelTableRows	function	platform	true		src/components/nav/navCore.ts	704	
-skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	715	
-skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	722	
-skelList	function	platform	true		src/components/nav/navCore.ts	729	
-_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	738	
-setHdrBadge	function	platform	true		src/components/nav/navCore.ts	740	
-LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	762	
-_sbBadgeLastLabel	variable	platform	false		src/components/nav/navCore.ts	763	
-_setSbBadge	function	platform	false		src/components/nav/navCore.ts	765	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	787	
+cfg	function	platform	false		src/components/nav/navCore.ts	21	
+moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	31	
+allItemsForRole	function	platform	false		src/components/nav/navCore.ts	43	
+REQUIRED_MODULE_IDS	variable	platform	true		src/components/nav/navCore.ts	55	
+GlobalChildEntry	interface	platform	true		src/components/nav/navCore.ts	61	
+GlobalModuleEntry	interface	platform	true		src/components/nav/navCore.ts	70	
+NavGlobalGroup	interface	platform	true		src/components/nav/navCore.ts	84	
+NavGlobalCatalog	interface	platform	true		src/components/nav/navCore.ts	90	
+groupDisplayLabel	function	platform	false		src/components/nav/navCore.ts	101	
+navGlobalCatalog	function	platform	true		src/components/nav/navCore.ts	116	
+applyCustomization	function	platform	false		src/components/nav/navCore.ts	187	
+mergeModuleGroups	function	platform	true		src/components/nav/navCore.ts	202	
+allSectionItems	function	platform	true		src/components/nav/navCore.ts	215	
+appState	function	platform	false		src/components/nav/navCore.ts	222	
+getRole	function	platform	true		src/components/nav/navCore.ts	226	
+getUser	function	platform	true		src/components/nav/navCore.ts	227	
+getFullName	function	platform	true		src/components/nav/navCore.ts	228	
+getProfileImage	function	platform	true		src/components/nav/navCore.ts	229	
+getScheme	function	platform	true		src/components/nav/navCore.ts	230	
+getLayout	function	platform	true		src/components/nav/navCore.ts	231	
+esc	function	platform	true		src/components/nav/navCore.ts	235	
+isEmployeeRole	function	platform	false		src/components/nav/navCore.ts	245	
+renderNavItem	function	platform	false		src/components/nav/navCore.ts	253	
+renderNavTreeItem	function	platform	false		src/components/nav/navCore.ts	265	
+renderGroupItems	function	platform	false		src/components/nav/navCore.ts	286	
+_groupTitle	function	platform	false		src/components/nav/navCore.ts	300	
+NAV_EXPAND_KEY	function	platform	false		src/components/nav/navCore.ts	305	
+loadExpandedGroups	function	platform	false		src/components/nav/navCore.ts	308	
+saveExpandedGroups	function	platform	false		src/components/nav/navCore.ts	317	
+NAV_PARENT_KEY	function	platform	false		src/components/nav/navCore.ts	322	
+loadExpandedParents	function	platform	false		src/components/nav/navCore.ts	324	
+saveExpandedParents	function	platform	false		src/components/nav/navCore.ts	332	
+_wireParentToggles	function	platform	false		src/components/nav/navCore.ts	337	
+activeSectionId	function	platform	false		src/components/nav/navCore.ts	366	
+buildSidebar	function	platform	true		src/components/nav/navCore.ts	382	
+topCount	function	platform	false		src/components/nav/navCore.ts	402	buildSidebar
+_wireGroupToggles	function	platform	false		src/components/nav/navCore.ts	458	
+buildTopTabs	function	platform	true		src/components/nav/navCore.ts	473	
+applyPalette	function	platform	true		src/components/nav/navCore.ts	490	
+renderPalettes	function	platform	true		src/components/nav/navCore.ts	503	
+applyLayout	function	platform	true		src/components/nav/navCore.ts	523	
+renderLayouts	function	platform	true		src/components/nav/navCore.ts	532	
+savePalette	function	platform	true		src/components/nav/navCore.ts	544	
+saveLayout	function	platform	true		src/components/nav/navCore.ts	567	
+showSection	function	platform	true		src/components/nav/navCore.ts	586	
+refreshSection	function	platform	true		src/components/nav/navCore.ts	645	
+setSkel	function	platform	true		src/components/nav/navCore.ts	694	
+skelStatValues	function	platform	true		src/components/nav/navCore.ts	699	
+skelTableRows	function	platform	true		src/components/nav/navCore.ts	706	
+skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	717	
+skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	724	
+skelList	function	platform	true		src/components/nav/navCore.ts	731	
+_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	740	
+setHdrBadge	function	platform	true		src/components/nav/navCore.ts	742	
+LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	764	
+_sbBadgeLastLabel	variable	platform	false		src/components/nav/navCore.ts	765	
+_setSbBadge	function	platform	false		src/components/nav/navCore.ts	767	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	789	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
@@ -5308,20 +5320,21 @@ callWin	function	communications	false		src/components/realtime/RealtimeControlle
 scheduleRetry	function	communications	false		src/components/realtime/RealtimeController.ts	77	
 teardownRealtime	function	communications	true		src/components/realtime/RealtimeController.ts	85	
 initRealtime	function	communications	true		src/components/realtime/RealtimeController.ts	94	
-OVERVIEW	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	26	
-PAYSLIP_DESIGNER	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	27	
-IDS	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	28	
-AccessControlSection	function	platform	true	component	src/components/sections/AccessControl/AccessControlSection.tsx	30	
-onSection	function	platform	false		src/components/sections/AccessControl/AccessControlSection.tsx	36	AccessControlSection
+OVERVIEW	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	27	
+APPROVALS	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	28	
+PAYSLIP_DESIGNER	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	29	
+IDS	variable	platform	false	component	src/components/sections/AccessControl/AccessControlSection.tsx	30	
+AccessControlSection	function	platform	true	component	src/components/sections/AccessControl/AccessControlSection.tsx	32	
+onSection	function	platform	false		src/components/sections/AccessControl/AccessControlSection.tsx	41	AccessControlSection
 AC_ROOT_ID	variable	platform	false		src/components/sections/AccessControl/module.ts	13	
 ITEMS	array	platform	false		src/components/sections/AccessControl/module.ts	17	
 accessControlModule	object	platform	true		src/components/sections/AccessControl/module.ts	28	
 mountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	14	
 unmountAccessControlSection	function	platform	true		src/components/sections/AccessControl/mount.ts	23	
-STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	19	
-dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	23	
-AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	25	
-doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	34	AcApprovalsPage
+STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	20	
+dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	24	
+AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	26	
+doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	35	AcApprovalsPage
 PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	14	
 dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	15	
 AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	17	
@@ -9690,19 +9703,20 @@ info	method	platform	false		src/lib/logger.ts	148	logger
 warn	method	platform	false		src/lib/logger.ts	151	logger
 error	method	platform	false		src/lib/logger.ts	154	logger
 critical	method	platform	false		src/lib/logger.ts	158	logger
-makeModule	function	platform	false	test	src/lib/moduleRegistry.test.ts	11	
+makeModule	function	platform	false	test	src/lib/moduleRegistry.test.ts	12	
 ModuleNavItem	interface	platform	true		src/lib/moduleRegistry.ts	28	
-ModuleNavGroup	interface	platform	true		src/lib/moduleRegistry.ts	40	
-ModuleMountContext	interface	platform	true		src/lib/moduleRegistry.ts	47	
-ModuleMount	interface	platform	true		src/lib/moduleRegistry.ts	54	
-AppRole	type	platform	true		src/lib/moduleRegistry.ts	66	
-ModuleDefinition	interface	platform	true		src/lib/moduleRegistry.ts	68	
-_modules	variable	platform	false		src/lib/moduleRegistry.ts	85	
-registerModule	function	platform	true		src/lib/moduleRegistry.ts	88	
-getModules	function	platform	true		src/lib/moduleRegistry.ts	93	
-getModule	function	platform	true		src/lib/moduleRegistry.ts	98	
-getModulesForRole	function	platform	true		src/lib/moduleRegistry.ts	103	
-getModuleForSection	function	platform	true		src/lib/moduleRegistry.ts	108	
+ModuleNavGroup	interface	platform	true		src/lib/moduleRegistry.ts	44	
+ModuleMountContext	interface	platform	true		src/lib/moduleRegistry.ts	51	
+ModuleMount	interface	platform	true		src/lib/moduleRegistry.ts	58	
+AppRole	type	platform	true		src/lib/moduleRegistry.ts	70	
+ModuleDefinition	interface	platform	true		src/lib/moduleRegistry.ts	72	
+canAccessModuleNavItem	function	platform	true		src/lib/moduleRegistry.ts	88	
+_modules	variable	platform	false		src/lib/moduleRegistry.ts	99	
+registerModule	function	platform	true		src/lib/moduleRegistry.ts	102	
+getModules	function	platform	true		src/lib/moduleRegistry.ts	107	
+getModule	function	platform	true		src/lib/moduleRegistry.ts	112	
+getModulesForRole	function	platform	true		src/lib/moduleRegistry.ts	117	
+getModuleForSection	function	platform	true		src/lib/moduleRegistry.ts	122	
 NS	variable	platform	false	test	src/lib/navVisibility.test.ts	12	
 items	array	platform	false	test	src/lib/navVisibility.test.ts	13	
 VisibilityItem	interface	platform	true		src/lib/navVisibility.ts	17	
@@ -9745,19 +9759,19 @@ PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44
 ctx	function	security	false	test	src/lib/permissions.test.ts	27	
 override	function	security	false	test	src/lib/permissions.test.ts	35	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	532	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	537	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	565	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	580	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	605	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1295	
-resolvePermission	function	security	true		src/lib/permissions.ts	1326	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1371	
-PermissionState	type	security	true		src/lib/permissions.ts	1377	
-permissionState	function	security	true		src/lib/permissions.ts	1383	
-permissionGroups	function	security	true		src/lib/permissions.ts	1393	
-can	function	security	true		src/lib/permissions.ts	1413	
-useCan	function	security	true	hook	src/lib/permissions.ts	1429	
+PermissionKey	type	security	true		src/lib/permissions.ts	533	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	538	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	566	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	581	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	606	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1297	
+resolvePermission	function	security	true		src/lib/permissions.ts	1328	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1373	
+PermissionState	type	security	true		src/lib/permissions.ts	1379	
+permissionState	function	security	true		src/lib/permissions.ts	1385	
+permissionGroups	function	security	true		src/lib/permissions.ts	1395	
+can	function	security	true		src/lib/permissions.ts	1415	
+useCan	function	security	true	hook	src/lib/permissions.ts	1431	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	

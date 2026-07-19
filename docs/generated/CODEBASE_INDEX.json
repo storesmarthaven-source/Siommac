@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1c498535aeef4a36628e6eab06bb99fb1d16d83f",
+    "head": "91db9f36b0bb97058425cb9ec38aa2535c05b8d9",
     "branch": "main",
-    "fingerprint": "b2070584096b9916f7fe19a0",
-    "indexedFiles": 1422
+    "fingerprint": "f2f7aade63ab98d4c9ad2242",
+    "indexedFiles": 1424
   },
   "summary": {
-    "files": 1118,
-    "symbols": 11108,
+    "files": 1120,
+    "symbols": 11122,
     "widgets": 32,
     "routes": 869,
     "routeDefinitions": 870,
@@ -16,7 +16,7 @@
     "apiCalls": 379,
     "databaseObjects": 1167,
     "e2eSuites": 66,
-    "e2eTests": 2172
+    "e2eTests": 2179
   },
   "modules": [
     {
@@ -100,8 +100,8 @@
     {
       "id": "security",
       "counts": {
-        "files": 43,
-        "symbols": 362,
+        "files": 45,
+        "symbols": 370,
         "widgets": 0,
         "routes": 49,
         "routeDefinitions": 49,
@@ -140,7 +140,7 @@
       "id": "platform",
       "counts": {
         "files": 275,
-        "symbols": 2505,
+        "symbols": 2507,
         "widgets": 0,
         "routes": 26,
         "routeDefinitions": 41,
@@ -153,7 +153,7 @@
       "id": "testing",
       "counts": {
         "files": 24,
-        "symbols": 138,
+        "symbols": 142,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
@@ -1159,11 +1159,18 @@
       "hash": "a021b8cac3b89aa9"
     },
     {
+      "path": "netlify/functions/lib/permissionApprovalScope.ts",
+      "module": "security",
+      "role": "backend-lib",
+      "lines": 27,
+      "hash": "48e147d3e75c5359"
+    },
+    {
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1128,
-      "hash": "ebc974c15fe46987"
+      "lines": 1130,
+      "hash": "4a1e2b29e010d88d"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -2002,8 +2009,8 @@
       "path": "netlify/functions/routes/permissionApprovals.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 289,
-      "hash": "b1c31460b2e1cab2"
+      "lines": 352,
+      "hash": "fc9384fce9324b26"
     },
     {
       "path": "netlify/functions/routes/settings.ts",
@@ -2031,7 +2038,7 @@
       "module": "platform",
       "role": "backend-route",
       "lines": 770,
-      "hash": "b7cc19e1bfef197f"
+      "hash": "1eb42225c72e8516"
     },
     {
       "path": "netlify/functions/routes/tickets.ts",
@@ -2604,8 +2611,8 @@
       "path": "scripts/e2e/suites/rbacConsole.mjs",
       "module": "testing",
       "role": "e2e-suite",
-      "lines": 424,
-      "hash": "13c49451c00bf244"
+      "lines": 531,
+      "hash": "0f1bcd0b7027b54e"
     },
     {
       "path": "scripts/e2e/suites/riskjsa.mjs",
@@ -3409,8 +3416,8 @@
       "path": "src/components/nav/navCore.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 796,
-      "hash": "8f2769dd9908583c"
+      "lines": 798,
+      "hash": "2911c7f8e5a5b3bd"
     },
     {
       "path": "src/components/nav/navIcons.ts",
@@ -3472,8 +3479,8 @@
       "path": "src/components/sections/AccessControl/AccessControlSection.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 56,
-      "hash": "7c6add719bba3a3a"
+      "lines": 65,
+      "hash": "18204b0b39e0f033"
     },
     {
       "path": "src/components/sections/AccessControl/index.ts",
@@ -3487,7 +3494,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 43,
-      "hash": "885ac4f4b1481930"
+      "hash": "7b7dba42d8ddda13"
     },
     {
       "path": "src/components/sections/AccessControl/mount.ts",
@@ -3500,8 +3507,8 @@
       "path": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 97,
-      "hash": "8419c3540fcae3db"
+      "lines": 98,
+      "hash": "b1659bcc020260ab"
     },
     {
       "path": "src/components/sections/AccessControl/pages/AcAuditPage.tsx",
@@ -3522,7 +3529,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 276,
-      "hash": "8f6584494fdb0776"
+      "hash": "cdc9b25af407ec25"
     },
     {
       "path": "src/components/sections/AccessControl/pages/AcExportDrawer.tsx",
@@ -3543,7 +3550,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 734,
-      "hash": "891849e1f5d94afd"
+      "hash": "fabc7d25dba720c9"
     },
     {
       "path": "src/components/sections/AccessControl/pages/AcSessionsPage.tsx",
@@ -3557,7 +3564,7 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 469,
-      "hash": "ec811e972a3b0585"
+      "hash": "a78388c6d8bd8ec9"
     },
     {
       "path": "src/components/sections/AdminDashboard/AdminDashboardController.tsx",
@@ -6112,14 +6119,14 @@
       "module": "platform",
       "role": "frontend-page",
       "lines": 57,
-      "hash": "a26f53ac68a39df2"
+      "hash": "aeb7f895d5472101"
     },
     {
       "path": "src/components/sections/SuperadminConsole/hooks.ts",
       "module": "platform",
       "role": "frontend-page",
       "lines": 349,
-      "hash": "8bbadf4b521c24a8"
+      "hash": "5a53f4bd1f690393"
     },
     {
       "path": "src/components/sections/SuperadminConsole/queryKeys.ts",
@@ -6510,15 +6517,15 @@
       "path": "src/lib/moduleRegistry.test.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 56,
-      "hash": "ee52ae8c0ec4335c"
+      "lines": 83,
+      "hash": "b4ad2b578acf6cd2"
     },
     {
       "path": "src/lib/moduleRegistry.ts",
       "module": "platform",
       "role": "frontend",
-      "lines": 111,
-      "hash": "11798c3d3285da38"
+      "lines": 125,
+      "hash": "1a1cf3ca09011441"
     },
     {
       "path": "src/lib/navVisibility.test.ts",
@@ -6552,8 +6559,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1696,
-      "hash": "56b6f8bcb929de07"
+      "lines": 1703,
+      "hash": "1abcc507ac49cfec"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -6566,8 +6573,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1439,
-      "hash": "1186194b1883ff21"
+      "lines": 1441,
+      "hash": "7af4e8495369bbef"
     },
     {
       "path": "src/lib/popup.ts",
@@ -7800,6 +7807,13 @@
       "role": "test",
       "lines": 259,
       "hash": "5bb25a28bbc3cdfe"
+    },
+    {
+      "path": "tests/unit/permissionApprovalScope.test.ts",
+      "module": "security",
+      "role": "test",
+      "lines": 42,
+      "hash": "8ce75ca11c46a540"
     },
     {
       "path": "tests/unit/permissionMeta.sync.test.ts",
@@ -27967,6 +27981,56 @@
       "tags": []
     },
     {
+      "name": "COMPLIANCE_ACCESS_GRANT_KEYS",
+      "kind": "variable",
+      "file": "netlify/functions/lib/permissionApprovalScope.ts",
+      "line": 1,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PermissionApprovalScope",
+      "kind": "type",
+      "file": "netlify/functions/lib/permissionApprovalScope.ts",
+      "line": 6,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolvePermissionApprovalScope",
+      "kind": "function",
+      "file": "netlify/functions/lib/permissionApprovalScope.ts",
+      "line": 8,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isComplianceAccessGrant",
+      "kind": "function",
+      "file": "netlify/functions/lib/permissionApprovalScope.ts",
+      "line": 17,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "canReviewPermissionGrant",
+      "kind": "function",
+      "file": "netlify/functions/lib/permissionApprovalScope.ts",
+      "line": 21,
+      "module": "security",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PERMISSION_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
@@ -27980,7 +28044,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 452,
+      "line": 453,
       "module": "security",
       "exported": true,
       "container": "",
@@ -27990,7 +28054,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 460,
+      "line": 462,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28000,7 +28064,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 472,
+      "line": 474,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28010,7 +28074,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 492,
+      "line": 494,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28020,7 +28084,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 501,
+      "line": 503,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28030,7 +28094,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 953,
+      "line": 955,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28040,7 +28104,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 969,
+      "line": 971,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28050,7 +28114,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 994,
+      "line": 996,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28060,7 +28124,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1004,
+      "line": 1006,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28070,7 +28134,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1005,
+      "line": 1007,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28080,7 +28144,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1008,
+      "line": 1010,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28090,7 +28154,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1024,
+      "line": 1026,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28100,7 +28164,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1059,
+      "line": 1061,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28110,7 +28174,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1071,
+      "line": 1073,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28120,7 +28184,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1072,
+      "line": 1074,
       "module": "security",
       "exported": false,
       "container": "",
@@ -28130,7 +28194,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1075,
+      "line": 1077,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28140,7 +28204,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1085,
+      "line": 1087,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28150,7 +28214,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1098,
+      "line": 1100,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28160,7 +28224,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1106,
+      "line": 1108,
       "module": "security",
       "exported": true,
       "container": "",
@@ -28170,7 +28234,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1117,
+      "line": 1119,
       "module": "security",
       "exported": true,
       "container": "",
@@ -37720,7 +37784,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 25,
+      "line": 35,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37730,7 +37794,7 @@
       "name": "ListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 29,
+      "line": 39,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37740,7 +37804,7 @@
       "name": "ApproveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 33,
+      "line": 43,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37750,7 +37814,7 @@
       "name": "RejectSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 37,
+      "line": 47,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37760,7 +37824,7 @@
       "name": "CancelSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 42,
+      "line": 52,
       "module": "security",
       "exported": false,
       "container": "",
@@ -37770,7 +37834,37 @@
       "name": "ApprovalRow",
       "kind": "interface",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 48,
+      "line": 58,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requireApprovalScope",
+      "kind": "function",
+      "file": "netlify/functions/routes/permissionApprovals.ts",
+      "line": 79,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "approvalPermissionKey",
+      "kind": "function",
+      "file": "netlify/functions/routes/permissionApprovals.ts",
+      "line": 92,
+      "module": "security",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "enforceApprovalTarget",
+      "kind": "function",
+      "file": "netlify/functions/routes/permissionApprovals.ts",
+      "line": 107,
       "module": "security",
       "exported": false,
       "container": "",
@@ -43511,7 +43605,7 @@
       ]
     },
     {
-      "name": "CRIT",
+      "name": "CRIT_COMPLIANCE_READ",
       "kind": "variable",
       "file": "scripts/e2e/suites/rbacConsole.mjs",
       "line": 28,
@@ -43523,10 +43617,46 @@
       ]
     },
     {
+      "name": "CRIT_COMPLIANCE_EXPORT",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/rbacConsole.mjs",
+      "line": 29,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CRIT_GENERAL",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/rbacConsole.mjs",
+      "line": 32,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "COMPLIANCE_APPROVER",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/rbacConsole.mjs",
+      "line": 33,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "run",
       "kind": "function",
       "file": "scripts/e2e/suites/rbacConsole.mjs",
-      "line": 30,
+      "line": 35,
       "module": "testing",
       "exported": true,
       "container": "",
@@ -43535,10 +43665,22 @@
       ]
     },
     {
+      "name": "validityWindow",
+      "kind": "function",
+      "file": "scripts/e2e/suites/rbacConsole.mjs",
+      "line": 88,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
       "name": "findRole",
       "kind": "function",
       "file": "scripts/e2e/suites/rbacConsole.mjs",
-      "line": 114,
+      "line": 138,
       "module": "testing",
       "exported": false,
       "container": "run",
@@ -43550,7 +43692,7 @@
       "name": "auditHas",
       "kind": "function",
       "file": "scripts/e2e/suites/rbacConsole.mjs",
-      "line": 118,
+      "line": 142,
       "module": "testing",
       "exported": false,
       "container": "run",
@@ -43562,7 +43704,7 @@
       "name": "denied",
       "kind": "function",
       "file": "scripts/e2e/suites/rbacConsole.mjs",
-      "line": 396,
+      "line": 503,
       "module": "testing",
       "exported": false,
       "container": "run",
@@ -60933,7 +61075,7 @@
       "name": "cfg",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 20,
+      "line": 21,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -60943,7 +61085,7 @@
       "name": "moduleSectionItems",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 30,
+      "line": 31,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -60953,7 +61095,7 @@
       "name": "allItemsForRole",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 41,
+      "line": 43,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -60963,7 +61105,7 @@
       "name": "REQUIRED_MODULE_IDS",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 53,
+      "line": 55,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -60973,7 +61115,7 @@
       "name": "GlobalChildEntry",
       "kind": "interface",
       "file": "src/components/nav/navCore.ts",
-      "line": 59,
+      "line": 61,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -60983,7 +61125,7 @@
       "name": "GlobalModuleEntry",
       "kind": "interface",
       "file": "src/components/nav/navCore.ts",
-      "line": 68,
+      "line": 70,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -60993,7 +61135,7 @@
       "name": "NavGlobalGroup",
       "kind": "interface",
       "file": "src/components/nav/navCore.ts",
-      "line": 82,
+      "line": 84,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61003,7 +61145,7 @@
       "name": "NavGlobalCatalog",
       "kind": "interface",
       "file": "src/components/nav/navCore.ts",
-      "line": 88,
+      "line": 90,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61013,7 +61155,7 @@
       "name": "groupDisplayLabel",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 99,
+      "line": 101,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61023,7 +61165,7 @@
       "name": "navGlobalCatalog",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 114,
+      "line": 116,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61033,7 +61175,7 @@
       "name": "applyCustomization",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 185,
+      "line": 187,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61043,7 +61185,7 @@
       "name": "mergeModuleGroups",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 200,
+      "line": 202,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61053,7 +61195,7 @@
       "name": "allSectionItems",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 213,
+      "line": 215,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61063,7 +61205,7 @@
       "name": "appState",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 220,
+      "line": 222,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61073,7 +61215,7 @@
       "name": "getRole",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 224,
+      "line": 226,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61083,7 +61225,7 @@
       "name": "getUser",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 225,
+      "line": 227,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61093,7 +61235,7 @@
       "name": "getFullName",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 226,
+      "line": 228,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61103,7 +61245,7 @@
       "name": "getProfileImage",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 227,
+      "line": 229,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61113,7 +61255,7 @@
       "name": "getScheme",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 228,
+      "line": 230,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61123,7 +61265,7 @@
       "name": "getLayout",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 229,
+      "line": 231,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61133,7 +61275,7 @@
       "name": "esc",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 233,
+      "line": 235,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61143,7 +61285,7 @@
       "name": "isEmployeeRole",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 243,
+      "line": 245,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61153,7 +61295,7 @@
       "name": "renderNavItem",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 251,
+      "line": 253,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61163,7 +61305,7 @@
       "name": "renderNavTreeItem",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 263,
+      "line": 265,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61173,7 +61315,7 @@
       "name": "renderGroupItems",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 284,
+      "line": 286,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61183,7 +61325,7 @@
       "name": "_groupTitle",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 298,
+      "line": 300,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61193,7 +61335,7 @@
       "name": "NAV_EXPAND_KEY",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 303,
+      "line": 305,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61203,7 +61345,7 @@
       "name": "loadExpandedGroups",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 306,
+      "line": 308,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61213,7 +61355,7 @@
       "name": "saveExpandedGroups",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 315,
+      "line": 317,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61223,7 +61365,7 @@
       "name": "NAV_PARENT_KEY",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 320,
+      "line": 322,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61233,7 +61375,7 @@
       "name": "loadExpandedParents",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 322,
+      "line": 324,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61243,7 +61385,7 @@
       "name": "saveExpandedParents",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 330,
+      "line": 332,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61253,7 +61395,7 @@
       "name": "_wireParentToggles",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 335,
+      "line": 337,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61263,7 +61405,7 @@
       "name": "activeSectionId",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 364,
+      "line": 366,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61273,7 +61415,7 @@
       "name": "buildSidebar",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 380,
+      "line": 382,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61283,7 +61425,7 @@
       "name": "topCount",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 400,
+      "line": 402,
       "module": "platform",
       "exported": false,
       "container": "buildSidebar",
@@ -61293,7 +61435,7 @@
       "name": "_wireGroupToggles",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 456,
+      "line": 458,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61303,7 +61445,7 @@
       "name": "buildTopTabs",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 471,
+      "line": 473,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61313,7 +61455,7 @@
       "name": "applyPalette",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 488,
+      "line": 490,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61323,7 +61465,7 @@
       "name": "renderPalettes",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 501,
+      "line": 503,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61333,7 +61475,7 @@
       "name": "applyLayout",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 521,
+      "line": 523,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61343,7 +61485,7 @@
       "name": "renderLayouts",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 530,
+      "line": 532,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61353,7 +61495,7 @@
       "name": "savePalette",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 542,
+      "line": 544,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61363,7 +61505,7 @@
       "name": "saveLayout",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 565,
+      "line": 567,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61373,7 +61515,7 @@
       "name": "showSection",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 584,
+      "line": 586,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61383,7 +61525,7 @@
       "name": "refreshSection",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 643,
+      "line": 645,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61393,7 +61535,7 @@
       "name": "setSkel",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 692,
+      "line": 694,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61403,7 +61545,7 @@
       "name": "skelStatValues",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 697,
+      "line": 699,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61413,7 +61555,7 @@
       "name": "skelTableRows",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 704,
+      "line": 706,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61423,7 +61565,7 @@
       "name": "skelStatCards",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 715,
+      "line": 717,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61435,7 +61577,7 @@
       "name": "skelCards",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 722,
+      "line": 724,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61447,7 +61589,7 @@
       "name": "skelList",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 729,
+      "line": 731,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61457,7 +61599,7 @@
       "name": "_badgeLastCount",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 738,
+      "line": 740,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61467,7 +61609,7 @@
       "name": "setHdrBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 740,
+      "line": 742,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -61477,7 +61619,7 @@
       "name": "LEAVE_SECTION_IDS",
       "kind": "array",
       "file": "src/components/nav/navCore.ts",
-      "line": 762,
+      "line": 764,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61487,7 +61629,7 @@
       "name": "_sbBadgeLastLabel",
       "kind": "variable",
       "file": "src/components/nav/navCore.ts",
-      "line": 763,
+      "line": 765,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61497,7 +61639,7 @@
       "name": "_setSbBadge",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 765,
+      "line": 767,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -61507,7 +61649,7 @@
       "name": "refreshNavBadges",
       "kind": "function",
       "file": "src/components/nav/navCore.ts",
-      "line": 787,
+      "line": 789,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -62837,18 +62979,6 @@
       "name": "OVERVIEW",
       "kind": "variable",
       "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
-      "line": 26,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PAYSLIP_DESIGNER",
-      "kind": "variable",
-      "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
       "line": 27,
       "module": "platform",
       "exported": false,
@@ -62858,7 +62988,7 @@
       ]
     },
     {
-      "name": "IDS",
+      "name": "APPROVALS",
       "kind": "variable",
       "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
       "line": 28,
@@ -62870,10 +63000,34 @@
       ]
     },
     {
+      "name": "PAYSLIP_DESIGNER",
+      "kind": "variable",
+      "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
+      "line": 29,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "IDS",
+      "kind": "variable",
+      "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "AccessControlSection",
       "kind": "function",
       "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
-      "line": 30,
+      "line": 32,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -62885,7 +63039,7 @@
       "name": "onSection",
       "kind": "function",
       "file": "src/components/sections/AccessControl/AccessControlSection.tsx",
-      "line": 36,
+      "line": 41,
       "module": "platform",
       "exported": false,
       "container": "AccessControlSection",
@@ -62945,7 +63099,7 @@
       "name": "STATUSES",
       "kind": "array",
       "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
-      "line": 19,
+      "line": 20,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -62955,7 +63109,7 @@
       "name": "dateLong",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
-      "line": 23,
+      "line": 24,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -62965,7 +63119,7 @@
       "name": "AcApprovalsPage",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
-      "line": 25,
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -62977,7 +63131,7 @@
       "name": "doReject",
       "kind": "function",
       "file": "src/components/sections/AccessControl/pages/AcApprovalsPage.tsx",
-      "line": 34,
+      "line": 35,
       "module": "platform",
       "exported": false,
       "container": "AcApprovalsPage",
@@ -109232,7 +109386,7 @@
       "name": "makeModule",
       "kind": "function",
       "file": "src/lib/moduleRegistry.test.ts",
-      "line": 11,
+      "line": 12,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -109254,7 +109408,7 @@
       "name": "ModuleNavGroup",
       "kind": "interface",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 40,
+      "line": 44,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109264,7 +109418,7 @@
       "name": "ModuleMountContext",
       "kind": "interface",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 47,
+      "line": 51,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109274,7 +109428,7 @@
       "name": "ModuleMount",
       "kind": "interface",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 54,
+      "line": 58,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109284,7 +109438,7 @@
       "name": "AppRole",
       "kind": "type",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 66,
+      "line": 70,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109294,24 +109448,14 @@
       "name": "ModuleDefinition",
       "kind": "interface",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 68,
+      "line": 72,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
-      "name": "_modules",
-      "kind": "variable",
-      "file": "src/lib/moduleRegistry.ts",
-      "line": 85,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "registerModule",
+      "name": "canAccessModuleNavItem",
       "kind": "function",
       "file": "src/lib/moduleRegistry.ts",
       "line": 88,
@@ -109321,10 +109465,30 @@
       "tags": []
     },
     {
+      "name": "_modules",
+      "kind": "variable",
+      "file": "src/lib/moduleRegistry.ts",
+      "line": 99,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "registerModule",
+      "kind": "function",
+      "file": "src/lib/moduleRegistry.ts",
+      "line": 102,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "getModules",
       "kind": "function",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 93,
+      "line": 107,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109334,7 +109498,7 @@
       "name": "getModule",
       "kind": "function",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 98,
+      "line": 112,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109344,7 +109508,7 @@
       "name": "getModulesForRole",
       "kind": "function",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 103,
+      "line": 117,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109354,7 +109518,7 @@
       "name": "getModuleForSection",
       "kind": "function",
       "file": "src/lib/moduleRegistry.ts",
-      "line": 108,
+      "line": 122,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -109812,7 +109976,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 532,
+      "line": 533,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109822,7 +109986,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 537,
+      "line": 538,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109832,7 +109996,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 565,
+      "line": 566,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109842,7 +110006,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 580,
+      "line": 581,
       "module": "security",
       "exported": false,
       "container": "",
@@ -109852,7 +110016,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 605,
+      "line": 606,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109862,7 +110026,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1295,
+      "line": 1297,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109872,7 +110036,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1326,
+      "line": 1328,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109882,7 +110046,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1371,
+      "line": 1373,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109892,7 +110056,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1377,
+      "line": 1379,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109902,7 +110066,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1383,
+      "line": 1385,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109912,7 +110076,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1393,
+      "line": 1395,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109922,7 +110086,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1413,
+      "line": 1415,
       "module": "security",
       "exported": true,
       "container": "",
@@ -109932,7 +110096,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1429,
+      "line": 1431,
       "module": "security",
       "exported": true,
       "container": "",
@@ -124602,13 +124766,11 @@
       "path": "/api/admin/approvals/approve",
       "localPath": "/approve",
       "router": "router",
-      "permission": "permissions.manage",
-      "guards": [
-        "requirePermission"
-      ],
+      "permission": "",
+      "guards": [],
       "schema": "ApproveSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 140,
+      "line": 200,
       "module": "security"
     },
     {
@@ -124621,33 +124783,29 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 257,
+      "line": 320,
       "module": "security"
     },
     {
       "path": "/api/admin/approvals/list",
       "localPath": "/list",
       "router": "router",
-      "permission": "permissions.manage",
-      "guards": [
-        "requirePermission"
-      ],
+      "permission": "",
+      "guards": [],
       "schema": "ListSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 71,
+      "line": 128,
       "module": "security"
     },
     {
       "path": "/api/admin/approvals/reject",
       "localPath": "/reject",
       "router": "router",
-      "permission": "permissions.manage",
-      "guards": [
-        "requirePermission"
-      ],
+      "permission": "",
+      "guards": [],
       "schema": "RejectSchema",
       "file": "netlify/functions/routes/permissionApprovals.ts",
-      "line": 222,
+      "line": 283,
       "module": "security"
     },
     {
@@ -156182,127 +156340,157 @@
       "tests": [
         {
           "name": "listRoles returns the RoleRow contract",
-          "line": 127
+          "line": 151
         },
         {
           "name": "createRole creates a custom role + writes role_create audit",
-          "line": 137
+          "line": 161
         },
         {
           "name": "createRole with a duplicate name → 409",
-          "line": 147
+          "line": 171
         },
         {
           "name": "getRolePermissions on a fresh role is empty",
-          "line": 152
-        },
-        {
-          "name": "setRolePermission grant → role_permissions row + role_perm_grant audit",
-          "line": 158
-        },
-        {
-          "name": "setRolePermission revoke → removed + role_perm_revoke audit",
-          "line": 168
-        },
-        {
-          "name": "setRolePermission rejects an unknown permission key",
           "line": 176
         },
         {
+          "name": "setRolePermission grant → role_permissions row + role_perm_grant audit",
+          "line": 182
+        },
+        {
+          "name": "setRolePermission revoke → removed + role_perm_revoke audit",
+          "line": 192
+        },
+        {
+          "name": "setRolePermission rejects an unknown permission key",
+          "line": 200
+        },
+        {
           "name": "updateRole changes the label + writes role_update audit",
-          "line": 181
+          "line": 205
         },
         {
           "name": "deleteRole removes the custom role + writes role_delete audit",
-          "line": 189
+          "line": 213
         },
         {
           "name": "deleteRole is blocked for a protected/system role",
-          "line": 197
+          "line": 221
         },
         {
           "name": "listRoleCategories returns the tier contract + the built-ins",
-          "line": 209
-        },
-        {
-          "name": "createRoleCategory creates a custom tier + role_category_create audit",
-          "line": 223
-        },
-        {
-          "name": "updateRoleCategory renames a tier + role_category_update audit",
           "line": 233
         },
         {
-          "name": "deleteRoleCategory is blocked for a built-in tier",
-          "line": 242
-        },
-        {
-          "name": "deleteRoleCategory is blocked while a role uses the tier",
+          "name": "createRoleCategory creates a custom tier + role_category_create audit",
           "line": 247
         },
         {
+          "name": "updateRoleCategory renames a tier + role_category_update audit",
+          "line": 257
+        },
+        {
+          "name": "deleteRoleCategory is blocked for a built-in tier",
+          "line": 266
+        },
+        {
+          "name": "deleteRoleCategory is blocked while a role uses the tier",
+          "line": 271
+        },
+        {
           "name": "deleteRoleCategory removes an empty custom tier + role_category_delete audit",
-          "line": 256
+          "line": 280
         },
         {
           "name": "listUsers returns the ConsoleUser contract (configurable roles only)",
-          "line": 267
+          "line": 291
         },
         {
           "name": "setUserPermission Allow → user_permissions row + permission_grant audit",
-          "line": 279
+          "line": 303
         },
         {
           "name": "setUserPermission Deny → granted=false + permission_deny audit",
-          "line": 293
+          "line": 317
         },
         {
           "name": "getAuditLogs entity_id filter scopes to one user (powers the per-user timeline)",
-          "line": 302
-        },
-        {
-          "name": "clearUserPermission → override removed (Inherit) + permission_clear audit",
-          "line": 315
-        },
-        {
-          "name": "critical user grant without a reason is rejected (not applied)",
           "line": 326
         },
         {
+          "name": "clearUserPermission → override removed (Inherit) + permission_clear audit",
+          "line": 339
+        },
+        {
+          "name": "critical user grant without a reason is rejected (not applied)",
+          "line": 350
+        },
+        {
           "name": "critical user grant WITH a reason → pending approval, NOT applied",
-          "line": 335
+          "line": 359
         },
         {
           "name": "a duplicate critical request is de-duped (409 already_pending)",
-          "line": 349
+          "line": 376
+        },
+        {
+          "name": "general critical ROLE grant routes through the full approval queue",
+          "line": 385
+        },
+        {
+          "name": "seed designated compliance approver grant",
+          "line": 399
+        },
+        {
+          "name": "designated approver lists compliance requests only",
+          "line": 407
+        },
+        {
+          "name": "permissions.manage still sees the full pending queue",
+          "line": 415
         },
         {
           "name": "the maker CANNOT approve their own request (segregation of duties)",
-          "line": 354
+          "line": 423
         },
         {
-          "name": "a SECOND superadmin approves → grant applies + row marked approved",
-          "line": 361
+          "name": "designated approver approves a compliance grant with step-up",
+          "line": 430
         },
         {
           "name": "re-approving an already-approved request is rejected (atomic status guard)",
-          "line": 371
+          "line": 441
         },
         {
-          "name": "critical ROLE grant routes through approval too",
-          "line": 378
+          "name": "designated approver rejects a compliance grant",
+          "line": 449
+        },
+        {
+          "name": "designated approver cannot approve or reject their own compliance request",
+          "line": 464
+        },
+        {
+          "name": "designated approver gets 403 for a non-compliance approval id",
+          "line": 488
+        },
+        {
+          "name": "actor without approval capability cannot list or decide approvals",
+          "line": 493
         },
         {
           "name": "employee cannot createRole (and no role row is written)",
-          "line": 409
+          "line": 516
         },
         {
           "name": "employee cannot set a per-user override (and none is written)",
-          "line": 417
+          "line": 524
         }
       ],
       "apiPaths": [
         "/api/admin/approvals/approve",
+        "/api/admin/approvals/list",
+        "/api/admin/approvals/reject",
         "/api/superadmin/clearUserPermission",
         "/api/superadmin/createRole",
         "/api/superadmin/createRoleCategory",

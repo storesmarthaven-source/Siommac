@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `b2070584096b9916f7fe19a0`
+Source fingerprint: `f2f7aade63ab98d4c9ad2242`
 
-Files: 275 | Symbols: 2505 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
+Files: 275 | Symbols: 2507 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 15 unmounted | API calls: 50 | DB objects: 240 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -131,10 +131,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:41` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:715` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:722` | `-` |
-| `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:30` | `-` |
-| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:25` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:717` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:724` | `-` |
+| `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
+| `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:26` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
 | `AcCoveragePage` | function / component | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx:39` | `-` |
 | `AcCreateRolePage` | function / component | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx:33` | `-` |
@@ -414,11 +414,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/site.ts` | 61 |
 | frontend-api | `src/api/sites.ts` | 167 |
 | frontend-api | `src/api/theme.ts` | 23 |
-| frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 56 |
+| frontend-page | `src/components/sections/AccessControl/AccessControlSection.tsx` | 65 |
 | frontend-page | `src/components/sections/AccessControl/index.ts` | 10 |
 | frontend-page | `src/components/sections/AccessControl/module.ts` | 43 |
 | frontend-page | `src/components/sections/AccessControl/mount.ts` | 26 |
-| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 97 |
+| frontend-page | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx` | 98 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcAuditPage.tsx` | 99 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCoveragePage.tsx` | 200 |
 | frontend-page | `src/components/sections/AccessControl/pages/AcCreateRolePage.tsx` | 276 |

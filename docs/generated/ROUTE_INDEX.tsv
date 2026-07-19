@@ -2,10 +2,10 @@ path	module	permission	guards	schema	file	line
 /api/addDepartment	hr	departments.add	requirePermission	AddDepartmentSchema	netlify/functions/routes/departments.ts	51
 /api/addEmployee	hr	employees.add	requirePermission	AddEmployeeSchema	netlify/functions/routes/employees.ts	63
 /api/addProjectSite	platform	sites.add	requirePermission	AddSiteSchema	netlify/functions/routes/sites.ts	81
-/api/admin/approvals/approve	security	permissions.manage	requirePermission	ApproveSchema	netlify/functions/routes/permissionApprovals.ts	140
-/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	257
-/api/admin/approvals/list	security	permissions.manage	requirePermission	ListSchema	netlify/functions/routes/permissionApprovals.ts	71
-/api/admin/approvals/reject	security	permissions.manage	requirePermission	RejectSchema	netlify/functions/routes/permissionApprovals.ts	222
+/api/admin/approvals/approve	security			ApproveSchema	netlify/functions/routes/permissionApprovals.ts	200
+/api/admin/approvals/cancel	security	permissions.manage	requirePermission	CancelSchema	netlify/functions/routes/permissionApprovals.ts	320
+/api/admin/approvals/list	security			ListSchema	netlify/functions/routes/permissionApprovals.ts	128
+/api/admin/approvals/reject	security			RejectSchema	netlify/functions/routes/permissionApprovals.ts	283
 /api/admin/security/policy/update	security	auth.security.manage_policy	requirePermission	PolicyUpdateSchema	netlify/functions/routes/adminSecurity.ts	225
 /api/admin/security/users/passkeys/revoke-all	security	auth.passkeys.admin_revoke	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	92
 /api/admin/security/users/status	security	auth.security.view	requirePermission	UserIdSchema	netlify/functions/routes/adminSecurity.ts	42
