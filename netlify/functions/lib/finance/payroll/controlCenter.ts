@@ -176,7 +176,7 @@ export async function getPayrollControlCenter(
     const runId = str(at.runId);
     const { data: rr } = await sb
       .from('finance_payroll_runs')
-      .select('pay_group, pay_group_id, employee_count, net_total, current_calculation_version_id')
+      .select('pay_group, pay_group_id, pay_date, employee_count, net_total, current_calculation_version_id')
       .eq('id', runId)
       .maybeSingle();
     // Resolve the pay-group NAME from its id (authoritative) — the run's own pay_group column stores the
@@ -206,6 +206,7 @@ export async function getPayrollControlCenter(
       runId,
       runNo: str(at.runNo),
       payGroupName,
+      payDate: (rr?.pay_date as string | null) ?? null,
       employeeCount,
       netPayroll: money(netAmount),
       title: str(at.title),

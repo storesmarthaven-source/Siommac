@@ -76,6 +76,8 @@ export interface PayrollAssignedWork {
   runNo: string;
   /** Human pay-group name for the run — the card shows THIS, never the raw run number. */
   payGroupName: string | null;
+  /** The run's pay date (when the money moves) — shown beside the Review action as urgency context. */
+  payDate: string | null;
   /** Population + net payroll the approval covers (mockup: "84 employees" / "Net payroll TTD …"). */
   employeeCount: number;
   netPayroll: MoneyValue;

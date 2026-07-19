@@ -29,8 +29,11 @@
   font-size:14px;
   font-weight:400;
   line-height:1.5;
+  text-transform:capitalize; /* page-wide Title Case (per request); inputs opt out below */
 }
 .pcc *{box-sizing:border-box;}
+/* Inputs keep their literal text so search/typing isn't visually re-cased. */
+.pcc input,.pcc textarea,.pcc select,.pcc [contenteditable]{text-transform:none;}
 .pcc a{color:var(--brand);text-decoration:none;}
 .pcc a:hover{text-decoration:underline;}
 
@@ -75,6 +78,12 @@
 .pcc .pcc-kpis{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;}
 @media(max-width:1350px){.pcc .pcc-kpis{grid-template-columns:repeat(3,minmax(0,1fr));}}
 @media(max-width:760px){.pcc .pcc-kpis{grid-template-columns:repeat(2,minmax(0,1fr));}}
+/* Title-case the KPI tile sub-labels on this page only (shared @ui KpiTile stays untouched elsewhere). */
+.pcc .ui-kpi-sub{text-transform:capitalize;}
+/* Money tiles ("TTD 18.9M") are wide — shrink the value a touch and keep the name on ONE line so
+   "Gross Payroll" / "Net Payroll" fit beside it without the row wrapping (which grew the tile height). */
+.pcc .ui-kpi-num{font-size:18px;}
+.pcc .ui-kpi-name{white-space:nowrap;}
 
 /* ── Command page head ───────────────────────────────────────────────────────── */
 .pcc .command-page-head{display:flex;align-items:center;justify-content:space-between;gap:24px;padding-bottom:16px;border-bottom:1px solid var(--border);}
@@ -93,29 +102,29 @@
 .pcc .portfolio-health.is-healthy .health-urgency-rail{background:var(--green);}
 .pcc .portfolio-health.is-attention .health-urgency-rail{background:var(--amber);}
 .pcc .portfolio-health.is-at_risk .health-urgency-rail{background:#c93f46;}
-.pcc .portfolio-health.is-critical .health-urgency-rail{background:#a8323a;}
+.pcc .portfolio-health.is-critical .health-urgency-rail{background:#c93f46;}
 .pcc .health-urgency-rail{position:relative;display:flex;align-items:center;justify-content:center;gap:8px;writing-mode:vertical-rl;transform:rotate(180deg);background:#c93f46;color:#fff;}
 .pcc .health-urgency-rail i{transform:rotate(180deg);font-size:11px;}
-.pcc .health-urgency-rail span{font-size:9px;font-weight:850;letter-spacing:.1em;}
+.pcc .health-urgency-rail span{font-size:9px;font-weight:650;letter-spacing:.1em;}
 .pcc .health-summary{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:10px 16px;background:#fff;}
 .pcc .health-summary span,.pcc .health-summary strong,.pcc .health-summary small{display:block;}
-.pcc .health-summary span{color:var(--muted);font-size:10px;font-weight:600;text-transform:uppercase;}
-.pcc .health-summary strong{margin-top:4px;color:var(--ink);font-size:16px;line-height:1.2;}
-.pcc .health-summary small{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.35;}
+.pcc .health-summary span{color:#8b6970;font-size:13px;font-weight:600;text-transform:capitalize;}
+.pcc .health-summary strong{margin-top:4px;color:var(--ink);font-size:16px;line-height:1.2;text-transform:capitalize;}
+.pcc .health-summary small{margin-top:4px;color:var(--muted);font-size:11px;line-height:1.35;text-transform:capitalize;}
 .pcc .health-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));border-left:1px solid var(--border-soft);}
 .pcc .health-stat{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:7px 10px;border-right:1px solid var(--border-soft);color:var(--ink);}
 .pcc .health-stat:last-child{border-right:0;}
 .pcc .health-stat strong,.pcc .health-stat span,.pcc .health-stat small{display:block;}
-.pcc .health-stat strong{font-size:14px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;}
-.pcc .health-stat span{margin-top:4px;font-size:10.5px;font-weight:600;}
-.pcc .health-stat small{margin-top:3px;color:var(--muted);font-size:9.5px;line-height:1.3;}
-.pcc .health-actions{display:grid;min-width:0;grid-template-rows:20px repeat(2,minmax(0,1fr));padding:4px 10px;background:#fbfcfe;}
-.pcc .health-actions-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e7ef;color:#7b8798;font-size:8.5px;font-weight:600;text-transform:uppercase;}
-.pcc .health-actions-head a,.pcc .health-actions-head span{color:var(--muted);font-size:9px;}
-.pcc .health-actions>a,.pcc .health-actions>button{display:grid;grid-template-columns:23px minmax(0,1fr) 10px;align-items:center;gap:8px;border:0;border-bottom:1px solid #e8ecf1;background:none;text-align:left;color:#536177;font-size:10px;font-weight:600;white-space:nowrap;cursor:pointer;font-family:inherit;}
+.pcc .health-stat strong{font-size:16px;line-height:1.15;font-variant-numeric:tabular-nums;white-space:nowrap;}
+.pcc .health-stat span{margin-top:4px;font-size:12px;font-weight:600;}
+.pcc .health-stat small{margin-top:3px;color:var(--muted);font-size:11px;line-height:1.3;}
+.pcc .health-actions{display:grid;min-width:0;grid-template-rows:20px repeat(2,minmax(0,1fr));padding:4px 10px;background:#fbfcfe;border-left:1px solid var(--border-soft);}
+.pcc .health-actions-head{display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid #e2e7ef;color:#7b8798;font-size:8.5px;font-weight:600;text-transform:capitalize;}
+.pcc .health-actions-head a,.pcc .health-actions-head span{color:var(--muted);font-size:10px;}
+.pcc .health-actions>a,.pcc .health-actions>button{display:grid;grid-template-columns:23px minmax(0,1fr) 10px;align-items:center;gap:8px;border:0;border-bottom:1px solid #e8ecf1;background:none;text-align:left;color:#536177;font-size:12px;font-weight:600;white-space:nowrap;text-transform:capitalize;cursor:pointer;font-family:inherit;}
 .pcc .health-actions>a:last-child,.pcc .health-actions>button:last-child{border-bottom:0;}
 .pcc .health-actions>a:hover,.pcc .health-actions>button:hover{background:#f4f7fb;text-decoration:none;}
-.pcc .health-actions b{width:21px;height:21px;display:grid;place-items:center;border-radius:5px;background:var(--brand-soft);color:var(--brand);font-size:8px;}
+.pcc .health-actions b{width:21px;height:21px;display:grid;place-items:center;border-radius:5px;background:rgba(201,63,70,.85);color:#fff;font-size:8px;}
 .pcc .health-actions i{color:#9ca7b7;font-size:8px;}
 .pcc .health-actions .health-clear{grid-template-columns:1fr;color:var(--muted);font-weight:600;cursor:default;}
 .pcc .health-actions .health-clear:hover{background:none;}
@@ -146,7 +155,7 @@
 .pcc .pay-widget{display:flex;min-width:0;height:100%;overflow:hidden;flex-direction:column;border:1px solid #e1e6ef;border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(16,24,40,.04);}
 .pcc .widget-head{display:flex;align-items:flex-start;justify-content:space-between;gap:14px;min-height:68px;padding:11px 15px;border-bottom:1px solid var(--border-soft);}
 .pcc .widget-head>div{min-width:0;}
-.pcc .widget-kicker{display:block;color:#6f7d92;font-size:10.5px;font-weight:600;text-transform:uppercase;}
+.pcc .widget-kicker{display:block;color:#6f7d92;font-size:10.5px;font-weight:600;text-transform:capitalize;}
 .pcc .widget-head h2{margin:2px 0 0;color:#15213b;font-size:17px;line-height:1.2;}
 .pcc .widget-head p{margin:3px 0 0;color:var(--muted);font-size:11.5px;line-height:1.35;}
 .pcc .widget-head .pill,.pcc .widget-head .head-link{flex:none;margin-top:4px;}
@@ -163,24 +172,26 @@
 .pcc .approval-assignee{display:grid;grid-template-columns:44px minmax(0,1fr);align-items:center;gap:9px;min-width:0;}
 .pcc .approval-assignee .av,.pcc .approval-assignee img{width:44px;height:44px;border:2px solid #fff;border-radius:50%;background:#dbe4f4;color:#33518f;object-fit:cover;box-shadow:0 0 0 1px #cdd9ee;display:grid;place-items:center;font-weight:600;font-size:14px;}
 .pcc .approval-assignee small,.pcc .approval-assignee strong,.pcc .approval-assignee span,.pcc .approval-decision-copy small,.pcc .approval-decision-copy strong,.pcc .approval-decision-copy p{display:block;}
-.pcc .approval-assignee small,.pcc .approval-decision-copy small{color:#6379a6;font-size:8.5px;font-weight:600;text-transform:uppercase;}
-.pcc .approval-assignee strong{margin-top:2px;color:#172540;font-size:11.5px;line-height:1.15;}
-.pcc .approval-assignee span{margin-top:2px;color:#66758b;font-size:9px;line-height:1.2;}
+.pcc .approval-assignee small,.pcc .approval-decision-copy small{color:#6379a6;font-size:10px;font-weight:600;text-transform:capitalize;}
+.pcc .approval-assignee strong{margin-top:2px;color:#172540;font-size:16px;line-height:1.15;}
+.pcc .approval-assignee span{margin-top:2px;color:#66758b;font-size:11px;line-height:1.2;}
 .pcc .approval-decision-copy{min-width:0;padding-left:12px;border-left:1px solid #cfdcf1;}
-.pcc .approval-decision-copy strong{margin-top:2px;font-size:12.5px;line-height:1.2;}
-.pcc .approval-decision-copy p{margin:2px 0 0;color:var(--muted);font-size:9.5px;}
+.pcc .approval-decision-copy strong{margin-top:2px;font-size:14px;line-height:1.2;}
+.pcc .approval-decision-copy p{margin:2px 0 0;color:var(--muted);font-size:12px;}
 .pcc .approval-control-summary{display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:end;gap:12px;padding:10px 13px;border-bottom:1px solid var(--border-soft);}
 .pcc .approval-control-summary>div:last-child{padding-left:12px;border-left:1px solid var(--border);text-align:right;}
 .pcc .approval-control-summary small,.pcc .approval-control-summary strong{display:block;}
-.pcc .approval-control-summary small{color:var(--muted);font-size:8.5px;font-weight:700;text-transform:uppercase;}
+.pcc .approval-control-summary small{color:var(--muted);font-size:12px;font-weight:600;text-transform:capitalize;}
 .pcc .approval-control-summary strong{margin-top:2px;font-size:12.5px;font-variant-numeric:tabular-nums;}
 .pcc .approval-command{display:flex;align-items:center;gap:10px;min-height:48px;padding:7px 13px;}
-.pcc .approval-context{display:flex;min-width:0;flex-direction:column;gap:3px;color:#59677d;font-size:9.5px;}
+.pcc .approval-context{display:flex;min-width:0;flex-direction:row;flex-wrap:wrap;align-items:center;gap:16px;color:#59677d;font-size:12px;}
 .pcc .approval-context span{display:flex;align-items:center;gap:6px;white-space:nowrap;}
 .pcc .approval-context i{width:11px;color:var(--brand);}
 .pcc .approval-command .btn{height:33px;margin-left:auto;padding-inline:10px;display:inline-flex;align-items:center;gap:7px;font-size:10.5px;white-space:nowrap;}
+/* Review button border matches the approval card's blue accent (scoped — other primary CTAs stay navy). */
+.pcc .approval-command .btn.primary{border-color:var(--accent-blue);}
 .pcc .activity-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:31px;padding:6px 14px;border-bottom:1px solid var(--border-soft);background:#fbfcfe;}
-.pcc .activity-head span{color:#536177;font-size:9.5px;font-weight:600;text-transform:uppercase;}
+.pcc .activity-head span{color:#536177;font-size:9.5px;font-weight:600;text-transform:capitalize;}
 .pcc .activity-head small{color:var(--muted);font-size:9.5px;}
 .pcc .activity-list{padding:0 14px;overflow:auto;}
 .pcc .activity-item{display:grid;grid-template-columns:30px minmax(0,1fr);align-items:center;gap:10px;min-height:50px;border-bottom:1px solid var(--border-soft);}
@@ -192,7 +203,7 @@
 .pcc .activity-icon.amber{background:var(--amber-soft);color:var(--amber);}
 .pcc .activity-icon.red{background:var(--red-soft);color:var(--red);}
 .pcc .activity-item strong,.pcc .activity-item small{display:block;}
-.pcc .activity-item strong{font-size:11px;line-height:1.25;}
+.pcc .activity-item strong{font-size:12px;line-height:1.25;}
 .pcc .activity-item small{margin-top:1px;color:var(--muted);font-size:10px;}
 .pcc .approval-activity-list time{color:var(--muted);font-size:10px;font-variant-numeric:tabular-nums;}
 .pcc .approval-empty{display:flex;flex-direction:column;align-items:center;gap:8px;padding:22px 16px;color:var(--muted);text-align:center;font-size:11.5px;}
@@ -204,7 +215,7 @@
 .pcc .pcc-cal-strip{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;}
 .pcc .pcc-cal-day{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:44px;padding:6px 2px;border:1px solid var(--border);border-radius:9px;background:#fff;cursor:pointer;font:inherit;}
 .pcc .pcc-cal-day:hover{background:#f4f7fc;border-color:#cdd8ea;}
-.pcc .pcc-cal-day>span{font-size:8.5px;font-weight:600;letter-spacing:.02em;text-transform:uppercase;color:var(--muted);line-height:1;}
+.pcc .pcc-cal-day>span{font-size:8.5px;font-weight:600;letter-spacing:.02em;text-transform:capitalize;color:var(--muted);line-height:1;}
 .pcc .pcc-cal-day>strong{font-size:13px;font-weight:700;color:var(--ink);line-height:1;}
 .pcc .pcc-cal-day.is-today{border-color:#2f5fe0;}
 .pcc .pcc-cal-day.is-today>strong{color:#2f5fe0;}
@@ -288,7 +299,7 @@
 .pcc .readiness-chart canvas{position:absolute;inset:0;width:82px!important;height:82px!important;}
 .pcc .readiness-chart-value{position:relative;z-index:1;display:grid;justify-items:center;line-height:1;pointer-events:none;}
 .pcc .readiness-chart-value strong{color:#fff;font-size:19px;line-height:1.15;font-variant-numeric:tabular-nums;}
-.pcc .readiness-chart-value span{margin-top:4px;color:#c9d3e5;font-size:8.5px;font-weight:600;text-transform:uppercase;}
+.pcc .readiness-chart-value span{margin-top:4px;color:#c9d3e5;font-size:8.5px;font-weight:600;text-transform:capitalize;}
 .pcc .readiness-identity{min-width:0;}
 .pcc .readiness-identity-name{display:block;overflow:hidden;color:#fff;font-size:15px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap;}
 .pcc .readiness-reference{display:flex;align-items:center;gap:7px;min-width:0;margin-top:7px;color:#b8c6df;font-size:8.5px;}
@@ -301,11 +312,11 @@
 .pcc .readiness-profile-stats>div{display:flex;min-width:0;flex-direction:column;justify-content:center;padding:8px 10px;border-right:1px solid var(--border-soft);}
 .pcc .readiness-profile-stats>div:last-child{border-right:0;}
 .pcc .readiness-profile-stats small,.pcc .readiness-profile-stats strong{display:block;}
-.pcc .readiness-profile-stats small{overflow:hidden;color:#7a8699;font-size:8px;font-weight:600;text-overflow:ellipsis;text-transform:uppercase;white-space:nowrap;}
+.pcc .readiness-profile-stats small{overflow:hidden;color:#7a8699;font-size:8px;font-weight:600;text-overflow:ellipsis;text-transform:capitalize;white-space:nowrap;}
 .pcc .readiness-profile-stats strong{margin-top:3px;overflow:hidden;color:#1b2d54;font-size:11.5px;line-height:1.2;text-overflow:ellipsis;white-space:nowrap;font-variant-numeric:tabular-nums;}
 .pcc .readiness-profile-stats strong.bad{color:#c43d3d;}
 .pcc .readiness-gates-head{display:flex;align-items:center;justify-content:space-between;gap:10px;min-height:34px;padding:7px 12px;border-bottom:1px solid var(--border-soft);background:#f8fafe;}
-.pcc .readiness-gates-head>span{color:#526174;font-size:8.5px;font-weight:600;text-transform:uppercase;}
+.pcc .readiness-gates-head>span{color:#526174;font-size:8.5px;font-weight:600;text-transform:capitalize;}
 .pcc .readiness-gates-head button.linklike{display:inline-flex;align-items:center;gap:5px;border:0;background:none;color:#1b2d54;font:inherit;font-size:9px;font-weight:600;cursor:pointer;}
 .pcc .readiness-gates{padding:0 12px;overflow:auto;}
 .pcc .gate-row{display:grid;grid-template-columns:22px minmax(0,1fr) auto;align-items:center;gap:7px;min-height:54px;width:100%;border:0;border-bottom:1px solid var(--border-soft);background:none;text-align:left;color:var(--ink);cursor:default;font:inherit;}
@@ -350,7 +361,7 @@
 .pcc .impact-step.bad>span{background:var(--red-soft);color:var(--red);}
 .pcc .impact-step>div{min-width:0;}
 .pcc .impact-step small,.pcc .impact-step strong,.pcc .impact-step em{display:block;}
-.pcc .impact-step small{color:var(--muted);font-size:9.5px;font-weight:700;text-transform:uppercase;}
+.pcc .impact-step small{color:var(--muted);font-size:9.5px;font-weight:700;text-transform:capitalize;}
 .pcc .impact-step strong{margin-top:3px;font-size:11.5px;line-height:1.25;}
 .pcc .impact-step em{margin-top:3px;color:var(--muted);font-size:9.5px;font-style:normal;line-height:1.25;}
 .pcc .pay-widget-impact .widget-foot{min-height:36px;padding:6px 13px;align-items:flex-start;flex-direction:column;gap:2px;}

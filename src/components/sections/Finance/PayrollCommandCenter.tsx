@@ -134,7 +134,8 @@ function relDate(iso: string | null | undefined): string {
 }
 function timeOf(iso: string): string {
   const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' });
+  // 12-hour clock with an AM/PM suffix (uppercase so the page-wide capitalize doesn't render "Am").
+  return Number.isNaN(d.getTime()) ? '' : d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', hour12: true });
 }
 const initials = (name: string): string => name.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase() || '?';
 
@@ -493,18 +494,36 @@ function PortfolioBand({ data, onOpen }: { data?: PayrollControlCenterResponse; 
   const headline = needCount > 0
     ? `${needCount} run${needCount !== 1 ? 's' : ''} need intervention`
     : state === 'healthy' ? 'Portfolio is on track' : 'Payroll needs attention';
+  // Sub-line mirrors the mockup: when release-blocking controls are open, name how many to clear before
+  // the next window; otherwise surface the specific top intervention, else the all-clear.
+  const openBlockers = h?.openBlockerCount ?? 0;
+  const summarySub = openBlockers > 0
+    ? `Resolve ${openBlockers} critical control${openBlockers !== 1 ? 's' : ''} before the next release window.`
+    : intervention ? intervention.detail : 'No critical release controls outstanding.';
+  // ── Stat tiles mirror the mockup: Approval Due · Funding Gap · Next Cutoff ─────
+  const deadlines = data?.upcomingDeadlines ?? [];
+  const nextApproval = deadlines.filter(d => d.kind === 'approval').sort((a, b) => a.dueAt.localeCompare(b.dueAt))[0];
+  const approvalCount = data?.runRegister.tabCounts.approval ?? 0;
+  const approvalSub = nextApproval
+    ? `${relDate(nextApproval.dueAt)}${timeOf(nextApproval.dueAt) ? ` · ${timeOf(nextApproval.dueAt)}` : ''}`
+    : 'None due';
+  const fundReq = k?.funding.required.amount ?? 0;
+  const fundGap = k?.funding.gap.amount ?? 0;
+  const fundingSub = fundGap <= 0 ? 'Fully funded'
+    : `${Math.round((fundReq > 0 ? fundGap / fundReq : 0) * 1000) / 10}% unconfirmed`;
+  const nextCutoff = deadlines.filter(d => d.kind === 'cutoff' && d.state !== 'overdue').sort((a, b) => a.dueAt.localeCompare(b.dueAt))[0];
   return (
     <section class={`portfolio-health is-${state}`} aria-label="Payroll portfolio health">
       <div class="health-urgency-rail"><i class={`fa-solid ${stateIcon}`} /><span>{stateLabel}</span></div>
       <div class="health-summary">
-        <span>Payroll portfolio health</span>
+        <span>Payroll Portfolio Health</span>
         <strong>{headline}</strong>
-        <small>{intervention ? intervention.detail : 'No critical release controls outstanding.'}</small>
+        <small>{summarySub}</small>
       </div>
-      <div class="health-stats" aria-label="Portfolio risk measures">
-        <div class="health-stat"><strong>{h?.criticalCount ?? 0}</strong><span>Critical</span><small>Runs at risk of missing release</small></div>
-        <div class="health-stat"><strong>{k ? fmtTTDc(k.funding.gap.amount) : '—'}</strong><span>Funding gap</span><small>{k ? humanize(k.funding.state) : 'Unconfirmed'}</small></div>
-        <div class="health-stat"><strong>{h?.openBlockerCount ?? 0}</strong><span>Open blockers</span><small>{h?.overdueActionCount ?? 0} overdue actions</small></div>
+      <div class="health-stats" aria-label="Portfolio operational measures">
+        <div class="health-stat"><strong>{approvalCount}</strong><span>Approval Due</span><small>{approvalSub}</small></div>
+        <div class="health-stat"><strong>{k ? fmtTTDc(fundGap) : '—'}</strong><span>Funding Gap</span><small>{fundingSub}</small></div>
+        <div class="health-stat"><strong>{nextCutoff ? relDate(nextCutoff.dueAt) : '—'}</strong><span>Next Cutoff</span><small>{nextCutoff ? fmtDay(nextCutoff.dueAt) : 'None scheduled'}</small></div>
       </div>
       <div class="health-actions" aria-label="Priority payroll actions">
         <div class="health-actions-head"><span>Resolve in order</span><span>{h?.overdueActionCount ?? 0} total</span></div>
@@ -585,7 +604,7 @@ function RunRegister({ data, tab, setTab, searchInput, setSearchInput, cursor, s
       </div>
       <div class="run-table-wrap">
         <table class="payroll-run-table">
-          <thead><tr><th>Run</th><th>Pay group</th><th>Pay date</th><th class="num">Net payroll</th><th>Readiness</th><th /></tr></thead>
+          <thead><tr><th>Run</th><th>Pay Group</th><th>Pay Date</th><th class="num">Net Payroll</th><th>Readiness</th><th /></tr></thead>
           <tbody>
             {reg && reg.items.length > 0 ? reg.items.map(row => <RunRow key={row.id} row={row} onOpen={onOpen} />) : (
               <tr><td colSpan={6}>
@@ -640,7 +659,7 @@ function ApprovalsWidget({ data, onOpen }: { data?: PayrollControlCenterResponse
     <section class="card pay-widget pay-widget-approvals">
       <div class="widget-head">
         <div><span class="widget-kicker">Assigned to you</span><h2>Approval and Activity</h2><p>Your next payroll decision and its latest movement.</p></div>
-        {a && <span class="pill blue">1 due</span>}
+        {a && <span class="pill amber">1 Due</span>}
       </div>
       {a ? (
         <div class="approval-focus">
@@ -656,7 +675,7 @@ function ApprovalsWidget({ data, onOpen }: { data?: PayrollControlCenterResponse
             <div><small>Net payroll</small><strong>{fmtTTD(a.netPayroll.amount)}</strong></div>
           </div>
           <div class="approval-command">
-            <div class="approval-context"><span><i class="fa-regular fa-calendar" /> {a.payGroupName ?? a.runNo}</span><span><i class="fa-solid fa-users" /> {a.employeeCount} employee{a.employeeCount !== 1 ? 's' : ''}</span></div>
+            <div class="approval-context"><span><i class="fa-regular fa-calendar" /> {a.payDate ? `Pays ${fmtDay(a.payDate)}` : 'No pay date'}</span><span><i class="fa-solid fa-users" /> {a.employeeCount} employee{a.employeeCount !== 1 ? 's' : ''}</span></div>
             <button type="button" class="btn primary" onClick={() => onOpen(a.runId)}><i class="fa-solid fa-user-check" /> Review <i class="fa-solid fa-arrow-right" /></button>
           </div>
         </div>
@@ -773,7 +792,7 @@ function ReadinessWidget({ data, onOpen }: { data?: PayrollControlCenterResponse
       <div class="readiness-profile-stats" aria-label="Release readiness facts">
         <div><small>Pay population</small><strong>{im.employees}</strong></div>
         <div><small>Net exposed</small><strong>{fmtTTDc(im.net.amount)}</strong></div>
-        <div><small>Funding gap</small><strong class={im.fundingGap.amount > 0 ? 'bad' : ''}>{fmtTTDc(im.fundingGap.amount)}</strong></div>
+        <div><small>Funding Gap</small><strong class={im.fundingGap.amount > 0 ? 'bad' : ''}>{fmtTTDc(im.fundingGap.amount)}</strong></div>
       </div>
       <div class="readiness-gates-head"><span>Release controls</span><button type="button" class="linklike" onClick={() => onOpen(n.run.id)}>Open workspace <i class="fa-solid fa-arrow-right" /></button></div>
       <div class="readiness-gates">
@@ -801,7 +820,7 @@ function ImpactWidget({ data, onOpen }: { data?: PayrollControlCenterResponse; o
     <section class="card pay-widget pay-widget-impact">
       <div class="widget-head">
         <div><span class="widget-kicker">{n?.run.payGroup.name ?? 'Next scheduled run'}</span><h2>Release Impact</h2><p>What is exposed if the next scheduled payroll misses its release controls.</p></div>
-        {im && im.fundingGap.amount > 0 && <span class="pill red">Funding gap</span>}
+        {im && im.fundingGap.amount > 0 && <span class="pill red">Funding Gap</span>}
       </div>
       {n && im ? (
         <>
@@ -809,7 +828,7 @@ function ImpactWidget({ data, onOpen }: { data?: PayrollControlCenterResponse; o
             <div class="impact-run"><span>Release at risk</span><strong>{n.run.runNo}</strong><small>{fmtDay(n.run.payDate)} pay date</small></div>
             <div><span>Employees exposed</span><strong>{im.employees}</strong><small>Scheduled population</small></div>
             <div><span>Net payroll exposed</span><strong>{fmtTTDc(im.net.amount)}</strong><small>Bank release control total</small></div>
-            <div><span>Funding gap</span><strong>{fmtTTDc(im.fundingGap.amount)}</strong><small>Treasury confirmation</small></div>
+            <div><span>Funding Gap</span><strong>{fmtTTDc(im.fundingGap.amount)}</strong><small>Treasury confirmation</small></div>
           </div>
           <div class="impact-path" aria-label="Release control path">
             {n.readiness.gates.slice(0, 4).map(g => {
