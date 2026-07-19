@@ -732,6 +732,53 @@ getPayrollReleaseCertificate	function	payroll	true		netlify/functions/lib/financ
 PAYROLL_SQLSTATE_HTTP	object	payroll	false		netlify/functions/lib/finance/payroll/rpcError.ts	1	
 PayrollRpcError	interface	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	9	
 payrollRpcHttpError	function	payroll	true		netlify/functions/lib/finance/payroll/rpcError.ts	14	
+parseDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	56	
+fmtDate	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	63	
+addDays	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	68	
+lastDayOfMonth	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	75	
+firstWeekdayOnOrAfter	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	83	
+MAX_WINDOW_DAYS	variable	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	92	
+PayGroupSchedule	interface	payroll	true		netlify/functions/lib/finance/payroll/runCalendar.ts	96	
+ScheduledInstance	interface	payroll	true		netlify/functions/lib/finance/payroll/runCalendar.ts	104	
+computeScheduledInstances	function	payroll	true		netlify/functions/lib/finance/payroll/runCalendar.ts	121	
+makeInstance	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	129	computeScheduledInstances
+inWindow	function	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	143	computeScheduledInstances
+PayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	235	
+RunRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runCalendar.ts	243	
+getPayrollRunCalendar	function	payroll	true		netlify/functions/lib/finance/payroll/runCalendar.ts	261	
+hashStr	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	43	
+filterFingerprint	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	50	
+CursorKeyDateSort	type	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	64	
+CursorKeyUpdated	type	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	65	
+CursorKey	type	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	66	
+encodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	68	
+decodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	73	
+malformed	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	74	decodeCursor
+makeCursorKey	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	114	
+RunMinimal	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	124	
+IN_PROGRESS_STATUSES	variable	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	155	
+APPROVAL_STATUSES	variable	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	156	
+ATTENTION_STATUSES	variable	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	157	
+RELEASED_STATUSES	variable	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	158	
+matchesTab	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	160	
+compareRuns	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	173	
+isAfterCursor	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	215	
+readinessLabel	function	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	276	
+listPayrollRunsRegister	function	payroll	true		netlify/functions/lib/finance/payroll/runRegister.ts	288	
+FindingRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	349	listPayrollRunsRegister
+CalcVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	412	listPayrollRunsRegister
+SourceRunRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	423	listPayrollRunsRegister
+PayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runRegister.ts	434	listPayrollRunsRegister
+VALID_SORTS	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	33	
+VALID_STATES	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	36	
+VALID_RUN_TYPES	variable	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	42	
+validateFilters	function	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	50	
+RunViewRow	interface	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	130	
+toPayrollRunView	function	payroll	false		netlify/functions/lib/finance/payroll/runViews.ts	140	
+listRunViews	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	155	
+createRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	181	
+updateRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	243	
+deleteRunView	function	payroll	true		netlify/functions/lib/finance/payroll/runViews.ts	316	
 InputSnapshotRow	interface	payroll	false		netlify/functions/lib/finance/payroll/workspace.ts	22	
 PayrollInputSnapshot	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	33	
 PayrollFindingSummary	interface	payroll	true		netlify/functions/lib/finance/payroll/workspace.ts	44	
@@ -2011,26 +2058,26 @@ resolvePermissionApprovalScope	function	security	true		netlify/functions/lib/per
 isComplianceAccessGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	17	
 canReviewPermissionGrant	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	21	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	453	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	462	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	474	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	494	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	503	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	955	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	971	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	996	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1006	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1007	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1010	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1026	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1061	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1073	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1074	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1077	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1087	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1100	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1108	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1119	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	454	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	463	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	475	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	495	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	504	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	957	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	973	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	998	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1008	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1009	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1012	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1028	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1063	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1075	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1076	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1079	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1089	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1102	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1110	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1121	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2708,9 +2755,9 @@ b	function	finance	false		netlify/functions/routes/financeNis.ts	25
 router	variable	finance	false		netlify/functions/routes/financeOverview.ts	24	
 b	function	finance	false		netlify/functions/routes/financeOverview.ts	26	
 fail	function	finance	false		netlify/functions/routes/financeOverview.ts	29	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	114	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	117	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	121	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	122	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	125	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	129	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3219,14 +3266,14 @@ SALT_DATE_BASE_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	2
 SALT_WINDOW_DAYS	variable	payroll	false		scripts/e2e/helpers/payrollRun.mjs	219	
 seedDateFromTag	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	220	
 PAYROLL_PERIOD_SALTS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	229	
-PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	254	
-yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	262	
-saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	269	
-assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	281	
-overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	282	assertPayrollPeriodAllocatorDisjoint
-payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	329	
-payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	340	
-payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	353	
+PAYROLL_PERIOD_YEAR_BANDS	variable	payroll	true		scripts/e2e/helpers/payrollRun.mjs	255	
+yearOfDayOffset	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	263	
+saltYearWindow	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	270	
+assertPayrollPeriodAllocatorDisjoint	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	282	
+overlaps	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	283	assertPayrollPeriodAllocatorDisjoint
+payrollPeriod	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	330	
+payrollPeriodYear	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	341	
+payrollRunSeed	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	354	
 here	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	18	
 defaultSuitesDir	variable	payroll	false		scripts/e2e/payroll-contract-gate.mjs	19	
 escapeRegExp	function	payroll	false		scripts/e2e/payroll-contract-gate.mjs	21	
@@ -3465,6 +3512,8 @@ seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs
 wq	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	118	run
 findRow	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	119	run
 curVer	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	122	run
+actCount	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	280	run
+evCount	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	281	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollGl.mjs	24	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	26	
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	37	
@@ -3484,6 +3533,13 @@ run	function	payroll	true	test	scripts/e2e/suites/payrollOvertimeRules.mjs	34
 title	variable	payroll	true	test	scripts/e2e/suites/payrollPayGroups.mjs	22	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollPayGroups.mjs	24	
 run	function	payroll	true	test	scripts/e2e/suites/payrollPayGroups.mjs	39	
+title	variable	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	27	
+run	function	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	29	
+seedRun	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	99	run
+seedCalcChain	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	122	run
+seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	141	run
+listRuns	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	169	run
+findByRef	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	174	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollScale.mjs	15	
 N	variable	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	17	
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	20	
@@ -3569,15 +3625,20 @@ waitFor	function	workflow	false	test	scripts/e2e/suites/workflowAdmin.mjs	55	run
 MARKER	variable	testing	false		scripts/e2e/sweep-orphans.mjs	40	
 serviceClient	function	testing	true		scripts/e2e/sweep-orphans.mjs	43	
 USER_KEYED	array	testing	false		scripts/e2e/sweep-orphans.mjs	60	
-BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	116	
-TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	138	
-sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	156	
-vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	158	sweepOrphans
-chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	163	sweepOrphans
-sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	169	sweepOrphans
-collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	189	sweepOrphans
-sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	208	sweepOrphans
-sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	218	sweepOrphans
+BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	118	
+TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	140	
+sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	158	
+vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	160	sweepOrphans
+chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	165	sweepOrphans
+sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	171	sweepOrphans
+collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	191	sweepOrphans
+sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	210	sweepOrphans
+sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	220	sweepOrphans
+sweepPayrollRunsOwnedBy	function	testing	false		scripts/e2e/sweep-orphans.mjs	244	sweepOrphans
+countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	245	sweepPayrollRunsOwnedBy
+delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	250	sweepPayrollRunsOwnedBy
+delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	259	sweepPayrollRunsOwnedBy
+selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	264	sweepPayrollRunsOwnedBy
 REQ	array	finance	false		scripts/e2e/verify-finance-ui.mjs	11	
 env	object	finance	false		scripts/e2e/verify-finance-ui.mjs	12	
 line	variable	finance	false		scripts/e2e/verify-finance-ui.mjs	13	
@@ -9791,19 +9852,19 @@ PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44
 ctx	function	security	false	test	src/lib/permissions.test.ts	27	
 override	function	security	false	test	src/lib/permissions.test.ts	35	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	533	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	538	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	566	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	581	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	606	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1297	
-resolvePermission	function	security	true		src/lib/permissions.ts	1328	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1373	
-PermissionState	type	security	true		src/lib/permissions.ts	1379	
-permissionState	function	security	true		src/lib/permissions.ts	1385	
-permissionGroups	function	security	true		src/lib/permissions.ts	1395	
-can	function	security	true		src/lib/permissions.ts	1415	
-useCan	function	security	true	hook	src/lib/permissions.ts	1431	
+PermissionKey	type	security	true		src/lib/permissions.ts	534	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	539	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	567	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	582	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	607	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1299	
+resolvePermission	function	security	true		src/lib/permissions.ts	1330	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1375	
+PermissionState	type	security	true		src/lib/permissions.ts	1381	
+permissionState	function	security	true		src/lib/permissions.ts	1387	
+permissionGroups	function	security	true		src/lib/permissions.ts	1397	
+can	function	security	true		src/lib/permissions.ts	1417	
+useCan	function	security	true	hook	src/lib/permissions.ts	1433	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -10740,6 +10801,7 @@ TT	object	payroll	false	test	tests/unit/payroll-calc.test.js	8
 hsThreshold	function	payroll	false	test	tests/unit/payroll-calc.test.js	35	
 calcPayslip	function	payroll	false	test	tests/unit/payroll-calc.test.js	40	
 pf	function	payroll	false	test	tests/unit/payrollControlCenter.test.ts	150	
+d	function	payroll	false	test	tests/unit/payrollRunCalendar.test.ts	23	
 WEEKS	variable	payroll	false	test	tests/unit/payrollStatutory.test.ts	30	
 cls	function	payroll	false	test	tests/unit/payrollStatutory.test.ts	36	
 ALL_CLASSES	array	payroll	false	test	tests/unit/payrollStatutory.test.ts	58	
@@ -11168,6 +11230,23 @@ PayrollWorkQueueResult	interface	payroll	true		types/payrollFindings.ts	133
 PayrollFindingEscalateRequest	interface	payroll	true		types/payrollFindings.ts	143	
 PayrollFindingCommentRequest	interface	payroll	true		types/payrollFindings.ts	152	
 PayrollFindingCommentResult	interface	payroll	true		types/payrollFindings.ts	160	
+PayrollRunState	type	payroll	true		types/payrollRuns.ts	24	
+PageRequest	interface	payroll	true		types/payrollRuns.ts	39	
+PageResult	interface	payroll	true		types/payrollRuns.ts	46	
+PayrollRunSort	type	payroll	true		types/payrollRuns.ts	55	
+PayrollRunListRequest	interface	payroll	true		types/payrollRuns.ts	63	
+PayrollRunViewFilters	type	payroll	true		types/payrollRuns.ts	74	
+PayrollRunListItem	interface	payroll	true		types/payrollRuns.ts	80	
+PayrollRunListTab	type	payroll	true		types/payrollRuns.ts	95	
+PayrollRunListResult	interface	payroll	true		types/payrollRuns.ts	97	
+PayrollRunListPageRequest	interface	payroll	true		types/payrollRuns.ts	103	
+PayrollRunViewScope	type	payroll	true		types/payrollRuns.ts	109	
+PayrollRunView	interface	payroll	true		types/payrollRuns.ts	111	
+PayrollRunViewCreateRequest	interface	payroll	true		types/payrollRuns.ts	121	
+PayrollRunViewUpdateRequest	interface	payroll	true		types/payrollRuns.ts	127	
+PayrollRunCalendarInstance	interface	payroll	true		types/payrollRuns.ts	141	
+PayrollRunCalendarRequest	interface	payroll	true		types/payrollRuns.ts	150	
+PayrollRunCalendarResult	interface	payroll	true		types/payrollRuns.ts	156	
 Database	interface	platform	true		types/supabase.ts	38	
 Tables	type	platform	false		types/supabase.ts	125	
 TableRow	type	platform	true		types/supabase.ts	128	
