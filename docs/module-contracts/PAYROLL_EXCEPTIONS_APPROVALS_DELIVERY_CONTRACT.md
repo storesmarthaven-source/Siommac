@@ -135,8 +135,10 @@ interface PayrollWorkQueueResult {
 
 | Object | Definition/change | Constraints | Indexes | RLS/grants | Migration |
 |---|---|---|---|---|---|
-| `finance_payroll_finding_activity` (NEW) | append-only activity/comment log | see below | `(finding_id, created_at desc)`, `(run_id)` | RLS on; revoke anon/auth; grant service_role | `20260919000450_finance_payroll_finding_activity.sql` |
-| `finance_payroll_finding_command_tx` (ALTER) | add `escalate`,`comment` commands; write one activity row per command | escalate→`in_progress`+assignee; comment→no state change/no version bump | — | function grant to service_role (companion grant if new key) | same migration or `...0451` |
+| `finance_payroll_finding_activity` (NEW) | append-only activity/comment log | see below | `(finding_id, created_at desc)`, `(run_id)` | RLS on; revoke anon/auth; grant service_role **SELECT/INSERT/DELETE only (no UPDATE = append-only)** | `20260919000450_finance_payroll_finding_activity.sql` |
+| `finance_payroll_finding_command_tx` (REPLACE, supersedes 422) | `escalate` merged into the assign branch; writes one activity row per state change | escalate→`in_progress`+assignee | — | execute→service_role | `20260919000450_finance_payroll_finding_activity.sql` |
+| `finance_payroll_finding_comment_tx` (NEW) | sibling comment RPC — activity+event+audit, no state change, no version bump, no run-freeze | comment allowed on submitted runs | — | execute→service_role | `20260919000450_finance_payroll_finding_activity.sql` |
+| `finance_payroll_findings_work_queue` (NEW) | strict DB keyset union (findings + open approval workflow-tasks); returns items+nextCursor+total+tabCounts+asOf | keyset `(severity_rank, neg-µs epoch, id)`; limit 1..100 | reuses finding/run/task indexes | execute→service_role | `20260919000451_finance_payroll_work_queue_fn.sql` |
 
 `finance_payroll_finding_activity` columns:
 
@@ -150,13 +152,23 @@ interface PayrollWorkQueueResult {
 - `metadata jsonb` (assignee change, evidence refs, waiver expiry)
 - `finding_version integer` (finding version AFTER the command; null for comment)
 - `created_at timestamptz not null default now()`
-- Append-only: `BEFORE UPDATE` immutability trigger reusing `finance_payroll_reject_evidence_update()` (DELETE remains allowed for cascade/retention, matching the evidence-table pattern).
+- Append-only via GRANTS — **no `BEFORE UPDATE` trigger** (Point-3 review fix). service_role has only
+  SELECT/INSERT/DELETE, so the app can never overwrite a row, while `actor_id ON DELETE SET NULL` still
+  proceeds (a system referential action, not subject to column grants). This avoids the calc_versions
+  orphan trap where an immutability trigger blocks the SET NULL and breaks user deletion. DELETE stays
+  available for retention/sweeper cleanup; rows also cascade from finding/run.
 
 ### Migration rules
 
-- Apply order: after `20260919000420`. New file `20260919000450` (+ optional `0451` grant).
+- Apply order: after `20260919000422`, apply `20260919000450` then `20260919000451`, then
+  `NOTIFY pgrst, 'reload schema'`. **No grant migration** — no new permission keys (escalate reuses
+  `finance.payroll.finding.assign`, comment gates `finance.payroll.view_all`).
+- Absolute paths (files live on branch `wf/payroll-exceptions`, not yet on main):
+  `…/.claude/worktrees/wf-payroll-exceptions/supabase/migrations/20260919000450_finance_payroll_finding_activity.sql`
+  and `…/20260919000451_finance_payroll_work_queue_fn.sql`.
 - Backfill: **none** — activity begins at slice go-live; historical findings have no synthetic activity (DEC-EXC-005).
-- Rollback/recovery: drop table + revert RPC to the 4-command version.
+- Rollback/recovery: drop `finance_payroll_findings_work_queue` + `finance_payroll_finding_comment_tx`,
+  revert `finance_payroll_finding_command_tx` to the `422` (4-command) version, drop `finance_payroll_finding_activity`.
 - Existing migration already released? No (new).
 - Live verification queries: `select count(*) from finance_payroll_finding_activity where finding_id = $1`; RPC round-trip via E2E.
 - PostgREST schema reload required? Yes after apply (`NOTIFY pgrst,'reload schema'`).

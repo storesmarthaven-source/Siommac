@@ -96,7 +96,7 @@ begin
     from public.workflow_tasks t
     join public.workflow_instances wi on wi.id = t.workflow_id
     join public.finance_payroll_runs r0 on r0.id::text = wi.source_record_id
-    where t.task_type = 'approve'
+    where t.step_type = 'approval'
       and t.status in ('open', 'in_progress')
       and wi.module_key = 'finance_payroll'
       and wi.source_record_id is not null
