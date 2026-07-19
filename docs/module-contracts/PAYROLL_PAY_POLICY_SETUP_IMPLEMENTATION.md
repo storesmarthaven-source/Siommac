@@ -1,7 +1,7 @@
 # Payroll Pay-Policy Setup Delivery Contract
 
 **Owner:** Finance Payroll configuration owners  
-**Status:** Designed  
+**Status:** Implemented; live target verification pending
 **Branch/HEAD:** `codex/payroll-policy-setup` / `f4659c3f9f34ad64c54975e866f0eb317d906b4e`  
 **Database target:** Not linked in this isolated worktree; live verification pending  
 **Approved scope date:** 2026-07-19
@@ -74,7 +74,7 @@
 | UI-PPS-008 | Preflight | policies.view | API-PPS-005 | exact blockers/warnings/checksum | BUI-PPS-008 |
 | UI-PPS-009 | Submit | policies.submit | API-PPS-006 | certifications + no blockers | BUI-PPS-009 |
 | UI-PPS-010 | Detail tabs | policies.view | API-PPS-002 | URL hash/tab state | BUI-PPS-010 |
-| UI-PPS-011 | Create New Version | policies.draft | API-PPS-003 | active policy only | BUI-PPS-011 |
+| UI-PPS-011 | Create New Version | policies.draft | API-PPS-016 | active policy only; one unpublished version | BUI-PPS-011 |
 | UI-PPS-012 | Compare Versions | policies.view | API-PPS-012 | explicit empty/no-change state | BUI-PPS-012 |
 | UI-PPS-013 | Assign Pay Group | policies.assign | API-PPS-014 | active version/date/overlap gates | BUI-PPS-013 |
 | UI-PPS-014 | End Assignment | policies.assign | API-PPS-015 | reason/date required | BUI-PPS-014 |
@@ -87,7 +87,7 @@ Loans & Advances setup tab is removed from this configuration surface.
 
 ## 5. API inventory
 
-The exact endpoint inventory is API-PPS-001 through API-PPS-015 in
+The exact endpoint inventory is API-PPS-001 through API-PPS-016 in
 `PAYROLL_PAY_POLICY_SETUP_CONTRACT_TO_CODE_MAP.md`. All routes:
 
 - use strict Zod schemas and `body.args ?? body`;
@@ -138,6 +138,7 @@ The exact endpoint inventory is API-PPS-001 through API-PPS-015 in
 | MUT-PPS-006 | assignment + event + audit + handoff + receipt | assignment RPC |
 | MUT-PPS-007 | assignment end + event + audit + receipt | assignment RPC |
 | MUT-PPS-008 | retirement/assignment closure + event + audit + notification/handoff + receipt | retire RPC |
+| MUT-PPS-009 | next draft + copied governed rules + event + audit + receipt | copy-version RPC |
 
 All request keys are browser-owned per user action and stable across retry. Hashes include the
 canonical business payload; same key/different payload returns `409`.
@@ -181,4 +182,3 @@ review participation; route permissions do not replace task authorization.
 - SQL/security review: pending implementation.
 - UX approval: approved mockup adapted per Phase A boundary.
 - Test-plan approval: contract-defined; executable evidence pending.
-

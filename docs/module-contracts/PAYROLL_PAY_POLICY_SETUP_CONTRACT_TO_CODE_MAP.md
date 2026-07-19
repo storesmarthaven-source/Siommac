@@ -1,6 +1,6 @@
 # Payroll Pay-Policy Setup — Contract-to-Code Map
 
-**Status:** Approved Phase A design, pre-implementation  
+**Status:** Phase A implemented; live target verification pending
 **Branch/base:** `codex/payroll-policy-setup` / `f4659c3f9f34ad64c54975e866f0eb317d906b4e`  
 **Authority:** `docs/PAYROLL_TECHNICAL_IMPLEMENTATION.md` §§9.4 and 14
 
@@ -76,6 +76,7 @@ All paths are POST-only under `/api/finance/payroll/policies`. Every schema is s
 | API-PPS-013 | `/pay-groups/list` | view | `listPayPolicyAssignments` | Effective assignments with group names and member counts. |
 | API-PPS-014 | `/pay-groups/assign` | `finance.payroll.policies.assign` | `finance_pay_policy_assignment_tx(assign)` | Effective assignment. |
 | API-PPS-015 | `/pay-groups/end-assignment` | assign | `finance_pay_policy_assignment_tx(end)` | Closed assignment. |
+| API-PPS-016 | `/copy-version` | draft | `finance_pay_policy_copy_version_tx` | New effective-dated draft copied from a published version, exactly once. |
 
 ## 5. UI-to-contract map
 
@@ -87,7 +88,7 @@ All paths are POST-only under `/api/finance/payroll/policies`. Every schema is s
 | Components | Immutable active bindings and draft bindings | API-PPS-002/011 |
 | Source controls | Owner, match key, cutoff/late-input/conflict outcome | API-PPS-002/011 |
 | Cost & Payment | TTD, primary bank destination, missing-bank blocker, employee cost-centre rule | API-PPS-002 |
-| Versions | Create next draft, view, compare | API-PPS-003/010–012 |
+| Versions | Create next draft, view, compare | API-PPS-010–012/016 |
 | Usage | Assign/end pay group, effective group population | API-PPS-013–015 |
 | Audit | Bounded policy-specific `app_events`/audit rows | API-PPS-002 |
 
@@ -125,4 +126,3 @@ locks are held.
    established Statutory register language.
 5. Employee loans are removed from Payroll Setup navigation because they are employee/payroll
    operations, not pay-policy setup. Their existing API and feature remain untouched.
-

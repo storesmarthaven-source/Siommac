@@ -50,6 +50,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { EmployeePicker } from './_shared/pickers';
 import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
+import { PayPolicySetup } from './payroll/setup/PayPolicySetup';
 
 const empName = (e: HrEmployeeRow): string =>
   (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
@@ -85,11 +86,11 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
 // Main page
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SetupTab = 'pay-groups' | 'overtime-rules' | 'loans';
+type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules';
 
 export function PayrollSetupOverview(): VNode {
-  const [tab, setTab] = useState<SetupTab>('pay-groups');
-  const canView = can('finance.payroll.view_all');
+  const [tab, setTab] = useState<SetupTab>('pay-policies');
+  const canView = can('finance.payroll.view_all') || can('finance.payroll.policies.view');
 
   if (!canView) {
     return (
@@ -107,18 +108,18 @@ export function PayrollSetupOverview(): VNode {
       <HrfinPageHeader
         icon="book"
         title="Payroll Setup"
-        sub="Pay groups drive run frequency and population; overtime rules price OT by type; loans and advances auto-deduct from each run until cleared."
+        sub="Governed Pay Policies, Pay Groups, And Overtime Rules For Local Trinidad And Tobago Payroll."
       />
 
       <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
+        <button type="button" class={tab === 'pay-policies' ? 'is-active' : ''} onClick={() => setTab('pay-policies')}>Pay Policies</button>
         <button type="button" class={tab === 'pay-groups' ? 'is-active' : ''} onClick={() => setTab('pay-groups')}>Pay Groups</button>
         <button type="button" class={tab === 'overtime-rules' ? 'is-active' : ''} onClick={() => setTab('overtime-rules')}>Overtime Rules</button>
-        <button type="button" class={tab === 'loans' ? 'is-active' : ''} onClick={() => setTab('loans')}>Loans &amp; Advances</button>
       </div>
 
-      {tab === 'pay-groups' ? <PayGroupsPanel />
-        : tab === 'overtime-rules' ? <OvertimeRulesPanel />
-        : <LoansPanel />}
+      {tab === 'pay-policies' ? <PayPolicySetup />
+        : tab === 'pay-groups' ? <PayGroupsPanel />
+        : <OvertimeRulesPanel />}
     </div>
   );
 }

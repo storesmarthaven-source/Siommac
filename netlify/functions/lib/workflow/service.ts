@@ -48,6 +48,7 @@ const MODULE_START_PERMISSION: Record<string, string> = {
   ptw:                  'hse.ptw.view',
   finance_payroll:      'finance.payroll.view_all',
   finance_statutory:    'finance.statutory.view',
+  finance_pay_policy:   'finance.payroll.policies.view',
   finance_ap:           'finance.ap.view',
   finance_expenses:     'finance.expenses.view',
   finance_remittances:  'finance.remittances.view',

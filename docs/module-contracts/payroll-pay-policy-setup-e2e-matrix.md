@@ -15,6 +15,7 @@
 | APIE-PPS-011 | Compare: field/component/source diff and no-change state | `payrollPayPolicies: version comparison is server-derived` |
 | APIE-PPS-012 | Assign: active-only, overlap rejected, boundary resolution, effects/retry | `payrollPayPolicies: pay-group assignment is effective-dated and exactly once` |
 | APIE-PPS-013 | End assignment: state/date/reason gates and effects | `payrollPayPolicies: assignment end preserves history` |
+| APIE-PPS-014 | Copy version: published source, single unpublished version, exact copied rules/effects/idempotency | `payrollPayPolicies: new version is an atomic governed copy` |
 | AUTH-PPS-001 | No token is 401 for every new path | `payrollPayPolicies: all policy endpoints require authentication` |
 | AUTH-PPS-002 | Real employee receives 403 for every new path | `payrollPayPolicies: employee role is denied` |
 | AUTH-PPS-003 | Finance/HR review permissions and non-assignee negative paths | `payrollPayPolicies: review permissions and assignment are enforced` |
@@ -28,10 +29,10 @@
 | MUT-PPS-006 | Assignment event/audit/handoff exact counts | `payrollPayPolicies: pay-group assignment is effective-dated and exactly once` |
 | MUT-PPS-007 | End event/audit exact counts | `payrollPayPolicies: assignment end preserves history` |
 | MUT-PPS-008 | Retire event/audit/notification/handoff exact counts | `payrollPayPolicies: retirement closes future use atomically` |
+| MUT-PPS-009 | Copy-version business rows/event/audit/receipt exact counts | `payrollPayPolicies: new version is an atomic governed copy` |
 | BUI-PPS-001 | Authorized navigation; loading/empty/error/populated/forbidden | `Payroll Pay Policies browser: directory states` |
 | BUI-PPS-002 | Search/status/pagination/clear | `Payroll Pay Policies browser: directory controls` |
 | BUI-PPS-003–009 | Wizard validation, cancellation, save, resume, preflight, submit/toasts | `Payroll Pay Policies browser: governed wizard` |
 | BUI-PPS-010–012 | Detail tabs, create version, compare | `Payroll Pay Policies browser: detail and versions` |
 | BUI-PPS-013–017 | Assignment, activation, reject, retire, permission-hidden controls | `Payroll Pay Policies browser: governed actions` |
 | CLEAN-PPS-001 | Exact business/platform cleanup; no tagged leak | `payrollPayPolicies: cleanup verification` |
-

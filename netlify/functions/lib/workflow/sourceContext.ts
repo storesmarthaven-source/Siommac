@@ -79,6 +79,10 @@ const SOURCE_SPECS: Partial<Record<string, SourceSpec>> = {
     table: 'finance_statutory_versions', refColumns: ['label'],
     ownerColumns: ['created_by'], subjectColumns: ['created_by'],
   },
+  finance_pay_policy: {
+    table: 'finance_pay_policy_versions', refColumns: ['id'],
+    ownerColumns: ['prepared_by'], subjectColumns: ['prepared_by'],
+  },
   finance_ap: {
     table: 'finance_ap_bills', refColumns: ['bill_no'],
     ownerColumns: ['created_by'], subjectColumns: ['created_by'],
