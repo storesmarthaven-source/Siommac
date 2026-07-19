@@ -9,12 +9,15 @@
  * - No-backfill: ignore signals older than the page-load epoch (resetToastSessionClock on mount).
  * - Respect NotificationPreferences mute / quiet-hours.
  * - Coalesce bursts: 2s window → one "N new <domain>" rich toast.
- * - action_route guard: only showSection when route starts with 's-'.
+ * - action_route navigation (navigateToRoute): external urls → location.assign;
+ *   every in-app route (section ids AND internal paths) → showSection. Section
+ *   ids are never location.assign'd (that would break the SPA).
  * - s-notification-center (NOT s-notifications), s-messages (NOT s-notifications).
  * - Tickets: open the shared header ticket modal (data-pill-action="ticket"), not showSection.
  */
 
 import { toast }                                    from "@ui/toast";
+import { showSection }                              from "@components/nav/navCore";
 import type { CanonicalNotification }               from "@api/communications";
 import type { NotificationPreferencesData }         from "@api/communications";
 
@@ -64,35 +67,44 @@ function openTicketPanel(): void {
     btn.click();
   } else {
     // Fallback: navigate to notification center
-    window.Nav.showSection?.("s-notification-center");
+    showSection("s-notification-center");
   }
 }
 
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    window.Nav.showSection?.("s-messages");
+    showSection("s-messages");
   } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav.showSection?.("s-notification-center");
+    showSection("s-notification-center");
   }
 }
 
+/** True for a real external URL — a scheme (http:, mailto:, …) or protocol-relative. */
+function isExternalUrl(route: string): boolean {
+  return /^[a-z][a-z0-9+.-]*:/i.test(route) || route.startsWith("//");
+}
+
 /**
- * Open a notification's action_route. A route that starts with 's-' is an in-app
- * section id → showSection (§0.3 guard); anything else is treated as a URL. This
- * is why the Open button uses onClick, not a raw href (which would location.assign
- * a section id like 's-messages' as a bad URL).
+ * Open a notification's action_route (centralized here — no per-type duplication):
+ *  - a real EXTERNAL url (scheme / protocol-relative) → window.location.assign;
+ *  - everything else is IN-APP — section ids ('s-…') and any internal path go
+ *    through the canonical section navigator `showSection` (which switches the
+ *    panel + dispatches 'siomac:section'). We never location.assign an in-app
+ *    route, since assigning a section id like 's-messages' as a URL breaks the SPA.
+ * The Open button uses onClick → this, NOT a raw href (ToastCard resolves href via
+ * location.assign, which is only correct for external urls).
  */
-function navigateToRoute(route: string): void {
-  if (route.startsWith("s-")) {
-    window.Nav.showSection?.(route);
-  } else {
+export function navigateToRoute(route: string): void {
+  if (isExternalUrl(route)) {
     window.location.assign(route);
+    return;
   }
+  showSection(route);
 }
 
 // ── Severity → ToastVariant map ───────────────────────────────────────────────
