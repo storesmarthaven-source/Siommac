@@ -42,53 +42,24 @@ import {
   updateMyPreference,
 }                                  from '@api/notifications';
 import type { UpdatePreferencePayload } from '@api/schemas/notification';
-import { toast } from '@ui/toast';
+import { maybeToastNotification, resetToastSessionClock } from '@components/realtime/notificationToasts';
+import type { CanonicalNotification } from '@api/communications';
 
 // ── Realtime channel handle ───────────────────────────────────────────────────
 
 let _notifChannel: ReturnType<typeof supabase.channel> | null = null;
 
-/** The realtime `notifications` row shape we read for the targeted toast. */
-interface NotificationRow {
-  id?: string;
-  type?: string;
-  title?: string;
-  body?: string;
-  action_route?: string;
-}
-
-/** Compliance access notification types that warrant a live rich toast. */
+/**
+ * Compliance access notification types that warrant a live rich toast. We reuse
+ * the canonical `maybeToastNotification` engine (rich toast + burst-coalescing +
+ * no-backfill) SELECTIVELY for just these types — every other notification stays
+ * bubble-only, never toasted app-wide.
+ */
 const COMPLIANCE_TOAST_TYPES = new Set<string>([
   'iam.permission.compliance_grant_requested',
   'communications.compliance.access_granted',
   'communications.compliance.access_revoked',
 ]);
-
-/**
- * Show a targeted rich toast for a compliance access notification (and ONLY those).
- * The Open action deep-links to the notification's section (Approvals for a
- * request, Messages for grant/revoke). Cosmetic — the backend routes enforce access.
- */
-function fireComplianceAccessToast(n: NotificationRow): void {
-  if (!n.type || !COMPLIANCE_TOAST_TYPES.has(n.type)) return;
-  const variant = n.type === 'communications.compliance.access_revoked' ? 'warning' as const
-    : n.type === 'communications.compliance.access_granted' ? 'success' as const
-    : 'info' as const;
-  const route = n.action_route;
-  const nav = (window as unknown as { Nav?: { showSection?: (id: string) => void } }).Nav;
-  toast.action({
-    variant,
-    title: n.title ?? 'Compliance access',
-    description: n.body ?? undefined,
-    statusLabel: 'Compliance',
-    actions: [
-      { label: 'Dismiss', dismissOnClick: true },
-      ...(route?.startsWith('s-')
-        ? [{ label: 'Open', onClick: () => nav?.showSection?.(route), dismissOnClick: true }]
-        : []),
-    ],
-  });
-}
 
 /**
  * Subscribe to the user-scoped `notifications` Realtime channel.
@@ -101,6 +72,10 @@ function fireComplianceAccessToast(n: NotificationRow): void {
 export function initNotificationsRealtime(userId: string): void {
   if (_notifChannel) return;   // already subscribed
 
+  // Session start for the toast engine's no-backfill guard (ignores signals older
+  // than this epoch), so a reconnect can't replay old notifications as toasts.
+  resetToastSessionClock();
+
   _notifChannel = supabase
     .channel(`notifications:${userId}`)
     .on(
@@ -112,13 +87,16 @@ export function initNotificationsRealtime(userId: string): void {
         filter: `user_id=eq.${userId}`,
       },
       (payload) => {
-        const row = payload.new as NotificationRow;
+        const row = payload.new as CanonicalNotification;
         logger.info('[notifications] Realtime INSERT', { id: row.id });
         useNotificationStore.getState().onNewNotification();
-        // Targeted: ONLY compliance access notifications get a live rich toast
-        // (grant/revoke to the grantee, request to approvers). Every other
-        // notification type stays bubble-only — no global toast.
-        fireComplianceAccessToast(row);
+        // Targeted: reuse the canonical toast engine ONLY for compliance access
+        // types (grant/revoke to grantee, request to approvers). Everything else
+        // stays bubble-only. Mute is intentionally not applied to these — a
+        // security-relevant access change should surface even during quiet hours.
+        if (row.type && COMPLIANCE_TOAST_TYPES.has(row.type)) {
+          maybeToastNotification({ notification: row, domain: 'notifications' });
+        }
       },
     )
     .subscribe((status) => {

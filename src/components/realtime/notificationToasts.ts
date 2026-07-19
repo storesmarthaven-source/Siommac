@@ -64,20 +64,34 @@ function openTicketPanel(): void {
     btn.click();
   } else {
     // Fallback: navigate to notification center
-    window.Nav?.showSection?.("s-notification-center");
+    window.Nav.showSection?.("s-notification-center");
   }
 }
 
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    window.Nav?.showSection?.("s-messages");
+    window.Nav.showSection?.("s-messages");
   } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav?.showSection?.("s-notification-center");
+    window.Nav.showSection?.("s-notification-center");
+  }
+}
+
+/**
+ * Open a notification's action_route. A route that starts with 's-' is an in-app
+ * section id → showSection (§0.3 guard); anything else is treated as a URL. This
+ * is why the Open button uses onClick, not a raw href (which would location.assign
+ * a section id like 's-messages' as a bad URL).
+ */
+function navigateToRoute(route: string): void {
+  if (route.startsWith("s-")) {
+    window.Nav.showSection?.(route);
+  } else {
+    window.location.assign(route);
   }
 }
 
@@ -109,7 +123,7 @@ function fireNotificationToast(notification: CanonicalNotification, domain: stri
         subtitle: notification.body ?? undefined
       },
       actions: action_route
-        ? [{ label: "Open", href: action_route, dismissOnClick: true }]
+        ? [{ label: "Open", onClick: () => navigateToRoute(action_route), dismissOnClick: true }]
         : undefined
     });
     return;
@@ -128,7 +142,7 @@ function fireNotificationToast(notification: CanonicalNotification, domain: stri
       ],
       actions: [
         { label: "Dismiss", dismissOnClick: true },
-        { label: "Open", href: action_route, dismissOnClick: true }
+        { label: "Open", onClick: () => navigateToRoute(action_route), dismissOnClick: true }
       ]
     });
     return;
