@@ -42,32 +42,21 @@ import {
   updateMyPreference,
 }                                  from '@api/notifications';
 import type { UpdatePreferencePayload } from '@api/schemas/notification';
-import { maybeToastNotification, resetToastSessionClock } from '@components/realtime/notificationToasts';
-import type { CanonicalNotification } from '@api/communications';
+import { resetToastSessionClock } from '@components/realtime/notificationToasts';
 
 // ── Realtime channel handle ───────────────────────────────────────────────────
 
 let _notifChannel: ReturnType<typeof supabase.channel> | null = null;
 
 /**
- * Compliance access notification types that warrant a live rich toast. We reuse
- * the canonical `maybeToastNotification` engine (rich toast + burst-coalescing +
- * no-backfill) SELECTIVELY for just these types — every other notification stays
- * bubble-only, never toasted app-wide.
- */
-const COMPLIANCE_TOAST_TYPES = new Set<string>([
-  'iam.permission.compliance_grant_requested',
-  'communications.compliance.access_granted',
-  'communications.compliance.access_revoked',
-]);
-
-/**
  * Subscribe to the user-scoped `notifications` Realtime channel.
  * Call once after login. Idempotent — safe to call multiple times.
  *
- * On INSERT → calls onNewNotification() which:
- *   1. Increments unread count optimistically
- *   2. Invalidates TanStack Query cache
+ * NOTE: `public.notifications` is NOT in the Supabase realtime publication, so this
+ * postgres_changes subscription does not currently fire. The live badge + the
+ * compliance toast are driven off the WORKING communication_signals(domain=
+ * 'notifications') signal in useRealtimeSignals instead. This subscription is kept
+ * (harmless) for the day the table is published; it must NOT be the toast source.
  */
 export function initNotificationsRealtime(userId: string): void {
   if (_notifChannel) return;   // already subscribed
@@ -87,16 +76,8 @@ export function initNotificationsRealtime(userId: string): void {
         filter: `user_id=eq.${userId}`,
       },
       (payload) => {
-        const row = payload.new as CanonicalNotification;
-        logger.info('[notifications] Realtime INSERT', { id: row.id });
+        logger.info('[notifications] Realtime INSERT', { id: (payload.new as { id?: string }).id });
         useNotificationStore.getState().onNewNotification();
-        // Targeted: reuse the canonical toast engine ONLY for compliance access
-        // types (grant/revoke to grantee, request to approvers). Everything else
-        // stays bubble-only. Mute is intentionally not applied to these — a
-        // security-relevant access change should surface even during quiet hours.
-        if (row.type && COMPLIANCE_TOAST_TYPES.has(row.type)) {
-          maybeToastNotification({ notification: row, domain: 'notifications' });
-        }
       },
     )
     .subscribe((status) => {

@@ -29,6 +29,52 @@ import { emitMessagesSignal } from '@components/sections/Messages/messenger/inte
 type SupabaseClient  = ReturnType<typeof window.supabase.createClient>;
 type SupabaseChannel = ReturnType<SupabaseClient['channel']>;
 
+/** Compliance access notification types that warrant a live rich toast. */
+const COMPLIANCE_TOAST_TYPES = new Set<string>([
+  'iam.permission.compliance_grant_requested',
+  'communications.compliance.access_granted',
+  'communications.compliance.access_revoked',
+]);
+/** Notification ids already toasted this session — dedup across repeated signals. */
+const _toastedNotifIds = new Set<string>();
+
+/**
+ * Drive the compliance-access rich toast off the WORKING communication_signals
+ * (domain='notifications') signal — the `notifications` table is NOT in the realtime
+ * publication, so its own subscription never fires. Fetch recent notifications, map
+ * to the canonical shape (the read carries the route in `link`), dedupe by id, and
+ * hand each new compliance one to maybeToastNotification (no-backfill + burst guards
+ * still apply; every other type stays bubble-only).
+ */
+async function toastComplianceFromNotifications(): Promise<void> {
+  const [{ getMyNotifications }, { maybeToastNotification }, { useSessionStore }] = await Promise.all([
+    import('@api/notifications'),
+    import('@components/realtime/notificationToasts'),
+    import('@store/session'),
+  ]);
+  const userId = useSessionStore.getState().userId;
+  if (!userId) return;
+  let rows;
+  try { rows = await getMyNotifications(userId); } catch { return; }
+  for (const n of rows) {
+    if (!COMPLIANCE_TOAST_TYPES.has(n.type) || _toastedNotifIds.has(n.id)) continue;
+    _toastedNotifIds.add(n.id);
+    const severity = n.type === 'communications.compliance.access_granted' ? 'success'
+      : n.type === 'communications.compliance.access_revoked' ? 'warning' : 'info';
+    maybeToastNotification({
+      notification: {
+        id: n.id, type: n.type, title: n.title, body: n.body ?? null,
+        created_at: n.created_at ?? new Date().toISOString(), is_read: n.is_read,
+        action_route: n.link ?? null,   // the read carries the route in `link`
+        severity,
+        module: null, source_type: null, source_id: null,
+        metadata: null, action_required: false, action_status: 'none', due_at: null,
+      },
+      domain: 'notifications',
+    });
+  }
+}
+
 export function useRealtimeSignals(channelKey: string | null, realtimeToken: string | null = null): void {
   const qc           = useQueryClient();
   const clientRef    = useRef<SupabaseClient | null>(null);
@@ -106,6 +152,9 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
           const domain = payload.new?.domain;
           if (domain === 'notifications') {
             void qc.invalidateQueries({ queryKey: notificationKeys.all });
+            // The notifications table isn't published for realtime, so this working
+            // signal is where the compliance toast fires (fetch + dedupe + toast).
+            void toastComplianceFromNotifications();
           } else if (domain === 'messages') {
             void qc.invalidateQueries({ queryKey: messageKeys.all });
             emitMessagesSignal();   // Messenger workspace refetch bridge (no-op when unmounted)

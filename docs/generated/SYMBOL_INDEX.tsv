@@ -5203,21 +5203,22 @@ onInputKey	function	platform	false		src/components/nav/CommandPalette.tsx	150	Co
 mountCommandPalette	function	platform	true		src/components/nav/CommandPalette.tsx	218	
 mountNavController	function	platform	true		src/components/nav/mount.ts	13	
 unmountNavController	function	platform	true		src/components/nav/mount.ts	17	
-HDR_MODALS	variable	platform	false	component	src/components/nav/NavController.tsx	32	
-Win	type	platform	false		src/components/nav/NavController.tsx	34	
-callWin	function	platform	false		src/components/nav/NavController.tsx	36	
-NavController	function	platform	true	component	src/components/nav/NavController.tsx	41	
-setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	68	NavController
-onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	73	NavController
-onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	76	NavController
-onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	88	NavController
-onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	101	NavController
-closeAllModals	function	platform	false		src/components/nav/NavController.tsx	110	NavController
-HdrKind	type	platform	false		src/components/nav/NavController.tsx	115	NavController
-afterOpen	function	platform	false		src/components/nav/NavController.tsx	119	NavController
-toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	148	NavController
-onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	173	NavController
-onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	188	NavController
+HDR_MODALS	variable	platform	false	component	src/components/nav/NavController.tsx	33	
+Win	type	platform	false		src/components/nav/NavController.tsx	35	
+callWin	function	platform	false		src/components/nav/NavController.tsx	37	
+permissionSignature	function	platform	false		src/components/nav/NavController.tsx	47	
+NavController	function	platform	true	component	src/components/nav/NavController.tsx	55	
+setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	99	NavController
+onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	104	NavController
+onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	107	NavController
+onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	119	NavController
+onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	132	NavController
+closeAllModals	function	platform	false		src/components/nav/NavController.tsx	141	NavController
+HdrKind	type	platform	false		src/components/nav/NavController.tsx	146	NavController
+afterOpen	function	platform	false		src/components/nav/NavController.tsx	150	NavController
+toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	179	NavController
+onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	204	NavController
+onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	219	NavController
 cfg	function	platform	false		src/components/nav/navCore.ts	21	
 moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	31	
 allItemsForRole	function	platform	false		src/components/nav/navCore.ts	43	
@@ -9486,8 +9487,11 @@ CommunicationCounts	interface	communications	true		src/hooks/useCommunicationSum
 useCommunicationSummary	function	communications	true	hook	src/hooks/useCommunicationSummary.ts	26	
 SupabaseClient	type	communications	false		src/hooks/useRealtimeSignals.ts	29	
 SupabaseChannel	type	communications	false		src/hooks/useRealtimeSignals.ts	30	
-useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	32	
-onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	54	useRealtimeSignals
+COMPLIANCE_TOAST_TYPES	variable	communications	false		src/hooks/useRealtimeSignals.ts	33	
+_toastedNotifIds	variable	communications	false		src/hooks/useRealtimeSignals.ts	39	
+toastComplianceFromNotifications	function	communications	false		src/hooks/useRealtimeSignals.ts	49	
+useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	78	
+onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	100	useRealtimeSignals
 StepUpOptions	interface	platform	false		src/hooks/useStepUp.tsx	23	
 StepUpVerifyResponse	interface	platform	false		src/hooks/useStepUp.tsx	29	
 ResolveFn	type	platform	false		src/hooks/useStepUp.tsx	37	
@@ -9834,18 +9838,17 @@ setOrder	function	platform	true		src/lib/navVisibility.ts	133
 resetVisibility	function	platform	true		src/lib/navVisibility.ts	139	
 UUID_1	variable	communications	false	test	src/lib/notifications.test.ts	55	
 UUID_2	variable	communications	false	test	src/lib/notifications.test.ts	56	
-_notifChannel	variable	communications	false		src/lib/notifications.ts	50	
-COMPLIANCE_TOAST_TYPES	variable	communications	false		src/lib/notifications.ts	58	
-initNotificationsRealtime	function	communications	true		src/lib/notifications.ts	72	
-teardownNotificationsRealtime	function	communications	true		src/lib/notifications.ts	116	
-useMyNotifications	function	communications	true	hook	src/lib/notifications.ts	134	
-useUnreadCount	function	communications	true	hook	src/lib/notifications.ts	149	
-useMyNotificationPreferences	function	communications	true	hook	src/lib/notifications.ts	164	
-useMarkAsRead	function	communications	true	hook	src/lib/notifications.ts	177	
-useMarkAllAsRead	function	communications	true	hook	src/lib/notifications.ts	191	
-useDeleteNotification	function	communications	true	hook	src/lib/notifications.ts	208	
-useClearAllNotifications	function	communications	true	hook	src/lib/notifications.ts	222	
-useUpdateNotificationPreference	function	communications	true	hook	src/lib/notifications.ts	238	
+_notifChannel	variable	communications	false		src/lib/notifications.ts	49	
+initNotificationsRealtime	function	communications	true		src/lib/notifications.ts	61	
+teardownNotificationsRealtime	function	communications	true		src/lib/notifications.ts	97	
+useMyNotifications	function	communications	true	hook	src/lib/notifications.ts	115	
+useUnreadCount	function	communications	true	hook	src/lib/notifications.ts	130	
+useMyNotificationPreferences	function	communications	true	hook	src/lib/notifications.ts	145	
+useMarkAsRead	function	communications	true	hook	src/lib/notifications.ts	158	
+useMarkAllAsRead	function	communications	true	hook	src/lib/notifications.ts	172	
+useDeleteNotification	function	communications	true	hook	src/lib/notifications.ts	189	
+useClearAllNotifications	function	communications	true	hook	src/lib/notifications.ts	203	
+useUpdateNotificationPreference	function	communications	true	hook	src/lib/notifications.ts	219	
 PermissionRisk	type	security	true		src/lib/permissionMeta.ts	24	
 PermissionMeta	interface	security	true		src/lib/permissionMeta.ts	26	
 PERMISSION_META	object	security	true		src/lib/permissionMeta.ts	44	

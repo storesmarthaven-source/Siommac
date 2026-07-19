@@ -13,7 +13,8 @@
  */
 
 import { h, Fragment } from 'preact';
-import { useEffect }   from 'preact/hooks';
+import { useEffect, useRef } from 'preact/hooks';
+import { useSessionStore } from '@store/session';
 
 import {
   buildSidebar,
@@ -38,7 +39,37 @@ function callWin(name: string, ...args: unknown[]): void {
   if (typeof fn === 'function') (fn as (...a: unknown[]) => void)(...args);
 }
 
+/**
+ * A stable signature of everything that affects nav-item permission gating: the
+ * per-user overrides (incl. compliance validity/revocation) + the role's default
+ * set + the role. When this changes, the imperative sidebar must be rebuilt.
+ */
+function permissionSignature(s: ReturnType<typeof useSessionStore.getState>): string {
+  return s.permissionOverrides
+    .map(o => `${o.permission}|${String(o.granted)}|${o.revoked_at ?? ''}|${o.valid_from ?? ''}|${o.valid_until ?? ''}`)
+    .sort().join(';')
+    + '::' + [...s.rolePermissions].sort().join(',')
+    + '::' + (s.role ?? '');
+}
+
 export function NavController(): h.JSX.Element {
+
+  // The sidebar / top-tabs are built imperatively into the DOM once, and their
+  // per-item permission gates (canAccessModuleNavItem → can()) are evaluated at
+  // build time. A permission change (grant/revoke via refreshPermissionOverrides,
+  // the boundary timer, token-refresh) updates the store but would NOT rebuild the
+  // raw-DOM nav — so a newly-granted item (e.g. Approvals) would stay hidden until
+  // reload. Rebuild when the effective permission signature actually changes.
+  const permSig = useRef(permissionSignature(useSessionStore.getState()));
+  useEffect(() => useSessionStore.subscribe(s => {
+    const next = permissionSignature(s);
+    if (next === permSig.current) return;
+    permSig.current = next;
+    const role = getRole();
+    if (!role) return;
+    buildSidebar(role);
+    if (getLayout() === 'tabs') buildTopTabs(role);
+  }), []);
 
   useEffect(() => {
     const cleanups: (() => void)[] = [];
