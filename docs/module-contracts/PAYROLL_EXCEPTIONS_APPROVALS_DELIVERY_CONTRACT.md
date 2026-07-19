@@ -1,7 +1,7 @@
 # Payroll Exceptions & Approvals (§15.3) Delivery Contract
 
 **Owner:** Payroll module (Claude, parent session)
-**Status:** Designed
+**Status:** Live-verified · **Regression-clean** (payrollExceptions 29/29; financePayroll 138/138; full-run reds proven pre-existing on main via identical `payrollOverrides` failure on :8888) · ready for PR/merge
 **Branch/HEAD:** `wf/payroll-exceptions` / off `main` `a7eb0441`
 **Database target:** shared-dev
 **Approved scope date:** 2026-07-19
