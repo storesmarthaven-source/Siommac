@@ -1,24 +1,34 @@
 /**
  * routes/permissionApprovals.ts
  *
- * Maker-checker approval routes for critical permission grants.
- * A critical permission grant (isCriticalGrant(key) && effect=allow) does NOT
- * take effect immediately — it creates a pending permission_grant_approvals row.
- * A DIFFERENT superadmin (maker ≠ checker) must approve it here before it applies.
+ * Maker-checker approval routes for permission grants that require review.
+ * A gated grant request does NOT take effect immediately — it creates a pending
+ * permission_grant_approvals row. A different authorized reviewer (maker ≠
+ * checker) must approve it here before it applies.
  *
- * Routes (all POST, all require permissions.manage):
+ * Review scopes:
+ *   - permissions.manage: full queue for all gated permission grants.
+ *   - communications.compliance_approve: only time-boxed compliance_read/export grants.
+ *
+ * Routes (all POST):
  *   POST /api/admin/approvals/list    — pending (or filtered) approval requests
  *   POST /api/admin/approvals/approve — approve a pending request (step-up required, maker≠checker)
  *   POST /api/admin/approvals/reject  — reject a pending request (maker≠checker enforced)
- *   POST /api/admin/approvals/cancel  — requester cancels their own pending request
+ *   POST /api/admin/approvals/cancel  — requester cancels their own pending request (permissions.manage)
  */
 
 import { Hono }                      from 'hono';
 import { sb }                        from '../lib/db';
-import { requirePermission }         from '../lib/auth';
+import { requirePermission, requireUser, userCan } from '../lib/auth';
 import { requireStepUp }             from '../lib/stepUp';
 import { invalidateRolePermissions } from '../lib/permissions';
 import { emitSignal }                from '../lib/communications';
+import {
+  COMPLIANCE_ACCESS_GRANT_KEYS,
+  canReviewPermissionGrant,
+  resolvePermissionApprovalScope,
+  type PermissionApprovalScope,
+} from '../lib/permissionApprovalScope';
 import { z, zv }                     from '../lib/validate';
 import type { HonoVariables }        from '../../../types/api';
 
@@ -66,20 +76,70 @@ interface ApprovalRow {
   created_at:      string;
 }
 
+async function requireApprovalScope(
+  c: Parameters<typeof requireUser>[0],
+): Promise<{ actor: Awaited<ReturnType<typeof requireUser>>; scope: PermissionApprovalScope }> {
+  const actor = await requireUser(c);
+  const [canManagePermissions, canApproveCompliance] = await Promise.all([
+    userCan(actor, 'permissions.manage'),
+    userCan(actor, 'communications.compliance_approve'),
+  ]);
+  const scope = resolvePermissionApprovalScope(canManagePermissions, canApproveCompliance);
+  if (!scope) throw Object.assign(new Error('Forbidden'), { status: 403 });
+  return { actor, scope };
+}
+
+async function approvalPermissionKey(approvalId: string): Promise<{
+  permissionKey: string | null;
+  error: { message: string } | null;
+}> {
+  const { data, error } = await sb
+    .from('permission_grant_approvals')
+    .select('permission_key')
+    .eq('id', approvalId)
+    .maybeSingle();
+  return {
+    permissionKey: (data as { permission_key?: string } | null)?.permission_key ?? null,
+    error: error ? { message: error.message } : null,
+  };
+}
+
+async function enforceApprovalTarget(
+  c: Parameters<typeof requireUser>[0],
+  scope: PermissionApprovalScope,
+  approvalId: string,
+): Promise<Response | null> {
+  const target = await approvalPermissionKey(approvalId);
+  if (target.error) {
+    console.error('[approvals/scope] approval lookup error:', target.error.message);
+    return c.json({ success: false, message: 'Failed to validate approval scope.' }, 500);
+  }
+  if (!target.permissionKey) {
+    return c.json({ success: false, message: 'Approval not found.' }, 404);
+  }
+  if (!canReviewPermissionGrant(scope, target.permissionKey)) {
+    return c.json({ success: false, message: 'This approval is outside your authorized scope.' }, 403);
+  }
+  return null;
+}
+
 // ── POST /api/admin/approvals/list ────────────────────────────────────────────
 
 router.post('/list', async c => {
-  await requirePermission(c, 'permissions.manage');
+  const { scope } = await requireApprovalScope(c);
 
   const v = zv(c, ListSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const statusFilter = v.data.status ?? 'pending';
 
-  const { data, error } = await sb
+  let query = sb
     .from('permission_grant_approvals')
     .select('*')
-    .eq('status', statusFilter)
-    .order('requested_at', { ascending: false });
+    .eq('status', statusFilter);
+  if (scope === 'compliance') {
+    query = query.in('permission_key', [...COMPLIANCE_ACCESS_GRANT_KEYS]);
+  }
+  const { data, error } = await query.order('requested_at', { ascending: false });
 
   if (error) {
     console.error('[approvals/list] error:', error.message);
@@ -138,13 +198,14 @@ router.post('/list', async c => {
 // ── POST /api/admin/approvals/approve ─────────────────────────────────────────
 
 router.post('/approve', async c => {
-  // Permission check first (RBAC gate), then step-up freshness check
-  const actor = await requirePermission(c, 'permissions.manage');
-  await requireStepUp(c);
+  const { actor, scope } = await requireApprovalScope(c);
 
   const v = zv(c, ApproveSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { approvalId } = v.data;
+  const scopeError = await enforceApprovalTarget(c, scope, approvalId);
+  if (scopeError) return scopeError;
+  await requireStepUp(c);
 
   // Apply the grant + mark the approval approved in ONE atomic DB transaction.
   // The RPC row-locks the pending request, re-checks status / expiry / segregation
@@ -220,10 +281,12 @@ router.post('/approve', async c => {
 // ── POST /api/admin/approvals/reject ──────────────────────────────────────────
 
 router.post('/reject', async c => {
-  const actor = await requirePermission(c, 'permissions.manage');
+  const { actor, scope } = await requireApprovalScope(c);
   const v = zv(c, RejectSchema, c.get('body').args ?? {});
   if (!v.ok) return v.response;
   const { approvalId, reason } = v.data;
+  const scopeError = await enforceApprovalTarget(c, scope, approvalId);
+  if (scopeError) return scopeError;
 
   // ONE atomic transaction (row lock + pending re-check + maker≠checker inside
   // the tx) — a concurrent approve can no longer apply the grant between a

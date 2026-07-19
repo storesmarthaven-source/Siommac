@@ -78,6 +78,7 @@ export const PERMISSION_KEYS = [
   'communications.admin',
   'communications.compliance_read',
   'communications.compliance_export',
+  'communications.compliance_approve',
   // Granular message/participant capabilities (rich Message Center add-on)
   'communications.messages.post',
   'communications.messages.attach',
@@ -454,7 +455,8 @@ export type PermissionKey = typeof PERMISSION_KEYS[number];
 // ── Critical-grant keys (require dual superadmin approval) ──────────────────
 /**
  * Permission keys that are so sensitive that granting them (effect=allow) to any
- * role or user requires a SECOND superadmin to approve before they take effect.
+ * role or user requires a different authorized reviewer to approve before it
+ * takes effect.
  * Revokes and deny-overrides are never intercepted — only grants are gated.
  */
 export const CRITICAL_GRANT_KEYS = new Set<string>([

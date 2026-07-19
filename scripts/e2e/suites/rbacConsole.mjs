@@ -23,9 +23,14 @@ export const title = 'RBAC Console';
 // A real, non-critical permission key — low risk, so a grant applies immediately and
 // never routes through the maker-checker approval queue that critical keys use.
 const PERM = 'hr.employees.view';
-// A CRITICAL key (isCriticalGrant) — granting it must NOT apply immediately; it routes
-// through the maker-checker approval queue instead.
-const CRIT = 'communications.compliance_read';
+// Compliance data-access grants are critical and time-boxed. They route through
+// maker-checker and are the only requests a designated compliance approver may review.
+const CRIT_COMPLIANCE_READ = 'communications.compliance_read';
+const CRIT_COMPLIANCE_EXPORT = 'communications.compliance_export';
+// A non-compliance critical key for proving designated approvers cannot see or act
+// on the general high-risk approval queue.
+const CRIT_GENERAL = 'communications.admin';
+const COMPLIANCE_APPROVER = 'communications.compliance_approve';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, mintStepUp, sb, TAG } = h;
@@ -46,12 +51,20 @@ export default async function run(h) {
   const { actors: [emp], createdIds: idsEmp } = await h.acquireActors('employee', 1);
   const createdActorIds = [...idsMgr, ...idsEmp];
 
-  // A SECOND superadmin (checker) with a step-up token — required to APPROVE a maker-checker
-  // request (maker ≠ checker). Synthetic so it is always distinct from `sadmin`.
+  // A different superadmin (checker) with a step-up token — still valid for the full
+  // permissions.manage approval scope. Synthetic so it is always distinct from `sadmin`.
   const checkerId  = `${TAG}_checker`;
   const checkerUsr = `${TAG.toLowerCase()}_checker`;
   await sb.from('app_users').insert({ id: checkerId, username: checkerUsr, role: 'superadmin', status: 'active', employment_type: 'employee', full_name: 'E2E Checker' });
   const checkerTok = mintStepUp({ id: checkerId, username: checkerUsr, role: 'superadmin' });
+  // Designated non-superadmin compliance approver. The explicit permission grants
+  // only approval-scope authority; it does not grant message read/export access.
+  const approverId = `${TAG}_compliance_approver`;
+  const approverUsr = `${TAG.toLowerCase()}_compliance_approver`;
+  const approver = { id: approverId, username: approverUsr, role: 'employee', department_id: null };
+  await sb.from('app_users').insert({ id: approverId, username: approverUsr, role: 'employee', status: 'active', employment_type: 'employee', full_name: 'E2E Compliance Approver' });
+  const approverTok = mint(approver);
+  const approverStepTok = mintStepUp(approver);
   const approvalIds = [];
 
   const T = { sadmin: mint(sadmin), emp: mint(emp) };
@@ -65,9 +78,17 @@ export default async function run(h) {
   const createdRoles = [];
   const createdTiers = [];   // managed role_categories created by this suite
 
-  // Capture the target's pre-test override for PERM so cleanup restores it exactly.
+  // Capture pre-test overrides so cleanup restores exact state for borrowed actors.
   const { body: baseBody } = await api('superadmin/getUserPermissions', T.sadmin, { userId: tgt.id });
   const baseRow = (baseBody?.permissions ?? []).find(p => p.permission === PERM);
+  const prevComplianceRead = await h.readPermissionOverride(tgt.id, CRIT_COMPLIANCE_READ);
+  const prevComplianceExport = await h.readPermissionOverride(tgt.id, CRIT_COMPLIANCE_EXPORT);
+  const prevApproverGrant = await h.readPermissionOverride(approverId, COMPLIANCE_APPROVER);
+
+  const validityWindow = () => ({
+    validFrom: new Date(Date.now() - 60_000).toISOString(),
+    validUntil: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+  });
 
   h.onCleanup(async () => {
     // Restore the manager's PERM override to its exact pre-test state.
@@ -94,10 +115,12 @@ export default async function run(h) {
       .eq('entity', 'user').eq('entity_id', tgt.id)
       .in('action', ['permission_grant', 'permission_deny', 'permission_clear', 'permission_grant_requested'])
       .gte('created_at', runStart);
-    // Maker-checker artifacts: pending/approved approval rows + any applied CRIT grants.
+    // Maker-checker artifacts: pending/approved approval rows + any applied critical grants.
     if (approvalIds.length) await sb.from('permission_grant_approvals').delete().in('id', approvalIds);
     await sb.from('permission_grant_approvals').delete().eq('requested_by', sadmin.id).gte('created_at', runStart);
-    await sb.from('user_permissions').delete().eq('user_id', tgt.id).eq('permission', CRIT);
+    await h.restorePermissionOverride(tgt.id, CRIT_COMPLIANCE_READ, prevComplianceRead);
+    await h.restorePermissionOverride(tgt.id, CRIT_COMPLIANCE_EXPORT, prevComplianceExport);
+    await h.restorePermissionOverride(approverId, COMPLIANCE_APPROVER, prevApproverGrant);
     // NOTE: role_permissions for created roles are removed via createdRoles above —
     // we deliberately do NOT touch any real role (e.g. 'manager') here.
     // Platform §2 rows emitted by the mutations (app_events + emitAppEvent audit_logs).
@@ -107,6 +130,7 @@ export default async function run(h) {
     if (approvalIds.length) await sb.from('activity_logs').delete().gte('created_at', runStart).in('entity_id', approvalIds);
     // Synthetic actors (checker + any shortfall).
     await sb.from('app_users').delete().eq('id', checkerId);
+    await sb.from('app_users').delete().eq('id', approverId);
     if (createdActorIds.length) await sb.from('app_users').delete().in('id', createdActorIds);
   });
 
@@ -320,35 +344,80 @@ export default async function run(h) {
     expect(await auditHas('user', tgt.id, 'permission_clear'), 'permission_clear audit');
   });
 
-  // ── Maker-checker: CRITICAL grants need a SECOND superadmin's approval ────────
+  // ── Maker-checker: critical grants need a different authorized reviewer ─────
   h.section('RBAC Console › Maker-checker (critical grants)');
 
   await test('critical user grant without a reason is rejected (not applied)', async () => {
-    const r = await api('superadmin/setUserPermission', T.sadmin, { userId: tgt.id, permission: CRIT, granted: true });
+    const r = await api('superadmin/setUserPermission', T.sadmin, { userId: tgt.id, permission: CRIT_COMPLIANCE_READ, granted: true });
     fails(r);
     expect(r.status === 400 && r.body.code === 'reason_required', `400 reason_required, got ${r.status}/${r.body.code}`);
-    const { data } = await sb.from('user_permissions').select('permission').eq('user_id', tgt.id).eq('permission', CRIT);
+    const { data } = await sb.from('user_permissions').select('permission').eq('user_id', tgt.id).eq('permission', CRIT_COMPLIANCE_READ);
     expect((data ?? []).length === 0, 'not applied');
   });
 
   let userApprovalId = null;
   await test('critical user grant WITH a reason → pending approval, NOT applied', async () => {
-    const r = await api('superadmin/setUserPermission', T.sadmin, { userId: tgt.id, permission: CRIT, granted: true, reason: 'E2E maker-checker' });
+    const r = await api('superadmin/setUserPermission', T.sadmin, {
+      userId: tgt.id, permission: CRIT_COMPLIANCE_READ, granted: true, reason: 'E2E maker-checker',
+      ...validityWindow(),
+    });
     ok(r);
     expect(r.body.pending === true, 'response marked pending');
     expect(!!r.body.approvalId, 'approvalId returned');
     userApprovalId = r.body.approvalId; approvalIds.push(userApprovalId);
     const { data: appr } = await sb.from('permission_grant_approvals')
       .select('status, request_type, permission_key, target_user_id, requested_by').eq('id', userApprovalId).maybeSingle();
-    expect(appr && appr.status === 'pending' && appr.request_type === 'user_override' && appr.permission_key === CRIT && appr.target_user_id === tgt.id, 'pending user_override row created');
+    expect(appr && appr.status === 'pending' && appr.request_type === 'user_override' && appr.permission_key === CRIT_COMPLIANCE_READ && appr.target_user_id === tgt.id, 'pending user_override row created');
     expect(appr.requested_by === sadmin.id, 'requested_by = the maker');
-    const { data: up } = await sb.from('user_permissions').select('permission').eq('user_id', tgt.id).eq('permission', CRIT);
+    const { data: up } = await sb.from('user_permissions').select('permission').eq('user_id', tgt.id).eq('permission', CRIT_COMPLIANCE_READ);
     expect((up ?? []).length === 0, 'grant NOT applied while pending');
   });
 
   await test('a duplicate critical request is de-duped (409 already_pending)', async () => {
-    const r = await api('superadmin/setUserPermission', T.sadmin, { userId: tgt.id, permission: CRIT, granted: true, reason: 'again' });
+    const r = await api('superadmin/setUserPermission', T.sadmin, {
+      userId: tgt.id, permission: CRIT_COMPLIANCE_READ, granted: true, reason: 'again',
+      ...validityWindow(),
+    });
     fails(r); expect(r.status === 409 && r.body.code === 'already_pending', `409 already_pending, got ${r.status}/${r.body.code}`);
+  });
+
+  let generalApprovalId = null;
+  await test('general critical ROLE grant routes through the full approval queue', async () => {
+    const cr = await api('superadmin/createRole', T.sadmin, { name: roleNameCrit, label: 'E2E Crit Role', category: 'staff' });
+    ok(cr); createdRoles.push(roleNameCrit);
+    const noReason = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT_GENERAL, granted: true });
+    fails(noReason); expect(noReason.status === 400 && noReason.body.code === 'reason_required', 'role critical grant needs a reason');
+    const r = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT_GENERAL, granted: true, reason: 'E2E general critical' });
+    ok(r); expect(r.body.pending === true && !!r.body.approvalId, 'pending role approval');
+    generalApprovalId = r.body.approvalId; approvalIds.push(generalApprovalId);
+    const { data: appr } = await sb.from('permission_grant_approvals').select('request_type, target_role, permission_key, status').eq('id', generalApprovalId).maybeSingle();
+    expect(appr && appr.request_type === 'role_permission' && appr.target_role === roleNameCrit && appr.permission_key === CRIT_GENERAL && appr.status === 'pending', 'pending general role_permission row');
+    const { data: rp } = await sb.from('role_permissions').select('permission').eq('role_name', roleNameCrit).eq('permission', CRIT_GENERAL);
+    expect((rp ?? []).length === 0, 'role grant NOT applied while pending');
+  });
+
+  await test('seed designated compliance approver grant', async () => {
+    const { error } = await sb.from('user_permissions').upsert(
+      { user_id: approverId, permission: COMPLIANCE_APPROVER, granted: true, set_by: `e2e_${TAG}`, set_at: new Date().toISOString() },
+      { onConflict: 'user_id,permission' },
+    );
+    expect(!error, error?.message ?? 'approver grant inserted');
+  });
+
+  await test('designated approver lists compliance requests only', async () => {
+    const r = await api('admin/approvals/list', approverTok, { status: 'pending' });
+    ok(r);
+    const keys = (r.body.approvals ?? []).map(a => a.permissionKey);
+    expect(keys.includes(CRIT_COMPLIANCE_READ), 'compliance request visible');
+    expect(!keys.includes(CRIT_GENERAL), 'general critical request hidden');
+  });
+
+  await test('permissions.manage still sees the full pending queue', async () => {
+    const r = await api('admin/approvals/list', T.sadmin, { status: 'pending' });
+    ok(r);
+    const ids = new Set((r.body.approvals ?? []).map(a => a.id));
+    expect(ids.has(userApprovalId), 'compliance approval visible to permissions.manage');
+    expect(ids.has(generalApprovalId), 'general critical approval visible to permissions.manage');
   });
 
   await test('the maker CANNOT approve their own request (segregation of duties)', async () => {
@@ -358,14 +427,15 @@ export default async function run(h) {
     expect(appr && appr.status === 'pending', 'still pending after a blocked self-approval');
   });
 
-  await test('a SECOND superadmin approves → grant applies + row marked approved', async () => {
-    const r = await api('admin/approvals/approve', checkerTok, { approvalId: userApprovalId });
+  await test('designated approver approves a compliance grant with step-up', async () => {
+    const r = await api('admin/approvals/approve', approverStepTok, { approvalId: userApprovalId });
     ok(r);
-    const { data: up } = await sb.from('user_permissions').select('granted').eq('user_id', tgt.id).eq('permission', CRIT).maybeSingle();
+    const { data: up } = await sb.from('user_permissions').select('granted, valid_from, valid_until').eq('user_id', tgt.id).eq('permission', CRIT_COMPLIANCE_READ).maybeSingle();
     expect(up && up.granted === true, 'grant now applied after approval');
     const { data: appr } = await sb.from('permission_grant_approvals').select('status, decided_by, applied_at').eq('id', userApprovalId).maybeSingle();
-    expect(appr && appr.status === 'approved' && appr.decided_by === checkerId, 'row approved by the checker');
+    expect(appr && appr.status === 'approved' && appr.decided_by === approverId, 'row approved by the designated approver');
     expect(appr && appr.applied_at, 'applied_at stamped atomically with the grant');
+    expect(up && up.valid_from && up.valid_until, 'time-box copied to the applied compliance grant');
   });
 
   await test('re-approving an already-approved request is rejected (atomic status guard)', async () => {
@@ -375,19 +445,56 @@ export default async function run(h) {
     fails(r); expect(r.status === 400, `expected 400 not_pending, got ${r.status}`);
   });
 
-  await test('critical ROLE grant routes through approval too', async () => {
-    // Target a fresh throwaway role — never a real one — so nothing real is mutated.
-    const cr = await api('superadmin/createRole', T.sadmin, { name: roleNameCrit, label: 'E2E Crit Role', category: 'staff' });
-    ok(cr); createdRoles.push(roleNameCrit);
-    const noReason = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT, granted: true });
-    fails(noReason); expect(noReason.status === 400 && noReason.body.code === 'reason_required', 'role critical grant needs a reason');
-    const r = await api('superadmin/setRolePermission', T.sadmin, { roleName: roleNameCrit, permission: CRIT, granted: true, reason: 'E2E role critical' });
-    ok(r); expect(r.body.pending === true && !!r.body.approvalId, 'pending role approval');
-    approvalIds.push(r.body.approvalId);
-    const { data: appr } = await sb.from('permission_grant_approvals').select('request_type, target_role, status').eq('id', r.body.approvalId).maybeSingle();
-    expect(appr && appr.request_type === 'role_permission' && appr.target_role === roleNameCrit && appr.status === 'pending', 'pending role_permission row');
-    const { data: rp } = await sb.from('role_permissions').select('permission').eq('role_name', roleNameCrit).eq('permission', CRIT);
-    expect((rp ?? []).length === 0, 'role grant NOT applied while pending');
+  let exportApprovalId = null;
+  await test('designated approver rejects a compliance grant', async () => {
+    const req = await api('superadmin/setUserPermission', T.sadmin, {
+      userId: tgt.id, permission: CRIT_COMPLIANCE_EXPORT, granted: true, reason: 'E2E compliance reject',
+      ...validityWindow(),
+    });
+    ok(req); expect(req.body.pending === true && !!req.body.approvalId, 'pending export approval');
+    exportApprovalId = req.body.approvalId; approvalIds.push(exportApprovalId);
+    const r = await api('admin/approvals/reject', approverTok, { approvalId: exportApprovalId, reason: 'E2E reject' });
+    ok(r);
+    const { data: appr } = await sb.from('permission_grant_approvals').select('status, decided_by').eq('id', exportApprovalId).maybeSingle();
+    expect(appr && appr.status === 'rejected' && appr.decided_by === approverId, 'row rejected by designated approver');
+    const { data: up } = await sb.from('user_permissions').select('permission').eq('user_id', tgt.id).eq('permission', CRIT_COMPLIANCE_EXPORT);
+    expect((up ?? []).length === 0, 'rejected grant was not applied');
+  });
+
+  await test('designated approver cannot approve or reject their own compliance request', async () => {
+    const selfApprovalId = `PGA-${crypto.randomUUID()}`;
+    approvalIds.push(selfApprovalId);
+    const { validFrom, validUntil } = validityWindow();
+    const { error } = await sb.from('permission_grant_approvals').insert({
+      id: selfApprovalId,
+      request_type: 'user_override',
+      target_user_id: tgt.id,
+      target_role: null,
+      permission_key: CRIT_COMPLIANCE_EXPORT,
+      effect: 'allow',
+      reason: 'E2E self approval guard',
+      requested_by: approverId,
+      expires_at: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+      grant_valid_from: validFrom,
+      grant_valid_until: validUntil,
+    });
+    expect(!error, error?.message ?? 'self approval row inserted');
+    const approveSelf = await api('admin/approvals/approve', approverStepTok, { approvalId: selfApprovalId });
+    fails(approveSelf); expect(approveSelf.status === 403 && approveSelf.body.code === 'self_approval', `403 self_approval, got ${approveSelf.status}/${approveSelf.body.code}`);
+    const rejectSelf = await api('admin/approvals/reject', approverTok, { approvalId: selfApprovalId, reason: 'nope' });
+    fails(rejectSelf); expect(rejectSelf.status === 403 && rejectSelf.body.code === 'self_approval', `403 self_approval, got ${rejectSelf.status}/${rejectSelf.body.code}`);
+  });
+
+  await test('designated approver gets 403 for a non-compliance approval id', async () => {
+    const r = await api('admin/approvals/approve', approverTok, { approvalId: generalApprovalId });
+    fails(r); expect(r.status === 403, `expected 403, got ${r.status}`);
+  });
+
+  await test('actor without approval capability cannot list or decide approvals', async () => {
+    const list = await api('admin/approvals/list', T.emp, { status: 'pending' });
+    fails(list); expect(list.status === 403, `list expected 403, got ${list.status}`);
+    const approve = await api('admin/approvals/approve', mintStepUp(emp), { approvalId: generalApprovalId });
+    fails(approve); expect(approve.status === 403, `approve expected 403, got ${approve.status}`);
   });
 
   // ── Access control: the negative path (a real employee is denied) ────────────

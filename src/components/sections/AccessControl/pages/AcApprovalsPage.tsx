@@ -3,8 +3,9 @@
  *
  * Access Control — Approvals. Maker-checker queue for critical permission grants,
  * rendered in the `.acx` design system (no dedicated mockup). Wired to the console
- * approval hooks: a second superadmin approves (step-up) or rejects; the requester
- * cancels. Approve is blocked for your own request (segregation of duties).
+ * approval hooks: a different authorized reviewer approves (step-up) or rejects;
+ * the requester cancels. Approve is blocked for your own request (segregation
+ * of duties).
  */
 
 import { type VNode } from 'preact';
@@ -41,7 +42,7 @@ export function AcApprovalsPage(): VNode {
     <div class="acx">
       <div class="page-head">
         <h1 class="page-title">Approvals <span class="tag">Maker-Checker</span></h1>
-        <p class="page-sub">Critical permission grants require a second superadmin's approval before they take effect. You cannot approve your own request.</p>
+        <p class="page-sub">Critical permission grants require a different authorized reviewer's approval before they take effect. You cannot approve your own request.</p>
       </div>
 
       <div class="stats" style={{ gridTemplateColumns: 'repeat(4,1fr)' }}>

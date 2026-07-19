@@ -21,35 +21,44 @@ import { AcAuditPage }     from './pages/AcAuditPage';
 import { AcSessionsPage }  from './pages/AcSessionsPage';
 import { PayslipStudioSection } from '../PayslipStudio/PayslipStudioSection';
 import { showSection } from '@components/nav/navCore';
+import { useCan } from '@lib/permissions';
 import './accessControl.css';
 
 const OVERVIEW = 's-ac-overview';
+const APPROVALS = 's-ac-approvals';
 const PAYSLIP_DESIGNER = 's-ac-payslip-designer';
-const IDS = new Set([OVERVIEW, 's-ac-users', 's-ac-roles', 's-ac-coverage', 's-ac-approvals', 's-ac-audit', 's-ac-sessions', PAYSLIP_DESIGNER]);
+const IDS = new Set([OVERVIEW, 's-ac-users', 's-ac-roles', 's-ac-coverage', APPROVALS, 's-ac-audit', 's-ac-sessions', PAYSLIP_DESIGNER]);
 
 export function AccessControlSection(): VNode {
+  const canManage = useCan('permissions.manage');
+  const canApproveCompliance = useCan('communications.compliance_approve');
   const [sectionId, setSectionId] = useState<string>(() => {
     try { return localStorage.getItem('siomac_ac_section') ?? OVERVIEW; } catch { return OVERVIEW; }
   });
+  const effectiveSectionId = canManage ? sectionId : canApproveCompliance ? APPROVALS : null;
 
   useEffect(() => {
     function onSection(e: Event): void {
       const id = (e as CustomEvent<string>).detail;
-      if (IDS.has(id)) {
+      const allowed = canManage ? IDS.has(id) : canApproveCompliance && id === APPROVALS;
+      if (allowed) {
         setSectionId(id);
         try { localStorage.setItem('siomac_ac_section', id); } catch (_) { /* ignore */ }
       }
     }
     window.addEventListener('siomac:section', onSection);
     return () => window.removeEventListener('siomac:section', onSection);
-  }, []);
+  }, [canApproveCompliance, canManage]);
 
-  if (sectionId === 's-ac-users')     return <AcUsersPage />;
-  if (sectionId === 's-ac-roles')     return <AcRolesPage />;
-  if (sectionId === 's-ac-coverage')  return <AcCoveragePage />;
-  if (sectionId === 's-ac-approvals') return <AcApprovalsPage />;
-  if (sectionId === 's-ac-audit')     return <AcAuditPage />;
-  if (sectionId === 's-ac-sessions')  return <AcSessionsPage />;
-  if (sectionId === PAYSLIP_DESIGNER) return <PayslipStudioSection onBack={() => showSection('s-ac-overview')} />;
+  if (!effectiveSectionId) {
+    return <div class="acx ac-empty">You do not have permission to access this section.</div>;
+  }
+  if (effectiveSectionId === 's-ac-users')     return <AcUsersPage />;
+  if (effectiveSectionId === 's-ac-roles')     return <AcRolesPage />;
+  if (effectiveSectionId === 's-ac-coverage')  return <AcCoveragePage />;
+  if (effectiveSectionId === APPROVALS)        return <AcApprovalsPage />;
+  if (effectiveSectionId === 's-ac-audit')     return <AcAuditPage />;
+  if (effectiveSectionId === 's-ac-sessions')  return <AcSessionsPage />;
+  if (effectiveSectionId === PAYSLIP_DESIGNER) return <PayslipStudioSection onBack={() => showSection('s-ac-overview')} />;
   return <AcOverviewPage />;
 }

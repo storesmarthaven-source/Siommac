@@ -35,6 +35,10 @@ export interface ModuleNavItem {
   parent?: string;
   /** For toggleable children: default sidebar visibility (default true). */
   defaultVisible?: boolean;
+  /** Optional role restriction narrower than the owning module's role list. */
+  roles?: AppRole[];
+  /** Optional capability required for this individual navigation item. */
+  permission?: string;
 }
 
 export interface ModuleNavGroup {
@@ -78,6 +82,16 @@ export interface ModuleDefinition {
   mount: ModuleMount;
   /** Visibility namespace for toggleable children (navVisibility store). */
   visibilityNamespace?: string;
+}
+
+/** Pure item-level authorization used by the DOM navigation and unit tests. */
+export function canAccessModuleNavItem(
+  item: ModuleNavItem,
+  role: string,
+  hasPermission: (key: string) => boolean,
+): boolean {
+  if (item.roles && !item.roles.includes(role as AppRole)) return false;
+  return !item.permission || hasPermission(item.permission);
 }
 
 // ── Registry ──────────────────────────────────────────────────────────────────

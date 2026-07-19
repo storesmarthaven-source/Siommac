@@ -272,6 +272,7 @@ export const PERMISSION_KEYS = [
   'communications.admin',           // messaging settings, retention, broadcast, blocked users
   'communications.compliance_read', // controlled, audited read of private threads (per-user grant)
   'communications.compliance_export', // export message history for approved investigations
+  'communications.compliance_approve', // approve/reject time-boxed compliance access grants
   // Granular message/participant capabilities (rich Message Center add-on)
   'communications.messages.post',                 // send a message in a thread you participate in
   'communications.messages.attach',               // attach files to a message
@@ -1212,6 +1213,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'communications.view', 'communications.thread_create', 'communications.thread_manage_own',
     'communications.record_thread_read', 'communications.moderate', 'communications.admin',
     'communications.compliance_read', 'communications.compliance_export',
+    'communications.compliance_approve',
     'communications.messages.post', 'communications.messages.attach',
     'communications.messages.download_attachment', 'communications.messages.delete_own_attachment',
     'communications.messages.pin_own', 'communications.messages.pin_thread',

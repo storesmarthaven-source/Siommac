@@ -245,7 +245,7 @@ export function AcCreateRolePage({ role: existingRole, initialCategory, onDone }
                 <div class="between" style={{ marginBottom: '8px' }}><span class="muted">High-risk (approval-gated)</span><b style={{ color: 'var(--red)' }}>{summary.critical}</b></div>
                 <div class="between"><span class="muted">Description</span><span class="muted" style={{ maxWidth: '60%', textAlign: 'right' }}>{description.trim() || '—'}</span></div>
               </div></div>
-              {newCritical.length > 0 && <div class="cr-info-box" style={{ marginBottom: '0' }}><i class="fas fa-triangle-exclamation" /><div><div class="cr-info-title">{newCritical.length} capability(ies) will be submitted for approval</div><div class="cr-info-body">Non-critical grants apply immediately; critical grants become effective after a second superadmin approves.</div></div></div>}
+              {newCritical.length > 0 && <div class="cr-info-box" style={{ marginBottom: '0' }}><i class="fas fa-triangle-exclamation" /><div><div class="cr-info-title">{newCritical.length} capability(ies) will be submitted for approval</div><div class="cr-info-body">Non-critical grants apply immediately; critical grants become effective after a different authorized reviewer approves.</div></div></div>}
             </>
           )}
         </div>

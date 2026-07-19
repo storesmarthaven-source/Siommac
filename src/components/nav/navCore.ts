@@ -11,7 +11,8 @@
 import type { SiomacConfig, SectionItem, NavGroupItem, NavGroupId } from './types';
 import { updateColorScheme, updateLayoutMode } from './api';
 import { navIconSvg } from './navIcons';
-import { getModulesForRole, getModuleForSection } from '@lib/moduleRegistry';
+import { canAccessModuleNavItem, getModulesForRole, getModuleForSection } from '@lib/moduleRegistry';
+import { can } from '@lib/permissions';
 import { isVisible, resolveVisible, resolveOrder } from '@lib/navVisibility';
 import { setActivePanel } from '../../shell/sections/useActiveSection';
 
@@ -31,6 +32,7 @@ export function moduleSectionItems(role: string): SectionItem[] {
   const out: SectionItem[] = [];
   for (const mod of getModulesForRole(role)) {
     for (const it of mod.navItems) {
+      if (!canAccessModuleNavItem(it, role, can)) continue;
       out.push({ id: it.id, label: it.label, icon: it.icon, sub: it.sub, group: mod.navGroup?.id, parent: it.parent, defaultVisible: it.defaultVisible });
     }
   }

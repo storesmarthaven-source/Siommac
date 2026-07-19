@@ -301,7 +301,7 @@ function ApprovalDialog({ roleLabel, permKey, onSubmit, onCancel }: {
           <span class="r2-modal-ico amber"><LucideIcon name="ShieldAlert" size={17} /></span>
           <div class="r2-modal-titles">
             <div class="r2-modal-title">Approval Required</div>
-            <div class="r2-modal-sub">Critical capability — it will be routed to a second superadmin instead of applied immediately.</div>
+            <div class="r2-modal-sub">Critical capability — it will be routed to a different authorized reviewer instead of applied immediately.</div>
           </div>
           <button type="button" class="r2-modal-x" onClick={onCancel} aria-label="Close"><LucideIcon name="X" size={17} /></button>
         </div>
@@ -379,7 +379,7 @@ function ReviewDialog({ role, pending, saving, onCancel, onConfirm }: {
           {approvals > 0 && (
             <div class="r2-rev-note">
               <LucideIcon name="ShieldAlert" size={15} />
-              {approvals} critical grant{approvals === 1 ? '' : 's'} will be sent for a second superadmin's approval instead of applied immediately.
+              {approvals} critical grant{approvals === 1 ? '' : 's'} will be sent for a different authorized reviewer's approval instead of applied immediately.
             </div>
           )}
         </div>

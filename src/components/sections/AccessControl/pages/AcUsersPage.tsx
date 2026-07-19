@@ -178,7 +178,7 @@ export function AcUsersPage(): VNode {
     if (!key || !selId) return;
     const res = await setUserPermissionWithReasonApi(selId, key, true, reason);
     if (!res.success) toast.error(res.message ?? 'Failed to submit request.');
-    else if (res.pending) { setLocal(prev => new Set([...prev, key])); void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') }); toast.success("Submitted for a second superadmin's approval."); }
+    else if (res.pending) { setLocal(prev => new Set([...prev, key])); void qc.invalidateQueries({ queryKey: consoleKeys.approvals('pending') }); toast.success("Submitted for a different authorized reviewer's approval."); }
     else { toast.success(`${key} granted.`); void permsQ.refetch(); }
   };
 

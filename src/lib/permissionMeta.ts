@@ -773,6 +773,13 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     risk: 'critical',
     requiresSuperAdmin: true,
   },
+  'communications.compliance_approve': {
+    module: 'Communications', group: 'Compliance',
+    label: 'Approve Compliance Access',
+    description: 'Approve or reject time-boxed Messenger compliance read and export grants without managing other permissions.',
+    risk: 'high',
+    requiresSuperAdmin: true,
+  },
   'communications.messages.post': {
     module: 'Communications', group: 'Messaging',
     label: 'Send Messages',

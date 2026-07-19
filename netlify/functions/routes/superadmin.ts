@@ -41,9 +41,9 @@ const PERMISSION_KEY_SET = new Set<string>(PERMISSION_KEYS);
 
 // ── requestCriticalGrant — open a maker-checker approval for a CRITICAL grant ──
 // A critical capability (isCriticalGrant) is NOT applied on a single actor's say-so:
-// this inserts a pending permission_grant_approvals row that a SECOND superadmin must
-// approve (routes/permissionApprovals.ts) before it takes effect. Returns the approval
-// id so the caller can respond { pending: true }.
+// this inserts a pending permission_grant_approvals row that a different authorized
+// reviewer must approve (routes/permissionApprovals.ts) before it takes effect.
+// Returns the approval id so the caller can respond { pending: true }.
 async function requestCriticalGrant(
   actor: { id: string; username: string },
   req: {

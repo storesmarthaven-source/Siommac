@@ -1,11 +1,11 @@
 /**
  * CriticalGrantDialog.tsx — reason prompt for a CRITICAL permission grant.
  *
- * A critical capability is not applied on one superadmin's say-so: submitting this
- * dialog opens a maker-checker approval that a SECOND superadmin must approve before
- * it takes effect (backend routes/permissionApprovals.ts). Used by both the Users tab
- * (per-user override) and the Roles tab (role default). `targetLabel` names what the
- * grant is for — a role or a user — for the copy.
+ * A critical capability is not applied on one actor's say-so: submitting this
+ * dialog opens a maker-checker approval that a different authorized reviewer must
+ * approve before it takes effect (backend routes/permissionApprovals.ts). Used by
+ * both the Users tab (per-user override) and the Roles tab (role default).
+ * `targetLabel` names what the grant is for — a role or a user — for the copy.
  */
 
 import { type VNode } from 'preact';
@@ -38,7 +38,7 @@ export function CriticalGrantDialog({ permKey, targetLabel, onConfirm, onCancel 
           </div>
           <div style={{ fontSize: '12.5px', color: 'var(--text-secondary, #6b7280)', lineHeight: 1.5 }}>
             <strong style={{ color: 'var(--text-primary)' }}>{meta?.label ?? permKey}</strong> is a critical permission.
-            Granting it{targetLabel ? ` to ${targetLabel}` : ''} requires a second superadmin's approval before it takes effect.
+            Granting it{targetLabel ? ` to ${targetLabel}` : ''} requires a different authorized reviewer's approval before it takes effect.
           </div>
         </div>
         <div>
@@ -48,7 +48,7 @@ export function CriticalGrantDialog({ permKey, targetLabel, onConfirm, onCancel 
           <textarea value={reason} onInput={e => setReason((e.target as HTMLTextAreaElement).value)} rows={3} autoFocus
             placeholder="Describe why this grant is necessary and who authorised it…"
             style={{ width: '100%', boxSizing: 'border-box', padding: '8px 10px', border: '1px solid var(--border, #d1d5db)', borderRadius: '6px', fontSize: '13px', resize: 'vertical', fontFamily: 'inherit', background: 'var(--bg-input, #fff)', color: 'var(--text-primary)' }} />
-          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>Shown to the approving superadmin and recorded in the audit log.</div>
+          <div style={{ fontSize: '11.5px', color: 'var(--text-muted)', marginTop: '4px' }}>Shown to the authorized reviewer and recorded in the audit log.</div>
         </div>
       </div>
     </Modal>

@@ -5,6 +5,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   type ModuleDefinition,
+  canAccessModuleNavItem,
   registerModule, getModules, getModule, getModulesForRole, getModuleForSection,
 } from './moduleRegistry';
 
@@ -51,5 +52,31 @@ describe('getModuleForSection', () => {
     }));
     expect(getModuleForSection('s-mtest4-child')?.id).toBe('mtest4');
     expect(getModuleForSection('s-nope')).toBeUndefined();
+  });
+});
+
+describe('canAccessModuleNavItem', () => {
+  it('allows an item when role and permission requirements both pass', () => {
+    expect(canAccessModuleNavItem(
+      { id: 's-ac-approvals', label: 'Approvals', icon: 'fa-check', roles: ['manager'], permission: 'communications.compliance_approve' },
+      'manager',
+      key => key === 'communications.compliance_approve',
+    )).toBe(true);
+  });
+
+  it('denies when the item role restriction does not include the current role', () => {
+    expect(canAccessModuleNavItem(
+      { id: 's-ac-users', label: 'Users', icon: 'fa-user-lock', roles: ['superadmin'] },
+      'manager',
+      () => true,
+    )).toBe(false);
+  });
+
+  it('denies permission-gated items when the actor lacks the capability', () => {
+    expect(canAccessModuleNavItem(
+      { id: 's-ac-approvals', label: 'Approvals', icon: 'fa-check', permission: 'communications.compliance_approve' },
+      'employee',
+      () => false,
+    )).toBe(false);
   });
 });

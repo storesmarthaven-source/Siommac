@@ -53,6 +53,13 @@ Use the existing Access Control critical-permission approval system.
 - Critical grants have explicit validity dates.
 - Pending, rejected, expired, and revoked grants do not authorize access.
 - Superadmin does not bypass this process.
+- `communications.compliance_read` and `communications.compliance_export`
+  requests can be approved or rejected by either a full permission administrator
+  (`permissions.manage`) or a designated compliance approver
+  (`communications.compliance_approve`).
+- `communications.compliance_approve` is high-risk and superadmin-designated,
+  but is not itself a critical grant key. Superadmin may hold it by role default
+  without creating a one-superadmin bootstrap deadlock.
 
 Investigation cases also require a second actor to approve them. The case
 requester cannot approve their own case. The approver must independently hold
@@ -605,6 +612,34 @@ Commands:
 
 Do not display cases or conversations here.
 
+Designated compliance approver behavior:
+
+- A holder of `communications.compliance_approve` who does not also hold
+  `permissions.manage` can open Access Control only to the Approvals page.
+- Overview, Users, Roles, Coverage, Audit, Sessions, and Payslip Designer remain
+  hidden and guarded for that actor.
+- The Approvals page lists only requests for `communications.compliance_read`
+  and `communications.compliance_export`; general critical permission requests
+  are not returned by the server.
+- Approve still requires step-up and maker-checker segregation. Reject enforces
+  the same maker-checker segregation. Self-approval and self-rejection are
+  denied.
+- The capability does not grant message read, message export, role management,
+  per-user permission management, audit access, session management, or access to
+  the general critical permission queue.
+- Navigation filtering is UX only; `netlify/functions/routes/permissionApprovals.ts`
+  is the security boundary.
+
+Bootstrap:
+
+- Superadmin designates trusted HR, Legal, or compliance officers by granting
+  `communications.compliance_approve`.
+- The permission metadata keeps `requiresSuperAdmin: true`, so only a
+  superadmin/full access administrator can designate approvers.
+- The approver key is deliberately outside `CRITICAL_GRANT_KEYS`; the compliance
+  data-access keys remain inside `CRITICAL_GRANT_KEYS` and
+  `COMPLIANCE_GATED_KEYS`.
+
 ### 9.2 Messenger Compliance
 
 Keep the existing Compliance entry and provide three views:
@@ -810,6 +845,15 @@ the shared development database (see §11.0).
 - approved active grant permits the route;
 - expired and revoked grants return 403;
 - simulated permission lookup failure denies critical permissions.
+- designated compliance approver lists only compliance read/export grant
+  requests;
+- designated compliance approver cannot see or decide general critical grant
+  requests;
+- designated compliance approver can approve a compliance grant with step-up;
+- designated compliance approver can reject a compliance grant;
+- actor with neither `permissions.manage` nor
+  `communications.compliance_approve` receives 403;
+- `permissions.manage` continues to see the complete permission-grant queue.
 
 ### 11.2 Case workflow
 

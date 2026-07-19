@@ -295,7 +295,7 @@ export function useApproveGrant() {
     onSuccess: (res) => {
       if (!res.success) {
         if (res.code === 'self_approval') {
-          toast.error('You cannot approve your own request — a different superadmin must review it.');
+          toast.error('You cannot approve your own request — a different authorized reviewer must review it.');
         } else if (res.code === 'expired') {
           toast.error('This approval request has expired and can no longer be approved.');
         } else {
