@@ -128,6 +128,8 @@ export default async function run(h) {
     expect(Array.isArray(row.tags) && row.tags.length > 0, 'tags missing from list contract');
     expect(typeof row.unreadCount === 'number', 'unreadCount missing');
     expect(typeof row.canHandle === 'boolean', 'canHandle missing');
+    expect(row.requester?.id === b.id, 'requester profile identity missing from list contract');
+    expect(typeof row.requester?.displayName === 'string', 'requester display name missing from list contract');
   });
 
   await test('queue handler sees the ticket in queue scope', async () => {
@@ -150,6 +152,8 @@ export default async function run(h) {
     ok(handler);
     expect(Array.isArray(requester.body.data.comments), 'requester comments contract missing');
     expect(handler.body.data.canHandle === true, 'handler capability missing');
+    expect(requester.body.data.ticket.requester?.id === b.id, 'requester profile missing from detail contract');
+    expect(handler.body.data.participants.some(participant => participant.user?.id === b.id), 'participant profile missing from handler detail');
   });
 
   await test('mark-read advances a monotonic ticket cursor', async () => {

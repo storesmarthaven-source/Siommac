@@ -53,3 +53,13 @@ export function openNotificationTarget(n: CanonicalNotification): boolean {
   }));
   return true;
 }
+
+/** Open a canonical ticket notification in the full Ticket Center. */
+export function openTicketNotification(n: CanonicalNotification): boolean {
+  if (n.source_type !== 'ticket') return false;
+  showSection('s-tickets');
+  window.dispatchEvent(new CustomEvent('siomac:openTicket', {
+    detail: { ticketNumber: n.source_id },
+  }));
+  return true;
+}

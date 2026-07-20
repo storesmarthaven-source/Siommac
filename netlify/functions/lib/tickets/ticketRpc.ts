@@ -19,6 +19,14 @@ export interface TicketListResult {
   nextCursor: string | null;
 }
 
+export interface TicketUserProfile {
+  id: string;
+  displayName: string;
+  email: string | null;
+  role: string | null;
+  photoUrl: string | null;
+}
+
 export interface TicketOverdueSweepResult {
   processed: number;
   recipientIds: string[];
@@ -64,6 +72,56 @@ async function ticketRpc(
 
 function optionalString(value: unknown): string | undefined {
   return typeof value === 'string' && value.length > 0 ? value : undefined;
+}
+
+async function ticketUserProfiles(ids: unknown[]): Promise<Map<string, TicketUserProfile>> {
+  const userIds = [...new Set(ids.filter((id): id is string => typeof id === 'string' && id.length > 0))];
+  if (userIds.length === 0) return new Map();
+  const { data, error } = await sb.from('app_users')
+    .select('id, full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image')
+    .in('id', userIds) as {
+      data: {
+        id: string;
+        full_name: string | null;
+        email: string | null;
+        role: string | null;
+        profile_image_url: string | null;
+        profile_image_thumb_url: string | null;
+        profile_image: string | null;
+      }[] | null;
+      error: { message: string } | null;
+    };
+  if (error) {
+    throw Object.assign(new Error(`Ticket user profile lookup failed: ${error.message}`), {
+      status: 500,
+      code: 'ticket_profile_lookup_failed',
+    });
+  }
+  return new Map((data ?? []).map(user => [
+    user.id,
+    {
+      id: user.id,
+      displayName: user.full_name ?? user.email ?? 'SIOMAC user',
+      email: user.email,
+      role: user.role,
+      photoUrl: user.profile_image_thumb_url
+        ?? user.profile_image_url
+        ?? (user.profile_image && /^https?:\/\//.test(user.profile_image) ? user.profile_image : null),
+    },
+  ]));
+}
+
+function withProfile(
+  row: Record<string, unknown>,
+  idKey: string,
+  profileKey: string,
+  profiles: Map<string, TicketUserProfile>,
+): Record<string, unknown> {
+  const id = row[idKey];
+  return {
+    ...row,
+    [profileKey]: typeof id === 'string' ? (profiles.get(id) ?? null) : null,
+  };
 }
 
 function mutationResult(data: unknown): TicketMutationResult {
@@ -222,8 +280,20 @@ export async function listTicketsForActor(input: {
   });
   if (error) throwRpcError(error);
   const row = (data ?? {}) as Record<string, unknown>;
+  const items = Array.isArray(row.items) ? row.items as Record<string, unknown>[] : [];
+  const profiles = await ticketUserProfiles(items.flatMap(item => [
+    item.requesterUserId,
+    item.assigneeUserId,
+  ]));
   return {
-    items: Array.isArray(row.items) ? row.items as Record<string, unknown>[] : [],
+    items: items.map(item =>
+      withProfile(
+        withProfile(item, 'requesterUserId', 'requester', profiles),
+        'assigneeUserId',
+        'assignee',
+        profiles,
+      ),
+    ),
     nextCursor: typeof row.nextCursor === 'string' ? row.nextCursor : null,
   };
 }
@@ -237,7 +307,30 @@ export async function getTicketForActor(
     p_ticket_id: ticketId,
   });
   if (error) throwRpcError(error);
-  return (data ?? {}) as Record<string, unknown>;
+  const detail = (data ?? {}) as Record<string, unknown>;
+  const ticket = (detail.ticket ?? {}) as Record<string, unknown>;
+  const comments = Array.isArray(detail.comments) ? detail.comments as Record<string, unknown>[] : [];
+  const participants = Array.isArray(detail.participants) ? detail.participants as Record<string, unknown>[] : [];
+  const events = Array.isArray(detail.events) ? detail.events as Record<string, unknown>[] : [];
+  const profiles = await ticketUserProfiles([
+    ticket.requesterUserId,
+    ticket.assigneeUserId,
+    ...comments.map(comment => comment.authorUserId),
+    ...participants.map(participant => participant.userId),
+    ...events.map(event => event.actorUserId),
+  ]);
+  return {
+    ...detail,
+    ticket: withProfile(
+      withProfile(ticket, 'requesterUserId', 'requester', profiles),
+      'assigneeUserId',
+      'assignee',
+      profiles,
+    ),
+    comments: comments.map(comment => withProfile(comment, 'authorUserId', 'author', profiles)),
+    participants: participants.map(participant => withProfile(participant, 'userId', 'user', profiles)),
+    events: events.map(event => withProfile(event, 'actorUserId', 'actor', profiles)),
+  };
 }
 
 export async function runTicketOverdueSweep(limit = 100): Promise<TicketOverdueSweepResult> {

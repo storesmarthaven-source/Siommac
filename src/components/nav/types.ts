@@ -108,26 +108,3 @@ export interface MsgReply {
   body:        string;
   createdAt:   string;
 }
-
-// Ticket item from getTickets
-export interface TicketItem {
-  id:           string | number;
-  ticketNumber: string;
-  status:       string;
-  fromUsername: string;
-  fromName:     string;
-  fromPhoto:    string;
-  subject:      string;
-  body:         string;
-  createdAt:    string;
-  replies:      TicketReply[];
-}
-
-export interface TicketReply {
-  id:           string | number;
-  fromUsername: string;
-  fromName:     string;
-  fromPhoto:    string;
-  body:         string;
-  createdAt:    string;
-}

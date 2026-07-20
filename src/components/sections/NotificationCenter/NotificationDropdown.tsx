@@ -16,7 +16,7 @@ import {
 } from '@api/communications';
 import { showSection, setHdrBadge } from '@components/nav/navCore';
 import { NotificationDropdownItem } from './NotificationDropdownItem';
-import { openNotificationTarget } from './notifAction';
+import { openNotificationTarget, openTicketNotification } from './notifAction';
 
 const TABS = [
   { key: 'all',    label: 'All' },
@@ -95,9 +95,7 @@ export function NotificationDropdown(): VNode {
   function open(n: CanonicalNotification) {
     if (!n.is_read) markRead.mutate(n.id);
     closeModal();
-    if (!openNotificationTarget(n) && n.source_type === 'ticket') {
-      document.querySelector<HTMLElement>('[data-pill-action="ticket"]')?.click();
-    }
+    if (!openNotificationTarget(n)) openTicketNotification(n);
   }
 
   return (

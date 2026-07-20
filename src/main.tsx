@@ -60,10 +60,12 @@ import type { EmployeeSectionId }     from '@sections/Employees';
 import { mountAttendanceDashboard }   from '@sections/AttendanceDashboard';
 import { mountNotificationCenterSection, mountNotificationDropdown } from '@sections/NotificationCenter';
 import { mountMessageCenterSection, mountMessageDropdown } from '@sections/Messages';
+import { mountTicketDropdown } from '@sections/Tickets';
 import '@sections/HSE';                 // self-registers the HSE module
 import '@sections/HR';                  // self-registers the HR module
 import '@sections/Finance';             // self-registers the Finance module
 import '@sections/Calendar';            // self-registers the Calendar & Tasks module
+import '@sections/Tickets';             // self-registers the canonical Ticket Center
 import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)
 import { getModules } from '@lib/moduleRegistry';
 import { h, render }           from 'preact';
@@ -392,6 +394,11 @@ async function bootApp(): Promise<void> {
   const msgDropdownRoot = document.getElementById('preact-msg-dropdown-root');
   if (msgDropdownRoot) {
     mountMessageDropdown(msgDropdownRoot, { queryClient });
+  }
+
+  const ticketDropdownRoot = document.getElementById('preact-ticket-dropdown-root');
+  if (ticketDropdownRoot) {
+    mountTicketDropdown(ticketDropdownRoot, { queryClient });
   }
 
   // Registered feature modules (HSE, and future modules) — each mounts into the

@@ -114,17 +114,7 @@ export function initRealtime(): void {
     // table subscriptions were retired with routes/messages.ts.
 
     // ── support tickets ───────────────────────────────────────────────────────
-    .on('postgres_changes', { event: '*', schema: 'public', table: 'support_tickets' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchTickets');
-    })
-
     // ── ticket replies ────────────────────────────────────────────────────────
-    .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'ticket_replies' }, () => {
-      scheduleHdrBadgeSync();
-      callWin('_fetchTickets');
-    })
-
     // ── leave requests (drives notification + pending-leave badge) ────────────
     .on('postgres_changes', { event: '*', schema: 'public', table: 'leave_requests' }, () => {
       scheduleHdrBadgeSync();

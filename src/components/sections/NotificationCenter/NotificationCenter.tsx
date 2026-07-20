@@ -19,7 +19,7 @@ import {
 import { NotificationItem } from './NotificationItem';
 import { BroadcastComposer } from './BroadcastComposer';
 import { NotificationPreferencesPanel } from './NotificationPreferencesPanel';
-import { openNotificationTarget } from './notifAction';
+import { openNotificationTarget, openTicketNotification } from './notifAction';
 
 const TABS: AreaTab[] = [
   { key: 'all',      label: 'All',             icon: 'fa-inbox' },
@@ -125,9 +125,7 @@ export function NotificationCenter(): VNode {
 
   function open(n: CanonicalNotification) {
     if (!n.is_read) markRead.mutate(n.id);
-    if (!openNotificationTarget(n) && n.source_type === 'ticket') {
-      document.querySelector<HTMLElement>('[data-pill-action="ticket"]')?.click();
-    }
+    if (!openNotificationTarget(n)) openTicketNotification(n);
   }
 
   function clearFilters() {

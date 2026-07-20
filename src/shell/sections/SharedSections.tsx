@@ -191,6 +191,10 @@ export default function SharedSections() {
         <div id="preact-messages-root" />
       </AppSection>
 
+      <AppSection id="s-tickets">
+        <div id="preact-ticket-center-root" />
+      </AppSection>
+
       {/* Calendar & Tasks — all roles (the module renders its own page header) */}
       <AppSection id="s-calendar">
         <div id="preact-calendar-root" />

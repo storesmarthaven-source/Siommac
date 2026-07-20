@@ -58,33 +58,29 @@ const BURST_WINDOW_MS = 2000;
 
 // ── Navigation (§0.2 + §0.3 guarded) ─────────────────────────────────────────
 
-function openTicketPanel(): void {
-  // Trigger the shared header ticket modal via the delegated pill handler
-  const btn = document.querySelector<HTMLElement>('[data-pill-action="ticket"]');
-  if (btn) {
-    btn.click();
-  } else {
-    // Fallback: navigate to notification center
-    window.Nav.showSection("s-notification-center");
+function openTicketPanel(ticketNumber?: string | null): void {
+  window.Nav?.showSection?.("s-tickets");
+  if (ticketNumber) {
+    window.dispatchEvent(new CustomEvent("siomac:openTicket", { detail: { ticketNumber } }));
   }
 }
 
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    window.Nav.showSection("s-messages");
+    window.Nav?.showSection?.("s-messages");
   } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav.showSection("s-notification-center");
+    window.Nav?.showSection?.("s-notification-center");
   }
 }
 
 function openNotification(notification: CanonicalNotification, domain: string): void {
   if (notification.source_type === "ticket") {
-    navigateToDomain("tickets");
+    openTicketPanel(notification.source_id);
     return;
   }
   if (openNotificationTarget(notification)) return;

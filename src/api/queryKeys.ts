@@ -192,8 +192,8 @@ export const messageKeys = {
 
 export const ticketKeys = {
   all:      ['tickets']                                    as const,
-  mine:     () => [...ticketKeys.all, 'mine']              as const,
-  admin:    () => [...ticketKeys.all, 'admin']             as const,
+  list:     (args: Record<string, unknown>) => [...ticketKeys.all, 'list', args] as const,
+  requestTypes: () => [...ticketKeys.all, 'request-types']  as const,
   detail:   (id: string) => [...ticketKeys.all, 'detail', id] as const,
 } as const;
 

@@ -136,6 +136,41 @@ export interface CanonicalTicket {
   tags:               { key: string; label: string; kind: 'system' | 'custom' }[];
   createdAt:          string;
   version:            number;
+  requester:          TicketUserProfile | null;
+  assignee:           TicketUserProfile | null;
+}
+
+export interface TicketUserProfile {
+  id:          string;
+  displayName: string;
+  email:       string | null;
+  role:        string | null;
+  photoUrl:    string | null;
+}
+
+export interface TicketRequestType {
+  code:                    string;
+  label:                   string;
+  description:             string | null;
+  category:                string;
+  queueCode:               string;
+  queueLabel:              string;
+  module:                  string;
+  defaultPriority:         'low' | 'medium' | 'high' | 'critical';
+  responseTargetMinutes:   number;
+  resolutionTargetMinutes: number;
+  systemTags:              string[];
+  isConfidential:          boolean;
+}
+
+export interface TicketAttachment {
+  id:          string;
+  fileName:    string;
+  contentType: string;
+  sizeBytes:   number;
+  uploadedBy:  string;
+  createdAt:   string;
+  uploadedAt:  string | null;
 }
 
 export interface CanonicalTicketDetail {
@@ -149,10 +184,12 @@ export interface CanonicalTicketDetail {
     isSystem:       boolean;
     sequence:       number;
     createdAt:      string;
+    author:         TicketUserProfile | null;
   }[];
   tags: { key: string; label: string; kind: 'system' | 'custom'; createdAt: string }[];
-  participants: Record<string, unknown>[];
-  events: Record<string, unknown>[];
+  attachments: TicketAttachment[];
+  participants: (Record<string, unknown> & { user?: TicketUserProfile | null })[];
+  events: (Record<string, unknown> & { actor?: TicketUserProfile | null })[];
   lastReadSequence: number;
   unreadCount: number;
 }
@@ -758,7 +795,7 @@ export interface TicketListArgs extends Record<string, unknown> {
 
 export function useMyTickets(args: TicketListArgs = {}) {
   return useQuery({
-    queryKey: ticketKeys.mine(),
+    queryKey: ticketKeys.list(args),
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicket[] }>(
         'communications/tickets/list',
@@ -768,6 +805,20 @@ export function useMyTickets(args: TicketListArgs = {}) {
       if (!res.success) throw new Error('Failed to load tickets');
       return res.data;
     },
+  });
+}
+
+export function useTicketRequestTypes() {
+  return useQuery({
+    queryKey: ticketKeys.requestTypes(),
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: TicketRequestType[] }>(
+        'communications/tickets/request-types', {}, { signal },
+      );
+      if (!res.success) throw new Error('Failed to load ticket request types');
+      return res.data;
+    },
+    staleTime: 5 * 60_000,
   });
 }
 
@@ -800,12 +851,15 @@ export interface CreateTicketArgs extends Record<string, unknown> {
 export function useCreateTicket() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: CreateTicketArgs) =>
-      apiPost<{ success: boolean; data: { ticketId: string; ticketNumber: string } }>(
+    mutationFn: async (args: CreateTicketArgs) => {
+      const res = await apiPost<{ success: boolean; data: { ticketId: string; ticketNumber: string }; message?: string }>(
         'communications/tickets/create',
         { ...args, idempotencyKey: crypto.randomUUID() },
         { retryable: false },
-      ),
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to create ticket');
+      return res;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ticketKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -822,12 +876,15 @@ export interface CommentTicketArgs extends Record<string, unknown> {
 export function useCommentTicket() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: CommentTicketArgs) =>
-      apiPost<{ success: boolean; data: Record<string, unknown> }>(
+    mutationFn: async (args: CommentTicketArgs) => {
+      const res = await apiPost<{ success: boolean; data: Record<string, unknown>; message?: string }>(
         'communications/tickets/comment',
         { ...args, idempotencyKey: crypto.randomUUID() },
         { retryable: false },
-      ),
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to add ticket comment');
+      return res;
+    },
     onSuccess: (_r: unknown, vars: CommentTicketArgs) => {
       void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -847,15 +904,71 @@ export interface UpdateTicketArgs extends Record<string, unknown> {
 export function useUpdateTicket() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: UpdateTicketArgs) =>
-      apiPost<{ success: boolean; data: Record<string, unknown> }>(
+    mutationFn: async (args: UpdateTicketArgs) => {
+      const res = await apiPost<{ success: boolean; data: Record<string, unknown>; message?: string }>(
         'communications/tickets/command',
         { ...args, idempotencyKey: crypto.randomUUID() },
         { retryable: false },
-      ),
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to update ticket');
+      return res;
+    },
     onSuccess: (_r: unknown, vars: UpdateTicketArgs) => {
       void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
       void qc.invalidateQueries({ queryKey: ticketKeys.all });
     },
   });
+}
+
+export function useMarkTicketRead() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (args: { ticketId: string; sequence?: number | null }) =>
+      apiPost<{ success: boolean; data: Record<string, unknown> }>(
+        'communications/tickets/mark-read', args, { retryable: false },
+      ).then(res => {
+        if (!res.success) throw new Error('Failed to mark ticket as read');
+        return res.data;
+      }),
+    onSuccess: (_result, args) => {
+      void qc.invalidateQueries({ queryKey: ticketKeys.detail(args.ticketId) });
+      void qc.invalidateQueries({ queryKey: ticketKeys.all });
+      void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
+    },
+  });
+}
+
+export async function uploadTicketAttachment(ticketId: string, file: File): Promise<string> {
+  const reserved = await apiPost<{
+    success: boolean;
+    data: { attachmentId: string; uploadUrl: string };
+    message?: string;
+  }>('communications/tickets/attachments/upload-url', {
+    ticketId,
+    fileName: file.name,
+    contentType: file.type || 'application/octet-stream',
+    sizeBytes: file.size,
+  }, { retryable: false });
+  if (!reserved.success) throw new Error(reserved.message ?? 'Could not reserve attachment upload');
+  const uploaded = await fetch(reserved.data.uploadUrl, {
+    method: 'PUT',
+    headers: { 'Content-Type': file.type || 'application/octet-stream' },
+    body: file,
+  });
+  if (!uploaded.ok) throw new Error('Attachment upload failed');
+  const completed = await apiPost<{ success: boolean; message?: string }>(
+    'communications/tickets/attachments/complete',
+    { attachmentId: reserved.data.attachmentId, idempotencyKey: crypto.randomUUID() },
+    { retryable: false },
+  );
+  if (!completed.success) throw new Error(completed.message ?? 'Could not complete attachment upload');
+  return reserved.data.attachmentId;
+}
+
+export async function getTicketAttachmentUrl(attachmentId: string): Promise<string> {
+  const res = await apiPost<{ success: boolean; data: { url: string }; message?: string }>(
+    'communications/tickets/attachments/get-url', { attachmentId },
+  );
+  if (!res.success) throw new Error(res.message ?? 'Could not open attachment');
+  return res.data.url;
 }

@@ -152,14 +152,7 @@ export const useRealtimeStore = create<RealtimeState>()((set, get) => ({
       .on('postgres_changes', pg('message_reads'), () => _fire('messages'))
 
       // ── support tickets ────────────────────────────────────────────────────
-      .on('postgres_changes', pg('support_tickets'), () => _fire('support_tickets'))
-
       // ── ticket replies ─────────────────────────────────────────────────────
-      .on('postgres_changes', pg('ticket_replies', 'INSERT'), () => {
-        _fire('ticket_replies');
-        _fire('support_tickets');
-      })
-
       // ── leave requests ─────────────────────────────────────────────────────
       .on('postgres_changes', pg('leave_requests'), () => _fire('leave_requests'))
 

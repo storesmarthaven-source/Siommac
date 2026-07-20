@@ -26,7 +26,6 @@ import {
   getRole,
 } from './navCore';
 import { scheduleHdrBadgeSync, doHdrBadgeSync } from './badgeSync';
-import { mountTicketsPanel }       from './TicketsPanel';
 
 // ── Shared header modals (one set, shared by every profile pill) ─────────────
 
@@ -150,26 +149,13 @@ export function NavController(): h.JSX.Element {
     type HdrKind = 'notif' | 'msg' | 'ticket';
     const MODAL_FOR: Record<HdrKind, string> = { notif: 'hdrNotifModal', msg: 'hdrMsgModal', ticket: 'hdrTicketModal' };
 
-    /** Run the per-kind post-open setup (fetch lists, reset panes). */
+    /** Run the per-kind post-open setup. Dropdowns self-fetch through Query. */
     function afterOpen(kind: HdrKind): void {
-      if (kind === 'ticket') {
-        setTimeout(() => {
-          const tl = document.getElementById('ticketList');
-          const tf = document.getElementById('ticketModalFoot');
-          const td = document.getElementById('ticketDetailPane');
-          const tc = document.getElementById('ticketComposePane');
-          if (tl) tl.style.display = '';
-          if (tf) tf.style.display = '';
-          if (td) td.style.display = 'none';
-          if (tc) tc.style.display = 'none';
-          callWin('_clearTicketDetail');
-          callWin('_ticketModalOpened');
-        }, 0);
-      } else if (kind === 'notif') {
+      if (kind === 'notif') {
         // The bell is the self-fetching Preact <NotificationDropdown> mounted
         // into #hdrNotifModal — it loads via TanStack Query on open, so there is
         // no imperative post-open work here.
-      } else {
+      } else if (kind === 'msg') {
         // The message modal is now the self-fetching Preact <MessageDropdown>
         // mounted into #hdrMsgModal — no imperative post-open work needed.
       }
@@ -218,7 +204,7 @@ export function NavController(): h.JSX.Element {
 
     // ── 8. Global click — close modals when clicking outside ─────────────────
     const CLOSE_CB: Record<string, string> = {
-      hdrMsgModal: '_msgModalClosed', hdrTicketModal: '_ticketModalClosed', hdrNotifModal: '_notifModalClosed',
+      hdrMsgModal: '_msgModalClosed', hdrNotifModal: '_notifModalClosed',
     };
     function onDocClickForModals(e: Event): void {
       const target = e.target as Element;
@@ -253,8 +239,6 @@ export function NavController(): h.JSX.Element {
     // ── 12. Mount the panel systems ───────────────────────────────────────────
     //    Notifications render via Preact <NotificationDropdown> (main.tsx) — retired.
     //    Messages now render via Preact <MessageDropdown> (main.tsx) — retired.
-    const cleanupTickets = mountTicketsPanel();
-    cleanups.push(cleanupTickets);
 
     // ── 13. Expose Nav shim on window ─────────────────────────────────────────
     //    Other scripts call window.Nav.buildSidebar etc. after login.
