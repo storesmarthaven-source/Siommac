@@ -1,3 +1,4 @@
+import { vi } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/preact';
 import type { CalendarItemDTO } from '@api/calendar';
 import { AgendaView } from './AgendaView';
