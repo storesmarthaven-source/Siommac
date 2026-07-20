@@ -720,13 +720,14 @@ export async function lockInputs(
   }
 
   const EMP_COLS =
-    'id, pay_basis, monthly_salary, hourly_rate, department_id, status, start_date, end_date';
+    'id, pay_basis, monthly_salary, hourly_rate, department_id, cost_center, status, start_date, end_date';
   type EmpRow = {
     id: string;
     pay_basis: string | null;
     monthly_salary: number | null;
     hourly_rate: number | null;
     department_id: string | null;
+    cost_center: string | null;
     status: string;
     start_date: string | null;
     end_date: string | null;
@@ -867,6 +868,71 @@ export async function lockInputs(
   // and recalculate never double-deduct.
   const loanInstallments = await loadLoanInstallments(empList.map(e => e.id), periodStart);
 
+  // ── 3d. F-02 R4: per-employee source presence for the pinned policy's rules ──
+  // Derived here, server-side, from the SAME canonical reads that build the inputs
+  // and folded into each employee's base_pay line metadata. Because the lock route
+  // builds p_inputs (a caller only sends {id, idempotencyKey}), this presence is
+  // intrinsic to the locked payload — it cannot be fabricated or drift. Only the
+  // sources the pinned policy actually references are read/populated; a policy with
+  // no source/costing rules (incl. legacy fixtures) skips this entirely and the RPC
+  // enforcement no-ops. lock_inputs_tx then fails-closed on block_input_lock /
+  // cost_centre and persists the rest as immutable conflict evidence.
+  let sourcePresence: Map<string, Record<string, boolean | string | null>> | null = null;
+  {
+    const pinRow = (await sb.from('finance_payroll_runs')
+      .select('pay_policy_version_id, pay_policy_required')
+      .eq('id', runId)
+      .single()).data as { pay_policy_version_id: string | null; pay_policy_required: boolean | null } | null;
+    const policyVersionId = pinRow?.pay_policy_version_id ?? null;
+    if (pinRow?.pay_policy_required && policyVersionId) {
+      const [srcRulesRes, costRulesRes] = await Promise.all([
+        sb.from('finance_pay_policy_source_rules').select('source_type').eq('policy_version_id', policyVersionId),
+        sb.from('finance_pay_policy_costing_rules').select('dimension').eq('policy_version_id', policyVersionId),
+      ]);
+      const needed = new Set(((srcRulesRes.data ?? []) as { source_type: string }[]).map(r => r.source_type));
+      const needsCostCentre = ((costRulesRes.data ?? []) as { dimension: string }[]).some(r => r.dimension === 'cost_centre');
+      if (needed.size > 0 || needsCostCentre) {
+        const empIds = empList.map(e => e.id);
+        const leaveSet = new Set<string>();
+        const statSet = new Set<string>();
+        const bankSet = new Set<string>();
+        for (const ids of chunk(empIds, 300)) {
+          if (needed.has('approved_leave')) {
+            const { data } = await sb.from('hr_leave_requests')
+              .select('employee_id')
+              .eq('status', 'approved')
+              .lte('from_date', periodEnd)
+              .gte('to_date', periodStart)
+              .in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) leaveSet.add(r.employee_id);
+          }
+          if (needed.has('statutory_profile')) {
+            const { data } = await sb.from('hr_employee_statutory_profiles')
+              .select('employee_id').in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) statSet.add(r.employee_id);
+          }
+          if (needed.has('payment_destination')) {
+            const { data } = await sb.from('finance_employee_bank_accounts')
+              .select('employee_id').eq('is_primary', true).eq('is_active', true).in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) bankSet.add(r.employee_id);
+          }
+        }
+        sourcePresence = new Map();
+        for (const emp of empList) {
+          const hasPayItem = payItems.some((p: { employee_id: string }) => p.employee_id === emp.id);
+          const s: Record<string, boolean | string | null> = {};
+          if (needed.has('approved_time')) s.approved_time = tsByEmp.has(emp.id);
+          if (needed.has('approved_compensation')) s.approved_compensation = hasPayItem || (emp.pay_basis === 'salary' && emp.monthly_salary != null);
+          if (needed.has('approved_leave')) s.approved_leave = leaveSet.has(emp.id);
+          if (needed.has('statutory_profile')) s.statutory_profile = statSet.has(emp.id);
+          if (needed.has('payment_destination')) s.payment_destination = bankSet.has(emp.id);
+          if (needsCostCentre) s.cost_centre = emp.cost_center ?? null;
+          sourcePresence.set(emp.id, s);
+        }
+      }
+    }
+  }
+
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const inputRows: Record<string, unknown>[] = [];
 
@@ -918,6 +984,9 @@ export async function lockInputs(
         employment_start:       emp.start_date,
         employment_end:         emp.end_date,
         nis_contribution_weeks: nisContributionWeeks,
+        // F-02 R4: pinned-policy source presence (only present when the policy has
+        // source/costing rules) — lock_inputs_tx enforces/persists from this.
+        ...(sourcePresence ? { sources: sourcePresence.get(emp.id) ?? {} } : {}),
         ...(isSalary
           ? { monthly_salary: emp.monthly_salary ?? 0 }
           : { hourly_rate: hourlyRate, worked_hours: workedHours }),
@@ -1130,6 +1199,23 @@ export async function calculateRun(
     throw Object.assign(new Error(`This run has ${empIds.length} employees, above the supported single-run ceiling of ${MAX_RUN_EMPLOYEES}. Split it into multiple pay groups.`), { status: 422 });
   }
 
+  // ── F-02 R4: consume the persisted block_employee_calculation exclusions from the
+  // snapshot's immutable lock evidence. Calculation NEVER re-evaluates live sources —
+  // it only honors what was frozen at lock; an excluded employee gets no line. The
+  // review/correction conflicts are materialized into findings by the atomic calc
+  // publish RPC (finance_payroll_calculation_publish_tx), not here.
+  const excludedEmployees = new Set<string>();
+  if (run.currentInputSnapshotId) {
+    const snapRow = (await sb.from('finance_payroll_input_snapshots')
+      .select('source_summary')
+      .eq('id', run.currentInputSnapshotId)
+      .single()).data;
+    const summary = snapRow?.source_summary as { excludedEmployees?: { employeeId?: string }[] } | null | undefined;
+    for (const ex of (summary?.excludedEmployees ?? [])) {
+      if (ex.employeeId) excludedEmployees.add(ex.employeeId);
+    }
+  }
+
   // Batch-load every statutory profile once (was an N+1: one query per employee).
   const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
@@ -1145,6 +1231,7 @@ export async function calculateRun(
   let totalNisEmployer = 0;
 
   for (const empId of empIds) {
+    if (excludedEmployees.has(empId)) continue; // R4: block_employee_calculation (persisted at lock)
     const empInputs = allInputs.filter(i => i.employeeId === empId);
 
     // ── NIS checks (§13) ────────────────────────────────────────────────────
