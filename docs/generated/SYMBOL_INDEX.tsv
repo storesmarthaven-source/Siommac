@@ -5503,7 +5503,7 @@ mapSeverityToVariant	function	communications	false		src/components/realtime/noti
 fireNotificationToast	function	communications	false		src/components/realtime/notificationToasts.ts	103	
 fireBurstToast	function	communications	false		src/components/realtime/notificationToasts.ts	163	
 MaybeToastArgs	interface	communications	true		src/components/realtime/notificationToasts.ts	181	
-maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	187	
+maybeToastNotification	function	communications	true		src/components/realtime/notificationToasts.ts	195	
 SupabaseClient	interface	communications	false		src/components/realtime/RealtimeController.ts	32	
 SupabaseChannel	interface	communications	false		src/components/realtime/RealtimeController.ts	37	
 SupabaseStatic	interface	communications	false		src/components/realtime/RealtimeController.ts	46	

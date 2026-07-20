@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "f275ce50c48e5fe6d1b3c94aa00fc462b856039f",
+    "head": "0bc690cfe14f2069b1541392e3088b2bb473e683",
     "branch": "main",
-    "fingerprint": "747f7cb0f6ef1f4535594bac",
+    "fingerprint": "4bb88ee4e52196aa37aab23d",
     "indexedFiles": 1469
   },
   "summary": {
@@ -3591,8 +3591,8 @@
       "path": "src/components/realtime/notificationToasts.ts",
       "module": "communications",
       "role": "frontend",
-      "lines": 230,
-      "hash": "ff36a866d24df2eb"
+      "lines": 246,
+      "hash": "9d3203829a4414a2"
     },
     {
       "path": "src/components/sections/AccessControl/AccessControlSection.tsx",
@@ -65172,7 +65172,7 @@
       "name": "maybeToastNotification",
       "kind": "function",
       "file": "src/components/realtime/notificationToasts.ts",
-      "line": 187,
+      "line": 195,
       "module": "communications",
       "exported": true,
       "container": "",
