@@ -1,79 +1,57 @@
-/**
- * src/components/sections/Calendar/MonthView.tsx
- *
- * Month grid (6×7, Sunday-start). Each cell shows up to 3 item chips + "+N more".
- * Items are coloured by type (deadline/task/activity); done items strike through,
- * overdue items get a red ring. Clicking a day selects it (opens the day drawer);
- * clicking a chip opens that item.
- */
-
 import { type VNode } from 'preact';
 import type { CalendarItemDTO } from '@api/calendar';
-import { monthGrid, toLocalDateKey, isToday, itemDateKey, isOverdue } from '@lib/calendar/date';
+import { isToday, itemDateKey, monthGrid, timeLabel, toLocalDateKey } from '@lib/calendar/date';
+import { sourceLabel, sourceTone } from './calendarViewModel';
 
-const MAX_CHIPS = 3;
+const MAX_ITEMS = 3;
 
-export function typeIcon(type: string): string {
-  if (type === 'deadline') return 'fa-clock';
-  if (type === 'activity') return 'fa-calendar-day';
-  return 'fa-circle-check';   // task
-}
-
-function Chip({ item, onOpen }: { item: CalendarItemDTO; onOpen: (i: CalendarItemDTO) => void }): VNode {
-  const done = item.status === 'done';
-  const overdue = isOverdue(item);
+function EventCard({ item, full, onOpen }: { item: CalendarItemDTO; full: boolean; onOpen: (item: CalendarItemDTO) => void }): VNode {
   return (
-    <div
-      class={`cal-chip cal-chip--${item.type}${done ? ' is-done' : ''}${overdue ? ' is-overdue' : ''}`}
-      title={item.title}
-      onClick={(e) => { e.stopPropagation(); onOpen(item); }}
-    >
-      <i class={`fas ${typeIcon(item.type)}`} aria-hidden="true" />
-      <span style="overflow:hidden;text-overflow:ellipsis">{item.title}</span>
-    </div>
+    <button type="button" class={`cal-event ${sourceTone(item)}${full ? ' is-full' : ''}${item.status === 'done' ? ' is-done' : ''}`}
+      title={item.title} onClick={event => { event.stopPropagation(); onOpen(item); }}>
+      <span class="cal-event-title">{item.title}{item.recurrenceRule ? <i class="fas fa-rotate" aria-label="Recurring" /> : null}</span>
+      <small>{item.allDay ? sourceLabel(item) : `${item.startsAt ? timeLabel(item.startsAt) : 'Time pending'} · ${sourceLabel(item)}`}</small>
+      {full && item.notes ? <span class="cal-event-notes">{item.notes}</span> : null}
+    </button>
   );
 }
-
-export function MonthView({ month, items, selectedKey, onSelectDay, onOpenItem }: {
+export function MonthView({ month, items, selectedKey, loading, onSelectDay, onOpenItem }: {
   month: Date;
   items: CalendarItemDTO[];
-  selectedKey: string | null;
+  selectedKey: string;
+  loading: boolean;
   onSelectDay: (key: string) => void;
   onOpenItem: (item: CalendarItemDTO) => void;
 }): VNode {
   const days = monthGrid(month);
   const monthIndex = month.getMonth();
-
-  // Bucket items by their local day key.
   const byDay = new Map<string, CalendarItemDTO[]>();
-  for (const it of items) {
-    const key = itemDateKey(it);
+  for (const item of items) {
+    const key = itemDateKey(item);
     if (!key) continue;
-    (byDay.get(key) ?? byDay.set(key, []).get(key)!).push(it);
+    const existing = byDay.get(key);
+    if (existing) existing.push(item);
+    else byDay.set(key, [item]);
   }
 
   return (
-    <div class="cal-surface">
-      <div class="cal-weekhead">
-        {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => <div key={d}>{d}</div>)}
-      </div>
-      <div class="cal-grid">
+    <div class="cal-month" aria-busy={loading}>
+      <div class="cal-weekdays">{['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map(day => <div key={day}>{day}</div>)}</div>
+      <div class="cal-month-grid">
         {days.map(day => {
           const key = toLocalDateKey(day);
-          const dayItems = (byDay.get(key) ?? []).slice().sort((a, b) =>
-            (a.startsAt ?? a.startsOn ?? '').localeCompare(b.startsAt ?? b.startsOn ?? ''));
-          const shown = dayItems.slice(0, MAX_CHIPS);
+          const dayItems = (byDay.get(key) ?? []).slice().sort((a, b) => (a.startsAt ?? a.startsOn ?? '').localeCompare(b.startsAt ?? b.startsOn ?? ''));
+          const shown = dayItems.slice(0, MAX_ITEMS);
           const extra = dayItems.length - shown.length;
-          const out = day.getMonth() !== monthIndex;
           return (
-            <div
-              key={key}
-              class={`cal-cell${out ? ' is-out' : ''}${isToday(day) ? ' is-today' : ''}${key === selectedKey ? ' is-selected' : ''}`}
+            <div key={key} role="button" tabIndex={0}
+              aria-label={`${day.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long' })}, ${dayItems.length} item${dayItems.length === 1 ? '' : 's'}`}
+              class={`cal-day${day.getMonth() !== monthIndex ? ' is-out' : ''}${isToday(day) ? ' is-today' : ''}${selectedKey === key ? ' is-selected' : ''}`}
               onClick={() => onSelectDay(key)}
-            >
-              <div class="cal-daynum">{day.getDate()}</div>
-              {shown.map(it => <Chip key={it.id} item={it} onOpen={onOpenItem} />)}
-              {extra > 0 && <div class="cal-more" onClick={(e) => { e.stopPropagation(); onSelectDay(key); }}>+{extra} more</div>}
+              onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); onSelectDay(key); } }}>
+              <span class="cal-day-number">{day.getDate()}</span>
+              {loading ? <div class="cal-skeleton cal-skeleton-event" /> : shown.map(item => <EventCard key={item.id} item={item} full={dayItems.length === 1} onOpen={onOpenItem} />)}
+              {extra > 0 ? <button type="button" class="cal-more" onClick={event => { event.stopPropagation(); onSelectDay(key); }}>+{extra} more</button> : null}
             </div>
           );
         })}
