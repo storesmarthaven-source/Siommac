@@ -51,18 +51,18 @@ export function sameDay(a: Date, b: Date): boolean {
 export function isToday(d: Date): boolean { return sameDay(d, new Date()); }
 
 /**
- * The 6×7 grid of days for a month view (weeks start Sunday), including the
+ * The 6×7 grid of days for a month view (weeks start Monday), including the
  * trailing/leading days of the adjacent months so the grid is always full.
  */
 export function monthGrid(month: Date): Date[] {
   const first = startOfMonth(month);
-  const start = addDays(first, -first.getDay());   // back to the Sunday on/before the 1st
+  const start = addDays(first, -((first.getDay() + 6) % 7));
   return Array.from({ length: 42 }, (_, i) => addDays(start, i));
 }
 
-/** The 7 days of the week (Sunday-start) containing `d`. */
+/** The 7 days of the week (Monday-start) containing `d`. */
 export function weekDays(d: Date): Date[] {
-  const start = addDays(d, -d.getDay());
+  const start = addDays(d, -((d.getDay() + 6) % 7));
   return Array.from({ length: 7 }, (_, i) => addDays(start, i));
 }
 

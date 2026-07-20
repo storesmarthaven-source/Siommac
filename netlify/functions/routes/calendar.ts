@@ -121,7 +121,8 @@ function entryToDto(row: EntryRow, caps: Caps, occ?: {
 async function hydrateNames(items: CalendarItemDTO[]): Promise<void> {
   const ids = [...new Set(items.flatMap(i => [i.ownerUserId, i.assigneeUserId]).filter((x): x is string => !!x))];
   if (!ids.length) return;
-  const { data } = await sb.from('app_users').select('id, full_name, username').in('id', ids);
+  const { data, error } = await sb.from('app_users').select('id, full_name, username').in('id', ids);
+  if (error) throw new Error(`calendar name hydration failed: ${error.message}`);
   const nameOf = new Map((data ?? []).map((u: { id: string; full_name: string | null; username: string }) => [u.id, u.full_name || u.username]));
   for (const it of items) {
     if (it.ownerUserId)    it.ownerName    = nameOf.get(it.ownerUserId) ?? null;
@@ -163,8 +164,12 @@ router.post('/calendar/list', async c => {
 
   // Read scope: own (owner/assignee/INVITED ATTENDEE) + org, plus team for managers.
   // Never others' personal. Mirrors canReadEntry (the central policy).
-  const { data: attRows } = await sb.from('calendar_activity_attendees')
+  const { data: attRows, error: attendeeScopeError } = await sb.from('calendar_activity_attendees')
     .select('calendar_entry_id').eq('user_id', user.id);
+  if (attendeeScopeError) {
+    console.error('[calendar/list] attendee scope:', attendeeScopeError.message);
+    return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
+  }
   const attendeeIds = [...new Set(((attRows ?? []) as Array<{ calendar_entry_id: string }>).map(a => a.calendar_entry_id))];
   const scopeOr = [
     `owner_user_id.eq.${user.id}`,
@@ -208,10 +213,14 @@ router.post('/calendar/list', async c => {
     const masterIds = masterRows.map(m => m.id);
     const exByMaster = new Map<string, OccurrenceException[]>();
     if (masterIds.length) {
-      const { data: exRows } = await sb
+      const { data: exRows, error: exceptionError } = await sb
         .from('calendar_recurrence_exceptions')
         .select('*')
         .in('calendar_entry_id', masterIds);
+      if (exceptionError) {
+        console.error('[calendar/list] recurrence exceptions:', exceptionError.message);
+        return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
+      }
       for (const e of (exRows ?? []) as Array<Record<string, unknown>>) {
         const mid = e.calendar_entry_id as string;
         (exByMaster.get(mid) ?? exByMaster.set(mid, []).get(mid)!).push({
@@ -248,7 +257,11 @@ router.post('/calendar/list', async c => {
   // 3. Attendee counts for any activities in the result.
   const activityIds = items.filter(i => i.type === 'activity' && i.origin === 'calendar').map(i => parseEntryId(i.id).entryId);
   if (activityIds.length) {
-    const { data: att } = await sb.from('calendar_activity_attendees').select('calendar_entry_id').in('calendar_entry_id', [...new Set(activityIds)]);
+    const { data: att, error: attendeeCountError } = await sb.from('calendar_activity_attendees').select('calendar_entry_id').in('calendar_entry_id', [...new Set(activityIds)]);
+    if (attendeeCountError) {
+      console.error('[calendar/list] attendee counts:', attendeeCountError.message);
+      return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
+    }
     const counts = new Map<string, number>();
     for (const a of (att ?? []) as Array<{ calendar_entry_id: string }>) counts.set(a.calendar_entry_id, (counts.get(a.calendar_entry_id) ?? 0) + 1);
     for (const it of items) if (it.type === 'activity' && it.origin === 'calendar') it.attendeeCount = counts.get(parseEntryId(it.id).entryId) ?? 0;
@@ -258,10 +271,16 @@ router.post('/calendar/list', async c => {
   if (wantType('deadline')) {
     const ctx: AdapterContext = { userId: user.id, can, fromKey: from, toKey: to };
     const wantModule = (m: string) => !v.data.sourceModules || v.data.sourceModules.includes(m);
-    for (const [mod, adapter] of Object.entries(DEADLINE_ADAPTERS)) {
-      if (!wantModule(mod)) continue;
-      try { items.push(...await adapter(ctx)); }
-      catch (e) { console.error(`[calendar/list] adapter ${mod}:`, (e as Error).message); }
+    try {
+      const projections = await Promise.all(
+        Object.entries(DEADLINE_ADAPTERS)
+          .filter(([mod]) => wantModule(mod))
+          .map(([, adapter]) => adapter(ctx)),
+      );
+      items.push(...projections.flat());
+    } catch (e) {
+      console.error('[calendar/list] deadline adapter:', (e as Error).message);
+      return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
     }
   }
 
@@ -272,7 +291,12 @@ router.post('/calendar/list', async c => {
   if (v.data.ownerUserId)   out = out.filter(i => i.ownerUserId === v.data.ownerUserId);
   if (v.data.assigneeUserId) out = out.filter(i => i.assigneeUserId === v.data.assigneeUserId);
 
-  await hydrateNames(out);
+  try {
+    await hydrateNames(out);
+  } catch (e) {
+    console.error('[calendar/list] names:', (e as Error).message);
+    return c.json({ success: false, message: 'Failed to load calendar.' }, 500);
+  }
   out.sort((a, b) => (a.startsAt ?? a.startsOn ?? '').localeCompare(b.startsAt ?? b.startsOn ?? ''));
 
   const res: CalendarListResponse = { success: true, items: out, range: { from, to } };
@@ -303,9 +327,15 @@ router.post('/calendar/get', async c => {
   }
 
   const dto = entryToDto(row, caps);
-  const { data: att } = await sb.from('calendar_activity_attendees').select('user_id, response_status').eq('calendar_entry_id', entryId);
+  const { data: att, error: attendeeError } = await sb.from('calendar_activity_attendees').select('user_id, response_status').eq('calendar_entry_id', entryId);
+  if (attendeeError) return c.json({ success: false, message: 'Failed to load item.' }, 500);
   dto.attendeeCount = (att ?? []).length;
-  await hydrateNames([dto]);
+  try {
+    await hydrateNames([dto]);
+  } catch (e) {
+    console.error('[calendar/get] names:', (e as Error).message);
+    return c.json({ success: false, message: 'Failed to load item.' }, 500);
+  }
   return c.json({ success: true, item: dto, attendees: att ?? [] });
 });
 
@@ -327,7 +357,8 @@ function normalizeWhen(allDay: boolean, startsOn?: string | null, endsOn?: strin
 
 /** Confirm an assignee is a real active user (server-side, never trust the client id). */
 async function validAssignee(id: string): Promise<boolean> {
-  const { data } = await sb.from('app_users').select('id, status').eq('id', id).maybeSingle<{ id: string; status: string }>();
+  const { data, error } = await sb.from('app_users').select('id, status').eq('id', id).maybeSingle<{ id: string; status: string }>();
+  if (error) throw new Error(`calendar assignee validation failed: ${error.message}`);
   return !!data && data.status === 'active';
 }
 
@@ -473,9 +504,10 @@ router.post('/calendar/activity/create', async c => {
       } : {}),
       afterCommit: async ({ entityId }) => {
         if (attendees.length) {
-          await sb.from('calendar_activity_attendees').insert(
+          const { error } = await sb.from('calendar_activity_attendees').insert(
             attendees.map(uid => ({ calendar_entry_id: entityId, user_id: uid, response_status: 'invited' })),
           );
+          if (error) throw new Error(`calendar attendee creation failed: ${error.message}`);
         }
       },
     },
@@ -505,8 +537,9 @@ router.post('/calendar/activity/create', async c => {
 
 /** Is the caller an invited attendee of this entry? */
 async function isAttendee(entryId: string, userId: string): Promise<boolean> {
-  const { data } = await sb.from('calendar_activity_attendees')
+  const { data, error } = await sb.from('calendar_activity_attendees')
     .select('user_id').eq('calendar_entry_id', entryId).eq('user_id', userId).maybeSingle();
+  if (error) throw new Error(`calendar attendee authorization failed: ${error.message}`);
   return !!data;
 }
 
@@ -558,7 +591,7 @@ async function loadEditable(user: { id: string; role?: string | null }, entryId:
 
 /** Upsert a recurrence exception for one occurrence (modify or cancel). */
 async function writeException(row: EntryRow, occurrenceDate: string, actorId: string, ex: Partial<OccurrenceException> & { exceptionType: 'cancelled' | 'modified' }): Promise<void> {
-  await sb.from('calendar_recurrence_exceptions').upsert({
+  const { error } = await sb.from('calendar_recurrence_exceptions').upsert({
     calendar_entry_id:     row.id,
     series_id:             row.recurrence_series_id ?? row.id,
     occurrence_date:       occurrenceDate,
@@ -574,6 +607,7 @@ async function writeException(row: EntryRow, occurrenceDate: string, actorId: st
     created_by:            actorId,
     updated_at:            new Date().toISOString(),
   }, { onConflict: 'calendar_entry_id,occurrence_date' });
+  if (error) throw new Error(`calendar recurrence exception failed: ${error.message}`);
 }
 
 // ── POST /calendar/update ───────────────────────────────────────────────────
@@ -650,7 +684,7 @@ router.post('/calendar/update', async c => {
     if (error) return c.json({ success: false, message: error.message }, 500);
   }
 
-  void emitAppEvent({
+  await emitAppEvent({
     eventType: 'calendar.entry.updated', sourceModule: 'calendar',
     sourceEntityType: row.type, sourceEntityId: entryId, actorUserId: user.id,
     severity: 'info', payload: { scope, occurrenceDate },
@@ -700,7 +734,7 @@ router.post('/calendar/task/status', async c => {
     if (uErr) return c.json({ success: false, message: uErr.message }, 500);
   }
 
-  void emitAppEvent({
+  await emitAppEvent({
     eventType: v.data.status === 'done' ? 'calendar.task.completed' : 'calendar.task.status_changed',
     sourceModule: 'calendar', sourceEntityType: 'task', sourceEntityId: entryId, actorUserId: user.id,
     severity: 'info', payload: { status: v.data.status, occurrenceDate },
@@ -742,7 +776,7 @@ router.post('/calendar/cancel', async c => {
     if (error) return c.json({ success: false, message: error.message }, 500);
   }
 
-  void emitAppEvent({
+  await emitAppEvent({
     eventType: 'calendar.entry.cancelled', sourceModule: 'calendar',
     sourceEntityType: row.type, sourceEntityId: entryId, actorUserId: user.id,
     severity: 'info', payload: { occurrenceDate },
