@@ -30,6 +30,7 @@ import {
   payrollPeriodYear,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
@@ -71,6 +72,7 @@ export default async function run(h) {
       }
     }} catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    try { if (ctx.policyFixture) await ctx.policyFixture.cleanup(); } catch {}
     try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
     try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
@@ -134,6 +136,8 @@ export default async function run(h) {
     const gr = await api('finance/payroll/pay-groups/create', fmgrT, { code, name: `Scale Group ${TAG}`, frequency: 'monthly' });
     ok(gr, `create group failed: ${gr.body.message}`);
     ctx.groupId = gr.body.data.id;
+    // F-02: seed the active policy so create_run_tx can pin it (non-working_days).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.groupId, actorId: fmgr2Id, tag: TAG });
 
     const assigns = ctx.empIds.map(id => ({ employee_id: id, pay_group_id: ctx.groupId, effective_from: `${Y}-01-01` }));
     for (const batch of chunk(assigns, 500)) {

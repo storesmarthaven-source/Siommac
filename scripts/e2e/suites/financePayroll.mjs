@@ -47,6 +47,7 @@ import {
   payrollRunCommand,
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export const title = 'Finance — Payroll Runs (Phase 3 — full lifecycle)';
 
@@ -294,6 +295,12 @@ export default async function run(h) {
       await h.mustDelete('finance_employee_bank_accounts',
         query => query.in('id', ctx.bankAccountIds));
     }
+    // F-02: remove the seeded policy assignment + policy BEFORE the pay group
+    // (assignment→group + assignment→version are `on delete restrict`); runs were
+    // already deleted above so the run→version pin no longer blocks it.
+    if (ctx.policyFixture) {
+      await ctx.policyFixture.cleanup();
+    }
     if (ctx.mainPayGroupId) {
       await h.mustDelete('finance_employee_pay_group_assignments',
         query => query.eq('pay_group_id', ctx.mainPayGroupId));
@@ -366,6 +373,11 @@ export default async function run(h) {
       });
       ok(assignment, `main pay group assignment failed: ${assignment.body.message}`);
     }
+
+    // F-02: migration 711's create_run_tx requires an active, whole-period policy
+    // assignment for the pay group. Seed the non-working_days prerequisite so base
+    // pay stays full-period (the behaviour this suite already asserts).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.mainPayGroupId, actorId: fmgr1Id, tag: TAG });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
