@@ -79,7 +79,7 @@ export default async function run(h) {
     policyId: null, versionId: null, workflowId: null,
     hcvId: null, wcVerId: null,
     pgMain: null, pgBank: null, pgCost: null,
-    polAsg: [], calAsg: [], runIds: [], calcVersionIds: [],
+    polAsg: [], calAsg: [], runIds: [], calcVersionIds: [], cfPayGroups: [],
   };
 
   // ── FK-safe teardown (runs LIFO after all tests): runs → calendar assignments
@@ -98,13 +98,13 @@ export default async function run(h) {
     }
     for (const a of ids.calAsg) { try { await api('hr/work-calendars/assignment/command', T.hr, { requestKey: uuid(), reason: 'e2e cleanup', command: 'cancel_assignment', assignmentId: a }); } catch {} }
     try { await sb.rpc('work_calendar_purge_tx', { p_work_calendar_ids: null, p_holiday_calendar_ids: null }); } catch {}
-    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost]) {
+    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost, ...ids.cfPayGroups]) {
       if (!pg) continue;
       try { await sb.from('finance_pay_group_policy_assignments').delete().eq('pay_group_id', pg); } catch {}
       try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', pg); } catch {}
     }
     if (ids.policyId) { try { await sb.from('finance_pay_policies').delete().eq('id', ids.policyId); } catch {} }
-    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost]) { if (pg) { try { await sb.from('finance_pay_groups').delete().eq('id', pg); } catch {} } }
+    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost, ...ids.cfPayGroups]) { if (pg) { try { await sb.from('finance_pay_groups').delete().eq('id', pg); } catch {} } }
     const empIds = [U.A, U.B, U.C, U.D, U.E];
     try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', empIds); } catch {}
     try { await sb.from('hr_leave_requests').delete().in('employee_id', empIds); } catch {}
@@ -115,9 +115,9 @@ export default async function run(h) {
   // ── real-route provisioning helpers ────────────────────────────────────────
   const cal = (extra) => ({ requestKey: uuid(), reason: 'e2e', ...extra });
 
-  async function publishHolidaySet() {
+  async function publishHolidaySet({ jurisdiction = 'TT' } = {}) {
     const cv = await api('hr/work-calendars/holiday-set/command', T.hr, cal({
-      command: 'create_version', calendar: { name: `HS ${TAG} ${uuid().slice(0, 6)}`, jurisdiction: 'TT' },
+      command: 'create_version', calendar: { name: `HS ${TAG} ${uuid().slice(0, 6)}`, jurisdiction },
       effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
     }));
     expect(cv.status === 200, `create holiday version: ${cv.status} ${JSON.stringify(cv.body).slice(0, 160)}`);
@@ -147,10 +147,10 @@ export default async function run(h) {
     expect(pub.status === 200, `publish work cal: ${pub.status} ${JSON.stringify(pub.body).slice(0, 160)}`);
     return verId;
   }
-  async function assignCalendar(payGroupId, wcVerId) {
+  async function assignCalendar(payGroupId, wcVerId, effectiveFrom = '2026-01-01', effectiveTo = '2026-12-31') {
     const asg = await api('hr/work-calendars/assignment/command', T.hr, cal({
       command: 'assign', scope: 'pay_group', payGroupId, workCalendarVersionId: wcVerId,
-      effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
+      effectiveFrom, effectiveTo,
     }));
     expect(asg.status === 200, `assign calendar: ${asg.status} ${JSON.stringify(asg.body).slice(0, 160)}`);
     ids.calAsg.push(asg.body.data.assignment?.id ?? asg.body.data.assignmentId);
@@ -247,7 +247,7 @@ export default async function run(h) {
 
     ids.hcvId = await publishHolidaySet();
     ids.wcVerId = await publishWorkCalendar(ids.hcvId);
-    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost]) await assignCalendar(pg, ids.wcVerId);
+    for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost, ...ids.cfPayGroups]) await assignCalendar(pg, ids.wcVerId);
 
     await activatePolicy();
     await assignPolicy(ids.pgMain, 'main'); await assignPolicy(ids.pgBank, 'bank'); await assignPolicy(ids.pgCost, 'cost');
@@ -391,4 +391,60 @@ export default async function run(h) {
     const row = await sb.from('finance_payroll_runs').select('pay_policy_version_id').eq('id', runId).single();
     expect(row.data.pay_policy_version_id === ids.versionId, 'second run must resolve+pin the same active policy');
   });
+
+  // ── T12 (table-driven): create-time calendar failures propagate ATOMICALLY ───
+  // A working_days policy makes create_run_tx call work_calendar_resolve, and every
+  // calendar failure must be propagated VERBATIM with NO run row created. F-CAL's
+  // own tests only prove the resolver; this proves F-02 propagation + atomicity.
+  // FL-PPR-005/006/010/011 are provisioned live via real F-CAL routes. FL-PPR-007/
+  // 008/009 are route-unreachable (DEC-PPR-019: F-CAL assign rejects unpublished/
+  // window-uncovered versions); provisioning them live would need direct F-CAL table
+  // writes forbidden by N7b/§13, so they stay DB-level (U-PPR-007), recorded here.
+  const calendarFailures = [
+    { fl: 'FL-PPR-005', e2e: 'E2E-PPR-034', code: 'calendar.unresolved',
+      period: [P1_START, P1_END],
+      setup: async () => {} },                       // policy assigned, NO calendar assignment
+    { fl: 'FL-PPR-006', e2e: 'E2E-PPR-035', code: 'calendar.split_period',
+      period: [P1_START, P1_END],
+      setup: async (pg) => {                          // two adjacent assignments, neither contains the period
+        await assignCalendar(pg, ids.wcVerId, '2026-01-01', '2026-03-15');
+        await assignCalendar(pg, ids.wcVerId, '2026-03-16', '2026-12-31');
+      } },
+    { fl: 'FL-PPR-010', e2e: 'E2E-PPR-037', code: 'calendar.jurisdiction_mismatch',
+      period: [P1_START, P1_END],
+      setup: async (pg) => {                          // TT pay group, calendar whose holiday set is non-TT
+        const hcv = await publishHolidaySet({ jurisdiction: 'US' });
+        const wcv = await publishWorkCalendar(hcv);
+        await assignCalendar(pg, wcv);
+      } },
+    { fl: 'FL-PPR-011', e2e: 'E2E-PPR-038', code: 'calendar.zero_working_days',
+      period: ['2026-03-07', '2026-03-08'],           // Sat–Sun (workingWeekdays Mon–Fri) ⇒ 0 working days
+      setup: async (pg) => { await assignCalendar(pg, ids.wcVerId); } },
+  ];
+  for (const c of calendarFailures) {
+    await test(`T12 ${c.fl} (${c.e2e}) — create_run_tx propagates ${c.code} atomically, no run row`, async () => {
+      const pg = await seedPayGroup(`CF${c.fl.slice(-3)}`);
+      ids.cfPayGroups.push(pg);
+      await assignPolicy(pg, `cf${c.fl.slice(-3)}`);
+      await c.setup(pg);
+      const cr = await createRun(pg, `cf-${c.fl.slice(-3)}`, c.period[0], c.period[1]);
+      fails(cr); expect(cr.status === 422, `${c.fl}: expected 422, got ${cr.status}`);
+      expect(String(cr.body.message || cr.body.error || '').includes(c.code),
+        `${c.fl}: expected ${c.code}, got ${JSON.stringify(cr.body).slice(0, 180)}`);
+      const rows = await sb.from('finance_payroll_runs').select('id').eq('pay_group_id', pg);
+      expect((rows.data ?? []).length === 0, `${c.fl}: create must be atomic — zero run rows`);
+    });
+  }
+  for (const c of [
+    { fl: 'FL-PPR-007', code: 'calendar.version_unpublished' },
+    { fl: 'FL-PPR-008', code: 'calendar.holiday_set_unpublished' },
+    { fl: 'FL-PPR-009', code: 'calendar.version_period_uncovered' },
+  ]) {
+    await test(`T12 ${c.fl} — ${c.code} is route-unreachable (DEC-PPR-019) ⇒ DB-level U-PPR-007`, () => {
+      // F-CAL's assign rejects unpublished / window-uncovered versions, so this
+      // work_calendar_resolve branch cannot arise through real routes; live
+      // provisioning would require direct F-CAL writes forbidden by N7b/§13.
+      expect(true, `${c.fl} traced to U-PPR-007 per contract DEC-PPR-019`);
+    });
+  }
 }

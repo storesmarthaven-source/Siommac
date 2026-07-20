@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `bda7942b776b486d60ac0ccc`
+Source fingerprint: `e95ea16ba4fc03fc221b8f43`
 
 Files: 149 | Symbols: 1404 | Widgets: 10 | Unique mounted endpoints: 123 | Route definitions: 123 mounted + 0 unmounted | API calls: 5 | DB objects: 205 | E2E suites: 20
 
@@ -379,7 +379,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Finance Wave 4 - Overtime rule engine | 5 | 4 | `scripts/e2e/suites/payrollOvertimeRules.mjs` |
 | Finance Wave 3 - Pay groups + period-correct PAYE | 11 | 6 | `scripts/e2e/suites/payrollPayGroups.mjs` |
 | Finance Payroll Setup - Pay Policies Phase A | 13 | 17 | `scripts/e2e/suites/payrollPayPolicies.mjs` |
-| payrollPayPolicyRun | 11 | 13 | `scripts/e2e/suites/payrollPayPolicyRun.mjs` |
+| payrollPayPolicyRun | 13 | 13 | `scripts/e2e/suites/payrollPayPolicyRun.mjs` |
 | Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 37 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
 | Payroll -- Scale (1000+ employee run) | 19 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
@@ -408,7 +408,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollOvertimeRules.mjs` | 139 |
 | e2e-suite | `scripts/e2e/suites/payrollPayGroups.mjs` | 215 |
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicies.mjs` | 268 |
-| e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 395 |
+| e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 451 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 837 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 398 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |

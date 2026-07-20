@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "5366808602abbbc98350de054bdcfdb1918c395c",
+    "head": "3af7584902332d11915a2d74ad6af532bd37d449",
     "branch": "wf/payroll-f02",
-    "fingerprint": "bda7942b776b486d60ac0ccc",
+    "fingerprint": "e95ea16ba4fc03fc221b8f43",
     "indexedFiles": 1475
   },
   "summary": {
@@ -16,7 +16,7 @@
     "apiCalls": 379,
     "databaseObjects": 1258,
     "e2eSuites": 71,
-    "e2eTests": 2296
+    "e2eTests": 2298
   },
   "modules": [
     {
@@ -2625,8 +2625,8 @@
       "path": "scripts/e2e/suites/payrollPayPolicyRun.mjs",
       "module": "payroll",
       "role": "e2e-suite",
-      "lines": 395,
-      "hash": "7f328d110a30df43"
+      "lines": 451,
+      "hash": "b56b9791c092b777"
     },
     {
       "path": "scripts/e2e/suites/payrollRunsRegister.mjs",
@@ -161995,6 +161995,14 @@
         {
           "name": "T11 a second consecutive run on the same group succeeds (reuse) — proves cleanup-safe reuse",
           "line": 387
+        },
+        {
+          "name": "T12 ${...} (${...}) — create_run_tx propagates ${...} atomically, no run row",
+          "line": 425
+        },
+        {
+          "name": "T12 ${...} — ${...} is route-unreachable (DEC-PPR-019) ⇒ DB-level U-PPR-007",
+          "line": 443
         }
       ],
       "apiPaths": [
