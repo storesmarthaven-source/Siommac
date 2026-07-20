@@ -1,274 +1,35 @@
--- Finance Payroll Setup: governed T&T pay policies (Phase A).
--- Scope is deliberately local employees paid in TTD; crew/run-policy integration is Phase B.
--- Operator-applied. After applying: NOTIFY pgrst, 'reload schema';
+-- ============================================================================
+-- PAYROLL PAY POLICY PHASE A — consolidated live-DB re-deploy
+-- ============================================================================
+-- Applies every not-yet-applied change from migration 20260919000600 to the
+-- already-running Supabase instance. Run ONCE in the Supabase Dashboard SQL
+-- Editor (or psql). The final NOTIFY reloads PostgREST schema cache.
+--
+-- Supersedes the two earlier one-off files:
+--   _apply_preflight_digest_fix.sql    (sha256 + digest fix)
+--   _apply_workflow_task_perms_fix.sql (hr_manager/finance_manager/finance_staff
+--                                       workflow.tasks.* grants)
+--
+-- CHANGES vs currently-live functions:
+--   1. SECURITY INVOKER + SET search_path = pg_catalog,public on ALL 6 functions
+--      (was SECURITY DEFINER). Caller is always service_role which has full
+--      grants on all tables, wf_internal schema+functions, and bypasses RLS.
+--   2. Preflight dead-component detection: explicit blocker codes
+--      'component.missing' and 'component.inactive' for any bound
+--      finance_pay_policy_components row whose referenced finance_pay_components
+--      row is gone or is_active=false.
+--   3. Checksum manifest: components subquery now joins to finance_pay_components
+--      and includes componentCode, componentKind, componentActive in the manifest
+--      so deactivating a bound component changes the checksum and invalidates
+--      any in-flight approval (activation re-checks checksum vs canonical_checksum).
+--   4. Preflight sha256 fix (already applied in prior round):
+--      encode(sha256(convert_to(manifest::text,'UTF8')),'hex') — PG built-in,
+--      no pgcrypto overload ambiguity.
+--   5. Workflow-task permission grants for hr_manager, finance_manager, finance_staff
+--      so they can call /workflow-engine/decide (was missing for hr_manager).
+-- ============================================================================
 
-create extension if not exists pgcrypto;
-create extension if not exists btree_gist;
-
-create table public.finance_pay_policies (
-  id uuid primary key default gen_random_uuid(),
-  code text not null unique check (code ~ '^[A-Z0-9][A-Z0-9_-]{1,19}$'),
-  name text not null check (char_length(name) between 3 and 120),
-  description text not null default '' check (char_length(description) <= 1000),
-  legal_entity_code text not null default 'SIOMAC-TT' check (legal_entity_code = 'SIOMAC-TT'),
-  worker_relationship text not null default 'employee' check (worker_relationship = 'employee'),
-  policy_type text not null check (policy_type in ('standard_salary','hourly_shift')),
-  workforce_type text not null check (workforce_type in ('salaried','hourly')),
-  status text not null default 'draft' check (status in ('draft','active','retired')),
-  owner_id text references public.app_users(id) on delete set null,
-  created_by text not null references public.app_users(id),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now()
-);
-
-create table public.finance_pay_policy_versions (
-  id uuid primary key default gen_random_uuid(),
-  policy_id uuid not null references public.finance_pay_policies(id) on delete cascade,
-  version_no integer not null check (version_no > 0),
-  status text not null default 'draft'
-    check (status in ('draft','pending_approval','approved','active','superseded','rejected','retired')),
-  effective_from date not null,
-  effective_to date,
-  change_summary text not null default '' check (char_length(change_summary) <= 500),
-  timezone text not null default 'America/Port_of_Spain' check (timezone = 'America/Port_of_Spain'),
-  day_boundary text not null check (day_boundary in ('calendar_day','shift_start')),
-  statutory_binding text not null default 'approved_by_pay_date' check (statutory_binding = 'approved_by_pay_date'),
-  currency text not null default 'TTD' check (currency = 'TTD'),
-  payment_destination text not null default 'primary_bank_account' check (payment_destination = 'primary_bank_account'),
-  missing_bank_outcome text not null default 'block_release' check (missing_bank_outcome = 'block_release'),
-  workflow_id uuid references public.workflow_instances(id) on delete set null,
-  canonical_checksum text,
-  lock_version integer not null default 1,
-  prepared_by text not null references public.app_users(id),
-  submitted_by text references public.app_users(id),
-  submitted_at timestamptz,
-  approved_by text references public.app_users(id),
-  approved_at timestamptz,
-  activated_by text references public.app_users(id),
-  activated_at timestamptz,
-  retired_by text references public.app_users(id),
-  retired_at timestamptz,
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (policy_id, version_no),
-  check (effective_to is null or effective_to >= effective_from)
-);
-
-create table public.finance_pay_policy_components (
-  id uuid primary key default gen_random_uuid(),
-  policy_version_id uuid not null references public.finance_pay_policy_versions(id) on delete cascade,
-  component_id uuid not null references public.finance_pay_components(id) on delete restrict,
-  calculation_basis text not null check (calculation_basis in ('salary_period','approved_hours')),
-  rate_source text not null check (rate_source in ('employee_contract','employee_assignment')),
-  eligibility_source text not null
-    check (eligibility_source in ('effective_employment','approved_compensation','approved_time')),
-  rule_parameters jsonb not null default '{}'::jsonb,
-  is_required boolean not null default true,
-  sort_order integer not null default 0 check (sort_order between 0 and 999),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (policy_version_id, component_id),
-  check (
-    (calculation_basis = 'salary_period' and eligibility_source in ('effective_employment','approved_compensation')
-      and rule_parameters ? 'proration' and rule_parameters->>'proration' in ('calendar_days','working_days'))
-    or
-    (calculation_basis = 'approved_hours' and eligibility_source = 'approved_time' and rule_parameters = '{}'::jsonb)
-  )
-);
-
-create table public.finance_pay_policy_source_rules (
-  id uuid primary key default gen_random_uuid(),
-  policy_version_id uuid not null references public.finance_pay_policy_versions(id) on delete cascade,
-  source_type text not null
-    check (source_type in ('approved_compensation','approved_time','approved_leave','statutory_profile','payment_destination')),
-  owner_role text not null check (owner_role in ('hr_manager','finance_staff','finance_manager','manager')),
-  required boolean not null default true,
-  reconciliation_key text not null
-    check (reconciliation_key in ('employee_effective_date','employee_period','employee_work_date')),
-  cutoff_policy text not null default 'pay_group_cutoff' check (cutoff_policy = 'pay_group_cutoff'),
-  late_input_policy text not null check (late_input_policy in ('exclude_and_review','correction_candidate')),
-  conflict_severity text not null check (conflict_severity in ('warning','blocker')),
-  conflict_outcome text not null
-    check (conflict_outcome in ('exclude_unapproved_input','create_review_finding','block_employee_calculation','block_input_lock','create_correction_candidate')),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  unique (policy_version_id, source_type)
-);
-
-create table public.finance_pay_policy_costing_rules (
-  id uuid primary key default gen_random_uuid(),
-  policy_version_id uuid not null references public.finance_pay_policy_versions(id) on delete cascade,
-  dimension text not null check (dimension = 'cost_centre'),
-  resolution_source text not null check (resolution_source = 'employee_assignment'),
-  required boolean not null default true check (required),
-  missing_outcome text not null default 'block_input_lock' check (missing_outcome = 'block_input_lock'),
-  created_at timestamptz not null default now(),
-  unique (policy_version_id, dimension)
-);
-
-create table public.finance_pay_group_policy_assignments (
-  id uuid primary key default gen_random_uuid(),
-  pay_group_id uuid not null references public.finance_pay_groups(id) on delete restrict,
-  policy_id uuid not null references public.finance_pay_policies(id) on delete restrict,
-  policy_version_id uuid not null references public.finance_pay_policy_versions(id) on delete restrict,
-  effective_from date not null,
-  effective_to date,
-  status text not null default 'active' check (status in ('active','ended')),
-  assigned_by text not null references public.app_users(id),
-  ended_by text references public.app_users(id),
-  end_reason text check (end_reason is null or char_length(end_reason) between 3 and 500),
-  created_at timestamptz not null default now(),
-  updated_at timestamptz not null default now(),
-  check (effective_to is null or effective_to >= effective_from)
-);
-
-alter table public.finance_pay_group_policy_assignments
-  add constraint finance_pay_group_policy_assignments_no_overlap
-  exclude using gist (
-    pay_group_id with =,
-    daterange(effective_from, coalesce(effective_to + 1, 'infinity'::date), '[)') with &&
-  ) where (status = 'active');
-
-create table public.finance_pay_policy_command_receipts (
-  request_key text primary key,
-  input_hash text not null,
-  command text not null,
-  policy_id uuid,
-  result jsonb not null,
-  created_at timestamptz not null default now()
-);
-
-create index finance_pay_policies_list_idx on public.finance_pay_policies(status, updated_at desc, id desc);
-create index finance_pay_policy_versions_policy_idx on public.finance_pay_policy_versions(policy_id, version_no desc);
-create index finance_pay_policy_versions_workflow_idx on public.finance_pay_policy_versions(workflow_id);
-create index finance_pay_policy_components_version_idx on public.finance_pay_policy_components(policy_version_id);
-create index finance_pay_policy_sources_version_idx on public.finance_pay_policy_source_rules(policy_version_id);
-create index finance_pay_policy_assignments_policy_idx on public.finance_pay_group_policy_assignments(policy_id, effective_from desc);
-create index finance_pay_policy_assignments_group_idx on public.finance_pay_group_policy_assignments(pay_group_id, effective_from desc);
-
-alter table public.finance_pay_policies enable row level security;
-alter table public.finance_pay_policy_versions enable row level security;
-alter table public.finance_pay_policy_components enable row level security;
-alter table public.finance_pay_policy_source_rules enable row level security;
-alter table public.finance_pay_policy_costing_rules enable row level security;
-alter table public.finance_pay_group_policy_assignments enable row level security;
-alter table public.finance_pay_policy_command_receipts enable row level security;
-grant select, insert, update, delete on public.finance_pay_policies to service_role;
-grant select, insert, update, delete on public.finance_pay_policy_versions to service_role;
-grant select, insert, update, delete on public.finance_pay_policy_components to service_role;
-grant select, insert, update, delete on public.finance_pay_policy_source_rules to service_role;
-grant select, insert, update, delete on public.finance_pay_policy_costing_rules to service_role;
-grant select, insert, update, delete on public.finance_pay_group_policy_assignments to service_role;
-grant select, insert, update, delete on public.finance_pay_policy_command_receipts to service_role;
-
-create trigger finance_pay_policies_updated_at before update on public.finance_pay_policies
-  for each row execute function public.set_updated_at();
-create trigger finance_pay_policy_versions_updated_at before update on public.finance_pay_policy_versions
-  for each row execute function public.set_updated_at();
-create trigger finance_pay_policy_components_updated_at before update on public.finance_pay_policy_components
-  for each row execute function public.set_updated_at();
-create trigger finance_pay_policy_sources_updated_at before update on public.finance_pay_policy_source_rules
-  for each row execute function public.set_updated_at();
-create trigger finance_pay_policy_assignments_updated_at before update on public.finance_pay_group_policy_assignments
-  for each row execute function public.set_updated_at();
-
--- Permission catalogue grants. Static catalogues are updated in TS in the same slice.
-insert into public.role_permissions (role_name, permission) values
-  ('finance_staff','finance.payroll.policies.view'),
-  ('finance_staff','finance.payroll.policies.draft'),
-  ('finance_staff','finance.payroll.policies.submit'),
-  ('finance_manager','finance.payroll.policies.view'),
-  ('finance_manager','finance.payroll.policies.draft'),
-  ('finance_manager','finance.payroll.policies.submit'),
-  ('finance_manager','finance.payroll.policies.statutory_approve'),
-  ('finance_manager','finance.payroll.policies.activate'),
-  ('finance_manager','finance.payroll.policies.assign'),
-  ('hr_manager','finance.payroll.policies.view'),
-  ('hr_manager','finance.payroll.policies.source_approve'),
-  ('admin','finance.payroll.policies.view'),
-  ('admin','finance.payroll.policies.draft'),
-  ('admin','finance.payroll.policies.submit'),
-  ('admin','finance.payroll.policies.source_approve'),
-  ('admin','finance.payroll.policies.statutory_approve'),
-  ('admin','finance.payroll.policies.activate'),
-  ('admin','finance.payroll.policies.assign'),
-  ('superadmin','finance.payroll.policies.view'),
-  ('superadmin','finance.payroll.policies.draft'),
-  ('superadmin','finance.payroll.policies.submit'),
-  ('superadmin','finance.payroll.policies.source_approve'),
-  ('superadmin','finance.payroll.policies.statutory_approve'),
-  ('superadmin','finance.payroll.policies.activate'),
-  ('superadmin','finance.payroll.policies.assign')
-on conflict do nothing;
-
--- Workflow task capability grants for the roles this migration introduces as
--- workflow approvers. The central workflow seed (20260704000002) only covers
--- the generic roles (employee/manager/admin/superadmin). This workflow template
--- assigns step 1 to hr_manager (HR source review) and step 2 to finance_manager
--- (Finance statutory review). Both roles must be able to call /workflow-engine/decide.
--- finance_staff submits policies → must also be able to view and claim tasks.
-insert into public.role_permissions (role_name, permission) values
-  ('hr_manager','workflow.my_tasks.view'),
-  ('hr_manager','workflow.tasks.approve'),
-  ('hr_manager','workflow.tasks.return'),
-  ('hr_manager','workflow.tasks.reject'),
-  ('hr_manager','workflow.view'),
-  ('finance_manager','workflow.my_tasks.view'),
-  ('finance_manager','workflow.tasks.approve'),
-  ('finance_manager','workflow.tasks.return'),
-  ('finance_manager','workflow.tasks.reject'),
-  ('finance_manager','workflow.view'),
-  ('finance_staff','workflow.my_tasks.view'),
-  ('finance_staff','workflow.submit'),
-  ('finance_staff','workflow.tasks.approve'),
-  ('finance_staff','workflow.tasks.return'),
-  ('finance_staff','workflow.tasks.reject'),
-  ('finance_staff','workflow.view')
-on conflict do nothing;
-
--- Two workflow-native reviews. Activation is the third, independent Finance approval.
-do $seed$
-declare v_template uuid; v_version uuid;
-begin
-  select id into v_template from public.workflow_templates where template_key = 'finance_pay_policy_approval';
-  if v_template is null then
-    insert into public.workflow_templates
-      (template_key,module_key,workflow_type,name,description,status,is_active,current_version,definition)
-    values
-      ('finance_pay_policy_approval','finance_pay_policy','finance_pay_policy_approval',
-       'Finance Pay Policy Approval','HR source review followed by Finance statutory review.','active',true,1,'{}')
-    returning id into v_template;
-  end if;
-  insert into public.workflow_template_versions(template_id,version_no,version_status,definition,published_at)
-  values (v_template,1,'published',jsonb_build_object(
-    'schemaVersion',1,
-    'steps',jsonb_build_array(
-      jsonb_build_object('stepKey','source_review','stepName','HR Source Policy Review','stepType','approval','sequenceNo',1,
-        'assignment',jsonb_build_object('type','role','value','hr_manager'),'dueDurationHours',72,'required',true,
-        'decisionRules',jsonb_build_object('canApprove',true,'canReturn',true,'canReject',true,'canDelegate',false,
-          'requireCommentOnApprove',false,'requireCommentOnReturn',true,'requireCommentOnReject',true,'requireAttachment',false)),
-      jsonb_build_object('stepKey','statutory_review','stepName','Finance Statutory Review','stepType','approval','sequenceNo',2,
-        'assignment',jsonb_build_object('type','role','value','finance_manager'),'dueDurationHours',72,'required',true,
-        'decisionRules',jsonb_build_object('canApprove',true,'canReturn',true,'canReject',true,'canDelegate',false,
-          'requireCommentOnApprove',false,'requireCommentOnReturn',true,'requireCommentOnReject',true,'requireAttachment',false))
-    ),
-    'transitions','[]'::jsonb,'notifications','[]'::jsonb,'handoffs','[]'::jsonb,
-    'sourceStatusMap',jsonb_build_object('onStarted','pending_approval','onCompleted','approved',
-      'onReturned','draft','onRejected','rejected','onCancelled','draft'),
-    'settings',jsonb_build_object('allowReturn',true,'allowReject',true,'allowDelegate',false,
-      'allowAdminOverride',true,'requireAuditAllTransitions',true)
-  ),now())
-  on conflict (template_id,version_no) do update set version_status='published',definition=excluded.definition,published_at=excluded.published_at
-  returning id into v_version;
-  delete from public.module_workflow_bindings
-    where module_key='finance_pay_policy' and workflow_type='finance_pay_policy_approval'
-      and trigger_event='finance.payroll.policy.submitted' and scope_type='global' and scope_id is null;
-  insert into public.module_workflow_bindings
-    (module_key,workflow_type,trigger_event,template_id,template_version_id,scope_type,is_active,priority)
-  values ('finance_pay_policy','finance_pay_policy_approval','finance.payroll.policy.submitted',
-    v_template,v_version,'global',true,100);
-end $seed$;
-
+-- ── 1. finance_pay_policy_preflight ─────────────────────────────────────────
 create or replace function public.finance_pay_policy_preflight(p_version_id uuid)
 returns jsonb language plpgsql stable security invoker set search_path=pg_catalog,public as $fn$
 declare v public.finance_pay_policy_versions%rowtype; p public.finance_pay_policies%rowtype;
@@ -289,7 +50,7 @@ begin
     where jurisdiction='TT' and currency='TTD' and status='active' and is_active
       and effective_from<=v.effective_from order by effective_from desc limit 1;
   -- Explicit dead-component check: bound component missing or deactivated.
-  -- This must run before the aggregate checks to give a precise blocker code.
+  -- This runs before aggregate checks to surface a precise blocker per component.
   for dead_component in
     select pc.component_id, c.code as comp_code, c.is_active
     from public.finance_pay_policy_components pc
@@ -314,9 +75,8 @@ begin
   if p.policy_type='hourly_shift' and not exists(select 1 from public.finance_pay_policy_source_rules where policy_version_id=v.id and source_type='approved_time' and required)
     then blockers:=blockers||jsonb_build_array(jsonb_build_object('code','source.approved_time','message','Hourly policies require approved-time evidence.')); end if;
   if costing_count=0 then blockers:=blockers||jsonb_build_array(jsonb_build_object('code','costing.cost_centre','message','Employee cost-centre resolution is required.')); end if;
-  -- Checksum manifest. Components join to finance_pay_components to include authoritative
-  -- is_active/code/kind — deactivating a bound component changes the checksum and
-  -- invalidates any in-flight approval (activation re-checks checksum vs canonical_checksum).
+  -- Checksum manifest includes authoritative component fields (code, kind, is_active).
+  -- Deactivating a bound component changes the checksum and invalidates in-flight approvals.
   manifest:=jsonb_build_object('policy',jsonb_build_object('code',p.code,'type',p.policy_type),
     'version',jsonb_build_object('versionNo',v.version_no,'effectiveFrom',v.effective_from,'effectiveTo',v.effective_to,
       'timezone',v.timezone,'dayBoundary',v.day_boundary,'currency',v.currency),
@@ -342,6 +102,7 @@ begin
     'counts',jsonb_build_object('components',component_count,'requiredSources',source_count,'costingRules',costing_count));
 end $fn$;
 
+-- ── 2. finance_pay_policy_draft_command_tx ──────────────────────────────────
 create or replace function public.finance_pay_policy_draft_command_tx(
   p_command text,p_policy_id uuid,p_version_id uuid,p_actor_id text,p_request_key text,p_input_hash text,p_payload jsonb
 ) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public as $fn$
@@ -390,6 +151,7 @@ begin
 exception when unique_violation then raise exception 'pay_policy: code already exists' using errcode='WF409';
 end $fn$;
 
+-- ── 3. finance_pay_policy_copy_version_tx ───────────────────────────────────
 create or replace function public.finance_pay_policy_copy_version_tx(
   p_policy_id uuid,p_source_version_id uuid,p_effective_from date,p_change_summary text,
   p_actor_id text,p_request_key text,p_input_hash text
@@ -444,6 +206,7 @@ begin
   return result;
 end $fn$;
 
+-- ── 4. finance_pay_policy_submit_tx ─────────────────────────────────────────
 create or replace function public.finance_pay_policy_submit_tx(
   p_version_id uuid,p_actor_id text,p_request_key text,p_input_hash text,p_certifications jsonb
 ) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public as $fn$
@@ -485,6 +248,7 @@ begin
   return result;
 end $fn$;
 
+-- ── 5. finance_pay_policy_workflow_transition_tx ────────────────────────────
 create or replace function public.finance_pay_policy_workflow_transition_tx(
   p_transition_id uuid,p_version_id uuid,p_actor_id text,p_target_status text,p_comment text,p_input_hash text
 ) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public as $fn$
@@ -527,6 +291,7 @@ begin
   return result;
 end $fn$;
 
+-- ── 6. finance_pay_policy_admin_command_tx ──────────────────────────────────
 create or replace function public.finance_pay_policy_admin_command_tx(
   p_command text,p_policy_id uuid,p_version_id uuid,p_actor_id text,p_request_key text,p_input_hash text,p_payload jsonb
 ) returns jsonb language plpgsql security invoker set search_path=pg_catalog,public as $fn$
@@ -627,6 +392,7 @@ begin
 exception when exclusion_violation then raise exception 'pay_policy: pay-group assignment overlaps an active assignment' using errcode='WF409';
 end $fn$;
 
+-- ── Revoke / grant (unchanged from original migration) ───────────────────────
 revoke all on function public.finance_pay_policy_preflight(uuid) from public,anon,authenticated;
 revoke all on function public.finance_pay_policy_draft_command_tx(text,uuid,uuid,text,text,text,jsonb) from public,anon,authenticated;
 revoke all on function public.finance_pay_policy_copy_version_tx(uuid,uuid,date,text,text,text,text) from public,anon,authenticated;
@@ -639,3 +405,28 @@ grant execute on function public.finance_pay_policy_copy_version_tx(uuid,uuid,da
 grant execute on function public.finance_pay_policy_submit_tx(uuid,text,text,text,jsonb) to service_role;
 grant execute on function public.finance_pay_policy_workflow_transition_tx(uuid,uuid,text,text,text,text) to service_role;
 grant execute on function public.finance_pay_policy_admin_command_tx(text,uuid,uuid,text,text,text,jsonb) to service_role;
+
+-- ── Workflow-task permission grants ──────────────────────────────────────────
+-- hr_manager, finance_manager, finance_staff need workflow.tasks.* to call
+-- /workflow-engine/decide. The central workflow seed (20260704000002) only
+-- covered generic roles (employee/manager/admin/superadmin). Idempotent.
+insert into public.role_permissions (role_name, permission) values
+  ('hr_manager','workflow.my_tasks.view'),
+  ('hr_manager','workflow.tasks.approve'),
+  ('hr_manager','workflow.tasks.return'),
+  ('hr_manager','workflow.tasks.reject'),
+  ('hr_manager','workflow.view'),
+  ('finance_manager','workflow.my_tasks.view'),
+  ('finance_manager','workflow.tasks.approve'),
+  ('finance_manager','workflow.tasks.return'),
+  ('finance_manager','workflow.tasks.reject'),
+  ('finance_manager','workflow.view'),
+  ('finance_staff','workflow.my_tasks.view'),
+  ('finance_staff','workflow.submit'),
+  ('finance_staff','workflow.tasks.approve'),
+  ('finance_staff','workflow.tasks.return'),
+  ('finance_staff','workflow.tasks.reject'),
+  ('finance_staff','workflow.view')
+on conflict do nothing;
+
+notify pgrst, 'reload schema';
