@@ -46,10 +46,64 @@ export async function assignmentCommand(actorId: string, c: WorkCalendarCommand)
   return { assignment: assignmentDto(d.assignment as Row) };
 }
 
+// Working-day evidence a resolved version yields over the requested period. The DB function is
+// service-role-only (never routed on its own); the resolve PREVIEW surfaces it so an admin can
+// verify the pay-group → calendar → working-day chain before F-02 consumes the same numbers.
+interface WorkingDaysResult { count: string; excluded: Array<{ date: string; reason: string; lostFraction: string; holidayName?: string }>; }
+
+// The resolve READ enriches the raw RPC result (IDs + checksums + path) with resolved names and
+// working-day evidence, so the UI never displays a raw UUID (contract §9.4) and the resolve
+// preview can show names + evidence (UT-CAL-U6). Raw top-level fields are preserved for F-02.
 export async function resolveWorkCalendar(payGroupId: string, periodStart: string, periodEnd: string): Promise<unknown> {
   const { data, error } = await sb.rpc('work_calendar_resolve', { p_pay_group_id: payGroupId, p_start: periodStart, p_end: periodEnd });
   if (error) rpcError(error);
-  return data;
+  const base = (data ?? {}) as Row;
+  const workVersionId = asText(base.workCalendarVersionId);
+  const holidayVersionId = asText(base.holidayCalendarVersionId);
+
+  const [wv, hv, pg, wd] = await Promise.all([
+    sb.from('work_calendar_versions').select('*, work_calendars(name)').eq('id', workVersionId).maybeSingle(),
+    sb.from('holiday_calendar_versions').select('*, holiday_calendars(name,jurisdiction)').eq('id', holidayVersionId).maybeSingle(),
+    sb.from('finance_pay_groups').select('id,code,name,statutory_country').eq('id', payGroupId).maybeSingle(),
+    sb.rpc('work_calendar_working_days', { p_version_id: workVersionId, p_start: periodStart, p_end: periodEnd }),
+  ]);
+  // Fail closed — every enrichment read is checked; a failed lookup or working-day computation must
+  // surface, never a fabricated name or a faked zero count (no-band-aids: no swallowed errors/faked values).
+  const fail = (msg: string): never => { throw Object.assign(new Error(`resolve enrichment: ${msg}`), { status: 500 }); };
+  if (wd.error) rpcError(wd.error);
+  if (wv.error) fail(`work version read: ${wv.error.message}`);
+  if (hv.error) fail(`holiday version read: ${hv.error.message}`);
+  if (pg.error) fail(`pay group read: ${pg.error.message}`);
+  if (!wv.data) fail('resolved work-calendar version not found');
+  if (!hv.data) fail('resolved holiday version not found');
+  if (!pg.data) fail('pay group not found');
+  if (wd.data == null) fail('working-day evidence unavailable');
+  const wvRow = wv.data as Row;
+  const hvRow = hv.data as Row;
+  const pgRow = pg.data as Row;
+  const wc = (wvRow.work_calendars as Row) ?? {};
+  const hc = (hvRow.holiday_calendars as Row) ?? {};
+  const working = wd.data as WorkingDaysResult;
+
+  return {
+    ...base,
+    workCalendar: {
+      id: asText(wvRow.work_calendar_id), name: wc.name ? asText(wc.name) : '(unnamed calendar)',
+      versionNo: Number(wvRow.version_no) || null, status: asText(wvRow.status),
+      effectiveFrom: wvRow.effective_from ? asText(wvRow.effective_from) : null,
+      effectiveTo: wvRow.effective_to ? asText(wvRow.effective_to) : null,
+      timezone: asText(wvRow.timezone), workingWeekdays: (wvRow.working_weekdays as number[]) ?? [],
+      weekdayFractions: (wvRow.weekday_fractions as Record<string, number>) ?? {},
+    },
+    holidayCalendar: {
+      id: asText(hvRow.holiday_calendar_id), name: hc.name ? asText(hc.name) : '(unnamed holiday set)',
+      jurisdiction: hc.jurisdiction ? asText(hc.jurisdiction) : '', versionNo: Number(hvRow.version_no) || null,
+      status: asText(hvRow.status), effectiveFrom: hvRow.effective_from ? asText(hvRow.effective_from) : null,
+      effectiveTo: hvRow.effective_to ? asText(hvRow.effective_to) : null,
+    },
+    payGroup: { id: payGroupId, code: pgRow.code ? asText(pgRow.code) : null, name: pgRow.name ? asText(pgRow.name) : null, statutoryCountry: pgRow.statutory_country ? asText(pgRow.statutory_country) : null },
+    workingDays: { count: asText(working.count), excluded: Array.isArray(working.excluded) ? working.excluded : [] },
+  };
 }
 
 // ── Bounded keyset reads ─────────────────────────────────────────────────────

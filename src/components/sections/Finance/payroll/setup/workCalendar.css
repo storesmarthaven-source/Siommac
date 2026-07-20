@@ -1,0 +1,93 @@
+/* Shared Work Calendar (F-CAL) admin console — scoped .wcal, reusing --hrfin-* tokens. */
+.wcal{display:grid;gap:14px;color:var(--hrfin-text-primary)}
+.wcal button,.wcal input,.wcal select,.wcal textarea{font:inherit}
+.wcal button{border:1px solid var(--hrfin-border);background:#fff;border-radius:7px;padding:8px 12px;cursor:pointer}
+.wcal button:disabled{opacity:.45;cursor:not-allowed}
+.wcal button.is-primary{background:#0b5f62;color:#fff;border-color:#0b5f62}
+.wcal button.is-danger{color:#a2232d;border-color:#e3b9bd}
+
+.wcal-subtabs{display:flex;border-bottom:1px solid var(--hrfin-border);gap:24px;overflow:auto}
+.wcal-subtabs button{border:0;border-radius:0;padding:10px 1px;background:transparent;white-space:nowrap}
+.wcal-subtabs button.active{border-bottom:2px solid #0b7778;color:#075d60;font-weight:700}
+
+.wcal-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.wcal-toolbar input{min-width:300px;padding:9px 11px;border:1px solid var(--hrfin-border);border-radius:7px}
+.wcal-toolbar>div{display:flex;gap:9px;align-items:center}
+.wcal-sub{font-size:12px;color:var(--hrfin-text-secondary);max-width:640px}
+
+.wcal-register,.wcal-panel{background:#fff;border:1px solid var(--hrfin-border);border-radius:9px;overflow:auto}
+.wcal-panel{padding:16px;display:grid;gap:12px}
+.wcal-panel h3{margin:0}
+.wcal-panel-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.wcal-inline-actions{display:flex;gap:8px;align-items:center}
+
+.wcal table{width:100%;border-collapse:collapse}
+.wcal th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:.05em;padding:11px 13px;border-bottom:1px solid var(--hrfin-border);color:var(--hrfin-text-secondary)}
+.wcal td{padding:12px 13px;border-bottom:1px solid var(--hrfin-border);font-size:12.5px;vertical-align:top}
+.wcal td small{display:block;color:var(--hrfin-text-secondary);margin-top:3px}
+.wcal tbody tr{cursor:default}
+.wcal-register tbody tr[tabindex]{cursor:pointer}
+.wcal tbody tr:focus-visible{outline:2px solid #0b7778;outline-offset:-2px}
+.wcal tbody tr.is-open{background:#eef7f6}
+.wcal-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;font-size:11.5px}
+.wcal-row-actions{display:flex;gap:6px;justify-content:flex-end}
+.wcal-row-actions button{padding:5px 9px;font-size:11.5px}
+
+.wcal-state{padding:30px;text-align:center;color:var(--hrfin-text-secondary)}
+.wcal-state.is-error{color:#a2232d}
+.wcal-state button{margin-left:6px}
+.wcal-skel{padding:14px;display:grid;gap:10px}
+.wcal-skel-row{height:38px;border-radius:7px;background:linear-gradient(90deg,#eef1f2 25%,#f6f8f9 37%,#eef1f2 63%);background-size:400% 100%;animation:wcal-shimmer 1.3s ease infinite}
+@keyframes wcal-shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+.wcal-footer{display:flex;justify-content:space-between;align-items:center}
+.wcal-footer span{font-size:12px;color:var(--hrfin-text-secondary)}
+.wcal-footer>div{display:flex;gap:8px}
+
+.wcal-detail{display:grid;gap:14px}
+.wcal-detail-head{display:flex;justify-content:space-between;align-items:flex-start;gap:16px}
+.wcal-detail-head>div:first-child{display:grid;gap:2px}
+.wcal-detail-head h2{margin:5px 0 0}
+.wcal-detail-head span{font-size:12px;color:var(--hrfin-text-secondary)}
+
+/* ── Modal form ── */
+.wcal-form{display:grid;gap:13px;min-width:min(560px,82vw)}
+.wcal-form label{display:grid;gap:5px;font-size:12px;font-weight:650}
+.wcal-form input,.wcal-form select,.wcal-form textarea{border:1px solid var(--hrfin-border);border-radius:6px;padding:9px}
+.wcal-form textarea{min-height:70px;resize:vertical}
+.wcal-grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wcal-grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.wcal-err{color:#a2232d;font-weight:500;font-size:11.5px}
+.wcal-banner{padding:10px 12px;border-radius:7px;font-size:12.5px}
+.wcal-banner.is-error{background:#fdf0f1;border:1px solid #e3b9bd;color:#a2232d}
+.wcal-note{font-size:11.5px;color:var(--hrfin-text-secondary);background:var(--hrfin-surface-2);border-radius:7px;padding:9px 11px}
+
+/* ── Weekday toggles (no preselection) ── */
+.wcal-weekdays{border:1px solid var(--hrfin-border);border-radius:8px;padding:11px 13px;display:grid;gap:8px}
+.wcal-weekdays legend{font-size:12px;font-weight:650;padding:0 4px}
+.wcal-weekdays>div[role=group]{display:flex;gap:7px;flex-wrap:wrap}
+.wcal-weekdays button{min-width:52px;padding:8px 6px;border-radius:7px;font-size:12px}
+.wcal-weekdays button.on{background:#0b5f62;color:#fff;border-color:#0b5f62;font-weight:650}
+.wcal-fractions{display:grid;gap:7px}
+
+.wcal-picker{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.wcal-picker label{display:grid;gap:5px;font-size:12px;font-weight:650}
+.wcal-picker select{border:1px solid var(--hrfin-border);border-radius:6px;padding:9px}
+
+/* ── Resolve preview ── */
+.wcal-resolve{display:grid;gap:14px}
+.wcal-resolve-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.wcal-resolve-grid>div{display:grid;gap:3px;padding:12px;background:var(--hrfin-surface-2);border-radius:8px}
+.wcal-resolve-grid span{font-size:10px;text-transform:uppercase;letter-spacing:.05em;color:var(--hrfin-text-secondary)}
+.wcal-resolve-grid small{color:var(--hrfin-text-secondary);font-weight:400}
+.wcal-workingdays{display:grid;gap:10px}
+.wcal-wd-count{display:flex;align-items:baseline;gap:12px;padding:12px;border:1px solid #b6d7d6;background:#edf8f7;border-radius:8px}
+.wcal-wd-count span{font-size:11px;text-transform:uppercase;color:var(--hrfin-text-secondary)}
+.wcal-wd-count strong{font-size:22px;color:#075d60}
+
+@media(max-width:900px){
+  .wcal-toolbar{flex-direction:column;align-items:stretch}
+  .wcal-toolbar input{min-width:0}
+  .wcal-detail-head{flex-direction:column}
+  .wcal-grid2,.wcal-grid3,.wcal-picker,.wcal-resolve-grid{grid-template-columns:1fr}
+}
