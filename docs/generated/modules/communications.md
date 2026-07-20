@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `beb540cef488bba3d5d82837`
+Source fingerprint: `7839073c3ac33c77588a0fa1`
 
-Files: 103 | Symbols: 939 | Widgets: 0 | Unique mounted endpoints: 72 | Route definitions: 73 mounted + 2 unmounted | API calls: 88 | DB objects: 120 | E2E suites: 4
+Files: 103 | Symbols: 937 | Widgets: 0 | Unique mounted endpoints: 72 | Route definitions: 73 mounted + 2 unmounted | API calls: 88 | DB objects: 120 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -71,7 +71,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/mute` | `communications.view` | requirePermission | `MuteSchema` | `netlify/functions/routes/communications.ts:249` | useMuteNotifications @ src/api/communications.ts:215 | communications |
 | `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:186` | res @ src/api/communications.ts:193 | communications |
 | `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:223` | useSetNotificationPreference @ src/api/communications.ts:206 | communications |
-| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:84` | res @ src/api/communications.ts:148<br>res @ src/components/nav/badgeSync.ts:52 | communications, messengerRealtime |
+| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:84` | res @ src/api/communications.ts:148<br>res @ src/components/nav/badgeSync.ts:58 | communications, messengerRealtime |
 | `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1057` | useCommentTicket @ src/api/communications.ts:799 | communications |
 | `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:991` | useCreateTicket @ src/api/communications.ts:779<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications |
 | `/api/communications/tickets/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1030` | res @ src/api/communications.ts:753 | communications |

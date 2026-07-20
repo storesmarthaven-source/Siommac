@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `beb540cef488bba3d5d82837`
+Source fingerprint: `7839073c3ac33c77588a0fa1`
 
-Files: 200 | Symbols: 2189 | Widgets: 12 | Unique mounted endpoints: 245 | Route definitions: 245 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
+Files: 202 | Symbols: 2243 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
 
 ## Widgets and Tiles
 
@@ -264,6 +264,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/sites/list` | `hr.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:963` | res @ src/api/hr/employees.ts:323 | hrEmployeeMaster |
 | `/api/hr/transfers/list` | `hr.transfers.view` | requirePermission | `z.object({     status:     z.string().optional(),     employeeId: z.string().optional(),     limit:      z.number().int().positive().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1389` | - | hrTransfers |
 | `/api/hr/transfers/request` | `hr.transfers.request` | requirePermission | `z.object({     employeeId:    z.string().min(1),     departmentId:  z.string().nullable().optional(),     siteId:        z.string().nullable().optional(),     positionId:    z.string().uuid().nullable().optional(),     supervisorId:  z.string().nullable().optional(),     role:          z.string().nullable().optional(),     monthlySalary: z.number().positive().nullable().optional(),     hourlyRate:    z.number().positive().nullable().optional(),     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),     reason:        z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1345` | - | hrTransfers |
+| `/api/hr/work-calendars/assignment/command` | `hr.work_calendar.manage` | requirePermission | `assignSchema` | `netlify/functions/routes/hrWorkCalendars.ts:83` | - | workCalendar |
+| `/api/hr/work-calendars/holiday-set/command` | `hr.work_calendar.manage` | requirePermission | `holidaySchema` | `netlify/functions/routes/hrWorkCalendars.ts:46` | - | workCalendar |
+| `/api/hr/work-calendars/read` | `hr.work_calendar.view` | requirePermission | `readSchema` | `netlify/functions/routes/hrWorkCalendars.ts:102` | - | workCalendar |
+| `/api/hr/work-calendars/version/command` | `hr.work_calendar.manage` | requirePermission | `versionSchema` | `netlify/functions/routes/hrWorkCalendars.ts:66` | - | workCalendar |
 | `/api/listAssignableRoles` | `employees.edit` | requirePermission | `-` | `netlify/functions/routes/employees.ts:291` | res @ src/components/sections/Employees/api.ts:91 | - |
 | `/api/listAttendance` | `-` | requireRole | `ListAttendanceSchema` | `netlify/functions/routes/attendance.ts:255` | - | - |
 | `/api/listDailyLog` | `-` | requireRole | `ListDailyLogSchema` | `netlify/functions/routes/attendance.ts:303` | res @ src/components/sections/Attendance/api.ts:36 | - |
@@ -501,7 +505,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRosters` | function / hook | `src/api/hr/roster.ts:99` | `-` |
 | `useRoster` | function / hook | `src/api/hr/roster.ts:106` | `-` |
 | `useCoverageGaps` | function / hook | `src/api/hr/roster.ts:114` | `-` |
-| ... | 85 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 92 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -644,6 +648,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/hr/roster.ts` | 150 |
 | frontend-api | `src/api/hr/statutoryProfile.ts` | 80 |
 | frontend-api | `src/api/hr/transfers.ts` | 67 |
+| frontend-api | `src/api/hr/workCalendars.ts` | 103 |
 | frontend-api | `src/api/schemas/attendance.ts` | 92 |
 | frontend-api | `src/api/schemas/employee.ts` | 148 |
 | frontend-api | `src/api/schemas/leave.ts` | 62 |
@@ -687,7 +692,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
-| frontend-page | `src/components/sections/HR/HRSection.tsx` | 90 |
+| frontend-page | `src/components/sections/HR/HRSection.tsx` | 93 |
 | frontend-page | `src/components/sections/HR/ImportWizard.tsx` | 345 |
 | frontend-page | `src/components/sections/HR/LeaveOverview.tsx` | 301 |
 | frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 266 |
@@ -709,7 +714,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 402 |
 | frontend-page | `src/components/sections/HR/index.ts` | 10 |
-| frontend-page | `src/components/sections/HR/module.ts` | 114 |
+| frontend-page | `src/components/sections/HR/module.ts` | 125 |
 | frontend-page | `src/components/sections/HR/mount.ts` | 25 |
 | frontend-page | `src/components/sections/HR/onboardingCase.helpers.tsx` | 143 |
 | frontend-page | `src/components/sections/HR/onboardingStatus.ts` | 77 |

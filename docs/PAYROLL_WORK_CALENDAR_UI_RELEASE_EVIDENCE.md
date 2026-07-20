@@ -1,7 +1,7 @@
 # Shared Work Calendar (F-CAL) — Admin UI Release Evidence
 
 **Final status:** Live-verified (backend) · Implemented + unit/component-verified (UI) · Regression-verified pending combined merge · Browser QA = operator gate
-**Branch/commit:** `codex/payroll-policy-setup` / base `cd7a94c0` → this commit
+**Branch/commit:** developed on `codex/payroll-policy-setup`; integrated to main via `wf/fcal-calendar` (F-CAL + shared Calendar cherry-picked off `main`, F-01 excluded)
 **Database target:** Supabase `gaflqcwcrvnusnlghwej` (migrations `20260919000700/701` already applied; unchanged by this slice)
 **Server origin and CWD:** codex worktree `C:/Users/MSI Laptop/.codex/worktrees/3977/Siomac`; functions dev server on `:8894` (main's `:8888` untouched)
 **Evidence timestamp:** 2026-07-20
@@ -26,7 +26,7 @@
 | `src/components/sections/Finance/payroll/setup/workCalendar.css` | new | Scoped `.wcal` styles. |
 | `src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts` | new | Unit tests for the rules (UT-CAL-U2/U3/U5 logic). |
 | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | new | Mounted component tests (UT-CAL-U1/U3/U4/U5/U6/U7/U8). |
-| `src/components/sections/Finance/PayrollSetupOverview.tsx` | modified | Work Calendar tab (finance-admin shortcut), independently permission-gated. |
+| `src/components/sections/Finance/PayrollSetupOverview.tsx` | modified **(codex branch only)** | Work Calendar tab (finance-admin shortcut). On `wf/fcal-calendar` this file stays at main's version — the shortcut sits beside F-01's Pay Policies, so it is **deferred until F-01 lands**; on main the Work Calendar is reached via **HR ▸ Work Calendar**. |
 | `src/components/sections/HR/module.ts` | modified | Primary HR nav entry `s-hr-work-calendar`, per-item gated on `hr.work_calendar.view`. |
 | `src/components/sections/HR/HRSection.tsx` | modified | Route the HR nav id to `WorkCalendarPage`. |
 

@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	85	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	98	
-app	variable	platform	false		netlify/functions/api.ts	107	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	259	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	289	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	298	
-handler	function	platform	true		netlify/functions/api.ts	302	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	86	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	99	
+app	variable	platform	false		netlify/functions/api.ts	108	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	261	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	291	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	300	
+handler	function	platform	true		netlify/functions/api.ts	304	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -640,7 +640,7 @@ err	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.
 obj	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	69	assertRpcShape
 reqNum	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	74	assertRpcShape
 getPayrollControlCenter	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenter.ts	96	
-mapRegisterItem	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	349	
+mapRegisterItem	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenter.ts	350	
 RegisterCursorTuple	interface	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	7	
 hashStr	function	payroll	false		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	15	
 filterFingerprint	function	payroll	true		netlify/functions/lib/finance/payroll/controlCenterCursor.ts	22	
@@ -1829,6 +1829,38 @@ err	function	hr	false		netlify/functions/lib/hr/timesheetService.ts	16
 buildTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	18	
 submitTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	72	
 reopenTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	147	
+SQLSTATE_HTTP	object	hr	false		netlify/functions/lib/hr/workCalendar.ts	9	
+rpcError	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	10	
+Row	type	hr	false		netlify/functions/lib/hr/workCalendar.ts	15	
+asText	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	16	
+holidayCalendarDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	19	
+workCalendarDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	20	
+holidayVersionDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	21	
+workVersionDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	22	
+holidayDateDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	23	
+assignmentDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	24	
+WorkCalendarCommand	interface	hr	true		netlify/functions/lib/hr/workCalendar.ts	27	
+callRpc	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	29	
+holidaySetCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	36	
+workCalendarCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	40	
+assignmentCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	44	
+WorkingDaysResult	interface	hr	false		netlify/functions/lib/hr/workCalendar.ts	52	
+resolveWorkCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	57	
+fail	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	72	resolveWorkCalendar
+MAX_LIMIT	variable	hr	true		netlify/functions/lib/hr/workCalendar.ts	110	
+clampLimit	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	111	
+Cursor	interface	hr	false		netlify/functions/lib/hr/workCalendar.ts	113	
+encodeCursor	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	114	
+decodeCursor	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	117	
+fingerprint	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	125	
+Page	interface	hr	false		netlify/functions/lib/hr/workCalendar.ts	126	
+keysetPage	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	128	
+listHolidayCalendars	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	143	
+listWorkCalendars	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	145	
+getHolidayCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	148	
+getWorkCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	155	
+listHolidays	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	162	
+listAssignments	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	167	
 EVIDENCE_DOMAIN	variable	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	5	
 evidencePepper	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	7	
 hashEvidence	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	18	
@@ -2061,26 +2093,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	454	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	463	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	475	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	495	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	504	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	957	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	973	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	998	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1008	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1009	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1012	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1028	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1063	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1075	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1076	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1079	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1089	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1102	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1110	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1121	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	456	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	465	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	477	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	497	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	506	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	959	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	975	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1000	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1010	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1011	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1014	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1030	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1065	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1077	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1078	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1081	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1091	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1104	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1112	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1123	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2635,23 +2667,23 @@ Caps	interface	platform	false		netlify/functions/routes/calendar.ts	65
 entryCaps	function	platform	false		netlify/functions/routes/calendar.ts	68	
 entryToDto	function	platform	false		netlify/functions/routes/calendar.ts	84	
 hydrateNames	function	platform	false		netlify/functions/routes/calendar.ts	121	
-parseEntryId	function	platform	false		netlify/functions/routes/calendar.ts	133	
-ListSchema	variable	platform	false		netlify/functions/routes/calendar.ts	140	
-wantType	function	platform	false		netlify/functions/routes/calendar.ts	177	
-wantModule	function	platform	false		netlify/functions/routes/calendar.ts	260	
-GetSchema	variable	platform	false		netlify/functions/routes/calendar.ts	284	
-VISIBILITY	variable	platform	false		netlify/functions/routes/calendar.ts	314	
-normalizeWhen	function	platform	false		netlify/functions/routes/calendar.ts	317	
-validAssignee	function	platform	false		netlify/functions/routes/calendar.ts	329	
-CreateTaskSchema	variable	platform	false		netlify/functions/routes/calendar.ts	336	
-CreateActivitySchema	variable	platform	false		netlify/functions/routes/calendar.ts	419	
-isAttendee	function	platform	false		netlify/functions/routes/calendar.ts	507	
-canReadEntry	function	platform	false		netlify/functions/routes/calendar.ts	519	
-loadEditable	function	platform	false		netlify/functions/routes/calendar.ts	535	
-writeException	function	platform	false		netlify/functions/routes/calendar.ts	560	
-UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	581	
-StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	664	
-CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	714	
+parseEntryId	function	platform	false		netlify/functions/routes/calendar.ts	134	
+ListSchema	variable	platform	false		netlify/functions/routes/calendar.ts	141	
+wantType	function	platform	false		netlify/functions/routes/calendar.ts	182	
+wantModule	function	platform	false		netlify/functions/routes/calendar.ts	273	
+GetSchema	variable	platform	false		netlify/functions/routes/calendar.ts	308	
+VISIBILITY	variable	platform	false		netlify/functions/routes/calendar.ts	344	
+normalizeWhen	function	platform	false		netlify/functions/routes/calendar.ts	347	
+validAssignee	function	platform	false		netlify/functions/routes/calendar.ts	359	
+CreateTaskSchema	variable	platform	false		netlify/functions/routes/calendar.ts	367	
+CreateActivitySchema	variable	platform	false		netlify/functions/routes/calendar.ts	450	
+isAttendee	function	platform	false		netlify/functions/routes/calendar.ts	539	
+canReadEntry	function	platform	false		netlify/functions/routes/calendar.ts	552	
+loadEditable	function	platform	false		netlify/functions/routes/calendar.ts	568	
+writeException	function	platform	false		netlify/functions/routes/calendar.ts	593	
+UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	615	
+StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	698	
+CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	748	
 router	variable	communications	false		netlify/functions/routes/communications.ts	80	
 NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	92	
 PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	216	
@@ -2878,6 +2910,20 @@ body	function	hr	false		netlify/functions/routes/hrRoster.ts	35
 routeErr	function	hr	false		netlify/functions/routes/hrRoster.ts	36	
 router	variable	platform	false		netlify/functions/routes/hrStatutoryProfile.ts	20	
 b	function	platform	false		netlify/functions/routes/hrStatutoryProfile.ts	23	
+router	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	12	
+body	function	platform	false		netlify/functions/routes/hrWorkCalendars.ts	13	
+fail	function	platform	false		netlify/functions/routes/hrWorkCalendars.ts	17	
+date	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	22	
+requestKey	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	23	
+reason	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	24	
+uuid	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	25	
+weekday	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	26	
+fractions	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	27	
+holidayInput	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	28	
+holidaySchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	36	
+versionSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	56	
+assignSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	76	
+readSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	93	
 router	variable	platform	false		netlify/functions/routes/hseCapa.ts	22	
 ListCapaSchema	variable	platform	false		netlify/functions/routes/hseCapa.ts	26	
 CreateCapaSchema	variable	platform	false		netlify/functions/routes/hseCapa.ts	86	
@@ -3071,23 +3117,23 @@ router	variable	platform	false		netlify/functions/routes/superadmin.ts	32
 PERMISSION_KEY_SET	variable	platform	false		netlify/functions/routes/superadmin.ts	38	
 listComplianceGrantApprovers	function	platform	false		netlify/functions/routes/superadmin.ts	54	
 requestCriticalGrant	function	platform	false		netlify/functions/routes/superadmin.ts	99	
-GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	252	
-SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	253	
-ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	261	
-ApproverAvailabilitySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	391	
-RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	487	
-GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	566	
-RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	651	
-RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	654	
-CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	655	
-UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	661	
-GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	668	
-SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	669	
-DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	675	
-slugify	function	platform	false		netlify/functions/routes/superadmin.ts	795	
-CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	796	
-UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	797	
-DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	798	
+GetUserPermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	253	
+SetUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	254	
+ClearUserPermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	262	
+ApproverAvailabilitySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	393	
+RevokeSessionSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	493	
+GetAuditLogsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	572	
+RoleNameSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	657	
+RoleCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	660	
+CreateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	661	
+UpdateRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	667	
+GetRolePermsSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	674	
+SetRolePermSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	675	
+DeleteRoleSchema	variable	platform	false		netlify/functions/routes/superadmin.ts	681	
+slugify	function	platform	false		netlify/functions/routes/superadmin.ts	801	
+CreateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	802	
+UpdateCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	803	
+DeleteCategorySchema	variable	platform	false		netlify/functions/routes/superadmin.ts	804	
 router	variable	communications	false		netlify/functions/routes/tickets.ts	8	
 _genTicketNumber	function	communications	false		netlify/functions/routes/tickets.ts	10	
 router	variable	security	false		netlify/functions/routes/trustedDevices.ts	25	
@@ -3617,6 +3663,14 @@ createCert	function	testing	false	test	scripts/e2e/suites/training.mjs	40	run
 title	variable	widgets	true	test	scripts/e2e/suites/widgets.mjs	18	
 run	function	widgets	true	test	scripts/e2e/suites/widgets.mjs	20	
 pkg	function	widgets	false	test	scripts/e2e/suites/widgets.mjs	37	run
+uuid	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	6	
+title	variable	testing	true	test	scripts/e2e/suites/workCalendar.mjs	8	
+run	function	testing	true	test	scripts/e2e/suites/workCalendar.mjs	10	
+base	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	20	run
+holiday	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	21	run
+publishHolidaySet	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	37	run
+publishWorkCalendar	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	54	run
+cvExtra	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	64	run
 title	variable	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	8	
 run	function	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	10	
 waitFor	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	24	run
@@ -4506,6 +4560,26 @@ hrTransfersApi	object	hr	true		src/api/hr/transfers.ts	27
 transferKeys	object	hr	true		src/api/hr/transfers.ts	43	
 useTransfers	function	hr	true	hook	src/api/hr/transfers.ts	48	
 useTransfersMutation	function	hr	true	hook	src/api/hr/transfers.ts	57	
+HOLIDAY_SET	variable	hr	false		src/api/hr/workCalendars.ts	14	
+VERSION	variable	hr	false		src/api/hr/workCalendars.ts	15	
+ASSIGNMENT	variable	hr	false		src/api/hr/workCalendars.ts	16	
+READ	variable	hr	false		src/api/hr/workCalendars.ts	17	
+post	function	hr	false		src/api/hr/workCalendars.ts	19	
+requestKey	function	hr	true		src/api/hr/workCalendars.ts	26	
+Base	type	hr	false		src/api/hr/workCalendars.ts	29	
+HolidaySetCommandInput	type	hr	true		src/api/hr/workCalendars.ts	30	
+WorkCalendarCommandInput	type	hr	true		src/api/hr/workCalendars.ts	38	
+AssignmentCommandInput	type	hr	true		src/api/hr/workCalendars.ts	44	
+ListArgs	interface	hr	true		src/api/hr/workCalendars.ts	49	
+workCalendarKeys	object	hr	true		src/api/hr/workCalendars.ts	51	
+workCalendarsApi	object	hr	true		src/api/hr/workCalendars.ts	61	
+useHolidayCalendars	function	hr	true	hook	src/api/hr/workCalendars.ts	77	
+useWorkCalendars	function	hr	true	hook	src/api/hr/workCalendars.ts	80	
+useHolidayCalendar	function	hr	true	hook	src/api/hr/workCalendars.ts	83	
+useWorkCalendar	function	hr	true	hook	src/api/hr/workCalendars.ts	86	
+useHolidays	function	hr	true	hook	src/api/hr/workCalendars.ts	89	
+useAssignments	function	hr	true	hook	src/api/hr/workCalendars.ts	92	
+useWorkCalendarMutation	function	hr	true	hook	src/api/hr/workCalendars.ts	96	
 IncidentSeverity	type	hse	true		src/api/hse/incidents.ts	21	
 IncidentStatus	type	hse	true		src/api/hse/incidents.ts	22	
 IncidentType	type	hse	true		src/api/hse/incidents.ts	25	
@@ -5196,6 +5270,8 @@ APPROVE	variable	platform	false	test	src/components/nav/approvalsNavVisibility.t
 approvalsButton	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	19	
 registerApprovalsModule	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	22	
 expiredCompliance	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	32	
+badgeText	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	93	
+buildRow	function	platform	false	test	src/components/nav/approvalsNavVisibility.test.ts	95	
 mockCounts	variable	platform	false	test	src/components/nav/badgeSync.test.ts	18	
 buildSidebar	function	platform	false	test	src/components/nav/badgeSync.test.ts	21	
 badge	function	platform	false	test	src/components/nav/badgeSync.test.ts	25	
@@ -5205,6 +5281,7 @@ _timer	variable	platform	false		src/components/nav/badgeSync.ts	19
 syncApprovalNavBadge	function	platform	true		src/components/nav/badgeSync.ts	32	
 scheduleHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	45	
 doHdrBadgeSync	function	platform	true		src/components/nav/badgeSync.ts	50	
+syncHeaderBadges	function	platform	false		src/components/nav/badgeSync.ts	57	
 PaletteEntry	interface	platform	false		src/components/nav/CommandPalette.tsx	23	
 cfg	function	platform	false		src/components/nav/CommandPalette.tsx	31	
 appState	function	platform	false		src/components/nav/CommandPalette.tsx	35	
@@ -5223,17 +5300,17 @@ Win	type	platform	false		src/components/nav/NavController.tsx	35
 callWin	function	platform	false		src/components/nav/NavController.tsx	37	
 permissionSignature	function	platform	false		src/components/nav/NavController.tsx	47	
 NavController	function	platform	true	component	src/components/nav/NavController.tsx	55	
-setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	99	NavController
-onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	104	NavController
-onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	107	NavController
-onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	119	NavController
-onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	132	NavController
-closeAllModals	function	platform	false		src/components/nav/NavController.tsx	141	NavController
-HdrKind	type	platform	false		src/components/nav/NavController.tsx	146	NavController
-afterOpen	function	platform	false		src/components/nav/NavController.tsx	150	NavController
-toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	179	NavController
-onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	204	NavController
-onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	219	NavController
+setMobileOpen	function	platform	false		src/components/nav/NavController.tsx	103	NavController
+onMobileMenuClick	function	platform	false		src/components/nav/NavController.tsx	108	NavController
+onBackdropClick	function	platform	false		src/components/nav/NavController.tsx	111	NavController
+onSidebarMenuClick	function	platform	false		src/components/nav/NavController.tsx	123	NavController
+onTopTabsClick	function	platform	false		src/components/nav/NavController.tsx	136	NavController
+closeAllModals	function	platform	false		src/components/nav/NavController.tsx	145	NavController
+HdrKind	type	platform	false		src/components/nav/NavController.tsx	150	NavController
+afterOpen	function	platform	false		src/components/nav/NavController.tsx	154	NavController
+toggleHdrModal	function	platform	false		src/components/nav/NavController.tsx	183	NavController
+onPillActionClick	function	platform	false		src/components/nav/NavController.tsx	208	NavController
+onDocClickForModals	function	platform	false		src/components/nav/NavController.tsx	223	NavController
 cfg	function	platform	false		src/components/nav/navCore.ts	21	
 moduleSectionItems	function	platform	true		src/components/nav/navCore.ts	31	
 allItemsForRole	function	platform	false		src/components/nav/navCore.ts	43	
@@ -5289,10 +5366,10 @@ skelList	function	platform	true		src/components/nav/navCore.ts	731
 _badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	740	
 setHdrBadge	function	platform	true		src/components/nav/navCore.ts	742	
 LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	764	
-_sbBadgeLastLabel	variable	platform	false		src/components/nav/navCore.ts	765	
-_setSbBadge	function	platform	false		src/components/nav/navCore.ts	767	
-setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	796	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	805	
+_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	771	
+_setSbBadge	function	platform	false		src/components/nav/navCore.ts	773	
+setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	803	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	812	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
@@ -5395,20 +5472,17 @@ SettingsViewShim	interface	communications	false		src/components/realtime/Brandin
 settingsView	function	communications	false		src/components/realtime/BrandingRealtimeBridge.ts	28	
 patchSessionCache	function	communications	false		src/components/realtime/BrandingRealtimeBridge.ts	33	
 applyBrandingPush	function	communications	true		src/components/realtime/BrandingRealtimeBridge.ts	48	
-mockToast	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	23	
-BOUNDARY	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	26	
-BEFORE	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	27	
-AFTER	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	28	
-row	function	communications	false	test	src/components/realtime/complianceToasts.test.ts	30	
+mockToast	variable	communications	false	test	src/components/realtime/complianceToasts.test.ts	24	
+row	function	communications	false	test	src/components/realtime/complianceToasts.test.ts	26	
 ComplianceNotifRow	interface	communications	true		src/components/realtime/complianceToasts.ts	25	
 COMPLIANCE_TOAST_TYPES	variable	communications	true		src/components/realtime/complianceToasts.ts	36	
 _seen	variable	communications	false		src/components/realtime/complianceToasts.ts	44	
 _seededForUser	variable	communications	false		src/components/realtime/complianceToasts.ts	45	
 needsWatermarkSeed	function	communications	true		src/components/realtime/complianceToasts.ts	48	
-seedComplianceToastWatermark	function	communications	true		src/components/realtime/complianceToasts.ts	62	
-severityFor	function	communications	false		src/components/realtime/complianceToasts.ts	75	
-surfaceComplianceToasts	function	communications	true		src/components/realtime/complianceToasts.ts	86	
-__resetComplianceToastState	function	communications	true		src/components/realtime/complianceToasts.ts	113	
+seedComplianceToastWatermark	function	communications	true		src/components/realtime/complianceToasts.ts	64	
+severityFor	function	communications	false		src/components/realtime/complianceToasts.ts	73	
+surfaceComplianceToasts	function	communications	true		src/components/realtime/complianceToasts.ts	84	
+__resetComplianceToastState	function	communications	true		src/components/realtime/complianceToasts.ts	111	
 notif	function	communications	false	test	src/components/realtime/notificationToasts.test.ts	64	
 _sessionEpoch	variable	communications	false		src/components/realtime/notificationToasts.ts	29	
 resetToastSessionClock	function	communications	true		src/components/realtime/notificationToasts.ts	32	
@@ -5452,7 +5526,8 @@ unmountAccessControlSection	function	platform	true		src/components/sections/Acce
 STATUSES	array	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	21	
 dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	25	
 AcApprovalsPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	27	
-doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	48	AcApprovalsPage
+onSection	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	45	AcApprovalsPage
+doReject	function	platform	false		src/components/sections/AccessControl/pages/AcApprovalsPage.tsx	61	AcApprovalsPage
 PAGE	variable	platform	false	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	14	
 dateLong	function	platform	false		src/components/sections/AccessControl/pages/AcAuditPage.tsx	15	
 AcAuditPage	function	platform	true	component	src/components/sections/AccessControl/pages/AcAuditPage.tsx	17	
@@ -5675,21 +5750,51 @@ LocationData	interface	hr	true		src/components/sections/AttendanceDashboard/type
 MarkAttendanceResponse	interface	hr	true		src/components/sections/AttendanceDashboard/types.ts	36	
 AttendanceAction	type	hr	true		src/components/sections/AttendanceDashboard/types.ts	43	
 CameraPhase	type	hr	true		src/components/sections/AttendanceDashboard/types.ts	46	
-StatCard	function	platform	false	component,ui-tile	src/components/sections/Calendar/CalendarPage.tsx	20	
-CalendarPage	function	platform	true	component	src/components/sections/Calendar/CalendarPage.tsx	32	
-shiftMonth	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	58	CalendarPage
-goToday	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	59	CalendarPage
-openItem	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	61	CalendarPage
-TYPE_COLOR	object	platform	false		src/components/sections/Calendar/DayDrawer.tsx	14	
-Donut	function	platform	false	component	src/components/sections/Calendar/DayDrawer.tsx	17	
-AgendaRow	function	platform	false	component	src/components/sections/Calendar/DayDrawer.tsx	41	
-DayDrawer	function	platform	true	component	src/components/sections/Calendar/DayDrawer.tsx	64	
+AgendaTime	function	platform	false	component	src/components/sections/Calendar/AgendaView.tsx	6	
+AgendaView	function	platform	true	component	src/components/sections/Calendar/AgendaView.tsx	16	
+CalendarItemDialog	function	platform	true	component	src/components/sections/Calendar/CalendarItemDialog.tsx	17	
+close	function	platform	false		src/components/sections/Calendar/CalendarItemDialog.tsx	49	CalendarItemDialog
+save	function	platform	false		src/components/sections/Calendar/CalendarItemDialog.tsx	61	CalendarItemDialog
+setTaskStatus	function	platform	false		src/components/sections/Calendar/CalendarItemDialog.tsx	79	CalendarItemDialog
+cancelItem	function	platform	false		src/components/sections/Calendar/CalendarItemDialog.tsx	89	CalendarItemDialog
+drillThrough	function	platform	false		src/components/sections/Calendar/CalendarItemDialog.tsx	99	CalendarItemDialog
+SCOPES	array	platform	false		src/components/sections/Calendar/CalendarPage.tsx	23	
+formatPeriodRange	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	30	
+Select	function	platform	false	component	src/components/sections/Calendar/CalendarPage.tsx	37	
+FilterPanel	function	platform	false	component	src/components/sections/Calendar/CalendarPage.tsx	45	
+patch	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	52	FilterPanel
+CalendarPage	function	platform	true	component	src/components/sections/Calendar/CalendarPage.tsx	81	
+shiftMonth	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	110	CalendarPage
+goToday	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	111	CalendarPage
+openCreate	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	116	CalendarPage
+refresh	function	platform	false		src/components/sections/Calendar/CalendarPage.tsx	120	CalendarPage
+countTypes	function	platform	false		src/components/sections/Calendar/CalendarRail.tsx	6	
+RailItem	function	platform	false	component	src/components/sections/Calendar/CalendarRail.tsx	13	
+CalendarRail	function	platform	true	component	src/components/sections/Calendar/CalendarRail.tsx	26	
+item	function	platform	false	test	src/components/sections/Calendar/calendarViewModel.test.ts	11	
+CalendarViewMode	type	platform	true		src/components/sections/Calendar/calendarViewModel.ts	9	
+CalendarScope	type	platform	true		src/components/sections/Calendar/calendarViewModel.ts	10	
+CalendarFilters	interface	platform	true		src/components/sections/Calendar/calendarViewModel.ts	12	
+EMPTY_FILTERS	object	platform	true		src/components/sections/Calendar/calendarViewModel.ts	21	
+calendarSource	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	30	
+sourceLabel	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	35	
+sourceTone	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	42	
+itemSortValue	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	54	
+filterCalendarItems	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	58	
+groupItemsByDate	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	95	
+upcomingActionItems	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	109	
+activeFilterCount	function	platform	true		src/components/sections/Calendar/calendarViewModel.ts	123	
+CreateType	type	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	6	
+localTimestamp	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	8	
+CreateCalendarItemDialog	function	platform	true	component	src/components/sections/Calendar/CreateCalendarItemDialog.tsx	12	
+close	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	47	CreateCalendarItemDialog
+submit	function	platform	false		src/components/sections/Calendar/CreateCalendarItemDialog.tsx	69	CreateCalendarItemDialog
 CALENDAR_ROOT_ID	variable	platform	false		src/components/sections/Calendar/module.ts	12	
 calendarModule	object	platform	true		src/components/sections/Calendar/module.ts	14	
-MAX_CHIPS	variable	platform	false	component	src/components/sections/Calendar/MonthView.tsx	14	
-typeIcon	function	platform	true		src/components/sections/Calendar/MonthView.tsx	16	
-Chip	function	platform	false	component	src/components/sections/Calendar/MonthView.tsx	22	
-MonthView	function	platform	true	component	src/components/sections/Calendar/MonthView.tsx	37	
+item	function	platform	false	test	src/components/sections/Calendar/MonthView.test.tsx	7	
+MAX_ITEMS	variable	platform	false	component	src/components/sections/Calendar/MonthView.tsx	6	
+EventCard	function	platform	false	component,ui-tile	src/components/sections/Calendar/MonthView.tsx	8	
+MonthView	function	platform	true	component	src/components/sections/Calendar/MonthView.tsx	18	
 mountCalendarSection	function	platform	true		src/components/sections/Calendar/mount.ts	10	
 unmountCalendarSection	function	platform	true		src/components/sections/Calendar/mount.ts	17	
 ApiResponse	interface	platform	false		src/components/sections/Dashboard/api.ts	12	
@@ -6323,58 +6428,141 @@ Step5Review	function	finance	false	component	src/components/sections/Finance/Pay
 STEP_LABELS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	489	
 PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	498	
 handlePrimary	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	529	PayNewRunWizard
-PAGE_KEY	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	42	
-BOARD_COLS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	43	
-KPI_PAGE_KEY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	44	
-W_ASSIGNED	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	45	
-W_DEADLINES	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	46	
-W_READINESS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	47	
-W_IMPACT	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	48	
-W_REGISTER	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	49	
-W_KPI_NEXTPAY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	50	
-W_KPI_ACTIVE	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	51	
-W_KPI_EMPLOYEES	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	52	
-W_KPI_GROSS	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	53	
-W_KPI_NET	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	54	
-CELL	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	55	
-defInst	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	57	
-defaultKpiLayout	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	62	
-defaultLayout	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	76	
-floor	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	93	
-REGISTER_TABS	array	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	96	
-fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	104	
-fmtTTDc	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	105	
-fmtDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	111	
-fmtDayShort	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	117	
-relDate	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	123	
-timeOf	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	135	
-initials	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	139	
-READINESS_PROGRESS	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	142	
-READINESS_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	145	
-DEADLINE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	150	
-DEADLINE_PILL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	153	
-ACTIVITY_VISUAL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	160	
-activityVisual	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	171	
-GATE_STATE	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	175	
-HEALTH_STATE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	182	
-HEALTH_ICON	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	185	
-ReadinessDoughnut	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	190	
-SkeletonPage	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	220	
-PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	232	
-placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	263	PayrollCommandCenter
-promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	265	PayrollCommandCenter
-runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	282	PayrollCommandCenter
-submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	288	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	482	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	525	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	557	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	616	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	636	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	684	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	688	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	689	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	740	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	797	
+fullHoliday	function	payroll	false	test	src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts	10	
+ISO_WEEKDAYS	variable	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	6	
+WEEKDAY_LABEL	object	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	7	
+WEEKDAY_FULL	object	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	8	
+HOLIDAY_TYPES	array	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	9	
+DEFAULT_TZ	variable	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	10	
+isoDate	function	payroll	false		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	12	
+VersionWindow	interface	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	14	
+inWindow	function	payroll	false		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	15	
+HolidayFormState	interface	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	23	
+emptyHolidayForm	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	28	
+holidayFieldErrors	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	33	
+holidayFormValid	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	55	
+toHolidayInput	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	59	
+PatternFormState	interface	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	76	
+emptyPatternForm	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	81	
+PatternErrors	interface	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	83	
+patternFieldErrors	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	84	
+patternFormValid	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	100	
+buildWeekdayFractions	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	105	
+sortedWeekdays	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	116	
+periodError	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	119	
+assignmentWindowError	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	128	
+effectiveError	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	139	
+FRIENDLY_ERROR	object	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	150	
+friendlyError	function	payroll	true		src/components/sections/Finance/payroll/setup/workCalendarRules.ts	170	
+H	variable	payroll	false	component,test	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx	7	
+q	function	payroll	false	test	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx	8	H
+loaded	function	payroll	false	test	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx	45	
+today	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	25	
+title	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	26	
+range	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	27	
+statusTone	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	28	
+patternSummary	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	29	
+shortSum	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	30	
+copyEffectiveDate	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	34	
+SUBTABS	variable	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	45	
+SubTab	type	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	51	
+WorkCalendarPage	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	55	
+WorkCalendarSetup	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	66	
+Directory	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	88	
+usePager	function	payroll	false	hook	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	132	
+next	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	135	usePager
+prev	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	136	usePager
+reset	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	137	usePager
+HolidaySetsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	144	
+HolidaySetDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	168	
+doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	181	HolidaySetDetail
+HolidayVersionEditor	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	220	
+doRemove	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	232	HolidayVersionEditor
+doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	240	HolidayVersionEditor
+HolidayEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	291	
+set	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	304	HolidayEditorModal
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	306	HolidayEditorModal
+HolidayVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	348	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	361	HolidayVersionModal
+WorkCalendarsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	397	
+WorkCalendarDetail	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	421	
+doPublish	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	433	WorkCalendarDetail
+doCopy	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	442	WorkCalendarDetail
+PatternFields	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	486	
+toggle	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	488	PatternFields
+WorkVersionModal	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	532	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	544	WorkVersionModal
+PatternEditorModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	577	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	587	PatternEditorModal
+PublishedHolidayVersionPicker	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	611	
+PublishedWorkVersionPicker	function	payroll	false	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	636	
+AssignmentsPanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	667	
+doEnd	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	679	AssignmentsPanel
+doCancel	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	687	AssignmentsPanel
+AssignModal	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	732	
+save	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	749	AssignModal
+ResolvePanel	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	792	
+run	function	payroll	false		src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	803	ResolvePanel
+ResolveResultView	function	payroll	true	component	src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx	834	
+H	variable	payroll	false	component,test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	22	
+fullData	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	59	
+setScenario	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	74	
+skeletonShown	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	81	
+renderPage	function	payroll	false	test	src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx	111	
+PAGE_KEY	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	43	
+BOARD_COLS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	44	
+KPI_PAGE_KEY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	45	
+W_ASSIGNED	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	46	
+W_DEADLINES	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	47	
+W_READINESS	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	48	
+W_IMPACT	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	49	
+W_REGISTER	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	50	
+W_KPI_NEXTPAY	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	51	
+W_KPI_ACTIVE	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	52	
+W_KPI_EMPLOYEES	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	53	
+W_KPI_GROSS	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	54	
+W_KPI_NET	variable	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	55	
+CELL	variable	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	56	
+defInst	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	58	
+defaultKpiLayout	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	63	
+defaultLayout	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	77	
+floor	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	94	
+REGISTER_TABS	array	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	97	
+fmtTTD	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	105	
+fmtTTDc	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	106	
+fmtDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	112	
+fmtDayShort	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	118	
+relDate	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	124	
+timeOf	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	136	
+initials	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	141	
+READINESS_PROGRESS	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	144	
+READINESS_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	147	
+DEADLINE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	152	
+DEADLINE_PILL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	155	
+ACTIVITY_VISUAL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	162	
+activityVisual	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	173	
+GATE_STATE	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	177	
+HEALTH_STATE_LABEL	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	184	
+HEALTH_ICON	object	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	187	
+ReadinessDoughnut	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	192	
+commandCenterReady	function	payroll	true		src/components/sections/Finance/PayrollCommandCenter.tsx	231	
+SkeletonBody	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	243	
+SkeletonHeader	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	258	
+PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	272	
+placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	309	PayrollCommandCenter
+promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	311	PayrollCommandCenter
+runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	335	PayrollCommandCenter
+submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	341	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	535	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	596	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	628	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	687	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	707	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	755	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	759	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	760	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	811	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	868	
 PAGE_SIZE	variable	payroll	false	component	src/components/sections/Finance/PayrollOverview.tsx	53	
 paginate	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	55	
 runStatusTone	function	payroll	false		src/components/sections/Finance/PayrollOverview.tsx	63	
@@ -6880,22 +7068,23 @@ submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	269	
 TriageTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	310	
 handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	322	TriageTab
 HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	391	
-EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	30	
-ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	31	
-ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
-DOC_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
-OFF_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
-LEAVE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	35	
-TRANSFERS_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	36	
-REQ_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	37	
-ATTENDANCE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	38	
-ROSTER_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	39	
-COMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	40	
-OT_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	41	
-isHrSection	function	hr	false		src/components/sections/HR/HRSection.tsx	43	
-HRSection	function	hr	true	component	src/components/sections/HR/HRSection.tsx	47	
-onSection	function	hr	false		src/components/sections/HR/HRSection.tsx	54	HRSection
-onOpenCase	function	hr	false		src/components/sections/HR/HRSection.tsx	61	HRSection
+EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	31	
+ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
+ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
+DOC_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
+OFF_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	35	
+LEAVE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	36	
+TRANSFERS_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	37	
+REQ_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	38	
+ATTENDANCE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	39	
+ROSTER_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	40	
+COMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	41	
+OT_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	42	
+WORKCAL_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	43	
+isHrSection	function	hr	false		src/components/sections/HR/HRSection.tsx	45	
+HRSection	function	hr	true	component	src/components/sections/HR/HRSection.tsx	49	
+onSection	function	hr	false		src/components/sections/HR/HRSection.tsx	56	HRSection
+onOpenCase	function	hr	false		src/components/sections/HR/HRSection.tsx	63	HRSection
 STEPS	array	hr	false		src/components/sections/HR/ImportWizard.tsx	20	
 ORDER	variable	hr	false	component	src/components/sections/HR/ImportWizard.tsx	28	
 FIELDS	array	hr	false		src/components/sections/HR/ImportWizard.tsx	30	
@@ -6944,7 +7133,8 @@ REQUESTS_ITEM	object	hr	false		src/components/sections/HR/module.ts	71
 ROSTER_ITEM	object	hr	false		src/components/sections/HR/module.ts	78	
 COMPENSATION_ITEM	object	hr	false		src/components/sections/HR/module.ts	85	
 OVERTIME_ITEM	object	hr	false		src/components/sections/HR/module.ts	92	
-hrModule	object	hr	true		src/components/sections/HR/module.ts	99	
+WORK_CALENDAR_ITEM	object	hr	false		src/components/sections/HR/module.ts	102	
+hrModule	object	hr	true		src/components/sections/HR/module.ts	110	
 mountHRSection	function	hr	true		src/components/sections/HR/mount.ts	10	
 unmountHRSection	function	hr	true		src/components/sections/HR/mount.ts	22	
 REASONS	array	hr	false		src/components/sections/HR/OffboardingOverview.tsx	25	
@@ -9520,10 +9710,11 @@ CommunicationCounts	interface	communications	true		src/hooks/useCommunicationSum
 useCommunicationSummary	function	communications	true	hook	src/hooks/useCommunicationSummary.ts	26	
 SupabaseClient	type	communications	false		src/hooks/useRealtimeSignals.ts	29	
 SupabaseChannel	type	communications	false		src/hooks/useRealtimeSignals.ts	30	
-seedComplianceWatermark	function	communications	false		src/hooks/useRealtimeSignals.ts	37	
-surfaceComplianceFromNotifications	function	communications	false		src/hooks/useRealtimeSignals.ts	65	
-useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	78	
-onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	100	useRealtimeSignals
+seedComplianceWatermark	function	communications	false		src/hooks/useRealtimeSignals.ts	39	
+surfaceComplianceFromNotifications	function	communications	false		src/hooks/useRealtimeSignals.ts	63	
+useRealtimeSignals	function	communications	true	hook	src/hooks/useRealtimeSignals.ts	76	
+onFocus	function	communications	false		src/hooks/useRealtimeSignals.ts	98	useRealtimeSignals
+attemptSeedAndDrain	function	communications	false		src/hooks/useRealtimeSignals.ts	126	useRealtimeSignals
 StepUpOptions	interface	platform	false		src/hooks/useStepUp.tsx	23	
 StepUpVerifyResponse	interface	platform	false		src/hooks/useStepUp.tsx	29	
 ResolveFn	type	platform	false		src/hooks/useStepUp.tsx	37	
@@ -9889,19 +10080,19 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	534	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	539	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	567	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	582	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	607	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1299	
-resolvePermission	function	security	true		src/lib/permissions.ts	1330	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1375	
-PermissionState	type	security	true		src/lib/permissions.ts	1381	
-permissionState	function	security	true		src/lib/permissions.ts	1387	
-permissionGroups	function	security	true		src/lib/permissions.ts	1397	
-can	function	security	true		src/lib/permissions.ts	1417	
-useCan	function	security	true	hook	src/lib/permissions.ts	1433	
+PermissionKey	type	security	true		src/lib/permissions.ts	536	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	541	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	569	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	584	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	609	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1301	
+resolvePermission	function	security	true		src/lib/permissions.ts	1332	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1377	
+PermissionState	type	security	true		src/lib/permissions.ts	1383	
+permissionState	function	security	true		src/lib/permissions.ts	1389	
+permissionGroups	function	security	true		src/lib/permissions.ts	1399	
+can	function	security	true		src/lib/permissions.ts	1419	
+useCan	function	security	true	hook	src/lib/permissions.ts	1435	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -11244,13 +11435,13 @@ PayrollControlCenterCapabilities	interface	payroll	true		types/payrollControlCen
 PayrollPortfolioHealth	interface	payroll	true		types/payrollControlCenter.ts	41	
 PayrollCommandCenterKpis	interface	payroll	true	ui-tile	types/payrollControlCenter.ts	58	
 PayrollAssignedWork	interface	payroll	true		types/payrollControlCenter.ts	72	
-PayrollActivityItem	interface	payroll	true		types/payrollControlCenter.ts	89	
-PayrollDeadlineItem	interface	payroll	true		types/payrollControlCenter.ts	99	
-PayrollReadinessGate	interface	payroll	true		types/payrollControlCenter.ts	109	
-PayrollRunRegisterItem	interface	payroll	true		types/payrollControlCenter.ts	124	
-PayrollNextRun	interface	payroll	true		types/payrollControlCenter.ts	145	
-PayrollRunRegisterPage	interface	payroll	true		types/payrollControlCenter.ts	163	
-PayrollControlCenterResponse	interface	payroll	true		types/payrollControlCenter.ts	170	
+PayrollActivityItem	interface	payroll	true		types/payrollControlCenter.ts	91	
+PayrollDeadlineItem	interface	payroll	true		types/payrollControlCenter.ts	101	
+PayrollReadinessGate	interface	payroll	true		types/payrollControlCenter.ts	111	
+PayrollRunRegisterItem	interface	payroll	true		types/payrollControlCenter.ts	126	
+PayrollNextRun	interface	payroll	true		types/payrollControlCenter.ts	147	
+PayrollRunRegisterPage	interface	payroll	true		types/payrollControlCenter.ts	165	
+PayrollControlCenterResponse	interface	payroll	true		types/payrollControlCenter.ts	172	
 PayrollFindingKind	type	payroll	true		types/payrollFindings.ts	10	
 PayrollFindingQueueSeverity	type	payroll	true		types/payrollFindings.ts	14	
 PayrollFindingQueueState	type	payroll	true		types/payrollFindings.ts	17	
@@ -11293,3 +11484,24 @@ Tables	type	platform	false		types/supabase.ts	125
 TableRow	type	platform	true		types/supabase.ts	128	
 TableInsert	type	platform	true		types/supabase.ts	131	
 TableUpdate	type	platform	true		types/supabase.ts	134	
+VersionStatus	type	platform	true		types/workCalendars.ts	5	
+HolidayType	type	platform	true		types/workCalendars.ts	6	
+AssignmentScope	type	platform	true		types/workCalendars.ts	7	
+AssignmentStatus	type	platform	true		types/workCalendars.ts	8	
+CalendarProvenance	type	platform	true		types/workCalendars.ts	9	
+HolidayCalendarSummary	interface	platform	true		types/workCalendars.ts	11	
+WorkCalendarSummary	interface	platform	true		types/workCalendars.ts	19	
+HolidayVersionDto	interface	platform	true		types/workCalendars.ts	26	
+WorkVersionDto	interface	platform	true		types/workCalendars.ts	39	
+HolidayDateDto	interface	platform	true		types/workCalendars.ts	55	
+AssignmentDto	interface	platform	true		types/workCalendars.ts	71	
+AssignmentRow	interface	platform	true		types/workCalendars.ts	80	
+HolidayInput	interface	platform	true		types/workCalendars.ts	86	
+HolidaySetCommandResult	interface	platform	true		types/workCalendars.ts	99	
+WorkCalendarCommandResult	interface	platform	true		types/workCalendars.ts	104	
+AssignmentCommandResult	interface	platform	true		types/workCalendars.ts	108	
+Page	interface	platform	true		types/workCalendars.ts	113	
+HolidayCalendarDetail	interface	platform	true		types/workCalendars.ts	114	
+WorkCalendarDetail	interface	platform	true		types/workCalendars.ts	115	
+WorkingDayExclusion	interface	platform	true		types/workCalendars.ts	117	
+ResolvePreview	interface	platform	true		types/workCalendars.ts	126	
