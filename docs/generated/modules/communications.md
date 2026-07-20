@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `12a0e285e6de15ded8a02621`
+Source fingerprint: `747f7cb0f6ef1f4535594bac`
 
-Files: 104 | Symbols: 938 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
+Files: 104 | Symbols: 943 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
 
 ## Widgets and Tiles
 
@@ -525,8 +525,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/NotificationCenter/mount.ts` | 41 |
 | frontend-page | `src/components/sections/NotificationCenter/notifAction.ts` | 66 |
 | frontend-page | `src/components/sections/NotificationCenter/notifMeta.ts` | 48 |
-| frontend-page | `src/components/sections/Tickets/TicketCenter.test.tsx` | 158 |
-| frontend-page | `src/components/sections/Tickets/TicketCenter.tsx` | 568 |
+| frontend-page | `src/components/sections/Tickets/TicketCenter.test.tsx` | 174 |
+| frontend-page | `src/components/sections/Tickets/TicketCenter.tsx` | 593 |
 | frontend-page | `src/components/sections/Tickets/TicketCreateDialog.tsx` | 99 |
 | frontend-page | `src/components/sections/Tickets/TicketDropdown.tsx` | 68 |
 | frontend-page | `src/components/sections/Tickets/index.ts` | 6 |

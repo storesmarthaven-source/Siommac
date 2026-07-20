@@ -9558,33 +9558,38 @@ requester	object	communications	false	test	src/components/sections/Tickets/Ticke
 handler	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	13	
 ticket	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	14	
 detail	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	40	
-Scope	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	22	
-DrawerTab	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	23	
-ActionDialog	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	24	
-OPEN_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	26	
-titleCase	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	28	
-initials	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	32	
-relativeTime	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	36	
-formatDate	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	44	
-fileSize	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	49	
-serializeInlineNode	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	55	
-editorToMarkdown	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	79	
-appendBlock	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	81	editorToMarkdown
-safeLink	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	106	
-InlineTicketText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	110	
-TicketRichText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	132	
-TicketPills	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	156	
-Avatar	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	166	
-TicketRow	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	172	
-TicketDetailsDrawer	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	189	
-TicketCenter	function	communications	true	component	src/components/sections/Tickets/TicketCenter.tsx	261	
-onOpen	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	322	TicketCenter
-selectTicket	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	359	TicketCenter
-runAction	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	365	TicketCenter
-sendComment	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	378	TicketCenter
-format	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	391	TicketCenter
-attach	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	397	TicketCenter
-download	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	411	TicketCenter
+Scope	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	23	
+DrawerTab	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	24	
+ActionDialog	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	25	
+QuickView	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	26	
+OPEN_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	28	
+titleCase	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	30	
+initials	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	34	
+relativeTime	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	38	
+formatDate	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	46	
+durationBetween	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	51	
+dueRemaining	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	60	
+recordText	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	71	
+recordIdentifier	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	76	
+fileSize	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	81	
+serializeInlineNode	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	87	
+editorToMarkdown	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	111	
+appendBlock	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	113	editorToMarkdown
+safeLink	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	138	
+InlineTicketText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	142	
+TicketRichText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	164	
+TicketPills	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	188	
+Avatar	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	198	
+TicketRow	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	204	
+MockupTicketDetailsDrawer	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	221	
+TicketCenter	function	communications	true	component	src/components/sections/Tickets/TicketCenter.tsx	262	
+onOpen	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	336	TicketCenter
+selectTicket	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	373	TicketCenter
+runAction	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	379	TicketCenter
+sendComment	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	392	TicketCenter
+format	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	405	TicketCenter
+attach	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	411	TicketCenter
+download	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	425	TicketCenter
 TicketCreateDialog	function	communications	true	component	src/components/sections/Tickets/TicketCreateDialog.tsx	7	
 close	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	31	TicketCreateDialog
 submit	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	38	TicketCreateDialog
