@@ -51,9 +51,9 @@ const detail = {
     author: handler,
   }],
   tags: [{ key: 'job-letter', label: 'Job letter', kind: 'system' as const, createdAt: '2026-07-20T09:00:00Z' }],
-  attachments: [],
-  participants: [{ userId: requester.id, role: 'requester', user: requester }],
-  events: [{ id: 'event-1', eventType: 'created', actorUserId: requester.id, actor: requester, createdAt: '2026-07-20T09:00:00Z' }],
+  attachments: [{ id: 'attachment-1', fileName: 'employment-letter.pdf', contentType: 'application/pdf', sizeBytes: 2048, uploadedBy: handler.id, createdAt: '2026-07-20T10:00:00Z', uploadedAt: '2026-07-20T10:00:00Z' }],
+  participants: [{ userId: requester.id, role: 'requester', notificationsMuted: false, user: requester }],
+  events: [{ id: 'event-1', eventType: 'created', sequence: 1, actorUserId: requester.id, actor: requester, createdAt: '2026-07-20T09:00:00Z' }],
   lastReadSequence: 0,
   unreadCount: 2,
 };
@@ -95,8 +95,11 @@ describe('TicketCenter', () => {
     expect(screen.getAllByText('Employment letter').length).toBeGreaterThan(0);
     expect(await screen.findByText('Please prepare a letter for my visa application.')).toBeTruthy();
     fireEvent.click(screen.getByLabelText('Filters'));
+    expect(screen.getAllByText('Waiting on requester').length).toBeGreaterThan(0);
     expect(screen.getByLabelText('Request type')).toBeTruthy();
     expect(screen.getByLabelText('Tag')).toBeTruthy();
+    expect(screen.getByLabelText('Paragraph style')).toBeTruthy();
+    expect(screen.getByLabelText('Align left')).toBeTruthy();
   });
 
   it('marks an unread selected ticket through the canonical endpoint', async () => {
@@ -107,7 +110,7 @@ describe('TicketCenter', () => {
     }));
   });
 
-  it('sends replies and internal notes using the ticket comment mutation', async () => {
+  it('sends replies and internal notes using the ticket comment mutation', () => {
     const { container } = render(<TicketCenter />);
     const editor = container.querySelector<HTMLElement>('.tc-editor');
     expect(editor).toBeTruthy();
@@ -144,7 +147,7 @@ describe('TicketCenter', () => {
     );
   });
 
-  it('wires lifecycle actions and the details drawer', async () => {
+  it('wires lifecycle actions and exposes every ticket detail section directly', async () => {
     render(<TicketCenter />);
     fireEvent.click(await screen.findByText('Assign to me'));
     expect(mocks.update).toHaveBeenCalledWith(
@@ -152,6 +155,19 @@ describe('TicketCenter', () => {
       expect.any(Object),
     );
     fireEvent.click(screen.getByRole('button', { name: /Ticket details/ }));
-    expect(screen.getByText('Service level')).toBeTruthy();
+    expect(screen.getByText(/Resolution due/)).toBeTruthy();
+    expect(screen.getByText('Lifecycle')).toBeTruthy();
+    expect(screen.getByText('Ownership and source')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Attachments' }));
+    expect(screen.getAllByText('employment-letter.pdf').length).toBeGreaterThan(1);
+
+    fireEvent.click(screen.getByRole('button', { name: 'Participants' }));
+    expect(screen.getByText('Ticket participants (1)')).toBeTruthy();
+    expect(screen.getByText('Notifications on')).toBeTruthy();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Activity' }));
+    expect(screen.getByText('Sequenced activity (1)')).toBeTruthy();
+    expect(screen.getByText(/Sequence 1/)).toBeTruthy();
   });
 });
