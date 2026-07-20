@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `47bad380b179a2033efab7fc`
+Source fingerprint: `12a0e285e6de15ded8a02621`
 
 Files: 45 | Symbols: 378 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -54,8 +54,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:321` | - | rbacConsole |
 | `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:864` | - | rbacConsole |
 | `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:337` | - | communicationsCompliance, permissionPropagation, rbacConsole |
-| `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:616` | updateColorScheme @ src/components/nav/api.ts:41 | - |
-| `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:625` | updateLayoutMode @ src/components/nav/api.ts:44 | - |
+| `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:616` | updateColorScheme @ src/components/nav/api.ts:22 | - |
+| `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:625` | updateLayoutMode @ src/components/nav/api.ts:25 | - |
 | `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:634` | res @ src/components/sections/Profile/api.ts:108 | - |
 | `/api/verify2fa` | `-` | - | `Verify2faExtSchema` | `netlify/functions/routes/auth.ts:356` | verify2faApi @ src/components/auth/api.ts:88 | - |
 | `/api/verifyPassword` | `-` | requireUser | `VerifyPasswordSchema` | `netlify/functions/routes/auth.ts:709` | - | - |
