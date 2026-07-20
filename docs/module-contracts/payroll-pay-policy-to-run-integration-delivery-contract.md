@@ -295,7 +295,8 @@ R4 pass. No lock-time policy-invalidation (N4).
 
 | ID | Condition | Point | Code -> HTTP |
 |---|---|---|---|
-| FL-PPR-001 | no active assignment+version covering whole period (incl. version dates, finding #5) | create | `PR422 policy.missing` -> 422 |
+| FL-PPR-000 | new run with no pay group (`pay_group_id` null) | create | `PR422 policy.pay_group_required` -> 422 |
+| FL-PPR-001 | pay group given but no active assignment+version covering whole period (incl. version dates, finding #5) | create | `PR422 policy.missing` -> 422 |
 | FL-PPR-002 | >1 covering active assignment (defensive; F-01 blocks overlap) | create | `PR409 policy.ambiguous` -> 409 |
 | FL-PPR-003 | required source missing/unapproved, outcome `block_input_lock` | lock | `PR422 policy.source_missing:<type>` -> 422 |
 | FL-PPR-004 | cost centre required and missing | lock | `PR422 policy.cost_centre_missing` -> 422 |
@@ -387,6 +388,7 @@ operator browser-QA gate are hard preconditions to any merge or Pay-Policy un-fe
 | DEC-PPR-018 | **(Rev 4.1)** Employment clamp uses exactly `app_users.start_date`/`end_date` (nullable), inclusive boundaries, null⇒period bound (§5b). |
 | DEC-PPR-019 | **(Rev 4.1)** Route-unreachable resolver branches (`version_unpublished`/`holiday_set_unpublished`/`version_period_uncovered`, FL-PPR-007/008/009) are unit/DB-tested (U-PPR-007), not live E2E — live fixtures are always F-CAL-route-created. |
 | DEC-PPR-020 | **(Rev 4.1)** Authenticated operator browser QA (UI-PPR-001..005) is a REQUIRED release gate; the 2000-employee lock-inputs benchmark PERF-PPR-001 (one `work_calendar_working_days` per working_days employee, no N²) is required. |
+| DEC-PPR-021 | **(Rev 4.1)** EVERY new production run is pay-group-scoped (the pay group determines population, policy, work calendar, funding/approval scope, statutory/reporting context). `create_run_tx` rejects `pay_group_id=null` with `PR422 policy.pay_group_required` (FL-PPR-000) — NOT `policy.missing`. `pay_policy_required=false` is ONLY the historical-row discriminator (mig 710); a new run never uses it as a bypass. Legacy runs stay read-only historical records. Create-run UI must always send `payGroupId`. |
 
 ## 15. Approval
 

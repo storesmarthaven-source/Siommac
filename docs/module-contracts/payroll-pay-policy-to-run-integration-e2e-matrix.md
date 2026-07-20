@@ -25,6 +25,7 @@ Exact tables/events asserted: `finance_payroll_runs` (policy + **calendar** pin 
 | E2E-PPR-004 | assignment date boundary | effective_from=period_start, effective_to=period_end pass; move either in by 1 day fail | create passes / `policy.missing`. |
 | E2E-PPR-005 | VERSION date boundary (finding #5) | assignment covers period but version.effective_to < period_end | create -> `policy.missing`; no run row. |
 | E2E-PPR-006 | missing policy (FL-PPR-001) | group with no active assignment | create -> `PR422 policy.missing`; assert no run row AND no `app_events` for tag. |
+| E2E-PPR-006b | no pay group (FL-PPR-000/DEC-PPR-021) | create with `payGroupId` null | create -> `PR422 policy.pay_group_required`; no run row, no event; distinct from `policy.missing`. |
 | E2E-PPR-007 | working_days resolve+pin (R11/SE-PPR-003) | policy binds a `working_days` component; published work calendar assigned to the pay group covering the whole period | create -> run carries `work_calendar_version_id/holiday_calendar_version_id/work_calendar_checksum/holiday_calendar_checksum` + `calendar_resolution{scope,assignmentId,periodDenominator>0,periodExcluded[]}`; exactly one `payroll_run.created` (enriched, no new event); non-working_days policy leaves all five calendar cols NULL. |
 | E2E-PPR-008 | one manifest per snapshot (R3,DEC-PPR-006) | pinned run | lock -> exactly ONE `finance_payroll_run_policy_evidence` row (`unique(input_snapshot_id)`) with component/source/costing arrays + checksum; `app_events 'payroll_run.inputs_locked'` carries the checksum. |
 | E2E-PPR-009 | reopen THEN relock (R3,DEC-PPR-006) | locked run -> reopen -> relock | new `snapshot_no` gets a FRESH single manifest bound to the new `input_snapshot_id`; prior manifest retained; run `current_input_snapshot_id` advances. |
@@ -82,7 +83,7 @@ Exact tables/events asserted: `finance_payroll_runs` (policy + **calendar** pin 
 |---|---|
 | UT-PPR-U1 | pinned-policy chip renders name/version/short checksum; empty state when no pin. |
 | UT-PPR-U2 | evidence panel renders component/source/costing arrays; loading/empty/error states. |
-| UT-PPR-U3 | create-run inline blocker shows the typed reason for `policy.missing` AND the calendar codes (`calendar.unresolved`/`.split_period`/`.zero_working_days`/…). |
+| UT-PPR-U3 | create-run REQUIRES a pay group (submit disabled until `payGroupId` chosen; DEC-PPR-021) and its inline blocker shows the typed reason for `policy.pay_group_required`/`policy.missing` AND the calendar codes (`calendar.unresolved`/`.split_period`/`.zero_working_days`/…). |
 | UT-PPR-U4 | work-calendar chip renders calendar name/version + short holiday checksum + scope; hidden when the run has no calendar pin (non-working_days). |
 | UT-PPR-U5 | working-days evidence rows render per-employee numerator/denominator/period/excluded-count with resolved names (no raw UUID); loading/empty/error states. |
 
