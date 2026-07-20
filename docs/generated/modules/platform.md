@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `7839073c3ac33c77588a0fa1`
+Source fingerprint: `47bad380b179a2033efab7fc`
 
-Files: 286 | Symbols: 2602 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 282 | E2E suites: 0
+Files: 286 | Symbols: 2602 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 283 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -386,6 +386,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.block_compliance_access_event_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1024` |
 | function | `public.guard_compliance_export_mutation` | `supabase/migrations/20260919000433_messaging_compliance_v1_schema.sql:1119` |
 | function | `msg_internal._write_compliance_evidence` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:10` |
+| function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000439_messaging_thread_list_performance.sql:24` |
 | table | `if` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:31` |
 | table | `public.approval_seen_receipts` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:44` |
 | function | `public.work_calendar_valid_weekdays` | `supabase/migrations/20260919000700_shared_work_calendar.sql:24` |
@@ -508,7 +509,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/db.ts` | 244 |
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
-| shared-types | `types/messaging.ts` | 281 |
+| shared-types | `types/messaging.ts` | 283 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/workCalendars.ts` | 145 |

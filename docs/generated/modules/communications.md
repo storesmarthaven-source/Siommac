@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `7839073c3ac33c77588a0fa1`
+Source fingerprint: `47bad380b179a2033efab7fc`
 
-Files: 103 | Symbols: 937 | Widgets: 0 | Unique mounted endpoints: 72 | Route definitions: 73 mounted + 2 unmounted | API calls: 88 | DB objects: 120 | E2E suites: 4
+Files: 104 | Symbols: 938 | Widgets: 0 | Unique mounted endpoints: 72 | Route definitions: 73 mounted + 2 unmounted | API calls: 86 | DB objects: 123 | E2E suites: 4
 
 ## Widgets and Tiles
 
@@ -34,35 +34,35 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/compliance/grants/revoke` | `communications.compliance_read` | requirePermission | `GrantRevokeSchema` | `netlify/functions/routes/communicationsCompliance.ts:391` | useRevokeComplianceGrant @ src/api/communicationsCompliance.ts:223 | communicationsCompliance |
 | `/api/communications/compliance/summary/get` | `communications.compliance_read` | requirePermission | `SummaryGetSchema` | `netlify/functions/routes/communicationsCompliance.ts:234` | res @ src/api/communicationsCompliance.ts:84 | communicationsCompliance |
 | `/api/communications/messages/activity` | `communications.view` | requirePermission | `z.object({ threadId: z.uuid() })` | `netlify/functions/routes/communications.ts:435` | - | communications |
-| `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:638` | useArchiveThread @ src/api/communications.ts:616<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279 | communications |
-| `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:598` | useCreateMessageAttachment @ src/api/communications.ts:369<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
-| `/api/communications/messages/attachments/get-url` | `communications.view` | requirePermission | `AttachUrlSchema` | `netlify/functions/routes/communications.ts:777` | useAttachmentUrl @ src/api/communications.ts:606<br>res @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:55 | communications |
-| `/api/communications/messages/attachments/upload-url` | `communications.view` | requirePermission | `AttachUploadUrlSchema` | `netlify/functions/routes/communications.ts:574` | useMessageAttachmentUploadUrl @ src/api/communications.ts:356<br>urlRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:15 | communications |
-| `/api/communications/messages/createThread` | `communications.thread_create` | requirePermission | `CreateThreadSchema` | `netlify/functions/routes/communications.ts:501` | res @ src/api/communications.ts:397<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:229 | communications, communicationsCompliance, messaging, messagingFavourites, messagingReactions, messagingTypingPresence, messengerPagination, messengerRealtime |
-| `/api/communications/messages/delete` | `communications.view` | requirePermission, userCan | `DeleteMessageSchema` | `netlify/functions/routes/communications.ts:849` | useDeleteMessage @ src/api/communications.ts:558 | messaging, messagingReactions |
+| `/api/communications/messages/archive` | `communications.view` | requirePermission | `ArchiveSchema` | `netlify/functions/routes/communications.ts:638` | useArchiveThread @ src/api/communications.ts:617<br>setArchived @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:268 | communications |
+| `/api/communications/messages/attachments/create` | `communications.view` | requirePermission | `AttachCreateSchema` | `netlify/functions/routes/communications.ts:598` | useCreateMessageAttachment @ src/api/communications.ts:370<br>createRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42 | communications |
+| `/api/communications/messages/attachments/get-url` | `communications.view` | requirePermission | `AttachUrlSchema` | `netlify/functions/routes/communications.ts:777` | useAttachmentUrl @ src/api/communications.ts:607<br>res @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:55 | communications |
+| `/api/communications/messages/attachments/upload-url` | `communications.view` | requirePermission | `AttachUploadUrlSchema` | `netlify/functions/routes/communications.ts:574` | useMessageAttachmentUploadUrl @ src/api/communications.ts:357<br>urlRes @ src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:15 | communications |
+| `/api/communications/messages/createThread` | `communications.thread_create` | requirePermission | `CreateThreadSchema` | `netlify/functions/routes/communications.ts:501` | res @ src/api/communications.ts:398<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:218 | communications, communicationsCompliance, messaging, messagingFavourites, messagingReactions, messagingTypingPresence, messengerPagination, messengerRealtime |
+| `/api/communications/messages/delete` | `communications.view` | requirePermission, userCan | `DeleteMessageSchema` | `netlify/functions/routes/communications.ts:849` | useDeleteMessage @ src/api/communications.ts:559 | messaging, messagingReactions |
 | `/api/communications/messages/draft/delete` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:942` | - | communications |
-| `/api/communications/messages/draft/get` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:933` | res @ src/api/communications.ts:586<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160 | communications |
-| `/api/communications/messages/draft/save` | `communications.view` | requirePermission | `DraftSaveSchema` | `netlify/functions/routes/communications.ts:921` | useSaveDraft @ src/api/communications.ts:597 | communications |
-| `/api/communications/messages/favourites/set` | `communications.view` | requirePermission | `FavouriteThreadSchema` | `netlify/functions/routes/communications.ts:669` | setFavourite @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:316 | messagingFavourites |
-| `/api/communications/messages/markRead` | `communications.view` | requirePermission | `MarkReadSchema` | `netlify/functions/routes/communications.ts:622` | useMarkThreadRead @ src/api/communications.ts:488<br>markRead @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:271 | communications, messaging, messengerRealtime |
-| `/api/communications/messages/mute` | `communications.view` | requirePermission | `MuteThreadSchema` | `netlify/functions/routes/communications.ts:652` | useMuteThread @ src/api/communications.ts:631<br>setMuted @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:275 | communications |
-| `/api/communications/messages/online` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:971` | res @ src/api/communications.ts:573<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:55 | communications |
-| `/api/communications/messages/participants/add` | `communications.thread_manage_own` | requirePermission | `ParticipantsAddSchema` | `netlify/functions/routes/communications.ts:689` | useAddThreadParticipants @ src/api/communications.ts:644 | communications, messaging |
-| `/api/communications/messages/participants/remove` | `communications.thread_manage_own` | requirePermission, userCan | `ParticipantsRemoveSchema` | `netlify/functions/routes/communications.ts:709` | useRemoveThreadParticipant @ src/api/communications.ts:658 | communications, messaging |
-| `/api/communications/messages/pins/list` | `communications.view` | requirePermission | `PinsListSchema` | `netlify/functions/routes/communications.ts:894` | res @ src/api/communications.ts:520<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:86 | communications |
-| `/api/communications/messages/pins/pin` | `communications.view` | requirePermission | `PinSchema` | `netlify/functions/routes/communications.ts:805` | usePinMessage @ src/api/communications.ts:531 | communications, messaging |
-| `/api/communications/messages/pins/pinned-summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:906` | res @ src/api/communications.ts:508 | communications |
-| `/api/communications/messages/pins/unpin` | `communications.view` | requirePermission | `UnpinSchema` | `netlify/functions/routes/communications.ts:829` | useUnpinMessage @ src/api/communications.ts:544 | communications, messaging |
-| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:539` | usePostMessage @ src/api/communications.ts:331<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination, messengerRealtime |
-| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:391` | res @ src/api/communications.ts:307<br>res @ src/api/communications.ts:469<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination |
+| `/api/communications/messages/draft/get` | `communications.view` | requirePermission | `DraftGetSchema` | `netlify/functions/routes/communications.ts:933` | res @ src/api/communications.ts:587<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:149 | communications |
+| `/api/communications/messages/draft/save` | `communications.view` | requirePermission | `DraftSaveSchema` | `netlify/functions/routes/communications.ts:921` | useSaveDraft @ src/api/communications.ts:598 | communications |
+| `/api/communications/messages/favourites/set` | `communications.view` | requirePermission | `FavouriteThreadSchema` | `netlify/functions/routes/communications.ts:669` | setFavourite @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:305 | messagingFavourites |
+| `/api/communications/messages/markRead` | `communications.view` | requirePermission | `MarkReadSchema` | `netlify/functions/routes/communications.ts:622` | useMarkThreadRead @ src/api/communications.ts:489<br>markRead @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:260 | communications, messaging, messengerRealtime |
+| `/api/communications/messages/mute` | `communications.view` | requirePermission | `MuteThreadSchema` | `netlify/functions/routes/communications.ts:652` | useMuteThread @ src/api/communications.ts:632<br>setMuted @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:264 | communications |
+| `/api/communications/messages/online` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:971` | res @ src/api/communications.ts:574<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:50 | communications |
+| `/api/communications/messages/participants/add` | `communications.thread_manage_own` | requirePermission | `ParticipantsAddSchema` | `netlify/functions/routes/communications.ts:689` | useAddThreadParticipants @ src/api/communications.ts:645 | communications, messaging |
+| `/api/communications/messages/participants/remove` | `communications.thread_manage_own` | requirePermission, userCan | `ParticipantsRemoveSchema` | `netlify/functions/routes/communications.ts:709` | useRemoveThreadParticipant @ src/api/communications.ts:659 | communications, messaging |
+| `/api/communications/messages/pins/list` | `communications.view` | requirePermission | `PinsListSchema` | `netlify/functions/routes/communications.ts:894` | res @ src/api/communications.ts:521<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:77 | communications |
+| `/api/communications/messages/pins/pin` | `communications.view` | requirePermission | `PinSchema` | `netlify/functions/routes/communications.ts:805` | usePinMessage @ src/api/communications.ts:532 | communications, messaging |
+| `/api/communications/messages/pins/pinned-summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:906` | res @ src/api/communications.ts:509 | communications |
+| `/api/communications/messages/pins/unpin` | `communications.view` | requirePermission | `UnpinSchema` | `netlify/functions/routes/communications.ts:829` | useUnpinMessage @ src/api/communications.ts:545 | communications, messaging |
+| `/api/communications/messages/post` | `communications.view` | requirePermission | `PostMessageSchema` | `netlify/functions/routes/communications.ts:539` | usePostMessage @ src/api/communications.ts:332<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:188 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination, messengerRealtime |
+| `/api/communications/messages/posts` | `communications.view` | requirePermission | `PostsSchema` | `netlify/functions/routes/communications.ts:391` | res @ src/api/communications.ts:308<br>res @ src/api/communications.ts:470<br>loadThreadDetail @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:76<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:108 | communications, communicationsCompliance, messaging, messagingReactions, messengerPagination |
 | `/api/communications/messages/presence/update` | `communications.view` | requirePermission | `PresenceSchema` | `netlify/functions/routes/communications.ts:961` | - | communications |
 | `/api/communications/messages/reactions/toggle` | `communications.view` | requirePermission | `ToggleReactionSchema` | `netlify/functions/routes/communications.ts:877` | - | messagingReactions |
-| `/api/communications/messages/recipients` | `communications.view` | requirePermission | `RecipientsSchema` | `netlify/functions/routes/communications.ts:760` | res @ src/api/communications.ts:714 | communications |
-| `/api/communications/messages/recordThread` | `communications.thread_create` | requirePermission | `RecordThreadSchema` | `netlify/functions/routes/communications.ts:463` | useResolveRecordThread @ src/api/communications.ts:682 | communications |
-| `/api/communications/messages/search` | `communications.view` | requirePermission | `MessageSearchSchema` | `netlify/functions/routes/communications.ts:419` | res @ src/api/communications.ts:697<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
-| `/api/communications/messages/search` | `communications.view` | requirePermission | `SearchSchema` | `netlify/functions/routes/communications.ts:745` | res @ src/api/communications.ts:697<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171 | communications, messengerPagination |
-| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:362` | res @ src/api/communications.ts:442 | communications, communicationsCompliance |
-| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:338` | res @ src/api/communications.ts:292<br>res @ src/api/communications.ts:426<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142<br>loadMoreThreads @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143 | communications, messaging, messagingFavourites, messengerPagination |
+| `/api/communications/messages/recipients` | `communications.view` | requirePermission | `RecipientsSchema` | `netlify/functions/routes/communications.ts:760` | res @ src/api/communications.ts:715 | communications |
+| `/api/communications/messages/recordThread` | `communications.thread_create` | requirePermission | `RecordThreadSchema` | `netlify/functions/routes/communications.ts:463` | useResolveRecordThread @ src/api/communications.ts:683 | communications |
+| `/api/communications/messages/search` | `communications.view` | requirePermission | `MessageSearchSchema` | `netlify/functions/routes/communications.ts:419` | res @ src/api/communications.ts:698<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160 | communications, messengerPagination |
+| `/api/communications/messages/search` | `communications.view` | requirePermission | `SearchSchema` | `netlify/functions/routes/communications.ts:745` | res @ src/api/communications.ts:698<br>res @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160 | communications, messengerPagination |
+| `/api/communications/messages/thread` | `communications.view` | requirePermission | `ThreadGetSchema` | `netlify/functions/routes/communications.ts:362` | res @ src/api/communications.ts:443 | communications, communicationsCompliance |
+| `/api/communications/messages/threads` | `communications.view` | requirePermission | `ThreadsListSchema` | `netlify/functions/routes/communications.ts:338` | res @ src/api/communications.ts:292<br>res @ src/api/communications.ts:427<br>load @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:49<br>result @ src/components/sections/Messages/messenger/adapters/siomacRepository.ts:132 | communications, messaging, messagingFavourites, messengerPagination |
 | `/api/communications/notifications/archive` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:164` | useArchiveNotification @ src/api/communications.ts:274 | communications |
 | `/api/communications/notifications/broadcast` | `communications.admin` | requirePermission | `BroadcastSchema` | `netlify/functions/routes/communications.ts:283` | useBroadcastNotification @ src/api/communications.ts:233 | communications |
 | `/api/communications/notifications/list` | `communications.view` | requirePermission | `NotifListSchema` | `netlify/functions/routes/communications.ts:103` | res @ src/api/communications.ts:176 | communications |
@@ -72,11 +72,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:186` | res @ src/api/communications.ts:193 | communications |
 | `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:223` | useSetNotificationPreference @ src/api/communications.ts:206 | communications |
 | `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:84` | res @ src/api/communications.ts:148<br>res @ src/components/nav/badgeSync.ts:58 | communications, messengerRealtime |
-| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1057` | useCommentTicket @ src/api/communications.ts:799 | communications |
-| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:991` | useCreateTicket @ src/api/communications.ts:779<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications |
-| `/api/communications/tickets/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1030` | res @ src/api/communications.ts:753 | communications |
-| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1009` | res @ src/api/communications.ts:738 | communications |
-| `/api/communications/tickets/update` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/communications.ts:1100` | useUpdateTicket @ src/api/communications.ts:820 | communications |
+| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1057` | useCommentTicket @ src/api/communications.ts:800 | communications |
+| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:991` | useCreateTicket @ src/api/communications.ts:780<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications |
+| `/api/communications/tickets/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1030` | res @ src/api/communications.ts:754 | communications |
+| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1009` | res @ src/api/communications.ts:739 | communications |
+| `/api/communications/tickets/update` | `tickets.manage` | requirePermission | `UpdateTicketSchema` | `netlify/functions/routes/communications.ts:1100` | useUpdateTicket @ src/api/communications.ts:821 | communications |
 | `/api/createTicket` | `-` | requireUser | `CreateTicketSchema` | `netlify/functions/routes/tickets.ts:20` | res @ src/api/tickets.ts:58<br>createTicket @ src/components/nav/api.ts:26 | - |
 | `/api/deleteNotification` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:164` | res @ src/api/notifications.ts:103 | - |
 | `/api/deleteTicket` | `-` | requireUser | `GetTicketSchema` | `netlify/functions/routes/tickets.ts:126` | res @ src/api/tickets.ts:82<br>deleteTicket @ src/components/nav/api.ts:35 | - |
@@ -113,51 +113,49 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/compliance/exports/list` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:168` |
 | `/api/communications/compliance/grants/revoke` | `apiPost` | `useRevokeComplianceGrant` | `src/api/communicationsCompliance.ts:223` |
 | `/api/communications/compliance/summary/get` | `apiPost` | `res` | `src/api/communicationsCompliance.ts:84` |
-| `/api/communications/messages/archive` | `apiPost` | `useArchiveThread` | `src/api/communications.ts:616` |
-| `/api/communications/messages/archive` | `apiPost` | `setArchived` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:279` |
-| `/api/communications/messages/attachments/create` | `apiPost` | `useCreateMessageAttachment` | `src/api/communications.ts:369` |
+| `/api/communications/messages/archive` | `apiPost` | `useArchiveThread` | `src/api/communications.ts:617` |
+| `/api/communications/messages/archive` | `apiPost` | `setArchived` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:268` |
+| `/api/communications/messages/attachments/create` | `apiPost` | `useCreateMessageAttachment` | `src/api/communications.ts:370` |
 | `/api/communications/messages/attachments/create` | `apiPost` | `createRes` | `src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:42` |
-| `/api/communications/messages/attachments/get-url` | `apiPost` | `useAttachmentUrl` | `src/api/communications.ts:606` |
+| `/api/communications/messages/attachments/get-url` | `apiPost` | `useAttachmentUrl` | `src/api/communications.ts:607` |
 | `/api/communications/messages/attachments/get-url` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:55` |
-| `/api/communications/messages/attachments/upload-url` | `apiPost` | `useMessageAttachmentUploadUrl` | `src/api/communications.ts:356` |
+| `/api/communications/messages/attachments/upload-url` | `apiPost` | `useMessageAttachmentUploadUrl` | `src/api/communications.ts:357` |
 | `/api/communications/messages/attachments/upload-url` | `apiPost` | `urlRes` | `src/components/sections/Messages/messenger/adapters/siomacAttachments.ts:15` |
-| `/api/communications/messages/createThread` | `apiPost` | `res` | `src/api/communications.ts:397` |
-| `/api/communications/messages/createThread` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:229` |
-| `/api/communications/messages/delete` | `apiPost` | `useDeleteMessage` | `src/api/communications.ts:558` |
-| `/api/communications/messages/draft/get` | `apiPost` | `res` | `src/api/communications.ts:586` |
-| `/api/communications/messages/draft/get` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160` |
-| `/api/communications/messages/draft/save` | `apiPost` | `useSaveDraft` | `src/api/communications.ts:597` |
-| `/api/communications/messages/favourites/set` | `apiPost` | `setFavourite` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:316` |
-| `/api/communications/messages/markRead` | `apiPost` | `useMarkThreadRead` | `src/api/communications.ts:488` |
-| `/api/communications/messages/markRead` | `apiPost` | `markRead` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:271` |
-| `/api/communications/messages/mute` | `apiPost` | `useMuteThread` | `src/api/communications.ts:631` |
-| `/api/communications/messages/mute` | `apiPost` | `setMuted` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:275` |
-| `/api/communications/messages/online` | `apiPost` | `res` | `src/api/communications.ts:573` |
-| `/api/communications/messages/online` | `apiPost` | `load` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:55` |
-| `/api/communications/messages/participants/add` | `apiPost` | `useAddThreadParticipants` | `src/api/communications.ts:644` |
-| `/api/communications/messages/participants/remove` | `apiPost` | `useRemoveThreadParticipant` | `src/api/communications.ts:658` |
-| `/api/communications/messages/pins/list` | `apiPost` | `res` | `src/api/communications.ts:520` |
-| `/api/communications/messages/pins/list` | `apiPost` | `loadThreadDetail` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:86` |
-| `/api/communications/messages/pins/pin` | `apiPost` | `usePinMessage` | `src/api/communications.ts:531` |
-| `/api/communications/messages/pins/pinned-summary` | `apiPost` | `res` | `src/api/communications.ts:508` |
-| `/api/communications/messages/pins/unpin` | `apiPost` | `useUnpinMessage` | `src/api/communications.ts:544` |
-| `/api/communications/messages/post` | `apiPost` | `usePostMessage` | `src/api/communications.ts:331` |
-| `/api/communications/messages/post` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:199` |
-| `/api/communications/messages/posts` | `apiPost` | `res` | `src/api/communications.ts:307` |
-| `/api/communications/messages/posts` | `apiPost` | `res` | `src/api/communications.ts:469` |
-| `/api/communications/messages/posts` | `apiPost` | `loadThreadDetail` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:85` |
-| `/api/communications/messages/posts` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:117` |
-| `/api/communications/messages/recipients` | `apiPost` | `res` | `src/api/communications.ts:714` |
-| `/api/communications/messages/recordThread` | `apiPost` | `useResolveRecordThread` | `src/api/communications.ts:682` |
-| `/api/communications/messages/search` | `apiPost` | `res` | `src/api/communications.ts:697` |
-| `/api/communications/messages/search` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:171` |
-| `/api/communications/messages/thread` | `apiPost` | `res` | `src/api/communications.ts:442` |
+| `/api/communications/messages/createThread` | `apiPost` | `res` | `src/api/communications.ts:398` |
+| `/api/communications/messages/createThread` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:218` |
+| `/api/communications/messages/delete` | `apiPost` | `useDeleteMessage` | `src/api/communications.ts:559` |
+| `/api/communications/messages/draft/get` | `apiPost` | `res` | `src/api/communications.ts:587` |
+| `/api/communications/messages/draft/get` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:149` |
+| `/api/communications/messages/draft/save` | `apiPost` | `useSaveDraft` | `src/api/communications.ts:598` |
+| `/api/communications/messages/favourites/set` | `apiPost` | `setFavourite` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:305` |
+| `/api/communications/messages/markRead` | `apiPost` | `useMarkThreadRead` | `src/api/communications.ts:489` |
+| `/api/communications/messages/markRead` | `apiPost` | `markRead` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:260` |
+| `/api/communications/messages/mute` | `apiPost` | `useMuteThread` | `src/api/communications.ts:632` |
+| `/api/communications/messages/mute` | `apiPost` | `setMuted` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:264` |
+| `/api/communications/messages/online` | `apiPost` | `res` | `src/api/communications.ts:574` |
+| `/api/communications/messages/online` | `apiPost` | `load` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:50` |
+| `/api/communications/messages/participants/add` | `apiPost` | `useAddThreadParticipants` | `src/api/communications.ts:645` |
+| `/api/communications/messages/participants/remove` | `apiPost` | `useRemoveThreadParticipant` | `src/api/communications.ts:659` |
+| `/api/communications/messages/pins/list` | `apiPost` | `res` | `src/api/communications.ts:521` |
+| `/api/communications/messages/pins/list` | `apiPost` | `loadThreadDetail` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:77` |
+| `/api/communications/messages/pins/pin` | `apiPost` | `usePinMessage` | `src/api/communications.ts:532` |
+| `/api/communications/messages/pins/pinned-summary` | `apiPost` | `res` | `src/api/communications.ts:509` |
+| `/api/communications/messages/pins/unpin` | `apiPost` | `useUnpinMessage` | `src/api/communications.ts:545` |
+| `/api/communications/messages/post` | `apiPost` | `usePostMessage` | `src/api/communications.ts:332` |
+| `/api/communications/messages/post` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:188` |
+| `/api/communications/messages/posts` | `apiPost` | `res` | `src/api/communications.ts:308` |
+| `/api/communications/messages/posts` | `apiPost` | `res` | `src/api/communications.ts:470` |
+| `/api/communications/messages/posts` | `apiPost` | `loadThreadDetail` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:76` |
+| `/api/communications/messages/posts` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:108` |
+| `/api/communications/messages/recipients` | `apiPost` | `res` | `src/api/communications.ts:715` |
+| `/api/communications/messages/recordThread` | `apiPost` | `useResolveRecordThread` | `src/api/communications.ts:683` |
+| `/api/communications/messages/search` | `apiPost` | `res` | `src/api/communications.ts:698` |
+| `/api/communications/messages/search` | `apiPost` | `res` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:160` |
+| `/api/communications/messages/thread` | `apiPost` | `res` | `src/api/communications.ts:443` |
 | `/api/communications/messages/threads` | `apiPost` | `res` | `src/api/communications.ts:292` |
-| `/api/communications/messages/threads` | `apiPost` | `res` | `src/api/communications.ts:426` |
-| `/api/communications/messages/threads` | `apiPost` | `load` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:51` |
-| `/api/communications/messages/threads` | `apiPost` | `load` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:54` |
-| `/api/communications/messages/threads` | `apiPost` | `loadMoreThreads` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:142` |
-| `/api/communications/messages/threads` | `apiPost` | `loadMoreThreads` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:143` |
+| `/api/communications/messages/threads` | `apiPost` | `res` | `src/api/communications.ts:427` |
+| `/api/communications/messages/threads` | `apiPost` | `load` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:49` |
+| `/api/communications/messages/threads` | `apiPost` | `result` | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts:132` |
 | `/api/communications/notifications/archive` | `apiPost` | `useArchiveNotification` | `src/api/communications.ts:274` |
 | `/api/communications/notifications/broadcast` | `apiPost` | `useBroadcastNotification` | `src/api/communications.ts:233` |
 | `/api/communications/notifications/list` | `apiPost` | `res` | `src/api/communications.ts:176` |
@@ -167,11 +165,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `apiPost` | `res` | `src/api/communications.ts:193` |
 | `/api/communications/notifications/preferences/set` | `apiPost` | `useSetNotificationPreference` | `src/api/communications.ts:206` |
 | `/api/communications/summary` | `apiPost` | `res` | `src/api/communications.ts:148` |
-| `/api/communications/tickets/comment` | `apiPost` | `useCommentTicket` | `src/api/communications.ts:799` |
-| `/api/communications/tickets/create` | `apiPost` | `useCreateTicket` | `src/api/communications.ts:779` |
-| `/api/communications/tickets/get` | `apiPost` | `res` | `src/api/communications.ts:753` |
-| `/api/communications/tickets/list` | `apiPost` | `res` | `src/api/communications.ts:738` |
-| `/api/communications/tickets/update` | `apiPost` | `useUpdateTicket` | `src/api/communications.ts:820` |
+| `/api/communications/tickets/comment` | `apiPost` | `useCommentTicket` | `src/api/communications.ts:800` |
+| `/api/communications/tickets/create` | `apiPost` | `useCreateTicket` | `src/api/communications.ts:780` |
+| `/api/communications/tickets/get` | `apiPost` | `res` | `src/api/communications.ts:754` |
+| `/api/communications/tickets/list` | `apiPost` | `res` | `src/api/communications.ts:739` |
+| `/api/communications/tickets/update` | `apiPost` | `useUpdateTicket` | `src/api/communications.ts:821` |
 | `/api/createTicket` | `apiPost` | `res` | `src/api/tickets.ts:58` |
 | `/api/deleteNotification` | `apiPost` | `res` | `src/api/notifications.ts:103` |
 | `/api/deleteTicket` | `apiPost` | `res` | `src/api/tickets.ts:82` |
@@ -201,36 +199,36 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useMarkAllNotificationsRead` | function / hook | `src/api/communications.ts:254` | `-` |
 | `useArchiveNotification` | function / hook | `src/api/communications.ts:270` | `-` |
 | `useMessageThreads` | function / hook | `src/api/communications.ts:288` | `-` |
-| `useMessagePosts` | function / hook | `src/api/communications.ts:303` | `-` |
-| `usePostMessage` | function / hook | `src/api/communications.ts:327` | `-` |
-| `useMessageAttachmentUploadUrl` | function / hook | `src/api/communications.ts:353` | `-` |
-| `useCreateMessageAttachment` | function / hook | `src/api/communications.ts:366` | `-` |
-| `useCreateMessageThread` | function / hook | `src/api/communications.ts:389` | `-` |
-| `useMessageThreadsFull` | function / hook | `src/api/communications.ts:422` | `-` |
-| `useThread` | function / hook | `src/api/communications.ts:438` | `-` |
-| `useThreadPosts` | function / hook | `src/api/communications.ts:465` | `-` |
-| `useMarkThreadRead` | function / hook | `src/api/communications.ts:484` | `-` |
-| `usePinnedSummary` | function / hook | `src/api/communications.ts:504` | `-` |
-| `usePins` | function / hook | `src/api/communications.ts:516` | `-` |
-| `usePinMessage` | function / hook | `src/api/communications.ts:527` | `-` |
-| `useUnpinMessage` | function / hook | `src/api/communications.ts:540` | `-` |
-| `useDeleteMessage` | function / hook | `src/api/communications.ts:554` | `-` |
-| `useOnlineUsers` | function / hook | `src/api/communications.ts:569` | `-` |
-| `useDraft` | function / hook | `src/api/communications.ts:582` | `-` |
-| `useSaveDraft` | function / hook | `src/api/communications.ts:593` | `-` |
-| `useAttachmentUrl` | function / hook | `src/api/communications.ts:603` | `-` |
-| `useArchiveThread` | function / hook | `src/api/communications.ts:612` | `-` |
-| `useMuteThread` | function / hook | `src/api/communications.ts:627` | `-` |
-| `useAddThreadParticipants` | function / hook | `src/api/communications.ts:640` | `-` |
-| `useRemoveThreadParticipant` | function / hook | `src/api/communications.ts:654` | `-` |
-| `useResolveRecordThread` | function / hook | `src/api/communications.ts:678` | `-` |
-| `useMessageSearch` | function / hook | `src/api/communications.ts:693` | `-` |
-| `useMessageRecipients` | function / hook | `src/api/communications.ts:710` | `-` |
-| `useMyTickets` | function / hook | `src/api/communications.ts:734` | `-` |
-| `useTicket` | function / hook | `src/api/communications.ts:749` | `-` |
-| `useCreateTicket` | function / hook | `src/api/communications.ts:775` | `-` |
-| `useCommentTicket` | function / hook | `src/api/communications.ts:795` | `-` |
-| `useUpdateTicket` | function / hook | `src/api/communications.ts:816` | `-` |
+| `useMessagePosts` | function / hook | `src/api/communications.ts:304` | `-` |
+| `usePostMessage` | function / hook | `src/api/communications.ts:328` | `-` |
+| `useMessageAttachmentUploadUrl` | function / hook | `src/api/communications.ts:354` | `-` |
+| `useCreateMessageAttachment` | function / hook | `src/api/communications.ts:367` | `-` |
+| `useCreateMessageThread` | function / hook | `src/api/communications.ts:390` | `-` |
+| `useMessageThreadsFull` | function / hook | `src/api/communications.ts:423` | `-` |
+| `useThread` | function / hook | `src/api/communications.ts:439` | `-` |
+| `useThreadPosts` | function / hook | `src/api/communications.ts:466` | `-` |
+| `useMarkThreadRead` | function / hook | `src/api/communications.ts:485` | `-` |
+| `usePinnedSummary` | function / hook | `src/api/communications.ts:505` | `-` |
+| `usePins` | function / hook | `src/api/communications.ts:517` | `-` |
+| `usePinMessage` | function / hook | `src/api/communications.ts:528` | `-` |
+| `useUnpinMessage` | function / hook | `src/api/communications.ts:541` | `-` |
+| `useDeleteMessage` | function / hook | `src/api/communications.ts:555` | `-` |
+| `useOnlineUsers` | function / hook | `src/api/communications.ts:570` | `-` |
+| `useDraft` | function / hook | `src/api/communications.ts:583` | `-` |
+| `useSaveDraft` | function / hook | `src/api/communications.ts:594` | `-` |
+| `useAttachmentUrl` | function / hook | `src/api/communications.ts:604` | `-` |
+| `useArchiveThread` | function / hook | `src/api/communications.ts:613` | `-` |
+| `useMuteThread` | function / hook | `src/api/communications.ts:628` | `-` |
+| `useAddThreadParticipants` | function / hook | `src/api/communications.ts:641` | `-` |
+| `useRemoveThreadParticipant` | function / hook | `src/api/communications.ts:655` | `-` |
+| `useResolveRecordThread` | function / hook | `src/api/communications.ts:679` | `-` |
+| `useMessageSearch` | function / hook | `src/api/communications.ts:694` | `-` |
+| `useMessageRecipients` | function / hook | `src/api/communications.ts:711` | `-` |
+| `useMyTickets` | function / hook | `src/api/communications.ts:735` | `-` |
+| `useTicket` | function / hook | `src/api/communications.ts:750` | `-` |
+| `useCreateTicket` | function / hook | `src/api/communications.ts:776` | `-` |
+| `useCommentTicket` | function / hook | `src/api/communications.ts:796` | `-` |
+| `useUpdateTicket` | function / hook | `src/api/communications.ts:817` | `-` |
 | `useComplianceSummary` | function / hook | `src/api/communicationsCompliance.ts:80` | `-` |
 | `useComplianceCases` | function / hook | `src/api/communicationsCompliance.ts:91` | `-` |
 | `useComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:109` | `-` |
@@ -248,8 +246,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DiscussionButton` | function / component | `src/components/sections/Messages/DiscussionButton.tsx:21` | `-` |
 | `MessageDropdown` | function / component | `src/components/sections/Messages/MessageDropdown.tsx:38` | `-` |
 | `MessageDropdownItem` | function / component | `src/components/sections/Messages/MessageDropdownItem.tsx:33` | `-` |
-| `MessagingProvider` | function / component | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:86` | `-` |
-| `useMessaging` | function / hook | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:571` | `-` |
+| `MessagingProvider` | function / component | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:88` | `-` |
+| `useMessaging` | function / hook | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx:589` | `-` |
 | `CollaborationCard` | interface / ui-tile | `src/components/sections/Messages/messenger/domain/models.ts:53` | `-` |
 | `MessengerWorkspace` | function / component | `src/components/sections/Messages/messenger/MessengerWorkspace.tsx:18` | `-` |
 | `ComplianceAccessLogView` | function / component | `src/components/sections/Messages/messenger/ui/compliance/ComplianceAccessLogView.tsx:44` | `-` |
@@ -348,7 +346,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `MessagesWorkspace` | function / component | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx:26` | `-` |
 | `ThreadHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:30` | `-` |
 | `MessageThread` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:62` | `-` |
-| `RichMessage` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:322` | `-` |
+| `RichMessage` | function / component | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx:327` | `-` |
 | `QueueHeader` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:31` | `-` |
 | `ThreadSidebar` | function / component | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx:54` | `-` |
 | ... | 37 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
@@ -435,11 +433,11 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 504 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
-| e2e-suite | `scripts/e2e/suites/communications.mjs` | 998 |
+| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1011 |
 | e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1218 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
-| frontend-api | `src/api/communications.ts` | 829 |
+| frontend-api | `src/api/communications.ts` | 830 |
 | frontend-api | `src/api/communicationsCompliance.ts` | 252 |
 | frontend-api | `src/api/notifications.ts` | 160 |
 | frontend-api | `src/api/schemas/notification.ts` | 106 |
@@ -447,21 +445,22 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/tickets.ts` | 95 |
 | frontend-page | `src/components/sections/Messages/ComposeThreadDialog.tsx` | 222 |
 | frontend-page | `src/components/sections/Messages/DiscussionButton.tsx` | 60 |
-| frontend-page | `src/components/sections/Messages/MessageDropdown.tsx` | 204 |
+| frontend-page | `src/components/sections/Messages/MessageDropdown.tsx` | 211 |
 | frontend-page | `src/components/sections/Messages/MessageDropdownItem.tsx` | 92 |
 | frontend-page | `src/components/sections/Messages/index.ts` | 10 |
 | frontend-page | `src/components/sections/Messages/messenger/MessengerWorkspace.tsx` | 52 |
 | frontend-page | `src/components/sections/Messages/messenger/adapters/index.ts` | 63 |
-| frontend-page | `src/components/sections/Messages/messenger/adapters/mappers.ts` | 187 |
+| frontend-page | `src/components/sections/Messages/messenger/adapters/mappers.test.ts` | 43 |
+| frontend-page | `src/components/sections/Messages/messenger/adapters/mappers.ts` | 188 |
 | frontend-page | `src/components/sections/Messages/messenger/adapters/siomacAttachments.ts` | 63 |
 | frontend-page | `src/components/sections/Messages/messenger/adapters/siomacRealtime.ts` | 162 |
-| frontend-page | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts` | 323 |
-| frontend-page | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx` | 576 |
+| frontend-page | `src/components/sections/Messages/messenger/adapters/siomacRepository.ts` | 312 |
+| frontend-page | `src/components/sections/Messages/messenger/app/MessagingProvider.tsx` | 594 |
 | frontend-page | `src/components/sections/Messages/messenger/app/selectors.ts` | 31 |
 | frontend-page | `src/components/sections/Messages/messenger/app/typingState.test.ts` | 48 |
 | frontend-page | `src/components/sections/Messages/messenger/app/typingState.ts` | 58 |
 | frontend-page | `src/components/sections/Messages/messenger/domain/format.ts` | 86 |
-| frontend-page | `src/components/sections/Messages/messenger/domain/models.ts` | 150 |
+| frontend-page | `src/components/sections/Messages/messenger/domain/models.ts` | 152 |
 | frontend-page | `src/components/sections/Messages/messenger/domain/ports.ts` | 51 |
 | frontend-page | `src/components/sections/Messages/messenger/domain/preferences.ts` | 34 |
 | frontend-page | `src/components/sections/Messages/messenger/integration/messagingNotifications.ts` | 52 |
@@ -481,7 +480,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx` | 173 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/Dialog.tsx` | 45 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageCards.tsx` | 138 |
-| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 342 |
+| frontend-page | `src/components/sections/Messages/messenger/ui/components/MessageThread.tsx` | 347 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx` | 201 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx` | 125 |
 | frontend-page | `src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx` | 125 |

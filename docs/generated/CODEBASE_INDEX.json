@@ -1,20 +1,20 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "304e0c695a7568d0ad8a9c3b3403ace7eaa99f46",
-    "branch": "wf/fcal-calendar",
-    "fingerprint": "7839073c3ac33c77588a0fa1",
-    "indexedFiles": 1462
+    "head": "bb87a62c9990aed5d858127ee9df7dc0560fd803",
+    "branch": "wf/messaging-only",
+    "fingerprint": "47bad380b179a2033efab7fc",
+    "indexedFiles": 1464
   },
   "summary": {
-    "files": 1151,
-    "symbols": 11506,
+    "files": 1152,
+    "symbols": 11507,
     "widgets": 32,
     "routes": 885,
     "routeDefinitions": 886,
     "unmountedRoutes": 17,
-    "apiCalls": 379,
-    "databaseObjects": 1219,
+    "apiCalls": 377,
+    "databaseObjects": 1223,
     "e2eSuites": 69,
     "e2eTests": 2272
   },
@@ -74,13 +74,13 @@
     {
       "id": "communications",
       "counts": {
-        "files": 103,
-        "symbols": 937,
+        "files": 104,
+        "symbols": 938,
         "widgets": 0,
         "routes": 72,
         "routeDefinitions": 75,
-        "apiCalls": 88,
-        "databaseObjects": 120,
+        "apiCalls": 86,
+        "databaseObjects": 123,
         "e2eSuites": 4
       }
     },
@@ -145,7 +145,7 @@
         "routes": 27,
         "routeDefinitions": 42,
         "apiCalls": 50,
-        "databaseObjects": 282,
+        "databaseObjects": 283,
         "e2eSuites": 0
       }
     },
@@ -252,8 +252,8 @@
       "path": "netlify/functions/lib/communications.ts",
       "module": "communications",
       "role": "backend-lib",
-      "lines": 1970,
-      "hash": "a0e96dfdd08a6526"
+      "lines": 1941,
+      "hash": "136e67d97d0bca23"
     },
     {
       "path": "netlify/functions/lib/db.ts",
@@ -2268,8 +2268,8 @@
       "path": "scripts/e2e/suites/communications.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 998,
-      "hash": "ea5ef728f77b6756"
+      "lines": 1011,
+      "hash": "aa7158e6409fb3b7"
     },
     {
       "path": "scripts/e2e/suites/communicationsCompliance.mjs",
@@ -2807,8 +2807,8 @@
       "path": "src/api/communications.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 829,
-      "hash": "5eee3fe9c5760c58"
+      "lines": 830,
+      "hash": "af7fe6a2a8430c4d"
     },
     {
       "path": "src/api/communicationsCompliance.ts",
@@ -5341,8 +5341,8 @@
       "path": "src/components/sections/Messages/MessageDropdown.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 204,
-      "hash": "1bc87b0e85c12c29"
+      "lines": 211,
+      "hash": "e33e343859017661"
     },
     {
       "path": "src/components/sections/Messages/MessageDropdownItem.tsx",
@@ -5373,11 +5373,18 @@
       "hash": "092c98dec2e91088"
     },
     {
+      "path": "src/components/sections/Messages/messenger/adapters/mappers.test.ts",
+      "module": "communications",
+      "role": "frontend-page",
+      "lines": 43,
+      "hash": "a1457a20070bc9d9"
+    },
+    {
       "path": "src/components/sections/Messages/messenger/adapters/mappers.ts",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 187,
-      "hash": "26c3d8e12e9e4077"
+      "lines": 188,
+      "hash": "dac5febaa03a5afc"
     },
     {
       "path": "src/components/sections/Messages/messenger/adapters/siomacAttachments.ts",
@@ -5397,15 +5404,15 @@
       "path": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 323,
-      "hash": "e60e0ac3d51069da"
+      "lines": 312,
+      "hash": "5824cf00d4da16ef"
     },
     {
       "path": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 576,
-      "hash": "3db91351dbe831ec"
+      "lines": 594,
+      "hash": "ccca490e516606e3"
     },
     {
       "path": "src/components/sections/Messages/messenger/app/selectors.ts",
@@ -5439,8 +5446,8 @@
       "path": "src/components/sections/Messages/messenger/domain/models.ts",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 150,
-      "hash": "2002a5f53e60375d"
+      "lines": 152,
+      "hash": "8dfd43eaad1095e6"
     },
     {
       "path": "src/components/sections/Messages/messenger/domain/ports.ts",
@@ -5579,8 +5586,8 @@
       "path": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
       "module": "communications",
       "role": "frontend-page",
-      "lines": 342,
-      "hash": "b48cafd6e0caee4a"
+      "lines": 347,
+      "hash": "4b74261553b38f6f"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx",
@@ -5594,7 +5601,7 @@
       "module": "communications",
       "role": "frontend-page",
       "lines": 125,
-      "hash": "a8cbd99d3a49c3b8"
+      "hash": "c3c94ca3452d9688"
     },
     {
       "path": "src/components/sections/Messages/messenger/ui/components/WorkspaceDialogs.tsx",
@@ -8176,8 +8183,8 @@
       "path": "types/messaging.ts",
       "module": "platform",
       "role": "shared-types",
-      "lines": 281,
-      "hash": "1f021d8fedd68489"
+      "lines": 283,
+      "hash": "aa61493ff4396614"
     },
     {
       "path": "types/messagingCompliance.ts",
@@ -9587,7 +9594,7 @@
       "name": "GetThreadResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 990,
+      "line": 961,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9597,7 +9604,7 @@
       "name": "getThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1001,
+      "line": 972,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9607,7 +9614,7 @@
       "name": "PostRow",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1098,
+      "line": 1069,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9617,7 +9624,7 @@
       "name": "AttachmentRow",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1099,
+      "line": 1070,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9627,7 +9634,7 @@
       "name": "GetThreadPostsResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1101,
+      "line": 1072,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9637,7 +9644,7 @@
       "name": "getThreadPosts",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1109,
+      "line": 1080,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9647,7 +9654,7 @@
       "name": "RawPost",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1126,
+      "line": 1097,
       "module": "communications",
       "exported": false,
       "container": "getThreadPosts",
@@ -9657,7 +9664,7 @@
       "name": "MessageSearchHit",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1312,
+      "line": 1283,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9667,7 +9674,7 @@
       "name": "MessageSearchResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1321,
+      "line": 1292,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9677,7 +9684,7 @@
       "name": "searchMessagePosts",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1332,
+      "line": 1303,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9687,7 +9694,7 @@
       "name": "Row",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1341,
+      "line": 1312,
       "module": "communications",
       "exported": false,
       "container": "searchMessagePosts",
@@ -9697,7 +9704,7 @@
       "name": "SourceRecordResolver",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1369,
+      "line": 1340,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9707,7 +9714,7 @@
       "name": "s",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1376,
+      "line": 1347,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9717,7 +9724,7 @@
       "name": "SOURCE_RECORD_RESOLVERS",
       "kind": "object",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1381,
+      "line": 1352,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9727,7 +9734,7 @@
       "name": "resolveSourceRecords",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1409,
+      "line": 1380,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9737,7 +9744,7 @@
       "name": "sourceRecordFor",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1436,
+      "line": 1407,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -9747,7 +9754,7 @@
       "name": "ListThreadActivityResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1447,
+      "line": 1418,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9757,7 +9764,7 @@
       "name": "listThreadActivity",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1460,
+      "line": 1431,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9767,7 +9774,7 @@
       "name": "PostSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1473,
+      "line": 1444,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9777,7 +9784,7 @@
       "name": "PinSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1474,
+      "line": 1445,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9787,7 +9794,7 @@
       "name": "PartSlim",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1475,
+      "line": 1446,
       "module": "communications",
       "exported": false,
       "container": "listThreadActivity",
@@ -9797,7 +9804,7 @@
       "name": "MessageAttachmentUploadUrlResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1541,
+      "line": 1512,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9807,7 +9814,7 @@
       "name": "createMessageAttachmentUploadUrl",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1554,
+      "line": 1525,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9817,7 +9824,7 @@
       "name": "CreateMessageAttachmentInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1562,
+      "line": 1533,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9827,7 +9834,7 @@
       "name": "createMessageAttachmentRecord",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1575,
+      "line": 1546,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9837,7 +9844,7 @@
       "name": "getAttachmentUrl",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1611,
+      "line": 1582,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9847,7 +9854,7 @@
       "name": "markThreadRead",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1652,
+      "line": 1623,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9857,7 +9864,7 @@
       "name": "archiveThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1672,
+      "line": 1643,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9867,7 +9874,7 @@
       "name": "muteThread",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1684,
+      "line": 1655,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9877,7 +9884,7 @@
       "name": "setThreadFavourite",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1699,
+      "line": 1670,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9887,7 +9894,7 @@
       "name": "addThreadParticipants",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1729,
+      "line": 1700,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9897,7 +9904,7 @@
       "name": "removeThreadParticipant",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1785,
+      "line": 1756,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9907,7 +9914,7 @@
       "name": "SearchMessageResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1816,
+      "line": 1787,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9917,7 +9924,7 @@
       "name": "searchMessages",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1825,
+      "line": 1796,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9927,7 +9934,7 @@
       "name": "PostWithAuthorAndThread",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1837,
+      "line": 1808,
       "module": "communications",
       "exported": false,
       "container": "searchMessages",
@@ -9937,7 +9944,7 @@
       "name": "RecipientProfile",
       "kind": "type",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1872,
+      "line": 1843,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9947,7 +9954,7 @@
       "name": "getMessageRecipients",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1874,
+      "line": 1845,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9957,7 +9964,7 @@
       "name": "UserRow",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1876,
+      "line": 1847,
       "module": "communications",
       "exported": false,
       "container": "getMessageRecipients",
@@ -9967,7 +9974,7 @@
       "name": "CreateTicketInput",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1910,
+      "line": 1881,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9977,7 +9984,7 @@
       "name": "CreateTicketResult",
       "kind": "interface",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1921,
+      "line": 1892,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -9987,7 +9994,7 @@
       "name": "createTicket",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 1927,
+      "line": 1898,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -42117,7 +42124,7 @@
       "name": "inB",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 458,
+      "line": 471,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -42129,7 +42136,7 @@
       "name": "sumN",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 514,
+      "line": 527,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -42141,7 +42148,7 @@
       "name": "sumM",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 515,
+      "line": 528,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -42153,7 +42160,7 @@
       "name": "waitForSignal",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 519,
+      "line": 532,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -42165,7 +42172,7 @@
       "name": "unreadOf",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 662,
+      "line": 675,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -42177,7 +42184,7 @@
       "name": "threadUnread",
       "kind": "function",
       "file": "scripts/e2e/suites/communications.mjs",
-      "line": 663,
+      "line": 676,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -47565,7 +47572,7 @@
       "name": "useMessagePosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 303,
+      "line": 304,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47577,7 +47584,7 @@
       "name": "PostMessageArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 319,
+      "line": 320,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47587,7 +47594,7 @@
       "name": "usePostMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 327,
+      "line": 328,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47599,7 +47606,7 @@
       "name": "AttachmentUploadUrlResult",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 344,
+      "line": 345,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47609,7 +47616,7 @@
       "name": "useMessageAttachmentUploadUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 353,
+      "line": 354,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47621,7 +47628,7 @@
       "name": "useCreateMessageAttachment",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 366,
+      "line": 367,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47633,7 +47640,7 @@
       "name": "CreateThreadArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 378,
+      "line": 379,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47643,7 +47650,7 @@
       "name": "useCreateMessageThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 389,
+      "line": 390,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47655,7 +47662,7 @@
       "name": "ThreadFilters",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 414,
+      "line": 415,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47665,7 +47672,7 @@
       "name": "useMessageThreadsFull",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 422,
+      "line": 423,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47677,7 +47684,7 @@
       "name": "useThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 438,
+      "line": 439,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47689,7 +47696,7 @@
       "name": "ThreadAccessError",
       "kind": "class",
       "file": "src/api/communications.ts",
-      "line": 455,
+      "line": 456,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47699,7 +47706,7 @@
       "name": "useThreadPosts",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 465,
+      "line": 466,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47711,7 +47718,7 @@
       "name": "useMarkThreadRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 484,
+      "line": 485,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47723,7 +47730,7 @@
       "name": "OnlineUser",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 500,
+      "line": 501,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47733,7 +47740,7 @@
       "name": "PinnedThreadRow",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 501,
+      "line": 502,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47743,7 +47750,7 @@
       "name": "usePinnedSummary",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 504,
+      "line": 505,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47755,7 +47762,7 @@
       "name": "usePins",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 516,
+      "line": 517,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47767,7 +47774,7 @@
       "name": "usePinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 527,
+      "line": 528,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47779,7 +47786,7 @@
       "name": "useUnpinMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 540,
+      "line": 541,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47791,7 +47798,7 @@
       "name": "useDeleteMessage",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 554,
+      "line": 555,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47803,7 +47810,7 @@
       "name": "useOnlineUsers",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 569,
+      "line": 570,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47815,7 +47822,7 @@
       "name": "useDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 582,
+      "line": 583,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47827,7 +47834,7 @@
       "name": "useSaveDraft",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 593,
+      "line": 594,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47839,7 +47846,7 @@
       "name": "useAttachmentUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 603,
+      "line": 604,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47851,7 +47858,7 @@
       "name": "useArchiveThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 612,
+      "line": 613,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47863,7 +47870,7 @@
       "name": "useMuteThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 627,
+      "line": 628,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47875,7 +47882,7 @@
       "name": "useAddThreadParticipants",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 640,
+      "line": 641,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47887,7 +47894,7 @@
       "name": "useRemoveThreadParticipant",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 654,
+      "line": 655,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47899,7 +47906,7 @@
       "name": "useResolveRecordThread",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 678,
+      "line": 679,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47911,7 +47918,7 @@
       "name": "useMessageSearch",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 693,
+      "line": 694,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47923,7 +47930,7 @@
       "name": "useMessageRecipients",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 710,
+      "line": 711,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47935,7 +47942,7 @@
       "name": "TicketListArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 728,
+      "line": 729,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47945,7 +47952,7 @@
       "name": "useMyTickets",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 734,
+      "line": 735,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47957,7 +47964,7 @@
       "name": "useTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 749,
+      "line": 750,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47969,7 +47976,7 @@
       "name": "CreateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 765,
+      "line": 766,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47979,7 +47986,7 @@
       "name": "useCreateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 775,
+      "line": 776,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -47991,7 +47998,7 @@
       "name": "CommentTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 789,
+      "line": 790,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48001,7 +48008,7 @@
       "name": "useCommentTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 795,
+      "line": 796,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48013,7 +48020,7 @@
       "name": "UpdateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 809,
+      "line": 810,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48023,7 +48030,7 @@
       "name": "useUpdateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 816,
+      "line": 817,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -97014,7 +97021,7 @@
       "name": "openThread",
       "kind": "function",
       "file": "src/components/sections/Messages/MessageDropdown.tsx",
-      "line": 90,
+      "line": 89,
       "module": "communications",
       "exported": false,
       "container": "MessageDropdown",
@@ -97081,6 +97088,18 @@
       "exported": true,
       "container": "",
       "tags": []
+    },
+    {
+      "name": "thread",
+      "kind": "function",
+      "file": "src/components/sections/Messages/messenger/adapters/mappers.test.ts",
+      "line": 5,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
     },
     {
       "name": "ATTACHMENT_KIND",
@@ -97456,7 +97475,7 @@
       "name": "load",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 47,
+      "line": 46,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97466,7 +97485,7 @@
       "name": "loadThreadDetail",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 81,
+      "line": 72,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97476,7 +97495,7 @@
       "name": "loadThread",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 109,
+      "line": 100,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97486,7 +97505,7 @@
       "name": "loadOlderMessages",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 114,
+      "line": 105,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97496,7 +97515,7 @@
       "name": "loadMoreThreads",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 138,
+      "line": 129,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97506,7 +97525,7 @@
       "name": "saveDraft",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 155,
+      "line": 144,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97516,7 +97535,7 @@
       "name": "getDraft",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 159,
+      "line": 148,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97526,7 +97545,7 @@
       "name": "deleteDraft",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 165,
+      "line": 154,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97536,7 +97555,7 @@
       "name": "searchMessages",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 170,
+      "line": 159,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97546,7 +97565,7 @@
       "name": "loadPreferences",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 177,
+      "line": 166,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97556,7 +97575,7 @@
       "name": "savePreferences",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 188,
+      "line": 177,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97566,7 +97585,7 @@
       "name": "send",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 193,
+      "line": 182,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97576,7 +97595,7 @@
       "name": "createGroup",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 224,
+      "line": 213,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97586,7 +97605,7 @@
       "name": "deleteMessage",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 246,
+      "line": 235,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97596,7 +97615,7 @@
       "name": "togglePin",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 250,
+      "line": 239,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97606,7 +97625,7 @@
       "name": "markRead",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 270,
+      "line": 259,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97616,7 +97635,7 @@
       "name": "setMuted",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 274,
+      "line": 263,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97626,7 +97645,7 @@
       "name": "setArchived",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 278,
+      "line": 267,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97636,7 +97655,7 @@
       "name": "invite",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 282,
+      "line": 271,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97646,7 +97665,7 @@
       "name": "removeParticipant",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 286,
+      "line": 275,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97656,7 +97675,7 @@
       "name": "listActivity",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 292,
+      "line": 281,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97666,7 +97685,7 @@
       "name": "listRecipients",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 298,
+      "line": 287,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97676,7 +97695,7 @@
       "name": "toggleReaction",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 310,
+      "line": 299,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97686,7 +97705,7 @@
       "name": "setFavourite",
       "kind": "method",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 315,
+      "line": 304,
       "module": "communications",
       "exported": false,
       "container": "SiomacMessagingRepository",
@@ -97716,7 +97735,7 @@
       "name": "MessagingContext",
       "kind": "variable",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 76,
+      "line": 78,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -97728,7 +97747,7 @@
       "name": "MessagingProviderProps",
       "kind": "interface",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 78,
+      "line": 80,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -97738,7 +97757,7 @@
       "name": "MessagingProvider",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 86,
+      "line": 88,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -97750,7 +97769,7 @@
       "name": "preserveClientKeys",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 115,
+      "line": 119,
       "module": "communications",
       "exported": false,
       "container": "MessagingProvider",
@@ -97760,7 +97779,7 @@
       "name": "mergeThreadMessages",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 147,
+      "line": 165,
       "module": "communications",
       "exported": false,
       "container": "MessagingProvider",
@@ -97770,7 +97789,7 @@
       "name": "patch",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 345,
+      "line": 363,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -97780,7 +97799,7 @@
       "name": "flip",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 366,
+      "line": 384,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -97790,7 +97809,7 @@
       "name": "toggle",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 387,
+      "line": 405,
       "module": "communications",
       "exported": false,
       "container": "actions",
@@ -97800,7 +97819,7 @@
       "name": "useMessaging",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/app/MessagingProvider.tsx",
-      "line": 571,
+      "line": 589,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -98198,7 +98217,7 @@
       "name": "ActivityEntry",
       "kind": "interface",
       "file": "src/components/sections/Messages/messenger/domain/models.ts",
-      "line": 126,
+      "line": 128,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -98208,7 +98227,7 @@
       "name": "MessageDraft",
       "kind": "interface",
       "file": "src/components/sections/Messages/messenger/domain/models.ts",
-      "line": 135,
+      "line": 137,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -98218,7 +98237,7 @@
       "name": "WorkspaceSnapshot",
       "kind": "interface",
       "file": "src/components/sections/Messages/messenger/domain/models.ts",
-      "line": 143,
+      "line": 145,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -100593,7 +100612,7 @@
       "name": "SystemEvent",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 272,
+      "line": 277,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -100605,7 +100624,7 @@
       "name": "MessageRow",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 276,
+      "line": 281,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -100617,7 +100636,7 @@
       "name": "MessageStatus",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 316,
+      "line": 321,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -100629,7 +100648,7 @@
       "name": "RichMessage",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 322,
+      "line": 327,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -100641,7 +100660,7 @@
       "name": "renderRichNode",
       "kind": "function",
       "file": "src/components/sections/Messages/messenger/ui/components/MessageThread.tsx",
-      "line": 328,
+      "line": 333,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -127412,7 +127431,7 @@
       "name": "ThreadSourceRecord",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 162,
+      "line": 164,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127422,7 +127441,7 @@
       "name": "ThreadActivityEntry",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 175,
+      "line": 177,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127432,7 +127451,7 @@
       "name": "MessagePin",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 185,
+      "line": 187,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127442,7 +127461,7 @@
       "name": "ThreadContextResponse",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 202,
+      "line": 204,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127452,7 +127471,7 @@
       "name": "MessageRealtimeReason",
       "kind": "type",
       "file": "types/messaging.ts",
-      "line": 246,
+      "line": 248,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127462,7 +127481,7 @@
       "name": "MessageThreadDetail",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 253,
+      "line": 255,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127472,7 +127491,7 @@
       "name": "MessageRecipient",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 258,
+      "line": 260,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -127482,7 +127501,7 @@
       "name": "ComplianceThread",
       "kind": "interface",
       "file": "types/messaging.ts",
-      "line": 269,
+      "line": 271,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -141119,7 +141138,7 @@
       "helper": "apiPost",
       "caller": "useArchiveThread",
       "file": "src/api/communications.ts",
-      "line": 616,
+      "line": 617,
       "module": "communications"
     },
     {
@@ -141127,7 +141146,7 @@
       "helper": "apiPost",
       "caller": "setArchived",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 279,
+      "line": 268,
       "module": "communications"
     },
     {
@@ -141135,7 +141154,7 @@
       "helper": "apiPost",
       "caller": "useCreateMessageAttachment",
       "file": "src/api/communications.ts",
-      "line": 369,
+      "line": 370,
       "module": "communications"
     },
     {
@@ -141151,7 +141170,7 @@
       "helper": "apiPost",
       "caller": "useAttachmentUrl",
       "file": "src/api/communications.ts",
-      "line": 606,
+      "line": 607,
       "module": "communications"
     },
     {
@@ -141167,7 +141186,7 @@
       "helper": "apiPost",
       "caller": "useMessageAttachmentUploadUrl",
       "file": "src/api/communications.ts",
-      "line": 356,
+      "line": 357,
       "module": "communications"
     },
     {
@@ -141183,7 +141202,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 397,
+      "line": 398,
       "module": "communications"
     },
     {
@@ -141191,7 +141210,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 229,
+      "line": 218,
       "module": "communications"
     },
     {
@@ -141199,7 +141218,7 @@
       "helper": "apiPost",
       "caller": "useDeleteMessage",
       "file": "src/api/communications.ts",
-      "line": 558,
+      "line": 559,
       "module": "communications"
     },
     {
@@ -141207,7 +141226,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 586,
+      "line": 587,
       "module": "communications"
     },
     {
@@ -141215,7 +141234,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 160,
+      "line": 149,
       "module": "communications"
     },
     {
@@ -141223,7 +141242,7 @@
       "helper": "apiPost",
       "caller": "useSaveDraft",
       "file": "src/api/communications.ts",
-      "line": 597,
+      "line": 598,
       "module": "communications"
     },
     {
@@ -141231,7 +141250,7 @@
       "helper": "apiPost",
       "caller": "setFavourite",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 316,
+      "line": 305,
       "module": "communications"
     },
     {
@@ -141239,7 +141258,7 @@
       "helper": "apiPost",
       "caller": "useMarkThreadRead",
       "file": "src/api/communications.ts",
-      "line": 488,
+      "line": 489,
       "module": "communications"
     },
     {
@@ -141247,7 +141266,7 @@
       "helper": "apiPost",
       "caller": "markRead",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 271,
+      "line": 260,
       "module": "communications"
     },
     {
@@ -141255,7 +141274,7 @@
       "helper": "apiPost",
       "caller": "useMuteThread",
       "file": "src/api/communications.ts",
-      "line": 631,
+      "line": 632,
       "module": "communications"
     },
     {
@@ -141263,7 +141282,7 @@
       "helper": "apiPost",
       "caller": "setMuted",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 275,
+      "line": 264,
       "module": "communications"
     },
     {
@@ -141271,7 +141290,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 573,
+      "line": 574,
       "module": "communications"
     },
     {
@@ -141279,7 +141298,7 @@
       "helper": "apiPost",
       "caller": "load",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 55,
+      "line": 50,
       "module": "communications"
     },
     {
@@ -141287,7 +141306,7 @@
       "helper": "apiPost",
       "caller": "useAddThreadParticipants",
       "file": "src/api/communications.ts",
-      "line": 644,
+      "line": 645,
       "module": "communications"
     },
     {
@@ -141295,7 +141314,7 @@
       "helper": "apiPost",
       "caller": "useRemoveThreadParticipant",
       "file": "src/api/communications.ts",
-      "line": 658,
+      "line": 659,
       "module": "communications"
     },
     {
@@ -141303,7 +141322,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 520,
+      "line": 521,
       "module": "communications"
     },
     {
@@ -141311,7 +141330,7 @@
       "helper": "apiPost",
       "caller": "loadThreadDetail",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 86,
+      "line": 77,
       "module": "communications"
     },
     {
@@ -141319,7 +141338,7 @@
       "helper": "apiPost",
       "caller": "usePinMessage",
       "file": "src/api/communications.ts",
-      "line": 531,
+      "line": 532,
       "module": "communications"
     },
     {
@@ -141327,7 +141346,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 508,
+      "line": 509,
       "module": "communications"
     },
     {
@@ -141335,7 +141354,7 @@
       "helper": "apiPost",
       "caller": "useUnpinMessage",
       "file": "src/api/communications.ts",
-      "line": 544,
+      "line": 545,
       "module": "communications"
     },
     {
@@ -141343,7 +141362,7 @@
       "helper": "apiPost",
       "caller": "usePostMessage",
       "file": "src/api/communications.ts",
-      "line": 331,
+      "line": 332,
       "module": "communications"
     },
     {
@@ -141351,7 +141370,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 199,
+      "line": 188,
       "module": "communications"
     },
     {
@@ -141359,7 +141378,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 307,
+      "line": 308,
       "module": "communications"
     },
     {
@@ -141367,7 +141386,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 469,
+      "line": 470,
       "module": "communications"
     },
     {
@@ -141375,7 +141394,7 @@
       "helper": "apiPost",
       "caller": "loadThreadDetail",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 85,
+      "line": 76,
       "module": "communications"
     },
     {
@@ -141383,7 +141402,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 117,
+      "line": 108,
       "module": "communications"
     },
     {
@@ -141391,7 +141410,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 714,
+      "line": 715,
       "module": "communications"
     },
     {
@@ -141399,7 +141418,7 @@
       "helper": "apiPost",
       "caller": "useResolveRecordThread",
       "file": "src/api/communications.ts",
-      "line": 682,
+      "line": 683,
       "module": "communications"
     },
     {
@@ -141407,7 +141426,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 697,
+      "line": 698,
       "module": "communications"
     },
     {
@@ -141415,7 +141434,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 171,
+      "line": 160,
       "module": "communications"
     },
     {
@@ -141423,7 +141442,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 442,
+      "line": 443,
       "module": "communications"
     },
     {
@@ -141439,7 +141458,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 426,
+      "line": 427,
       "module": "communications"
     },
     {
@@ -141447,31 +141466,15 @@
       "helper": "apiPost",
       "caller": "load",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 51,
+      "line": 49,
       "module": "communications"
     },
     {
       "path": "/api/communications/messages/threads",
       "helper": "apiPost",
-      "caller": "load",
+      "caller": "result",
       "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 54,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/threads",
-      "helper": "apiPost",
-      "caller": "loadMoreThreads",
-      "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 142,
-      "module": "communications"
-    },
-    {
-      "path": "/api/communications/messages/threads",
-      "helper": "apiPost",
-      "caller": "loadMoreThreads",
-      "file": "src/components/sections/Messages/messenger/adapters/siomacRepository.ts",
-      "line": 143,
+      "line": 132,
       "module": "communications"
     },
     {
@@ -141559,7 +141562,7 @@
       "helper": "apiPost",
       "caller": "useCommentTicket",
       "file": "src/api/communications.ts",
-      "line": 799,
+      "line": 800,
       "module": "communications"
     },
     {
@@ -141567,7 +141570,7 @@
       "helper": "apiPost",
       "caller": "useCreateTicket",
       "file": "src/api/communications.ts",
-      "line": 779,
+      "line": 780,
       "module": "communications"
     },
     {
@@ -141583,7 +141586,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 753,
+      "line": 754,
       "module": "communications"
     },
     {
@@ -141591,7 +141594,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 738,
+      "line": 739,
       "module": "communications"
     },
     {
@@ -141599,7 +141602,7 @@
       "helper": "apiPost",
       "caller": "useUpdateTicket",
       "file": "src/api/communications.ts",
-      "line": 820,
+      "line": 821,
       "module": "communications"
     },
     {
@@ -151910,6 +151913,34 @@
       "module": "communications"
     },
     {
+      "name": "message_posts_thread_author_active_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000439_messaging_thread_list_performance.sql",
+      "line": 8,
+      "module": "communications"
+    },
+    {
+      "name": "message_posts_thread_attachments_active_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000439_messaging_thread_list_performance.sql",
+      "line": 12,
+      "module": "communications"
+    },
+    {
+      "name": "message_posts_thread_failed_author_active_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000439_messaging_thread_list_performance.sql",
+      "line": 16,
+      "module": "communications"
+    },
+    {
+      "name": "public.messaging_list_threads_page",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000439_messaging_thread_list_performance.sql",
+      "line": 24,
+      "module": "platform"
+    },
+    {
       "name": "public.finance_payroll_run_views",
       "kind": "table",
       "file": "supabase/migrations/20260919000440_finance_payroll_run_views.sql",
@@ -152669,344 +152700,344 @@
           "line": 194
         },
         {
-          "name": "inbox lists the new thread",
+          "name": "CONTRACT: inbox list returns indexed summaries and preview",
           "line": 199
         },
         {
           "name": "threads/${...} returns array",
-          "line": 204
+          "line": 217
         },
         {
           "name": "thread detail has named participants",
-          "line": 209
-        },
-        {
-          "name": "posts returns the seeded message with author name",
-          "line": 216
-        },
-        {
-          "name": "participant B can read posts",
-          "line": 221
-        },
-        {
-          "name": "ACCESS: non-participant C is denied posts",
           "line": 222
         },
         {
-          "name": "post a reply (admin)",
-          "line": 227
+          "name": "posts returns the seeded message with author name",
+          "line": 229
         },
         {
-          "name": "SIDE-EFFECT: thread.last_post_preview updated",
-          "line": 231
+          "name": "participant B can read posts",
+          "line": 234
         },
         {
-          "name": "post count increased to >=2",
+          "name": "ACCESS: non-participant C is denied posts",
           "line": 235
         },
         {
-          "name": "markRead (B reads the thread)",
-          "line": 239
-        },
-        {
-          "name": "participants/add (admin adds C)",
+          "name": "post a reply (admin)",
           "line": 240
         },
         {
-          "name": "C can read after being added",
-          "line": 241
-        },
-        {
-          "name": "participants/remove (admin removes C)",
-          "line": 242
-        },
-        {
-          "name": "ACCESS: C denied again after removal",
-          "line": 243
-        },
-        {
-          "name": "archive then unarchive",
+          "name": "SIDE-EFFECT: thread.last_post_preview updated",
           "line": 244
         },
         {
-          "name": "recipients search returns array",
+          "name": "post count increased to >=2",
           "line": 248
         },
         {
-          "name": "message search returns array",
+          "name": "markRead (B reads the thread)",
           "line": 252
         },
         {
-          "name": "attachments/upload-url returns a presigned URL",
+          "name": "participants/add (admin adds C)",
+          "line": 253
+        },
+        {
+          "name": "C can read after being added",
+          "line": 254
+        },
+        {
+          "name": "participants/remove (admin removes C)",
+          "line": 255
+        },
+        {
+          "name": "ACCESS: C denied again after removal",
           "line": 256
         },
         {
+          "name": "archive then unarchive",
+          "line": 257
+        },
+        {
+          "name": "recipients search returns array",
+          "line": 261
+        },
+        {
+          "name": "message search returns array",
+          "line": 265
+        },
+        {
+          "name": "attachments/upload-url returns a presigned URL",
+          "line": 269
+        },
+        {
           "name": "compose: recipient picker returns active users and excludes self",
-          "line": 263
+          "line": 276
         },
         {
           "name": "compose: DIRECT thread (1 recipient) → threadType direct",
-          "line": 270
+          "line": 283
         },
         {
           "name": "compose: GROUP thread (3 participants) → threadType group, all added",
-          "line": 277
+          "line": 290
         },
         {
           "name": "compose: thread WITHOUT a subject succeeds (subject optional)",
-          "line": 287
-        },
-        {
-          "name": "compose VALIDATION: empty body is rejected by the backend",
-          "line": 292
-        },
-        {
-          "name": "compose VALIDATION: no recipients is rejected by the backend",
-          "line": 296
-        },
-        {
-          "name": "compose VALIDATION: an invalid recipient id is rejected (not silently dropped)",
           "line": 300
         },
         {
+          "name": "compose VALIDATION: empty body is rejected by the backend",
+          "line": 305
+        },
+        {
+          "name": "compose VALIDATION: no recipients is rejected by the backend",
+          "line": 309
+        },
+        {
+          "name": "compose VALIDATION: an invalid recipient id is rejected (not silently dropped)",
+          "line": 313
+        },
+        {
           "name": "GOC 1: first call CREATES the direct thread (created=true)",
-          "line": 315
+          "line": 328
         },
         {
           "name": "GOC 2: second call returns the SAME threadId (created=false)",
-          "line": 323
+          "line": 336
         },
         {
           "name": "GOC 3: the reuse created a NEW post, not another thread",
-          "line": 332
+          "line": 345
         },
         {
           "name": "GOC 4: concurrent create calls resolve to ONE thread",
-          "line": 341
+          "line": 354
         },
         {
           "name": "GOC 5: attachment-only create reuses the thread and appends",
-          "line": 357
+          "line": 370
         },
         {
           "name": "GOC 6: idempotent retry does NOT duplicate the post",
-          "line": 372
+          "line": 385
         },
         {
           "name": "file upload: presign → PUT to storage → create record → attach → retrieve",
-          "line": 398
+          "line": 411
         },
         {
           "name": "uploaded file is actually downloadable via the signed url (bytes match)",
-          "line": 427
+          "line": 440
         },
         {
           "name": "attachments/get-url: participant gets a signed url per purpose",
-          "line": 437
+          "line": 450
         },
         {
           "name": "ACCESS: removed participant C cannot sign an attachment url (403)",
-          "line": 446
+          "line": 459
         },
         {
           "name": "status: recipient unreadCount rises on new msg, resets on read",
-          "line": 454
+          "line": 467
         },
         {
           "name": "status: archive removes from inbox → archived tab, isArchived flips, unarchive reverses",
-          "line": 466
+          "line": 479
         },
         {
           "name": "concurrency: 8 messages posted at once all land, no loss, no dupes, in order",
-          "line": 480
+          "line": 493
         },
         {
           "name": "concurrency: recipient unread reflects the bulk burst, clears on read",
-          "line": 495
+          "line": 508
         },
         {
           "name": "notification badge: unread +1 on new, −1 on read",
-          "line": 529
+          "line": 542
         },
         {
           "name": "message badge: unread +1 on new message, −1 on read (recipient B)",
-          "line": 543
+          "line": 556
         },
         {
           "name": "realtime: a new message writes a communication_signals row for the recipient",
-          "line": 561
-        },
-        {
-          "name": "realtime: a new notification writes a communication_signals row for the recipient",
           "line": 574
         },
         {
+          "name": "realtime: a new notification writes a communication_signals row for the recipient",
+          "line": 587
+        },
+        {
           "name": "realtime DELIVERY: an AUTHENTICATED subscription receives the signal (mig 351)",
-          "line": 585
+          "line": 598
         },
         {
           "name": "realtime DENIAL: an ANONYMOUS subscription receives nothing (mig 351 RLS)",
-          "line": 623
+          "line": 636
         },
         {
           "name": "latency: summary endpoint responds quickly",
-          "line": 651
+          "line": 664
         },
         {
           "name": "employee → admin: admin badge + thread unread rise, reset on read",
-          "line": 668
+          "line": 681
         },
         {
           "name": "admin → employee: employee badge + thread unread rise, reset on read",
-          "line": 680
+          "line": 693
         },
         {
           "name": "employee → employee: recipient gets unread, sender does not",
-          "line": 691
+          "line": 704
         },
         {
           "name": "group (admin+B+C): a post raises unread for BOTH others, not the author; reads are per-user",
-          "line": 700
+          "line": 713
         },
         {
           "name": "BADGE↔UNREAD-TAB: your OWN message must NOT inflate your badge",
-          "line": 712
+          "line": 725
         },
         {
           "name": "BADGE↔UNREAD-TAB: badge equals the number of inbox threads with unreadCount>0",
-          "line": 726
+          "line": 739
         },
         {
           "name": "group reply re-raises unread for the other members",
-          "line": 740
+          "line": 753
         },
         {
           "name": "setup: thread (admin → B) for pins/drafts",
-          "line": 756
+          "line": 769
         },
         {
           "name": "pin a post (personal) returns a pin",
-          "line": 765
-        },
-        {
-          "name": "CONTRACT: pins/list returns the pin with expected shape",
-          "line": 772
-        },
-        {
-          "name": "personal pin is private to its creator (B cannot see it)",
           "line": 778
         },
         {
+          "name": "CONTRACT: pins/list returns the pin with expected shape",
+          "line": 785
+        },
+        {
+          "name": "personal pin is private to its creator (B cannot see it)",
+          "line": 791
+        },
+        {
           "name": "SIDE-EFFECT: pin wrote app_events communications.message_pinned",
-          "line": 782
+          "line": 795
         },
         {
           "name": "CAPABILITIES: posts DTO carries pinnedBy + allowedPinActions per caller (slice 4)",
-          "line": 788
+          "line": 801
         },
         {
           "name": "owner can thread-pin; visible to participant B",
-          "line": 821
-        },
-        {
-          "name": "CONTRACT: pinned-summary includes the pinned thread",
-          "line": 829
-        },
-        {
-          "name": "ACCESS: non-participant C cannot pin",
           "line": 834
         },
         {
+          "name": "CONTRACT: pinned-summary includes the pinned thread",
+          "line": 842
+        },
+        {
+          "name": "ACCESS: non-participant C cannot pin",
+          "line": 847
+        },
+        {
           "name": "VALIDATION: post pin without postId is rejected",
-          "line": 836
+          "line": 849
         },
         {
           "name": "unpin own pin removes it from the list",
-          "line": 838
-        },
-        {
-          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
-          "line": 843
-        },
-        {
-          "name": "draft/save stores a draft",
           "line": 851
         },
         {
+          "name": "ACCESS: C (finance_manager, no unpin_any) cannot unpin admin thread-pin",
+          "line": 856
+        },
+        {
+          "name": "draft/save stores a draft",
+          "line": 864
+        },
+        {
           "name": "draft/get returns the saved body",
-          "line": 853
-        },
-        {
-          "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
-          "line": 857
-        },
-        {
-          "name": "draft is per-user (B has no draft on this thread)",
-          "line": 862
-        },
-        {
-          "name": "empty draft body deletes the draft",
           "line": 866
         },
         {
-          "name": "draft/delete removes an existing draft (the send-success path)",
-          "line": 871
+          "name": "CONTRACT: thread list surfaces hasDraft + draftPreview",
+          "line": 870
         },
         {
-          "name": "mute/unmute toggles the per-user thread mute",
+          "name": "draft is per-user (B has no draft on this thread)",
+          "line": 875
+        },
+        {
+          "name": "empty draft body deletes the draft",
           "line": 879
         },
         {
+          "name": "draft/delete removes an existing draft (the send-success path)",
+          "line": 884
+        },
+        {
+          "name": "mute/unmute toggles the per-user thread mute",
+          "line": 892
+        },
+        {
           "name": "VALIDATION: mute without the muted boolean is rejected",
-          "line": 883
+          "line": 896
         },
         {
           "name": "presence/update accepts a heartbeat",
-          "line": 887
-        },
-        {
-          "name": "online: array, excludes self, includes a freshly-online peer",
-          "line": 889
-        },
-        {
-          "name": "activity: participant gets REAL derived entries (message + pin + join)",
           "line": 900
         },
         {
+          "name": "online: array, excludes self, includes a freshly-online peer",
+          "line": 902
+        },
+        {
+          "name": "activity: participant gets REAL derived entries (message + pin + join)",
+          "line": 913
+        },
+        {
           "name": "activity: NON-PARTICIPANT is denied (403)",
-          "line": 916
+          "line": 929
         },
         {
           "name": "record thread: threads list resolves the LIVE source record (collaboration card)",
-          "line": 922
+          "line": 935
         },
         {
           "name": "record thread with an UNKNOWN module resolves to null (no fabricated card)",
-          "line": 949
-        },
-        {
-          "name": "recordThread: find-or-create resolves a stable thread for a business record",
           "line": 962
         },
         {
+          "name": "recordThread: find-or-create resolves a stable thread for a business record",
+          "line": 975
+        },
+        {
           "name": "create ticket",
-          "line": 980
+          "line": 993
         },
         {
           "name": "ticket appears in list",
-          "line": 987
+          "line": 1000
         },
         {
           "name": "get ticket detail",
-          "line": 991
+          "line": 1004
         },
         {
           "name": "comment on ticket",
-          "line": 995
+          "line": 1008
         },
         {
           "name": "update ticket status",
-          "line": 996
+          "line": 1009
         }
       ],
       "apiPaths": [

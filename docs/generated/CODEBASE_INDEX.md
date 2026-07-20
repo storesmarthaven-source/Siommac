@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `304e0c695a7568d0ad8a9c3b3403ace7eaa99f46`  
-Source fingerprint: `7839073c3ac33c77588a0fa1`  
+Source HEAD: `bb87a62c9990aed5d858127ee9df7dc0560fd803`  
+Source fingerprint: `47bad380b179a2033efab7fc`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1151 | 11506 | 32 | 885 | 886 | 17 | 379 | 1219 | 69 | 2272 |
+| 1152 | 11507 | 32 | 885 | 886 | 17 | 377 | 1223 | 69 | 2272 |
 
 ## Modules
 
@@ -29,12 +29,12 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | payroll | 143 | 1347 | 10 | 107 | 107 | 5 | 192 | 18 | [open](modules/payroll.md) |
 | finance | 122 | 1714 | 10 | 156 | 156 | 4 | 176 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
-| communications | 103 | 937 | 0 | 72 | 75 | 88 | 120 | 4 | [open](modules/communications.md) |
+| communications | 104 | 938 | 0 | 72 | 75 | 86 | 123 | 4 | [open](modules/communications.md) |
 | workflow | 47 | 320 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 45 | 378 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 42 | 246 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 49 | 289 | 0 | 13 | 13 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 286 | 2602 | 0 | 27 | 42 | 50 | 282 | 0 | [open](modules/platform.md) |
+| platform | 286 | 2602 | 0 | 27 | 42 | 50 | 283 | 0 | [open](modules/platform.md) |
 | testing | 25 | 155 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 
 ## Widget and Tile Directory
