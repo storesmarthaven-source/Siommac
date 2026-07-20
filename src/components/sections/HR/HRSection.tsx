@@ -26,6 +26,7 @@ import { AttendanceOverview }  from './AttendanceOverview';
 import { RosterOverview }      from './RosterOverview';
 import { CompensationOverview } from './CompensationOverview';
 import { OvertimeOverview }     from './OvertimeOverview';
+import { WorkCalendarPage }     from '../Finance/payroll/setup/WorkCalendarSetup';
 
 const EMP_ID       = 's-hr-employees';
 const ONB_ID       = 's-hr-onboarding';
@@ -39,9 +40,10 @@ const ATTENDANCE_ID = 's-hr-attendance';
 const ROSTER_ID    = 's-hr-roster';
 const COMP_ID      = 's-hr-compensation';
 const OT_ID        = 's-hr-overtime';
+const WORKCAL_ID   = 's-hr-work-calendar';
 
 function isHrSection(id: string): boolean {
-  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID || id === ATTENDANCE_ID || id === ROSTER_ID || id === COMP_ID || id === OT_ID;
+  return id === EMP_ID || id === ONB_ID || id === ORG_ID || id === DOC_ID || id === OFF_ID || id === LEAVE_ID || id === TRANSFERS_ID || id === REQ_ID || id === ATTENDANCE_ID || id === ROSTER_ID || id === COMP_ID || id === OT_ID || id === WORKCAL_ID;
 }
 
 export function HRSection(): VNode {
@@ -83,6 +85,7 @@ export function HRSection(): VNode {
   if (sectionId === ROSTER_ID)     return <RosterOverview />;
   if (sectionId === COMP_ID)       return <CompensationOverview />;
   if (sectionId === OT_ID)         return <OvertimeOverview />;
+  if (sectionId === WORKCAL_ID)    return <WorkCalendarPage />;
   return sectionId === ONB_ID
     ? <OnboardingOverview initialCaseId={pendingCaseId} />
     : <EmployeeMaster />;

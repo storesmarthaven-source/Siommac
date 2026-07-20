@@ -51,6 +51,7 @@ import { EmployeePicker } from './_shared/pickers';
 import { fmtDate, fmtMoney, humanize } from './financeShared';
 import './finance.css';
 import { PayPolicySetup } from './payroll/setup/PayPolicySetup';
+import { WorkCalendarSetup } from './payroll/setup/WorkCalendarSetup';
 
 const empName = (e: HrEmployeeRow): string =>
   (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
@@ -86,13 +87,24 @@ function paginate<T>(rows: T[], page: number): { rows: T[]; pageCount: number; t
 // Main page
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules';
+type SetupTab = 'pay-policies' | 'pay-groups' | 'overtime-rules' | 'work-calendar';
 
 export function PayrollSetupOverview(): VNode {
-  const [tab, setTab] = useState<SetupTab>('pay-policies');
-  const canView = can('finance.payroll.view_all') || can('finance.payroll.policies.view');
+  // Payroll config and the shared Work Calendar are gated independently — the calendar is
+  // hr.work_calendar.view (shared HR capability), payroll config is finance.payroll.*.
+  const canViewPayroll = can('finance.payroll.view_all') || can('finance.payroll.policies.view');
+  const canViewCalendar = can('hr.work_calendar.view');
+  const tabs = useMemo<{ key: SetupTab; label: string }[]>(() => [
+    ...(canViewPayroll ? [
+      { key: 'pay-policies' as const, label: 'Pay Policies' },
+      { key: 'pay-groups' as const, label: 'Pay Groups' },
+      { key: 'overtime-rules' as const, label: 'Overtime Rules' },
+    ] : []),
+    ...(canViewCalendar ? [{ key: 'work-calendar' as const, label: 'Work Calendar' }] : []),
+  ], [canViewPayroll, canViewCalendar]);
+  const [tab, setTab] = useState<SetupTab>(tabs[0]?.key ?? 'pay-policies');
 
-  if (!canView) {
+  if (!canViewPayroll && !canViewCalendar) {
     return (
       <div class="hrfin fin-page">
         <HrfinPageHeader icon="book" title="Payroll Setup" sub="Pay groups and overtime rules." />
@@ -108,18 +120,19 @@ export function PayrollSetupOverview(): VNode {
       <HrfinPageHeader
         icon="book"
         title="Payroll Setup"
-        sub="Governed Pay Policies, Pay Groups, And Overtime Rules For Local Trinidad And Tobago Payroll."
+        sub="Governed Pay Policies, Pay Groups, Overtime Rules, And Work Calendars For Local Trinidad And Tobago Payroll."
       />
 
       <div class="hrfin-tabs" style={{ marginBottom: 14 }}>
-        <button type="button" class={tab === 'pay-policies' ? 'is-active' : ''} onClick={() => setTab('pay-policies')}>Pay Policies</button>
-        <button type="button" class={tab === 'pay-groups' ? 'is-active' : ''} onClick={() => setTab('pay-groups')}>Pay Groups</button>
-        <button type="button" class={tab === 'overtime-rules' ? 'is-active' : ''} onClick={() => setTab('overtime-rules')}>Overtime Rules</button>
+        {tabs.map(t => (
+          <button key={t.key} type="button" class={tab === t.key ? 'is-active' : ''} onClick={() => setTab(t.key)}>{t.label}</button>
+        ))}
       </div>
 
       {tab === 'pay-policies' ? <PayPolicySetup />
         : tab === 'pay-groups' ? <PayGroupsPanel />
-        : <OvertimeRulesPanel />}
+        : tab === 'overtime-rules' ? <OvertimeRulesPanel />
+        : <WorkCalendarSetup />}
     </div>
   );
 }
