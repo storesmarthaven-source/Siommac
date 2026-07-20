@@ -20,6 +20,13 @@ export type CalendarItemOrigin = 'calendar' | 'module' | 'workflow';
 export type CalendarTaskStatus = 'not_started' | 'in_progress' | 'in_review' | 'blocked' | 'done' | 'cancelled';
 export type CalendarTaskPriority = 'low' | 'medium' | 'high';
 export type CalendarVisibility = 'personal' | 'team' | 'org';
+export type CalendarAttendeeResponse = 'invited' | 'accepted' | 'declined' | 'tentative';
+
+export interface CalendarAttendeeDTO {
+  userId:         string;
+  responseStatus: CalendarAttendeeResponse;
+  respondedAt:    string | null;
+}
 
 /** One normalized dated item. Deadlines are projected by source adapters; tasks
  *  and activities are native `calendar_entries`. Recurrence occurrences are
@@ -139,4 +146,21 @@ export interface TaskStatusRequest {
   id:             string;
   scope?:         RecurrenceScope;
   occurrenceDate?: string;
+}
+
+export interface CalendarRemindersResponse {
+  success:       boolean;
+  entryId:       string;
+  offsetMinutes: number[];
+  message?:      string;
+}
+
+export interface SetCalendarRemindersRequest {
+  id:            string;
+  offsetMinutes: number[];
+}
+
+export interface CalendarAttendeeResponseRequest {
+  id:             string;
+  responseStatus: Exclude<CalendarAttendeeResponse, 'invited'>;
 }

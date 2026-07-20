@@ -2,7 +2,10 @@ import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import {
   useCalendarItem,
+  useCalendarReminders,
   useCancelEntry,
+  useRespondToCalendarActivity,
+  useSetCalendarReminders,
   useTaskStatus,
   useUpdateEntry,
   type CalendarItemDTO,
@@ -10,13 +13,18 @@ import {
   type CalendarVisibility,
   type RecurrenceScope,
 } from '@api/calendar';
+import { useSessionStore } from '@store/session';
 import { showSection } from '@components/nav/navCore';
 import { itemDateKey, longDayLabel, parseLocalDate, timeLabel } from '@lib/calendar/date';
 import { sourceLabel, sourceTone } from './calendarViewModel';
 
 export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | null; onClose: () => void }): VNode | null {
+  const userId = useSessionStore(state => state.userId);
   const nativeId = item?.origin === 'calendar' ? item.id : null;
   const detail = useCalendarItem(nativeId);
+  const reminders = useCalendarReminders(nativeId);
+  const setReminders = useSetCalendarReminders();
+  const respond = useRespondToCalendarActivity();
   const current = item?.occurrenceDate && detail.data?.item
     ? { ...detail.data.item, ...item, attendeeCount: detail.data.item.attendeeCount }
     : detail.data?.item ?? item;
@@ -31,6 +39,7 @@ export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | 
   const [visibility, setVisibility] = useState<CalendarVisibility>('personal');
   const [scope, setScope] = useState<RecurrenceScope>('series');
   const [actionError, setActionError] = useState<string | null>(null);
+  const [reminderOffsets, setReminderOffsets] = useState<number[]>([]);
 
   useEffect(() => {
     if (!current) return;
@@ -45,6 +54,10 @@ export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | 
   }, [current?.id]);
 
   useEffect(() => {
+    if (reminders.data) setReminderOffsets(reminders.data);
+  }, [reminders.data]);
+
+  useEffect(() => {
     if (!item) return;
     const close = (event: KeyboardEvent): void => { if (event.key === 'Escape') onClose(); };
     window.addEventListener('keydown', close);
@@ -54,9 +67,10 @@ export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | 
   if (!current) return null;
   const key = itemDateKey(current);
   const date = key ? parseLocalDate(key) : null;
-  const recurrence = current.occurrenceDate || current.recurrenceRule;
+  const recurrence = current.occurrenceDate ?? current.recurrenceRule;
   const actionArgs = { id: current.id, ...(recurrence ? { scope } : {}), ...(scope === 'occurrence' && current.occurrenceDate ? { occurrenceDate: current.occurrenceDate } : {}) };
-  const pending = update.isPending || status.isPending || cancel.isPending;
+  const pending = update.isPending || status.isPending || cancel.isPending || setReminders.isPending || respond.isPending;
+  const myAttendance = detail.data?.attendees.find(attendee => attendee.userId === userId);
 
   const save = async (): Promise<void> => {
     setActionError(null);
@@ -101,6 +115,31 @@ export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | 
     showSection(current.sourceRoute);
     onClose();
   };
+  const toggleReminder = (minutes: number): void => {
+    setReminderOffsets(offsets => offsets.includes(minutes)
+      ? offsets.filter(offset => offset !== minutes)
+      : [...offsets, minutes].sort((a, b) => a - b));
+  };
+  const saveReminders = async (): Promise<void> => {
+    if (!nativeId) return;
+    setActionError(null);
+    try {
+      const response = await setReminders.mutateAsync({ id: nativeId, offsetMinutes: reminderOffsets });
+      if (!response.success) setActionError(response.message ?? 'Reminder settings could not be saved.');
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'Reminder settings could not be saved.');
+    }
+  };
+  const respondToActivity = async (responseStatus: 'accepted' | 'declined' | 'tentative'): Promise<void> => {
+    if (!nativeId) return;
+    setActionError(null);
+    try {
+      const response = await respond.mutateAsync({ id: nativeId, responseStatus });
+      if (!response.success) setActionError(response.message ?? 'Your response could not be recorded.');
+    } catch (cause) {
+      setActionError(cause instanceof Error ? cause.message : 'Your response could not be recorded.');
+    }
+  };
 
   return (
     <div class="cal-modal-backdrop" onClick={event => { if (event.target === event.currentTarget && !pending) onClose(); }}>
@@ -141,6 +180,43 @@ export function CalendarItemDialog({ item, onClose }: { item: CalendarItemDTO | 
           )}
 
           {recurrence ? <div class="cal-recurrence-choice"><span>Apply actions to</span><button type="button" class={scope === 'occurrence' ? 'active' : ''} disabled={!current.occurrenceDate} onClick={() => setScope('occurrence')}>This occurrence</button><button type="button" class={scope === 'series' ? 'active' : ''} onClick={() => setScope('series')}>Entire series</button></div> : null}
+          {current.origin === 'calendar' && current.status !== 'done' && current.status !== 'cancelled' ? (
+            <section class="cal-reminder-settings">
+              <div><strong>My reminders</strong><span>Delivered through your notification preferences.</span></div>
+              <div class="cal-reminder-options">
+                {[
+                  { minutes: 0, label: 'At start' },
+                  { minutes: 15, label: '15 min' },
+                  { minutes: 60, label: '1 hour' },
+                  { minutes: 1440, label: '1 day' },
+                  { minutes: 10080, label: '1 week' },
+                ].map(option => (
+                  <button type="button" key={option.minutes} aria-pressed={reminderOffsets.includes(option.minutes)}
+                    class={reminderOffsets.includes(option.minutes) ? 'active' : ''}
+                    onClick={() => toggleReminder(option.minutes)}>
+                    {option.label}
+                  </button>
+                ))}
+                <button type="button" class="save" disabled={setReminders.isPending || reminders.isLoading}
+                  onClick={() => void saveReminders()}>Save</button>
+              </div>
+            </section>
+          ) : null}
+          {current.type === 'activity' && myAttendance ? (
+            <section class="cal-response-settings">
+              <div><strong>Your response</strong><span>Current: {myAttendance.responseStatus}</span></div>
+              <div>
+                {(['accepted', 'tentative', 'declined'] as const).map(responseStatus => (
+                  <button type="button" key={responseStatus}
+                    class={myAttendance.responseStatus === responseStatus ? 'active' : ''}
+                    disabled={respond.isPending}
+                    onClick={() => void respondToActivity(responseStatus)}>
+                    {responseStatus}
+                  </button>
+                ))}
+              </div>
+            </section>
+          ) : null}
           {current.origin !== 'calendar' ? <div class="cal-readonly-note"><i class="fas fa-shield-halved" /><div><strong>Source-controlled item</strong><span>Calendar displays this record read-only. Open the source module to take action.</span></div></div> : null}
           {confirmCancel ? <div class="cal-confirm-row"><span>Cancel this {current.type}?</span><button type="button" onClick={() => setConfirmCancel(false)}>Keep</button><button type="button" class="danger" onClick={() => void cancelItem()}>Confirm cancel</button></div> : null}
         </div>

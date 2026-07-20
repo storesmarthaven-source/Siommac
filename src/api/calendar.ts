@@ -13,12 +13,15 @@ import { useSessionStore } from '@store/session';
 import type {
   CalendarItemDTO, CalendarListRequest, CalendarListResponse,
   CreateTaskRequest, CreateActivityRequest, UpdateEntryRequest,
-  CalendarTaskStatus, RecurrenceScope,
+  CalendarTaskStatus, RecurrenceScope, CalendarAttendeeDTO,
+  CalendarRemindersResponse, SetCalendarRemindersRequest,
+  CalendarAttendeeResponseRequest,
 } from '../../types/calendar';
 
 export type {
   CalendarItemDTO, CalendarItemType, CalendarItemOrigin, CalendarTaskStatus,
   CalendarTaskPriority, CalendarVisibility, RecurrenceScope,
+  CalendarAttendeeDTO, CalendarAttendeeResponse,
 } from '../../types/calendar';
 
 // ── query keys ──────────────────────────────────────────────────────────────
@@ -27,6 +30,7 @@ export const calendarKeys = {
   all:  ['calendar'] as const,
   list: (req: CalendarListRequest) => [...calendarKeys.all, 'list', req] as const,
   item: (id: string) => [...calendarKeys.all, 'item', id] as const,
+  reminders: (id: string) => [...calendarKeys.all, 'reminders', id] as const,
 };
 
 // ── list ────────────────────────────────────────────────────────────────────
@@ -51,10 +55,23 @@ export function useCalendarItem(id: string | null) {
     queryKey: calendarKeys.item(id ?? ''),
     enabled:  !!id && isAuthenticated,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; item: CalendarItemDTO; attendees: { user_id: string; response_status: string }[]; message?: string }>(
+      const res = await apiPost<{ success: boolean; item: CalendarItemDTO; attendees: CalendarAttendeeDTO[]; message?: string }>(
         'calendar/get', { id }, { signal });
       if (!res.success) throw new Error(res.message ?? 'Failed to load item');
       return { item: res.item, attendees: res.attendees };
+    },
+  });
+}
+
+export function useCalendarReminders(id: string | null) {
+  const isAuthenticated = useSessionStore(s => s.isAuthenticated);
+  return useQuery({
+    queryKey: calendarKeys.reminders(id ?? ''),
+    enabled: !!id && isAuthenticated,
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<CalendarRemindersResponse>('calendar/reminders/get', { id }, { signal });
+      if (!res.success) throw new Error(res.message ?? 'Failed to load reminders');
+      return res.offsetMinutes;
     },
   });
 }
@@ -123,6 +140,32 @@ export function useCancelEntry() {
     onSuccess: (res) => {
       if (!res.success) { toast.error(res.message ?? 'Failed to cancel.'); return; }
       toast.success('Cancelled.'); void invalidate();
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useSetCalendarReminders() {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: (req: SetCalendarRemindersRequest) =>
+      apiPost<CalendarRemindersResponse>('calendar/reminders/set', req as unknown as Record<string, unknown>),
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to save reminders.'); return; }
+      toast.success('Reminder settings saved.'); void invalidate();
+    },
+    onError: () => toast.error('Network error. Try again.'),
+  });
+}
+
+export function useRespondToCalendarActivity() {
+  const invalidate = useInvalidateCalendar();
+  return useMutation({
+    mutationFn: (req: CalendarAttendeeResponseRequest) =>
+      apiPost<{ success: boolean; message?: string }>('calendar/activity/respond', req as unknown as Record<string, unknown>),
+    onSuccess: (res) => {
+      if (!res.success) { toast.error(res.message ?? 'Failed to record your response.'); return; }
+      toast.success('Response recorded.'); void invalidate();
     },
     onError: () => toast.error('Network error. Try again.'),
   });

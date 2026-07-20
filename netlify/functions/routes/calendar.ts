@@ -15,6 +15,10 @@
  *   /calendar/update         — edit an entry (series or a single occurrence)
  *   /calendar/task/status    — complete / reopen a task (series or occurrence)
  *   /calendar/cancel         — cancel a task / activity (series or occurrence)
+ *   /calendar/reminders/get  — load the signed-in user's reminder offsets
+ *   /calendar/reminders/set  — atomically replace the user's reminder offsets
+ *   /calendar/activity/respond — accept, tentatively accept, or decline an invite
+ *   /calendar/reminders/run-sweep — service-only verification/operator sweep
  *
  * Creates go through runModuleMutation (business row + app_events + audit +
  * assignee notifications). Transitions/updates use a direct write + emitAppEvent
@@ -23,15 +27,17 @@
 
 import { Hono }                     from 'hono';
 import { sb }                       from '../lib/db';
-import { requirePermission, requireUser, userCan, loadUserOverrides, log_ } from '../lib/auth';
+import { requirePermission, userCan, loadUserOverrides, log_ } from '../lib/auth';
 import { loadRolePermissions, resolveWithSet } from '../lib/permissions';
-import { emitAppEvent }             from '../lib/appEvents';
+import { deliverEventNotifications, emitAppEvent } from '../lib/appEvents';
 import { runModuleMutation }        from '../lib/moduleServiceAdapter';
 import { z, zv }                    from '../lib/validate';
 import { expandRecurrence, validateRrule, type RecurrenceMaster, type OccurrenceException } from '../lib/calendarRecurrence';
 import { DEADLINE_ADAPTERS, type AdapterContext } from '../lib/calendarAdapters';
+import { runCalendarReminderSweep } from '../lib/calendarReminderSweep';
 import type {
   CalendarItemDTO, CalendarListResponse, CalendarVisibility, CalendarTaskStatus, CalendarTaskPriority,
+  CalendarAttendeeDTO,
 } from '../../../types/calendar';
 import type { HonoVariables }       from '../../../types/api';
 
@@ -41,6 +47,14 @@ const router = new Hono<{ Variables: HonoVariables }>();
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const OCC_SEP = '::';
+
+function sameInstant(left: string | null, right: string | null): boolean {
+  if (left === right) return true;
+  if (!left || !right) return false;
+  const leftTime = new Date(left).getTime();
+  const rightTime = new Date(right).getTime();
+  return !Number.isNaN(leftTime) && !Number.isNaN(rightTime) && leftTime === rightTime;
+}
 
 /** Load a caller's effective-permission checker once (superadmin-aware, no throw). */
 async function effectiveCan(user: { id: string; role?: string | null }): Promise<(key: string) => boolean> {
@@ -60,6 +74,7 @@ interface EntryRow {
   status: string | null; priority: string | null; completed_at: string | null;
   recurrence_rule: string | null; recurrence_series_id: string | null;
   source_module: string | null; source_ref: string | null;
+  updated_at: string;
 }
 
 interface Caps { canManage: boolean; canAssign: boolean; userId: string; }
@@ -327,7 +342,7 @@ router.post('/calendar/get', async c => {
   }
 
   const dto = entryToDto(row, caps);
-  const { data: att, error: attendeeError } = await sb.from('calendar_activity_attendees').select('user_id, response_status').eq('calendar_entry_id', entryId);
+  const { data: att, error: attendeeError } = await sb.from('calendar_activity_attendees').select('user_id, response_status, responded_at').eq('calendar_entry_id', entryId);
   if (attendeeError) return c.json({ success: false, message: 'Failed to load item.' }, 500);
   dto.attendeeCount = (att ?? []).length;
   try {
@@ -336,7 +351,135 @@ router.post('/calendar/get', async c => {
     console.error('[calendar/get] names:', (e as Error).message);
     return c.json({ success: false, message: 'Failed to load item.' }, 500);
   }
-  return c.json({ success: true, item: dto, attendees: att ?? [] });
+  const attendees: CalendarAttendeeDTO[] = (att ?? []).map(row => ({
+    userId: row.user_id as string,
+    responseStatus: row.response_status as CalendarAttendeeDTO['responseStatus'],
+    respondedAt: row.responded_at as string | null,
+  }));
+  return c.json({ success: true, item: dto, attendees });
+});
+
+const ReminderGetSchema = z.object({ id: z.string().min(1) });
+const ReminderSetSchema = z.object({
+  id: z.string().min(1),
+  offsetMinutes: z.array(z.number().int().min(0).max(525600)).max(5),
+});
+
+async function loadReadableEntry(user: { id: string; role?: string | null }, rawId: string): Promise<{ row: EntryRow; entryId: string } | null> {
+  const { entryId } = parseEntryId(rawId);
+  const { data: row, error } = await sb.from('calendar_entries').select('*').eq('id', entryId).maybeSingle<EntryRow>();
+  if (error) throw new Error(`calendar entry read failed: ${error.message}`);
+  if (!row) return null;
+  const can = await effectiveCan(user);
+  const caps: Caps = { canManage: can('calendar.manage'), canAssign: can('calendar.task.assign'), userId: user.id };
+  if (!canReadEntry(row, caps, await isAttendee(entryId, user.id))) return null;
+  return { row, entryId };
+}
+
+router.post('/calendar/reminders/get', async c => {
+  const user = await requirePermission(c, 'calendar.view');
+  const v = zv(c, ReminderGetSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const readable = await loadReadableEntry(user, v.data.id);
+  if (!readable) return c.json({ success: false, message: 'Item not found.' }, 404);
+  const { data, error } = await sb.from('calendar_reminders')
+    .select('offset_minutes')
+    .eq('calendar_entry_id', readable.entryId)
+    .eq('user_id', user.id)
+    .eq('enabled', true)
+    .order('offset_minutes', { ascending: true });
+  if (error) return c.json({ success: false, message: 'Failed to load reminders.' }, 500);
+  return c.json({
+    success: true,
+    entryId: readable.entryId,
+    offsetMinutes: data.map(row => row.offset_minutes as number),
+  });
+});
+
+router.post('/calendar/reminders/set', async c => {
+  const user = await requirePermission(c, 'calendar.view');
+  const v = zv(c, ReminderSetSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const readable = await loadReadableEntry(user, v.data.id);
+  if (!readable) return c.json({ success: false, message: 'Item not found.' }, 404);
+  if (readable.row.status === 'done' || readable.row.status === 'cancelled') {
+    return c.json({ success: false, message: 'Reminders cannot be set on a completed or cancelled task.' }, 400);
+  }
+  const offsets = [...new Set(v.data.offsetMinutes)].sort((a, b) => a - b);
+  const rpcResult = await sb.rpc('calendar_replace_reminders_tx', {
+    p_calendar_entry_id: readable.entryId,
+    p_user_id: user.id,
+    p_actor_user_id: user.id,
+    p_offsets: offsets,
+  }) as { data: unknown; error: { message: string } | null };
+  const { data, error } = rpcResult;
+  if (error) return c.json({ success: false, message: error.message }, 500);
+  return c.json({ success: true, entryId: readable.entryId, offsetMinutes: offsets, result: data });
+});
+
+const AttendeeResponseSchema = z.object({
+  id: z.string().min(1),
+  responseStatus: z.enum(['accepted', 'declined', 'tentative']),
+});
+
+router.post('/calendar/activity/respond', async c => {
+  const user = await requirePermission(c, 'calendar.view');
+  const v = zv(c, AttendeeResponseSchema, c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const { entryId } = parseEntryId(v.data.id);
+  const { data: attendee, error: attendeeError } = await sb.from('calendar_activity_attendees')
+    .select('user_id')
+    .eq('calendar_entry_id', entryId)
+    .eq('user_id', user.id)
+    .maybeSingle();
+  if (attendeeError) return c.json({ success: false, message: 'Failed to load invitation.' }, 500);
+  if (!attendee) return c.json({ success: false, message: 'Invitation not found.' }, 404);
+  const rpcResult = await sb.rpc('calendar_attendee_respond_tx', {
+    p_calendar_entry_id: entryId,
+    p_user_id: user.id,
+    p_response_status: v.data.responseStatus,
+  }) as { data: unknown; error: { message: string } | null };
+  const { data, error } = rpcResult;
+  if (error) return c.json({ success: false, message: error.message }, 500);
+  const result = (data ?? {}) as { changed?: boolean; eventId?: string; ownerUserId?: string; dedupeKey?: string };
+  if (result.changed && result.ownerUserId && result.ownerUserId !== user.id && result.dedupeKey) {
+    await deliverEventNotifications({
+      eventType: 'calendar.activity.response_changed',
+      sourceModule: 'calendar',
+      sourceEntityType: 'activity',
+      sourceEntityId: entryId,
+      actorUserId: user.id,
+      severity: 'info',
+      payload: { responseStatus: v.data.responseStatus, attendeeUserId: user.id },
+      dedupeKey: result.dedupeKey,
+      explicitRecipients: [{ userId: result.ownerUserId, reason: 'owner' }],
+      notification: {
+        type: 'calendar.activity.response_changed',
+        title: 'Calendar invitation response',
+        body: `An attendee responded ${v.data.responseStatus}.`,
+        actionRoute: 's-calendar',
+      },
+    }, result.eventId ?? null);
+  }
+  return c.json({ success: true });
+});
+
+router.post('/calendar/reminders/run-sweep', async c => {
+  const authHeader = (c.req.raw.headers.get('authorization') ?? '').trim();
+  const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY ?? '';
+  if (!serviceKey || authHeader !== `Bearer ${serviceKey}`) {
+    return c.json({ success: false, message: 'Service-role authentication required.' }, 403);
+  }
+  const v = zv(c, z.object({ now: z.string().optional() }), c.get('body').args ?? {});
+  if (!v.ok) return v.response;
+  const now = v.data.now ? new Date(v.data.now) : new Date();
+  if (Number.isNaN(now.getTime())) return c.json({ success: false, message: 'Invalid sweep time.' }, 400);
+  try {
+    const data = await runCalendarReminderSweep(now);
+    return c.json({ success: true, data });
+  } catch (error) {
+    return c.json({ success: false, message: error instanceof Error ? error.message : 'Calendar reminder sweep failed.' }, 500);
+  }
 });
 
 // ── create helpers ──────────────────────────────────────────────────────────
@@ -543,6 +686,14 @@ async function isAttendee(entryId: string, userId: string): Promise<boolean> {
   return !!data;
 }
 
+async function attendeeUserIds(entryId: string): Promise<string[]> {
+  const { data, error } = await sb.from('calendar_activity_attendees')
+    .select('user_id')
+    .eq('calendar_entry_id', entryId);
+  if (error) throw new Error(`calendar attendees fetch failed: ${error.message}`);
+  return [...new Set((data ?? []).map(row => row.user_id as string))];
+}
+
 /**
  * Read policy (mirrors /calendar/list scope):
  *   participant (owner / assignee / invited attendee) → yes
@@ -642,6 +793,13 @@ router.post('/calendar/update', async c => {
   if (!load.ok) return c.json({ success: false, message: load.message }, load.status);
   const { row } = load;
   const p = v.data.patch;
+  const temporalChange =
+    (p.allDay !== undefined && p.allDay !== row.all_day)
+    || (p.startsOn !== undefined && p.startsOn !== row.starts_on)
+    || (p.endsOn !== undefined && p.endsOn !== row.ends_on)
+    || (p.startsAt !== undefined && !sameInstant(p.startsAt, row.starts_at))
+    || (p.endsAt !== undefined && !sameInstant(p.endsAt, row.ends_at));
+  const rescheduleRecipients = row.type === 'activity' && temporalChange ? await attendeeUserIds(entryId) : [];
 
   // Reassignment is gated + validated.
   if (p.assigneeUserId !== undefined && p.assigneeUserId && p.assigneeUserId !== row.owner_user_id) {
@@ -684,11 +842,38 @@ router.post('/calendar/update', async c => {
     if (error) return c.json({ success: false, message: error.message }, 500);
   }
 
-  await emitAppEvent({
+  const updatedEvent = await emitAppEvent({
     eventType: 'calendar.entry.updated', sourceModule: 'calendar',
     sourceEntityType: row.type, sourceEntityId: entryId, actorUserId: user.id,
     severity: 'info', payload: { scope, occurrenceDate },
   });
+  if (!updatedEvent.ok) return c.json({ success: false, message: 'The item changed, but its update event could not be recorded.' }, 500);
+  if (rescheduleRecipients.length) {
+    const scheduleIdentity = [
+      p.startsOn ?? row.starts_on ?? '',
+      p.endsOn ?? row.ends_on ?? '',
+      p.startsAt ?? row.starts_at ?? '',
+      p.endsAt ?? row.ends_at ?? '',
+    ].join('|');
+    const rescheduledEvent = await emitAppEvent({
+      eventType: 'calendar.activity.rescheduled',
+      sourceModule: 'calendar',
+      sourceEntityType: 'activity',
+      sourceEntityId: entryId,
+      actorUserId: user.id,
+      severity: 'info',
+      payload: { title: p.title ?? row.title, scope, occurrenceDate },
+      dedupeKey: `calendar.activity.rescheduled:${entryId}:${occurrenceDate ?? 'series'}:${row.updated_at}:${scheduleIdentity}`,
+      explicitRecipients: rescheduleRecipients.map(userId => ({ userId, reason: 'assignee' as const })),
+      notification: {
+        type: 'calendar.activity.rescheduled',
+        title: `Activity rescheduled: ${p.title ?? row.title}`,
+        body: 'The date or time changed. Open Calendar to review the updated schedule.',
+        actionRoute: 's-calendar',
+      },
+    });
+    if (!rescheduledEvent.ok) return c.json({ success: false, message: 'The activity changed, but attendee notifications could not be recorded.' }, 500);
+  }
   await log_(user, 'calendar_update', 'calendar_entry', entryId, JSON.stringify({ scope, occurrenceDate }));
   return c.json({ success: true });
 });
@@ -757,10 +942,12 @@ router.post('/calendar/cancel', async c => {
   if (!v.ok) return v.response;
   const { entryId, occurrenceDate: idOcc } = parseEntryId(v.data.id);
   const occurrenceDate = v.data.occurrenceDate ?? idOcc;
+  const scope = v.data.scope ?? (occurrenceDate ? 'occurrence' : 'series');
 
   const load = await loadEditable(user, entryId);
   if (!load.ok) return c.json({ success: false, message: load.message }, load.status);
   const { row } = load;
+  const cancellationRecipients = row.type === 'activity' ? await attendeeUserIds(entryId) : [];
   const now = new Date().toISOString();
 
   if (occurrenceDate && row.recurrence_rule) {
@@ -776,11 +963,32 @@ router.post('/calendar/cancel', async c => {
     if (error) return c.json({ success: false, message: error.message }, 500);
   }
 
-  await emitAppEvent({
+  const cancelledEvent = await emitAppEvent({
     eventType: 'calendar.entry.cancelled', sourceModule: 'calendar',
     sourceEntityType: row.type, sourceEntityId: entryId, actorUserId: user.id,
     severity: 'info', payload: { occurrenceDate },
   });
+  if (!cancelledEvent.ok) return c.json({ success: false, message: 'The item was cancelled, but its cancellation event could not be recorded.' }, 500);
+  if (cancellationRecipients.length) {
+    const participantEvent = await emitAppEvent({
+      eventType: 'calendar.activity.cancelled',
+      sourceModule: 'calendar',
+      sourceEntityType: 'activity',
+      sourceEntityId: entryId,
+      actorUserId: user.id,
+      severity: 'warning',
+      payload: { title: row.title, scope, occurrenceDate },
+      dedupeKey: `calendar.activity.cancelled:${entryId}:${occurrenceDate ?? 'series'}`,
+      explicitRecipients: cancellationRecipients.map(userId => ({ userId, reason: 'assignee' as const })),
+      notification: {
+        type: 'calendar.activity.cancelled',
+        title: `Activity cancelled: ${row.title}`,
+        body: occurrenceDate ? `The ${occurrenceDate} occurrence was cancelled.` : 'This activity was cancelled.',
+        actionRoute: 's-calendar',
+      },
+    });
+    if (!participantEvent.ok) return c.json({ success: false, message: 'The activity was cancelled, but attendee notifications could not be recorded.' }, 500);
+  }
   await log_(user, 'calendar_cancel', 'calendar_entry', entryId, JSON.stringify({ occurrenceDate, type: row.type }));
   return c.json({ success: true });
 });

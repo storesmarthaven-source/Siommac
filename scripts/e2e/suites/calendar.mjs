@@ -6,8 +6,10 @@
  * via the service-role client.
  *
  * Covers, per the Testing Standard:
- *   • Every endpoint — list, get, task/create, activity/create, update, task/status, cancel.
- *   • Flows — task lifecycle (not_started→in_progress→done), activity + attendees,
+ *   • Every endpoint — list, get, task/create, activity/create, update, task/status,
+ *     cancel, reminder get/set/sweep, and attendee response.
+ *   • Flows — task lifecycle (not_started→in_progress→done), activity invitations,
+ *     reminder and overdue delivery, preferences, reschedule/cancellation notifications,
  *     recurrence expansion + per-occurrence cancel/modify.
  *   • Access control — assignment gate, per-owner edit gate, personal-visibility scope,
  *     and calendar.view DENY via a user override (the negative path).
@@ -26,23 +28,31 @@ export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
 
   // Actors: two real employees (creator + "other user") and a manager (has assign/manage).
-  const { actors: [emp1, emp2], createdIds: idsEmp } = await h.acquireActors('employee', 2);
-  const { actors: [mgr],        createdIds: idsMgr } = await h.acquireActors('manager', 1);
+  const { actors: [emp1, emp2], createdIds: idsEmp } = await h.acquireActors('employee', 2, {}, {}, { forceSynthetic: true });
+  const { actors: [mgr],        createdIds: idsMgr } = await h.acquireActors('manager', 1, {}, {}, { forceSynthetic: true });
   const createdActorIds = [...idsEmp, ...idsMgr];
   const T = { emp1: mint(emp1), emp2: mint(emp2), mgr: mint(mgr) };
 
   const runStart = new Date().toISOString();
   const entryIds = [];               // every calendar_entries id this run created
   const overrides = [];              // { userId, permission } overrides to remove
+  const preferenceStates = [];       // preferences changed by this run, restored at cleanup
 
   h.onCleanup(async () => {
     if (entryIds.length) {
-      await sb.from('calendar_entries').delete().in('id', entryIds);          // cascades attendees + exceptions
-      await sb.from('app_events').delete().eq('source_module', 'calendar').in('source_entity_id', entryIds).gte('created_at', runStart);
-      await sb.from('activity_logs').delete().eq('entity', 'calendar_entry').in('entity_id', entryIds).gte('created_at', runStart);
+      await h.mustDelete('notifications', q => q.eq('module', 'calendar').in('source_id', entryIds).gte('created_at', runStart));
+      await h.mustDelete('audit_logs', q => q.in('record_id', entryIds).gte('created_at', runStart));
+      await h.mustDelete('calendar_entries', q => q.in('id', entryIds));
+      await h.mustDelete('app_events', q => q.eq('source_module', 'calendar').in('source_entity_id', entryIds).gte('created_at', runStart));
+      await h.mustDelete('activity_logs', q => q.eq('entity', 'calendar_entry').in('entity_id', entryIds).gte('created_at', runStart));
     }
-    for (const o of overrides) await sb.from('user_permissions').delete().eq('user_id', o.userId).eq('permission', o.permission);
-    if (createdActorIds.length) await sb.from('app_users').delete().in('id', createdActorIds);
+    for (const state of preferenceStates) {
+      if (state.before) await sb.from('notification_preferences').upsert(state.before, { onConflict: 'user_id,event_type' });
+      else await h.mustDelete('notification_preferences', q => q.eq('user_id', state.userId).eq('event_type', state.eventType));
+    }
+    for (const o of overrides)
+      await h.mustDelete('user_permissions', q => q.eq('user_id', o.userId).eq('permission', o.permission));
+    if (createdActorIds.length) await h.mustDelete('app_users', q => q.in('id', createdActorIds));
   });
 
   const appEventExists = async (entityId, eventType) => {
@@ -59,6 +69,14 @@ export default async function run(h) {
     const r = await api('calendar/list', token, { from, to, ...extra });
     ok(r);
     return r.body.items ?? [];
+  };
+  const serviceSweep = async now => {
+    const response = await fetch(`${h.base}/api/calendar/reminders/run-sweep`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${h.serviceKey}` },
+      body: JSON.stringify({ args: { now } }),
+    });
+    return { status: response.status, body: await response.json() };
   };
 
   // ── Tasks: create · list contract · update · status lifecycle · cancel ──────
@@ -109,6 +127,8 @@ export default async function run(h) {
     const { data: row } = await sb.from('calendar_entries').select('status').eq('id', taskId).maybeSingle();
     expect(row && row.status === 'cancelled', 'status cancelled');
     expect(await appEventExists(taskId, 'calendar.entry.cancelled'), 'cancel app_event');
+    const reminder = await api('calendar/reminders/set', T.emp1, { id: taskId, offsetMinutes: [60] });
+    fails(reminder); expect(reminder.status === 400, 'cancelled task rejects new reminders');
   });
 
   // ── Activities + attendees ──────────────────────────────────────────────────
@@ -129,15 +149,150 @@ export default async function run(h) {
     expect(await appEventExists(activityId, 'calendar.activity.created'), 'app_event calendar.activity.created');
   });
 
-  await test('get returns the activity + attendeeCount', async () => {
-    const g = await api('calendar/get', T.emp1, { id: activityId });
-    ok(g); expect(g.body.item.type === 'activity' && g.body.item.attendeeCount === 1, 'attendeeCount = 1');
+  await test('get returns attendee response contract to the invited user', async () => {
+    const g = await api('calendar/get', T.emp2, { id: activityId });
+    ok(g);
+    expect(g.body.item.type === 'activity' && g.body.item.attendeeCount === 1, 'attendeeCount = 1');
+    const attendee = (g.body.attendees ?? []).find(a => a.userId === emp2.id);
+    expect(attendee && attendee.responseStatus === 'invited' && attendee.respondedAt === null, 'camelCase invitation contract');
   });
 
-  await test('cancel an activity → row deleted', async () => {
+  await test('only an attendee can respond; acceptance is atomic and notifies the owner', async () => {
+    const ownerAttempt = await api('calendar/activity/respond', T.emp1, { id: activityId, responseStatus: 'accepted' });
+    fails(ownerAttempt); expect(ownerAttempt.status === 404, `non-attendee response expected 404, got ${ownerAttempt.status}`);
+
+    ok(await api('calendar/activity/respond', T.emp2, { id: activityId, responseStatus: 'accepted' }));
+    const { data: attendee } = await sb.from('calendar_activity_attendees')
+      .select('response_status,responded_at').eq('calendar_entry_id', activityId).eq('user_id', emp2.id).maybeSingle();
+    expect(attendee?.response_status === 'accepted' && !!attendee.responded_at, 'response + timestamp persisted');
+    expect(await appEventExists(activityId, 'calendar.activity.response_changed'), 'response app_event');
+    const { data: notification } = await sb.from('notifications').select('id')
+      .eq('user_id', emp1.id).eq('type', 'calendar.activity.response_changed').eq('source_id', activityId).maybeSingle();
+    expect(!!notification, 'owner response notification');
+    ok(await api('calendar/activity/respond', T.emp2, { id: activityId, responseStatus: 'accepted' }));
+    const { data: eventsAfterRetry } = await sb.from('app_events').select('id')
+      .eq('source_module', 'calendar').eq('source_entity_id', activityId)
+      .eq('event_type', 'calendar.activity.response_changed').gte('created_at', runStart);
+    expect((eventsAfterRetry ?? []).length === 1, 'same response retry is a no-op');
+  });
+
+  await test('rescheduling an activity sends one idempotent attendee notification', async () => {
+    const startsAt = `${dayKey(2)}T13:00:00`;
+    const endsAt = `${dayKey(2)}T14:00:00`;
+    ok(await api('calendar/update', T.emp1, { id: activityId, patch: { startsAt, endsAt } }));
+    ok(await api('calendar/update', T.emp1, { id: activityId, patch: { startsAt, endsAt } }));
+    const { data: notifications } = await sb.from('notifications').select('id')
+      .eq('user_id', emp2.id).eq('type', 'calendar.activity.rescheduled').eq('source_id', activityId);
+    expect((notifications ?? []).length === 1, 'one attendee reschedule notification');
+    expect(await appEventExists(activityId, 'calendar.activity.rescheduled'), 'reschedule app_event');
+  });
+
+  await test('cancelling an activity notifies the attendee and deletes the activity', async () => {
     ok(await api('calendar/cancel', T.emp1, { id: activityId }));
+    const { data: notifications } = await sb.from('notifications').select('id')
+      .eq('user_id', emp2.id).eq('type', 'calendar.activity.cancelled').eq('source_id', activityId);
+    expect((notifications ?? []).length === 1, 'one attendee cancellation notification');
+    expect(await appEventExists(activityId, 'calendar.activity.cancelled'), 'participant cancellation app_event');
     const g = await api('calendar/get', T.emp1, { id: activityId });
     fails(g); expect(g.status === 404, 'activity gone (404)');
+  });
+
+  // ── Reminders, preferences, and overdue sweeps ──────────────────────────────
+  h.section('Calendar › Reminders and overdue');
+
+  const sweepNow = new Date(Date.now() + 5_000);
+  let reminderTaskId = null;
+  await test('reminder set/get deduplicates offsets and writes atomic event + audit', async () => {
+    const eventType = 'calendar.reminder.due';
+    const { data: before } = await sb.from('notification_preferences').select('*')
+      .eq('user_id', emp1.id).eq('event_type', eventType).maybeSingle();
+    preferenceStates.push({ userId: emp1.id, eventType, before });
+    const { error: preferenceError } = await sb.from('notification_preferences').upsert({
+      user_id: emp1.id, event_type: eventType, in_app: true, email: false, whatsapp: false,
+    }, { onConflict: 'user_id,event_type' });
+    expect(!preferenceError, `preference setup: ${preferenceError?.message ?? ''}`);
+
+    const startsAt = new Date(sweepNow.getTime() + 30 * 60_000).toISOString();
+    const r = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Reminder task`, allDay: false, startsAt, visibility: 'personal',
+    });
+    ok(r); reminderTaskId = r.body.id; entryIds.push(reminderTaskId);
+    const set = await api('calendar/reminders/set', T.emp1, { id: reminderTaskId, offsetMinutes: [30, 15, 30] });
+    ok(set); expect(JSON.stringify(set.body.offsetMinutes) === JSON.stringify([15, 30]), 'offsets sorted and deduplicated');
+    const get = await api('calendar/reminders/get', T.emp1, { id: reminderTaskId });
+    ok(get); expect(JSON.stringify(get.body.offsetMinutes) === JSON.stringify([15, 30]), 'saved reminder contract');
+    ok(await api('calendar/reminders/set', T.emp1, { id: reminderTaskId, offsetMinutes: [15, 30] }));
+    expect(await appEventExists(reminderTaskId, 'calendar.reminders.updated'), 'reminder update app_event');
+    const { data: events } = await sb.from('app_events').select('id')
+      .eq('source_module', 'calendar').eq('source_entity_id', reminderTaskId)
+      .eq('event_type', 'calendar.reminders.updated').gte('created_at', runStart);
+    expect((events ?? []).length === 1, 'same reminder settings retry is a no-op');
+    const { data: audit } = await sb.from('audit_logs').select('id')
+      .eq('record_id', reminderTaskId).eq('action', 'calendar.reminders.updated').gte('created_at', runStart).limit(1);
+    expect((audit ?? []).length === 1, 'atomic reminder audit');
+    const hidden = await api('calendar/reminders/get', T.emp2, { id: reminderTaskId });
+    fails(hidden); expect(hidden.status === 404, 'non-participant reminder read is hidden');
+  });
+
+  await test('the sweep is service-only, delivers due reminders once, and records the ledger', async () => {
+    const denied = await api('calendar/reminders/run-sweep', T.emp1, { now: sweepNow.toISOString() });
+    fails(denied); expect(denied.status === 403, `normal JWT expected 403, got ${denied.status}`);
+    const first = await serviceSweep(sweepNow.toISOString());
+    ok(first); expect(first.body.data.remindersDelivered >= 1, 'due reminder delivered');
+    const { data: ledger } = await sb.from('calendar_reminder_deliveries').select('id')
+      .eq('calendar_entry_id', reminderTaskId).eq('delivery_kind', 'reminder');
+    expect((ledger ?? []).length === 1, 'one delivery ledger row');
+    const { data: notifications } = await sb.from('notifications').select('id')
+      .eq('user_id', emp1.id).eq('type', 'calendar.reminder.due').eq('source_id', reminderTaskId);
+    expect((notifications ?? []).length === 1, 'one in-app reminder notification');
+    const second = await serviceSweep(sweepNow.toISOString());
+    ok(second);
+    const { data: afterRetry } = await sb.from('calendar_reminder_deliveries').select('id')
+      .eq('calendar_entry_id', reminderTaskId).eq('delivery_kind', 'reminder');
+    expect((afterRetry ?? []).length === 1, 'retry did not duplicate delivery');
+  });
+
+  let preferenceTaskId = null;
+  await test('notification preferences suppress channels without suppressing the delivery claim', async () => {
+    const eventType = 'calendar.reminder.due';
+    const { error: preferenceError } = await sb.from('notification_preferences').upsert({
+      user_id: emp1.id, event_type: eventType, in_app: false, email: false, whatsapp: false,
+    }, { onConflict: 'user_id,event_type' });
+    expect(!preferenceError, `preference setup: ${preferenceError?.message ?? ''}`);
+
+    const startsAt = new Date(sweepNow.getTime() + 45 * 60_000).toISOString();
+    const r = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Preference task`, allDay: false, startsAt, visibility: 'personal',
+    });
+    ok(r); preferenceTaskId = r.body.id; entryIds.push(preferenceTaskId);
+    ok(await api('calendar/reminders/set', T.emp1, { id: preferenceTaskId, offsetMinutes: [45] }));
+    ok(await serviceSweep(sweepNow.toISOString()));
+    const { data: ledger } = await sb.from('calendar_reminder_deliveries').select('id')
+      .eq('calendar_entry_id', preferenceTaskId).eq('delivery_kind', 'reminder');
+    expect((ledger ?? []).length === 1, 'suppressed reminder is claimed once');
+    const { data: notifications } = await sb.from('notifications').select('id')
+      .eq('user_id', emp1.id).eq('type', eventType).eq('source_id', preferenceTaskId);
+    expect((notifications ?? []).length === 0, 'in-app preference suppresses notification');
+  });
+
+  let overdueTaskId = null;
+  await test('overdue sweep delivers once and records the shared notification', async () => {
+    const r = await api('calendar/task/create', T.emp1, {
+      title: `${TAG} Overdue task`, allDay: true, startsOn: dayKey(-2), visibility: 'personal',
+    });
+    ok(r); overdueTaskId = r.body.id; entryIds.push(overdueTaskId);
+    const first = await serviceSweep(sweepNow.toISOString());
+    ok(first);
+    const { data: ledger } = await sb.from('calendar_reminder_deliveries').select('id')
+      .eq('calendar_entry_id', overdueTaskId).eq('delivery_kind', 'overdue');
+    expect((ledger ?? []).length === 1, 'one overdue delivery');
+    const { data: notifications } = await sb.from('notifications').select('id')
+      .eq('user_id', emp1.id).eq('type', 'calendar.task.overdue').eq('source_id', overdueTaskId);
+    expect((notifications ?? []).length === 1, 'one overdue notification');
+    ok(await serviceSweep(sweepNow.toISOString()));
+    const { data: afterRetry } = await sb.from('calendar_reminder_deliveries').select('id')
+      .eq('calendar_entry_id', overdueTaskId).eq('delivery_kind', 'overdue');
+    expect((afterRetry ?? []).length === 1, 'overdue retry is idempotent');
   });
 
   // ── Assignment gating ───────────────────────────────────────────────────────

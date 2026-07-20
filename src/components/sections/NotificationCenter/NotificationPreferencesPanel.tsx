@@ -33,6 +33,16 @@ const CRITICAL: Group = {
 const GROUPS: Group[] = [
   CRITICAL,
   {
+    title: 'Calendar',
+    rows: [
+      { eventType: 'calendar.reminder.due',              label: 'Scheduled reminders', sub: 'A task or activity reaches one of your reminder times' },
+      { eventType: 'calendar.task.overdue',              label: 'Overdue tasks',        sub: 'An incomplete task passes its due time' },
+      { eventType: 'calendar.activity.rescheduled',      label: 'Rescheduled activities', sub: 'An activity you were invited to changes date or time' },
+      { eventType: 'calendar.activity.cancelled',        label: 'Cancelled activities', sub: 'An activity you were invited to is cancelled' },
+      { eventType: 'calendar.activity.response_changed', label: 'Attendee responses',   sub: 'An attendee responds to an activity you own' },
+    ],
+  },
+  {
     title: 'HSE',
     rows: [
       { eventType: 'hse.incident.submitted',     label: 'Incidents reported',  sub: 'A new incident is logged' },
@@ -98,7 +108,7 @@ export function NotificationPreferencesPanel({ open, onClose }: { open: boolean;
 
   const byType = new Map<string, NotificationPreference>();
   if (data) {
-    byType.set('*', data.defaults ?? DEFAULT_PREF);
+    byType.set('*', data.defaults);
     for (const p of data.preferences) byType.set(p.event_type, p);
   }
   const def = byType.get('*') ?? DEFAULT_PREF;

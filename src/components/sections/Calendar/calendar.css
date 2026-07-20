@@ -498,6 +498,15 @@
 .cal-readonly-note i { color: var(--cal-blue); }
 .cal-readonly-note strong, .cal-readonly-note span { display: block; }
 .cal-readonly-note span { margin-top: 2px; color: var(--cal-muted); font-size: 12px; }
+.cal-reminder-settings, .cal-response-settings { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-top: 18px; padding: 14px 0; border-top: 1px solid var(--cal-line); }
+.cal-reminder-settings > div:first-child, .cal-response-settings > div:first-child { display: grid; gap: 3px; }
+.cal-reminder-settings strong, .cal-response-settings strong { color: var(--cal-navy); font-size: 14px; }
+.cal-reminder-settings span, .cal-response-settings span { color: var(--cal-muted); font-size: 12px; }
+.cal-reminder-options, .cal-response-settings > div:last-child { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 6px; }
+.cal-reminder-options button, .cal-response-settings button { min-height: 32px; padding: 0 10px; border: 1px solid var(--cal-line); border-radius: 8px; background: #fff; color: var(--cal-muted); font: inherit; font-size: 12px; font-weight: 600; text-transform: capitalize; cursor: pointer; }
+.cal-reminder-options button.active, .cal-response-settings button.active { border-color: rgba(31, 78, 121, .4); background: var(--cal-blue-soft); color: var(--cal-blue); }
+.cal-reminder-options button.save { border-color: var(--cal-navy); background: var(--cal-navy); color: #fff; }
+.cal-reminder-options button:disabled, .cal-response-settings button:disabled { opacity: .55; cursor: not-allowed; }
 .cal-confirm-row { display: flex; align-items: center; gap: 8px; margin-top: 15px; padding: 11px; border-radius: 8px; background: var(--cal-red-soft); }
 .cal-confirm-row span { margin-right: auto; color: var(--cal-red); font-weight: 650; }
 .cal-confirm-row button { min-height: 33px; padding: 0 10px; border: 1px solid var(--cal-line); border-radius: 7px; background: #fff; }
@@ -549,4 +558,6 @@
   .cal-form-grid, .cal-detail-grid { grid-template-columns: 1fr; }
   .cal-agenda-row { grid-template-columns: 58px 34px minmax(0, 1fr) 10px; }
   .cal-agenda-row .cal-status { display: none; }
+  .cal-reminder-settings, .cal-response-settings { align-items: flex-start; flex-direction: column; }
+  .cal-reminder-options, .cal-response-settings > div:last-child { justify-content: flex-start; }
 }
