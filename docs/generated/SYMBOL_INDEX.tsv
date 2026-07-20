@@ -953,20 +953,20 @@ CreateRunInput	interface	payroll	true		netlify/functions/lib/finance/payrollRuns
 createPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	655	
 lockInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	685	
 EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	724	lockInputs
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	816	lockInputs
-calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1057	
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1371	calculateRun
-maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1461	
-PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1470	
-getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1485	
-ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1547	
-downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1563	
-submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1620	
-decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1692	
-emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1760	
-lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1807	
-reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1854	
-notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1889	
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	817	lockInputs
+calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1126	
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1458	calculateRun
+maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1548	
+PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1557	
+getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1572	
+ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1634	
+downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1650	
+submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1707	
+decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1779	
+emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1847	
+lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1894	
+reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1941	
+notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1976	
 payPeriodsForFrequency	function	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	32	
 ComputeNisInput	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	45	
 ComputeNisResult	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	56	
@@ -3333,6 +3333,8 @@ ping	method	testing	false		scripts/e2e/harness.mjs	165	Harness
 pickUsers	method	testing	false		scripts/e2e/harness.mjs	179	Harness
 runCleanup	method	testing	false		scripts/e2e/harness.mjs	384	Harness
 report	method	testing	false		scripts/e2e/harness.mjs	392	Harness
+fixturePolicyCode	function	testing	false		scripts/e2e/helpers/payPolicyFixture.mjs	36	
+attachActivePolicy	function	testing	true		scripts/e2e/helpers/payPolicyFixture.mjs	56	
 addDays	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	1	
 endOfMonth	function	payroll	false		scripts/e2e/helpers/payrollRun.mjs	8	
 payrollPeriodEnd	function	payroll	true		scripts/e2e/helpers/payrollRun.mjs	16	
@@ -3462,14 +3464,14 @@ run	function	finance	true	test	scripts/e2e/suites/financeOverview.mjs	26
 title	variable	finance	true	test	scripts/e2e/suites/financePayComponents.mjs	37	
 run	function	finance	true	test	scripts/e2e/suites/financePayComponents.mjs	39	
 waitFor	function	finance	false	test	scripts/e2e/suites/financePayComponents.mjs	61	run
-title	variable	payroll	true	test	scripts/e2e/suites/financePayroll.mjs	51	
-BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	58	
-seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	71	
-run	function	payroll	true	test	scripts/e2e/suites/financePayroll.mjs	80	
-waitFor	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	119	run
-seedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1157	run
-seedCalculatedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1172	run
-runPayslipFlow	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1604	run
+title	variable	payroll	true	test	scripts/e2e/suites/financePayroll.mjs	52	
+BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	59	
+seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	72	
+run	function	payroll	true	test	scripts/e2e/suites/financePayroll.mjs	81	
+waitFor	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	120	run
+seedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1169	run
+seedCalculatedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1184	run
+runPayslipFlow	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1616	run
 title	variable	payroll	true	test	scripts/e2e/suites/financePayslipsEss.mjs	33	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/financePayslipsEss.mjs	38	
 run	function	payroll	true	test	scripts/e2e/suites/financePayslipsEss.mjs	49	
@@ -3575,19 +3577,19 @@ title	variable	workflow	true	test	scripts/e2e/suites/orchestration.mjs	6
 run	function	workflow	true	test	scripts/e2e/suites/orchestration.mjs	8	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollBackPay.mjs	18	
 run	function	payroll	true	test	scripts/e2e/suites/payrollBackPay.mjs	26	
-title	variable	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	22	
-BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	24	
-run	function	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	31	
-waitFor	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	53	run
-seedRun	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	121	run
-seedCalcChain	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	133	run
-seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	147	run
-seedFunding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	154	run
-driveToPendingApproval	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	163	run
-getA	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	238	run
-WIN	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	239	run
-getB	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	240	run
-snap	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	410	run
+title	variable	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	23	
+BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	25	
+run	function	payroll	true	test	scripts/e2e/suites/payrollControlCenter.mjs	32	
+waitFor	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	54	run
+seedRun	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	123	run
+seedCalcChain	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	135	run
+seedFinding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	149	run
+seedFunding	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	156	run
+driveToPendingApproval	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	165	run
+getA	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	243	run
+WIN	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	244	run
+getB	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	245	run
+snap	function	payroll	false	test	scripts/e2e/suites/payrollControlCenter.mjs	415	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	15	
 run	function	payroll	true	test	scripts/e2e/suites/payrollExceptions.mjs	17	
 key	function	payroll	false	test	scripts/e2e/suites/payrollExceptions.mjs	39	run
@@ -3606,23 +3608,35 @@ run	function	payroll	true	test	scripts/e2e/suites/payrollGl.mjs	44
 amountFor	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	361	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollLoans.mjs	21	
 seedDate	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	23	
-run	function	payroll	true	test	scripts/e2e/suites/payrollLoans.mjs	38	
-waitFor	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	45	run
-seedDraftLoan	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	170	run
+run	function	payroll	true	test	scripts/e2e/suites/payrollLoans.mjs	39	
+waitFor	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	46	run
+seedDraftLoan	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	172	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollOverrides.mjs	23	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollOverrides.mjs	25	
 run	function	payroll	true	test	scripts/e2e/suites/payrollOverrides.mjs	40	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollOvertimeRules.mjs	21	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollOvertimeRules.mjs	23	
-run	function	payroll	true	test	scripts/e2e/suites/payrollOvertimeRules.mjs	34	
+run	function	payroll	true	test	scripts/e2e/suites/payrollOvertimeRules.mjs	35	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollPayGroups.mjs	22	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollPayGroups.mjs	24	
-run	function	payroll	true	test	scripts/e2e/suites/payrollPayGroups.mjs	39	
+run	function	payroll	true	test	scripts/e2e/suites/payrollPayGroups.mjs	40	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollPayPolicies.mjs	1	
 uuid	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicies.mjs	3	
 exactKeys	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicies.mjs	4	
 run	function	payroll	true	test	scripts/e2e/suites/payrollPayPolicies.mjs	10	
 draft	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicies.mjs	46	run
+run	function	payroll	true	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	63	
+cal	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	116	run
+publishHolidaySet	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	118	run
+publishWorkCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	134	run
+assignCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	150	run
+policyDraft	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	159	run
+activatePolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	175	run
+assignPolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	192	run
+seedPayGroup	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	200	run
+assignMember	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	205	run
+setSources	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	208	run
+createRun	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	215	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	27	
 run	function	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	29	
 seedRun	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	99	run
@@ -3633,16 +3647,16 @@ findByRef	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs
 title	variable	payroll	true	test	scripts/e2e/suites/payrollScale.mjs	15	
 N	variable	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	17	
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	20	
-run	function	payroll	true	test	scripts/e2e/suites/payrollScale.mjs	34	
-waitFor	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	42	run
-chunk	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	54	run
+run	function	payroll	true	test	scripts/e2e/suites/payrollScale.mjs	35	
+waitFor	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	43	run
+chunk	function	payroll	false	test	scripts/e2e/suites/payrollScale.mjs	55	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollStatutoryForms.mjs	7	
 run	function	payroll	true	test	scripts/e2e/suites/payrollStatutoryForms.mjs	13	
 waitFor	function	payroll	false	test	scripts/e2e/suites/payrollStatutoryForms.mjs	21	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	25	
 V2_EFFECTIVE_FROM	variable	payroll	false	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	29	
 V2_LABEL_MARK	variable	payroll	false	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	30	
-run	function	payroll	true	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	38	
+run	function	payroll	true	test	scripts/e2e/suites/payrollStatutorySnapshot.mjs	39	
 title	variable	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	6	
 run	function	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	10	
 mkRun	function	payroll	false	test	scripts/e2e/suites/payrollVarianceReports.mjs	44	run
@@ -3650,8 +3664,8 @@ line	function	payroll	false	test	scripts/e2e/suites/payrollVarianceReports.mjs	5
 title	variable	payroll	true	test	scripts/e2e/suites/payslipRender.mjs	47	
 tokenDesign	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	59	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	127	
-run	function	payroll	true	test	scripts/e2e/suites/payslipRender.mjs	143	
-waitFor	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	158	run
+run	function	payroll	true	test	scripts/e2e/suites/payslipRender.mjs	144	
+waitFor	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	159	run
 title	variable	payroll	true	test	scripts/e2e/suites/payslipTemplateApproval.mjs	31	
 sampleDesign	function	payroll	false	test	scripts/e2e/suites/payslipTemplateApproval.mjs	33	
 run	function	payroll	true	test	scripts/e2e/suites/payslipTemplateApproval.mjs	50	
