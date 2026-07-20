@@ -1,11 +1,15 @@
-# Payroll Pay-Policy-to-Run Integration (F-02) -- E2E Matrix -- Rev 3
+# Payroll Pay-Policy-to-Run Integration (F-02) -- E2E Matrix -- Rev 4
 
-Suite `scripts/e2e/suites/payrollPayPolicyRun.mjs` at `:8888`. Pairs with the Rev 3 delivery contract.
+Suite `scripts/e2e/suites/payrollPayPolicyRun.mjs` at `:8888`. Pairs with the Rev 4 delivery contract.
 Assertions use the exact `PR4xx -> HTTP` contract and exact `app_events.event_type` values; side-effects
-verified via the service-role client against named tables. Rows tagged `h.TAG`; FK-safe cleanup.
+verified via the service-role client against named tables. Rows tagged `h.TAG`; FK-safe cleanup. The
+`working_days` cases provision a published F-CAL work calendar + pay-group assignment **through F-CAL's own
+authenticated routes** (never by writing F-CAL tables directly) so the resolver exercises real published data.
 
-Exact tables/events asserted: `finance_payroll_runs` (pin cols), `finance_payroll_run_policy_evidence`
-(one manifest per `input_snapshot_id`), `finance_payroll_control_findings` (conflict findings),
+Exact tables/events asserted: `finance_payroll_runs` (policy + **calendar** pin cols),
+`finance_payroll_run_policy_evidence` (one manifest per `input_snapshot_id`),
+**`finance_payroll_run_calendar_evidence` (one row per working_days employee per `input_snapshot_id`)**,
+`finance_payroll_control_findings` (conflict findings),
 `app_events.event_type in ('payroll_run.created','payroll_run.inputs_locked','payroll_run.calculated')`.
 
 ## Live E2E
@@ -18,7 +22,7 @@ Exact tables/events asserted: `finance_payroll_runs` (pin cols), `finance_payrol
 | E2E-PPR-004 | assignment date boundary | effective_from=period_start, effective_to=period_end pass; move either in by 1 day fail | create passes / `policy.missing`. |
 | E2E-PPR-005 | VERSION date boundary (finding #5) | assignment covers period but version.effective_to < period_end | create -> `policy.missing`; no run row. |
 | E2E-PPR-006 | missing policy (FL-PPR-001) | group with no active assignment | create -> `PR422 policy.missing`; assert no run row AND no `app_events` for tag. |
-| E2E-PPR-007 | working_days deferral (N8/FL-PPR-005) | pinned component uses `working_days` proration | create or lock -> `PR422 policy.working_days_unsupported`; no snapshot. |
+| E2E-PPR-007 | working_days resolve+pin (R11/SE-PPR-003) | policy binds a `working_days` component; published work calendar assigned to the pay group covering the whole period | create -> run carries `work_calendar_version_id/holiday_calendar_version_id/work_calendar_checksum/holiday_calendar_checksum` + `calendar_resolution{scope,assignmentId,periodDenominator>0,periodExcluded[]}`; exactly one `payroll_run.created` (enriched, no new event); non-working_days policy leaves all five calendar cols NULL. |
 | E2E-PPR-008 | one manifest per snapshot (R3,DEC-PPR-006) | pinned run | lock -> exactly ONE `finance_payroll_run_policy_evidence` row (`unique(input_snapshot_id)`) with component/source/costing arrays + checksum; `app_events 'payroll_run.inputs_locked'` carries the checksum. |
 | E2E-PPR-009 | reopen THEN relock (R3,DEC-PPR-006) | locked run -> reopen -> relock | new `snapshot_no` gets a FRESH single manifest bound to the new `input_snapshot_id`; prior manifest retained; run `current_input_snapshot_id` advances. |
 | E2E-PPR-010 | required approved_time missing (FL-PPR-003) | source_rule `approved_time` required, none, outcome block_input_lock | lock -> `PR422 policy.source_missing:approved_time`; no snapshot/evidence; status `draft`. |
@@ -45,6 +49,16 @@ Exact tables/events asserted: `finance_payroll_runs` (pin cols), `finance_payrol
 | E2E-PPR-031 | no duplicate events (R9) | successful create then lock | exactly one `payroll_run.created` and one `payroll_run.inputs_locked` (enriched, not duplicated). |
 | E2E-PPR-032 | access-control negatives (Sec 9) | real user missing each key | 403 on create/lock/calc without `run.manage`; 403 on get/evidence without `view_all`. |
 | E2E-PPR-033 | read surface (R8) | pinned run + relock | run get returns exact `payPolicy`; policy-evidence defaults to `current_input_snapshot_id`, accepts explicit `inputSnapshotId` for history, resolves names (no raw UUID). |
+| E2E-PPR-034 | calendar unresolved (FL-PPR-005) | working_days policy; pay group has NO covering work-calendar assignment | create -> `PR422 calendar.unresolved`; no run row; zero `app_events` for tag. |
+| E2E-PPR-035 | calendar split-period (FL-PPR-006) | two adjacent pay-group calendar assignments jointly span the period, neither contains it | create -> `PR422 calendar.split_period`; no run row (never falls back to org). |
+| E2E-PPR-036 | version coverage / unpublished (FL-PPR-007..009) | assignment covers period but the work OR holiday version window does not, / references a draft version | create -> `PR422 calendar.version_period_uncovered` (resp. `.version_unpublished` / `.holiday_set_unpublished`); no run row. |
+| E2E-PPR-037 | jurisdiction mismatch (FL-PPR-010) | TT pay group assigned a non-TT holiday-set calendar | create -> `PR422 calendar.jurisdiction_mismatch`; no run row. |
+| E2E-PPR-038 | zero denominator (FL-PPR-011) | working_days policy over a fully non-working range (e.g. all weekend/holiday) | create -> `PR422 calendar.zero_working_days`; no run row/pin. |
+| E2E-PPR-039 | working_days EXACT amount (R12/R13, 5c) | published calendar, known pattern+holidays, employee employed the WHOLE period, named rate | lock -> one `finance_payroll_run_calendar_evidence` row `numerator==denominator`, `excluded` matches the period; calc -> base = `round2(rate * numerator/denominator)` == `round2(rate)`, to the cent. |
+| E2E-PPR-040 | employment-clamp numerator (R12/DEC-PPR-013) | employee starts mid-period (empFrom > period_start) | evidence `numerator < denominator` with `clamp_from=empFrom`; base = `round2(rate * numerator/denominator)` (named number); a NON-intersecting employee -> `numerator=0`, base `0.00`, no failure. |
+| E2E-PPR-041 | calc consumes pinned calendar (R13/DEC-PPR-004) | calculated working_days run; then supersede/republish the work calendar (new version) OR add a holiday | recalc -> lines + `numerator/denominator` UNCHANGED; run `work_calendar_version_id` unchanged; new run for the group picks up the new version. |
+| E2E-PPR-042 | calendar evidence read (R8) | pinned working_days run | policy-evidence DTO `calendar` block returns resolved calendar/holiday NAMES + short holiday checksum + resolution scope + `periodDenominator` + per-employee `employees[]` (numerator/denominator/excludedCount), no raw UUID. |
+| E2E-PPR-043 | one calendar-evidence row per employee per snapshot (R12) | working_days run, N employees, then reopen+relock | exactly N rows `unique(input_snapshot_id, employee_id)`; relock -> fresh N rows on the new snapshot, prior retained; no duplicates. |
 
 ## Unit tests (states F-01 makes impossible live, + pure math)
 
@@ -53,7 +67,9 @@ Exact tables/events asserted: `finance_payroll_runs` (pin cols), `finance_payrol
 | U-PPR-001 | resolver defensive `>1 row` ambiguity branch (F-01 blocks overlap live). |
 | U-PPR-002 | editing an `approved`/`active` version is REJECTED (`draft_command_tx` filters `status='draft'`) -> no checksum drift possible. |
 | U-PPR-003 | whole-period predicate incl. version + assignment effective windows (boundary math). |
-| U-PPR-004 | calendar_days proration + approved_hours math to the cent; `working_days` returns the deferred error. |
+| U-PPR-004 | calendar_days proration + approved_hours math to the cent. |
+| U-PPR-005 | working_days math: `basePay=round2(rate*numerator/denominator)`; employment clamp `[max(start,empFrom),min(end,empTo)]`; empty window -> numerator 0 -> base 0; `numerator<=denominator`; fractional-day denominators honored. |
+| U-PPR-006 | calendar pin all-or-nothing invariant + conditional pin (working_days policy pins; non-working_days leaves the five cols null); `period_denominator>0` guard. |
 
 ## vitest UI component tests
 
@@ -61,7 +77,9 @@ Exact tables/events asserted: `finance_payroll_runs` (pin cols), `finance_payrol
 |---|---|
 | UT-PPR-U1 | pinned-policy chip renders name/version/short checksum; empty state when no pin. |
 | UT-PPR-U2 | evidence panel renders component/source/costing arrays; loading/empty/error states. |
-| UT-PPR-U3 | create-run inline blocker shows the typed `policy.missing`/`policy.working_days_unsupported` reason. |
+| UT-PPR-U3 | create-run inline blocker shows the typed reason for `policy.missing` AND the calendar codes (`calendar.unresolved`/`.split_period`/`.zero_working_days`/…). |
+| UT-PPR-U4 | work-calendar chip renders calendar name/version + short holiday checksum + scope; hidden when the run has no calendar pin (non-working_days). |
+| UT-PPR-U5 | working-days evidence rows render per-employee numerator/denominator/period/excluded-count with resolved names (no raw UUID); loading/empty/error states. |
 
 (Authenticated end-to-end browser QA is passkey-gated and not automatable; recorded as a limitation in
 release evidence -- the live E2E + vitest component tests are the behavioral proof.)
@@ -72,5 +90,7 @@ release evidence -- the live E2E + vitest component tests are the behavioral pro
 - C-PPR-002: run input-lock vs F-01 assignment-end -- assignment-end takes `for update`; the pinned version
   is immutable, so lock is never corrupted.
 
-Coverage: every REQUIRED R1-R10, every FL-PPR, all five conflict outcomes, and DEC-PPR-004/005/006/009/010
-each map to >=1 named test.
+Coverage: every REQUIRED R1-R13, every FL-PPR-001..011, all five conflict outcomes, and
+DEC-PPR-004/005/006/009/010/012/013/014/015 each map to >=1 named test. The `working_days` path
+(E2E-PPR-007, 034-043 + U-PPR-005/006 + UT-PPR-U4/U5) provisions its F-CAL fixtures via F-CAL's routes only
+(N7b: no direct F-CAL table writes, no F-CAL code change).
