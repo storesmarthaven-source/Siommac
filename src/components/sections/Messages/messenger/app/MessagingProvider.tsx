@@ -69,6 +69,8 @@ interface MessagingContextValue {
   typingByThread: ReadonlyMap<ThreadId, UserId[]>;
   /** Threads with MORE (older) history available to load. */
   hasOlderByThread: ReadonlyMap<ThreadId, boolean>;
+  /** Threads whose newest message page is currently loading. */
+  loadingThreadIds: ReadonlySet<ThreadId>;
   /** True while the thread LIST has further pages. */
   threadsHaveMore: boolean;
 }
@@ -87,6 +89,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   const [base, setBase] = useState<WorkspaceSnapshot | null>(null);
   const [messagesByThread, setMessagesByThread] = useState<ReadonlyMap<ThreadId, Message[]>>(new Map());
   const [hasOlderByThread, setHasOlderByThread] = useState<ReadonlyMap<ThreadId, boolean>>(new Map());
+  const [loadingThreadIds, setLoadingThreadIds] = useState<ReadonlySet<ThreadId>>(new Set());
   const [threadsHaveMore, setThreadsHaveMore] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -100,6 +103,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   // the useMemo deps, every state change minted a NEW actions object and
   // re-ran every [actions]-dependent effect (draft/get churn, markRead spam).
   const messagesRef = useRef<ReadonlyMap<ThreadId, Message[]>>(new Map());
+  const threadLoadsInFlight = useRef(new Map<ThreadId, Promise<void>>());
   useEffect(() => { messagesRef.current = messagesByThread; }, [messagesByThread]);
   // Same render-independence for the base snapshot: `base` is NOT in the
   // actions useMemo deps (deliberately — see above), so any action reading the
@@ -122,22 +126,36 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
   };
 
   const loadThreadMessages = useCallback(async (threadId: ThreadId) => {
-    const { messages, authors, hasMore } = await repository.loadThreadDetail(threadId);
-    setHasOlderByThread((current) => new Map(current).set(threadId, hasMore));
-    setMessagesByThread((current) => {
-      const next = new Map(current);
-      next.set(threadId, preserveClientKeys(messages, current.get(threadId)));
-      return next;
-    });
-    // Merge post authors the roster does not know (departed participants) so
-    // names/avatars render instead of raw ids. Known users keep their entry
-    // (participant/online data carries live presence).
-    setBase((current) => {
-      if (!current) return current;
-      const known = new Set(current.users.map((user) => user.id));
-      const missing = authors.filter((author) => !known.has(author.id));
-      return missing.length ? { ...current, users: [...current.users, ...missing] } : current;
-    });
+    const existing = threadLoadsInFlight.current.get(threadId);
+    if (existing) return existing;
+    const task = (async () => {
+      setLoadingThreadIds((current) => new Set(current).add(threadId));
+      try {
+        const { messages, authors, hasMore } = await repository.loadThreadDetail(threadId);
+        setHasOlderByThread((current) => new Map(current).set(threadId, hasMore));
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, preserveClientKeys(messages, current.get(threadId)));
+          return next;
+        });
+        // Merge post authors the roster does not know (departed participants).
+        setBase((current) => {
+          if (!current) return current;
+          const known = new Set(current.users.map((user) => user.id));
+          const missing = authors.filter((author) => !known.has(author.id));
+          return missing.length ? { ...current, users: [...current.users, ...missing] } : current;
+        });
+      } finally {
+        threadLoadsInFlight.current.delete(threadId);
+        setLoadingThreadIds((current) => {
+          const next = new Set(current);
+          next.delete(threadId);
+          return next;
+        });
+      }
+    })();
+    threadLoadsInFlight.current.set(threadId, task);
+    return task;
   }, [repository]);
 
   /** Merge a freshly-fetched NEWEST page into a thread's cached messages:
@@ -564,7 +582,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
     return next;
   }, [currentUserId, typing]);
 
-  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread, hasOlderByThread, threadsHaveMore }), [actions, error, loading, preferences, snapshot, typingByThread, hasOlderByThread, threadsHaveMore]);
+  const value = useMemo(() => ({ snapshot, loading, error, preferences, actions, typingByThread, hasOlderByThread, loadingThreadIds, threadsHaveMore }), [actions, error, loading, preferences, snapshot, typingByThread, hasOlderByThread, loadingThreadIds, threadsHaveMore]);
   return <MessagingContext.Provider value={value}>{children}</MessagingContext.Provider>;
 }
 

@@ -804,6 +804,9 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       priority: string | null; action_required: boolean | null;
       participant_role: string; last_read_at: string | null;
       archived_at: string | null; notifications_muted: boolean | null;
+      unread_count: number; has_attachments: boolean;
+      failed_send_count: number; last_post_by: string | null;
+      authored_by_me: boolean;
     }
     const { data: pageRows, error } = await sb.rpc('messaging_list_threads_page', {
       p_user_id:   userId,
@@ -814,9 +817,9 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       p_cursor_id: parsed?.id ?? null,
     }) as { data: ThreadPageRow[] | null; error: { message: string } | null };
     if (error || !pageRows) {
-      if (error) console.error('[communications] messaging_list_threads_page failed:', error.message);
-      return { rows: [], nextCursor: null };
+      throw new Error(error?.message ?? 'messaging_list_threads_page returned no data');
     }
+    const summaryByThread = new Map(pageRows.map(row => [row.thread_id, row]));
 
     // Adapt to the enrichment pipeline's shape (unchanged below).
     const page: ParticipantWithThread[] = pageRows.map(r => ({
@@ -862,42 +865,8 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
       participantMap.set(p.thread_id, list);
     }
 
-    // readAt per thread — store as ms-epoch to avoid format mismatch in string
-    // comparison (PostgREST may strip trailing zeros from last_read_at, causing
-    // '...200.2+00:00' < '...200.123+00:00' incorrectly as string; tsMs() fixes this).
-    const readAtMsMap = new Map<string, number>();
-    for (const r of page) readAtMsMap.set(r.thread_id, r.last_read_at ? tsMs(r.last_read_at) : 0);
-
-    // One pass over the page's non-deleted posts computes unread (others' posts
-    // after readAt), hasAttachments, failedSendCount (own failed posts) and the
-    // latest post's author — replacing the previous unread-only fetch.
-    const unreadCountMap = new Map<string, number>();
-    const hasAttachMap   = new Map<string, boolean>();
-    const failedCountMap = new Map<string, number>();
-    const lastAuthorMap  = new Map<string, { author: string | null; at: string }>();
-    if (threadIdSet.length > 0) {
-      const { data: posts } = await sb
-        .from('message_posts')
-        .select('thread_id, author_user_id, attachment_count, delivery_status, created_at')
-        .in('thread_id', threadIdSet)
-        .is('deleted_at', null) as {
-          data: { thread_id: string; author_user_id: string | null; attachment_count: number | null; delivery_status: string | null; created_at: string }[] | null;
-        };
-
-      for (const p of posts ?? []) {
-        const readAtMs = readAtMsMap.get(p.thread_id) ?? 0;
-        if (p.author_user_id !== userId && tsMs(p.created_at) > readAtMs) {
-          unreadCountMap.set(p.thread_id, (unreadCountMap.get(p.thread_id) ?? 0) + 1);
-        }
-        if ((p.attachment_count ?? 0) > 0) hasAttachMap.set(p.thread_id, true);
-        if (p.author_user_id === userId && p.delivery_status === 'failed') {
-          failedCountMap.set(p.thread_id, (failedCountMap.get(p.thread_id) ?? 0) + 1);
-        }
-        const cur = lastAuthorMap.get(p.thread_id);
-        if (!cur || p.created_at > cur.at) lastAuthorMap.set(p.thread_id, { author: p.author_user_id, at: p.created_at });
-      }
-    }
-
+    // Per-thread post summaries are returned by the page RPC, avoiding an
+    // unbounded transfer of every historical post in the visible threads.
     // Pinned threads (thread-pin visible to the caller) + the caller's drafts.
     const pinnedSet = new Set<string>();
     const draftMap  = new Map<string, string>();
@@ -934,11 +903,12 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
 
     const resultRows: ThreadRow[] = page.map(r => {
       const mt           = r.message_threads;
-      const unread       = unreadCountMap.get(r.thread_id) ?? 0;
+      const summary      = summaryByThread.get(r.thread_id);
+      const unread       = summary?.unread_count ?? 0;
       const participants = participantMap.get(r.thread_id) ?? [];
       const draftBody    = draftMap.get(r.thread_id) ?? null;
-      const failed       = failedCountMap.get(r.thread_id) ?? 0;
-      const lastAuthorId = lastAuthorMap.get(r.thread_id)?.author ?? null;
+      const failed       = summary?.failed_send_count ?? 0;
+      const lastAuthorId = summary?.last_post_by ?? null;
       return {
         id:               r.thread_id,
         threadType:       mt.thread_type as MessageThread['threadType'],
@@ -965,7 +935,8 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
         hasDraft:           draftBody != null,
         draftPreview:       draftBody,
         failedSendCount:    failed,
-        hasAttachments:     hasAttachMap.get(r.thread_id) ?? false,
+        hasAttachments:     summary?.has_attachments ?? false,
+        authoredByMe:       summary?.authored_by_me ?? false,
         actionRequired:     mt.action_required === true,
         priority:           (mt.priority ?? 'normal') as MessageThread['priority'],
         sourceRecord:       sourceRecordFor(resolvedSources, { sourceModule: mt.source_module, sourceEntityType: mt.source_entity_type, sourceEntityId: mt.source_entity_id }),
@@ -981,7 +952,7 @@ export async function listThreadsForUser(input: ListThreadsInput): Promise<ListT
     return { rows: resultRows, nextCursor };
   } catch (e) {
     console.error('[communications] listThreadsForUser failed:', e);
-    return { rows: [], nextCursor: null };
+    throw e;
   }
 }
 

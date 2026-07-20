@@ -196,9 +196,22 @@ export default async function run(h) {
     const ids = (data || []).map(p => p.user_id);
     expect(ids.includes(admin.id) && ids.includes(b.id), `participants wrong: ${JSON.stringify(ids)}`);
   });
-  await test('inbox lists the new thread', async () => {
+  await test('CONTRACT: inbox list returns indexed summaries and preview', async () => {
     const r = await api('communications/messages/threads', T.admin, { tab: 'inbox', limit: 100 });
-    ok(r); expect((r.body.data || []).some(t => t.id === ctx.threadId), 'thread missing from inbox');
+    ok(r);
+    const row = (r.body.data || []).find(t => t.id === ctx.threadId);
+    expect(row, 'thread missing from inbox');
+    expect(row.lastPostPreview === 'first message', `preview mismatch: ${row.lastPostPreview}`);
+    expect(row.lastPostBy === admin.id, `lastPostBy mismatch: ${row.lastPostBy}`);
+    expect(row.unreadCount === 0, `author unreadCount must be 0, got ${row.unreadCount}`);
+    expect(row.authoredByMe === true, 'author membership summary missing');
+    expect(typeof row.hasAttachments === 'boolean', 'hasAttachments must be boolean');
+    expect(typeof row.failedSendCount === 'number', 'failedSendCount must be numeric');
+    const recipient = await api('communications/messages/threads', T.b, { tab: 'inbox', limit: 100 });
+    ok(recipient);
+    const recipientRow = (recipient.body.data || []).find(t => t.id === ctx.threadId);
+    expect(recipientRow?.authoredByMe === false, 'recipient incorrectly marked as an author');
+    expect(recipientRow?.unreadCount === 1, `recipient unreadCount must be 1, got ${recipientRow?.unreadCount}`);
   });
   for (const tab of ['inbox', 'sent', 'archived', 'all']) {
     await test(`threads/${tab} returns array`, async () => {

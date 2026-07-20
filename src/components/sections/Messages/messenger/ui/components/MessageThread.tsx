@@ -65,7 +65,7 @@ export function MessageThread({ thread, onPreview, onActivity, onOpenCollaborati
   onActivity: () => void;
   onOpenCollaboration: (card: CollaborationCard) => void;
 }) {
-  const { snapshot, actions, typingByThread, hasOlderByThread } = useMessaging();
+  const { snapshot, actions, typingByThread, hasOlderByThread, loadingThreadIds } = useMessaging();
   const [replyTo, setReplyTo] = useState<Message | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
   const [activePinIndex, setActivePinIndex] = useState(0);
@@ -220,6 +220,11 @@ export function MessageThread({ thread, onPreview, onActivity, onOpenCollaborati
         {/* Single content wrapper = the ResizeObserver target that keeps the
             list pinned to the newest message through async growth. */}
         <div ref={listInnerRef} className="sm-message-list__inner">
+          {loadingThreadIds.has(thread.id) && messages.length === 0 ? (
+            <div className="sm-loading sm-thread-loading" role="status">
+              <span aria-hidden="true" /><strong>Loading conversation...</strong>
+            </div>
+          ) : null}
           {hasOlderByThread.get(thread.id) ? (
             <button
               className="sm-load-older" type="button" disabled={loadingOlder}

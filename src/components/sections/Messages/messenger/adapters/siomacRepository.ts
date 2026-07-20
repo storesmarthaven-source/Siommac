@@ -40,27 +40,18 @@ export class SiomacMessagingRepository implements MessagingRepository {
   private readonly pinOfPost    = new Map<string, string>();
   /** Older-history cursor per thread (null = history exhausted). */
   private readonly olderCursor  = new Map<string, string | null>();
-  /** Thread-list page cursors + accumulated Sent membership across pages. */
-  private threadCursors: { all: string | null; sent: string | null } = { all: null, sent: null };
-  private readonly sentThreadIds = new Set<string>();
+  /** Thread-list keyset cursor; each row carries its own Sent membership. */
+  private threadCursor: string | null = null;
 
   async load(currentUserId: string): Promise<WorkspaceSnapshot> {
-    // First PAGE of each tab (keyset cursors retained for loadMoreThreads —
-    // contract: docs/module-contracts/messenger-pagination-search.md).
-    const [threadsRes, sentRes, online] = await Promise.all([
+    // Load the canonical page once; authoredByMe is server-derived per row.
+    const [threadsRes, online] = await Promise.all([
       apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null; message?: string }>('communications/messages/threads', { tab: 'all', limit: 30 }),
-      // Server-derived Sent membership (threads where I authored ≥1 post) —
-      // powers the Sent queue without loading every thread's messages.
-      apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null; message?: string }>('communications/messages/threads', { tab: 'sent', limit: 30 }),
       apiPost<{ success: boolean; data: OnlineUser[] }>('communications/messages/online', {}).then(r => (r.success ? r.data : [])),
     ]);
     if (!threadsRes.success) throw new Error(threadsRes.message ?? 'Failed to load conversations');
     const threadDtos = threadsRes.data ?? [];
-    const sentDtos   = sentRes.success ? (sentRes.data ?? []) : [];
-    this.threadCursors = { all: threadsRes.nextCursor ?? null, sent: sentRes.success ? (sentRes.nextCursor ?? null) : null };
-    this.sentThreadIds.clear();
-    for (const t of sentDtos) this.sentThreadIds.add(t.id);
-    const sentIds = this.sentThreadIds;
+    this.threadCursor = threadsRes.nextCursor ?? null;
     const users = new Map<string, User>();
     for (const t of threadDtos) {
       for (const p of t.participants) users.set(p.userId, mapParticipantToUser(p));
@@ -70,7 +61,7 @@ export class SiomacMessagingRepository implements MessagingRepository {
     return {
       currentUserId,
       users: Array.from(users.values()),
-      threads: threadDtos.map(t => mapThread(t, currentUserId, sentIds.has(t.id))),
+      threads: threadDtos.map(t => mapThread(t, currentUserId)),
       messages: [],   // lazy per-thread; see loadThread()
       activity: [],
     };
@@ -129,25 +120,23 @@ export class SiomacMessagingRepository implements MessagingRepository {
     return { messages: posts.map(mapPost), authors: Array.from(authors.values()), hasMore: (res.nextCursor ?? null) !== null };
   }
 
-  /** True while further thread-list pages exist (either tab cursor live). */
+  /** True while a further canonical thread-list page exists. */
   get threadListHasMore(): boolean {
-    return this.threadCursors.all !== null || this.threadCursors.sent !== null;
+    return this.threadCursor !== null;
   }
 
-  /** Next thread-list page(s): advances the all/sent cursors in step. */
+  /** Next canonical thread-list page. */
   async loadMoreThreads(currentUserId: string): Promise<{ threads: Thread[]; hasMore: boolean }> {
-    const { all, sent } = this.threadCursors;
-    if (!all && !sent) return { threads: [], hasMore: false };
-    const [allRes, sentRes] = await Promise.all([
-      all  ? apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null }>('communications/messages/threads', { tab: 'all', limit: 30, cursor: all }) : Promise.resolve(null),
-      sent ? apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null }>('communications/messages/threads', { tab: 'sent', limit: 30, cursor: sent }) : Promise.resolve(null),
-    ]);
-    if (allRes?.success)  this.threadCursors.all  = allRes.nextCursor ?? null;
-    if (sentRes?.success) { this.threadCursors.sent = sentRes.nextCursor ?? null; for (const t of sentRes.data ?? []) this.sentThreadIds.add(t.id); }
-    const dtos = allRes?.success ? (allRes.data ?? []) : [];
+    const cursor = this.threadCursor;
+    if (!cursor) return { threads: [], hasMore: false };
+    const result = await apiPost<{ success: boolean; data?: ThreadDTO[]; nextCursor?: string | null; message?: string }>(
+      'communications/messages/threads', { tab: 'all', limit: 30, cursor });
+    if (!result.success) throw new Error(result.message ?? 'Failed to load more conversations');
+    this.threadCursor = result.nextCursor ?? null;
+    const dtos = result.data ?? [];
     return {
-      threads: dtos.map(t => mapThread(t, currentUserId, this.sentThreadIds.has(t.id))),
-      hasMore: this.threadCursors.all !== null || this.threadCursors.sent !== null,
+      threads: dtos.map(t => mapThread(t, currentUserId)),
+      hasMore: this.threadCursor !== null,
     };
   }
 

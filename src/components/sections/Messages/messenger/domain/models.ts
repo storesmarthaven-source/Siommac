@@ -120,6 +120,8 @@ export interface Thread {
   hasDraft?: boolean;
   /** First characters of that draft (server-provided, for the list row). */
   draftPreview?: string | null;
+  /** Server-provided preview used before this thread's message page is loaded. */
+  lastMessagePreview?: string | null;
   lastActivityAt: string;
 }
 

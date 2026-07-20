@@ -166,7 +166,8 @@ export function mapThread(t: ThreadDTO, currentUserId: string, authoredByMe = fa
     unreadCount: t.unreadCount,
     muted: t.isMuted ?? false,
     favourite: t.isFavourite ?? false,
-    authoredByMe,
+    authoredByMe: t.authoredByMe ?? authoredByMe,
+    lastMessagePreview: t.lastPostPreview,
     complianceControlled: t.threadType === 'record' || t.threadType === 'system',
     ...(t.createdBy ? { createdBy: t.createdBy } : {}),
     // Server-resolved source record (collaboration cards): live ref/title/

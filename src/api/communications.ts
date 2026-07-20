@@ -297,6 +297,7 @@ export function useMessageThreads(limit = 50) {
       if (!res.success) throw new Error('Failed to load message threads');
       return res.data;
     },
+    placeholderData: previous => previous,
   });
 }
 

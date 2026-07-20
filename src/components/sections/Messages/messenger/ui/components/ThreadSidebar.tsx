@@ -96,7 +96,7 @@ export function ThreadSidebar({ activeThreadId, queue, onSelect, onCompose }: { 
         const groupParticipants = thread.kind === "group" ? thread.participantIds.map((id) => userById(snapshot, id)) : [];
         return <button type="button" className={`${thread.id === activeThreadId ? "is-active" : ""} ${thread.kind === "group" ? "is-group" : ""} ${thread.unreadCount ? "is-unread" : ""}`} key={thread.id} onClick={() => onSelect(thread)}>
           {thread.kind === "group" ? <GroupAvatarStack users={groupParticipants} /> : <Avatar user={participant ?? currentUser} size="medium" showPresence={Boolean(participant)} />}
-          <span><strong>{thread.name}</strong>{thread.hasDraft && thread.draftPreview ? <em className="sm-draft-preview">Draft: {thread.draftPreview}</em> : <em>{message?.deleted ? "Message deleted" : (message?.body.trim() ? message.body : message?.attachments[0]?.name) ?? "No messages yet"}</em>}</span>
+          <span><strong>{thread.name}</strong>{thread.hasDraft && thread.draftPreview ? <em className="sm-draft-preview">Draft: {thread.draftPreview}</em> : <em>{message?.deleted ? "Message deleted" : (message?.body.trim() ? message.body : message?.attachments[0]?.name) ?? thread.lastMessagePreview ?? "No messages yet"}</em>}</span>
           <small>{formatRelativeTime(thread.lastActivityAt)}{thread.favourite ? <Star className="sm-thread-favourite-star" /> : null}{thread.muted ? <BellOff /> : null}{thread.complianceControlled ? <ShieldCheck /> : null}</small>
           {thread.unreadCount ? <b>{thread.unreadCount}</b> : null}
         </button>;

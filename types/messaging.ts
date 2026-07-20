@@ -145,6 +145,8 @@ export interface MessageThread {
   draftPreview?:       string | null;
   failedSendCount?:    number;
   hasAttachments?:     boolean;
+  /** True when the requesting user authored at least one active post. */
+  authoredByMe?:       boolean;
   actionRequired?:     boolean;
   priority?:           MessagePriority;
   /** Resolved source record for record threads (collaboration cards): the

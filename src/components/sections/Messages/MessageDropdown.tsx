@@ -14,7 +14,7 @@ import { type VNode } from 'preact';
 import { useState, useEffect, useRef } from 'preact/hooks';
 import {
   useMessageThreadsFull, useCommsSummary, useMarkThreadRead,
-  type MessageThreadListItem, type ThreadFilters,
+  type MessageThreadListItem,
 } from '@api/communications';
 import { showSection, setHdrBadge } from '@components/nav/navCore';
 import { MessageDropdownItem } from './MessageDropdownItem';
@@ -73,11 +73,10 @@ export function MessageDropdown(): VNode {
     document.querySelectorAll('[data-pill-badge="msg"]').forEach(el => setHdrBadge(el, unread));
   }, [unread]);
 
-  const filters: ThreadFilters = {
-    tab:   tab === 'unread' ? 'inbox' : 'all',
-    limit: 30,
-  };
-  const { data, isLoading, refetch } = useMessageThreadsFull(filters);
+  // One canonical list powers both tabs. The previous unread tab changed the
+  // query key to `inbox`, causing a second cold request even though the all
+  // response already carries each thread's authoritative unreadCount.
+  const { data, isLoading, isFetching, isError, refetch } = useMessageThreadsFull({ tab: 'all', limit: 30 });
 
   // Client-side filter for unread tab
   const rows = (data ?? []).filter(t => {
@@ -149,10 +148,18 @@ export function MessageDropdown(): VNode {
 
       {/* Body */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: '120px' }}>
-        {isLoading && (
+        {(isLoading || (isFetching && data == null)) && (
           <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>
         )}
-        {!isLoading && rows.length === 0 && (
+        {isError && data == null && (
+          <div style={{ padding: '28px 20px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>
+            <div>Messages could not be loaded.</div>
+            <button class="hse-btn" style={{ marginTop: '12px' }} onClick={() => void refetch()}>
+              <i class="fas fa-rotate" /> Try again
+            </button>
+          </div>
+        )}
+        {!isLoading && !isError && data != null && rows.length === 0 && (
           <div style={{ padding: '32px 20px', textAlign: 'center' }}>
             <i class="fas fa-comments" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
             <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '10px' }}>
