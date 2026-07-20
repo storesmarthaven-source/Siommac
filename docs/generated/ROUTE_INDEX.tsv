@@ -619,6 +619,10 @@ path	module	permission	guards	schema	file	line
 /api/hr/sites/list	hr	hr.view	requirePermission		netlify/functions/routes/hr.ts	963
 /api/hr/transfers/list	hr	hr.transfers.view	requirePermission	z.object({     status:     z.string().optional(),     employeeId: z.string().optional(),     limit:      z.number().int().positive().max(500).optional(),   })	netlify/functions/routes/hr.ts	1389
 /api/hr/transfers/request	hr	hr.transfers.request	requirePermission	z.object({     employeeId:    z.string().min(1),     departmentId:  z.string().nullable().optional(),     siteId:        z.string().nullable().optional(),     positionId:    z.string().uuid().nullable().optional(),     supervisorId:  z.string().nullable().optional(),     role:          z.string().nullable().optional(),     monthlySalary: z.number().positive().nullable().optional(),     hourlyRate:    z.number().positive().nullable().optional(),     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),     reason:        z.string().max(500).optional(),   })	netlify/functions/routes/hr.ts	1345
+/api/hr/work-calendars/assignment/command	hr	hr.work_calendar.manage	requirePermission	assignSchema	netlify/functions/routes/hrWorkCalendars.ts	83
+/api/hr/work-calendars/holiday-set/command	hr	hr.work_calendar.manage	requirePermission	holidaySchema	netlify/functions/routes/hrWorkCalendars.ts	46
+/api/hr/work-calendars/read	hr	hr.work_calendar.view	requirePermission	readSchema	netlify/functions/routes/hrWorkCalendars.ts	102
+/api/hr/work-calendars/version/command	hr	hr.work_calendar.manage	requirePermission	versionSchema	netlify/functions/routes/hrWorkCalendars.ts	66
 /api/hse/capa/create	hse	hse.capa.manage	requirePermission	CreateCapaSchema	netlify/functions/routes/hseCapa.ts	97
 /api/hse/capa/get	hse	hse.capa.view	requirePermission		netlify/functions/routes/hseCapa.ts	66
 /api/hse/capa/list	hse	hse.capa.view	requirePermission	ListCapaSchema	netlify/functions/routes/hseCapa.ts	35
