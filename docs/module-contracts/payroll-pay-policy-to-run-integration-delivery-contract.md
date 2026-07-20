@@ -1,6 +1,9 @@
-# Payroll Pay-Policy-to-Run Integration (F-02) Delivery Contract -- Rev 4
+# Payroll Pay-Policy-to-Run Integration (F-02) Delivery Contract -- Rev 4.1
 
-**Status:** DRAFT (Rev 4) -- contract-first, awaiting sign-off. No implementation started.
+**Status:** CONDITIONALLY SIGNED OFF (Rev 4.1, 2026-07-20) -- the five required corrections are folded in
+(§8 create `for share`+revalidate / TOCTOU; §8 F-02-owned `calendar.zero_working_days`; route-unreachable
+branches → unit; E2E-PPR-041 real correction lifecycle; `app_users.start_date/end_date` clamp; browser-QA
+REQUIRED gate + 2000-emp benchmark). Cleared to implement without another design-review round. No code yet.
 **Rev history:** Rev 1 mis-scoped to legacy JS. Rev 2 rebuilt on the RPC/snapshot model. Rev 3
 made every source, formula, checksum, owner, lock order, and invariant executable (named columns/RPCs)
 but DEFERRED `working_days` proration (no holiday-calendar source existed). **Rev 4 removes that deferral
@@ -59,7 +62,9 @@ FORBIDDEN/DEFERRED:
   gate / merging (or un-feature-gating the Pay-Policy UI) before F-01+F-02 both green AND the combined live
   regression passes. N7 any F-01 change or JS compensating rollback.
 - **N7b any F-CAL / Shared-Calendar change** -- F-02 calls `work_calendar_resolve` /
-  `work_calendar_working_days` read-only; it adds/alters/migrates NO F-CAL object (see the F-CAL boundary).
+  `work_calendar_working_days` read-only and may take a **read-only `for share` lock** on the resolved
+  `work_calendar_assignments` row during create (to close the resolve→insert race, §8); it writes/adds/alters/
+  migrates NO F-CAL object (see the F-CAL boundary). A `for share` acquires no write and mutates nothing.
 - N8 **site/location-scoped** work-calendar resolution (F-CAL deferred `location` scope): F-02 resolves the
   pay-group calendar with F-CAL's organization-default fallback only; "company/site" == the organization
   default. N9 per-employee calendar OVERRIDE (numerator clamps to the employee's employment window against the
@@ -107,8 +112,11 @@ period_start,period_end,current_input_snapshot_id}` (OK); operator applies the F
 | UI-PPR-004 | Run detail | pinned work-calendar chip (calendar name/version + short holiday checksum + resolution scope), shown only when a `working_days` policy is pinned | API-PPR-004 | vitest UT-PPR-U4 |
 | UI-PPR-005 | Run detail | working-days evidence rows in the evidence panel (per-employee numerator/denominator + period + excluded count), resolved names, no raw UUID | API-PPR-005 | vitest UT-PPR-U5 |
 
-Browser QA of these is auth-gated (passkey login, not automatable) -- covered by vitest component tests;
-authenticated browser QA is a documented limitation recorded in release evidence, not a silent skip.
+Vitest component tests cover these surfaces automatically. **Authenticated operator browser QA of UI-PPR-001..005
+is a REQUIRED release gate** (passkey login is operator-only, not agent-automatable): the operator walks the
+pinned-policy chip, the work-calendar chip, the evidence panel (policy + working-days rows), and the create-run
+typed blockers at supported desktop widths + mobile, and records operator/date/env/browser/result in release
+evidence. It is NOT merely a recorded limitation — release is blocked until this gate is signed off (§15).
 
 ## 5. API inventory (all POST-only)
 
@@ -137,7 +145,7 @@ authenticated browser QA is a documented limitation recorded in release evidence
 | `eligibility_source='approved_time'` | has approved `hr_timesheets` | -- |
 | **work calendar (`working_days` proration)** | `work_calendar_resolve(run.pay_group_id, period_start, period_end)` -> published/superseded version covering the whole period; F-CAL org-default fallback | resolved + pinned at create; consumed (never re-resolved) thereafter |
 | **period denominator** | `work_calendar_working_days(pinned_version, period_start, period_end).count` | computed at create (must be > 0) + pinned; re-used per employee |
-| **employment window (numerator clamp)** | `app_users` employment dates: `empFrom=hire/employment start`, `empTo=coalesce(termination/employment end,'infinity')` | numerator window `[max(period_start,empFrom), min(period_end,empTo)]`; empty window -> numerator 0 |
+| **employment window (numerator clamp)** | `app_users.start_date` (date, nullable) + `app_users.end_date` (date, nullable) | INCLUSIVE clamp: `clampFrom=greatest(period_start, coalesce(start_date, period_start))`, `clampTo=least(period_end, coalesce(end_date, period_end))`. Null `start_date` ⇒ employed from period_start; null `end_date` ⇒ employed through period_end. Both boundary days COUNT (a day == start_date or == end_date is worked). Empty window (`clampFrom > clampTo`, i.e. `start_date > period_end` or `end_date < period_start`) ⇒ numerator 0 (no `work_calendar_working_days` call) |
 
 ### 5c. Calculation formulas (executable; `round2` = 2-dp half-up at each step)
 
@@ -150,10 +158,12 @@ itself is unchanged and owns statutory math (DEC-PPR-009):
 - **working_days proration** (`salary_period`, `rule_parameters.proration='working_days'`) -- INTEGRATED via
   F-CAL (DEC-PPR-010, Rev 4): `denominator = work_calendar_working_days(pinnedWorkCalendarVersionId,
   period_start, period_end).count` (a NUMERIC decimal string; fractional days honored); `numerator =`
-  `work_calendar_working_days(pinnedWorkCalendarVersionId, max(period_start,empFrom), min(period_end,empTo)).count`
-  when that window is non-empty, else `0`; `basePay = round2(rate * numerator / denominator)`. `denominator=0`
-  is fail-closed at CREATE (`calendar.zero_working_days`); it can never reach calc. Both `count`s are exact
-  decimals (F-CAL clamps `worked = greatest(0, pattern - holiday)`), so `numerator <= denominator` always.
+  `work_calendar_working_days(pinnedWorkCalendarVersionId, clampFrom, clampTo).count` where `clampFrom/clampTo`
+  are the INCLUSIVE employment clamp from §5b (`app_users.start_date/end_date`), else `0` when the clamp window
+  is empty; `basePay = round2(rate * numerator / denominator)`. **`denominator=0` (F-CAL returns `count='0'`,
+  does not raise) is detected by `create_run_tx` and fail-closed as `calendar.zero_working_days` at CREATE
+  (FL-PPR-011)** — it can never reach calc. Both `count`s are exact decimals (F-CAL clamps `worked =
+  greatest(0, pattern - holiday)`), so `numerator <= denominator` always.
 - **approved_hours** (`approved_hours`): `componentAmount = round2(approvedHours * rate)`; `approvedHours`
   from `hr_timesheets` (approved), `rate` from `rate_source`.
 - **taxableAllowances / nonTaxableAllowances**: sum of approved `hr_employee_pay_items` whose
@@ -259,16 +269,27 @@ R4 pass. No lock-time policy-invalidation (N4).
 
 **Lock order (finding #8 -- separate for create vs lock):**
 - Create: `pg_advisory_xact_lock(pay_group)` -> policy assignment `for share` -> policy version (read,
-  immutable) -> **[working_days policy only] `work_calendar_resolve(...)` (F-CAL reads the work-calendar
-  assignment/version; both immutable-published, so no additional lock is required beyond F-CAL's own reads)
-  -> `work_calendar_working_days(pinnedVersion, period)` for the period denominator** -> INSERT run (with both
-  pins). (Cannot lock a not-yet-inserted run row.) Ordering the calendar resolution AFTER the policy read
-  keeps a single deterministic acquisition order and avoids a lock cycle with F-CAL admin publishes.
+  immutable) -> **[working_days policy only] `work_calendar_resolve(...)` (unlocked F-CAL reads) THEN lock the
+  resolved assignment: `select id, status, effective_from, effective_to, work_calendar_version_id from
+  public.work_calendar_assignments where id = <resolutionPath.assignmentId> for share` and REVALIDATE the
+  locked row — `status='active'`, its window still contains the whole period (`daterange(effective_from,
+  coalesce(effective_to+1,'infinity'),'[)') @> [period_start,period_end]`), and `work_calendar_version_id ==`
+  the resolved `workCalendarVersionId` — THEN `work_calendar_working_days(pinnedVersion, period)` for the
+  period denominator** -> INSERT run (with both pins). **This `for share` closes the resolve→insert TOCTOU
+  race:** F-CAL `end_assignment`/`cancel_assignment` take `for update` on that same row, so a concurrent
+  end/cancel either commits BEFORE our `for share` (revalidation then fails → the run is rejected, not
+  half-pinned) or blocks until our create commits. Any revalidation mismatch (row missing / cancelled /
+  ended-out-of-window / version changed) fails closed with `calendar.unresolved` (missing/cancelled/ended) or
+  `calendar.split_period` (no longer whole-period) — no run row. (Cannot lock a not-yet-inserted run row.)
+  Ordering the calendar lock AFTER the policy read keeps a single deterministic acquisition order and avoids a
+  cycle with F-CAL admin publishes. **The `for share` is a READ-ONLY lock on an F-CAL row (no write) — see N7b.**
 - Input lock: run `for update` -> input snapshot insert -> policy-evidence insert -> **per-employee
   calendar-evidence inserts (working_days employees), each computed from the run's PINNED version**.
-- F-01 assignment-end must take a compatible lock on the assignment row (`for update`) -- verify in F-01
-  `admin_command_tx` during implementation; concurrency test C-PPR-002. F-CAL publishes/supersedes are
-  immutable-forward (a pinned version row is never mutated), so no lock coordination with F-CAL is needed.
+- F-01 assignment-end must take a compatible lock on the policy assignment row (`for update`) -- verify in F-01
+  `admin_command_tx` during implementation; concurrency test C-PPR-002. F-CAL `end_assignment`/`cancel_assignment`
+  already take `for update` on the work-calendar assignment row; our create's `for share` coordinates with them
+  (C-PPR-003). F-CAL publishes/supersedes are immutable-forward (a pinned version row is never mutated), so no
+  lock coordination with F-CAL VERSIONS is needed — only the assignment `for share` above.
 
 **Failure matrix (exact `PR4xx -> HTTP`):**
 
@@ -284,10 +305,15 @@ R4 pass. No lock-time policy-invalidation (N4).
 | FL-PPR-008 | resolved holiday version not published | create | `PR422 calendar.holiday_set_unpublished` -> 422 |
 | FL-PPR-009 | resolved version window does not cover the whole period | create | `PR422 calendar.version_period_uncovered` -> 422 |
 | FL-PPR-010 | holiday jurisdiction != pay group `statutory_country` | create | `PR422 calendar.jurisdiction_mismatch` -> 422 |
-| FL-PPR-011 | period denominator = 0 (fully non-working period) | create | `PR422 calendar.zero_working_days` -> 422 |
+| FL-PPR-011 | period denominator = 0 (fully non-working period) — **F-02-raised** | create | `PR422 calendar.zero_working_days` -> 422 |
 
-All FL-PPR-005..011 codes are raised by the F-CAL functions and propagated verbatim by the F-02 RPC (the lib
-maps `PR422 -> 422`); F-02 adds no new calendar code and swallows none.
+FL-PPR-005/006/010 are raised by `work_calendar_resolve` and propagated verbatim by the F-02 RPC (the lib maps
+`PR422 -> 422`). **FL-PPR-011 is OWNED BY F-02, not F-CAL:** `work_calendar_working_days` for a fully
+non-working period returns `count='0'` (it does NOT raise) — so `create_run_tx` must itself test the period
+denominator and `raise exception 'calendar.zero_working_days' using errcode='PR422'` when it is `0`
+(fail closed, no run/pin). FL-PPR-007/008/009 are defensive `resolve` branches that valid F-CAL routes cannot
+produce (F-CAL's `assign` rejects unpublished + window-uncovered versions); they are covered at unit/DB level
+(U-PPR-007), not live E2E. F-02 adds no other calendar code and swallows none.
 
 ## 9. Permission matrix
 
@@ -303,12 +329,17 @@ owner. DEC-PPR-003 block-only v1 (no notification/message/ticket; no event on re
 ## 11. Query, scale, concurrency
 
 Policy resolution = one indexed lookup (Section 6c). Calendar resolution (working_days only) = one
-`work_calendar_resolve` + one `work_calendar_working_days` at create (period denominator). At lock, exactly
-one `work_calendar_working_days` per working_days employee for the numerator (F-CAL fn is `stable`, reads one
-immutable version + its holidays; bounded by period length). Evidence bounded by policy size + one calendar
-row per working_days employee. Scale unchanged (`MAX_RUN_EMPLOYEES=2000`); no per-employee policy/calendar
-fan-out beyond the numerator call (N3/N9). Lock order per Section 8; pinned F-CAL versions are immutable so
-no concurrent-publish corruption is possible.
+`work_calendar_resolve` + one `for share` on the resolved assignment + one `work_calendar_working_days` at
+create (period denominator). At lock, **exactly one `work_calendar_working_days` per working_days employee for
+the numerator** (F-CAL fn is `stable`, reads one immutable version + its holidays; bounded by period length) —
+i.e. an O(N) fan-out over employees. **Required benchmark PERF-PPR-001: lock-inputs on a `MAX_RUN_EMPLOYEES=2000`
+working_days run** — record wall-clock + the working_days call count (must be exactly N, one per working_days
+employee, no N² / no per-occurrence re-query) and assert it stays within the lock-inputs budget; if it regresses,
+memoize identical `(version, clampFrom, clampTo)` windows (many employees share the full-period window) before
+optimizing further. Evidence bounded by policy size + one calendar row per working_days employee. No per-employee
+policy/calendar fan-out beyond that one numerator call (N3/N9). Lock order per Section 8; pinned F-CAL versions
+are immutable so no concurrent-publish corruption is possible; the create `for share` handles concurrent
+end/cancel (C-PPR-003).
 
 ## 12. UX / a11y
 
@@ -321,11 +352,16 @@ Live suite `scripts/e2e/suites/payrollPayPolicyRun.mjs` (:8888) asserts Section 
 `app_events.event_type`, and evidence via the service-role client; tagged + FK-safe cleanup. It provisions a
 published F-CAL work calendar + pay-group assignment (through F-CAL's own routes -- NOT by writing F-CAL
 tables directly) to exercise the `working_days` path, and asserts the pin columns + `finance_payroll_run_
-calendar_evidence` rows. Unit tests (policy resolver whole-period+version-date boundary, defensive ambiguity,
-calendar_days + approved_hours math, **working_days numerator/denominator math incl. employment clamp + zero/
-empty-window edges**) + vitest UI component tests. Full regression (all suites, incl. `workCalendar` +
-`calendar`) = combined F-01+F-02 pre-merge gate. **The combined live regression passing is a hard precondition
-to any merge or Pay-Policy un-feature-gate (N6).**
+calendar_evidence` rows. **Live E2E also covers the create-vs-calendar-end/cancel race (C-PPR-003) and asserts
+never-half-pinned.** Unit/DB tests (policy resolver whole-period+version-date boundary, defensive ambiguity,
+calendar_days + approved_hours math, **working_days numerator/denominator math incl. `app_users.start_date/
+end_date` clamp with null + inclusive boundaries + zero/empty-window edges**, and **U-PPR-007 the route-
+unreachable defensive resolve branches** — unpublished/holiday-unpublished/uncovered — driven at the DB-function
+level). Plus **PERF-PPR-001 the 2000-employee lock-inputs benchmark** (assert exactly one `work_calendar_
+working_days` per working_days employee, within budget) + vitest UI component tests. Authenticated operator
+browser QA of UI-PPR-001..005 is a REQUIRED release gate (§4/§12). Full regression (all suites, incl.
+`workCalendar` + `calendar`) = combined F-01+F-02 pre-merge gate. **The combined live regression passing AND the
+operator browser-QA gate are hard preconditions to any merge or Pay-Policy un-feature-gate (N6).**
 
 ## 14. Decisions
 
@@ -346,14 +382,25 @@ to any merge or Pay-Policy un-feature-gate (N6).**
 | DEC-PPR-013 | Denominator is period-level (one per run, pinned at create, must be > 0); numerator is per-employee (employment-clamped, snapshotted at lock). No-employment-intersection -> numerator 0 -> base pay 0 (not a failure). |
 | DEC-PPR-014 | F-02 calls F-CAL read-only (`work_calendar_resolve`/`work_calendar_working_days`); it creates/alters NO F-CAL object (N7b). Site/location scope stays deferred in F-CAL; "company/site" == F-CAL organization-default fallback (N8). |
 | DEC-PPR-015 | Calendar resolution/pin uses the same transactional-RPC ownership as the policy pin (no JS compensating rollback); a rejected create/lock rolls back both pins and all evidence atomically. |
+| DEC-PPR-016 | **(Rev 4.1)** Create locks the resolved `work_calendar_assignments` row `for share` and revalidates status/whole-period-coverage/version BEFORE inserting the run — closes the resolve→insert TOCTOU vs F-CAL `end/cancel` (`for update`); read-only lock, permitted under N7b. Concurrency test C-PPR-003. |
+| DEC-PPR-017 | **(Rev 4.1)** `calendar.zero_working_days` is F-02-OWNED: `work_calendar_working_days` returns `count='0'` and does not raise, so `create_run_tx` tests the period denominator and raises the code itself (FL-PPR-011). |
+| DEC-PPR-018 | **(Rev 4.1)** Employment clamp uses exactly `app_users.start_date`/`end_date` (nullable), inclusive boundaries, null⇒period bound (§5b). |
+| DEC-PPR-019 | **(Rev 4.1)** Route-unreachable resolver branches (`version_unpublished`/`holiday_set_unpublished`/`version_period_uncovered`, FL-PPR-007/008/009) are unit/DB-tested (U-PPR-007), not live E2E — live fixtures are always F-CAL-route-created. |
+| DEC-PPR-020 | **(Rev 4.1)** Authenticated operator browser QA (UI-PPR-001..005) is a REQUIRED release gate; the 2000-employee lock-inputs benchmark PERF-PPR-001 (one `work_calendar_working_days` per working_days employee, no N²) is required. |
 
 ## 15. Approval
 
-- [ ] User signs off Rev 4 (Sections 5b/5c/6/8 executable specifics; **working_days INTEGRATED via F-CAL per
-      DEC-PPR-010/012/013/014/015; F-CAL boundary N7b -- read-only, no F-CAL change**).
+- [x] User CONDITIONALLY signed off Rev 4 (2026-07-20). Rev 4.1 folds in the five required corrections:
+      DEC-PPR-016 (create `for share`+revalidate on the resolved assignment / TOCTOU + C-PPR-003 + N7b read-only
+      lock), DEC-PPR-017 (F-02-owned `calendar.zero_working_days`; F-CAL returns `count='0'`), DEC-PPR-019
+      (route-unreachable branches → unit/DB U-PPR-007, live fixtures route-created), E2E-PPR-041 real
+      copy→publish→reassign correction lifecycle, DEC-PPR-018 (`app_users.start_date/end_date` null+inclusive),
+      DEC-PPR-020 (operator browser QA REQUIRED gate + PERF-PPR-001 2000-emp benchmark). **Proceed to
+      implementation without another design-review round.**
 - [ ] Then: F-02 branch off `codex/payroll-policy-setup` (`3c917002`); migration (policy + calendar pin cols +
-      `finance_payroll_run_calendar_evidence`) + policy resolver + **calendar resolve/proration wiring
-      (read-only F-CAL calls)** + RPC extensions + routes/UI + E2E; operator applies migration; live-verify on
-      :8888. No F-CAL / Shared-Calendar file is edited.
-- [ ] Then: combined F-01+F-02 full regression (incl. `workCalendar` + `calendar` suites) MUST pass -> only
-      then enable the release gate, un-feature-gate the Pay-Policy UI, and merge both into `main`.
+      `finance_payroll_run_calendar_evidence`) + policy resolver + **calendar resolve/`for share`/proration
+      wiring (read-only F-CAL calls)** + RPC extensions + routes/UI + E2E (incl. C-PPR-003 + PERF-PPR-001);
+      operator applies migration; live-verify on :8888. No F-CAL / Shared-Calendar file is edited.
+- [ ] Then: combined F-01+F-02 full regression (incl. `workCalendar` + `calendar` suites) MUST pass **and the
+      operator browser-QA gate signed off** -> only then enable the release gate, un-feature-gate the Pay-Policy
+      UI, and merge both into `main`.
