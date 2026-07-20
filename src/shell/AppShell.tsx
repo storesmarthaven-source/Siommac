@@ -33,11 +33,16 @@ import MessageModal             from './modals/MessageModal';
 import TicketModal              from './modals/TicketModal';
 import EmployeeModals           from './modals/EmployeeModals';
 import ProjectSiteModal         from './modals/ProjectSiteModal';
-import { useEffect }                      from 'preact/hooks';
+import { useEffect, useRef }              from 'preact/hooks';
 import { useSessionStore, selectUserId } from '@store/session';
 import { initUserTheme, resetThemeToDefault } from '@store/ui';
 import { useCommunicationSummary }       from '@/hooks/useCommunicationSummary';
 import { useRealtimeSignals }            from '@/hooks/useRealtimeSignals';
+import { useNotifications, useNotificationPreferences } from '@api/communications';
+import {
+  maybeToastNotification,
+  resetToastSessionClock,
+} from '@/components/realtime/notificationToasts';
 import { StepUpProvider }                from '@/hooks/useStepUp';
 import { UserPill }                       from '@shared/UserPill';
 import { Toaster }                       from '@ui/toast';
@@ -49,7 +54,33 @@ import { ActionModalHost }               from '@/components/common/actions';
 
 function CommsBridgeInner() {
   const { channelKey, realtimeToken } = useCommunicationSummary();
+  const latestNotifications = useNotifications({ limit: 10 });
+  const notificationPreferences = useNotificationPreferences();
+  const seenToastNotificationIds = useRef<Set<string>>(new Set());
   useRealtimeSignals(channelKey, realtimeToken);
+
+  useEffect(() => {
+    resetToastSessionClock();
+  }, []);
+
+  useEffect(() => {
+    if (notificationPreferences.isLoading) return;
+    const notifications = [...(latestNotifications.data ?? [])].reverse();
+    for (const notification of notifications) {
+      if (seenToastNotificationIds.current.has(notification.id)) continue;
+      seenToastNotificationIds.current.add(notification.id);
+      maybeToastNotification({
+        notification,
+        domain: notification.source_type === 'ticket' ? 'tickets' : 'notifications',
+        prefs: notificationPreferences.data,
+      });
+    }
+  }, [
+    latestNotifications.data,
+    notificationPreferences.data,
+    notificationPreferences.isLoading,
+  ]);
+
   return null;
 }
 

@@ -27,15 +27,25 @@ const REQUIRED_ENV = ['JWT_SECRET', 'SUPABASE_URL', 'SUPABASE_SERVICE_ROLE_KEY',
 // guard explicitly (e.g. messagingTypingPresence requires the ES256 realtime key).
 const OPTIONAL_ENV = ['SUPABASE_JWT_ES256_PRIVATE_KEY', 'SUPABASE_JWT_ES256_KID'];
 
-/** Parse only the single-line keys we need from .env (ignores multiline PEM blocks). */
+/**
+ * Load credentials from the process first (CI, Netlify, isolated worktrees),
+ * then fill any missing values from a local .env. Secrets never need to be
+ * copied into a worktree merely to run the live harness.
+ */
 function loadEnv() {
+  const out = {};
+  for (const key of [...REQUIRED_ENV, ...OPTIONAL_ENV]) {
+    if (process.env[key]) out[key] = process.env[key].trim();
+  }
+
   let txt = '';
   try { txt = readFileSync(new URL('../../.env', import.meta.url), 'utf8'); }
-  catch { console.error('Could not read .env at project root'); process.exit(2); }
-  const out = {};
+  catch {
+    if (REQUIRED_ENV.every(key => out[key])) return out;
+  }
   for (const line of txt.split(/\r?\n/)) {
     const m = line.match(/^([A-Z0-9_]+)=(.*)$/);
-    if (m && (REQUIRED_ENV.includes(m[1]) || OPTIONAL_ENV.includes(m[1]))) {
+    if (m && !out[m[1]] && (REQUIRED_ENV.includes(m[1]) || OPTIONAL_ENV.includes(m[1]))) {
       out[m[1]] = m[2].replace(/^["']|["']$/g, '').trim();
     }
   }

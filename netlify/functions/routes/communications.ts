@@ -26,11 +26,17 @@
  * POST /api/communications/messages/attachments/create
  *
  * Tickets
+ * POST /api/communications/tickets/request-types
  * POST /api/communications/tickets/create
  * POST /api/communications/tickets/list
  * POST /api/communications/tickets/get
  * POST /api/communications/tickets/comment
- * POST /api/communications/tickets/update
+ * POST /api/communications/tickets/command
+ * POST /api/communications/tickets/mark-read
+ * POST /api/communications/tickets/attachments/upload-url
+ * POST /api/communications/tickets/attachments/complete
+ * POST /api/communications/tickets/attachments/get-url
+ * POST /api/communications/tickets/run-overdue-sweep
  */
 
 import { Hono }              from 'hono';
@@ -41,7 +47,6 @@ import { assertCanRemoveParticipant, DeliveryProtectionError } from '../lib/deli
 import {
   getCommsSummary,
   createMessageThread,
-  createTicket,
   emitSignal,
   postMessage,
   listThreadsForUser,
@@ -75,6 +80,21 @@ import {
   listOnlineUsers,
 } from '../lib/messagingRich';
 import { emitAppEvent } from '../lib/appEvents';
+import {
+  commandTicketTx,
+  commentTicketTx,
+  completeTicketAttachmentTx,
+  createTicketTx,
+  getTicketForActor,
+  listTicketRequestTypes,
+  listTicketsForActor,
+  markTicketReadTx,
+  runTicketOverdueSweep,
+  type TicketMutationResult,
+} from '../lib/tickets/ticketRpc';
+import { createAttachmentUploadUrl } from '../lib/upload';
+import { assertAttachmentAllowed } from '../lib/attachmentClassifier';
+import { getSignedUrl } from '../lib/photos';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -978,14 +998,30 @@ router.post('/communications/messages/online', async c => {
 
 // ── Tickets ───────────────────────────────────────────────────────────────────
 
+async function signalTicketMutation(result: TicketMutationResult): Promise<void> {
+  await Promise.all([
+    emitSignal(result.recipientIds, 'tickets'),
+    emitSignal(result.notificationRecipientIds, 'notifications'),
+  ]);
+}
+
+router.post('/communications/tickets/request-types', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const data = await listTicketRequestTypes(user.id);
+  return c.json({ success: true, data });
+});
+
 const CreateTicketSchema = z.object({
-  category:         z.string().min(1).max(100),
-  priority:         z.enum(['low','medium','high','critical']).default('medium'),
+  requestTypeCode:  z.string().min(1).max(100).optional(),
+  priority:         z.enum(['low','medium','high','critical']).nullable().optional(),
   subject:          z.string().min(1).max(200),
-  description:      z.string().min(1).max(5000),
+  description:      z.string().min(1).max(5000).optional(),
+  body:             z.string().min(1).max(5000).optional(),
   sourceModule:     z.string().nullable().optional(),
   sourceEntityType: z.string().nullable().optional(),
   sourceEntityId:   z.string().nullable().optional(),
+  metadata:         z.record(z.string(), z.unknown()).optional(),
+  idempotencyKey:   z.string().min(8).max(200).optional(),
 });
 
 router.post('/communications/tickets/create', async c => {
@@ -994,16 +1030,58 @@ router.post('/communications/tickets/create', async c => {
   const v = zv(c, CreateTicketSchema, body.args);
   if (!v.ok) return v.response;
 
-  const result = await createTicket({ ...v.data, requesterUserId: user.id });
-  if (!result.ok) return c.json({ success: false, message: 'Failed to create ticket' }, 500 as 200);
-  return c.json({ success: true, ticketId: result.ticketId, ticketNumber: result.ticketNumber });
+  const metadata = v.data.metadata;
+  const payrollRunId = typeof metadata?.runId === 'string' ? metadata.runId : null;
+  const payrollSourceId = typeof metadata?.sourceId === 'string' ? metadata.sourceId : null;
+  const legacyPayrollWarning = !v.data.requestTypeCode
+    && metadata?.sourceType === 'payroll_warning'
+    && payrollSourceId !== null
+    && payrollRunId !== null;
+  const requestTypeCode = v.data.requestTypeCode
+    ?? (legacyPayrollWarning ? 'finance_admin' : null);
+  const description = v.data.description ?? v.data.body ?? null;
+  const idempotencyKey = v.data.idempotencyKey
+    ?? (legacyPayrollWarning
+      ? `payroll-warning:${payrollRunId}:${payrollSourceId}`
+      : null);
+  if (!requestTypeCode || !description || !idempotencyKey) {
+    return c.json({
+      success: false,
+      message: 'requestTypeCode, description, and idempotencyKey are required.',
+    }, 400);
+  }
+
+  const result = await createTicketTx({
+    actorId: user.id,
+    requesterId: user.id,
+    requestTypeCode,
+    subject: v.data.subject,
+    description,
+    priority: v.data.priority,
+    sourceModule: v.data.sourceModule ?? (legacyPayrollWarning ? 'finance_payroll' : null),
+    sourceEntityType: v.data.sourceEntityType
+      ?? (legacyPayrollWarning ? 'payroll_warning' : null),
+    sourceEntityId: v.data.sourceEntityId
+      ?? (legacyPayrollWarning ? payrollSourceId : null),
+    idempotencyKey,
+  });
+  await signalTicketMutation(result);
+  return c.json({ success: true, data: result });
 });
 
 const TicketListSchema = z.object({
-  status:     z.string().optional(),
-  mine:       z.boolean().default(true),
-  limit:      z.number().int().min(1).max(100).default(50),
-  cursor:     z.string().nullable().optional(),
+  status:    z.enum([
+    'open','assigned','in_progress','waiting_requester',
+    'resolved','closed','reopened','cancelled',
+  ]).nullable().optional(),
+  scope:     z.enum(['mine','assigned','queue','all']).default('mine'),
+  queueCode: z.string().min(1).max(100).nullable().optional(),
+  priority: z.enum(['low','medium','high','critical']).nullable().optional(),
+  requestTypeCode: z.string().min(1).max(100).nullable().optional(),
+  tagKey: z.string().min(1).max(80).nullable().optional(),
+  search: z.string().max(200).nullable().optional(),
+  limit:     z.number().int().min(1).max(100).default(50),
+  cursor:    z.string().nullable().optional(),
 });
 
 router.post('/communications/tickets/list', async c => {
@@ -1012,46 +1090,37 @@ router.post('/communications/tickets/list', async c => {
   const v = zv(c, TicketListSchema, body.args ?? {});
   if (!v.ok) return v.response;
 
-  let q = sb
-    .from('tickets')
-    .select('id, ticket_number, category, priority, status, subject, sla_due_at, created_at, requester_user_id, assignee_user_id')
-    .order('created_at', { ascending: false })
-    .limit(v.data.limit);
-
-  if (v.data.status) q = q.eq('status', v.data.status);
-  if (v.data.mine) q = q.eq('requester_user_id', user.id);
-  if (v.data.cursor) q = q.lt('created_at', v.data.cursor);
-
-  const { data, error } = await q;
-  if (error) return c.json({ success: false, message: error.message }, 500 as 200);
-  return c.json({ success: true, data });
+  const data = await listTicketsForActor({
+    actorId: user.id,
+    scope: v.data.scope,
+    status: v.data.status,
+    queueCode: v.data.queueCode,
+    priority: v.data.priority,
+    requestTypeCode: v.data.requestTypeCode,
+    tagKey: v.data.tagKey,
+    search: v.data.search,
+    limit: v.data.limit,
+    before: v.data.cursor,
+  });
+  return c.json({ success: true, data: data.items, nextCursor: data.nextCursor });
 });
+
+const TicketIdSchema = z.object({ ticketId: z.uuid() });
 
 router.post('/communications/tickets/get', async c => {
   const user = await requirePermission(c, 'communications.view');
   const body = c.get('body');
-  const args = body.args as { ticketId: string } | undefined;
-  if (!args?.ticketId) return c.json({ success: false, message: 'ticketId required' }, 400 as 200);
-
-  const [ticketRes, commentsRes] = await Promise.all([
-    sb.from('tickets').select('*').eq('id', args.ticketId).maybeSingle<{ requester_user_id: string | null } & Record<string, unknown>>(),
-    sb.from('ticket_comments').select('*').eq('ticket_id', args.ticketId).order('created_at'),
-  ]);
-
-  if (!ticketRes.data) return c.json({ success: false, message: 'Ticket not found' }, 404 as 200);
-
-  // Requester or admin/manager can view
-  if (ticketRes.data.requester_user_id !== user.id && !['admin','superadmin','manager'].includes(user.role)) {
-    return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
-  }
-
-  return c.json({ success: true, data: { ticket: ticketRes.data, comments: commentsRes.data ?? [] } });
+  const v = zv(c, TicketIdSchema, body.args);
+  if (!v.ok) return v.response;
+  const data = await getTicketForActor(user.id, v.data.ticketId);
+  return c.json({ success: true, data });
 });
 
 const CommentSchema = z.object({
   ticketId:   z.uuid(),
   body:       z.string().min(1).max(5000),
   isInternal: z.boolean().default(false),
+  idempotencyKey: z.string().min(8).max(200),
 });
 
 router.post('/communications/tickets/comment', async c => {
@@ -1060,65 +1129,171 @@ router.post('/communications/tickets/comment', async c => {
   const v = zv(c, CommentSchema, body.args);
   if (!v.ok) return v.response;
 
-  const { data: ticket } = await sb
-    .from('tickets')
-    .select('id, requester_user_id, assignee_user_id, status')
-    .eq('id', v.data.ticketId)
-    .maybeSingle<{ id: string; requester_user_id: string; assignee_user_id: string | null; status: string }>();
-
-  if (!ticket) return c.json({ success: false, message: 'Ticket not found' }, 404 as 200);
-
-  // Internal notes: admin/manager only
-  if (v.data.isInternal && !['admin','superadmin','manager'].includes(user.role)) {
-    return c.json({ success: false, message: 'Forbidden' }, 403 as 200);
-  }
-
-  await sb.from('ticket_comments').insert({
-    ticket_id:      v.data.ticketId,
-    author_user_id: user.id,
-    body:           v.data.body,
-    is_internal:    v.data.isInternal,
+  const result = await commentTicketTx({
+    actorId: user.id,
+    ...v.data,
   });
-
-  await sb.from('tickets').update({ updated_at: new Date().toISOString() }).eq('id', v.data.ticketId);
-
-  // Signal requester (if not the commenter) and assignee
-  const toNotify = [ticket.requester_user_id, ticket.assignee_user_id]
-    .filter((id): id is string => !!id && id !== user.id);
-  if (toNotify.length > 0) void emitSignal(toNotify, 'tickets');
-
-  return c.json({ success: true });
+  await signalTicketMutation(result);
+  return c.json({ success: true, data: result });
 });
 
-const UpdateTicketSchema = z.object({
-  ticketId:   z.uuid(),
-  status:     z.string().optional(),
-  assigneeId: z.string().nullable().optional(),
-  priority:   z.string().optional(),
+const TicketCommandSchema = z.object({
+  ticketId: z.uuid(),
+  action: z.enum([
+    'assign','start','wait_requester','resolve','close','reopen','cancel',
+    'set_priority','add_tag','remove_tag','watch','unwatch',
+  ]),
+  payload: z.record(z.string(), z.unknown()).default({}),
+  idempotencyKey: z.string().min(8).max(200),
 });
 
-router.post('/communications/tickets/update', async c => {
-  await requirePermission(c, 'tickets.manage');
+router.post('/communications/tickets/command', async c => {
+  const user = await requirePermission(c, 'communications.view');
   const body = c.get('body');
-  const v = zv(c, UpdateTicketSchema, body.args);
+  const v = zv(c, TicketCommandSchema, body.args);
   if (!v.ok) return v.response;
 
-  const updates: Record<string, unknown> = { updated_at: new Date().toISOString() };
-  if (v.data.status !== undefined) {
-    updates.status = v.data.status;
-    if (v.data.status === 'resolved') updates.resolved_at = new Date().toISOString();
-    if (v.data.status === 'closed')   updates.closed_at   = new Date().toISOString();
-    if (v.data.status === 'assigned' && !updates.first_response_at) {
-      const { data: t } = await sb.from('tickets').select('first_response_at').eq('id', v.data.ticketId).maybeSingle<{ first_response_at: string | null }>();
-      if (!t?.first_response_at) updates.first_response_at = new Date().toISOString();
-    }
+  const result = await commandTicketTx({ actorId: user.id, ...v.data });
+  await signalTicketMutation(result);
+  return c.json({ success: true, data: result });
+});
+
+const TicketMarkReadSchema = z.object({
+  ticketId: z.uuid(),
+  sequence: z.number().int().nonnegative().nullable().optional(),
+});
+
+router.post('/communications/tickets/mark-read', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, TicketMarkReadSchema, body.args);
+  if (!v.ok) return v.response;
+  const data = await markTicketReadTx({
+    actorId: user.id,
+    ticketId: v.data.ticketId,
+    sequence: v.data.sequence,
+  });
+  return c.json({ success: true, data });
+});
+
+const TicketAttachmentUploadSchema = z.object({
+  ticketId: z.uuid(),
+  fileName: z.string().min(1).max(240),
+  contentType: z.string().min(1).max(160),
+  sizeBytes: z.number().int().min(0).max(25 * 1024 * 1024),
+});
+
+router.post('/communications/tickets/attachments/upload-url', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, TicketAttachmentUploadSchema, body.args);
+  if (!v.ok) return v.response;
+
+  await getTicketForActor(user.id, v.data.ticketId);
+  assertAttachmentAllowed(v.data.fileName, v.data.sizeBytes);
+  const upload = await createAttachmentUploadUrl(
+    'ticket-attachments',
+    v.data.fileName,
+    v.data.contentType,
+  );
+  const { data: attachment, error } = await sb.from('ticket_attachments').insert({
+    ticket_id: v.data.ticketId,
+    file_name: v.data.fileName,
+    file_path: upload.path,
+    content_type: v.data.contentType,
+    size_bytes: v.data.sizeBytes,
+    uploaded_by: user.id,
+    upload_status: 'pending',
+  }).select('id').single<{ id: string }>();
+  if (error) throw Object.assign(new Error('Could not reserve the ticket attachment.'), { status: 500 });
+
+  return c.json({
+    success: true,
+    data: {
+      attachmentId: attachment.id,
+      uploadUrl: upload.uploadUrl,
+      token: upload.token,
+      path: upload.path,
+      bucket: 'ticket-attachments',
+    },
+  });
+});
+
+const TicketAttachmentCompleteSchema = z.object({
+  attachmentId: z.uuid(),
+  idempotencyKey: z.string().min(8).max(200),
+});
+
+router.post('/communications/tickets/attachments/complete', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, TicketAttachmentCompleteSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data: attachment } = await sb.from('ticket_attachments')
+    .select('file_path, uploaded_by, upload_status')
+    .eq('id', v.data.attachmentId)
+    .maybeSingle<{ file_path: string; uploaded_by: string; upload_status: string }>();
+  if (!attachment) throw Object.assign(new Error('Attachment not found'), { status: 404 });
+  if (attachment.uploaded_by !== user.id) {
+    throw Object.assign(new Error('Only the uploader can complete this attachment'), { status: 403 });
   }
-  if (v.data.assigneeId !== undefined) updates.assignee_user_id = v.data.assigneeId;
-  if (v.data.priority)   updates.priority = v.data.priority;
+  const { data: objects, error: storageError } = await sb.storage
+    .from('ticket-attachments')
+    .list('', { search: attachment.file_path, limit: 100 });
+  if (storageError) {
+    throw Object.assign(new Error('Attachment storage verification failed'), { status: 503 });
+  }
+  if (!objects.some(object => object.name === attachment.file_path)) {
+    throw Object.assign(new Error('The attachment upload has not completed'), { status: 409 });
+  }
 
-  await sb.from('tickets').update(updates).eq('id', v.data.ticketId);
+  const result = await completeTicketAttachmentTx({
+    actorId: user.id,
+    attachmentId: v.data.attachmentId,
+    idempotencyKey: v.data.idempotencyKey,
+  });
+  await emitSignal(result.recipientIds, 'tickets');
+  return c.json({ success: true, data: result });
+});
 
-  return c.json({ success: true });
+const TicketAttachmentGetSchema = z.object({
+  attachmentId: z.uuid(),
+});
+
+router.post('/communications/tickets/attachments/get-url', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, TicketAttachmentGetSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const { data: attachment } = await sb.from('ticket_attachments')
+    .select('ticket_id, file_path, upload_status')
+    .eq('id', v.data.attachmentId)
+    .maybeSingle<{ ticket_id: string; file_path: string; upload_status: string }>();
+  if (attachment?.upload_status !== 'uploaded') {
+    throw Object.assign(new Error('Attachment not found'), { status: 404 });
+  }
+  await getTicketForActor(user.id, attachment.ticket_id);
+  const url = await getSignedUrl('ticket-attachments', attachment.file_path);
+  return c.json({ success: true, data: { url } });
+});
+
+const TicketSweepSchema = z.object({
+  limit: z.number().int().min(1).max(500).default(100),
+});
+
+router.post('/communications/tickets/run-overdue-sweep', async c => {
+  await requirePermission(c, 'tickets.manage');
+  const body = c.get('body');
+  const v = zv(c, TicketSweepSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  const data = await runTicketOverdueSweep(v.data.limit);
+  await Promise.all([
+    emitSignal(data.recipientIds, 'tickets'),
+    emitSignal(data.recipientIds, 'notifications'),
+  ]);
+  return c.json({ success: true, data });
 });
 
 export default router;

@@ -9,17 +9,15 @@
  * - No-backfill: ignore signals older than the page-load epoch (resetToastSessionClock on mount).
  * - Respect NotificationPreferences mute / quiet-hours.
  * - Coalesce bursts: 2s window → one "N new <domain>" rich toast.
- * - action_route navigation (navigateToRoute): external urls → location.assign;
- *   every in-app route (section ids AND internal paths) → showSection. Section
- *   ids are never location.assign'd (that would break the SPA).
+ * - action_route guard: only showSection when route starts with 's-'.
  * - s-notification-center (NOT s-notifications), s-messages (NOT s-notifications).
  * - Tickets: open the shared header ticket modal (data-pill-action="ticket"), not showSection.
  */
 
 import { toast }                                    from "@ui/toast";
-import { showSection }                              from "@components/nav/navCore";
 import type { CanonicalNotification }               from "@api/communications";
 import type { NotificationPreferencesData }         from "@api/communications";
+import { openNotificationTarget }                   from "@sections/NotificationCenter/notifAction";
 
 // ── Re-export the canonical notification type for consumers ───────────────────
 export type { CanonicalNotification };
@@ -67,44 +65,32 @@ function openTicketPanel(): void {
     btn.click();
   } else {
     // Fallback: navigate to notification center
-    showSection("s-notification-center");
+    window.Nav.showSection("s-notification-center");
   }
 }
 
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    showSection("s-messages");
+    window.Nav.showSection("s-messages");
   } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    showSection("s-notification-center");
+    window.Nav.showSection("s-notification-center");
   }
 }
 
-/** True for a real external URL — a scheme (http:, mailto:, …) or protocol-relative. */
-function isExternalUrl(route: string): boolean {
-  return /^[a-z][a-z0-9+.-]*:/i.test(route) || route.startsWith("//");
-}
-
-/**
- * Open a notification's action_route (centralized here — no per-type duplication):
- *  - a real EXTERNAL url (scheme / protocol-relative) → window.location.assign;
- *  - everything else is IN-APP — section ids ('s-…') and any internal path go
- *    through the canonical section navigator `showSection` (which switches the
- *    panel + dispatches 'siomac:section'). We never location.assign an in-app
- *    route, since assigning a section id like 's-messages' as a URL breaks the SPA.
- * The Open button uses onClick → this, NOT a raw href (ToastCard resolves href via
- * location.assign, which is only correct for external urls).
- */
-export function navigateToRoute(route: string): void {
-  if (isExternalUrl(route)) {
-    window.location.assign(route);
+function openNotification(notification: CanonicalNotification, domain: string): void {
+  if (notification.source_type === "ticket") {
+    navigateToDomain("tickets");
     return;
   }
-  showSection(route);
+  if (openNotificationTarget(notification)) return;
+  const route = notification.action_route;
+  if (route && /^https?:\/\//i.test(route)) window.location.assign(route);
+  else navigateToDomain(domain);
 }
 
 // ── Severity → ToastVariant map ───────────────────────────────────────────────
@@ -135,7 +121,11 @@ function fireNotificationToast(notification: CanonicalNotification, domain: stri
         subtitle: notification.body ?? undefined
       },
       actions: action_route
-        ? [{ label: "Open", onClick: () => navigateToRoute(action_route), dismissOnClick: true }]
+        ? [{
+            label: "Open",
+            onClick: () => openNotification(notification, domain),
+            dismissOnClick: true,
+          }]
         : undefined
     });
     return;
@@ -154,7 +144,11 @@ function fireNotificationToast(notification: CanonicalNotification, domain: stri
       ],
       actions: [
         { label: "Dismiss", dismissOnClick: true },
-        { label: "Open", onClick: () => navigateToRoute(action_route), dismissOnClick: true }
+        {
+          label: "Open",
+          onClick: () => openNotification(notification, domain),
+          dismissOnClick: true,
+        }
       ]
     });
     return;
@@ -192,25 +186,9 @@ export interface MaybeToastArgs {
   notification: CanonicalNotification;
   domain:       string;
   prefs?:       NotificationPreferencesData | null;
-  /**
-   * When false, bypass burst coalescing and fire the rich action-toast
-   * IMMEDIATELY. Compliance/security notifications are individually important and
-   * must never be collapsed into an "N new" burst. The caller owns the mount
-   * watermark that keeps historical/unread rows out (see complianceToasts.ts).
-   * The no-backfill + mute guards still apply. Default true (coalesced).
-   */
-  coalesce?:    boolean;
 }
 
-export function maybeToastNotification({ notification, domain, prefs, coalesce = true }: MaybeToastArgs): void {
-  // Direct path — compliance/security notifications fire the rich action-toast
-  // IMMEDIATELY. It is deliberately BEFORE the guards below: those compare the
-  // browser epoch (Date.now at page-load) with the server-assigned created_at, and
-  // that cross-machine comparison can misjudge under clock skew. The compliance
-  // caller owns a clock-free, id-based historical watermark instead, and these are
-  // security events, so mute/quiet-hours are bypassed too. Never coalesced.
-  if (!coalesce) { fireNotificationToast(notification, domain); return; }
-
+export function maybeToastNotification({ notification, domain, prefs }: MaybeToastArgs): void {
   // 1. No-backfill guard: ignore signals that arrived before page-load epoch
   if (_sessionEpoch !== null) {
     const createdMs = new Date(notification.created_at).getTime();

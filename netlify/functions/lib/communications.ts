@@ -21,6 +21,8 @@ import { createAttachmentUploadUrl } from './upload';
 import { userCan }       from './auth';
 import { mintRealtimeToken } from './realtimeAuth';
 import { classifyAttachment, fileExtension, assertAttachmentAllowed } from './attachmentClassifier';
+import { createHash } from 'node:crypto';
+import { createTicketTx } from './tickets/ticketRpc';
 import {
   createThreadTx, sendMessageTx, addParticipantsTx, removeParticipantTx, markReadTx,
 } from './messaging/messagingRpc';
@@ -386,10 +388,7 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     // one post by another author exists after last_read_at.
     _countUnreadThreads(userId),
 
-    sb.from('tickets')
-      .select('id', { count: 'exact', head: true })
-      .eq('requester_user_id', userId)
-      .in('status', ['open','assigned','in_progress','waiting_requester','reopened']),
+    _getTicketSummary(userId),
 
     // Workflow tasks assigned to this user or their role
     _countWorkflowTasks(userId, role),
@@ -417,13 +416,25 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     notificationsCritical:       activeNotifs.filter(n => n.severity === 'critical' && !n.is_read).length,
     notificationsArchived:       _countFromSettled(notifArchRes),
     messagesUnread:      _countFromSettled(msgRes),
-    ticketsOpen:         _countFromSettled(ticketRes),
-    ticketsUnread:       0, // TODO: per-ticket unread tracking
+    ticketsOpen:         ticketRes.status === 'fulfilled' ? ticketRes.value.open : 0,
+    ticketsUnread:       ticketRes.status === 'fulfilled' ? ticketRes.value.unread : 0,
     workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
     realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value) : null,
     realtimeToken:          realtimeToken?.token ?? null,
     realtimeTokenExpiresAt: realtimeToken?.expiresAt ?? null,
+  };
+}
+
+async function _getTicketSummary(userId: string): Promise<{ open: number; unread: number }> {
+  const { data, error } = await sb.rpc('ticket_summary_for_actor', {
+    p_actor_id: userId,
+  }) as unknown as { data: unknown; error: { message: string } | null };
+  if (error) throw new Error(`Ticket summary failed: ${error.message}`);
+  const row = (data ?? {}) as Record<string, unknown>;
+  return {
+    open: typeof row.open === 'number' ? row.open : Number(row.open ?? 0),
+    unread: typeof row.unread === 'number' ? row.unread : Number(row.unread ?? 0),
   };
 }
 
@@ -1879,6 +1890,7 @@ export async function getMessageRecipients(userId: string, query?: string | null
 // ── Tickets ────────────────────────────────────────────────────────────────────
 
 export interface CreateTicketInput {
+  /** Must match an active ticket_request_types.code; the RPC fails closed otherwise. */
   category:           string;
   priority?:          'low' | 'medium' | 'high' | 'critical';
   subject:            string;
@@ -1897,42 +1909,35 @@ export interface CreateTicketResult {
 
 export async function createTicket(input: CreateTicketInput): Promise<CreateTicketResult> {
   try {
-    const year = new Date().getFullYear();
-    const counterRes = await sb.rpc('increment_ref_counter', { p_prefix: 'TKT', p_year: year });
-    const counter = counterRes.data as number | null;
-    const ticketNumber = `TKT-${year}-${String(counter ?? Date.now()).padStart(4, '0')}`;
-
-    // SLA: critical = 4h, high = 8h, medium = 24h, low = 72h
-    const slaHours = { critical: 4, high: 8, medium: 24, low: 72 }[input.priority ?? 'medium'];
-    const slaDueAt = new Date(Date.now() + slaHours * 3600_000).toISOString();
-
-    const { data: ticket, error } = await sb
-      .from('tickets')
-      .insert({
-        ticket_number:      ticketNumber,
-        category:           input.category,
-        priority:           input.priority ?? 'medium',
-        subject:            input.subject,
-        description:        input.description,
-        requester_user_id:  input.requesterUserId,
-        source_module:      input.sourceModule ?? null,
-        source_entity_type: input.sourceEntityType ?? null,
-        source_entity_id:   input.sourceEntityId ?? null,
-        sla_due_at:         slaDueAt,
-        status:             'open',
-      })
-      .select('id')
-      .single<{ id: string }>();
-
-    if (error) {
-      console.error('[communications] createTicket failed:', error.message);
-      return { ok: false };
-    }
-
-    // Notify support queue (admin/manager)
-    void emitSignal([], 'tickets'); // TODO: resolve admin user ids
-
-    return { ok: true, ticketId: ticket.id, ticketNumber };
+    const idempotencyKey = createHash('sha256').update(JSON.stringify({
+      requestTypeCode: input.category,
+      requesterUserId: input.requesterUserId,
+      sourceModule: input.sourceModule ?? null,
+      sourceEntityType: input.sourceEntityType ?? null,
+      sourceEntityId: input.sourceEntityId ?? null,
+      subject: input.subject,
+    })).digest('hex');
+    const result = await createTicketTx({
+      actorId: input.requesterUserId,
+      requesterId: input.requesterUserId,
+      requestTypeCode: input.category,
+      priority: input.priority,
+      subject: input.subject,
+      description: input.description,
+      sourceModule: input.sourceModule,
+      sourceEntityType: input.sourceEntityType,
+      sourceEntityId: input.sourceEntityId,
+      idempotencyKey,
+    });
+    await Promise.all([
+      emitSignal(result.recipientIds, 'tickets'),
+      emitSignal(result.notificationRecipientIds, 'notifications'),
+    ]);
+    return {
+      ok: true,
+      ticketId: result.ticketId,
+      ticketNumber: result.ticketNumber,
+    };
   } catch (e) {
     console.error('[communications] createTicket failed:', e);
     return { ok: false };

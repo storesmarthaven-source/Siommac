@@ -19,7 +19,7 @@ export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
   const { admin, b, c } = h.users;
   const T = { admin: mint(admin), b: mint(b), c: mint(c) };
-  const ctx = { threadIds: [], ticketIds: [] };
+  const ctx = { threadIds: [], ticketIds: [], ticketNumbers: [] };
 
   // Register teardown up-front so partial runs still clean up.
   h.onCleanup(async () => {
@@ -33,6 +33,9 @@ export default async function run(h) {
       await sb.from('message_threads').delete().in('id', ctx.threadIds);
     }
     if (ctx.ticketIds.length) {
+      await sb.from('notifications').delete().in('source_id', ctx.ticketNumbers);
+      await sb.from('audit_logs').delete().in('record_id', ctx.ticketNumbers);
+      await sb.from('app_events').delete().in('source_entity_id', ctx.ticketNumbers);
       await sb.from('ticket_comments').delete().in('ticket_id', ctx.ticketIds);
       await sb.from('tickets').delete().in('id', ctx.ticketIds);
     }
@@ -992,19 +995,34 @@ export default async function run(h) {
 
   await test('create ticket', async () => {
     const r = await api('communications/tickets/create', T.admin, {
-      category: 'it_support', priority: 'medium', subject: `${TAG} ticket`, description: 'integration test',
+      requestTypeCode: 'general_support',
+      priority: 'medium',
+      subject: `${TAG} ticket`,
+      description: 'integration test',
+      idempotencyKey: `${TAG}:communications-ticket-create`,
     });
-    ok(r); expect(r.body.ticketId, 'no ticketId');
-    ctx.ticketId = r.body.ticketId; ctx.ticketIds.push(r.body.ticketId);
+    ok(r); expect(r.body.data?.ticketId, 'no ticketId');
+    ctx.ticketId = r.body.data.ticketId;
+    ctx.ticketIds.push(r.body.data.ticketId);
+    ctx.ticketNumbers.push(r.body.data.ticketNumber);
   });
   await test('ticket appears in list', async () => {
-    const r = await api('communications/tickets/list', T.admin, { mine: true, limit: 50 });
+    const r = await api('communications/tickets/list', T.admin, { scope: 'mine', limit: 50 });
     ok(r); expect((r.body.data || []).some(t => t.id === ctx.ticketId), 'ticket not in list');
   });
   await test('get ticket detail', async () => {
     const r = await api('communications/tickets/get', T.admin, { ticketId: ctx.ticketId });
     ok(r); expect(r.body.data?.ticket?.id === ctx.ticketId, 'detail mismatch');
   });
-  await test('comment on ticket', async () => ok(await api('communications/tickets/comment', T.admin, { ticketId: ctx.ticketId, body: 'a comment' })));
-  await test('update ticket status', async () => ok(await api('communications/tickets/update', T.admin, { ticketId: ctx.ticketId, status: 'in_progress' })));
+  await test('comment on ticket', async () => ok(await api('communications/tickets/comment', T.admin, {
+    ticketId: ctx.ticketId,
+    body: 'a comment',
+    idempotencyKey: `${TAG}:communications-ticket-comment`,
+  })));
+  await test('start ticket', async () => ok(await api('communications/tickets/command', T.admin, {
+    ticketId: ctx.ticketId,
+    action: 'start',
+    payload: {},
+    idempotencyKey: `${TAG}:communications-ticket-start`,
+  })));
 }

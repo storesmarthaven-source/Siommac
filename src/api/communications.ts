@@ -115,28 +115,46 @@ export interface MessagePost {
 }
 
 export interface CanonicalTicket {
-  id:                  string;
-  ticket_number:       string;
-  category:            string;
-  priority:            string;
-  status:              string;
-  subject:             string;
-  sla_due_at:          string | null;
-  created_at:          string;
-  requester_user_id:   string | null;
-  assignee_user_id:    string | null;
+  id:                 string;
+  ticketNumber:       string;
+  requestTypeCode:    string;
+  queueCode:          string;
+  category:           string;
+  priority:           string;
+  status:             string;
+  subject:            string;
+  responseDueAt:      string | null;
+  resolutionDueAt:    string | null;
+  lastActivityAt:     string;
+  requesterUserId:    string | null;
+  assigneeUserId:     string | null;
+  activitySequence:   number;
+  lastReadSequence:   number;
+  unreadCount:        number;
+  isConfidential:     boolean;
+  canHandle:          boolean;
+  tags:               { key: string; label: string; kind: 'system' | 'custom' }[];
+  createdAt:          string;
+  version:            number;
 }
 
 export interface CanonicalTicketDetail {
-  ticket:   CanonicalTicket & { description: string; resolved_at: string | null; closed_at: string | null };
+  ticket:   CanonicalTicket & Record<string, unknown>;
+  canHandle: boolean;
   comments: {
     id:             string;
-    author_user_id: string | null;
+    authorUserId:   string | null;
     body:           string;
-    is_internal:    boolean;
-    is_system:      boolean;
-    created_at:     string;
+    isInternal:     boolean;
+    isSystem:       boolean;
+    sequence:       number;
+    createdAt:      string;
   }[];
+  tags: { key: string; label: string; kind: 'system' | 'custom'; createdAt: string }[];
+  participants: Record<string, unknown>[];
+  events: Record<string, unknown>[];
+  lastReadSequence: number;
+  unreadCount: number;
 }
 
 // ── Summary ───────────────────────────────────────────────────────────────────
@@ -727,9 +745,15 @@ export function useMessageRecipients(query = '') {
 // ── Tickets ───────────────────────────────────────────────────────────────────
 
 export interface TicketListArgs extends Record<string, unknown> {
-  status?: string;
-  mine?:   boolean;
-  limit?:  number;
+  status?:    string | null;
+  scope?:     'mine' | 'assigned' | 'queue' | 'all';
+  queueCode?: string | null;
+  priority?:  'low' | 'medium' | 'high' | 'critical' | null;
+  requestTypeCode?: string | null;
+  tagKey?:    string | null;
+  search?:    string | null;
+  limit?:     number;
+  cursor?:    string | null;
 }
 
 export function useMyTickets(args: TicketListArgs = {}) {
@@ -738,7 +762,7 @@ export function useMyTickets(args: TicketListArgs = {}) {
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicket[] }>(
         'communications/tickets/list',
-        { mine: true, limit: 50, ...args },
+        { scope: 'mine', limit: 50, ...args },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load tickets');
@@ -764,7 +788,7 @@ export function useTicket(ticketId: string) {
 }
 
 export interface CreateTicketArgs extends Record<string, unknown> {
-  category:         string;
+  requestTypeCode:  string;
   priority?:        'low' | 'medium' | 'high' | 'critical';
   subject:          string;
   description:      string;
@@ -777,8 +801,10 @@ export function useCreateTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateTicketArgs) =>
-      apiPost<{ success: boolean; ticketId: string; ticketNumber: string }>(
-        'communications/tickets/create', args, { retryable: false },
+      apiPost<{ success: boolean; data: { ticketId: string; ticketNumber: string } }>(
+        'communications/tickets/create',
+        { ...args, idempotencyKey: crypto.randomUUID() },
+        { retryable: false },
       ),
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: ticketKeys.all });
@@ -797,8 +823,10 @@ export function useCommentTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CommentTicketArgs) =>
-      apiPost<{ success: boolean }>(
-        'communications/tickets/comment', args, { retryable: false },
+      apiPost<{ success: boolean; data: Record<string, unknown> }>(
+        'communications/tickets/comment',
+        { ...args, idempotencyKey: crypto.randomUUID() },
+        { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: CommentTicketArgs) => {
       void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });
@@ -808,18 +836,22 @@ export function useCommentTicket() {
 }
 
 export interface UpdateTicketArgs extends Record<string, unknown> {
-  ticketId:    string;
-  status?:     string;
-  assigneeId?: string | null;
-  priority?:   string;
+  ticketId: string;
+  action:
+    | 'assign' | 'start' | 'wait_requester' | 'resolve' | 'close'
+    | 'reopen' | 'cancel' | 'set_priority' | 'add_tag' | 'remove_tag'
+    | 'watch' | 'unwatch';
+  payload?: Record<string, unknown>;
 }
 
 export function useUpdateTicket() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: UpdateTicketArgs) =>
-      apiPost<{ success: boolean }>(
-        'communications/tickets/update', args, { retryable: false },
+      apiPost<{ success: boolean; data: Record<string, unknown> }>(
+        'communications/tickets/command',
+        { ...args, idempotencyKey: crypto.randomUUID() },
+        { retryable: false },
       ),
     onSuccess: (_r: unknown, vars: UpdateTicketArgs) => {
       void qc.invalidateQueries({ queryKey: ticketKeys.detail(vars.ticketId) });

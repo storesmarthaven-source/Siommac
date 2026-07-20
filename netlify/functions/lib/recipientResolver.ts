@@ -32,7 +32,7 @@ export interface ExplicitRecipient {
 }
 
 interface EventRule {
-  recipient_kind: RecipientReason | string;
+  recipient_kind: string;
   recipient_value: string | null;
   notify: boolean;
 }
@@ -63,7 +63,7 @@ export async function resolveRecipients(
     .or(`event_type.eq.${input.eventType},event_type.eq.*`) as { data: EventRule[] | null };
 
   for (const rule of (rules ?? [])) {
-    if (rule.notify === false) continue;
+    if (!rule.notify) continue;
     switch (rule.recipient_kind) {
       case 'actor':
         add(input.actorUserId, 'actor');
@@ -109,7 +109,7 @@ async function _addByRole(
 ): Promise<void> {
   let q = sb.from('app_users').select('id').in('role', roles).eq('status', 'active');
   if (departmentId) q = q.eq('department_id', departmentId);
-  const { data } = await q as { data: Array<{ id: string }> | null };
+  const { data } = await q as { data: { id: string }[] | null };
   for (const u of (data ?? [])) if (!out.has(u.id)) out.set(u.id, 'role');
 }
 
@@ -119,7 +119,11 @@ async function _addWatchers(
   entityId: string,
 ): Promise<void> {
   if (entityType !== 'ticket') return;
-  const res = await sb.from('ticket_watchers').select('user_id').eq('ticket_id', entityId);
-  const rows = (res.data ?? []) as Array<{ user_id: string }>;
+  const res = await sb
+    .from('ticket_participants')
+    .select('user_id')
+    .eq('ticket_id', entityId)
+    .is('removed_at', null);
+  const rows = (res.data ?? []) as { user_id: string }[];
   for (const w of rows) if (!out.has(w.user_id)) out.set(w.user_id, 'watcher');
 }
