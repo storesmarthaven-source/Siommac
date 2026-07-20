@@ -8,3 +8,4 @@ dashboard.html
 # Codex working logs (transient)
 .codex/
 supabase-es256-import.jwk.json
+.f02-baseline/

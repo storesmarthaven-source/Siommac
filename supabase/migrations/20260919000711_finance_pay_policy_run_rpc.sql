@@ -1,10 +1,14 @@
 -- F-02 Pay-Policy-to-Run Integration — RPC extensions (Rev 4.1 contract §1/§5/§8). Companion to mig 710.
--- This tranche extends finance_payroll_create_run_tx: every new run is pay-group-scoped, resolves + PINS the
--- active pay policy (whole-period coverage), and — when the policy binds a working_days component — resolves
--- the work calendar (work_calendar_resolve, read-only), locks the resolved assignment FOR SHARE + revalidates
--- (TOCTOU close), computes + pins the period denominator (F-02 raises calendar.zero_working_days on 0), and
--- pins both. lock_inputs_tx + calculation_start_tx (per-employee working-days evidence + consume) ship next.
--- No F-CAL / F-01 object is created or altered; F-CAL functions are called read-only.
+-- Built from the LIVE function definitions (mig 421 = authoritative baseline; nothing redefines these after)
+-- via programmatic extract + surgical edit + baseline-vs-modified diff (NOT hand transcription). This tranche
+-- ships create_run_tx; lock_inputs_tx + calculation_start_tx (per-employee working-days evidence + consume)
+-- follow in the same file once diff-verified. No F-CAL / F-01 object is created or altered (read-only calls).
+--
+-- create_run_tx: every new run is pay-group-scoped (policy.pay_group_required, no bypass); resolves + PINS the
+-- whole-period active policy assignment+version (policy.missing/ambiguous); for a working_days policy resolves
+-- the work calendar (work_calendar_resolve), locks the resolved assignment FOR SHARE + revalidates (TOCTOU
+-- close), computes+pins the period denominator (F-02 raises calendar.zero_working_days on '0'), pins 5 cols +
+-- calendar_resolution; enriches the creation event + audit.
 
 create or replace function public.finance_payroll_create_run_tx(
   p_actor_id             text,
@@ -144,29 +148,34 @@ begin
       using errcode = 'PR422';
   end if;
 
-  -- F-02 (DEC-PPR-021): every new production run is pay-group-scoped. Unscoped -> fail closed.
+  -- F-02 (DEC-PPR-021): every new production run is pay-group-scoped; no runtime bypass.
   if p_pay_group_id is null then
     raise exception 'policy.pay_group_required' using errcode = 'PR422';
   end if;
 
-  select *
-    into v_group
-    from public.finance_pay_groups
-   where id = p_pay_group_id
-   for share;
-  if not found then
-    raise exception 'finance_payroll_create: pay group % was not found', p_pay_group_id
-      using errcode = 'PR404';
+  if p_pay_group_id is not null then
+    select *
+      into v_group
+      from public.finance_pay_groups
+     where id = p_pay_group_id
+     for share;
+    if not found then
+      raise exception 'finance_payroll_create: pay group % was not found', p_pay_group_id
+        using errcode = 'PR404';
+    end if;
+    if not v_group.active then
+      raise exception 'finance_payroll_create: pay group % is inactive', v_group.code
+        using errcode = 'PR422';
+    end if;
+    if p_pay_frequency is not null and p_pay_frequency <> v_group.frequency then
+      raise exception 'finance_payroll_create: pay frequency must match pay group %', v_group.code
+        using errcode = 'PR422';
+    end if;
+    v_frequency := v_group.frequency;
+  else
+    -- unreachable: the pay_group_required guard above rejects unscoped runs (no bypass).
+    raise exception 'policy.pay_group_required' using errcode = 'PR422';
   end if;
-  if not v_group.active then
-    raise exception 'finance_payroll_create: pay group % is inactive', v_group.code
-      using errcode = 'PR422';
-  end if;
-  if p_pay_frequency is not null and p_pay_frequency <> v_group.frequency then
-    raise exception 'finance_payroll_create: pay frequency must match pay group %', v_group.code
-      using errcode = 'PR422';
-  end if;
-  v_frequency := v_group.frequency;
 
   if v_frequency not in ('weekly','fortnightly','semi_monthly','monthly') then
     raise exception 'finance_payroll_create: unsupported pay frequency %', v_frequency
@@ -267,7 +276,9 @@ begin
       using errcode = 'PR422';
   end if;
 
-  -- NIBTT contribution weeks = actual Mondays in the covered period (min 1).
+  -- NIBTT contributions are weekly and monthly/fortnightly contribution counts
+  -- follow the actual Mondays in the covered period. A short off-cycle period
+  -- with no Monday still represents part of one contribution week.
   select greatest(
     1,
     count(*) filter (where extract(isodow from day_value) = 1)
@@ -295,18 +306,48 @@ begin
 
   begin
     insert into public.finance_payroll_runs (
-      run_no, period_month, run_type, period_start, period_end, sequence_no, source_run_id,
-      pay_frequency, status, statutory_version_id, weeks_in_period, pay_group, pay_group_id,
-      pay_date, cut_off_date, created_by, creation_request_key, creation_request_hash,
+      run_no,
+      period_month,
+      run_type,
+      period_start,
+      period_end,
+      sequence_no,
+      source_run_id,
+      pay_frequency,
+      status,
+      statutory_version_id,
+      weeks_in_period,
+      pay_group,
+      pay_group_id,
+      pay_date,
+      cut_off_date,
+      created_by,
+      creation_request_key,
+      creation_request_hash,
       -- F-02 policy pin
       pay_policy_version_id, pay_policy_checksum, pay_policy_required,
       -- F-02 calendar pin (null for a non-working_days policy)
       work_calendar_version_id, holiday_calendar_version_id, work_calendar_checksum,
       holiday_calendar_checksum, calendar_resolution
     ) values (
-      v_run_no, v_period_month, p_run_type, p_period_start, p_period_end, p_sequence_no, p_source_run_id,
-      v_frequency, 'draft', p_statutory_version_id, v_weeks, v_group.code, p_pay_group_id,
-      v_pay_date, p_cut_off_date, p_actor_id, v_scoped_key, v_hash,
+      v_run_no,
+      v_period_month,
+      p_run_type,
+      p_period_start,
+      p_period_end,
+      p_sequence_no,
+      p_source_run_id,
+      v_frequency,
+      'draft',
+      p_statutory_version_id,
+      v_weeks,
+      case when p_pay_group_id is null then null else v_group.code end,
+      p_pay_group_id,
+      v_pay_date,
+      p_cut_off_date,
+      p_actor_id,
+      v_scoped_key,
+      v_hash,
       v_policy_version_id, v_policy_checksum, true,
       v_wc_version_id, v_hc_version_id, v_wc_checksum, v_hc_checksum, v_cal_resolution
     )
@@ -317,13 +358,22 @@ begin
         using errcode = 'PR409';
   end;
 
-  -- Enrich the SAME creation event with the pins (SE-PPR-001/003 — no new event).
   insert into public.app_events (
-    event_type, source_module, source_entity_type, source_entity_id,
-    actor_user_id, severity, payload, dedupe_key
+    event_type,
+    source_module,
+    source_entity_type,
+    source_entity_id,
+    actor_user_id,
+    severity,
+    payload,
+    dedupe_key
   ) values (
-    'finance.payroll.run.created', 'finance_payroll', 'payroll_run', v_run.id::text,
-    p_actor_id, 'info',
+    'finance.payroll.run.created',
+    'finance_payroll',
+    'payroll_run',
+    v_run.id::text,
+    p_actor_id,
+    'info',
     jsonb_build_object(
       'runNo', v_run.run_no,
       'runType', v_run.run_type,
@@ -339,9 +389,18 @@ begin
   );
 
   insert into public.hr_audit_log (
-    submodule_key, record_id, actor_id, action, previous_state, new_state
+    submodule_key,
+    record_id,
+    actor_id,
+    action,
+    previous_state,
+    new_state
   ) values (
-    'finance_payroll', v_run.id::text, p_actor_id, 'payroll_run.created', null,
+    'finance_payroll',
+    v_run.id::text,
+    p_actor_id,
+    'payroll_run.created',
+    null,
     jsonb_build_object(
       'status', v_run.status,
       'runNo', v_run.run_no,
