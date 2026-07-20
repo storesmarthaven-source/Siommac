@@ -114,6 +114,8 @@ export const PERMISSION_KEYS = [
   'hr.organization.manage',
   'hr.positions.view',
   'hr.positions.manage',
+  'hr.work_calendar.view',
+  'hr.work_calendar.manage',
   'hr.cost_centers.view',
   'hr.cost_centers.manage',
   'hr.organization.delete',

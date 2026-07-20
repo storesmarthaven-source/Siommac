@@ -2,9 +2,9 @@
 
 # testing Module Map
 
-Source fingerprint: `5d3b39b519183096dd168ff3`
+Source fingerprint: `e42d1434e7f8d8d7871fb359`
 
-Files: 24 | Symbols: 147 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 9
+Files: 25 | Symbols: 155 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 10
 
 ## Widgets and Tiles
 
@@ -53,6 +53,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Messenger — cursor pagination + content search | 16 | 5 | `scripts/e2e/suites/messengerPagination.mjs` |
 | RBAC Console | 37 | 18 | `scripts/e2e/suites/rbacConsole.mjs` |
 | HSE Training / Competency | 29 | 19 | `scripts/e2e/suites/training.mjs` |
+| Shared Work Calendar (F-CAL) | 14 | 4 | `scripts/e2e/suites/workCalendar.mjs` |
 
 ## Navigation Files
 
@@ -69,4 +70,5 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/messengerPagination.mjs` | 210 |
 | e2e-suite | `scripts/e2e/suites/rbacConsole.mjs` | 531 |
 | e2e-suite | `scripts/e2e/suites/training.mjs` | 255 |
+| e2e-suite | `scripts/e2e/suites/workCalendar.mjs` | 243 |
 

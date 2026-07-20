@@ -1,32 +1,32 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a8087e5c13840b1e8007c857ea34d89ab0ffe7ae",
+    "head": "490bf6af1aa365e0621d393c65f73c3ae15baae2",
     "branch": "codex/payroll-policy-setup",
-    "fingerprint": "5d3b39b519183096dd168ff3",
-    "indexedFiles": 1454
+    "fingerprint": "e42d1434e7f8d8d7871fb359",
+    "indexedFiles": 1459
   },
   "summary": {
-    "files": 1144,
-    "symbols": 11389,
+    "files": 1147,
+    "symbols": 11441,
     "widgets": 32,
-    "routes": 897,
-    "routeDefinitions": 898,
+    "routes": 901,
+    "routeDefinitions": 902,
     "unmountedRoutes": 17,
     "apiCalls": 379,
-    "databaseObjects": 1205,
-    "e2eSuites": 69,
-    "e2eTests": 2271
+    "databaseObjects": 1244,
+    "e2eSuites": 70,
+    "e2eTests": 2285
   },
   "modules": [
     {
       "id": "hr",
       "counts": {
-        "files": 200,
-        "symbols": 2189,
+        "files": 201,
+        "symbols": 2219,
         "widgets": 12,
-        "routes": 245,
-        "routeDefinitions": 245,
+        "routes": 249,
+        "routeDefinitions": 249,
         "apiCalls": 57,
         "databaseObjects": 156,
         "e2eSuites": 14
@@ -139,27 +139,27 @@
     {
       "id": "platform",
       "counts": {
-        "files": 278,
-        "symbols": 2537,
+        "files": 279,
+        "symbols": 2551,
         "widgets": 0,
         "routes": 27,
         "routeDefinitions": 42,
         "apiCalls": 50,
-        "databaseObjects": 243,
+        "databaseObjects": 282,
         "e2eSuites": 0
       }
     },
     {
       "id": "testing",
       "counts": {
-        "files": 24,
-        "symbols": 147,
+        "files": 25,
+        "symbols": 155,
         "widgets": 0,
         "routes": 0,
         "routeDefinitions": 0,
         "apiCalls": 0,
         "databaseObjects": 0,
-        "e2eSuites": 9
+        "e2eSuites": 10
       }
     }
   ],
@@ -168,8 +168,8 @@
       "path": "netlify/functions/api.ts",
       "module": "platform",
       "role": "backend",
-      "lines": 343,
-      "hash": "bc50865706060624"
+      "lines": 345,
+      "hash": "ba28e579452240d9"
     },
     {
       "path": "netlify/functions/auto-checkout.ts",
@@ -1089,6 +1089,13 @@
       "hash": "219fbd1649500e42"
     },
     {
+      "path": "netlify/functions/lib/hr/workCalendar.ts",
+      "module": "hr",
+      "role": "backend-lib",
+      "lines": 125,
+      "hash": "c38723a66f9b831e"
+    },
+    {
       "path": "netlify/functions/lib/messagingRich.ts",
       "module": "platform",
       "role": "backend-lib",
@@ -1204,8 +1211,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1149,
-      "hash": "28aa8e15a7b9a453"
+      "lines": 1151,
+      "hash": "d1ea726f881f7b64"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -1978,6 +1985,13 @@
       "hash": "0d604a867692cad8"
     },
     {
+      "path": "netlify/functions/routes/hrWorkCalendars.ts",
+      "module": "platform",
+      "role": "backend-route",
+      "lines": 123,
+      "hash": "3dcea56b5cd42c2a"
+    },
+    {
       "path": "netlify/functions/routes/hseCapa.ts",
       "module": "platform",
       "role": "backend-route",
@@ -2711,6 +2725,13 @@
       "role": "e2e-suite",
       "lines": 148,
       "hash": "ab083d1361987f0e"
+    },
+    {
+      "path": "scripts/e2e/suites/workCalendar.mjs",
+      "module": "testing",
+      "role": "e2e-suite",
+      "lines": 243,
+      "hash": "3eef4d1c9c07d437"
     },
     {
       "path": "scripts/e2e/suites/workflow-engine.mjs",
@@ -6699,8 +6720,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1744,
-      "hash": "1cc456c46dd6665a"
+      "lines": 1746,
+      "hash": "1e279186cd3d71aa"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -6713,8 +6734,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1460,
-      "hash": "20431ac635b70c65"
+      "lines": 1462,
+      "hash": "c2fd703a7c2473b4"
     },
     {
       "path": "src/lib/popup.ts",
@@ -8178,7 +8199,7 @@
       "name": "ALLOWED_ORIGINS",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 86,
+      "line": 87,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8188,7 +8209,7 @@
       "name": "isAllowedOrigin",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 99,
+      "line": 100,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8198,7 +8219,7 @@
       "name": "app",
       "kind": "variable",
       "file": "netlify/functions/api.ts",
-      "line": 108,
+      "line": 109,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8208,7 +8229,7 @@
       "name": "_legacyDispatch",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 261,
+      "line": 263,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8218,7 +8239,7 @@
       "name": "NetlifyV1Event",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 291,
+      "line": 293,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8228,7 +8249,7 @@
       "name": "NetlifyV1Context",
       "kind": "interface",
       "file": "netlify/functions/api.ts",
-      "line": 300,
+      "line": 302,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -8238,7 +8259,7 @@
       "name": "handler",
       "kind": "function",
       "file": "netlify/functions/api.ts",
-      "line": 304,
+      "line": 306,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -26749,6 +26770,306 @@
       "tags": []
     },
     {
+      "name": "SQLSTATE_HTTP",
+      "kind": "object",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 9,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "rpcError",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 10,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Row",
+      "kind": "type",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 15,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "asText",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 16,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayCalendarDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 19,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "workCalendarDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 20,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayVersionDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 21,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "workVersionDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 22,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayDateDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 23,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assignmentDto",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 24,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarCommand",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 27,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "callRpc",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 29,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidaySetCommand",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 36,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "workCalendarCommand",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 40,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assignmentCommand",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 44,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "resolveWorkCalendar",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 49,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "MAX_LIMIT",
+      "kind": "variable",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 56,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "clampLimit",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 57,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Cursor",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 59,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "encodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 60,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "decodeCursor",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 63,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fingerprint",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 71,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Page",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 72,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "keysetPage",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 74,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listHolidayCalendars",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 89,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listWorkCalendars",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 91,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getHolidayCalendar",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 94,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "getWorkCalendar",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 101,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listHolidays",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 108,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listAssignments",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 113,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "EVIDENCE_DOMAIN",
       "kind": "variable",
       "file": "netlify/functions/lib/messaging/complianceEvidence.ts",
@@ -29072,7 +29393,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 461,
+      "line": 463,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29082,7 +29403,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 470,
+      "line": 472,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29092,7 +29413,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 482,
+      "line": 484,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29102,7 +29423,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 502,
+      "line": 504,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29112,7 +29433,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 511,
+      "line": 513,
       "module": "security",
       "exported": false,
       "container": "",
@@ -29122,7 +29443,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 974,
+      "line": 976,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29132,7 +29453,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 990,
+      "line": 992,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29142,7 +29463,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1015,
+      "line": 1017,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29152,7 +29473,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1025,
+      "line": 1027,
       "module": "security",
       "exported": false,
       "container": "",
@@ -29162,7 +29483,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1026,
+      "line": 1028,
       "module": "security",
       "exported": false,
       "container": "",
@@ -29172,7 +29493,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1029,
+      "line": 1031,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29182,7 +29503,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1045,
+      "line": 1047,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29192,7 +29513,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1080,
+      "line": 1082,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29202,7 +29523,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1092,
+      "line": 1094,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29212,7 +29533,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1093,
+      "line": 1095,
       "module": "security",
       "exported": false,
       "container": "",
@@ -29222,7 +29543,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1096,
+      "line": 1098,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29232,7 +29553,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1106,
+      "line": 1108,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29242,7 +29563,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1119,
+      "line": 1121,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29252,7 +29573,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1127,
+      "line": 1129,
       "module": "security",
       "exported": true,
       "container": "",
@@ -29262,7 +29583,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1138,
+      "line": 1140,
       "module": "security",
       "exported": true,
       "container": "",
@@ -37323,6 +37644,146 @@
       "kind": "function",
       "file": "netlify/functions/routes/hrStatutoryProfile.ts",
       "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "router",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 12,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "body",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 13,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 17,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "date",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 22,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestKey",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "reason",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 24,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "uuid",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 25,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "weekday",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 26,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fractions",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 27,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayInput",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 28,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidaySchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 36,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "versionSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 56,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assignSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 76,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "readSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 93,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -45394,6 +45855,102 @@
       "file": "scripts/e2e/suites/widgets.mjs",
       "line": 37,
       "module": "widgets",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "uuid",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 6,
+      "module": "testing",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "title",
+      "kind": "variable",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 8,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 10,
+      "module": "testing",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "base",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 20,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "holiday",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 21,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "publishHolidaySet",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 37,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "publishWorkCalendar",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 54,
+      "module": "testing",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "cvExtra",
+      "kind": "function",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "line": 64,
+      "module": "testing",
       "exported": false,
       "container": "run",
       "tags": [
@@ -112355,7 +112912,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 541,
+      "line": 543,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112365,7 +112922,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 546,
+      "line": 548,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112375,7 +112932,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 574,
+      "line": 576,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112385,7 +112942,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 589,
+      "line": 591,
       "module": "security",
       "exported": false,
       "container": "",
@@ -112395,7 +112952,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 614,
+      "line": 616,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112405,7 +112962,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1316,
+      "line": 1318,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112415,7 +112972,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1347,
+      "line": 1349,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112425,7 +112982,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1392,
+      "line": 1394,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112435,7 +112992,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1398,
+      "line": 1400,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112445,7 +113002,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1404,
+      "line": 1406,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112455,7 +113012,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1414,
+      "line": 1416,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112465,7 +113022,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1434,
+      "line": 1436,
       "module": "security",
       "exported": true,
       "container": "",
@@ -112475,7 +113032,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1450,
+      "line": 1452,
       "module": "security",
       "exported": true,
       "container": "",
@@ -135956,6 +136513,58 @@
       "module": "hr"
     },
     {
+      "path": "/api/hr/work-calendars/assignment/command",
+      "localPath": "/work-calendars/assignment/command",
+      "router": "router",
+      "permission": "hr.work_calendar.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "assignSchema",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 83,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/work-calendars/holiday-set/command",
+      "localPath": "/work-calendars/holiday-set/command",
+      "router": "router",
+      "permission": "hr.work_calendar.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "holidaySchema",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 46,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/work-calendars/read",
+      "localPath": "/work-calendars/read",
+      "router": "router",
+      "permission": "hr.work_calendar.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "readSchema",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 102,
+      "module": "hr"
+    },
+    {
+      "path": "/api/hr/work-calendars/version/command",
+      "localPath": "/work-calendars/version/command",
+      "router": "router",
+      "permission": "hr.work_calendar.manage",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "versionSchema",
+      "file": "netlify/functions/routes/hrWorkCalendars.ts",
+      "line": 66,
+      "module": "hr"
+    },
+    {
       "path": "/api/hse/capa/create",
       "localPath": "/capa/create",
       "router": "router",
@@ -151005,43 +151614,316 @@
       "name": "public.finance_pay_policy_preflight",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 247,
+      "line": 272,
       "module": "finance"
     },
     {
       "name": "public.finance_pay_policy_draft_command_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 291,
+      "line": 345,
       "module": "finance"
     },
     {
       "name": "public.finance_pay_policy_copy_version_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 339,
+      "line": 393,
       "module": "finance"
     },
     {
       "name": "public.finance_pay_policy_submit_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 393,
+      "line": 447,
       "module": "finance"
     },
     {
       "name": "public.finance_pay_policy_workflow_transition_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 434,
+      "line": 488,
       "module": "finance"
     },
     {
       "name": "public.finance_pay_policy_admin_command_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000600_finance_pay_policy_setup.sql",
-      "line": 476,
+      "line": 530,
       "module": "finance"
+    },
+    {
+      "name": "public.work_calendar_valid_weekdays",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 24,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_valid_fractions",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 33,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_calendars",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 55,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_calendar_versions",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 65,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendar_one_published_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 88,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_dates",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 91,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_dates_version_effdate_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 112,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendars",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 118,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_versions",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 127,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_one_published_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 156,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_versions_holiday_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 158,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_assignments",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 164,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_assignments_pg_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 188,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_assignments_version_idx",
+      "kind": "index",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 190,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_command_receipts",
+      "kind": "table",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 196,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendars_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 210,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendar_versions_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 211,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendars_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 212,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_versions_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 213,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_assignments_touch",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 214,
+      "module": "platform"
+    },
+    {
+      "name": "public.wc_version_immutable",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 220,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendar_versions_immutable_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 232,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_versions_immutable_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 234,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_dates_guard",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 242,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_dates_guard_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 274,
+      "module": "platform"
+    },
+    {
+      "name": "public.wc_version_delete_guard",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 279,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendar_versions_delete_guard_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 288,
+      "module": "platform"
+    },
+    {
+      "name": "work_calendar_versions_delete_guard_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 290,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_calendars_freeze",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 295,
+      "module": "platform"
+    },
+    {
+      "name": "holiday_calendars_freeze_trg",
+      "kind": "trigger",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 305,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_holiday_checksum",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 327,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_version_checksum",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 347,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_working_days",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 369,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_resolve",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 437,
+      "module": "platform"
+    },
+    {
+      "name": "public.wc_idempotency_gate",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 509,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_assign_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 531,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_command_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 614,
+      "module": "platform"
+    },
+    {
+      "name": "public.holiday_set_command_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 736,
+      "module": "platform"
+    },
+    {
+      "name": "public.work_calendar_purge_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000700_shared_work_calendar.sql",
+      "line": 874,
+      "module": "platform"
     }
   ],
   "e2eSuites": [
@@ -161454,6 +162336,76 @@
         "/api/widgets/packages/install",
         "/api/widgets/packages/list",
         "/api/widgets/packages/uninstall"
+      ]
+    },
+    {
+      "name": "workCalendar",
+      "title": "Shared Work Calendar (F-CAL)",
+      "module": "testing",
+      "file": "scripts/e2e/suites/workCalendar.mjs",
+      "tests": [
+        {
+          "name": "provision roles + pay group",
+          "line": 67
+        },
+        {
+          "name": "routes require auth + deny non-manager (403) / non-viewer",
+          "line": 83
+        },
+        {
+          "name": "draft + add holiday + publish -> checksum + side effects (event/audit/receipt)",
+          "line": 99
+        },
+        {
+          "name": "missing provenance rejected (400 Zod)",
+          "line": 110
+        },
+        {
+          "name": "published version immutable + empty publish rejected + duplicate + out-of-window",
+          "line": 118
+        },
+        {
+          "name": "work draft + publish + checksum determinism",
+          "line": 140
+        },
+        {
+          "name": "invalid pattern rejected",
+          "line": 146
+        },
+        {
+          "name": "assign + overlap + window containment + cancel",
+          "line": 155
+        },
+        {
+          "name": "end_assignment is open-only (needs open version + open assignment)",
+          "line": 167
+        },
+        {
+          "name": "resolution: pay_group / split_period / unresolved / jurisdiction",
+          "line": 183
+        },
+        {
+          "name": "working_days exact count + independent evidence + zero denominator",
+          "line": 197
+        },
+        {
+          "name": "idempotency: replay / same-command-conflict / cross-command-independent",
+          "line": 210
+        },
+        {
+          "name": "rejected op writes no event / audit / receipt",
+          "line": 224
+        },
+        {
+          "name": "seed shell present, no version",
+          "line": 235
+        }
+      ],
+      "apiPaths": [
+        "/api/hr/work-calendars/assignment/command",
+        "/api/hr/work-calendars/holiday-set/command",
+        "/api/hr/work-calendars/read",
+        "/api/hr/work-calendars/version/command"
       ]
     },
     {

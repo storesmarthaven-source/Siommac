@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `5d3b39b519183096dd168ff3`
+Source fingerprint: `e42d1434e7f8d8d7871fb359`
 
-Files: 200 | Symbols: 2189 | Widgets: 12 | Unique mounted endpoints: 245 | Route definitions: 245 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
+Files: 201 | Symbols: 2219 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
 
 ## Widgets and Tiles
 
@@ -264,6 +264,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/sites/list` | `hr.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:963` | res @ src/api/hr/employees.ts:323 | hrEmployeeMaster |
 | `/api/hr/transfers/list` | `hr.transfers.view` | requirePermission | `z.object({     status:     z.string().optional(),     employeeId: z.string().optional(),     limit:      z.number().int().positive().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1389` | - | hrTransfers |
 | `/api/hr/transfers/request` | `hr.transfers.request` | requirePermission | `z.object({     employeeId:    z.string().min(1),     departmentId:  z.string().nullable().optional(),     siteId:        z.string().nullable().optional(),     positionId:    z.string().uuid().nullable().optional(),     supervisorId:  z.string().nullable().optional(),     role:          z.string().nullable().optional(),     monthlySalary: z.number().positive().nullable().optional(),     hourlyRate:    z.number().positive().nullable().optional(),     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),     reason:        z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1345` | - | hrTransfers |
+| `/api/hr/work-calendars/assignment/command` | `hr.work_calendar.manage` | requirePermission | `assignSchema` | `netlify/functions/routes/hrWorkCalendars.ts:83` | - | workCalendar |
+| `/api/hr/work-calendars/holiday-set/command` | `hr.work_calendar.manage` | requirePermission | `holidaySchema` | `netlify/functions/routes/hrWorkCalendars.ts:46` | - | workCalendar |
+| `/api/hr/work-calendars/read` | `hr.work_calendar.view` | requirePermission | `readSchema` | `netlify/functions/routes/hrWorkCalendars.ts:102` | - | workCalendar |
+| `/api/hr/work-calendars/version/command` | `hr.work_calendar.manage` | requirePermission | `versionSchema` | `netlify/functions/routes/hrWorkCalendars.ts:66` | - | workCalendar |
 | `/api/listAssignableRoles` | `employees.edit` | requirePermission | `-` | `netlify/functions/routes/employees.ts:291` | res @ src/components/sections/Employees/api.ts:91 | - |
 | `/api/listAttendance` | `-` | requireRole | `ListAttendanceSchema` | `netlify/functions/routes/attendance.ts:255` | - | - |
 | `/api/listDailyLog` | `-` | requireRole | `ListDailyLogSchema` | `netlify/functions/routes/attendance.ts:303` | res @ src/components/sections/Attendance/api.ts:36 | - |

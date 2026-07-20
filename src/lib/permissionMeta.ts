@@ -104,6 +104,8 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'hr.organization.manage':         { module: 'HR', group: 'Organization',   label: 'Manage Organization',      description: 'Create or edit org units and reporting lines.', risk: 'high' },
   'hr.positions.view':              { module: 'HR', group: 'Organization',   label: 'View Positions',           description: 'View job positions.', risk: 'low' },
   'hr.positions.manage':            { module: 'HR', group: 'Organization',   label: 'Manage Positions',         description: 'Create or edit job positions.', risk: 'high' },
+  'hr.work_calendar.view':          { module: 'HR', group: 'Work Calendar',  label: 'View Work Calendar',       description: 'View holiday sets, work-calendar patterns, assignments and the period-resolution preview.', risk: 'low' },
+  'hr.work_calendar.manage':        { module: 'HR', group: 'Work Calendar',  label: 'Manage Work Calendar',     description: 'Draft/publish holiday sets and work patterns, and assign work calendars to pay groups.', risk: 'high' },
   'hr.cost_centers.view':           { module: 'HR', group: 'Organization',   label: 'View Cost Centres',        description: 'View cost centres.', risk: 'low' },
   'hr.cost_centers.manage':         { module: 'HR', group: 'Organization',   label: 'Manage Cost Centres',      description: 'Create or edit cost centres.', risk: 'high' },
   'hr.organization.delete':         { module: 'HR', group: 'Organization',   label: 'Delete Org Units',         description: 'Hard-delete an org unit (guarded; deactivate is preferred).', risk: 'high' },

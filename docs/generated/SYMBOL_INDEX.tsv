@@ -1,11 +1,11 @@
 symbol	kind	module	exported	tags	file	line	container
-ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	86	
-isAllowedOrigin	function	platform	false		netlify/functions/api.ts	99	
-app	variable	platform	false		netlify/functions/api.ts	108	
-_legacyDispatch	function	platform	false		netlify/functions/api.ts	261	
-NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	291	
-NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	300	
-handler	function	platform	true		netlify/functions/api.ts	304	
+ALLOWED_ORIGINS	variable	platform	false		netlify/functions/api.ts	87	
+isAllowedOrigin	function	platform	false		netlify/functions/api.ts	100	
+app	variable	platform	false		netlify/functions/api.ts	109	
+_legacyDispatch	function	platform	false		netlify/functions/api.ts	263	
+NetlifyV1Event	interface	platform	false		netlify/functions/api.ts	293	
+NetlifyV1Context	interface	platform	false		netlify/functions/api.ts	302	
+handler	function	platform	true		netlify/functions/api.ts	306	
 TZ	variable	platform	false		netlify/functions/auto-checkout.ts	10	
 today24	function	platform	false		netlify/functions/auto-checkout.ts	12	
 hhmm24	function	platform	false		netlify/functions/auto-checkout.ts	15	
@@ -1854,6 +1854,36 @@ err	function	hr	false		netlify/functions/lib/hr/timesheetService.ts	16
 buildTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	18	
 submitTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	72	
 reopenTimesheet	function	hr	true		netlify/functions/lib/hr/timesheetService.ts	147	
+SQLSTATE_HTTP	object	hr	false		netlify/functions/lib/hr/workCalendar.ts	9	
+rpcError	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	10	
+Row	type	hr	false		netlify/functions/lib/hr/workCalendar.ts	15	
+asText	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	16	
+holidayCalendarDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	19	
+workCalendarDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	20	
+holidayVersionDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	21	
+workVersionDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	22	
+holidayDateDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	23	
+assignmentDto	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	24	
+WorkCalendarCommand	interface	hr	true		netlify/functions/lib/hr/workCalendar.ts	27	
+callRpc	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	29	
+holidaySetCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	36	
+workCalendarCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	40	
+assignmentCommand	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	44	
+resolveWorkCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	49	
+MAX_LIMIT	variable	hr	true		netlify/functions/lib/hr/workCalendar.ts	56	
+clampLimit	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	57	
+Cursor	interface	hr	false		netlify/functions/lib/hr/workCalendar.ts	59	
+encodeCursor	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	60	
+decodeCursor	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	63	
+fingerprint	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	71	
+Page	interface	hr	false		netlify/functions/lib/hr/workCalendar.ts	72	
+keysetPage	function	hr	false		netlify/functions/lib/hr/workCalendar.ts	74	
+listHolidayCalendars	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	89	
+listWorkCalendars	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	91	
+getHolidayCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	94	
+getWorkCalendar	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	101	
+listHolidays	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	108	
+listAssignments	function	hr	true		netlify/functions/lib/hr/workCalendar.ts	113	
 EVIDENCE_DOMAIN	variable	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	5	
 evidencePepper	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	7	
 hashEvidence	function	platform	false		netlify/functions/lib/messaging/complianceEvidence.ts	18	
@@ -2086,26 +2116,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	461	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	470	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	482	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	502	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	511	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	974	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	990	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1015	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1025	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1026	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1029	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1045	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1080	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1092	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1093	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1096	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1106	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1119	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1127	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1138	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	463	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	472	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	484	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	504	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	513	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	976	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	992	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1017	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1027	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1028	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1031	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1047	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1082	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1094	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1095	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1098	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1108	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1121	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1129	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1140	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2912,6 +2942,20 @@ body	function	hr	false		netlify/functions/routes/hrRoster.ts	35
 routeErr	function	hr	false		netlify/functions/routes/hrRoster.ts	36	
 router	variable	platform	false		netlify/functions/routes/hrStatutoryProfile.ts	20	
 b	function	platform	false		netlify/functions/routes/hrStatutoryProfile.ts	23	
+router	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	12	
+body	function	platform	false		netlify/functions/routes/hrWorkCalendars.ts	13	
+fail	function	platform	false		netlify/functions/routes/hrWorkCalendars.ts	17	
+date	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	22	
+requestKey	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	23	
+reason	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	24	
+uuid	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	25	
+weekday	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	26	
+fractions	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	27	
+holidayInput	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	28	
+holidaySchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	36	
+versionSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	56	
+assignSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	76	
+readSchema	variable	platform	false		netlify/functions/routes/hrWorkCalendars.ts	93	
 router	variable	platform	false		netlify/functions/routes/hseCapa.ts	22	
 ListCapaSchema	variable	platform	false		netlify/functions/routes/hseCapa.ts	26	
 CreateCapaSchema	variable	platform	false		netlify/functions/routes/hseCapa.ts	86	
@@ -3656,6 +3700,14 @@ createCert	function	testing	false	test	scripts/e2e/suites/training.mjs	40	run
 title	variable	widgets	true	test	scripts/e2e/suites/widgets.mjs	18	
 run	function	widgets	true	test	scripts/e2e/suites/widgets.mjs	20	
 pkg	function	widgets	false	test	scripts/e2e/suites/widgets.mjs	37	run
+uuid	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	6	
+title	variable	testing	true	test	scripts/e2e/suites/workCalendar.mjs	8	
+run	function	testing	true	test	scripts/e2e/suites/workCalendar.mjs	10	
+base	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	20	run
+holiday	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	21	run
+publishHolidaySet	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	37	run
+publishWorkCalendar	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	54	run
+cvExtra	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	64	run
 title	variable	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	8	
 run	function	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	10	
 waitFor	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	24	run
@@ -9969,19 +10021,19 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	541	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	546	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	574	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	589	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	614	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1316	
-resolvePermission	function	security	true		src/lib/permissions.ts	1347	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1392	
-PermissionState	type	security	true		src/lib/permissions.ts	1398	
-permissionState	function	security	true		src/lib/permissions.ts	1404	
-permissionGroups	function	security	true		src/lib/permissions.ts	1414	
-can	function	security	true		src/lib/permissions.ts	1434	
-useCan	function	security	true	hook	src/lib/permissions.ts	1450	
+PermissionKey	type	security	true		src/lib/permissions.ts	543	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	548	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	576	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	591	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	616	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1318	
+resolvePermission	function	security	true		src/lib/permissions.ts	1349	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1394	
+PermissionState	type	security	true		src/lib/permissions.ts	1400	
+permissionState	function	security	true		src/lib/permissions.ts	1406	
+permissionGroups	function	security	true		src/lib/permissions.ts	1416	
+can	function	security	true		src/lib/permissions.ts	1436	
+useCan	function	security	true	hook	src/lib/permissions.ts	1452	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	

@@ -160,6 +160,8 @@ export const PERMISSION_KEYS = [
   'hr.organization.manage',
   'hr.positions.view',
   'hr.positions.manage',
+  'hr.work_calendar.view',   // shared work calendar: read holiday sets, patterns, assignments, resolve preview
+  'hr.work_calendar.manage', // shared work calendar: admin holiday/pattern/assignment commands + publish
   'hr.cost_centers.view',
   'hr.cost_centers.manage',
   'hr.organization.delete',

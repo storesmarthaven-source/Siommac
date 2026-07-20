@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `5d3b39b519183096dd168ff3`
+Source fingerprint: `e42d1434e7f8d8d7871fb359`
 
 Files: 125 | Symbols: 1754 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 201 | E2E suites: 9
 
@@ -450,12 +450,12 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | trigger | `finance_pay_policy_components_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:168` |
 | trigger | `finance_pay_policy_sources_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:170` |
 | trigger | `finance_pay_policy_assignments_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:172` |
-| function | `public.finance_pay_policy_preflight` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:247` |
-| function | `public.finance_pay_policy_draft_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:291` |
-| function | `public.finance_pay_policy_copy_version_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:339` |
-| function | `public.finance_pay_policy_submit_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:393` |
-| function | `public.finance_pay_policy_workflow_transition_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:434` |
-| function | `public.finance_pay_policy_admin_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:476` |
+| function | `public.finance_pay_policy_preflight` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:272` |
+| function | `public.finance_pay_policy_draft_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:345` |
+| function | `public.finance_pay_policy_copy_version_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:393` |
+| function | `public.finance_pay_policy_submit_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:447` |
+| function | `public.finance_pay_policy_workflow_transition_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:488` |
+| function | `public.finance_pay_policy_admin_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:530` |
 
 ## E2E Suites
 

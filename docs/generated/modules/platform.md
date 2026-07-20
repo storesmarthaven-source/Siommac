@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `5d3b39b519183096dd168ff3`
+Source fingerprint: `e42d1434e7f8d8d7871fb359`
 
-Files: 278 | Symbols: 2537 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 243 | E2E suites: 0
+Files: 279 | Symbols: 2551 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 282 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -388,6 +388,39 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `msg_internal._write_compliance_evidence` | `supabase/migrations/20260919000434_messaging_compliance_v1_transactions.sql:10` |
 | table | `if` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:31` |
 | table | `public.approval_seen_receipts` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:44` |
+| function | `public.work_calendar_valid_weekdays` | `supabase/migrations/20260919000700_shared_work_calendar.sql:24` |
+| function | `public.work_calendar_valid_fractions` | `supabase/migrations/20260919000700_shared_work_calendar.sql:33` |
+| table | `public.holiday_calendars` | `supabase/migrations/20260919000700_shared_work_calendar.sql:55` |
+| table | `public.holiday_calendar_versions` | `supabase/migrations/20260919000700_shared_work_calendar.sql:65` |
+| table | `public.holiday_dates` | `supabase/migrations/20260919000700_shared_work_calendar.sql:91` |
+| table | `public.work_calendars` | `supabase/migrations/20260919000700_shared_work_calendar.sql:118` |
+| table | `public.work_calendar_versions` | `supabase/migrations/20260919000700_shared_work_calendar.sql:127` |
+| table | `public.work_calendar_assignments` | `supabase/migrations/20260919000700_shared_work_calendar.sql:164` |
+| table | `public.work_calendar_command_receipts` | `supabase/migrations/20260919000700_shared_work_calendar.sql:196` |
+| trigger | `holiday_calendars_touch` | `supabase/migrations/20260919000700_shared_work_calendar.sql:210` |
+| trigger | `holiday_calendar_versions_touch` | `supabase/migrations/20260919000700_shared_work_calendar.sql:211` |
+| trigger | `work_calendars_touch` | `supabase/migrations/20260919000700_shared_work_calendar.sql:212` |
+| trigger | `work_calendar_versions_touch` | `supabase/migrations/20260919000700_shared_work_calendar.sql:213` |
+| trigger | `work_calendar_assignments_touch` | `supabase/migrations/20260919000700_shared_work_calendar.sql:214` |
+| function | `public.wc_version_immutable` | `supabase/migrations/20260919000700_shared_work_calendar.sql:220` |
+| trigger | `holiday_calendar_versions_immutable_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:232` |
+| trigger | `work_calendar_versions_immutable_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:234` |
+| function | `public.holiday_dates_guard` | `supabase/migrations/20260919000700_shared_work_calendar.sql:242` |
+| trigger | `holiday_dates_guard_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:274` |
+| function | `public.wc_version_delete_guard` | `supabase/migrations/20260919000700_shared_work_calendar.sql:279` |
+| trigger | `holiday_calendar_versions_delete_guard_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:288` |
+| trigger | `work_calendar_versions_delete_guard_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:290` |
+| function | `public.holiday_calendars_freeze` | `supabase/migrations/20260919000700_shared_work_calendar.sql:295` |
+| trigger | `holiday_calendars_freeze_trg` | `supabase/migrations/20260919000700_shared_work_calendar.sql:305` |
+| function | `public.work_calendar_holiday_checksum` | `supabase/migrations/20260919000700_shared_work_calendar.sql:327` |
+| function | `public.work_calendar_version_checksum` | `supabase/migrations/20260919000700_shared_work_calendar.sql:347` |
+| function | `public.work_calendar_working_days` | `supabase/migrations/20260919000700_shared_work_calendar.sql:369` |
+| function | `public.work_calendar_resolve` | `supabase/migrations/20260919000700_shared_work_calendar.sql:437` |
+| function | `public.wc_idempotency_gate` | `supabase/migrations/20260919000700_shared_work_calendar.sql:509` |
+| function | `public.work_calendar_assign_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:531` |
+| function | `public.work_calendar_command_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:614` |
+| function | `public.holiday_set_command_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:736` |
+| function | `public.work_calendar_purge_tx` | `supabase/migrations/20260919000700_shared_work_calendar.sql:874` |
 
 ## E2E Suites
 
@@ -404,6 +437,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/calendar.ts` | 755 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
+| backend-route | `netlify/functions/routes/hrWorkCalendars.ts` | 123 |
 | backend-route | `netlify/functions/routes/hseCapa.ts` | 313 |
 | backend-route | `netlify/functions/routes/hsePtw.ts` | 2367 |
 | backend-route | `netlify/functions/routes/hseTraining.ts` | 558 |
