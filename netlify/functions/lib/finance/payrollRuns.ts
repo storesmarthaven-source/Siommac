@@ -241,6 +241,25 @@ function buildNisContributionPeriods(input: {
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
+/** F-02: pinned pay policy (+ work-calendar pin) for the run-detail chips.
+ * Policy name/version are resolved from the F-01 tables (F-02 reads F-01 per §10);
+ * the calendar block carries the pinned identity + resolution facts, with the
+ * display NAME resolved by the policy-evidence route (§6d) which owns F-CAL display. */
+export interface PayrollRunPayPolicy {
+  versionId: string;
+  checksum: string | null;
+  required: boolean;
+  policyName: string | null;
+  versionNo: number | null;
+  calendar: {
+    workCalendarVersionId: string;
+    workCalendarChecksum: string | null;
+    holidayCalendarChecksum: string | null;
+    scope: string | null;
+    periodDenominator: string | null;
+  } | null;
+}
+
 export interface PayrollRunDto {
   id: string;
   runNo: string;
@@ -279,6 +298,8 @@ export interface PayrollRunDto {
   releasedAt: string | null;
   exportedAt: string | null;
   templateId: string | null;
+  /** F-02 (API-PPR-004): pinned policy + calendar, name-resolved; null on legacy/unpinned runs. */
+  payPolicy: PayrollRunPayPolicy | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -357,6 +378,15 @@ interface DbRunRow {
   reopen_reason: string | null; released_by: string | null; released_at: string | null;
   exported_at: string | null;
   template_id: string | null;
+  // F-02 policy + calendar pins (mig 710)
+  pay_policy_version_id: string | null;
+  pay_policy_checksum: string | null;
+  pay_policy_required: boolean;
+  work_calendar_version_id: string | null;
+  holiday_calendar_version_id: string | null;
+  work_calendar_checksum: string | null;
+  holiday_calendar_checksum: string | null;
+  calendar_resolution: { scope?: string; periodDenominator?: string; assignmentId?: string } | null;
   created_at: string; updated_at: string;
 }
 
@@ -409,6 +439,7 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     reopenReason: r.reopen_reason, releasedBy: r.released_by, releasedAt: r.released_at,
     exportedAt: r.exported_at,
     templateId: r.template_id ?? null,
+    payPolicy: null, // enriched by getPayrollRun via resolveRunPayPolicy (async name resolution)
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -504,11 +535,45 @@ export async function listPayrollRuns(opts: ListRunsOptions = {}): Promise<Payro
   return ((data ?? []) as DbRunRow[]).map(toRunDto);
 }
 
+// F-02 (API-PPR-004): resolve the pinned policy (name/version from F-01) + the
+// calendar pin facts. Reads F-01 tables only (§10); the calendar display NAME is
+// owned by the policy-evidence route (§6d), so no F-CAL table is read here.
+async function resolveRunPayPolicy(r: DbRunRow): Promise<PayrollRunPayPolicy> {
+  const ver = (await sb.from('finance_pay_policy_versions')
+    .select('version_no, policy_id').eq('id', r.pay_policy_version_id ?? '').maybeSingle())
+    .data as { version_no: number; policy_id: string } | null;
+  const policyName = ver?.policy_id
+    ? ((await sb.from('finance_pay_policies').select('name').eq('id', ver.policy_id).maybeSingle())
+        .data as { name: string } | null)?.name ?? null
+    : null;
+  return {
+    versionId: r.pay_policy_version_id ?? '',
+    checksum: r.pay_policy_checksum,
+    required: r.pay_policy_required,
+    policyName,
+    versionNo: ver?.version_no ?? null,
+    calendar: r.work_calendar_version_id
+      ? {
+          workCalendarVersionId: r.work_calendar_version_id,
+          workCalendarChecksum: r.work_calendar_checksum,
+          holidayCalendarChecksum: r.holiday_calendar_checksum,
+          scope: r.calendar_resolution?.scope ?? null,
+          periodDenominator: r.calendar_resolution?.periodDenominator ?? null,
+        }
+      : null,
+  };
+}
+
 export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
   const { data, error } = await sb.from('finance_payroll_runs')
     .select('*').eq('id', id).maybeSingle<DbRunRow>();
   if (error) throw Object.assign(new Error('getPayrollRun: ' + error.message), { status: 500 });
-  return data ? toRunDto(data) : null;
+  if (!data) return null;
+  const dto = toRunDto(data);
+  if (data.pay_policy_required && data.pay_policy_version_id) {
+    dto.payPolicy = await resolveRunPayPolicy(data);
+  }
+  return dto;
 }
 
 /**
