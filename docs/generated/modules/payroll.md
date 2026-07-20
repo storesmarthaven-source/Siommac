@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `e42d1434e7f8d8d7871fb359`
+Source fingerprint: `af4eda728928f0b3ea458766`
 
-Files: 144 | Symbols: 1316 | Widgets: 10 | Unique mounted endpoints: 123 | Route definitions: 123 mounted + 0 unmounted | API calls: 5 | DB objects: 192 | E2E suites: 19
+Files: 148 | Symbols: 1392 | Widgets: 10 | Unique mounted endpoints: 123 | Route definitions: 123 mounted + 0 unmounted | API calls: 5 | DB objects: 192 | E2E suites: 19
 
 ## Widgets and Tiles
 
@@ -190,9 +190,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
 | `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:34` | `-` |
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:34` | `-` |
+| `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
+| `WorkCalendarSetup` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:66` | `-` |
+| `HolidaySetsPanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:144` | `-` |
+| `HolidayEditorModal` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:291` | `-` |
+| `WorkCalendarsPanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:397` | `-` |
+| `PatternFields` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:486` | `-` |
+| `PatternEditorModal` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:577` | `-` |
+| `PublishedHolidayVersionPicker` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:611` | `-` |
+| `AssignmentsPanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:667` | `-` |
+| `AssignModal` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:732` | `-` |
+| `ResolvePanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:792` | `-` |
+| `ResolveResultView` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:834` | `-` |
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:272` | `-` |
 | `PayrollOverview` | function / component | `src/components/sections/Finance/PayrollOverview.tsx:274` | `-` |
-| `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:91` | `-` |
+| `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
 | `Canvas` | function / component | `src/components/sections/PayslipStudio/components/canvas/Canvas.tsx:21` | `-` |
 | `ColumnGuides` | function / component | `src/components/sections/PayslipStudio/components/canvas/ColumnGuides.tsx:10` | `-` |
@@ -402,10 +414,14 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 903 |
 | frontend-page | `src/components/sections/Finance/PayrollOverview.tsx` | 723 |
-| frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 869 |
+| frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 403 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 198 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx` | 860 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts` | 37 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.ts` | 26 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts` | 123 |
+| frontend-page | `src/components/sections/Finance/payroll/setup/workCalendarRules.ts` | 172 |
 | frontend-page | `src/components/sections/PayslipStudio/App.tsx` | 33 |
 | frontend-page | `src/components/sections/PayslipStudio/PayslipStudioSection.tsx` | 136 |
 | frontend-page | `src/components/sections/PayslipStudio/components/DesignsMenu.tsx` | 385 |

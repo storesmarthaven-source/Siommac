@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "490bf6af1aa365e0621d393c65f73c3ae15baae2",
+    "head": "9d659d9f87ac23e4b6ba23da10962653b4efab2d",
     "branch": "codex/payroll-policy-setup",
-    "fingerprint": "e42d1434e7f8d8d7871fb359",
-    "indexedFiles": 1459
+    "fingerprint": "af4eda728928f0b3ea458766",
+    "indexedFiles": 1471
   },
   "summary": {
-    "files": 1147,
-    "symbols": 11441,
+    "files": 1159,
+    "symbols": 11592,
     "widgets": 32,
     "routes": 901,
     "routeDefinitions": 902,
@@ -22,8 +22,8 @@
     {
       "id": "hr",
       "counts": {
-        "files": 201,
-        "symbols": 2219,
+        "files": 202,
+        "symbols": 2243,
         "widgets": 12,
         "routes": 249,
         "routeDefinitions": 249,
@@ -35,8 +35,8 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 144,
-        "symbols": 1316,
+        "files": 148,
+        "symbols": 1392,
         "widgets": 10,
         "routes": 123,
         "routeDefinitions": 123,
@@ -139,8 +139,8 @@
     {
       "id": "platform",
       "counts": {
-        "files": 279,
-        "symbols": 2551,
+        "files": 286,
+        "symbols": 2602,
         "widgets": 0,
         "routes": 27,
         "routeDefinitions": 42,
@@ -1092,8 +1092,8 @@
       "path": "netlify/functions/lib/hr/workCalendar.ts",
       "module": "hr",
       "role": "backend-lib",
-      "lines": 125,
-      "hash": "c38723a66f9b831e"
+      "lines": 179,
+      "hash": "77887a6b18ccff27"
     },
     {
       "path": "netlify/functions/lib/messagingRich.ts",
@@ -1743,8 +1743,8 @@
       "path": "netlify/functions/routes/calendar.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 755,
-      "hash": "26297baae454b0df"
+      "lines": 789,
+      "hash": "8d8d5ed24f32d06c"
     },
     {
       "path": "netlify/functions/routes/communications.ts",
@@ -3070,6 +3070,13 @@
       "hash": "4885237260e16837"
     },
     {
+      "path": "src/api/hr/workCalendars.ts",
+      "module": "hr",
+      "role": "frontend-api",
+      "lines": 103,
+      "hash": "56b9c074b04ac2ee"
+    },
+    {
       "path": "src/api/hse/incidents.ts",
       "module": "hse",
       "role": "frontend-api",
@@ -3847,25 +3854,67 @@
       "hash": "76ec4dd715cef5d1"
     },
     {
+      "path": "src/components/sections/Calendar/AgendaView.tsx",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 70,
+      "hash": "a3611c14d96e2704"
+    },
+    {
+      "path": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 161,
+      "hash": "1bbd1e6713179dbb"
+    },
+    {
       "path": "src/components/sections/Calendar/CalendarPage.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 128,
-      "hash": "08c41f36aa271248"
+      "lines": 184,
+      "hash": "87ebc78895ee187b"
     },
     {
-      "path": "src/components/sections/Calendar/DayDrawer.tsx",
+      "path": "src/components/sections/Calendar/CalendarRail.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 107,
-      "hash": "19e442587c3ba9c8"
+      "lines": 101,
+      "hash": "a2ad442b71766199"
+    },
+    {
+      "path": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 144,
+      "hash": "437e221c67eafec8"
+    },
+    {
+      "path": "src/components/sections/Calendar/MonthView.test.tsx",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 98,
+      "hash": "31fa246166041e0d"
     },
     {
       "path": "src/components/sections/Calendar/MonthView.tsx",
       "module": "platform",
       "role": "frontend-page",
-      "lines": 84,
-      "hash": "5d6053261fed95e3"
+      "lines": 62,
+      "hash": "cdeb92419094629d"
+    },
+    {
+      "path": "src/components/sections/Calendar/calendarViewModel.test.ts",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 146,
+      "hash": "889b4d11c3e04fe2"
+    },
+    {
+      "path": "src/components/sections/Calendar/calendarViewModel.ts",
+      "module": "platform",
+      "role": "frontend-page",
+      "lines": 126,
+      "hash": "bec8554f62d91cab"
     },
     {
       "path": "src/components/sections/Calendar/index.ts",
@@ -4298,8 +4347,8 @@
       "path": "src/components/sections/Finance/PayrollSetupOverview.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 869,
-      "hash": "5a3ffc69c559fa74"
+      "lines": 882,
+      "hash": "10f9e4e139276e48"
     },
     {
       "path": "src/components/sections/Finance/RemittancesOverview.tsx",
@@ -4435,6 +4484,20 @@
       "hash": "ecf53fe54bc819d6"
     },
     {
+      "path": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 198,
+      "hash": "732b9a0c6a98ed74"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 860,
+      "hash": "db65511fbb1b8b59"
+    },
+    {
       "path": "src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts",
       "module": "payroll",
       "role": "frontend-page",
@@ -4447,6 +4510,20 @@
       "role": "frontend-page",
       "lines": 26,
       "hash": "b321fe2d0db08949"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 123,
+      "hash": "b10546e80b32ca23"
+    },
+    {
+      "path": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 172,
+      "hash": "c8962d1e4484c892"
     },
     {
       "path": "src/components/sections/HR/ActionDialogs.tsx",
@@ -4508,8 +4585,8 @@
       "path": "src/components/sections/HR/HRSection.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 90,
-      "hash": "0db3f18419bdfa24"
+      "lines": 93,
+      "hash": "33d39331744155ad"
     },
     {
       "path": "src/components/sections/HR/ImportWizard.tsx",
@@ -4669,8 +4746,8 @@
       "path": "src/components/sections/HR/module.ts",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 114,
-      "hash": "9b03cd96d9235888"
+      "lines": 125,
+      "hash": "a0c635892469b2b2"
     },
     {
       "path": "src/components/sections/HR/mount.ts",
@@ -6623,7 +6700,7 @@
       "module": "platform",
       "role": "frontend",
       "lines": 101,
-      "hash": "aa57b6b229e8ffda"
+      "hash": "8a0e176bdc154b97"
     },
     {
       "path": "src/lib/charts.ts",
@@ -8192,6 +8269,13 @@
       "role": "shared-types",
       "lines": 135,
       "hash": "b3698e5b94ed3a6b"
+    },
+    {
+      "path": "types/workCalendars.ts",
+      "module": "platform",
+      "role": "shared-types",
+      "lines": 145,
+      "hash": "ce5d0ed20cf2dbdf"
     }
   ],
   "symbols": [
@@ -26920,20 +27004,40 @@
       "tags": []
     },
     {
+      "name": "WorkingDaysResult",
+      "kind": "interface",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 52,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "resolveWorkCalendar",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 49,
+      "line": 57,
       "module": "hr",
       "exported": true,
       "container": "",
       "tags": []
     },
     {
+      "name": "fail",
+      "kind": "function",
+      "file": "netlify/functions/lib/hr/workCalendar.ts",
+      "line": 72,
+      "module": "hr",
+      "exported": false,
+      "container": "resolveWorkCalendar",
+      "tags": []
+    },
+    {
       "name": "MAX_LIMIT",
       "kind": "variable",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 56,
+      "line": 110,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -26943,7 +27047,7 @@
       "name": "clampLimit",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 57,
+      "line": 111,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -26953,7 +27057,7 @@
       "name": "Cursor",
       "kind": "interface",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 59,
+      "line": 113,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -26963,7 +27067,7 @@
       "name": "encodeCursor",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 60,
+      "line": 114,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -26973,7 +27077,7 @@
       "name": "decodeCursor",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 63,
+      "line": 117,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -26983,7 +27087,7 @@
       "name": "fingerprint",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 71,
+      "line": 125,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -26993,7 +27097,7 @@
       "name": "Page",
       "kind": "interface",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 72,
+      "line": 126,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27003,7 +27107,7 @@
       "name": "keysetPage",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 74,
+      "line": 128,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -27013,7 +27117,7 @@
       "name": "listHolidayCalendars",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 89,
+      "line": 143,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27023,7 +27127,7 @@
       "name": "listWorkCalendars",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 91,
+      "line": 145,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27033,7 +27137,7 @@
       "name": "getHolidayCalendar",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 94,
+      "line": 148,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27043,7 +27147,7 @@
       "name": "getWorkCalendar",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 101,
+      "line": 155,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27053,7 +27157,7 @@
       "name": "listHolidays",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 108,
+      "line": 162,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -27063,7 +27167,7 @@
       "name": "listAssignments",
       "kind": "function",
       "file": "netlify/functions/lib/hr/workCalendar.ts",
-      "line": 113,
+      "line": 167,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -35143,7 +35247,7 @@
       "name": "parseEntryId",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 133,
+      "line": 134,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35153,7 +35257,7 @@
       "name": "ListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 140,
+      "line": 141,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35163,7 +35267,7 @@
       "name": "wantType",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 177,
+      "line": 182,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35173,7 +35277,7 @@
       "name": "wantModule",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 260,
+      "line": 273,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35183,7 +35287,7 @@
       "name": "GetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 284,
+      "line": 308,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35193,7 +35297,7 @@
       "name": "VISIBILITY",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 314,
+      "line": 344,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35203,7 +35307,7 @@
       "name": "normalizeWhen",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 317,
+      "line": 347,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35213,7 +35317,7 @@
       "name": "validAssignee",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 329,
+      "line": 359,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35223,7 +35327,7 @@
       "name": "CreateTaskSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 336,
+      "line": 367,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35233,7 +35337,7 @@
       "name": "CreateActivitySchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 419,
+      "line": 450,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35243,7 +35347,7 @@
       "name": "isAttendee",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 507,
+      "line": 539,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35253,7 +35357,7 @@
       "name": "canReadEntry",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 519,
+      "line": 552,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35263,7 +35367,7 @@
       "name": "loadEditable",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 535,
+      "line": 568,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35273,7 +35377,7 @@
       "name": "writeException",
       "kind": "function",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 560,
+      "line": 593,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35283,7 +35387,7 @@
       "name": "UpdateSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 581,
+      "line": 615,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35293,7 +35397,7 @@
       "name": "StatusSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 664,
+      "line": 698,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -35303,7 +35407,7 @@
       "name": "CancelSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 714,
+      "line": 748,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -55704,6 +55808,220 @@
       ]
     },
     {
+      "name": "HOLIDAY_SET",
+      "kind": "variable",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 14,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "VERSION",
+      "kind": "variable",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 15,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ASSIGNMENT",
+      "kind": "variable",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 16,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "READ",
+      "kind": "variable",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 17,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "post",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 19,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "requestKey",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 26,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Base",
+      "kind": "type",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 29,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidaySetCommandInput",
+      "kind": "type",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 30,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarCommandInput",
+      "kind": "type",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 38,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentCommandInput",
+      "kind": "type",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 44,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ListArgs",
+      "kind": "interface",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 49,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "workCalendarKeys",
+      "kind": "object",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 51,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "workCalendarsApi",
+      "kind": "object",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 61,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "useHolidayCalendars",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 77,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useWorkCalendars",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 80,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useHolidayCalendar",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 83,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useWorkCalendar",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 86,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useHolidays",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 89,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useAssignments",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 92,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useWorkCalendarMutation",
+      "kind": "function",
+      "file": "src/api/hr/workCalendars.ts",
+      "line": 96,
+      "module": "hr",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "IncidentSeverity",
       "kind": "type",
       "file": "src/api/hse/incidents.ts",
@@ -67922,23 +68240,150 @@
       "tags": []
     },
     {
-      "name": "StatCard",
+      "name": "AgendaTime",
       "kind": "function",
-      "file": "src/components/sections/Calendar/CalendarPage.tsx",
-      "line": 20,
+      "file": "src/components/sections/Calendar/AgendaView.tsx",
+      "line": 6,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": [
-        "component",
-        "ui-tile"
+        "component"
       ]
+    },
+    {
+      "name": "AgendaView",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/AgendaView.tsx",
+      "line": 16,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CalendarItemDialog",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 17,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 49,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 61,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "setTaskStatus",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 79,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "cancelItem",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 89,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "drillThrough",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarItemDialog.tsx",
+      "line": 99,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "SCOPES",
+      "kind": "array",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 23,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "formatPeriodRange",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 30,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Select",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 37,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "FilterPanel",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 45,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "patch",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 52,
+      "module": "platform",
+      "exported": false,
+      "container": "FilterPanel",
+      "tags": []
     },
     {
       "name": "CalendarPage",
       "kind": "function",
       "file": "src/components/sections/Calendar/CalendarPage.tsx",
-      "line": 32,
+      "line": 81,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -67950,7 +68395,7 @@
       "name": "shiftMonth",
       "kind": "function",
       "file": "src/components/sections/Calendar/CalendarPage.tsx",
-      "line": 58,
+      "line": 110,
       "module": "platform",
       "exported": false,
       "container": "CalendarPage",
@@ -67960,37 +68405,47 @@
       "name": "goToday",
       "kind": "function",
       "file": "src/components/sections/Calendar/CalendarPage.tsx",
-      "line": 59,
+      "line": 111,
       "module": "platform",
       "exported": false,
       "container": "CalendarPage",
       "tags": []
     },
     {
-      "name": "openItem",
+      "name": "openCreate",
       "kind": "function",
       "file": "src/components/sections/Calendar/CalendarPage.tsx",
-      "line": 61,
+      "line": 116,
       "module": "platform",
       "exported": false,
       "container": "CalendarPage",
       "tags": []
     },
     {
-      "name": "TYPE_COLOR",
-      "kind": "object",
-      "file": "src/components/sections/Calendar/DayDrawer.tsx",
-      "line": 14,
+      "name": "refresh",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarPage.tsx",
+      "line": 120,
+      "module": "platform",
+      "exported": false,
+      "container": "CalendarPage",
+      "tags": []
+    },
+    {
+      "name": "countTypes",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CalendarRail.tsx",
+      "line": 6,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "Donut",
+      "name": "RailItem",
       "kind": "function",
-      "file": "src/components/sections/Calendar/DayDrawer.tsx",
-      "line": 17,
+      "file": "src/components/sections/Calendar/CalendarRail.tsx",
+      "line": 13,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -67999,28 +68454,200 @@
       ]
     },
     {
-      "name": "AgendaRow",
+      "name": "CalendarRail",
       "kind": "function",
-      "file": "src/components/sections/Calendar/DayDrawer.tsx",
-      "line": 41,
-      "module": "platform",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "DayDrawer",
-      "kind": "function",
-      "file": "src/components/sections/Calendar/DayDrawer.tsx",
-      "line": 64,
+      "file": "src/components/sections/Calendar/CalendarRail.tsx",
+      "line": 26,
       "module": "platform",
       "exported": true,
       "container": "",
       "tags": [
         "component"
       ]
+    },
+    {
+      "name": "item",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.test.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "CalendarViewMode",
+      "kind": "type",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CalendarScope",
+      "kind": "type",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 10,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CalendarFilters",
+      "kind": "interface",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "EMPTY_FILTERS",
+      "kind": "object",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 21,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "calendarSource",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 30,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sourceLabel",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 35,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sourceTone",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 42,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "itemSortValue",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 54,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "filterCalendarItems",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 58,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "groupItemsByDate",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 95,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "upcomingActionItems",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 109,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "activeFilterCount",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/calendarViewModel.ts",
+      "line": 123,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CreateType",
+      "kind": "type",
+      "file": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "line": 6,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "localTimestamp",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "line": 8,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CreateCalendarItemDialog",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "line": 12,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "close",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "line": 47,
+      "module": "platform",
+      "exported": false,
+      "container": "CreateCalendarItemDialog",
+      "tags": []
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/CreateCalendarItemDialog.tsx",
+      "line": 69,
+      "module": "platform",
+      "exported": false,
+      "container": "CreateCalendarItemDialog",
+      "tags": []
     },
     {
       "name": "CALENDAR_ROOT_ID",
@@ -68043,10 +68670,22 @@
       "tags": []
     },
     {
-      "name": "MAX_CHIPS",
+      "name": "item",
+      "kind": "function",
+      "file": "src/components/sections/Calendar/MonthView.test.tsx",
+      "line": 7,
+      "module": "platform",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "MAX_ITEMS",
       "kind": "variable",
       "file": "src/components/sections/Calendar/MonthView.tsx",
-      "line": 14,
+      "line": 6,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -68055,32 +68694,23 @@
       ]
     },
     {
-      "name": "typeIcon",
+      "name": "EventCard",
       "kind": "function",
       "file": "src/components/sections/Calendar/MonthView.tsx",
-      "line": 16,
-      "module": "platform",
-      "exported": true,
-      "container": "",
-      "tags": []
-    },
-    {
-      "name": "Chip",
-      "kind": "function",
-      "file": "src/components/sections/Calendar/MonthView.tsx",
-      "line": 22,
+      "line": 8,
       "module": "platform",
       "exported": false,
       "container": "",
       "tags": [
-        "component"
+        "component",
+        "ui-tile"
       ]
     },
     {
       "name": "MonthView",
       "kind": "function",
       "file": "src/components/sections/Calendar/MonthView.tsx",
-      "line": 37,
+      "line": 18,
       "module": "platform",
       "exported": true,
       "container": "",
@@ -75079,6 +75709,817 @@
       "tags": []
     },
     {
+      "name": "fullHoliday",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts",
+      "line": 10,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "ISO_WEEKDAYS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 6,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WEEKDAY_LABEL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 7,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WEEKDAY_FULL",
+      "kind": "object",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 8,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HOLIDAY_TYPES",
+      "kind": "array",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 9,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_TZ",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 10,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isoDate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 12,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "VersionWindow",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 14,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "inWindow",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 15,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayFormState",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 23,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emptyHolidayForm",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 28,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayFieldErrors",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 33,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "holidayFormValid",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 55,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "toHolidayInput",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 59,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PatternFormState",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 76,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "emptyPatternForm",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 81,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PatternErrors",
+      "kind": "interface",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 83,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "patternFieldErrors",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 84,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "patternFormValid",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 100,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "buildWeekdayFractions",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 105,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "sortedWeekdays",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 116,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "periodError",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 119,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "assignmentWindowError",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 128,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "effectiveError",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 139,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "FRIENDLY_ERROR",
+      "kind": "object",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 150,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "friendlyError",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/workCalendarRules.ts",
+      "line": 170,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "H",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx",
+      "line": 7,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component",
+        "test"
+      ]
+    },
+    {
+      "name": "q",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx",
+      "line": 8,
+      "module": "payroll",
+      "exported": false,
+      "container": "H",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "loaded",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx",
+      "line": 45,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "today",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 25,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "title",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 26,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "range",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 27,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "statusTone",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "patternSummary",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 29,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "shortSum",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 30,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "copyEffectiveDate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 34,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SUBTABS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 45,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "SubTab",
+      "kind": "type",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 51,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 55,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "WorkCalendarSetup",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 66,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Directory",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 88,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "usePager",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 132,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "next",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 135,
+      "module": "payroll",
+      "exported": false,
+      "container": "usePager",
+      "tags": []
+    },
+    {
+      "name": "prev",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 136,
+      "module": "payroll",
+      "exported": false,
+      "container": "usePager",
+      "tags": []
+    },
+    {
+      "name": "reset",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 137,
+      "module": "payroll",
+      "exported": false,
+      "container": "usePager",
+      "tags": []
+    },
+    {
+      "name": "HolidaySetsPanel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 144,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "HolidaySetDetail",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 168,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "doCopy",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 181,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidaySetDetail",
+      "tags": []
+    },
+    {
+      "name": "HolidayVersionEditor",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 220,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "doRemove",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 232,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidayVersionEditor",
+      "tags": []
+    },
+    {
+      "name": "doPublish",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 240,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidayVersionEditor",
+      "tags": []
+    },
+    {
+      "name": "HolidayEditorModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 291,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "set",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 304,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidayEditorModal",
+      "tags": []
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 306,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidayEditorModal",
+      "tags": []
+    },
+    {
+      "name": "HolidayVersionModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 348,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 361,
+      "module": "payroll",
+      "exported": false,
+      "container": "HolidayVersionModal",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarsPanel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 397,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "WorkCalendarDetail",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 421,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "doPublish",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 433,
+      "module": "payroll",
+      "exported": false,
+      "container": "WorkCalendarDetail",
+      "tags": []
+    },
+    {
+      "name": "doCopy",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 442,
+      "module": "payroll",
+      "exported": false,
+      "container": "WorkCalendarDetail",
+      "tags": []
+    },
+    {
+      "name": "PatternFields",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 486,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "toggle",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 488,
+      "module": "payroll",
+      "exported": false,
+      "container": "PatternFields",
+      "tags": []
+    },
+    {
+      "name": "WorkVersionModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 532,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 544,
+      "module": "payroll",
+      "exported": false,
+      "container": "WorkVersionModal",
+      "tags": []
+    },
+    {
+      "name": "PatternEditorModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 577,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 587,
+      "module": "payroll",
+      "exported": false,
+      "container": "PatternEditorModal",
+      "tags": []
+    },
+    {
+      "name": "PublishedHolidayVersionPicker",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 611,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PublishedWorkVersionPicker",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 636,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "AssignmentsPanel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 667,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "doEnd",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 679,
+      "module": "payroll",
+      "exported": false,
+      "container": "AssignmentsPanel",
+      "tags": []
+    },
+    {
+      "name": "doCancel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 687,
+      "module": "payroll",
+      "exported": false,
+      "container": "AssignmentsPanel",
+      "tags": []
+    },
+    {
+      "name": "AssignModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 732,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "save",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 749,
+      "module": "payroll",
+      "exported": false,
+      "container": "AssignModal",
+      "tags": []
+    },
+    {
+      "name": "ResolvePanel",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 792,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 803,
+      "module": "payroll",
+      "exported": false,
+      "container": "ResolvePanel",
+      "tags": []
+    },
+    {
+      "name": "ResolveResultView",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx",
+      "line": 834,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "H",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx",
@@ -75963,7 +77404,7 @@
       "name": "empName",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 55,
+      "line": 56,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -75973,7 +77414,7 @@
       "name": "todayIso",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 58,
+      "line": 59,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -75983,7 +77424,7 @@
       "name": "FREQUENCIES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 60,
+      "line": 61,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -75993,7 +77434,7 @@
       "name": "OT_EVENT_TYPES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 67,
+      "line": 68,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76003,7 +77444,7 @@
       "name": "otEventLabel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 74,
+      "line": 75,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76013,7 +77454,7 @@
       "name": "PAGE_SIZE",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 76,
+      "line": 77,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76025,7 +77466,7 @@
       "name": "paginate",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 77,
+      "line": 78,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76035,7 +77476,7 @@
       "name": "SetupTab",
       "kind": "type",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 89,
+      "line": 90,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76045,7 +77486,7 @@
       "name": "PayrollSetupOverview",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 91,
+      "line": 92,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -76057,7 +77498,7 @@
       "name": "LOAN_TYPES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 131,
+      "line": 144,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76067,7 +77508,7 @@
       "name": "loanStatusTone",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 136,
+      "line": 149,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76077,7 +77518,7 @@
       "name": "LoansPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 148,
+      "line": 161,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76089,7 +77530,7 @@
       "name": "run",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 178,
+      "line": 191,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -76099,7 +77540,7 @@
       "name": "doSubmitLoan",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 185,
+      "line": 198,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -76109,7 +77550,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 208,
+      "line": 221,
       "module": "payroll",
       "exported": false,
       "container": "LoansPanel",
@@ -76119,7 +77560,7 @@
       "name": "NewLoanModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 274,
+      "line": 287,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76131,7 +77572,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 295,
+      "line": 308,
       "module": "payroll",
       "exported": false,
       "container": "NewLoanModal",
@@ -76141,7 +77582,7 @@
       "name": "PayGroupsPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 376,
+      "line": 389,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76153,7 +77594,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 412,
+      "line": 425,
       "module": "payroll",
       "exported": false,
       "container": "PayGroupsPanel",
@@ -76163,7 +77604,7 @@
       "name": "NewPayGroupModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 456,
+      "line": 469,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76175,7 +77616,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 476,
+      "line": 489,
       "module": "payroll",
       "exported": false,
       "container": "NewPayGroupModal",
@@ -76185,7 +77626,7 @@
       "name": "PayGroupMembersModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 554,
+      "line": 567,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76197,7 +77638,7 @@
       "name": "addMember",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 571,
+      "line": 584,
       "module": "payroll",
       "exported": false,
       "container": "PayGroupMembersModal",
@@ -76207,7 +77648,7 @@
       "name": "ruleWindowTone",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 652,
+      "line": 665,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76217,7 +77658,7 @@
       "name": "OvertimeRulesPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 660,
+      "line": 673,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76229,7 +77670,7 @@
       "name": "toggleActive",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 680,
+      "line": 693,
       "module": "payroll",
       "exported": false,
       "container": "OvertimeRulesPanel",
@@ -76239,7 +77680,7 @@
       "name": "rowActions",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 708,
+      "line": 721,
       "module": "payroll",
       "exported": false,
       "container": "OvertimeRulesPanel",
@@ -76249,7 +77690,7 @@
       "name": "NewOvertimeRuleModal",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 764,
+      "line": 777,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -76261,7 +77702,7 @@
       "name": "submit",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollSetupOverview.tsx",
-      "line": 783,
+      "line": 796,
       "module": "payroll",
       "exported": false,
       "container": "NewOvertimeRuleModal",
@@ -81117,7 +82558,7 @@
       "name": "EMP_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 30,
+      "line": 31,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81129,7 +82570,7 @@
       "name": "ONB_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 31,
+      "line": 32,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81141,7 +82582,7 @@
       "name": "ORG_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 32,
+      "line": 33,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81153,7 +82594,7 @@
       "name": "DOC_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 33,
+      "line": 34,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81165,7 +82606,7 @@
       "name": "OFF_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 34,
+      "line": 35,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81177,7 +82618,7 @@
       "name": "LEAVE_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 35,
+      "line": 36,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81189,7 +82630,7 @@
       "name": "TRANSFERS_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 36,
+      "line": 37,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81201,7 +82642,7 @@
       "name": "REQ_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 37,
+      "line": 38,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81213,7 +82654,7 @@
       "name": "ATTENDANCE_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 38,
+      "line": 39,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81225,7 +82666,7 @@
       "name": "ROSTER_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 39,
+      "line": 40,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81237,7 +82678,7 @@
       "name": "COMP_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 40,
+      "line": 41,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81249,7 +82690,19 @@
       "name": "OT_ID",
       "kind": "variable",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 41,
+      "line": 42,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "WORKCAL_ID",
+      "kind": "variable",
+      "file": "src/components/sections/HR/HRSection.tsx",
+      "line": 43,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81261,7 +82714,7 @@
       "name": "isHrSection",
       "kind": "function",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 43,
+      "line": 45,
       "module": "hr",
       "exported": false,
       "container": "",
@@ -81271,7 +82724,7 @@
       "name": "HRSection",
       "kind": "function",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 47,
+      "line": 49,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -81283,7 +82736,7 @@
       "name": "onSection",
       "kind": "function",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 54,
+      "line": 56,
       "module": "hr",
       "exported": false,
       "container": "HRSection",
@@ -81293,7 +82746,7 @@
       "name": "onOpenCase",
       "kind": "function",
       "file": "src/components/sections/HR/HRSection.tsx",
-      "line": 61,
+      "line": 63,
       "module": "hr",
       "exported": false,
       "container": "HRSection",
@@ -81798,10 +83251,20 @@
       "tags": []
     },
     {
+      "name": "WORK_CALENDAR_ITEM",
+      "kind": "object",
+      "file": "src/components/sections/HR/module.ts",
+      "line": 102,
+      "module": "hr",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "hrModule",
       "kind": "object",
       "file": "src/components/sections/HR/module.ts",
-      "line": 99,
+      "line": 110,
       "module": "hr",
       "exported": true,
       "container": "",
@@ -127908,6 +129371,216 @@
       "exported": true,
       "container": "",
       "tags": []
+    },
+    {
+      "name": "VersionStatus",
+      "kind": "type",
+      "file": "types/workCalendars.ts",
+      "line": 5,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayType",
+      "kind": "type",
+      "file": "types/workCalendars.ts",
+      "line": 6,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentScope",
+      "kind": "type",
+      "file": "types/workCalendars.ts",
+      "line": 7,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentStatus",
+      "kind": "type",
+      "file": "types/workCalendars.ts",
+      "line": 8,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CalendarProvenance",
+      "kind": "type",
+      "file": "types/workCalendars.ts",
+      "line": 9,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayCalendarSummary",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 11,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarSummary",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 19,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayVersionDto",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 26,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkVersionDto",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 39,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayDateDto",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 55,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentDto",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 71,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentRow",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 80,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayInput",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 86,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidaySetCommandResult",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 99,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarCommandResult",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 104,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "AssignmentCommandResult",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 108,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "Page",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 113,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "HolidayCalendarDetail",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 114,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkCalendarDetail",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 115,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WorkingDayExclusion",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 117,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "ResolvePreview",
+      "kind": "interface",
+      "file": "types/workCalendars.ts",
+      "line": 126,
+      "module": "platform",
+      "exported": true,
+      "container": "",
+      "tags": []
     }
   ],
   "widgets": [
@@ -128570,7 +130243,7 @@
       ],
       "schema": "CreateActivitySchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 432,
+      "line": 463,
       "module": "platform"
     },
     {
@@ -128583,7 +130256,7 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 720,
+      "line": 754,
       "module": "platform"
     },
     {
@@ -128596,7 +130269,7 @@
       ],
       "schema": "GetSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 286,
+      "line": 310,
       "module": "platform"
     },
     {
@@ -128609,7 +130282,7 @@
       ],
       "schema": "ListSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 151,
+      "line": 152,
       "module": "platform"
     },
     {
@@ -128623,7 +130296,7 @@
       ],
       "schema": "CreateTaskSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 349,
+      "line": 380,
       "module": "platform"
     },
     {
@@ -128637,7 +130310,7 @@
       ],
       "schema": "StatusSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 671,
+      "line": 705,
       "module": "platform"
     },
     {
@@ -128651,7 +130324,7 @@
       ],
       "schema": "UpdateSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 599,
+      "line": 633,
       "module": "platform"
     },
     {

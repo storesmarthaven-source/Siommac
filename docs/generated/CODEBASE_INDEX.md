@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `490bf6af1aa365e0621d393c65f73c3ae15baae2`  
-Source fingerprint: `e42d1434e7f8d8d7871fb359`  
+Source HEAD: `9d659d9f87ac23e4b6ba23da10962653b4efab2d`  
+Source fingerprint: `af4eda728928f0b3ea458766`  
 Generator version: `1`
 
 ## Use
@@ -19,14 +19,14 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1147 | 11441 | 32 | 901 | 902 | 17 | 379 | 1244 | 70 | 2285 |
+| 1159 | 11592 | 32 | 901 | 902 | 17 | 379 | 1244 | 70 | 2285 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
-| hr | 201 | 2219 | 12 | 249 | 249 | 57 | 156 | 14 | [open](modules/hr.md) |
-| payroll | 144 | 1316 | 10 | 123 | 123 | 5 | 192 | 19 | [open](modules/payroll.md) |
+| hr | 202 | 2243 | 12 | 249 | 249 | 57 | 156 | 14 | [open](modules/hr.md) |
+| payroll | 148 | 1392 | 10 | 123 | 123 | 5 | 192 | 19 | [open](modules/payroll.md) |
 | finance | 125 | 1754 | 10 | 156 | 156 | 4 | 201 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 103 | 937 | 0 | 72 | 75 | 88 | 120 | 4 | [open](modules/communications.md) |
@@ -34,7 +34,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | security | 45 | 378 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 42 | 246 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
 | widgets | 49 | 289 | 0 | 13 | 13 | 11 | 14 | 1 | [open](modules/widgets.md) |
-| platform | 279 | 2551 | 0 | 27 | 42 | 50 | 282 | 0 | [open](modules/platform.md) |
+| platform | 286 | 2602 | 0 | 27 | 42 | 50 | 282 | 0 | [open](modules/platform.md) |
 | testing | 25 | 155 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 
 ## Widget and Tile Directory

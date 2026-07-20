@@ -25,13 +25,13 @@ path	module	permission	guards	schema	file	line
 /api/auth/trusted-devices/list	security		requireUser		netlify/functions/routes/trustedDevices.ts	37
 /api/auth/trusted-devices/revoke	security		requireUser		netlify/functions/routes/trustedDevices.ts	81
 /api/auth/trusted-devices/revoke-all	security				netlify/functions/routes/trustedDevices.ts	120
-/api/calendar/activity/create	platform	calendar.activity.manage_own	requirePermission	CreateActivitySchema	netlify/functions/routes/calendar.ts	432
-/api/calendar/cancel	platform	calendar.view	requirePermission	CancelSchema	netlify/functions/routes/calendar.ts	720
-/api/calendar/get	platform	calendar.view	requirePermission	GetSchema	netlify/functions/routes/calendar.ts	286
-/api/calendar/list	platform	calendar.view	requirePermission	ListSchema	netlify/functions/routes/calendar.ts	151
-/api/calendar/task/create	platform	calendar.task.manage_own	requirePermission,userCan	CreateTaskSchema	netlify/functions/routes/calendar.ts	349
-/api/calendar/task/status	platform	calendar.view	requirePermission,userCan	StatusSchema	netlify/functions/routes/calendar.ts	671
-/api/calendar/update	platform	calendar.view	requirePermission,userCan	UpdateSchema	netlify/functions/routes/calendar.ts	599
+/api/calendar/activity/create	platform	calendar.activity.manage_own	requirePermission	CreateActivitySchema	netlify/functions/routes/calendar.ts	463
+/api/calendar/cancel	platform	calendar.view	requirePermission	CancelSchema	netlify/functions/routes/calendar.ts	754
+/api/calendar/get	platform	calendar.view	requirePermission	GetSchema	netlify/functions/routes/calendar.ts	310
+/api/calendar/list	platform	calendar.view	requirePermission	ListSchema	netlify/functions/routes/calendar.ts	152
+/api/calendar/task/create	platform	calendar.task.manage_own	requirePermission,userCan	CreateTaskSchema	netlify/functions/routes/calendar.ts	380
+/api/calendar/task/status	platform	calendar.view	requirePermission,userCan	StatusSchema	netlify/functions/routes/calendar.ts	705
+/api/calendar/update	platform	calendar.view	requirePermission,userCan	UpdateSchema	netlify/functions/routes/calendar.ts	633
 /api/clearAllNotifications	communications		requireUser		netlify/functions/routes/notify.ts	181
 /api/clearClosedTickets	communications		requireUser		netlify/functions/routes/tickets.ts	144
 /api/communications/compliance/access-events/list	communications	communications.compliance_read	requirePermission	AccessEventsListSchema	netlify/functions/routes/communicationsCompliance.ts	451

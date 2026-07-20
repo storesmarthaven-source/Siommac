@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `e42d1434e7f8d8d7871fb359`
+Source fingerprint: `af4eda728928f0b3ea458766`
 
-Files: 279 | Symbols: 2551 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 282 | E2E suites: 0
+Files: 286 | Symbols: 2602 | Widgets: 0 | Unique mounted endpoints: 27 | Route definitions: 27 mounted + 15 unmounted | API calls: 50 | DB objects: 282 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -19,13 +19,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
 | `/api/addProjectSite` | `sites.add` | requirePermission | `AddSiteSchema` | `netlify/functions/routes/sites.ts:81` | res @ src/api/sites.ts:134<br>addProjectSiteApi @ src/components/sections/ProjectSites/api.ts:80 | - |
-| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:432` | useCreateActivity @ src/api/calendar.ts:84 | calendar |
-| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:720` | useCancelEntry @ src/api/calendar.ts:122 | calendar |
-| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:286` | res @ src/api/calendar.ts:54 | calendar |
-| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:151` | res @ src/api/calendar.ts:41 | calendar |
-| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:349` | useCreateTask @ src/api/calendar.ts:72 | calendar |
-| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:671` | useTaskStatus @ src/api/calendar.ts:109 | calendar |
-| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:599` | useUpdateEntry @ src/api/calendar.ts:96 | calendar |
+| `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:463` | useCreateActivity @ src/api/calendar.ts:84 | calendar |
+| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:754` | useCancelEntry @ src/api/calendar.ts:122 | calendar |
+| `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:310` | res @ src/api/calendar.ts:54 | calendar |
+| `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:152` | res @ src/api/calendar.ts:41 | calendar |
+| `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:380` | useCreateTask @ src/api/calendar.ts:72 | calendar |
+| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:705` | useTaskStatus @ src/api/calendar.ts:109 | calendar |
+| `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:633` | useUpdateEntry @ src/api/calendar.ts:96 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
@@ -147,9 +147,12 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ComplianceRevokeDialog` | function / component | `src/components/sections/AccessControl/pages/ComplianceRevokeDialog.tsx:16` | `-` |
 | `AdminStatCards` | function / component, ui-tile | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:59` | `-` |
 | `AdminRecentTable` | function / component | `src/components/sections/AdminDashboard/AdminDashboardController.tsx:99` | `-` |
-| `CalendarPage` | function / component | `src/components/sections/Calendar/CalendarPage.tsx:32` | `-` |
-| `DayDrawer` | function / component | `src/components/sections/Calendar/DayDrawer.tsx:64` | `-` |
-| `MonthView` | function / component | `src/components/sections/Calendar/MonthView.tsx:37` | `-` |
+| `AgendaView` | function / component | `src/components/sections/Calendar/AgendaView.tsx:16` | `-` |
+| `CalendarItemDialog` | function / component | `src/components/sections/Calendar/CalendarItemDialog.tsx:17` | `-` |
+| `CalendarPage` | function / component | `src/components/sections/Calendar/CalendarPage.tsx:81` | `-` |
+| `CalendarRail` | function / component | `src/components/sections/Calendar/CalendarRail.tsx:26` | `-` |
+| `CreateCalendarItemDialog` | function / component | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx:12` | `-` |
+| `MonthView` | function / component | `src/components/sections/Calendar/MonthView.tsx:18` | `-` |
 | `DashboardController` | function / component | `src/components/sections/Dashboard/DashboardController.tsx:96` | `-` |
 | `LiveMapController` | function / component | `src/components/sections/LiveMap/LiveMapController.tsx:65` | `-` |
 | `MyProfileSection` | function / component | `src/components/sections/Profile/MyProfileSection.tsx:1025` | `-` |
@@ -277,10 +280,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Tabs` | function / component | `src/ui/components/Tabs.tsx:28` | `-` |
 | `Toolbar` | function / component | `src/ui/components/Toolbar.tsx:19` | `-` |
 | `SearchInput` | function / component | `src/ui/components/Toolbar.tsx:35` | `-` |
-| `FilterSelect` | function / component | `src/ui/components/Toolbar.tsx:58` | `-` |
-| `Wizard` | function / component | `src/ui/components/Wizard.tsx:44` | `-` |
-| `WizardShell` | function / component | `src/ui/components/WizardShell.tsx:44` | `-` |
-| ... | 37 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 40 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -434,7 +434,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/calendar.ts` | 755 |
+| backend-route | `netlify/functions/routes/calendar.ts` | 789 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
 | backend-route | `netlify/functions/routes/hrWorkCalendars.ts` | 123 |
@@ -469,9 +469,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/AdminDashboard/api.ts` | 30 |
 | frontend-page | `src/components/sections/AdminDashboard/index.ts` | 13 |
 | frontend-page | `src/components/sections/AdminDashboard/mount.ts` | 16 |
-| frontend-page | `src/components/sections/Calendar/CalendarPage.tsx` | 128 |
-| frontend-page | `src/components/sections/Calendar/DayDrawer.tsx` | 107 |
-| frontend-page | `src/components/sections/Calendar/MonthView.tsx` | 84 |
+| frontend-page | `src/components/sections/Calendar/AgendaView.tsx` | 70 |
+| frontend-page | `src/components/sections/Calendar/CalendarItemDialog.tsx` | 161 |
+| frontend-page | `src/components/sections/Calendar/CalendarPage.tsx` | 184 |
+| frontend-page | `src/components/sections/Calendar/CalendarRail.tsx` | 101 |
+| frontend-page | `src/components/sections/Calendar/CreateCalendarItemDialog.tsx` | 144 |
+| frontend-page | `src/components/sections/Calendar/MonthView.test.tsx` | 98 |
+| frontend-page | `src/components/sections/Calendar/MonthView.tsx` | 62 |
+| frontend-page | `src/components/sections/Calendar/calendarViewModel.test.ts` | 146 |
+| frontend-page | `src/components/sections/Calendar/calendarViewModel.ts` | 126 |
 | frontend-page | `src/components/sections/Calendar/index.ts` | 10 |
 | frontend-page | `src/components/sections/Calendar/module.ts` | 34 |
 | frontend-page | `src/components/sections/Calendar/mount.ts` | 20 |
@@ -505,4 +511,5 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/messaging.ts` | 281 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
+| shared-types | `types/workCalendars.ts` | 145 |
 
