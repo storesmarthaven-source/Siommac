@@ -28,6 +28,7 @@ import {
   SummaryPanel, PopulationPanel, ReconciliationPanel, ApprovalsPanel, AuditPanel,
   InputsPanel, ExceptionsPanel, ReleasePanel,
 } from './payRunDetail/panels';
+import { CalcFailurePanel } from './payRunDetail/CalcFailurePanel';
 
 type TabKey = 'summary' | 'population' | 'inputs' | 'reconciliation' | 'exceptions' | 'approvals' | 'release' | 'audit';
 
@@ -156,29 +157,36 @@ export function PayRunDetailPage({ runId, onBack, canManage, canApprove, actions
       </section>
 
       {/* next-action banner */}
-      <NextActionBanner status={run.status} blockers={blockers} preflight={preflight} onGo={() => setTab('exceptions')} />
+      <NextActionBanner status={run.status} blockers={blockers} attempt={workspace?.calculationAttempts.length ?? 0} preflight={preflight} onGo={() => setTab('exceptions')} />
 
-      {/* tabs */}
-      <nav class="run-tabs">
-        {TAB_DEFS.map(t => (
-          <button type="button" class={`tab${tab === t.key ? ' on' : ''}`} key={t.key} onClick={() => setTab(t.key)}>
-            {t.label}
-            {t.key === 'exceptions' && blockers > 0 && <span class="pill red" style={{ padding: '2px 8px', fontSize: 11 }}>{blockers}</span>}
-          </button>
-        ))}
-      </nav>
+      {run.status === 'calculation_failed' ? (
+        /* F-05 — calculation-failure recovery replaces the tabs while the run is failed */
+        <CalcFailurePanel workspace={workspace} />
+      ) : (
+        <Fragment>
+          {/* tabs */}
+          <nav class="run-tabs">
+            {TAB_DEFS.map(t => (
+              <button type="button" class={`tab${tab === t.key ? ' on' : ''}`} key={t.key} onClick={() => setTab(t.key)}>
+                {t.label}
+                {t.key === 'exceptions' && blockers > 0 && <span class="pill red" style={{ padding: '2px 8px', fontSize: 11 }}>{blockers}</span>}
+              </button>
+            ))}
+          </nav>
 
-      {/* active panel */}
-      <div class="run-panel on">
-        {tab === 'summary'        && <SummaryPanel run={run} workspace={workspace} preflight={preflight} />}
-        {tab === 'population'     && <PopulationPanel runId={run.id} />}
-        {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace?.inputSnapshot} />}
-        {tab === 'reconciliation' && <ReconciliationPanel runId={run.id} />}
-        {tab === 'exceptions'     && <ExceptionsPanel run={run} workspace={workspace} canManage={canManage} />}
-        {tab === 'approvals'      && <ApprovalsPanel run={run} />}
-        {tab === 'release'        && <ReleasePanel run={run} preflight={preflight} canManage={canManage} actions={actions} />}
-        {tab === 'audit'          && <AuditPanel runId={run.id} />}
-      </div>
+          {/* active panel */}
+          <div class="run-panel on">
+            {tab === 'summary'        && <SummaryPanel run={run} workspace={workspace} preflight={preflight} />}
+            {tab === 'population'     && <PopulationPanel runId={run.id} />}
+            {tab === 'inputs'         && <InputsPanel run={run} canManage={canManage} inputSnapshot={workspace?.inputSnapshot} />}
+            {tab === 'reconciliation' && <ReconciliationPanel runId={run.id} />}
+            {tab === 'exceptions'     && <ExceptionsPanel run={run} workspace={workspace} canManage={canManage} />}
+            {tab === 'approvals'      && <ApprovalsPanel run={run} />}
+            {tab === 'release'        && <ReleasePanel run={run} preflight={preflight} canManage={canManage} actions={actions} />}
+            {tab === 'audit'          && <AuditPanel runId={run.id} />}
+          </div>
+        </Fragment>
+      )}
 
       <div class="footer-note">Payroll run workspace · {run.runNo}</div>
     </div>
@@ -194,6 +202,7 @@ function HeaderActions({ run, canManage, canApprove, actions }: {
   const btns: VNode[] = [];
   if (s === 'draft' && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>);
   if ((s === 'input_locked' || s === 'returned') && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>Calculate</button>);
+  if (s === 'calculation_failed' && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onCalculate(run)}>Retry Calculation</button>);
   if ((s === 'calculated' || s === 'returned') && canManage) btns.push(<button class="btn primary" type="button" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit For Approval' : 'Submit For Approval'}</button>);
   if (s === 'pending_approval' && canApprove) {
     btns.push(<button class="btn primary" type="button" onClick={() => actions.onApprove(run)}>Approve</button>);
@@ -218,9 +227,21 @@ function Metric({ ico, tone, k, v, s }: { ico: string; tone: string; k: string; 
   );
 }
 
-function NextActionBanner({ status, blockers, preflight, onGo }: {
-  status: string; blockers: number; preflight: { ready?: boolean; alreadyReleased?: boolean } | undefined; onGo: () => void;
+function NextActionBanner({ status, blockers, attempt, preflight, onGo }: {
+  status: string; blockers: number; attempt: number; preflight: { ready?: boolean; alreadyReleased?: boolean } | undefined; onGo: () => void;
 }): VNode | null {
+  if (status === 'calculation_failed') {
+    return (
+      <section class="banner danger">
+        <div class="b-ico">!</div>
+        <div>
+          <div class="b-eyebrow">CALCULATION STOPPED</div>
+          <div class="b-title">{attempt > 0 ? `Calculation attempt ${attempt} failed` : 'The calculation failed'} without committing any results</div>
+          <div class="b-sub">No partial payroll was written. Correct the source records below, then retry as a new attempt.</div>
+        </div>
+      </section>
+    );
+  }
   if (blockers > 0) {
     return (
       <section class="banner danger">
