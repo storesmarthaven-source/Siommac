@@ -119,8 +119,12 @@ export function PayrollRunRegisterPage(): VNode {
   const result   = listQ.data;
   const items    = result?.items ?? [];
   const counts   = result?.tabCounts;
+  const agg      = result?.aggregates;
   const payGroups = payGroupsQ.data ?? [];
   const views    = viewsQ.data ?? [];
+  const fundedPct = agg && agg.fundingRequired.amount > 0
+    ? `${Math.round((agg.fundingConfirmed.amount / agg.fundingRequired.amount) * 100)}% funded`
+    : 'Fully funded';
 
   // ── Filter / paging handlers ───────────────────────────────────────────────
   const changeTab = (t: PayrollRunListTab): void => { setTab(t); resetPage(); };
@@ -205,6 +209,12 @@ export function PayrollRunRegisterPage(): VNode {
         <Metric ico="red"  k="Need Action"       v={counts?.attention}   loading={listQ.isLoading} />
         <Metric ico="amber" k="Awaiting Approval" v={counts?.approval}   loading={listQ.isLoading} />
         <Metric ico="green" k="Released"          v={counts?.released}    loading={listQ.isLoading} />
+        <Metric ico="amber" k="Funding Gap"
+          text={agg ? money(agg.fundingGap.amount) : '—'} sub={agg ? fundedPct : undefined}
+          loading={listQ.isLoading} />
+        <Metric ico="green" k="Closed Net"
+          text={agg ? money(agg.closedNet.amount) : '—'} sub={agg ? 'Released & exported' : undefined}
+          loading={listQ.isLoading} />
         <Metric ico="blue" k="Next Pay Date"
           text={nextCal ? fmtDate(nextCal.payDate) : (calendarQ.isLoading ? '' : '—')}
           sub={nextCal ? nextCal.payGroup.name : undefined} loading={calendarQ.isLoading && !nextCal} />
@@ -282,18 +292,18 @@ export function PayrollRunRegisterPage(): VNode {
           <table class="prr-table">
             <thead><tr>
               <th>Run</th><th>Pay Group</th><th>Period &amp; Pay Date</th>
-              <th class="num">Net Payroll</th><th>Lifecycle</th><th>Status</th><th aria-label="Open" />
+              <th class="num">Net Payroll</th><th>Lifecycle</th><th>Status</th><th>Owner</th><th aria-label="Open" />
             </tr></thead>
             <tbody>
               {listQ.isLoading && (
-                <tr><td colSpan={7} class="prr-loading"><span class="prr-skel" /></td></tr>
+                <tr><td colSpan={8} class="prr-loading"><span class="prr-skel" /></td></tr>
               )}
               {listQ.isError && (
-                <tr><td colSpan={7} class="prr-empty"><i class="fa-solid fa-triangle-exclamation" />
+                <tr><td colSpan={8} class="prr-empty"><i class="fa-solid fa-triangle-exclamation" />
                   <strong>Could not load the register</strong><small>Retry, or adjust the filters.</small></td></tr>
               )}
               {!listQ.isLoading && !listQ.isError && items.length === 0 && (
-                <tr><td colSpan={7} class="prr-empty"><i class="fa-regular fa-folder-open" />
+                <tr><td colSpan={8} class="prr-empty"><i class="fa-regular fa-folder-open" />
                   <strong>No payroll runs match this view</strong><small>Change a filter or clear the search.</small></td></tr>
               )}
               {!listQ.isLoading && items.map(r => <RunRow key={r.id} r={r} onOpen={() => openRun(r.id)} />)}
@@ -367,6 +377,7 @@ function RunRow({ r, onOpen }: { r: PayrollRunListItem; onOpen: () => void }): V
         <small>{r.readiness.label}{r.readiness.blockers > 0 ? ` · ${r.readiness.blockers} blocker${r.readiness.blockers === 1 ? '' : 's'}` : ''}</small>
       </td>
       <td><span class={`prr-pill ${pill.cls}`}><i class="prr-dot" />{pill.label}</span></td>
+      <td class="prr-owner">{r.owner.name ?? '—'}</td>
       <td class="prr-open"><i class="fa-solid fa-arrow-right" /></td>
     </tr>
   );

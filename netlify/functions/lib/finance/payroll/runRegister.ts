@@ -25,6 +25,8 @@ import type {
   PayrollRunListTab,
   PayrollRunState,
   PayrollRunSort,
+  PayrollRunRegisterAggregates,
+  MoneyValue,
 } from '../../../../../types/payrollRuns';
 import type {
   PayrollRunType,
@@ -61,8 +63,8 @@ function filterFingerprint(req: Omit<PayrollRunListPageRequest, 'cursor' | 'limi
   return hashStr(canonical);
 }
 
-type CursorKeyDateSort = { sort: 'pay_date_desc' | 'pay_date_asc'; k: [string | null, string, string, string] };
-type CursorKeyUpdated  = { sort: 'updated_desc'; k: [string, string] };
+interface CursorKeyDateSort { sort: 'pay_date_desc' | 'pay_date_asc'; k: [string | null, string, string, string] }
+interface CursorKeyUpdated { sort: 'updated_desc'; k: [string, string] }
 type CursorKey = CursorKeyDateSort | CursorKeyUpdated;
 
 function encodeCursor(key: CursorKey, fingerprint: string): string {
@@ -93,20 +95,20 @@ function decodeCursor(cursor: string, fingerprint: string, sort: PayrollRunSort)
   const k = obj.k as unknown[];
 
   if (sort === 'updated_desc') {
-    if (k.length < 2 || typeof k[0] !== 'string' || typeof k[1] !== 'string' || !UUID.test(k[1] as string)) {
+    if (k.length < 2 || typeof k[0] !== 'string' || typeof k[1] !== 'string' || !UUID.test(k[1])) {
       return malformed();
     }
-    return { sort: 'updated_desc', k: [k[0] as string, k[1] as string] };
+    return { sort: 'updated_desc', k: [k[0], k[1]] };
   }
   // pay_date_desc | pay_date_asc
   if (k.length < 4) return malformed();
-  const payDateOk = k[0] === null || (typeof k[0] === 'string' && DATE.test(k[0] as string));
-  const periodEndOk = typeof k[1] === 'string' && DATE.test(k[1] as string);
-  const runNoOk     = typeof k[2] === 'string' && (k[2] as string).length > 0 && (k[2] as string).length <= 100;
-  const idOk        = typeof k[3] === 'string' && UUID.test(k[3] as string);
+  const payDateOk = k[0] === null || (typeof k[0] === 'string' && DATE.test(k[0]));
+  const periodEndOk = typeof k[1] === 'string' && DATE.test(k[1]);
+  const runNoOk     = typeof k[2] === 'string' && (k[2]).length > 0 && (k[2]).length <= 100;
+  const idOk        = typeof k[3] === 'string' && UUID.test(k[3]);
   if (!(payDateOk && periodEndOk && runNoOk && idOk)) return malformed();
   return {
-    sort: sort as 'pay_date_desc' | 'pay_date_asc',
+    sort: sort,
     k: [k[0] as string | null, k[1] as string, k[2] as string, k[3] as string],
   };
 }
@@ -114,7 +116,7 @@ function decodeCursor(cursor: string, fingerprint: string, sort: PayrollRunSort)
 function makeCursorKey(run: RunMinimal, sort: PayrollRunSort): CursorKey {
   if (sort === 'updated_desc') return { sort: 'updated_desc', k: [run.updated_at, run.id] };
   return {
-    sort: sort as 'pay_date_desc' | 'pay_date_asc',
+    sort: sort,
     k: [run.pay_date, run.period_end, run.run_no, run.id],
   };
 }
@@ -138,6 +140,7 @@ interface RunMinimal {
   gross_total: number;
   net_total: number;
   cut_off_date: string | null;
+  created_by: string | null;
 }
 
 // ── Tab predicates ─────────────────────────────────────────────────────────────
@@ -309,7 +312,7 @@ export async function listPayrollRunsRegister(
       'id,run_no,status,run_type,current_calculation_version_id,' +
       'pay_date,period_start,period_end,updated_at,' +
       'source_run_id,pay_group_id,pay_group,' +
-      'employee_count,gross_total,net_total,cut_off_date',
+      'employee_count,gross_total,net_total,cut_off_date,created_by',
     );
 
   // State filter (default excludes cancelled)
@@ -404,21 +407,101 @@ export async function listPayrollRunsRegister(
   const hasMore   = pageSlice.length > limit;
   const pageRuns  = pageSlice.slice(0, limit);
 
-  // ── 6. Enrich page items ──────────────────────────────────────────────────
-  const pageCalcVsnIds  = [...new Set(pageRuns.map(r => r.current_calculation_version_id).filter((v): v is string => v !== null))];
-  const pageSourceRunIds = [...new Set(pageRuns.map(r => r.source_run_id).filter((v): v is string => v !== null))];
-  const pagePayGroupIds  = [...new Set(pageRuns.map(r => r.pay_group_id).filter((v): v is string => v !== null))];
-
+  // ── 6. Effective totals for ALL runs (cv coalesce) — used by BOTH the money
+  //       aggregates (full filtered scope) AND page enrichment. Fetched once.
   interface CalcVersionRow { id: string; employee_count: number; gross_total: number; net_total: number }
   const cvMap = new Map<string, CalcVersionRow>();
-  if (pageCalcVsnIds.length > 0) {
-    const { data, error } = await sb
-      .from('finance_payroll_calculation_versions')
-      .select('id,employee_count,gross_total,net_total')
-      .in('id', pageCalcVsnIds);
-    if (error) throw Object.assign(new Error('listPayrollRunsRegister/calc-versions: ' + error.message), { status: 500 });
-    for (const cv of (data ?? []) as CalcVersionRow[]) cvMap.set(cv.id, cv);
+  const allCalcVsnIds = [...new Set(allRuns.map(r => r.current_calculation_version_id).filter((v): v is string => v !== null))];
+  if (allCalcVsnIds.length > 0) {
+    const CHUNK = 200;
+    for (let i = 0; i < allCalcVsnIds.length; i += CHUNK) {
+      const chunk = allCalcVsnIds.slice(i, i + CHUNK);
+      const { data, error } = await sb
+        .from('finance_payroll_calculation_versions')
+        .select('id,employee_count,gross_total,net_total')
+        .in('id', chunk);
+      if (error) throw Object.assign(new Error('listPayrollRunsRegister/calc-versions: ' + error.message), { status: 500 });
+      for (const cv of (data ?? []) as CalcVersionRow[]) cvMap.set(cv.id, cv);
+    }
   }
+
+  // Effective net per run: coalesce(cv.net_total, run.net_total) — the CC register rule.
+  const effNetOf = (run: RunMinimal): number => {
+    const cv = run.current_calculation_version_id ? cvMap.get(run.current_calculation_version_id) : undefined;
+    return cv ? Number(cv.net_total) : Number(run.net_total);
+  };
+  const CLOSED_STATUSES = new Set(['released', 'exported']);
+  // fundable — EXACTLY the CC/mig-430 predicate.
+  const isFundable = (run: RunMinimal): boolean =>
+    run.current_calculation_version_id !== null
+    && effNetOf(run) > 0
+    && !CLOSED_STATUSES.has(run.status)
+    && run.status !== 'cancelled';
+
+  // ── 6b. Latest funding confirmation per fundable run (run_id + current cv) ────
+  //   Mirrors mig 430: fc.run_id = r.id AND fc.calculation_version_id = r.current cv,
+  //   ordered by confirmation_no desc → latest wins.
+  const fundedById = new Map<string, number>();
+  const fundableIds = allRuns.filter(isFundable).map(r => r.id);
+  if (fundableIds.length > 0) {
+    interface FundingRow { run_id: string; calculation_version_id: string | null; confirmed_amount: number | string; confirmation_no: number }
+    const seenNo = new Map<string, number>();
+    const CHUNK = 200;
+    for (let i = 0; i < fundableIds.length; i += CHUNK) {
+      const chunk = fundableIds.slice(i, i + CHUNK);
+      const { data, error } = await sb
+        .from('finance_payroll_funding_confirmations')
+        .select('run_id,calculation_version_id,confirmed_amount,confirmation_no')
+        .in('run_id', chunk);
+      if (error) throw Object.assign(new Error('listPayrollRunsRegister/funding: ' + error.message), { status: 500 });
+      for (const f of (data ?? []) as FundingRow[]) {
+        const run = runById.get(f.run_id);
+        if (!run?.current_calculation_version_id) continue;
+        if (f.calculation_version_id !== run.current_calculation_version_id) continue;
+        const prev = seenNo.get(f.run_id);
+        if (prev === undefined || f.confirmation_no > prev) {
+          seenNo.set(f.run_id, f.confirmation_no);
+          fundedById.set(f.run_id, Number(f.confirmed_amount));
+        }
+      }
+    }
+  }
+
+  // ── 6c. Register-scoped money aggregates over the FULL filtered set ───────────
+  let fundingRequired = 0, fundingConfirmed = 0, closedNet = 0;
+  for (const run of allRuns) {
+    if (isFundable(run)) {
+      fundingRequired  += effNetOf(run);
+      fundingConfirmed += fundedById.get(run.id) ?? 0;
+    } else if (CLOSED_STATUSES.has(run.status)) {
+      closedNet += effNetOf(run);
+    }
+  }
+  const money = (amount: number): MoneyValue => ({ amount: Math.round(amount * 100) / 100, currency: 'TTD' });
+  const aggregates: PayrollRunRegisterAggregates = {
+    fundingRequired:  money(fundingRequired),
+    fundingConfirmed: money(fundingConfirmed),
+    fundingGap:       money(Math.max(0, fundingRequired - fundingConfirmed)),
+    closedNet:        money(closedNet),
+  };
+
+  // ── 6d. Owner display names for the PAGE runs (created_by → name, never a raw id) ──
+  const pageOwnerIds = [...new Set(pageRuns.map(r => r.created_by).filter((v): v is string => v !== null))];
+  const ownerName = new Map<string, string>();
+  if (pageOwnerIds.length > 0) {
+    const { data, error } = await sb
+      .from('app_users').select('id, first_name, last_name, username').in('id', pageOwnerIds);
+    if (error) throw Object.assign(new Error('listPayrollRunsRegister/owners: ' + error.message), { status: 500 });
+    interface UserRow { id: string; first_name: string | null; last_name: string | null; username: string | null }
+    for (const u of (data ?? []) as UserRow[]) {
+      const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.username || u.id;
+      ownerName.set(u.id, name);
+    }
+  }
+
+  // ── 6e. Page FK enrichment (source runs + pay groups) ─────────────────────────
+  const pageSourceRunIds = [...new Set(pageRuns.map(r => r.source_run_id).filter((v): v is string => v !== null))];
+  const pagePayGroupIds  = [...new Set(pageRuns.map(r => r.pay_group_id).filter((v): v is string => v !== null))];
 
   interface SourceRunRow { id: string; run_no: string }
   const sourceRunMap = new Map<string, SourceRunRow>();
@@ -489,6 +572,10 @@ export async function listPayrollRunsRegister(
         label:    readinessLabel(rdnState),
       },
       correctionOf: srcRun ? { id: srcRun.id, reference: srcRun.run_no } : null,
+      owner: {
+        id:   run.created_by,
+        name: run.created_by ? (ownerName.get(run.created_by) ?? null) : null,
+      },
       updatedAt:    run.updated_at,
     };
   });
@@ -499,5 +586,5 @@ export async function listPayrollRunsRegister(
     ? encodeCursor(makeCursorKey(lastRun, sort), fp)
     : null;
 
-  return { items, nextCursor, total, asOf, tabCounts };
+  return { items, nextCursor, total, asOf, tabCounts, aggregates };
 }

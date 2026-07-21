@@ -88,15 +88,34 @@ export interface PayrollRunListItem {
   totals: { currency: 'TTD'; gross: number | null; net: number | null };
   readiness: { state: ReadinessState; percent: number | null; blockers: number; warnings: number; label: string };
   correctionOf: { id: string; reference: string } | null;
+  /** Run creator (finance_payroll_runs.created_by resolved to a display name — never a raw id). */
+  owner: { id: string | null; name: string | null };
   updatedAt: string;
 }
 
 /** Register tab keys — server-calculated counts for the exact authorized filter scope. */
 export type PayrollRunListTab = 'all' | 'in_progress' | 'approval' | 'attention' | 'released';
 
+/**
+ * Register-scoped money aggregates over the FULL filtered set (NOT just the page).
+ * Mirrors the Command Center funding math EXACTLY (control-center fn, mig 430):
+ *   fundable   = eff_net > 0 AND status NOT IN (released,exported,cancelled) AND current cv present
+ *   required   = Σ eff_net (fundable);  confirmed = Σ latest confirmed_amount (fundable)
+ *   gap        = max(0, required − confirmed)
+ *   closedNet  = Σ eff_net (released + exported)
+ */
+export interface PayrollRunRegisterAggregates {
+  fundingRequired: MoneyValue;
+  fundingConfirmed: MoneyValue;
+  fundingGap: MoneyValue;
+  closedNet: MoneyValue;
+}
+
 export interface PayrollRunListResult extends PageResult<PayrollRunListItem> {
   /** Counts per tab for the CURRENT filter scope (search/states/etc.), independent of the active tab. */
   tabCounts: Record<PayrollRunListTab, number>;
+  /** Money aggregates over the full filtered set (Funding Gap / Closed Net KPIs). */
+  aggregates: PayrollRunRegisterAggregates;
 }
 
 /** The register request carries an optional active tab on top of the filter set. */

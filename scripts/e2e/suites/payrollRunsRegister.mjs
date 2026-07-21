@@ -50,6 +50,7 @@ export default async function run(h) {
     cvIds: [],
     snapIds: [],
     findingIds: [],
+    fundingConfIds: [],
     payGroupId: null,
     viewIds: [],
     runNos: [],
@@ -68,6 +69,7 @@ export default async function run(h) {
       for (const t of ['finance_payroll_input_lock_receipts','finance_payroll_lifecycle_command_receipts',
         'finance_payroll_calculation_attempts'])
         await h.mustDelete(t, q => q.in('run_id', runIds));
+      if (ctx.fundingConfIds.length) await h.mustDelete('finance_payroll_funding_confirmations', q => q.in('id', ctx.fundingConfIds));
       if (ctx.findingIds.length) await h.mustDelete('finance_payroll_control_findings', q => q.in('id', ctx.findingIds));
       if (ctx.cvIds.length)      await h.mustDelete('finance_payroll_calculation_versions', q => q.in('id', ctx.cvIds));
       if (ctx.snapIds.length)    await h.mustDelete('finance_payroll_input_snapshots',      q => q.in('id', ctx.snapIds));
@@ -149,6 +151,18 @@ export default async function run(h) {
     return data.id;
   }
 
+  // Seed ONE funding confirmation (latest) against a run's current calc version.
+  async function seedFunding(runId, cvId, amount) {
+    const { data, error } = await sb.from('finance_payroll_funding_confirmations').insert({
+      run_id: runId, calculation_version_id: cvId, confirmation_no: 1,
+      confirmed_amount: amount, currency: 'TTD',
+      confirmation_reference: `${TAG}-FUND-${runId}`, checksum: `reg-fund-${runId}`,
+      confirmed_by: fstaff.id,
+    }).select('id').single();
+    expect(!error, `funding: ${error?.message}`); ctx.fundingConfIds.push(data.id);
+    return data.id;
+  }
+
   // ── Seed test runs ──────────────────────────────────────────────────────────
   // runA: draft          → in_progress tab
   // runB: pending_approval → approval tab
@@ -164,6 +178,8 @@ export default async function run(h) {
   // runE needs a calc version and a blocker finding
   const runECvId = await seedCalcChain(runEId, { gross: 6000, net: 5000, emp: 1 });
   await seedFinding(runEId, runECvId, 'blocker');
+  // Partial funding confirmation on runE (eff_net 5000, confirmed 3000 → gap 2000).
+  await seedFunding(runEId, runECvId, 3000);
 
   // ── Helper: call runs/list ─────────────────────────────────────────────────
   async function listRuns(args, token = T.mgr) {
@@ -317,7 +333,35 @@ export default async function run(h) {
     expect(item.readiness.blockers === 1, `runE should have 1 blocker, got ${item.readiness.blockers}`);
     expect(item.readiness.state === 'blocked', `runE readiness.state should be blocked, got ${item.readiness.state}`);
 
+    // owner shape (created_by resolved to a display name — never a raw id)
+    expect(typeof item.owner === 'object' && item.owner !== null, 'owner must be object');
+    expect(item.owner.id === fstaff.id, `owner.id must be the creator ${fstaff.id}, got ${item.owner.id}`);
+    expect(typeof item.owner.name === 'string' && item.owner.name.length > 0, 'owner.name must be a non-empty string');
+    expect(item.owner.name !== item.owner.id, 'owner.name must be resolved, not the raw id');
+
     expect(typeof item.updatedAt === 'string', 'updatedAt must be string');
+  });
+
+  // ─────────────────────────────────────────────────────────────────────────────
+  // 8b. Money aggregates (Funding Gap / Closed Net KPIs) — scoped to our TAG.
+  //   Fundable (cv + eff_net>0 + not closed): runE (eff_net 5000, confirmed 3000).
+  //   Closed (released/exported): runD (net 4000, no cv → run.net_total).
+  //   A/B/C have no calc version → NOT fundable, NOT closed.
+  // ─────────────────────────────────────────────────────────────────────────────
+  await test('runs/list — aggregates: funding gap + closed net over the filtered scope', async () => {
+    const r = await listRuns({ search: TAG });
+    ok(r, 'scoped list should succeed');
+    const { aggregates: a } = r.body.data;
+    expect(typeof a === 'object' && a !== null, 'aggregates must be present');
+    for (const k of ['fundingRequired', 'fundingConfirmed', 'fundingGap', 'closedNet']) {
+      expect(a[k] && typeof a[k].amount === 'number' && a[k].currency === 'TTD',
+        `aggregates.${k} must be a TTD MoneyValue, got ${JSON.stringify(a[k])}`);
+    }
+    // Exact math for our isolated seed set (runE fundable, runD closed).
+    expect(a.fundingRequired.amount === 5000, `fundingRequired should be 5000, got ${a.fundingRequired.amount}`);
+    expect(a.fundingConfirmed.amount === 3000, `fundingConfirmed should be 3000, got ${a.fundingConfirmed.amount}`);
+    expect(a.fundingGap.amount === 2000, `fundingGap should be max(0,5000-3000)=2000, got ${a.fundingGap.amount}`);
+    expect(a.closedNet.amount === 4000, `closedNet should be runD net 4000, got ${a.closedNet.amount}`);
   });
 
   // ─────────────────────────────────────────────────────────────────────────────
