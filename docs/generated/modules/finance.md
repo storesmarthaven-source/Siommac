@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `c14c1744014d8e9168db52e9`
+Source fingerprint: `6d36b57b9aee2890d13cb024`
 
-Files: 129 | Symbols: 1793 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 129 | Symbols: 1795 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -544,9 +544,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceExportDialog.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
-| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 91 |
+| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 95 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
-| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 625 |
+| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 628 |
 | frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 264 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
@@ -566,7 +566,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
-| frontend-page | `src/components/sections/Finance/module.ts` | 114 |
+| frontend-page | `src/components/sections/Finance/module.ts` | 121 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1067 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 640 |

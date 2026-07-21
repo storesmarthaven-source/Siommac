@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `ba82d4a7e618ab62b29a2654f402680f4f773e78`  
-Source fingerprint: `c14c1744014d8e9168db52e9`  
+Source HEAD: `dfc49f37e8140f43c4a779ae9d04eb40fdaefcbc`  
+Source fingerprint: `6d36b57b9aee2890d13cb024`  
 Generator version: `1`
 
 ## Use
@@ -19,15 +19,15 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1182 | 11853 | 32 | 918 | 919 | 17 | 376 | 1310 | 75 | 2399 |
+| 1184 | 11889 | 32 | 918 | 919 | 17 | 376 | 1310 | 75 | 2399 |
 
 ## Modules
 
 | Module | Files | Symbols | Widgets | Unique routes | Route definitions | API calls | DB objects | E2E suites | Map |
 |---|---:|---:|---:|---:|---:|---:|---:|---:|---|
 | hr | 202 | 2243 | 12 | 249 | 249 | 57 | 156 | 14 | [open](modules/hr.md) |
-| payroll | 150 | 1452 | 10 | 127 | 127 | 5 | 208 | 22 | [open](modules/payroll.md) |
-| finance | 129 | 1793 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
+| payroll | 152 | 1486 | 10 | 127 | 127 | 5 | 208 | 22 | [open](modules/payroll.md) |
+| finance | 129 | 1795 | 10 | 156 | 156 | 4 | 202 | 9 | [open](modules/finance.md) |
 | hse | 87 | 1275 | 0 | 144 | 144 | 107 | 65 | 4 | [open](modules/hse.md) |
 | communications | 112 | 1044 | 0 | 81 | 84 | 88 | 155 | 6 | [open](modules/communications.md) |
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
@@ -41,16 +41,16 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | ID | Title | Kind | Module/area | Render | Location |
 |---|---|---|---|---|---|
-| `finance.payroll.assignedWork` | Approval and Activity | local | payroll | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:462` |
-| `finance.payroll.deadlines` | Upcoming Deadlines | local | payroll | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:463` |
-| `finance.payroll.kpi.activeRuns` | Active Runs | local | payroll | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:444` |
-| `finance.payroll.kpi.employeesDue` | Employees Due | local | payroll | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:447` |
-| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | payroll | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:450` |
-| `finance.payroll.kpi.netPayroll` | Net Payroll | local | payroll | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:453` |
-| `finance.payroll.kpi.nextPay` | Next Pay Date | local | payroll | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:439` |
-| `finance.payroll.releaseImpact` | Release Impact | local | payroll | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:465` |
-| `finance.payroll.releaseReadiness` | Release Readiness | local | payroll | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:464` |
-| `finance.payroll.runRegister` | Payroll Runs | local | payroll | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:466` |
+| `finance.payroll.assignedWork` | Approval and Activity | local | payroll | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:469` |
+| `finance.payroll.deadlines` | Upcoming Deadlines | local | payroll | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:470` |
+| `finance.payroll.kpi.activeRuns` | Active Runs | local | payroll | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:451` |
+| `finance.payroll.kpi.employeesDue` | Employees Due | local | payroll | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:454` |
+| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | payroll | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:457` |
+| `finance.payroll.kpi.netPayroll` | Net Payroll | local | payroll | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:460` |
+| `finance.payroll.kpi.nextPay` | Next Pay Date | local | payroll | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:446` |
+| `finance.payroll.releaseImpact` | Release Impact | local | payroll | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:472` |
+| `finance.payroll.releaseReadiness` | Release Readiness | local | payroll | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:471` |
+| `finance.payroll.runRegister` | Payroll Runs | local | payroll | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:473` |
 | `finance.statutory.deadlines` | Upcoming Deadlines | local | finance | `renderDeadlines` | `src/components/sections/Finance/StatutoryDashboard.tsx:715` |
 | `finance.statutory.kpi.activeVersion` | Active Version | local | finance | `renderKpiActive` | `src/components/sections/Finance/StatutoryDashboard.tsx:721` |
 | `finance.statutory.kpi.approvals` | Pending Approvals | local | finance | `renderKpiApprovals` | `src/components/sections/Finance/StatutoryDashboard.tsx:726` |

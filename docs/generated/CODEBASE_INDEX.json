@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ba82d4a7e618ab62b29a2654f402680f4f773e78",
+    "head": "dfc49f37e8140f43c4a779ae9d04eb40fdaefcbc",
     "branch": "main",
-    "fingerprint": "c14c1744014d8e9168db52e9",
-    "indexedFiles": 1502
+    "fingerprint": "6d36b57b9aee2890d13cb024",
+    "indexedFiles": 1504
   },
   "summary": {
-    "files": 1182,
-    "symbols": 11853,
+    "files": 1184,
+    "symbols": 11889,
     "widgets": 32,
     "routes": 918,
     "routeDefinitions": 919,
@@ -35,8 +35,8 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 150,
-        "symbols": 1452,
+        "files": 152,
+        "symbols": 1486,
         "widgets": 10,
         "routes": 127,
         "routeDefinitions": 127,
@@ -49,7 +49,7 @@
       "id": "finance",
       "counts": {
         "files": 129,
-        "symbols": 1793,
+        "symbols": 1795,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
@@ -3003,8 +3003,15 @@
       "path": "src/api/finance/payroll.ts",
       "module": "payroll",
       "role": "frontend-api",
-      "lines": 899,
-      "hash": "66f27aab90f7e851"
+      "lines": 895,
+      "hash": "06f65ae73bd79126"
+    },
+    {
+      "path": "src/api/finance/payrollRunsRegister.ts",
+      "module": "payroll",
+      "role": "frontend-api",
+      "lines": 77,
+      "hash": "5060fd244b59077d"
     },
     {
       "path": "src/api/finance/payroll/controlCenter.ts",
@@ -4340,8 +4347,8 @@
       "path": "src/components/sections/Finance/FinanceSection.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 91,
-      "hash": "387acdb4e1d97b5a"
+      "lines": 95,
+      "hash": "5ebd043dbfe942ee"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -4361,8 +4368,8 @@
       "path": "src/components/sections/Finance/PayNewRunWizard.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 625,
-      "hash": "4000a43c4aaac1a5"
+      "lines": 628,
+      "hash": "ff7199db41d744fd"
     },
     {
       "path": "src/components/sections/Finance/PayRunDetailPage.tsx",
@@ -4396,8 +4403,15 @@
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 916,
-      "hash": "6bde5a48c203da8a"
+      "lines": 923,
+      "hash": "3a661c54301a4e80"
+    },
+    {
+      "path": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 390,
+      "hash": "a887ddf732bc515a"
     },
     {
       "path": "src/components/sections/Finance/PayrollSetupOverview.tsx",
@@ -4522,8 +4536,8 @@
       "path": "src/components/sections/Finance/module.ts",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 114,
-      "hash": "2e31cd35d51fdc0b"
+      "lines": 121,
+      "hash": "ecd5793facc5a27b"
     },
     {
       "path": "src/components/sections/Finance/mount.ts",
@@ -53510,22 +53524,10 @@
       "tags": []
     },
     {
-      "name": "usePayrollRuns",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 714,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
       "name": "usePayrollRun",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 717,
+      "line": 713,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53537,7 +53539,7 @@
       "name": "useRunLines",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 720,
+      "line": 716,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53549,7 +53551,7 @@
       "name": "usePolicyEvidence",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 724,
+      "line": 720,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53561,7 +53563,7 @@
       "name": "useRunWorkspace",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 733,
+      "line": 729,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53573,7 +53575,7 @@
       "name": "useReleasePreflight",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 741,
+      "line": 737,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53585,7 +53587,7 @@
       "name": "useCalculationVersions",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 749,
+      "line": 745,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53597,7 +53599,7 @@
       "name": "useCalculationComparison",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 757,
+      "line": 753,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53609,7 +53611,7 @@
       "name": "useRunWarnings",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 764,
+      "line": 760,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53621,7 +53623,7 @@
       "name": "useRunPayslips",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 767,
+      "line": 763,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53633,7 +53635,7 @@
       "name": "useRunGlPreview",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 770,
+      "line": 766,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53645,7 +53647,7 @@
       "name": "usePayGroups",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 773,
+      "line": 769,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53657,7 +53659,7 @@
       "name": "useReasonCodes",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 777,
+      "line": 773,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53669,7 +53671,7 @@
       "name": "usePayGroupMembers",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 783,
+      "line": 779,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53681,7 +53683,7 @@
       "name": "useOvertimeRules",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 786,
+      "line": 782,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53693,7 +53695,7 @@
       "name": "useEmployeeLoans",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 789,
+      "line": 785,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53705,7 +53707,7 @@
       "name": "useRunOverrides",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 792,
+      "line": 788,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53717,7 +53719,7 @@
       "name": "useRunExports",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 795,
+      "line": 791,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53729,7 +53731,7 @@
       "name": "useRunInputs",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 798,
+      "line": 794,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53741,7 +53743,7 @@
       "name": "useNisProfiles",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 801,
+      "line": 797,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53753,7 +53755,7 @@
       "name": "useRunAuditLog",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 804,
+      "line": 800,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53765,7 +53767,7 @@
       "name": "usePopulationPreview",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 811,
+      "line": 807,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53777,7 +53779,7 @@
       "name": "usePopulationReconciliation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 817,
+      "line": 813,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53789,7 +53791,7 @@
       "name": "useInputReadiness",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 827,
+      "line": 823,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53801,7 +53803,7 @@
       "name": "usePayrollMutation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 840,
+      "line": 836,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53813,7 +53815,7 @@
       "name": "useResolveWarning",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 851,
+      "line": 847,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53825,7 +53827,7 @@
       "name": "useExportDownload",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 860,
+      "line": 856,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53837,7 +53839,7 @@
       "name": "payslipTemplateKeys",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 868,
+      "line": 864,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53847,7 +53849,7 @@
       "name": "usePayslipTemplates",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 878,
+      "line": 874,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53859,7 +53861,7 @@
       "name": "useSetRunTemplate",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 889,
+      "line": 885,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53958,6 +53960,94 @@
       "tags": [
         "hook"
       ]
+    },
+    {
+      "name": "post",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 19,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "runsRegisterKeys",
+      "kind": "object",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 25,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "runsRegisterApi",
+      "kind": "object",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 32,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "useRunsRegister",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 45,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunViews",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 54,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunCalendar",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 58,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunViewMutations",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 68,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "invalidate",
+      "kind": "function",
+      "file": "src/api/finance/payrollRunsRegister.ts",
+      "line": 70,
+      "module": "payroll",
+      "exported": false,
+      "container": "useRunViewMutations",
+      "tags": []
     },
     {
       "name": "STALE_5M",
@@ -76262,7 +76352,7 @@
       "name": "OVERVIEW_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 27,
+      "line": 28,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76274,7 +76364,7 @@
       "name": "PAYABLES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 28,
+      "line": 29,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76286,7 +76376,7 @@
       "name": "STATUTORY_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 29,
+      "line": 30,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76298,18 +76388,6 @@
       "name": "PAYROLL_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 30,
-      "module": "finance",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PAYROLL_SETUP_ID",
-      "kind": "variable",
-      "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 31,
       "module": "finance",
       "exported": false,
@@ -76319,7 +76397,7 @@
       ]
     },
     {
-      "name": "REMITTANCES_ID",
+      "name": "PAYROLL_RUNS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 32,
@@ -76331,7 +76409,7 @@
       ]
     },
     {
-      "name": "MY_PAYSLIPS_ID",
+      "name": "PAYROLL_SETUP_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 33,
@@ -76343,7 +76421,7 @@
       ]
     },
     {
-      "name": "EXPENSES_ID",
+      "name": "REMITTANCES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 34,
@@ -76355,7 +76433,7 @@
       ]
     },
     {
-      "name": "BUDGETS_ID",
+      "name": "MY_PAYSLIPS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 35,
@@ -76367,7 +76445,7 @@
       ]
     },
     {
-      "name": "DISBURSEMENTS_ID",
+      "name": "EXPENSES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 36,
@@ -76379,7 +76457,7 @@
       ]
     },
     {
-      "name": "STATUTORY_FORMS_ID",
+      "name": "BUDGETS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 37,
@@ -76391,7 +76469,7 @@
       ]
     },
     {
-      "name": "PAYSLIP_DESIGNER_ID",
+      "name": "DISBURSEMENTS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 38,
@@ -76403,10 +76481,34 @@
       ]
     },
     {
+      "name": "STATUTORY_FORMS_ID",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/FinanceSection.tsx",
+      "line": 39,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PAYSLIP_DESIGNER_ID",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/FinanceSection.tsx",
+      "line": 40,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "isFinanceSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 40,
+      "line": 42,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76416,7 +76518,7 @@
       "name": "FinanceSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 56,
+      "line": 59,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -76428,7 +76530,7 @@
       "name": "onSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 62,
+      "line": 65,
       "module": "finance",
       "exported": false,
       "container": "FinanceSection",
@@ -76595,7 +76697,7 @@
       "tags": []
     },
     {
-      "name": "PAYROLL_SETUP_ITEM",
+      "name": "PAYROLL_RUNS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 44,
@@ -76605,7 +76707,7 @@
       "tags": []
     },
     {
-      "name": "PAYSLIP_DESIGNER_ITEM",
+      "name": "PAYROLL_SETUP_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 51,
@@ -76615,7 +76717,7 @@
       "tags": []
     },
     {
-      "name": "REMITTANCES_ITEM",
+      "name": "PAYSLIP_DESIGNER_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 58,
@@ -76625,7 +76727,7 @@
       "tags": []
     },
     {
-      "name": "MY_PAYSLIPS_ITEM",
+      "name": "REMITTANCES_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 65,
@@ -76635,17 +76737,17 @@
       "tags": []
     },
     {
-      "name": "EXPENSES_ITEM",
+      "name": "MY_PAYSLIPS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
-      "line": 71,
+      "line": 72,
       "module": "finance",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "BUDGETS_ITEM",
+      "name": "EXPENSES_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 78,
@@ -76655,7 +76757,7 @@
       "tags": []
     },
     {
-      "name": "DISBURSEMENTS_ITEM",
+      "name": "BUDGETS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 85,
@@ -76665,7 +76767,7 @@
       "tags": []
     },
     {
-      "name": "STATUTORY_FORMS_ITEM",
+      "name": "DISBURSEMENTS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 92,
@@ -76675,10 +76777,20 @@
       "tags": []
     },
     {
-      "name": "financeModule",
+      "name": "STATUTORY_FORMS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 99,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "financeModule",
+      "kind": "object",
+      "file": "src/components/sections/Finance/module.ts",
+      "line": 106,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -76920,7 +77032,7 @@
       "name": "PAY_FREQS",
       "kind": "array",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 39,
+      "line": 40,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76930,7 +77042,7 @@
       "name": "WEEKS_MAP",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 45,
+      "line": 46,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76940,7 +77052,7 @@
       "name": "RUN_TYPES",
       "kind": "array",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 47,
+      "line": 48,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76950,7 +77062,7 @@
       "name": "RECON_STATE_PILL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 55,
+      "line": 56,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76960,7 +77072,7 @@
       "name": "RECON_STATE_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 58,
+      "line": 59,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76970,7 +77082,7 @@
       "name": "RECON_OWNER_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 61,
+      "line": 62,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76980,7 +77092,7 @@
       "name": "READINESS_RC",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 66,
+      "line": 67,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76990,7 +77102,7 @@
       "name": "READINESS_ICON",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 69,
+      "line": 70,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77000,7 +77112,7 @@
       "name": "READINESS_LABEL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 72,
+      "line": 73,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77010,7 +77122,7 @@
       "name": "READINESS_PILL",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 75,
+      "line": 76,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77020,7 +77132,7 @@
       "name": "STEPS",
       "kind": "variable",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 79,
+      "line": 80,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77032,7 +77144,7 @@
       "name": "CreateBlocker",
       "kind": "interface",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 90,
+      "line": 91,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77042,7 +77154,7 @@
       "name": "CREATE_BLOCKERS",
       "kind": "object",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 91,
+      "line": 92,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77052,7 +77164,7 @@
       "name": "matchCreateBlocker",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 105,
+      "line": 106,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -77062,7 +77174,7 @@
       "name": "lastOfMonth",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 111,
+      "line": 112,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77072,7 +77184,7 @@
       "name": "SummaryCard",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 121,
+      "line": 122,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77085,7 +77197,7 @@
       "name": "PendingBlock",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 132,
+      "line": 133,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -77097,7 +77209,7 @@
       "name": "PayNewRunWizard",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 143,
+      "line": 144,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -77109,7 +77221,7 @@
       "name": "selectGroup",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 212,
+      "line": 215,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -77119,7 +77231,7 @@
       "name": "goToStep",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 219,
+      "line": 222,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -77129,7 +77241,7 @@
       "name": "create",
       "kind": "function",
       "file": "src/components/sections/Finance/PayNewRunWizard.tsx",
-      "line": 221,
+      "line": 224,
       "module": "finance",
       "exported": false,
       "container": "PayNewRunWizard",
@@ -78755,7 +78867,7 @@
       "name": "PortfolioBand",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 548,
+      "line": 555,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78767,7 +78879,7 @@
       "name": "MetricsRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 609,
+      "line": 616,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78779,7 +78891,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 641,
+      "line": 648,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78791,7 +78903,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 700,
+      "line": 707,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78803,7 +78915,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 720,
+      "line": 727,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78816,7 +78928,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 768,
+      "line": 775,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78829,7 +78941,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 772,
+      "line": 779,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -78839,7 +78951,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 773,
+      "line": 780,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -78849,7 +78961,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 824,
+      "line": 831,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78862,13 +78974,293 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 881,
+      "line": 888,
       "module": "payroll",
       "exported": false,
       "container": "",
       "tags": [
         "component",
         "ui-tile"
+      ]
+    },
+    {
+      "name": "TABS",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "STATE_PILL",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 37,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "pillFor",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 50,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RUN_TYPES",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 52,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "SORTS",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 59,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "READINESS_CLS",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 64,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "money",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 66,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 68,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "dayNum",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 70,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "DEFAULT_FILTERS",
+      "kind": "object",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 72,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollRunRegisterPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 74,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "resetPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 96,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "iso",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 114,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "changeTab",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 126,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "changeRunType",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 127,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "changePayGroup",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 128,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "changeSort",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 129,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "nextPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 130,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "prevPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 135,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "openRun",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 139,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "onCreated",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 143,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "applyView",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 146,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "applyDefaultView",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 155,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "saveView",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 159,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "deleteActiveView",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 175,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollRunRegisterPage",
+      "tags": []
+    },
+    {
+      "name": "RunRow",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 345,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Metric",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
+      "line": 376,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
       ]
     },
     {
@@ -132601,7 +132993,7 @@
       "kind": "local",
       "render": "() => <ApprovalsWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 462
+      "line": 469
     },
     {
       "id": "finance.payroll.deadlines",
@@ -132611,7 +133003,7 @@
       "kind": "local",
       "render": "() => <DeadlinesWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 463
+      "line": 470
     },
     {
       "id": "finance.payroll.kpi.activeRuns",
@@ -132621,7 +133013,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-layer-group\" tone=\"teal\" label=\"Active Runs\" value={kk?.activeRuns ?? 0} sub=\"In the reporting window\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 444
+      "line": 451
     },
     {
       "id": "finance.payroll.kpi.employeesDue",
@@ -132631,7 +133023,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-users\" tone=\"blue\" label=\"Employees Due\" value={kk?.employeesDue ?? 0} sub=\"Current calc population\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 447
+      "line": 454
     },
     {
       "id": "finance.payroll.kpi.grossPayroll",
@@ -132641,7 +133033,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-coins\" tone=\"green\" label=\"Gross Payroll\" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 450
+      "line": 457
     },
     {
       "id": "finance.payroll.kpi.netPayroll",
@@ -132651,7 +133043,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-wallet\" tone=\"teal\" label=\"Net Payroll\" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 453
+      "line": 460
     },
     {
       "id": "finance.payroll.kpi.nextPay",
@@ -132661,7 +133053,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-calendar-day\" tone=\"blue\" label=\"Next Pay Date\"\n        value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}\n        sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}\n        link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 439
+      "line": 446
     },
     {
       "id": "finance.payroll.releaseImpact",
@@ -132671,7 +133063,7 @@
       "kind": "local",
       "render": "() => <ImpactWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 465
+      "line": 472
     },
     {
       "id": "finance.payroll.releaseReadiness",
@@ -132681,7 +133073,7 @@
       "kind": "local",
       "render": "() => <ReadinessWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 464
+      "line": 471
     },
     {
       "id": "finance.payroll.runRegister",
@@ -132691,7 +133083,7 @@
       "kind": "local",
       "render": "() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 466
+      "line": 473
     },
     {
       "id": "finance.statutory.deadlines",

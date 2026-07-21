@@ -2,24 +2,24 @@
 
 # payroll Module Map
 
-Source fingerprint: `c14c1744014d8e9168db52e9`
+Source fingerprint: `6d36b57b9aee2890d13cb024`
 
-Files: 150 | Symbols: 1452 | Widgets: 10 | Unique mounted endpoints: 127 | Route definitions: 127 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 22
+Files: 152 | Symbols: 1486 | Widgets: 10 | Unique mounted endpoints: 127 | Route definitions: 127 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 22
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `finance.payroll.assignedWork` | Approval and Activity | local | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:462` |
-| `finance.payroll.deadlines` | Upcoming Deadlines | local | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:463` |
-| `finance.payroll.kpi.activeRuns` | Active Runs | local | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:444` |
-| `finance.payroll.kpi.employeesDue` | Employees Due | local | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:447` |
-| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:450` |
-| `finance.payroll.kpi.netPayroll` | Net Payroll | local | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:453` |
-| `finance.payroll.kpi.nextPay` | Next Pay Date | local | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:439` |
-| `finance.payroll.releaseImpact` | Release Impact | local | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:465` |
-| `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:464` |
-| `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:466` |
+| `finance.payroll.assignedWork` | Approval and Activity | local | `() => <ApprovalsWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:469` |
+| `finance.payroll.deadlines` | Upcoming Deadlines | local | `() => <DeadlinesWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:470` |
+| `finance.payroll.kpi.activeRuns` | Active Runs | local | `() => <KpiTile icon="fa-layer-group" tone="teal" label="Active Runs" value={kk?.activeRuns ?? 0} sub="In the reporting window" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:451` |
+| `finance.payroll.kpi.employeesDue` | Employees Due | local | `() => <KpiTile icon="fa-users" tone="blue" label="Employees Due" value={kk?.employeesDue ?? 0} sub="Current calc population" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:454` |
+| `finance.payroll.kpi.grossPayroll` | Gross Payroll | local | `() => <KpiTile icon="fa-coins" tone="green" label="Gross Payroll" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:457` |
+| `finance.payroll.kpi.netPayroll` | Net Payroll | local | `() => <KpiTile icon="fa-wallet" tone="teal" label="Net Payroll" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub="Window total" loading={kpiLoading}         link={{ label: 'View runs', onClick: () => focusRegister('all') }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:460` |
+| `finance.payroll.kpi.nextPay` | Next Pay Date | local | `() => <KpiTile icon="fa-calendar-day" tone="blue" label="Next Pay Date"         value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}         sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}         link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:446` |
+| `finance.payroll.releaseImpact` | Release Impact | local | `() => <ImpactWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:472` |
+| `finance.payroll.releaseReadiness` | Release Readiness | local | `() => <ReadinessWidget data={data} onOpen={openRun} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:471` |
+| `finance.payroll.runRegister` | Payroll Runs | local | `() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />` | `src/components/sections/Finance/PayrollCommandCenter.tsx:473` |
 
 ## Route Definitions
 
@@ -170,36 +170,39 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Symbol | Kind/tags | Location | Container |
 |---|---|---|---|
 | `fundingKpiState` | function / ui-tile | `netlify/functions/lib/finance/payroll/controlCenterDerive.ts:70` | `-` |
-| `usePayrollRuns` | function / hook | `src/api/finance/payroll.ts:714` | `-` |
-| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:717` | `-` |
-| `useRunLines` | function / hook | `src/api/finance/payroll.ts:720` | `-` |
-| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:724` | `-` |
-| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:733` | `-` |
-| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:741` | `-` |
-| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:749` | `-` |
-| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:757` | `-` |
-| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:764` | `-` |
-| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:767` | `-` |
-| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:770` | `-` |
-| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:773` | `-` |
-| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:777` | `-` |
-| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:783` | `-` |
-| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:786` | `-` |
-| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:789` | `-` |
-| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:792` | `-` |
-| `useRunExports` | function / hook | `src/api/finance/payroll.ts:795` | `-` |
-| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:798` | `-` |
-| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:801` | `-` |
-| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:804` | `-` |
-| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:811` | `-` |
-| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:817` | `-` |
-| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:827` | `-` |
-| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:840` | `-` |
-| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:851` | `-` |
-| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:860` | `-` |
-| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:878` | `-` |
-| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:889` | `-` |
+| `usePayrollRun` | function / hook | `src/api/finance/payroll.ts:713` | `-` |
+| `useRunLines` | function / hook | `src/api/finance/payroll.ts:716` | `-` |
+| `usePolicyEvidence` | function / hook | `src/api/finance/payroll.ts:720` | `-` |
+| `useRunWorkspace` | function / hook | `src/api/finance/payroll.ts:729` | `-` |
+| `useReleasePreflight` | function / hook | `src/api/finance/payroll.ts:737` | `-` |
+| `useCalculationVersions` | function / hook | `src/api/finance/payroll.ts:745` | `-` |
+| `useCalculationComparison` | function / hook | `src/api/finance/payroll.ts:753` | `-` |
+| `useRunWarnings` | function / hook | `src/api/finance/payroll.ts:760` | `-` |
+| `useRunPayslips` | function / hook | `src/api/finance/payroll.ts:763` | `-` |
+| `useRunGlPreview` | function / hook | `src/api/finance/payroll.ts:766` | `-` |
+| `usePayGroups` | function / hook | `src/api/finance/payroll.ts:769` | `-` |
+| `useReasonCodes` | function / hook | `src/api/finance/payroll.ts:773` | `-` |
+| `usePayGroupMembers` | function / hook | `src/api/finance/payroll.ts:779` | `-` |
+| `useOvertimeRules` | function / hook | `src/api/finance/payroll.ts:782` | `-` |
+| `useEmployeeLoans` | function / hook | `src/api/finance/payroll.ts:785` | `-` |
+| `useRunOverrides` | function / hook | `src/api/finance/payroll.ts:788` | `-` |
+| `useRunExports` | function / hook | `src/api/finance/payroll.ts:791` | `-` |
+| `useRunInputs` | function / hook | `src/api/finance/payroll.ts:794` | `-` |
+| `useNisProfiles` | function / hook | `src/api/finance/payroll.ts:797` | `-` |
+| `useRunAuditLog` | function / hook | `src/api/finance/payroll.ts:800` | `-` |
+| `usePopulationPreview` | function / hook | `src/api/finance/payroll.ts:807` | `-` |
+| `usePopulationReconciliation` | function / hook | `src/api/finance/payroll.ts:813` | `-` |
+| `useInputReadiness` | function / hook | `src/api/finance/payroll.ts:823` | `-` |
+| `usePayrollMutation` | function / hook | `src/api/finance/payroll.ts:836` | `-` |
+| `useResolveWarning` | function / hook | `src/api/finance/payroll.ts:847` | `-` |
+| `useExportDownload` | function / hook | `src/api/finance/payroll.ts:856` | `-` |
+| `usePayslipTemplates` | function / hook | `src/api/finance/payroll.ts:874` | `-` |
+| `useSetRunTemplate` | function / hook | `src/api/finance/payroll.ts:885` | `-` |
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
+| `useRunsRegister` | function / hook | `src/api/finance/payrollRunsRegister.ts:45` | `-` |
+| `useRunViews` | function / hook | `src/api/finance/payrollRunsRegister.ts:54` | `-` |
+| `useRunCalendar` | function / hook | `src/api/finance/payrollRunsRegister.ts:58` | `-` |
+| `useRunViewMutations` | function / hook | `src/api/finance/payrollRunsRegister.ts:68` | `-` |
 | `MyPayslipsOverview` | function / component | `src/components/sections/Finance/MyPayslipsOverview.tsx:34` | `-` |
 | `PayPolicySetup` | function / component | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx:34` | `-` |
 | `WorkCalendarPage` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:55` | `-` |
@@ -215,6 +218,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ResolvePanel` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:792` | `-` |
 | `ResolveResultView` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:834` | `-` |
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:273` | `-` |
+| `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:74` | `-` |
 | `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
 | `Canvas` | function / component | `src/components/sections/PayslipStudio/components/canvas/Canvas.tsx:21` | `-` |
@@ -434,13 +438,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payslipRender.mjs` | 681 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplateApproval.mjs` | 517 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplates.mjs` | 271 |
-| frontend-api | `src/api/finance/payroll.ts` | 899 |
+| frontend-api | `src/api/finance/payroll.ts` | 895 |
+| frontend-api | `src/api/finance/payrollRunsRegister.ts` | 77 |
 | frontend-api | `src/api/finance/payroll/controlCenter.ts` | 133 |
 | frontend-api | `src/api/payroll.ts` | 132 |
 | frontend-api | `src/api/schemas/payroll.ts` | 88 |
 | frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 153 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
-| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 916 |
+| frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 923 |
+| frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 390 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 403 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 198 |
