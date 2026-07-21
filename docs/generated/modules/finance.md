@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `e95ea16ba4fc03fc221b8f43`
+Source fingerprint: `76f832aa58ee260f68ac2922`
 
-Files: 125 | Symbols: 1754 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 129 | Symbols: 1789 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -188,10 +188,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Helper | Caller | Location |
 |---|---|---|---|
-| `/api/communications/tickets/create` | `apiPost` | `handleCreateTicket` | `src/components/sections/Finance/PayRunDrawer.tsx:355` |
-| `/api/finance/payroll/inputs/edit` | `apiPost` | `handleEditAmount` | `src/components/sections/Finance/PayRunDrawer.tsx:226` |
-| `/api/finance/payroll/inputs/exclude` | `apiPost` | `handleExclude` | `src/components/sections/Finance/PayRunDrawer.tsx:243` |
-| `/api/finance/payroll/payslips/notify` | `apiPost` | `res` | `src/components/sections/Finance/PayRunDrawer.tsx:529` |
+| `/api/communications/tickets/create` | `apiPost` | `handleCreateTicket` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:275` |
+| `/api/finance/payroll/inputs/edit` | `apiPost` | `handleEditAmount` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:155` |
+| `/api/finance/payroll/inputs/exclude` | `apiPost` | `handleExclude` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:172` |
+| `/api/finance/payroll/payslips/notify` | `apiPost` | `res` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:412` |
 
 ## Key Components, Hooks, and UI Functions
 
@@ -357,7 +357,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
 | `IconBook` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:45` | `-` |
-| ... | 58 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 76 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -546,8 +546,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 91 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
-| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 610 |
-| frontend-page | `src/components/sections/Finance/PayRunDrawer.tsx` | 1615 |
+| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 707 |
+| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 264 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
@@ -568,4 +568,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
 | frontend-page | `src/components/sections/Finance/module.ts` | 114 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1067 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 640 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 126 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx` | 161 |
 
