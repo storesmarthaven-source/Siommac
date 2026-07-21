@@ -125,6 +125,14 @@
 .sm-bubble { position: relative; width: fit-content; min-width: 74px; max-width: min(100%, 42rem); padding: 8px 43px 8px 11px; border: 1px solid #d8e2ed; border-radius: 8px; color: #33465d; background: var(--sm-received-bubble); font-size: var(--sm-message-font-size); line-height: 1.4; overflow-wrap: anywhere; }
 .sm-message.is-admin .sm-bubble { border-color: var(--sm-admin-bubble); color: #fff; background: var(--sm-admin-bubble); }
 .sm-bubble strong { font-weight: 600; }
+/* Rich-text bodies — the shared subset (headings, paragraphs, lists, alignment).
+   Blocks render inside the bubble's inline span; keep first/last margins tight. */
+.sm-bubble h3 { margin: .4em 0 .2em; font-size: .95em; font-weight: 700; line-height: 1.3; }
+.sm-bubble p { margin: .28em 0; }
+.sm-bubble ul, .sm-bubble ol { margin: .28em 0; padding-inline-start: 1.4em; }
+.sm-bubble li { margin: .12em 0; }
+.sm-bubble > span > :first-child { margin-top: 0; }
+.sm-bubble > span > :last-child { margin-bottom: 0; }
 .sm-delivery { position: absolute; right: 8px; bottom: 7px; display: inline-flex; color: #8ca0b7; }
 .sm-message.is-admin .sm-delivery { color: #b9ccdf; }
 .sm-delivery.is-read { color: #38a8f4; }

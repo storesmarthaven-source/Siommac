@@ -8,7 +8,7 @@ import {
   Archive, ArchiveRestore, Check, CheckCheck, ChevronDown, ChevronLeft, ChevronRight, Globe2, Info, LockKeyhole, MessageSquareText, MoreHorizontal, Pin, PinOff,
   Reply, Settings2, ShieldCheck, SmilePlus, Star, Trash2, UserPlus, Users,
 } from "./icons";
-import type { ComponentChildren } from "preact";
+import { renderRichHtml } from "@lib/richText";
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "preact/hooks";
 import { useMessaging } from "../../app/MessagingProvider";
 import { messageById, messagesForThread, userById } from "../../app/selectors";
@@ -345,23 +345,9 @@ function MessageStatus({ message }: { message: Message }) {
   return <span className={`sm-delivery ${message.delivery === "read" ? "is-read" : ""}`}><CheckCheck /></span>;
 }
 
+// Render the sanitized rich-text body (inline marks, links, headings, lists,
+// alignment) via the shared renderer — same subset the composer produces and
+// the Ticket Center uses. The renderer re-sanitizes, so a stored body is safe.
 export function RichMessage({ html }: { html: string }) {
-  const documentNode = new DOMParser().parseFromString(`<div>${html}</div>`, "text/html");
-  const root = documentNode.body.firstElementChild;
-  return <>{root ? Array.from(root.childNodes).map((node, index) => renderRichNode(node, index)) : null}</>;
-}
-
-function renderRichNode(node: Node, key: number): ComponentChildren {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent;
-  if (!(node instanceof Element)) return null;
-  const children = Array.from(node.childNodes).map((child, index) => renderRichNode(child, index));
-  if (node.tagName === "STRONG" || node.tagName === "B") return <strong key={key}>{children}</strong>;
-  if (node.tagName === "EM" || node.tagName === "I") return <em key={key}>{children}</em>;
-  if (node.tagName === "U") return <u key={key}>{children}</u>;
-  if (node.tagName === "BR") return <br key={key} />;
-  if (node.tagName === "A") {
-    const href = node.getAttribute("href") ?? "";
-    return /^https?:\/\//i.test(href) ? <a key={key} href={href} target="_blank" rel="noreferrer">{children}</a> : children;
-  }
-  return children;
+  return renderRichHtml(html);
 }

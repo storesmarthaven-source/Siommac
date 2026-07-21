@@ -9,7 +9,7 @@
    contenteditable reads) mutate their own refs and call Date.now exclusively
    from event handlers/effects; the compiler rules cannot prove event-only
    execution for plain component-body functions shared across handlers. */
-import { CheckCircle2, FileUp, Link, LockKeyhole, Send, Smile, Trash2, UploadCloud, X } from "./icons";
+import { AlignCenter, AlignJustify, AlignLeft, AlignRight, CheckCircle2, FileUp, Heading3, Link, ListBullet, ListOrdered, LockKeyhole, Send, Smile, Trash2, UploadCloud, X } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
 import { linkPreviewFromUrl, sanitizeComposerHtml } from "../../domain/format";
@@ -202,6 +202,25 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     readEditor();
   }
 
+  // Block-level formatting: headings/paragraphs (formatBlock), bulleted/numbered
+  // lists, and text-alignment. execCommand emits the sanitizer-safe subset;
+  // styleWithCSS makes justify* produce a `text-align` style (which the shared
+  // sanitizer keeps) instead of a deprecated `align` attribute.
+  function applyRich(command: string, value?: string) {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0) return;
+    editor.focus();
+    if (!editor.contains(selection.getRangeAt(0).commonAncestorContainer)) return;
+    if (command.startsWith("justify")) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- styleWithCSS makes alignment emit a sanitizer-safe text-align style
+      document.execCommand("styleWithCSS", false, "true");
+    }
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- execCommand is the only synchronous contenteditable formatting API; no replacement exists
+    document.execCommand(command, false, value);
+    readEditor();
+  }
+
   function insertEmoji(emoji: string) {
     const editor = editorRef.current;
     if (!editor) return;
@@ -262,19 +281,22 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
   async function sendNote() {
     if (!canSend) return;
     setSending(true);
-    const text = body.trim();
+    // Persist the sanitized rich HTML (headings/lists/marks/alignment), not the
+    // stripped plain text — the note renders through RichMessage the same as a
+    // message. Fall back to the plain text only if the editor produced no HTML.
+    const noteHtml = html.trim() || body.trim();
     stopTyping();
     // Clear immediately (the optimistic note bubble is already in the thread);
-    // restore the note text verbatim on failure. No draft, reply, or attachments.
-    const restore = body;
+    // restore verbatim on failure. No draft, reply, or attachments.
+    const restoreBody = body, restoreHtml = html;
     setBody(""); setHtml(""); modeStash.current.note = "";
     if (editorRef.current) editorRef.current.innerHTML = "";
     onSent();
     try {
-      await actions.addInternalNote(threadId, text);
+      await actions.addInternalNote(threadId, noteHtml);
     } catch {
-      setBody(restore); setHtml(restore); modeStash.current.note = restore;
-      if (editorRef.current) editorRef.current.textContent = restore;
+      setBody(restoreBody); setHtml(restoreHtml); modeStash.current.note = restoreBody;
+      if (editorRef.current) editorRef.current.innerHTML = restoreHtml || restoreBody;
     } finally { setSending(false); }
   }
 
@@ -337,6 +359,13 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
             <button className={`sm-icon-button sm-format-button ${activeFormats.bold ? "is-active" : ""}`} type="button" aria-label="Bold" aria-pressed={activeFormats.bold} title="Bold" onMouseDown={(event) => event.preventDefault()} onClick={() => format("bold")}><span className="sm-format-glyph is-bold" aria-hidden="true">B</span></button>
             <button className={`sm-icon-button sm-format-button ${activeFormats.italic ? "is-active" : ""}`} type="button" aria-label="Italic" aria-pressed={activeFormats.italic} title="Italic" onMouseDown={(event) => event.preventDefault()} onClick={() => format("italic")}><span className="sm-format-glyph is-italic" aria-hidden="true">I</span></button>
             <button className={`sm-icon-button sm-format-button ${activeFormats.underline ? "is-active" : ""}`} type="button" aria-label="Underline" aria-pressed={activeFormats.underline} title="Underline" onMouseDown={(event) => event.preventDefault()} onClick={() => format("underline")}><span className="sm-format-glyph is-underline" aria-hidden="true">U</span></button>
+            <button className="sm-icon-button" type="button" aria-label="Heading" title="Heading" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("formatBlock", "h3")}><Heading3 /></button>
+            <button className="sm-icon-button" type="button" aria-label="Bulleted list" title="Bulleted list" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("insertUnorderedList")}><ListBullet /></button>
+            <button className="sm-icon-button" type="button" aria-label="Numbered list" title="Numbered list" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("insertOrderedList")}><ListOrdered /></button>
+            <button className="sm-icon-button" type="button" aria-label="Align left" title="Align left" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("justifyLeft")}><AlignLeft /></button>
+            <button className="sm-icon-button" type="button" aria-label="Align center" title="Align center" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("justifyCenter")}><AlignCenter /></button>
+            <button className="sm-icon-button" type="button" aria-label="Align right" title="Align right" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("justifyRight")}><AlignRight /></button>
+            <button className="sm-icon-button" type="button" aria-label="Justify" title="Justify" onMouseDown={(event) => event.preventDefault()} onClick={() => applyRich("justifyFull")}><AlignJustify /></button>
             {!isNote ? <button className="sm-icon-button" type="button" aria-label="Attach files" onClick={openAttachmentDialog}><FileUp /></button> : null}
             {!isNote ? <button className="sm-icon-button" type="button" aria-label="Insert link" aria-expanded={linkOpen} onClick={() => setLinkOpen((value) => !value)}><Link /></button> : null}
           </span>

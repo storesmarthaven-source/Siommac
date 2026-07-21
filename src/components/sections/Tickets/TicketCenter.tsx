@@ -19,6 +19,7 @@ import {
 import { useSessionStore } from '@store/session';
 import { toast } from '@store/ui';
 import { useCan } from '@lib/permissions';
+import { sanitizeRichHtml, renderRichHtml, looksLikeHtml } from '@lib/richText';
 import { Drawer, LucideIcon, Modal, PanelEmpty } from '@ui';
 import { TicketCreateDialog } from './TicketCreateDialog';
 import './ticketCenter.css';
@@ -129,55 +130,11 @@ function fileSize(bytes: number): string {
   return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
 }
 
-function serializeInlineNode(node: Node): string {
-  if (node.nodeType === Node.TEXT_NODE) return node.textContent ?? '';
-  if (!(node instanceof HTMLElement)) return '';
-  const content = [...node.childNodes].map(serializeInlineNode).join('');
-  switch (node.tagName) {
-    case 'B':
-    case 'STRONG':
-      return content ? `**${content}**` : '';
-    case 'I':
-    case 'EM':
-      return content ? `*${content}*` : '';
-    case 'U':
-      return content ? `++${content}++` : '';
-    case 'A': {
-      const href = node.getAttribute('href') ?? '';
-      return content && /^(https?:|mailto:)/i.test(href) ? `[${content}](${href})` : content;
-    }
-    case 'BR':
-      return '\n';
-    default:
-      return content;
-  }
-}
-
-function editorToMarkdown(editor: HTMLElement): string {
-  const lines: string[] = [];
-  const appendBlock = (node: Node): void => {
-    if (node.nodeType === Node.TEXT_NODE) {
-      const value = node.textContent?.trim();
-      if (value) lines.push(value);
-      return;
-    }
-    if (!(node instanceof HTMLElement)) return;
-    if (node.tagName === 'UL' || node.tagName === 'OL') {
-      [...node.children].forEach((child, index) => {
-        const prefix = node.tagName === 'UL' ? '- ' : `${index + 1}. `;
-        lines.push(`${prefix}${[...child.childNodes].map(serializeInlineNode).join('').trim()}`);
-      });
-      return;
-    }
-    if (node.tagName === 'DIV' || node.tagName === 'P') {
-      lines.push([...node.childNodes].map(serializeInlineNode).join('').trim());
-      return;
-    }
-    lines.push(serializeInlineNode(node).trim());
-  };
-  [...editor.childNodes].forEach(appendBlock);
-  const serialized = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  return serialized || editor.innerText.trim() || editor.textContent.trim() || '';
+// Serialize the composer to the shared sanitized rich-text HTML — the same
+// subset Messenger uses. Replaces a markdown serializer that silently dropped
+// headings and alignment; lists/marks/links round-trip as before, now via HTML.
+function editorToHtml(editor: HTMLElement): string {
+  return sanitizeRichHtml(editor.innerHTML);
 }
 
 function safeLink(value: string): string | null {
@@ -207,6 +164,14 @@ function InlineTicketText({ value }: { value: string }): VNode {
 }
 
 function TicketRichText({ value }: { value: string }): VNode {
+  // New content is sanitized rich-text HTML (headings/paragraphs/lists/marks/
+  // alignment). Pre-existing rows are the legacy markdown string — render each
+  // with its matching parser so historical comments still display correctly.
+  if (looksLikeHtml(value)) return <div class="tc-rich-text">{renderRichHtml(value)}</div>;
+  return <LegacyTicketMarkdown value={value} />;
+}
+
+function LegacyTicketMarkdown({ value }: { value: string }): VNode {
   const blocks: VNode[] = [];
   const lines = value.replace(/\r\n/g, '\n').split('\n');
   let index = 0;
@@ -465,7 +430,7 @@ export function TicketCenter(): VNode {
   }
 
   function sendComment(): void {
-    const text = editorRef.current ? editorToMarkdown(editorRef.current) : body.trim();
+    const text = editorRef.current ? editorToHtml(editorRef.current) : body.trim();
     if (!selectedId || !text || comment.isPending) return;
     comment.mutate({ ticketId: selectedId, body: text, isInternal: composerMode === 'internal' }, {
       onSuccess: () => {
@@ -479,9 +444,13 @@ export function TicketCenter(): VNode {
 
   function format(command: string, value?: string): void {
     editorRef.current?.focus();
+    if (command.startsWith('justify')) {
+      // eslint-disable-next-line @typescript-eslint/no-deprecated -- styleWithCSS makes alignment emit a sanitizer-safe text-align style
+      document.execCommand('styleWithCSS', false, 'true');
+    }
     // eslint-disable-next-line @typescript-eslint/no-deprecated -- execCommand is the only synchronous contenteditable formatting API; no replacement exists
     document.execCommand(command, false, value);
-    setBody(editorRef.current ? editorToMarkdown(editorRef.current) : '');
+    setBody(editorRef.current ? editorToHtml(editorRef.current) : '');
   }
 
   async function attach(file: File | undefined): Promise<void> {
@@ -673,7 +642,7 @@ export function TicketCenter(): VNode {
                     <button onClick={() => format('insertOrderedList')}><i class="fas fa-list-ol" /></button>
                     <button onClick={() => { const url = window.prompt('Paste a link'); if (url) format('createLink', url); }}><i class="fas fa-link" /></button>
                   </div>
-                  <div ref={editorRef} class="tc-editor" contentEditable role="textbox" aria-multiline="true" data-placeholder={composerMode === 'internal' ? 'Write an internal note…' : 'Type your reply…'} onInput={event => setBody(editorToMarkdown(event.currentTarget))} onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); sendComment(); } }} />
+                  <div ref={editorRef} class="tc-editor" contentEditable role="textbox" aria-multiline="true" data-placeholder={composerMode === 'internal' ? 'Write an internal note…' : 'Type your reply…'} onInput={event => setBody(editorToHtml(event.currentTarget))} onKeyDown={event => { if ((event.ctrlKey || event.metaKey) && event.key === 'Enter') { event.preventDefault(); sendComment(); } }} />
                   <footer><button type="button" class="tc-emoji" aria-label="Insert emoji" onClick={() => format('insertText', '🙂')}><i class="far fa-face-smile" /></button><label class={uploading ? 'disabled' : ''}><i class="fas fa-paperclip" /> Attach<input type="file" disabled={uploading} onChange={event => void attach(event.currentTarget.files?.[0])} /></label><small>{composerMode === 'internal' ? 'Visible to handlers only' : 'Requester will be notified'}</small><button disabled={!body.trim() || comment.isPending} onClick={sendComment}><i class="fas fa-paper-plane" /> {comment.isPending ? 'Sending…' : composerMode === 'internal' ? 'Add note' : 'Send reply'}</button></footer>
                 </div>
               )}

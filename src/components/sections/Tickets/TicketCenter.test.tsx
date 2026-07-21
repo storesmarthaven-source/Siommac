@@ -172,13 +172,14 @@ describe('TicketCenter', () => {
     const editor = container.querySelector<HTMLElement>('.tc-editor');
     expect(editor).toBeTruthy();
     if (!editor) return;
-    editor.innerText = 'Your letter is ready.';
+    // The composer serializes editor.innerHTML (rich-text) — drive it that way.
+    editor.innerHTML = 'Your letter is ready.';
     fireEvent.input(editor);
     fireEvent.click(screen.getByText('Send reply'));
     expect(mocks.comment).toHaveBeenCalledWith({ ticketId: ticket.id, body: 'Your letter is ready.', isInternal: false }, expect.any(Object));
 
     fireEvent.click(screen.getByText('Internal note'));
-    editor.innerText = 'Salary visibility checked.';
+    editor.innerHTML = 'Salary visibility checked.';
     fireEvent.input(editor);
     fireEvent.click(screen.getByText('Add note'));
     expect(mocks.comment).toHaveBeenCalledWith({ ticketId: ticket.id, body: 'Salary visibility checked.', isInternal: true }, expect.any(Object));

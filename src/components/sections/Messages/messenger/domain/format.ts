@@ -55,22 +55,10 @@ export function renderComposerMarkup(value: string): string {
     .replace(/\n/g, "<br>");
 }
 
-export function sanitizeComposerHtml(value: string): string {
-  const documentNode = new DOMParser().parseFromString(`<div>${value}</div>`, "text/html");
-  const root = documentNode.body.firstElementChild;
-  if (!root) return "";
-  const allowed = new Set(["STRONG", "B", "EM", "I", "U", "BR", "A"]);
-  Array.from(root.querySelectorAll("*")).forEach((element) => {
-    if (!allowed.has(element.tagName)) { element.replaceWith(...Array.from(element.childNodes)); return; }
-    Array.from(element.attributes).forEach((attribute) => element.removeAttribute(attribute.name));
-    if (element.tagName === "A") {
-      const raw = (element.textContent ?? "").trim();
-      if (/^https?:\/\//i.test(raw)) { element.setAttribute("href", raw); element.setAttribute("target", "_blank"); element.setAttribute("rel", "noreferrer"); }
-      else element.replaceWith(...Array.from(element.childNodes));
-    }
-  });
-  return root.innerHTML;
-}
+// Rich-text sanitize is shared with the Ticket Center (src/lib/richText). It
+// allows the same safe subset — inline marks, links, headings, paragraphs,
+// lists, and block text-alignment — so notes and messages round-trip formatting.
+export { sanitizeRichHtml as sanitizeComposerHtml } from "@lib/richText";
 
 export function linkPreviewFromUrl(raw: string) {
   const value = /^https?:\/\//i.test(raw) ? raw : `https://${raw}`;

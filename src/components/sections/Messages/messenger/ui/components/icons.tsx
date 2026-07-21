@@ -16,6 +16,13 @@ function make(name: LucideName) {
 
 export const Activity = make("Activity");
 export const AlertCircle = make("AlertCircle");
+export const AlignCenter = make("AlignCenter");
+export const AlignJustify = make("AlignJustify");
+export const AlignLeft = make("AlignLeft");
+export const AlignRight = make("AlignRight");
+export const Heading3 = make("Heading3");
+export const ListBullet = make("List");
+export const ListOrdered = make("ListOrdered");
 export const Archive = make("Archive");
 export const ArchiveRestore = make("ArchiveRestore");
 export const ArrowLeft = make("ArrowLeft");
