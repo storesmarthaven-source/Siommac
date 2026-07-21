@@ -130,6 +130,22 @@ set queue_code = excluded.queue_code,
     is_active = true,
     updated_at = now();
 
+-- ── Request-type routing flags + classification (idempotent) ────────────────────
+-- is_employee_requestable: types ordinary staff may raise (self/team/on_behalf).
+-- is_internal_requestable: internal/integration types (internal mode only) — must
+-- NOT be exposed to ordinary staff (filtered in ticket_request_types_for_actor).
+alter table public.ticket_request_types
+  add column if not exists is_employee_requestable boolean not null default false,
+  add column if not exists is_internal_requestable boolean not null default false;
+
+update public.ticket_request_types
+set is_employee_requestable = (code in (
+      'employment_letter','payslip_query','attendance_correction','leave_assistance',
+      'employee_record_correction','benefits_statutory_assistance','facilities_issue',
+      'technical_support','general_hr','hse_confidential_concern')),
+    is_internal_requestable = (code in (
+      'expense_receipt','finance_admin','compliance','finance_compliance','general_support'));
+
 alter table public.tickets
   add column if not exists request_type_code text references public.ticket_request_types(code),
   add column if not exists queue_code text references public.ticket_queues(code),
@@ -141,7 +157,11 @@ alter table public.tickets
   add column if not exists activity_sequence bigint not null default 0,
   add column if not exists version bigint not null default 1,
   add column if not exists overdue_notified_at timestamptz,
-  add column if not exists is_confidential boolean not null default false;
+  add column if not exists is_confidential boolean not null default false,
+  -- Creation provenance: who created the ticket, in what mode, and (on_behalf) why.
+  add column if not exists created_by_user_id text references public.app_users(id),
+  add column if not exists creation_mode text not null default 'self',
+  add column if not exists creation_reason text;
 
 update public.tickets
 set request_type_code = coalesce(request_type_code, 'general_support'),
@@ -150,13 +170,28 @@ set request_type_code = coalesce(request_type_code, 'general_support'),
     resolution_target_minutes = coalesce(resolution_target_minutes, 2880),
     response_due_at = coalesce(response_due_at, created_at + interval '480 minutes'),
     resolution_due_at = coalesce(resolution_due_at, sla_due_at, created_at + interval '2880 minutes'),
-    last_activity_at = coalesce(last_activity_at, updated_at, created_at)
+    last_activity_at = coalesce(last_activity_at, updated_at, created_at),
+    created_by_user_id = coalesce(created_by_user_id, requester_user_id)
 where request_type_code is null
    or queue_code is null
    or response_target_minutes is null
    or resolution_target_minutes is null
    or response_due_at is null
-   or resolution_due_at is null;
+   or resolution_due_at is null
+   or created_by_user_id is null;
+
+-- ── Ticket creation-mode constraints (guarded — a plain ADD CONSTRAINT is not
+-- idempotent, so gate on pg_constraint so the source is safely rerunnable). ──────
+do $$ begin
+  if not exists (select 1 from pg_constraint where conname = 'tickets_creation_mode_chk') then
+    alter table public.tickets add constraint tickets_creation_mode_chk
+      check (creation_mode in ('self','team','on_behalf','internal'));
+  end if;
+  if not exists (select 1 from pg_constraint where conname = 'tickets_on_behalf_reason_chk') then
+    alter table public.tickets add constraint tickets_on_behalf_reason_chk
+      check (creation_mode <> 'on_behalf' or (creation_reason is not null and btrim(creation_reason) <> ''));
+  end if;
+end $$;
 
 -- ── Ticket-creation permission grants (idempotent) ──────────────────────────────
 -- The four granular create keys. Enforcement reads these rows via

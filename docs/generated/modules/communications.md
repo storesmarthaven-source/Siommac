@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `40a68071aec6d2d4140147ef`
+Source fingerprint: `0f6b3a08ffef18b72c5269e2`
 
 Files: 104 | Symbols: 945 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
 
@@ -420,24 +420,24 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.message_compliance_summary` | `supabase/migrations/20260919000436_messaging_compliance_summary.sql:16` |
 | table | `public.ticket_queues` | `supabase/migrations/20260919000440_ticket_center_backend.sql:20` |
 | table | `public.ticket_request_types` | `supabase/migrations/20260919000440_ticket_center_backend.sql:30` |
-| table | `public.ticket_participants` | `supabase/migrations/20260919000440_ticket_center_backend.sql:200` |
-| table | `public.ticket_tags` | `supabase/migrations/20260919000440_ticket_center_backend.sql:244` |
-| table | `public.ticket_attachments` | `supabase/migrations/20260919000440_ticket_center_backend.sql:280` |
-| table | `ticket_internal.command_receipts` | `supabase/migrations/20260919000440_ticket_center_backend.sql:345` |
-| function | `ticket_internal.user_has_permission` | `supabase/migrations/20260919000440_ticket_center_backend.sql:357` |
-| function | `ticket_internal.handler_user_ids` | `supabase/migrations/20260919000440_ticket_center_backend.sql:397` |
-| function | `ticket_internal.record_event` | `supabase/migrations/20260919000440_ticket_center_backend.sql:415` |
-| function | `ticket_internal.notify_users` | `supabase/migrations/20260919000440_ticket_center_backend.sql:486` |
-| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:592` |
-| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:784` |
-| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:980` |
-| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1313` |
-| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1371` |
-| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1486` |
-| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1517` |
-| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1620` |
-| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1749` |
-| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1787` |
+| table | `public.ticket_participants` | `supabase/migrations/20260919000440_ticket_center_backend.sql:235` |
+| table | `public.ticket_tags` | `supabase/migrations/20260919000440_ticket_center_backend.sql:279` |
+| table | `public.ticket_attachments` | `supabase/migrations/20260919000440_ticket_center_backend.sql:315` |
+| table | `ticket_internal.command_receipts` | `supabase/migrations/20260919000440_ticket_center_backend.sql:380` |
+| function | `ticket_internal.user_has_permission` | `supabase/migrations/20260919000440_ticket_center_backend.sql:392` |
+| function | `ticket_internal.handler_user_ids` | `supabase/migrations/20260919000440_ticket_center_backend.sql:432` |
+| function | `ticket_internal.record_event` | `supabase/migrations/20260919000440_ticket_center_backend.sql:450` |
+| function | `ticket_internal.notify_users` | `supabase/migrations/20260919000440_ticket_center_backend.sql:521` |
+| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:627` |
+| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:819` |
+| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1015` |
+| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1348` |
+| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1406` |
+| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1521` |
+| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1552` |
+| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1655` |
+| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1784` |
+| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1822` |
 
 ## E2E Suites
 
