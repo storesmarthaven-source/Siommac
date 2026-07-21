@@ -187,6 +187,8 @@ describe('TicketCenter', () => {
 
   it('wires lifecycle actions and exposes every ticket detail section directly', async () => {
     render(<TicketCenter />);
+    expect(screen.queryByText('Start work')).toBeNull();
+    expect(screen.queryByText('Archive ticket')).toBeNull();
     fireEvent.click(await screen.findByText('Assign to me'));
     expect(mocks.update).toHaveBeenCalledWith({ ticketId: ticket.id, action: 'assign', payload: { assigneeId: 'handler-1' } }, expect.any(Object));
     fireEvent.click(screen.getByRole('button', { name: /Ticket details/ }));
@@ -196,5 +198,12 @@ describe('TicketCenter', () => {
     expect(screen.getAllByText('employment-letter.pdf').length).toBeGreaterThan(1);
     fireEvent.click(screen.getByRole('button', { name: 'Activity' }));
     expect(screen.getByText('Sequenced activity (1)')).toBeTruthy();
+  });
+
+  it('uses close as the archive action only after a ticket is resolved', async () => {
+    render(<TicketCenter />);
+    window.dispatchEvent(new CustomEvent('siomac:openTicket', { detail: { ticketId: resolvedTicket.id, status: resolvedTicket.status } }));
+    fireEvent.click(await screen.findByText('Archive ticket'));
+    expect(mocks.update).toHaveBeenCalledWith({ ticketId: resolvedTicket.id, action: 'close', payload: {} }, expect.any(Object));
   });
 });

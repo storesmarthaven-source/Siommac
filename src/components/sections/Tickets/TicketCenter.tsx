@@ -479,6 +479,19 @@ export function TicketCenter(): VNode {
   const requester = ticket?.requester ?? null;
   const activeStatus = ticket?.status ?? '';
   const isReadOnly = READ_ONLY_STATUSES.has(activeStatus);
+  const canAssignToSelf = Boolean(
+    detail?.canHandle
+    && currentUserId
+    && ticket
+    && ticket.assigneeUserId !== currentUserId
+    && ['open', 'reopened'].includes(activeStatus),
+  );
+  const canStartWork = Boolean(
+    detail?.canHandle
+    && ticket?.assigneeUserId === currentUserId
+    && ['assigned', 'reopened'].includes(activeStatus),
+  );
+  const canArchiveTicket = Boolean(detail?.canHandle && activeStatus === 'resolved');
   // Service-area filter options come from the actor's handled areas (handlers) so
   // they never depend on which tickets happened to load; request-type / tag options
   // are suggestions derived from the visible page.
@@ -583,15 +596,15 @@ export function TicketCenter(): VNode {
                   <button aria-label="Open activity" onClick={() => { setDrawerTab('Activity'); setDrawerOpen(true); }}><i class="fas fa-clock-rotate-left" /></button>
                   <button aria-label="More ticket actions" onClick={() => setMoreOpen(open => !open)}><i class="fas fa-ellipsis-vertical" /></button>
                   <span />
-                  {detail.canHandle && ticket.assigneeUserId !== currentUserId && <button onClick={() => currentUserId && runAction('assign', { assigneeId: currentUserId })}>Assign to me</button>}
-                  {detail.canHandle && ['open', 'assigned', 'reopened'].includes(activeStatus) && <button onClick={() => runAction('start')}>Start</button>}
+                  {canAssignToSelf && <button onClick={() => currentUserId && runAction('assign', { assigneeId: currentUserId })}>Assign to me</button>}
+                  {canStartWork && <button onClick={() => runAction('start')}>Start work</button>}
+                  {canArchiveTicket && <button class="archive" onClick={() => runAction('close')}>Archive ticket</button>}
                   <button class="details" onClick={() => { setDrawerTab('Details'); setDrawerOpen(true); }}>Ticket details <i class="fas fa-chevron-right" /></button>
                   {detail.canHandle && !isReadOnly && activeStatus && <button class="resolve" onClick={() => { setActionValue('fulfilled'); setActionDialog('resolve'); }}><i class="fas fa-check" /> Resolve</button>}
                   {moreOpen && <div class="tc-action-menu">
                     {detail.canHandle && <button onClick={() => runAction('wait_requester')}>Waiting on requester</button>}
                     {detail.canHandle && <button onClick={() => setActionDialog('priority')}>Change priority</button>}
                     {detail.canHandle && <button onClick={() => setActionDialog('tag')}>Add tag</button>}
-                    {detail.canHandle && activeStatus === 'resolved' && <button onClick={() => runAction('close')}>Close ticket</button>}
                     {['resolved', 'closed'].includes(activeStatus) && <button onClick={() => runAction('reopen')}>Reopen ticket</button>}
                     {!['closed', 'cancelled'].includes(activeStatus) && <button class="danger" onClick={() => runAction('cancel')}>Cancel ticket</button>}
                   </div>}

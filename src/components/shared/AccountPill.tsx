@@ -13,8 +13,9 @@
  *   • Id-free actions: icon buttons carry data-pill-action="notif|msg|ticket";
  *     NavController's delegated handler opens the shared header modal positioned
  *     under the clicked icon.
- *   • Id-free badges: count spans carry data-pill-badge="…"; badgeSync updates
- *     them by attribute.
+ *   • Id-free badges: count spans carry data-pill-badge="…"; the Preact pill
+ *     renders counts from the same communications summary query as the dropdowns.
+ *     badgeSync remains a fallback for non-Preact/legacy badge nodes.
  *   • Profile area routes to My Profile.
  *
  * Customization:
@@ -29,6 +30,7 @@ import { useState, useEffect, useRef } from 'preact/hooks';
 import { useSessionStore, selectFullName, selectRole } from '@store/session';
 import { useUiStore, selectTheme } from '@store/ui';
 import { dialog } from '@lib/dialog';
+import { useCommsSummary } from '@api/communications';
 
 // ── Lucide line-icons (the app's icon language) ───────────────────────────────
 const lIco = (inner: ComponentChildren, sw = 1.8, size = 19): VNode => (
@@ -56,6 +58,20 @@ function nav(id: string): void {
 }
 function doLogout(): void {
   (window as unknown as { handleLogout?: () => void }).handleLogout?.();
+}
+
+function badgeText(count: number | undefined): string {
+  if (!count || count <= 0) return '';
+  return count > 99 ? '99+' : String(count);
+}
+
+function badgeStyle(label: string): { display: string } | undefined {
+  return label ? undefined : { display: 'none' };
+}
+
+function actionLabel(label: string, count: number | undefined): string {
+  if (!count || count <= 0) return label;
+  return `${label}, ${count > 99 ? '99+' : count} unread`;
 }
 
 export interface AccountPillProps {
@@ -86,9 +102,13 @@ export function AccountPill({
   const role      = useSessionStore(selectRole);
   const avatarUrl = useSessionStore(s => s.profileImage);
   const username  = useSessionStore(s => s.username);
+  const summaryQ  = useCommsSummary();
 
   const name    = fullName ?? username ?? 'User';
   const initial = (name.trim()[0] ?? 'U').toUpperCase();
+  const notifBadge  = badgeText(summaryQ.data?.notificationsUnread);
+  const msgBadge    = badgeText(summaryQ.data?.messagesUnread);
+  const ticketBadge = badgeText(summaryQ.data?.ticketsUnread);
 
   const [menuOpen, setMenuOpen] = useState(false);
   // Appearance: the authoritative per-user theme (store → DB via system.user_theme).
@@ -189,18 +209,21 @@ export function AccountPill({
   const icons = anyIcon ? (
     <div class="pnp-icons">
       {showNotif && (
-        <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications">
-          <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={{ display: 'none' }} />
+        <button type="button" class="pnp-icon-btn" data-pill-action="notif" title="Notifications"
+          aria-label={actionLabel('Notifications', summaryQ.data?.notificationsUnread)}>
+          <i class="fas fa-bell" /><span class="pnp-badge" data-pill-badge="notif" style={badgeStyle(notifBadge)}>{notifBadge}</span>
         </button>
       )}
       {showMsg && (
-        <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages">
-          <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={{ display: 'none' }} />
+        <button type="button" class="pnp-icon-btn" data-pill-action="msg" title="Messages"
+          aria-label={actionLabel('Messages', summaryQ.data?.messagesUnread)}>
+          <i class="fas fa-comment-dots" /><span class="pnp-badge" data-pill-badge="msg" style={badgeStyle(msgBadge)}>{msgBadge}</span>
         </button>
       )}
       {showTicket && (
-        <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets">
-          <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={{ display: 'none' }} />
+        <button type="button" class="pnp-icon-btn" data-pill-action="ticket" title="Support Tickets"
+          aria-label={actionLabel('Support Tickets', summaryQ.data?.ticketsUnread)}>
+          <i class="fas fa-ticket-alt" /><span class="pnp-badge pnp-badge-gold" data-pill-badge="ticket" style={badgeStyle(ticketBadge)}>{ticketBadge}</span>
         </button>
       )}
     </div>

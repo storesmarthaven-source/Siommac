@@ -71,11 +71,8 @@ export function MessageDropdown(): VNode {
   // One canonical list powers both tabs. The previous unread tab changed the
   // query key to `inbox`, causing a second cold request even though the all
   // response already carries each thread's authoritative unreadCount.
-  // Gate on modal open state — no background fetches while the dropdown is hidden.
-  const { data, isLoading, isFetching, isError, refetch } = useMessageThreadsFull(
-    { tab: 'all', limit: 30 },
-    { enabled: isOpen },
-  );
+  // Keep the dropdown list warm so opening the modal does not start from a cold request.
+  const { data, isLoading, isFetching, isError, refetch } = useMessageThreadsFull({ tab: 'all', limit: 30 });
 
   // Client-side filter for unread tab
   const rows = (data ?? []).filter(t => {

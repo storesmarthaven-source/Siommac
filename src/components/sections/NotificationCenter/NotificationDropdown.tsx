@@ -67,11 +67,9 @@ export function NotificationDropdown(): VNode {
 
   const args: NotificationListArgs = {
     limit: 30,
-    unreadOnly:         tab === 'unread',
-    actionRequiredOnly: tab === 'action',
   };
-  // Gate on modal open state — no background fetches while the dropdown is hidden.
-  const { data, isLoading, isError, refetch } = useNotifications(args, { enabled: isOpen });
+  // Keep one canonical preview query warm; tabs filter the small result locally.
+  const { data, isLoading, isError, refetch } = useNotifications(args);
   // Belt-and-suspenders: also filter client-side so the tabs are correct even if
   // an older deployed backend ignores the unreadOnly / actionRequiredOnly args.
   const rows = (data ?? []).filter(n => {

@@ -2,9 +2,10 @@ import { type VNode } from 'preact';
 import { useState } from 'preact/hooks';
 import { useCommsSummary, useMarkTicketRead, useMyTickets, type CanonicalTicket } from '@api/communications';
 import { showSection } from '@components/nav/navCore';
-import { useHeaderModalOpen } from '@/hooks/useHeaderModalOpen';
 import { useCan } from '@lib/permissions';
 import { TicketCreateDialog } from './TicketCreateDialog';
+
+const TICKET_DROPDOWN_PREVIEW_LIMIT = 12;
 
 function closeModal(): void {
   document.getElementById('hdrTicketModal')?.classList.remove('open');
@@ -39,9 +40,6 @@ export function TicketDropdown(): VNode {
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [createOpen, setCreateOpen] = useState(false);
 
-  // Gate list fetches on modal visibility — no background fetches while hidden.
-  const isOpen = useHeaderModalOpen('hdrTicketModal');
-
   // useCan is a hook — call each unconditionally (a `||` chain would make the later
   // calls conditional and violate rules-of-hooks), then combine the booleans.
   const canCreateSelf = useCan('tickets.create_self');
@@ -52,13 +50,13 @@ export function TicketDropdown(): VNode {
   // Load every ticket the server authorizes the actor to see (participant OR
   // queue-handler), not just requester-owned tickets — otherwise handlers see an
   // unread count with nothing in the Unread tab. The backend gate stays authoritative.
-  // Gate on modal open state — no background fetches while the dropdown is hidden.
-  const ticketsQ = useMyTickets({ scope: 'all', limit: 30 }, { enabled: isOpen });
+  // Keep the dropdown list warm so opening the modal does not start from a cold request.
+  const ticketsQ = useMyTickets({ scope: 'all', limit: 30 });
   const summaryQ = useCommsSummary();
   const markRead = useMarkTicketRead();
   const unread = summaryQ.data?.ticketsUnread ?? 0;
 
-  const rows = (ticketsQ.data?.items ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, 10);
+  const rows = (ticketsQ.data?.items ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, TICKET_DROPDOWN_PREVIEW_LIMIT);
 
   function open(ticket: CanonicalTicket): void {
     if (ticket.unreadCount > 0) markRead.mutate({ ticketId: ticket.id, sequence: ticket.activitySequence });

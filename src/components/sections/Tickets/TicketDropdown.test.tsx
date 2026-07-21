@@ -2,8 +2,9 @@
  * src/components/sections/Tickets/TicketDropdown.test.tsx
  *
  * Verifies two key properties of the header ticket dropdown:
- *   1. The list query (useMyTickets) is DISABLED while the modal is hidden.
- *   2. An API error shows a clean error state without crashing the header.
+ *   1. The list query (useMyTickets) stays warm while the modal is hidden.
+ *   2. The dropdown asks for the canonical warm preview query, not a full queue.
+ *   3. An API error shows a clean error state without crashing the header.
  *
  * Does NOT test the badge DOM write — that responsibility belongs to badgeSync.ts.
  */
@@ -70,20 +71,28 @@ describe('TicketDropdown query gating', () => {
     myTickets.mockReturnValue(makeResult());
   });
 
-  it('passes enabled:false to useMyTickets when the modal is hidden', () => {
+  it('keeps useMyTickets warm when the modal is hidden', () => {
     _isModalOpen = false;
     renderDropdown();
     const call = myTickets.mock.calls[0];
     const opts = call?.[1];
-    expect(opts?.enabled).toBe(false);
+    expect(opts).toBeUndefined();
   });
 
-  it('passes enabled:true to useMyTickets when the modal is open', () => {
+  it('keeps useMyTickets warm when the modal is open', () => {
     _isModalOpen = true;
     renderDropdown();
     const call = myTickets.mock.calls[0];
     const opts = call?.[1];
-    expect(opts?.enabled).toBe(true);
+    expect(opts).toBeUndefined();
+  });
+
+  it('requests the standard warm ticket preview query', () => {
+    _isModalOpen = true;
+    renderDropdown();
+    const call = myTickets.mock.calls[0];
+    const args = call?.[0];
+    expect(args?.limit).toBe(30);
   });
 
   it('renders an error state (not a blank crash) when the tickets API fails', () => {

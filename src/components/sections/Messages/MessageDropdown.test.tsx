@@ -2,8 +2,8 @@
  * src/components/sections/Messages/MessageDropdown.test.tsx
  *
  * Verifies two key properties of the header message dropdown:
- *   1. The list query (useMessageThreadsFull) is DISABLED while the modal is hidden.
- *   2. The list query is ENABLED when the modal is open.
+ *   1. The list query (useMessageThreadsFull) stays warm while the modal is hidden.
+ *   2. The same warm query is used when the modal is open.
  *
  * Does NOT test the badge DOM write — that responsibility belongs to badgeSync.ts.
  */
@@ -60,20 +60,20 @@ describe('MessageDropdown query gating', () => {
     threadsFull.mockClear();
   });
 
-  it('passes enabled:false to useMessageThreadsFull when the modal is hidden', () => {
+  it('keeps useMessageThreadsFull warm when the modal is hidden', () => {
     _isModalOpen = false;
     renderDropdown();
     const call = threadsFull.mock.calls[0];
     const opts = call?.[1];
-    expect(opts?.enabled).toBe(false);
+    expect(opts).toBeUndefined();
   });
 
-  it('passes enabled:true to useMessageThreadsFull when the modal is open', () => {
+  it('keeps useMessageThreadsFull warm when the modal is open', () => {
     _isModalOpen = true;
     renderDropdown();
     const call = threadsFull.mock.calls[0];
     const opts = call?.[1];
-    expect(opts?.enabled).toBe(true);
+    expect(opts).toBeUndefined();
   });
 
   it('renders without crashing when modal is open and no threads are loaded', () => {
