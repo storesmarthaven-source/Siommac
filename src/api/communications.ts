@@ -808,17 +808,41 @@ export function useMyTickets(args: TicketListArgs = {}) {
   });
 }
 
-export function useTicketRequestTypes() {
+export function useTicketRequestTypes(creationMode: 'self' | 'team' | 'on_behalf' | 'internal' = 'self') {
   return useQuery({
-    queryKey: ticketKeys.requestTypes(),
+    // Key on the mode so switching mode in the dialog refetches the allowed types.
+    queryKey: [...ticketKeys.requestTypes(), creationMode],
     queryFn: async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: TicketRequestType[] }>(
-        'communications/tickets/request-types', {}, { signal },
+        'communications/tickets/request-types', { creationMode }, { signal },
       );
       if (!res.success) throw new Error('Failed to load ticket request types');
       return res.data;
     },
     staleTime: 5 * 60_000,
+  });
+}
+
+export interface TicketRequesterOption { id: string; displayName: string; email: string | null }
+
+// Authenticated requester picker for team / on-behalf modes. The server scopes the
+// results (team = active direct reports; on-behalf = active users if permitted).
+export function useTicketRequesterSearch(
+  creationMode: 'team' | 'on_behalf',
+  query: string,
+  enabled: boolean,
+) {
+  return useQuery({
+    queryKey: [...ticketKeys.all, 'requester-search', creationMode, query],
+    queryFn: async ({ signal }: QueryFunctionContext) => {
+      const res = await apiPost<{ success: boolean; data: TicketRequesterOption[] }>(
+        'communications/tickets/requester-search', { creationMode, query }, { signal },
+      );
+      if (!res.success) throw new Error('Failed to search requesters');
+      return res.data;
+    },
+    enabled,
+    staleTime: 30_000,
   });
 }
 

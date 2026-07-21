@@ -1589,8 +1589,12 @@ begin
 end;
 $$;
 
+-- Gained p_creation_mode (default 'self'); drop the old 1-arg overload so a 1-arg
+-- call is not ambiguous with the new default-arg version. Idempotent.
+drop function if exists public.ticket_request_types_for_actor(text);
 create or replace function public.ticket_request_types_for_actor(
-  p_actor_id text
+  p_actor_id text,
+  p_creation_mode text default 'self'
 )
 returns jsonb
 language sql
@@ -1617,7 +1621,60 @@ as $$
   where rt.is_active and q.is_active
     and exists (
       select 1 from public.app_users where id = p_actor_id and status = 'active'
-    );
+    )
+    -- Internal mode returns only internal types (and only if the actor may raise
+    -- internal work); every other mode returns only employee-facing types. Internal
+    -- types are therefore never exposed to ordinary staff.
+    and case
+      when lower(coalesce(nullif(trim(p_creation_mode), ''), 'self')) = 'internal'
+        then rt.is_internal_requestable
+             and ticket_internal.user_has_permission(p_actor_id, 'tickets.create_internal')
+      else rt.is_employee_requestable
+    end;
+$$;
+
+-- ── Requester search (team / on-behalf pickers) ─────────────────────────────────
+-- Team mode returns only the actor's active direct reports; on-behalf returns
+-- active users only when the actor holds tickets.create_on_behalf. Server-side
+-- ilike search + capped result count. No employee is listed for any other mode.
+create or replace function public.ticket_requester_search(
+  p_actor_id text,
+  p_mode text,
+  p_query text,
+  p_limit integer default 20
+)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public, ticket_internal
+as $$
+  with params as (
+    select least(greatest(coalesce(p_limit, 20), 1), 50) as n,
+           lower(coalesce(nullif(trim(p_mode), ''), 'team')) as mode,
+           nullif(trim(p_query), '') as term
+  )
+  select coalesce(jsonb_agg(to_jsonb(r)), '[]'::jsonb)
+  from (
+    select u.id,
+           coalesce(u.full_name, u.email, 'SIOMAC user') as "displayName",
+           u.email
+    from public.app_users u, params p
+    where u.status = 'active'
+      and u.id <> p_actor_id
+      and (p.term is null
+           or u.full_name ilike '%' || p.term || '%'
+           or u.email ilike '%' || p.term || '%')
+      and case
+        when p.mode = 'team'
+          then u.supervisor_id = p_actor_id
+        when p.mode = 'on_behalf'
+          then ticket_internal.user_has_permission(p_actor_id, 'tickets.create_on_behalf')
+        else false
+      end
+    order by coalesce(u.full_name, u.email)
+    limit (select n from params)
+  ) r;
 $$;
 
 create or replace function public.ticket_list_for_actor(
@@ -1967,7 +2024,9 @@ revoke all on function public.ticket_mark_read_tx(
 revoke all on function public.ticket_attachment_complete_tx(
   text,uuid,text
 ) from public, anon, authenticated;
-revoke all on function public.ticket_request_types_for_actor(text)
+revoke all on function public.ticket_request_types_for_actor(text,text)
+  from public, anon, authenticated;
+revoke all on function public.ticket_requester_search(text,text,text,integer)
   from public, anon, authenticated;
 revoke all on function public.ticket_list_for_actor(
   text,text,text,text,text,text,text,text,integer,timestamptz
@@ -1994,7 +2053,9 @@ grant execute on function public.ticket_mark_read_tx(
 grant execute on function public.ticket_attachment_complete_tx(
   text,uuid,text
 ) to service_role;
-grant execute on function public.ticket_request_types_for_actor(text)
+grant execute on function public.ticket_request_types_for_actor(text,text)
+  to service_role;
+grant execute on function public.ticket_requester_search(text,text,text,integer)
   to service_role;
 grant execute on function public.ticket_list_for_actor(
   text,text,text,text,text,text,text,text,integer,timestamptz

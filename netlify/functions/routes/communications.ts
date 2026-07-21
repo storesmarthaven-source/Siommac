@@ -89,6 +89,7 @@ import {
   listTicketRequestTypes,
   listTicketsForActor,
   markTicketReadTx,
+  searchTicketRequesters,
   runTicketOverdueSweep,
   type TicketMutationResult,
 } from '../lib/tickets/ticketRpc';
@@ -1005,9 +1006,34 @@ async function signalTicketMutation(result: TicketMutationResult): Promise<void>
   ]);
 }
 
+const RequestTypesSchema = z.object({
+  creationMode: z.enum(['self','team','on_behalf','internal']).optional(),
+});
+
 router.post('/communications/tickets/request-types', async c => {
   const user = await requirePermission(c, 'communications.view');
-  const data = await listTicketRequestTypes(user.id);
+  const body = c.get('body');
+  const v = zv(c, RequestTypesSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  // Only types allowed for the mode are returned; internal types stay hidden from
+  // ordinary staff (enforced in ticket_request_types_for_actor).
+  const data = await listTicketRequestTypes(user.id, v.data.creationMode ?? 'self');
+  return c.json({ success: true, data });
+});
+
+const RequesterSearchSchema = z.object({
+  creationMode: z.enum(['team','on_behalf']),
+  query:        z.string().max(120).optional(),
+});
+
+router.post('/communications/tickets/requester-search', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const body = c.get('body');
+  const v = zv(c, RequesterSearchSchema, body.args ?? {});
+  if (!v.ok) return v.response;
+  // Team -> active direct reports only; on-behalf -> active users, and only when the
+  // actor holds tickets.create_on_behalf (both enforced in ticket_requester_search).
+  const data = await searchTicketRequesters(user.id, v.data.creationMode, v.data.query ?? '');
   return c.json({ success: true, data });
 });
 

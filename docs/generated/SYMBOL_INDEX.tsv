@@ -2342,10 +2342,12 @@ commandTicketTx	function	communications	true		netlify/functions/lib/tickets/tick
 markTicketReadTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	225	
 completeTicketAttachmentTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	239	
 listTicketRequestTypes	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	253	
-listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	261	
-getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	305	
-runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	340	
-cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	352	
+TicketRequesterOption	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	265	
+searchTicketRequesters	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	267	
+listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	283	
+getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	327	
+runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	362	
+cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	374	
 ENCRYPTION_KEY_HEX	variable	platform	false		netlify/functions/lib/totp.ts	19	
 CHALLENGE_TTL_MS	variable	platform	false		netlify/functions/lib/totp.ts	20	
 MAX_ATTEMPTS	variable	platform	false		netlify/functions/lib/totp.ts	21	
@@ -2730,48 +2732,50 @@ writeException	function	platform	false		netlify/functions/routes/calendar.ts	744
 UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	766	
 StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	883	
 CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	933	
-router	variable	communications	false		netlify/functions/routes/communications.ts	100	
-NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	112	
-PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	236	
-MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	263	
-BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	290	
-ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	351	
-ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	378	
-PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	402	
-MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	433	
-RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	475	
-CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	506	
-PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	546	
-AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	589	
-AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	611	
-MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	637	
-ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	653	
-MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	670	
-FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	684	
-ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	704	
-ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	724	
-SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	760	
-RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	776	
-AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	792	
-PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	816	
-UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	847	
-DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	864	
-ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	892	
-PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	912	
-DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	935	
-DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	951	
-PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	976	
-signalTicketMutation	function	communications	false		netlify/functions/routes/communications.ts	1001	
-CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1014	
-TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1081	
-TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1117	
-CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1128	
-TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1149	
-TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1170	
-TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1188	
-TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1231	
-TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1269	
-TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1291	
+router	variable	communications	false		netlify/functions/routes/communications.ts	101	
+NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	113	
+PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	237	
+MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	264	
+BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	291	
+ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	352	
+ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	379	
+PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	403	
+MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	434	
+RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	476	
+CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	507	
+PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	547	
+AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	590	
+AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	612	
+MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	638	
+ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	654	
+MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	671	
+FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	685	
+ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	705	
+ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	725	
+SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	761	
+RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	777	
+AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	793	
+PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	817	
+UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	848	
+DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	865	
+ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	893	
+PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	913	
+DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	936	
+DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	952	
+PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	977	
+signalTicketMutation	function	communications	false		netlify/functions/routes/communications.ts	1002	
+RequestTypesSchema	variable	communications	false		netlify/functions/routes/communications.ts	1009	
+RequesterSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	1024	
+CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1040	
+TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1107	
+TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1143	
+CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1154	
+TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1175	
+TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1196	
+TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1214	
+TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1257	
+TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1295	
+TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1317	
 router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
 args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	37	
 CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	40	
@@ -3961,16 +3965,18 @@ useMessageRecipients	function	communications	true	hook	src/api/communications.ts
 TicketListArgs	interface	communications	true		src/api/communications.ts	784	
 useMyTickets	function	communications	true	hook	src/api/communications.ts	796	
 useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	811	
-useTicket	function	communications	true	hook	src/api/communications.ts	825	
-CreateTicketArgs	interface	communications	true		src/api/communications.ts	841	
-useCreateTicket	function	communications	true	hook	src/api/communications.ts	854	
-CommentTicketArgs	interface	communications	true		src/api/communications.ts	873	
-useCommentTicket	function	communications	true	hook	src/api/communications.ts	879	
-UpdateTicketArgs	interface	communications	true		src/api/communications.ts	898	
-useUpdateTicket	function	communications	true	hook	src/api/communications.ts	907	
-useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	926	
-uploadTicketAttachment	function	communications	true		src/api/communications.ts	975	
-getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1002	
+TicketRequesterOption	interface	communications	true		src/api/communications.ts	826	
+useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	830	
+useTicket	function	communications	true	hook	src/api/communications.ts	849	
+CreateTicketArgs	interface	communications	true		src/api/communications.ts	865	
+useCreateTicket	function	communications	true	hook	src/api/communications.ts	878	
+CommentTicketArgs	interface	communications	true		src/api/communications.ts	897	
+useCommentTicket	function	communications	true	hook	src/api/communications.ts	903	
+UpdateTicketArgs	interface	communications	true		src/api/communications.ts	922	
+useUpdateTicket	function	communications	true	hook	src/api/communications.ts	931	
+useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	950	
+uploadTicketAttachment	function	communications	true		src/api/communications.ts	999	
+getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1026	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
 ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
 asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	

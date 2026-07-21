@@ -250,12 +250,34 @@ export async function completeTicketAttachmentTx(input: {
   return mutationResult(data);
 }
 
-export async function listTicketRequestTypes(actorId: string): Promise<Record<string, unknown>[]> {
+export async function listTicketRequestTypes(
+  actorId: string,
+  creationMode: 'self' | 'team' | 'on_behalf' | 'internal' = 'self',
+): Promise<Record<string, unknown>[]> {
   const { data, error } = await ticketRpc('ticket_request_types_for_actor', {
     p_actor_id: actorId,
+    p_creation_mode: creationMode,
   });
   if (error) throwRpcError(error);
   return Array.isArray(data) ? data as Record<string, unknown>[] : [];
+}
+
+export interface TicketRequesterOption { id: string; displayName: string; email: string | null }
+
+export async function searchTicketRequesters(
+  actorId: string,
+  mode: 'team' | 'on_behalf',
+  query: string,
+  limit = 20,
+): Promise<TicketRequesterOption[]> {
+  const { data, error } = await ticketRpc('ticket_requester_search', {
+    p_actor_id: actorId,
+    p_mode: mode,
+    p_query: query,
+    p_limit: limit,
+  });
+  if (error) throwRpcError(error);
+  return Array.isArray(data) ? data as TicketRequesterOption[] : [];
 }
 
 export async function listTicketsForActor(input: {

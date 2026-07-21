@@ -1,20 +1,20 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "d78fedcea43f681a62a769dfce87fd4a6b5302a1",
+    "head": "bca9028490e7848ae56fb44a54cefe0173cffd03",
     "branch": "main",
-    "fingerprint": "82974925ad78d2a8908b358e",
+    "fingerprint": "eda2199376d19269f52bedf8",
     "indexedFiles": 1469
   },
   "summary": {
     "files": 1155,
-    "symbols": 11542,
+    "symbols": 11548,
     "widgets": 32,
-    "routes": 895,
-    "routeDefinitions": 896,
+    "routes": 896,
+    "routeDefinitions": 897,
     "unmountedRoutes": 17,
-    "apiCalls": 373,
-    "databaseObjects": 1261,
+    "apiCalls": 374,
+    "databaseObjects": 1262,
     "e2eSuites": 70,
     "e2eTests": 2301
   },
@@ -75,12 +75,12 @@
       "id": "communications",
       "counts": {
         "files": 104,
-        "symbols": 945,
+        "symbols": 951,
         "widgets": 0,
-        "routes": 78,
-        "routeDefinitions": 81,
-        "apiCalls": 85,
-        "databaseObjects": 151,
+        "routes": 79,
+        "routeDefinitions": 82,
+        "apiCalls": 86,
+        "databaseObjects": 152,
         "e2eSuites": 5
       }
     },
@@ -1533,8 +1533,8 @@
       "path": "netlify/functions/lib/tickets/ticketRpc.ts",
       "module": "communications",
       "role": "backend-lib",
-      "lines": 382,
-      "hash": "98eccdaef6ca7ce2"
+      "lines": 404,
+      "hash": "4413482e578eaaf1"
     },
     {
       "path": "netlify/functions/lib/totp.ts",
@@ -1764,8 +1764,8 @@
       "path": "netlify/functions/routes/communications.ts",
       "module": "communications",
       "role": "backend-route",
-      "lines": 1309,
-      "hash": "a9d630334da61fb9"
+      "lines": 1335,
+      "hash": "8cafc2a6b91d55f9"
     },
     {
       "path": "netlify/functions/routes/communicationsCompliance.ts",
@@ -2842,8 +2842,8 @@
       "path": "src/api/communications.ts",
       "module": "communications",
       "role": "frontend-api",
-      "lines": 1009,
-      "hash": "d2b7d2c296e5ba17"
+      "lines": 1033,
+      "hash": "cf43fe8cf47b9083"
     },
     {
       "path": "src/api/communicationsCompliance.ts",
@@ -31706,10 +31706,30 @@
       "tags": []
     },
     {
+      "name": "TicketRequesterOption",
+      "kind": "interface",
+      "file": "netlify/functions/lib/tickets/ticketRpc.ts",
+      "line": 265,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "searchTicketRequesters",
+      "kind": "function",
+      "file": "netlify/functions/lib/tickets/ticketRpc.ts",
+      "line": 267,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "listTicketsForActor",
       "kind": "function",
       "file": "netlify/functions/lib/tickets/ticketRpc.ts",
-      "line": 261,
+      "line": 283,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -31719,7 +31739,7 @@
       "name": "getTicketForActor",
       "kind": "function",
       "file": "netlify/functions/lib/tickets/ticketRpc.ts",
-      "line": 305,
+      "line": 327,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -31729,7 +31749,7 @@
       "name": "runTicketOverdueSweep",
       "kind": "function",
       "file": "netlify/functions/lib/tickets/ticketRpc.ts",
-      "line": 340,
+      "line": 362,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -31739,7 +31759,7 @@
       "name": "cleanupStaleTicketAttachments",
       "kind": "function",
       "file": "netlify/functions/lib/tickets/ticketRpc.ts",
-      "line": 352,
+      "line": 374,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -35589,7 +35609,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 100,
+      "line": 101,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35599,7 +35619,7 @@
       "name": "NotifListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 112,
+      "line": 113,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35609,7 +35629,7 @@
       "name": "PrefSetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 236,
+      "line": 237,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35619,7 +35639,7 @@
       "name": "MuteSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 263,
+      "line": 264,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35629,7 +35649,7 @@
       "name": "BroadcastSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 290,
+      "line": 291,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35639,7 +35659,7 @@
       "name": "ThreadsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 351,
+      "line": 352,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35649,7 +35669,7 @@
       "name": "ThreadGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 378,
+      "line": 379,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35659,7 +35679,7 @@
       "name": "PostsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 402,
+      "line": 403,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35669,7 +35689,7 @@
       "name": "MessageSearchSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 433,
+      "line": 434,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35679,7 +35699,7 @@
       "name": "RecordThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 475,
+      "line": 476,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35689,7 +35709,7 @@
       "name": "CreateThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 506,
+      "line": 507,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35699,7 +35719,7 @@
       "name": "PostMessageSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 546,
+      "line": 547,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35709,7 +35729,7 @@
       "name": "AttachUploadUrlSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 589,
+      "line": 590,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35719,7 +35739,7 @@
       "name": "AttachCreateSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 611,
+      "line": 612,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35729,7 +35749,7 @@
       "name": "MarkReadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 637,
+      "line": 638,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35739,7 +35759,7 @@
       "name": "ArchiveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 653,
+      "line": 654,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35749,7 +35769,7 @@
       "name": "MuteThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 670,
+      "line": 671,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35759,7 +35779,7 @@
       "name": "FavouriteThreadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 684,
+      "line": 685,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35769,7 +35789,7 @@
       "name": "ParticipantsAddSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 704,
+      "line": 705,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35779,7 +35799,7 @@
       "name": "ParticipantsRemoveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 724,
+      "line": 725,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35789,7 +35809,7 @@
       "name": "SearchSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 760,
+      "line": 761,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35799,7 +35819,7 @@
       "name": "RecipientsSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 776,
+      "line": 777,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35809,7 +35829,7 @@
       "name": "AttachUrlSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 792,
+      "line": 793,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35819,7 +35839,7 @@
       "name": "PinSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 816,
+      "line": 817,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35829,7 +35849,7 @@
       "name": "UnpinSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 847,
+      "line": 848,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35839,7 +35859,7 @@
       "name": "DeleteMessageSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 864,
+      "line": 865,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35849,7 +35869,7 @@
       "name": "ToggleReactionSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 892,
+      "line": 893,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35859,7 +35879,7 @@
       "name": "PinsListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 912,
+      "line": 913,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35869,7 +35889,7 @@
       "name": "DraftSaveSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 935,
+      "line": 936,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35879,7 +35899,7 @@
       "name": "DraftGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 951,
+      "line": 952,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35889,7 +35909,7 @@
       "name": "PresenceSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 976,
+      "line": 977,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35899,7 +35919,27 @@
       "name": "signalTicketMutation",
       "kind": "function",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1001,
+      "line": 1002,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RequestTypesSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communications.ts",
+      "line": 1009,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RequesterSearchSchema",
+      "kind": "variable",
+      "file": "netlify/functions/routes/communications.ts",
+      "line": 1024,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35909,7 +35949,7 @@
       "name": "CreateTicketSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1014,
+      "line": 1040,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35919,7 +35959,7 @@
       "name": "TicketListSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1081,
+      "line": 1107,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35929,7 +35969,7 @@
       "name": "TicketIdSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1117,
+      "line": 1143,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35939,7 +35979,7 @@
       "name": "CommentSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1128,
+      "line": 1154,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35949,7 +35989,7 @@
       "name": "TicketCommandSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1149,
+      "line": 1175,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35959,7 +35999,7 @@
       "name": "TicketMarkReadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1170,
+      "line": 1196,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35969,7 +36009,7 @@
       "name": "TicketAttachmentUploadSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1188,
+      "line": 1214,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35979,7 +36019,7 @@
       "name": "TicketAttachmentCompleteSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1231,
+      "line": 1257,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35989,7 +36029,7 @@
       "name": "TicketAttachmentGetSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1269,
+      "line": 1295,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -35999,7 +36039,7 @@
       "name": "TicketSweepSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1291,
+      "line": 1317,
       "module": "communications",
       "exported": false,
       "container": "",
@@ -48658,10 +48698,32 @@
       ]
     },
     {
+      "name": "TicketRequesterOption",
+      "kind": "interface",
+      "file": "src/api/communications.ts",
+      "line": 826,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "useTicketRequesterSearch",
+      "kind": "function",
+      "file": "src/api/communications.ts",
+      "line": 830,
+      "module": "communications",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "useTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 825,
+      "line": 849,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48673,7 +48735,7 @@
       "name": "CreateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 841,
+      "line": 865,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48683,7 +48745,7 @@
       "name": "useCreateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 854,
+      "line": 878,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48695,7 +48757,7 @@
       "name": "CommentTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 873,
+      "line": 897,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48705,7 +48767,7 @@
       "name": "useCommentTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 879,
+      "line": 903,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48717,7 +48779,7 @@
       "name": "UpdateTicketArgs",
       "kind": "interface",
       "file": "src/api/communications.ts",
-      "line": 898,
+      "line": 922,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48727,7 +48789,7 @@
       "name": "useUpdateTicket",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 907,
+      "line": 931,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48739,7 +48801,7 @@
       "name": "useMarkTicketRead",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 926,
+      "line": 950,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48751,7 +48813,7 @@
       "name": "uploadTicketAttachment",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 975,
+      "line": 999,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -48761,7 +48823,7 @@
       "name": "getTicketAttachmentUrl",
       "kind": "function",
       "file": "src/api/communications.ts",
-      "line": 1002,
+      "line": 1026,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -130056,7 +130118,7 @@
       ],
       "schema": "z.object({ threadId: z.uuid() })",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 455,
+      "line": 456,
       "module": "communications"
     },
     {
@@ -130069,7 +130131,7 @@
       ],
       "schema": "ArchiveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 658,
+      "line": 659,
       "module": "communications"
     },
     {
@@ -130082,7 +130144,7 @@
       ],
       "schema": "AttachCreateSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 618,
+      "line": 619,
       "module": "communications"
     },
     {
@@ -130095,7 +130157,7 @@
       ],
       "schema": "AttachUrlSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 797,
+      "line": 798,
       "module": "communications"
     },
     {
@@ -130108,7 +130170,7 @@
       ],
       "schema": "AttachUploadUrlSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 594,
+      "line": 595,
       "module": "communications"
     },
     {
@@ -130121,7 +130183,7 @@
       ],
       "schema": "CreateThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 521,
+      "line": 522,
       "module": "communications"
     },
     {
@@ -130135,7 +130197,7 @@
       ],
       "schema": "DeleteMessageSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 869,
+      "line": 870,
       "module": "communications"
     },
     {
@@ -130148,7 +130210,7 @@
       ],
       "schema": "DraftGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 962,
+      "line": 963,
       "module": "communications"
     },
     {
@@ -130161,7 +130223,7 @@
       ],
       "schema": "DraftGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 953,
+      "line": 954,
       "module": "communications"
     },
     {
@@ -130174,7 +130236,7 @@
       ],
       "schema": "DraftSaveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 941,
+      "line": 942,
       "module": "communications"
     },
     {
@@ -130187,7 +130249,7 @@
       ],
       "schema": "FavouriteThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 689,
+      "line": 690,
       "module": "communications"
     },
     {
@@ -130200,7 +130262,7 @@
       ],
       "schema": "MarkReadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 642,
+      "line": 643,
       "module": "communications"
     },
     {
@@ -130213,7 +130275,7 @@
       ],
       "schema": "MuteThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 672,
+      "line": 673,
       "module": "communications"
     },
     {
@@ -130226,7 +130288,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 991,
+      "line": 992,
       "module": "communications"
     },
     {
@@ -130239,7 +130301,7 @@
       ],
       "schema": "ParticipantsAddSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 709,
+      "line": 710,
       "module": "communications"
     },
     {
@@ -130253,7 +130315,7 @@
       ],
       "schema": "ParticipantsRemoveSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 729,
+      "line": 730,
       "module": "communications"
     },
     {
@@ -130266,7 +130328,7 @@
       ],
       "schema": "PinsListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 914,
+      "line": 915,
       "module": "communications"
     },
     {
@@ -130279,7 +130341,7 @@
       ],
       "schema": "PinSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 825,
+      "line": 826,
       "module": "communications"
     },
     {
@@ -130292,7 +130354,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 926,
+      "line": 927,
       "module": "communications"
     },
     {
@@ -130305,7 +130367,7 @@
       ],
       "schema": "UnpinSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 849,
+      "line": 850,
       "module": "communications"
     },
     {
@@ -130318,7 +130380,7 @@
       ],
       "schema": "PostMessageSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 559,
+      "line": 560,
       "module": "communications"
     },
     {
@@ -130331,7 +130393,7 @@
       ],
       "schema": "PostsSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 411,
+      "line": 412,
       "module": "communications"
     },
     {
@@ -130344,7 +130406,7 @@
       ],
       "schema": "PresenceSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 981,
+      "line": 982,
       "module": "communications"
     },
     {
@@ -130357,7 +130419,7 @@
       ],
       "schema": "ToggleReactionSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 897,
+      "line": 898,
       "module": "communications"
     },
     {
@@ -130370,7 +130432,7 @@
       ],
       "schema": "RecipientsSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 780,
+      "line": 781,
       "module": "communications"
     },
     {
@@ -130383,7 +130445,7 @@
       ],
       "schema": "RecordThreadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 483,
+      "line": 484,
       "module": "communications"
     },
     {
@@ -130396,7 +130458,7 @@
       ],
       "schema": "MessageSearchSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 439,
+      "line": 440,
       "module": "communications"
     },
     {
@@ -130409,7 +130471,7 @@
       ],
       "schema": "SearchSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 765,
+      "line": 766,
       "module": "communications"
     },
     {
@@ -130422,7 +130484,7 @@
       ],
       "schema": "ThreadGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 382,
+      "line": 383,
       "module": "communications"
     },
     {
@@ -130435,7 +130497,7 @@
       ],
       "schema": "ThreadsListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 358,
+      "line": 359,
       "module": "communications"
     },
     {
@@ -130448,7 +130510,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 184,
+      "line": 185,
       "module": "communications"
     },
     {
@@ -130461,7 +130523,7 @@
       ],
       "schema": "BroadcastSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 303,
+      "line": 304,
       "module": "communications"
     },
     {
@@ -130474,7 +130536,7 @@
       ],
       "schema": "NotifListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 123,
+      "line": 124,
       "module": "communications"
     },
     {
@@ -130487,7 +130549,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 170,
+      "line": 171,
       "module": "communications"
     },
     {
@@ -130500,7 +130562,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 156,
+      "line": 157,
       "module": "communications"
     },
     {
@@ -130513,7 +130575,7 @@
       ],
       "schema": "MuteSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 269,
+      "line": 270,
       "module": "communications"
     },
     {
@@ -130526,7 +130588,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 206,
+      "line": 207,
       "module": "communications"
     },
     {
@@ -130539,7 +130601,7 @@
       ],
       "schema": "PrefSetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 243,
+      "line": 244,
       "module": "communications"
     },
     {
@@ -130552,7 +130614,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 104,
+      "line": 105,
       "module": "communications"
     },
     {
@@ -130565,7 +130627,7 @@
       ],
       "schema": "TicketAttachmentCompleteSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1236,
+      "line": 1262,
       "module": "communications"
     },
     {
@@ -130578,7 +130640,7 @@
       ],
       "schema": "TicketAttachmentGetSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1273,
+      "line": 1299,
       "module": "communications"
     },
     {
@@ -130591,7 +130653,7 @@
       ],
       "schema": "TicketAttachmentUploadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1195,
+      "line": 1221,
       "module": "communications"
     },
     {
@@ -130604,7 +130666,7 @@
       ],
       "schema": "TicketCommandSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1159,
+      "line": 1185,
       "module": "communications"
     },
     {
@@ -130617,7 +130679,7 @@
       ],
       "schema": "CommentSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1135,
+      "line": 1161,
       "module": "communications"
     },
     {
@@ -130630,7 +130692,7 @@
       ],
       "schema": "CreateTicketSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1030,
+      "line": 1056,
       "module": "communications"
     },
     {
@@ -130643,7 +130705,7 @@
       ],
       "schema": "TicketIdSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1119,
+      "line": 1145,
       "module": "communications"
     },
     {
@@ -130656,7 +130718,7 @@
       ],
       "schema": "TicketListSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1096,
+      "line": 1122,
       "module": "communications"
     },
     {
@@ -130669,7 +130731,7 @@
       ],
       "schema": "TicketMarkReadSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1175,
+      "line": 1201,
       "module": "communications"
     },
     {
@@ -130680,9 +130742,22 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "",
+      "schema": "RequestTypesSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1008,
+      "line": 1013,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/tickets/requester-search",
+      "localPath": "/communications/tickets/requester-search",
+      "router": "router",
+      "permission": "communications.view",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "RequesterSearchSchema",
+      "file": "netlify/functions/routes/communications.ts",
+      "line": 1029,
       "module": "communications"
     },
     {
@@ -130695,7 +130770,7 @@
       ],
       "schema": "TicketSweepSchema",
       "file": "netlify/functions/routes/communications.ts",
-      "line": 1295,
+      "line": 1321,
       "module": "communications"
     },
     {
@@ -142095,7 +142170,7 @@
       "helper": "apiPost",
       "caller": "completed",
       "file": "src/api/communications.ts",
-      "line": 993,
+      "line": 1017,
       "module": "communications"
     },
     {
@@ -142103,7 +142178,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 1003,
+      "line": 1027,
       "module": "communications"
     },
     {
@@ -142111,7 +142186,7 @@
       "helper": "apiPost",
       "caller": "reserved",
       "file": "src/api/communications.ts",
-      "line": 976,
+      "line": 1000,
       "module": "communications"
     },
     {
@@ -142119,7 +142194,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 911,
+      "line": 935,
       "module": "communications"
     },
     {
@@ -142127,7 +142202,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 883,
+      "line": 907,
       "module": "communications"
     },
     {
@@ -142135,7 +142210,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 858,
+      "line": 882,
       "module": "communications"
     },
     {
@@ -142151,7 +142226,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 829,
+      "line": 853,
       "module": "communications"
     },
     {
@@ -142167,7 +142242,7 @@
       "helper": "apiPost",
       "caller": "useMarkTicketRead",
       "file": "src/api/communications.ts",
-      "line": 930,
+      "line": 954,
       "module": "communications"
     },
     {
@@ -142175,7 +142250,15 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/communications.ts",
-      "line": 815,
+      "line": 816,
+      "module": "communications"
+    },
+    {
+      "path": "/api/communications/tickets/requester-search",
+      "helper": "apiPost",
+      "caller": "res",
+      "file": "src/api/communications.ts",
+      "line": 838,
       "module": "communications"
     },
     {
@@ -152696,35 +152779,42 @@
       "name": "public.ticket_request_types_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1592,
+      "line": 1595,
+      "module": "communications"
+    },
+    {
+      "name": "public.ticket_requester_search",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
+      "line": 1640,
       "module": "communications"
     },
     {
       "name": "public.ticket_list_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1623,
+      "line": 1680,
       "module": "communications"
     },
     {
       "name": "public.ticket_get_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1726,
+      "line": 1783,
       "module": "communications"
     },
     {
       "name": "public.ticket_summary_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1855,
+      "line": 1912,
       "module": "communications"
     },
     {
       "name": "public.ticket_overdue_sweep_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1893,
+      "line": 1950,
       "module": "communications"
     },
     {
