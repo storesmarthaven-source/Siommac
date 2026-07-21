@@ -576,6 +576,209 @@ export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
   return dto;
 }
 
+// ── F-02 (API-PPR-005): policy-evidence read (§6d) ──────────────────────────────
+
+/** Resolve app_users display names for a set of ids (batch; avoids an N+1 and
+ * keeps raw UUIDs out of the evidence DTO — every employees[] row gets a name). */
+async function resolveEmployeeNames(ids: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const uniq = [...new Set(ids)].filter(Boolean);
+  if (uniq.length === 0) return map;
+  const { data } = await sb.from('app_users')
+    .select('id, full_name, first_name, last_name')
+    .in('id', uniq);
+  for (const u of (data ?? []) as
+       { id: string; full_name: string | null; first_name: string | null; last_name: string | null }[]) {
+    const name = (u.full_name ?? '').trim()
+      || `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim()
+      || u.id;
+    map.set(u.id, name);
+  }
+  return map;
+}
+
+/** One per-employee working_days evidence row, display-resolved (no raw UUID). */
+export interface PolicyEvidenceCalendarEmployee {
+  employeeId: string;
+  employeeName: string;
+  numerator: string;
+  denominator: string;
+  clampFrom: string | null;
+  clampTo: string | null;
+  excludedCount: number;
+}
+
+/** §6d calendar block — present only when the run is calendar-pinned (working_days). */
+export interface PolicyEvidenceCalendar {
+  workCalendarName: string | null;
+  workCalendarVersionNo: number | null;
+  holidayCalendarName: string | null;
+  holidayChecksumShort: string | null;
+  resolution: { scope: string | null; assignmentId: string | null };
+  periodDenominator: string | null;
+  employees: PolicyEvidenceCalendarEmployee[];
+}
+
+/** §6d policy-evidence DTO — the pinned policy manifest projection + the immutable
+ * lock conflict/exclusion evidence + (when calendar-pinned) the working_days block. */
+export interface PolicyEvidenceDto {
+  runId: string;
+  inputSnapshotId: string;
+  checksum: string | null;
+  components: Record<string, unknown>[];
+  sourceRules: Record<string, unknown>[];
+  costingRules: Record<string, unknown>[];
+  statutory: Record<string, unknown>;
+  sourceConflicts: Record<string, unknown>[];
+  excludedEmployees: Record<string, unknown>[];
+  calendar: PolicyEvidenceCalendar | null;
+}
+
+/**
+ * F-02 policy-evidence read (contract §6d, finding #10). Returns the pinned
+ * policy manifest (components / source rules / costing rules / statutory) + its
+ * checksum for a run's input snapshot, PLUS the immutable lock evidence
+ * (source conflicts + excluded employees from the snapshot source_summary) and,
+ * for a calendar-pinned working_days run, a resolved `calendar` block with the
+ * per-employee working_days numerators.
+ *
+ * Defaults to the run's `current_input_snapshot_id`; an explicit `inputSnapshotId`
+ * is validated to belong to THIS run (snapshot history after a relock). Evidence
+ * only exists after inputs are locked, so a run with no snapshot 404s.
+ */
+export async function getRunPolicyEvidence(
+  runId: string,
+  inputSnapshotId?: string,
+): Promise<PolicyEvidenceDto> {
+  // Raw run columns — the calendar pin ids/checksum are not all on the run DTO.
+  const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
+    .select('id, current_input_snapshot_id, pay_policy_required, work_calendar_version_id, ' +
+            'holiday_calendar_version_id, holiday_calendar_checksum, calendar_resolution')
+    .eq('id', runId)
+    .maybeSingle<{
+      id: string;
+      current_input_snapshot_id: string | null;
+      pay_policy_required: boolean;
+      work_calendar_version_id: string | null;
+      holiday_calendar_version_id: string | null;
+      holiday_calendar_checksum: string | null;
+      calendar_resolution: { scope?: string; periodDenominator?: string; assignmentId?: string } | null;
+    }>();
+  if (runErr) throw Object.assign(new Error('getRunPolicyEvidence/run: ' + runErr.message), { status: 500 });
+  if (!run)   throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+
+  // §6d: default to the current snapshot; an explicit id must belong to this run.
+  const targetSnapshotId = inputSnapshotId ?? run.current_input_snapshot_id;
+  if (!targetSnapshotId) {
+    throw Object.assign(
+      new Error('This run has no locked input snapshot yet. Lock inputs to generate policy evidence.'),
+      { status: 404 });
+  }
+  const { data: snap, error: snapErr } = await sb.from('finance_payroll_input_snapshots')
+    .select('id, run_id, source_summary')
+    .eq('id', targetSnapshotId)
+    .maybeSingle<{ id: string; run_id: string; source_summary: Record<string, unknown> | null }>();
+  if (snapErr) throw Object.assign(new Error('getRunPolicyEvidence/snapshot: ' + snapErr.message), { status: 500 });
+  if (!snap || snap.run_id !== runId) {
+    throw Object.assign(new Error('Input snapshot does not belong to this run.'), { status: 404 });
+  }
+
+  // Policy manifest — exactly one per snapshot; absent for legacy non-pinned runs.
+  const { data: ev, error: evErr } = await sb.from('finance_payroll_run_policy_evidence')
+    .select('checksum, manifest')
+    .eq('input_snapshot_id', targetSnapshotId)
+    .maybeSingle<{ checksum: string; manifest: Record<string, unknown> }>();
+  if (evErr) throw Object.assign(new Error('getRunPolicyEvidence/evidence: ' + evErr.message), { status: 500 });
+
+  const manifest = (ev?.manifest ?? {}) as {
+    components?: Record<string, unknown>[];
+    sourceRules?: Record<string, unknown>[];
+    costingRules?: Record<string, unknown>[];
+    statutory?: Record<string, unknown>;
+  };
+  const summary = (snap.source_summary ?? {}) as {
+    sourceConflicts?: Record<string, unknown>[];
+    excludedEmployees?: Record<string, unknown>[];
+  };
+
+  // §6d calendar block — resolved DISPLAY names of the PINNED work/holiday
+  // calendars + the per-employee working_days evidence. These are READ-ONLY
+  // display lookups of F-CAL tables, explicitly required by §6d; N7b forbids
+  // WRITES to F-CAL, not display reads (flagged per the contract).
+  let calendar: PolicyEvidenceCalendar | null = null;
+  if (run.work_calendar_version_id) {
+    const [wcVerRes, calEvRes] = await Promise.all([
+      sb.from('work_calendar_versions')
+        .select('version_no, work_calendar_id')
+        .eq('id', run.work_calendar_version_id)
+        .maybeSingle<{ version_no: number; work_calendar_id: string }>(),
+      sb.from('finance_payroll_run_calendar_evidence')
+        .select('employee_id, numerator, period_denominator, clamp_from, clamp_to, excluded')
+        .eq('input_snapshot_id', targetSnapshotId)
+        .order('employee_id', { ascending: true }),
+    ]);
+    const wcVer = wcVerRes.data;
+
+    const workCalendarName = wcVer?.work_calendar_id
+      ? ((await sb.from('work_calendars').select('name').eq('id', wcVer.work_calendar_id)
+          .maybeSingle<{ name: string }>()).data?.name ?? null)
+      : null;
+
+    let holidayCalendarName: string | null = null;
+    if (run.holiday_calendar_version_id) {
+      const hcVer = (await sb.from('holiday_calendar_versions')
+        .select('holiday_calendar_id').eq('id', run.holiday_calendar_version_id)
+        .maybeSingle<{ holiday_calendar_id: string }>()).data;
+      if (hcVer?.holiday_calendar_id) {
+        holidayCalendarName = (await sb.from('holiday_calendars').select('name')
+          .eq('id', hcVer.holiday_calendar_id).maybeSingle<{ name: string }>()).data?.name ?? null;
+      }
+    }
+
+    const calRows = (calEvRes.data ?? []) as {
+      employee_id: string; numerator: number | string; period_denominator: number | string;
+      clamp_from: string | null; clamp_to: string | null; excluded: unknown;
+    }[];
+    const nameMap = await resolveEmployeeNames(calRows.map(r => r.employee_id));
+
+    calendar = {
+      workCalendarName,
+      workCalendarVersionNo: wcVer?.version_no ?? null,
+      holidayCalendarName,
+      holidayChecksumShort: run.holiday_calendar_checksum
+        ? run.holiday_calendar_checksum.slice(0, 12)
+        : null,
+      resolution: {
+        scope:        run.calendar_resolution?.scope ?? null,
+        assignmentId: run.calendar_resolution?.assignmentId ?? null,
+      },
+      periodDenominator: run.calendar_resolution?.periodDenominator ?? null,
+      employees: calRows.map(r => ({
+        employeeId:    r.employee_id,
+        employeeName:  nameMap.get(r.employee_id) ?? r.employee_id,
+        numerator:     String(r.numerator),
+        denominator:   String(r.period_denominator),
+        clampFrom:     r.clamp_from,
+        clampTo:       r.clamp_to,
+        excludedCount: Array.isArray(r.excluded) ? r.excluded.length : 0,
+      })),
+    };
+  }
+
+  return {
+    runId,
+    inputSnapshotId:   targetSnapshotId,
+    checksum:          ev?.checksum ?? null,
+    components:        manifest.components ?? [],
+    sourceRules:       manifest.sourceRules ?? [],
+    costingRules:      manifest.costingRules ?? [],
+    statutory:         manifest.statutory ?? {},
+    sourceConflicts:   summary.sourceConflicts ?? [],
+    excludedEmployees: summary.excludedEmployees ?? [],
+    calendar,
+  };
+}
+
 /**
  * Set (or clear) the Payslip Studio template for a run.
  * templateId = null → use the active default template at render time.

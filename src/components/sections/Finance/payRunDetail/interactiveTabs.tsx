@@ -1,21 +1,11 @@
 /**
- * src/components/sections/Finance/PayRunDrawer.tsx
+ * src/components/sections/Finance/payRunDetail/interactiveTabs.tsx
  *
- * Rich, tabbed detail drawer for a payroll run.
- *
- * Tabs:
- *   Summary · Run Lines · Inputs · Warnings · Payslips · Exports ·
- *   Approvals · Timeline · Audit · Related
- *
- * Lifecycle actions (footer, state-aware + permission-gated):
- *   draft          → Lock Inputs
- *   inputs_locked  → Calculate
- *   calculated     → Submit for Approval
- *   submitted      → Approve / Reject   (different Finance Manager — SoD)
- *   approved       → Lock Run
- *   locked         → Export Run · Create Disbursement · Create Remittance · Reopen
- *
- * All mutations call parent page handlers (page owns the useMutation + toast).
+ * The interactive run-detail tab bodies, moved verbatim from the retired
+ * PayRunDrawer so the full-page run workspace (PayRunDetailPage) can reuse them
+ * without duplication: Inputs, Worksheet (overrides / mass-edit / back-pay),
+ * Warnings, Payslips, GL, Exports, Related (disbursement / remittance bridges),
+ * plus Run Lines. Each keeps its original wiring, permissions, and mutations.
  */
 
 import { type VNode } from 'preact';
@@ -23,9 +13,8 @@ import { useState, useMemo } from 'preact/hooks';
 import { toast } from '@store';
 import { dialog } from '@lib/dialog';
 import { can } from '@lib/permissions';
-import { Drawer, HrfinPill, type HrfinTone } from '@ui';
+import { HrfinPill, type HrfinTone } from '@ui';
 import {
-  usePayrollRun,
   useRunLines,
   useRunInputs,
   useRunWarnings,
@@ -34,7 +23,6 @@ import {
   useRunGlPreview,
   useRunOverrides,
   useExportDownload,
-  useRunAuditLog,
   usePayslipTemplates,
   useSetRunTemplate,
   type PayrollRun,
@@ -43,33 +31,36 @@ import {
   type PayrollRunWarning,
   type Payslip,
   type PayrollExport,
-  type RunAuditLogEntry,
   financePayrollApi,
   usePayrollMutation,
 } from '@api/finance/payroll';
 import { useEmployeeNames } from '@api/finance/lookups';
-import { EmployeeCellResolved, EmployeeCell } from './_shared/EmployeeCell';
-import { PayWarningResolveDialog } from './PayWarningResolveDialog';
-import { PayCreateDisbursementDialog, PayCreateRemittanceDialog } from './PayBridgeDialog';
-import { fmtMoney, fmtDate, humanize } from './financeShared';
+import { EmployeeCellResolved, EmployeeCell } from '../_shared/EmployeeCell';
+import { PayWarningResolveDialog } from '../PayWarningResolveDialog';
+import { fmtMoney, fmtDate, humanize } from '../financeShared';
 
-// ── Helpers ────────────────────────────────────────────────────────────────────
+// ── Shared lifecycle helpers (also used by the page header) ─────────────────────
 
-function runStatusTone(status: string): HrfinTone {
+export function runStatusTone(status: string): HrfinTone {
   switch (status) {
-    case 'locked':           return 'ok';
-    case 'approved':         return 'ok';
+    case 'locked':
+    case 'approved':
+    case 'released':
+      return 'ok';
     case 'pending_approval':
     case 'calculated':
     case 'input_locked':
       return 'wn';
-    case 'returned':  return 'bad';  // rejected/returned by approval — needs revision
-    case 'cancelled': return 'bad';
-    default:         return 'nu';  // draft
+    case 'returned':
+    case 'cancelled':
+    case 'calculation_failed':
+      return 'bad';
+    default:
+      return 'nu';
   }
 }
 
-function fmtDateTime(iso: string | null | undefined): string {
+export function fmtDateTime(iso: string | null | undefined): string {
   if (!iso) return '—';
   const d = new Date(iso);
   return Number.isNaN(d.getTime())
@@ -77,80 +68,22 @@ function fmtDateTime(iso: string | null | undefined): string {
     : d.toLocaleString('en-GB', { day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' });
 }
 
-// ── Tab types ─────────────────────────────────────────────────────────────────
-
-type Tab = 'summary' | 'lines' | 'inputs' | 'worksheet' | 'warnings' | 'payslips' | 'exports' | 'gl' | 'approvals' | 'timeline' | 'audit' | 'related';
-
-const TABS: { key: Tab; label: string }[] = [
-  { key: 'summary',   label: 'Summary' },
-  { key: 'lines',     label: 'Run Lines' },
-  { key: 'inputs',    label: 'Inputs' },
-  { key: 'worksheet', label: 'Worksheet' },
-  { key: 'warnings',  label: 'Warnings' },
-  { key: 'payslips',  label: 'Payslips' },
-  { key: 'exports',   label: 'Exports' },
-  { key: 'gl',        label: 'GL' },
-  { key: 'approvals', label: 'Approvals' },
-  { key: 'timeline',  label: 'Timeline' },
-  { key: 'audit',     label: 'Audit' },
-  { key: 'related',   label: 'Related' },
-];
-
-// ── Tab: Summary ──────────────────────────────────────────────────────────────
-
-function SummaryTab({ run }: { run: PayrollRun }): VNode {
-  return (
-    <div class="hrfin-metric-list">
-      <div class="hrfin-metric-row"><span>Run number</span><b>{run.runNo}</b></div>
-      <div class="hrfin-metric-row"><span>Pay period</span><b>{run.periodMonth.slice(0, 7)}</b></div>
-      <div class="hrfin-metric-row"><span>Frequency</span><b>{humanize(run.payFrequency)}</b></div>
-      <div class="hrfin-metric-row"><span>Weeks in period</span><b>{run.weeksInPeriod}</b></div>
-      <div class="hrfin-metric-row"><span>Status</span>
-        <HrfinPill tone={runStatusTone(run.status)}>{humanize(run.status)}</HrfinPill>
-      </div>
-      <div class="hrfin-metric-row"><span>Employees</span><b>{run.employeeCount}</b></div>
-      <div class="hrfin-metric-row"><span>Gross total</span><b>{fmtMoney(run.grossTotal)}</b></div>
-      <div class="hrfin-metric-row"><span>Total deductions</span><b>{fmtMoney(run.deductionTotal)}</b></div>
-      <div class="hrfin-metric-row"><span>Net payroll</span>
-        <b style={{ color: 'var(--hrfin-accent)' }}>{fmtMoney(run.netTotal)}</b>
-      </div>
-      <div class="hrfin-metric-row"><span>NIS (employer)</span><b>{fmtMoney(run.nisEmployerTotal)}</b></div>
-      <div class="hrfin-metric-row"><span>Statutory version</span>
-        <b style={{ fontSize: 11, fontFamily: 'monospace' }}>{run.statutoryVersionId.slice(0, 8)}…</b>
-      </div>
-      <div class="hrfin-metric-row"><span>Created by</span>
-        <EmployeeCell employeeId={run.createdBy} />
-      </div>
-      {run.inputLockedBy && (
-        <div class="hrfin-metric-row"><span>Inputs locked by</span>
-          <EmployeeCell employeeId={run.inputLockedBy} />
-        </div>
-      )}
-      {run.approvedBy && (
-        <div class="hrfin-metric-row"><span>Approved by</span>
-          <EmployeeCell employeeId={run.approvedBy} />
-        </div>
-      )}
-      {run.lockedBy && (
-        <div class="hrfin-metric-row"><span>Locked by</span>
-          <EmployeeCell employeeId={run.lockedBy} />
-        </div>
-      )}
-      {run.reopenedBy && (
-        <>
-          <div class="hrfin-metric-row"><span>Reopened by</span>
-            <EmployeeCell employeeId={run.reopenedBy} />
-          </div>
-          <div class="hrfin-metric-row"><span>Reopen reason</span><b>{run.reopenReason ?? '—'}</b></div>
-        </>
-      )}
-    </div>
-  );
+/** Lifecycle actions surfaced in the page header (Run Actions) + panels. */
+export interface PayRunDrawerActions {
+  onLockInputs:  (run: PayrollRun) => void;
+  onCalculate:   (run: PayrollRun) => void;
+  onSubmit:      (run: PayrollRun) => void;
+  onApprove:     (run: PayrollRun) => void;
+  onReject:      (run: PayrollRun) => void;
+  onLockRun:     (run: PayrollRun) => void;
+  onExport:      (run: PayrollRun) => void;
+  onReopen:      (run: PayrollRun) => void;
+  onGenPayslips: (run: PayrollRun) => void;
 }
 
-// ── Tab: Run Lines ────────────────────────────────────────────────────────────
+// ── Run Lines ───────────────────────────────────────────────────────────────────
 
-function RunLinesTab({ runId }: { runId: string }): VNode {
+export function RunLinesTab({ runId }: { runId: string }): VNode {
   const { data: lines, isLoading } = useRunLines(runId);
   const allIds = (lines ?? []).map(l => l.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
@@ -176,10 +109,7 @@ function RunLinesTab({ runId }: { runId: string }): VNode {
           {lines.map((line: PayrollRunLine) => (
             <tr key={line.id} style={{ borderBottom: '1px solid var(--hrfin-border)' }}>
               <td style={{ padding: '6px 8px' }}>
-                <EmployeeCellResolved
-                  resolved={nameMap?.get(line.employeeId)}
-                  fallbackId={line.employeeId}
-                />
+                <EmployeeCellResolved resolved={nameMap?.get(line.employeeId)} fallbackId={line.employeeId} />
               </td>
               <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmtMoney(line.gross)}</td>
               <td style={{ padding: '6px 8px', textAlign: 'right' }}>{fmtMoney(line.paye)}</td>
@@ -197,13 +127,12 @@ function RunLinesTab({ runId }: { runId: string }): VNode {
   );
 }
 
-// ── Tab: Inputs ───────────────────────────────────────────────────────────────
+// ── Inputs ──────────────────────────────────────────────────────────────────────
 
-function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: string; canManage: boolean }): VNode {
+export function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: string; canManage: boolean }): VNode {
   const { data: inputs, isLoading } = useRunInputs(runId);
   const allIds = (inputs ?? []).map(i => i.employeeId);
   const { data: nameMap } = useEmployeeNames(allIds);
-  // edit-before-lock is only available in 'input_locked' state (before calculate)
   const canEditInputs = canManage && runStatus === 'input_locked';
 
   if (isLoading) return <div class="hrfin-empty">Loading inputs…</div>;
@@ -249,7 +178,6 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
 
   function handleViewSource(inp: PayrollRunInput): void {
     if (!inp.sourceId) { toast('No source record linked to this input.'); return; }
-    // Navigate based on source type
     const hash = inp.sourceType === 'overtime'
       ? `s-hr-attendance?id=${inp.sourceId}`
       : inp.sourceType === 'pay_item'
@@ -311,18 +239,12 @@ function InputsTab({ runId, runStatus, canManage }: { runId: string; runStatus: 
   );
 }
 
-// ── Tab: Warnings ─────────────────────────────────────────────────────────────
+// ── Warnings ──────────────────────────────────────────────────────────────────
 
-function WarningsTab({
-  runId,
-  canManage,
-}: {
-  runId:      string;
-  canManage:  boolean;
-}): VNode {
+export function WarningsTab({ runId, canManage }: { runId: string; canManage: boolean }): VNode {
   const { data: warnings, isLoading, refetch } = useRunWarnings(runId);
   const [resolving,     setResolving]     = useState<PayrollRunWarning | null>(null);
-  const [acknowledging, setAcknowledging] = useState<string | null>(null); // warning id being acked
+  const [acknowledging, setAcknowledging] = useState<string | null>(null);
   const ackMut = usePayrollMutation(financePayrollApi.resolveWarning);
 
   if (isLoading) return <div class="hrfin-empty">Loading warnings…</div>;
@@ -348,8 +270,6 @@ function WarningsTab({
   }
 
   async function handleCreateTicket(w: PayrollRunWarning): Promise<void> {
-    // Cross-module: open a support ticket for this warning.
-    // Creates a ticket via the communications/tickets module.
     try {
       const { apiPost } = await import('@lib/api');
       await apiPost('communications/tickets/create', {
@@ -368,59 +288,28 @@ function WarningsTab({
     <>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
         {warnings.map((w: PayrollRunWarning) => (
-          <div
-            key={w.id}
-            style={{
-              padding: '10px 12px',
-              background: 'var(--hrfin-surface-2)',
-              border: '1px solid var(--hrfin-border)',
-              borderRadius: 8,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: 4,
-            }}
-          >
+          <div key={w.id}
+            style={{ padding: '10px 12px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
+                     borderRadius: 8, display: 'flex', flexDirection: 'column', gap: 4 }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
               <HrfinPill tone={warnTone(w.severity)}>{w.severity.toUpperCase()}</HrfinPill>
               <span style={{ fontWeight: 600, fontSize: 13 }}>{humanize(w.warningType)}</span>
               {w.resolved && <HrfinPill tone="ok">RESOLVED</HrfinPill>}
               {!w.resolved && canManage && (
                 <div style={{ marginLeft: 'auto', display: 'flex', gap: 6 }}>
-                  <button
-                    type="button"
-                    class="hrfin-action"
-                    style={{ fontSize: 11, padding: '3px 10px' }}
-                    onClick={() => setResolving(w)}
-                  >
+                  <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '3px 10px' }} onClick={() => setResolving(w)}>
                     Resolve
                   </button>
-                  <button
-                    type="button"
-                    class="hrfin-action"
-                    style={{ fontSize: 11, padding: '3px 10px' }}
-                    disabled={acknowledging === w.id || ackMut.isPending}
-                    onClick={() => void handleAcknowledge(w)}
-                  >
+                  <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '3px 10px' }}
+                    disabled={acknowledging === w.id || ackMut.isPending} onClick={() => void handleAcknowledge(w)}>
                     {acknowledging === w.id ? '…' : 'Acknowledge'}
                   </button>
-                  <button
-                    type="button"
-                    class="hrfin-action"
-                    style={{ fontSize: 11, padding: '3px 10px' }}
-                    onClick={() => void handleCreateTicket(w)}
-                  >
+                  <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '3px 10px' }} onClick={() => void handleCreateTicket(w)}>
                     Create Ticket
                   </button>
                   {w.employeeId && (
-                    <button
-                      type="button"
-                      class="hrfin-action"
-                      style={{ fontSize: 11, padding: '3px 10px' }}
-                      onClick={() => {
-                        // Navigate to employee profile (hash-based routing)
-                        window.location.hash = `s-hr-employees?id=${w.employeeId}`;
-                      }}
-                    >
+                    <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '3px 10px' }}
+                      onClick={() => { window.location.hash = `s-hr-employees?id=${w.employeeId}`; }}>
                       Open Profile
                     </button>
                   )}
@@ -429,9 +318,7 @@ function WarningsTab({
             </div>
             <p style={{ margin: 0, fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{w.message}</p>
             {w.employeeId && (
-              <div style={{ fontSize: 11 }}>
-                Employee: <EmployeeCell employeeId={w.employeeId} />
-              </div>
+              <div style={{ fontSize: 11 }}>Employee: <EmployeeCell employeeId={w.employeeId} /></div>
             )}
             {w.resolved && w.resolvedBy && (
               <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
@@ -442,7 +329,6 @@ function WarningsTab({
           </div>
         ))}
       </div>
-
       {resolving && (
         <PayWarningResolveDialog
           warning={resolving}
@@ -454,9 +340,9 @@ function WarningsTab({
   );
 }
 
-// ── Tab: Payslips ─────────────────────────────────────────────────────────────
+// ── Payslips ──────────────────────────────────────────────────────────────────
 
-function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }): VNode {
+export function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }): VNode {
   const runId = run.id;
   const { data: payslips, isLoading, refetch } = useRunPayslips(runId);
   const allIds = (payslips ?? []).map(p => p.employeeId);
@@ -466,8 +352,6 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
   const renderMut = usePayrollMutation(financePayrollApi.renderRunPayslips);
   const emailMut = usePayrollMutation(financePayrollApi.deliverRunPayslips);
   const canDistribute = can('finance.payroll.payslips.distribute');
-
-  // Template picker
   const { data: templates } = usePayslipTemplates();
   const setTemplateMut = useSetRunTemplate();
 
@@ -485,7 +369,6 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
     const toDownload = (payslips ?? []).filter(p => selected.has(p.id));
     for (const p of toDownload) {
       await downloadPayslip(p);
-      // Brief pause to avoid browser popup blocker
       await new Promise(r => setTimeout(r, 300));
     }
     toast(`Downloaded ${toDownload.length} payslip(s).`);
@@ -527,9 +410,7 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
     try {
       const { apiPost } = await import('@lib/api');
       const res = await apiPost<{ success: boolean; data?: { notified: number }; message?: string }>(
-        'finance/payroll/payslips/notify',
-        { runId },
-      );
+        'finance/payroll/payslips/notify', { runId });
       if (!res.success) throw new Error(res.message ?? 'Notify failed.');
       toast(`${res.data?.notified ?? 0} employee(s) notified.`);
     } catch (e) {
@@ -540,13 +421,8 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
   }
 
   function toggleSelect(id: string): void {
-    setSelected(prev => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
+    setSelected(prev => { const next = new Set(prev); next.has(id) ? next.delete(id) : next.add(id); return next; });
   }
-
   function toggleAll(): void {
     if (!payslips) return;
     setSelected(prev => prev.size === payslips.length ? new Set() : new Set(payslips.map(p => p.id)));
@@ -577,41 +453,23 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {/* Template picker — which Payslip Studio layout to render with */}
       {canManage && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10,
-                      padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
-          <label style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>
-            Payslip template:
-          </label>
-          <select
-            class="hrfin-input"
-            style={{ fontSize: 12, padding: '4px 8px', flex: 1, maxWidth: 280 }}
-            value={run.templateId ?? ''}
-            onChange={e => void handleTemplateChange(e)}
-            disabled={setTemplateMut.isPending}
-          >
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
+          <label style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>Payslip template:</label>
+          <select class="hrfin-input" style={{ fontSize: 12, padding: '4px 8px', flex: 1, maxWidth: 280 }}
+            value={run.templateId ?? ''} onChange={e => void handleTemplateChange(e)} disabled={setTemplateMut.isPending}>
             <option value="">Active default</option>
             {(templates ?? []).map(t => (
-              <option key={t.id} value={t.id}>
-                {t.name}{t.isDefault ? ' (default)' : ''}
-              </option>
+              <option key={t.id} value={t.id}>{t.name}{t.isDefault ? ' (default)' : ''}</option>
             ))}
           </select>
-          {setTemplateMut.isPending && (
-            <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Saving…</span>
-          )}
+          {setTemplateMut.isPending && <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Saving…</span>}
         </div>
       )}
 
-      {/* Bulk toolbar */}
-      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap',
-                    padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
+      <div style={{ display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap', padding: '8px 0', borderBottom: '1px solid var(--hrfin-border)' }}>
         <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontSize: 12, cursor: 'pointer' }}>
-          <input type="checkbox"
-            checked={selected.size === payslips.length && payslips.length > 0}
-            onChange={toggleAll}
-          />
+          <input type="checkbox" checked={selected.size === payslips.length && payslips.length > 0} onChange={toggleAll} />
           Select all ({payslips.length})
         </label>
         {selected.size > 0 && (
@@ -638,18 +496,12 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
       </div>
 
       {payslips.map((p: Payslip) => (
-        <div
-          key={p.id}
-          style={{
-            display: 'flex', alignItems: 'center', gap: 12,
-            padding: '10px 12px',
-            background: selected.has(p.id) ? 'rgba(var(--hrfin-accent-rgb,99,102,241),0.06)' : 'var(--hrfin-surface-2)',
-            border: `1px solid ${selected.has(p.id) ? 'var(--hrfin-accent)' : 'var(--hrfin-border)'}`,
-            borderRadius: 8,
-            cursor: 'pointer',
-          }}
-          onClick={() => toggleSelect(p.id)}
-        >
+        <div key={p.id}
+          style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px',
+                   background: selected.has(p.id) ? 'rgba(var(--hrfin-accent-rgb,99,102,241),0.06)' : 'var(--hrfin-surface-2)',
+                   border: `1px solid ${selected.has(p.id) ? 'var(--hrfin-accent)' : 'var(--hrfin-border)'}`,
+                   borderRadius: 8, cursor: 'pointer' }}
+          onClick={() => toggleSelect(p.id)}>
           <input type="checkbox" checked={selected.has(p.id)} onChange={() => toggleSelect(p.id)} onClick={e => e.stopPropagation()} />
           <div style={{ flex: 1 }}>
             <EmployeeCellResolved resolved={nameMap?.get(p.employeeId)} fallbackId={p.employeeId} />
@@ -661,23 +513,13 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
             </div>
           </div>
           {canDistribute && p.filePath && (
-            <button
-              type="button"
-              class="hrfin-action"
-              style={{ fontSize: 11, padding: '4px 10px' }}
-              onClick={e => { e.stopPropagation(); void resendOne(p.id); }}
-              title="Email this payslip to the employee"
-            >
+            <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '4px 10px' }}
+              onClick={e => { e.stopPropagation(); void resendOne(p.id); }} title="Email this payslip to the employee">
               Email
             </button>
           )}
-          <button
-            type="button"
-            class="hrfin-action"
-            style={{ fontSize: 11, padding: '4px 10px', opacity: p.filePath ? 1 : 0.5 }}
-            disabled={!p.filePath}
-            onClick={e => { e.stopPropagation(); void downloadPayslip(p); }}
-          >
+          <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '4px 10px', opacity: p.filePath ? 1 : 0.5 }}
+            disabled={!p.filePath} onClick={e => { e.stopPropagation(); void downloadPayslip(p); }}>
             Download
           </button>
         </div>
@@ -686,9 +528,9 @@ function PayslipsTab({ run, canManage }: { run: PayrollRun; canManage: boolean }
   );
 }
 
-// ── Tab: Worksheet (per-employee overrides) ─────────────────────────────────────
+// ── Worksheet (per-employee overrides) ──────────────────────────────────────────
 
-function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
+export function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
   const { data: lines } = useRunLines(runId);
   const { data: overrides, isLoading } = useRunOverrides(runId);
   const empIds = (lines ?? []).map(l => l.employeeId);
@@ -706,7 +548,6 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
   const [kind, setKind]     = useState<'earning' | 'deduction'>('earning');
   const [reason, setReason] = useState('');
 
-  // Worksheet grid — all employees on the run, with selection for mass-edit.
   const [search, setSearch]     = useState('');
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [massEdit, setMassEdit] = useState(false);
@@ -773,16 +614,13 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
         </div>
       )}
 
-      {/* Worksheet grid — every employee on the run (virtualized), with mass-edit selection */}
       {(lines?.length ?? 0) > 0 && (
         <div style={{ border: '1px solid var(--hrfin-border)', borderRadius: 8, overflow: 'hidden' }}>
           <div style={{ display: 'flex', gap: 8, alignItems: 'center', padding: 8, borderBottom: '1px solid var(--hrfin-border)' }}>
             <input value={search} placeholder="Filter employees…" onInput={e => setSearch((e.currentTarget).value)} style={{ ...fieldStyle, flex: 1 }} />
             <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap' }}>{selected.size} selected · {gridRows.length} shown</span>
             {canOverride && editable && (
-              <button type="button" class="hrfin-action" style={{ fontSize: 11 }} onClick={() => setBackPayOpen(true)}>
-                Back pay
-              </button>
+              <button type="button" class="hrfin-action" style={{ fontSize: 11 }} onClick={() => setBackPayOpen(true)}>Back pay</button>
             )}
             {canOverride && editable && (
               <button type="button" class="hrfin-action is-primary" style={{ fontSize: 11 }} disabled={selected.size === 0} onClick={() => setMassEdit(true)}>
@@ -803,8 +641,7 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       )}
 
       {canOverride && editable && (
-        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.9fr 1.2fr 0.8fr 1.4fr auto', gap: 6, alignItems: 'end',
-                      padding: '8px', border: '1px dashed var(--hrfin-border)', borderRadius: 8 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: '1.4fr 0.9fr 1.2fr 0.8fr 1.4fr auto', gap: 6, alignItems: 'end', padding: '8px', border: '1px dashed var(--hrfin-border)', borderRadius: 8 }}>
           <label style={{ display: 'flex', flexDirection: 'column', gap: 3, fontSize: 10, color: 'var(--hrfin-text-secondary)' }}>EMPLOYEE
             <select value={empId} onChange={e => setEmpId((e.currentTarget).value)} style={fieldStyle}>
               <option value="">Select…</option>
@@ -865,28 +702,16 @@ function WorksheetTab({ runId, runStatus }: { runId: string; runStatus: string }
       )}
 
       {massEdit && (
-        <MassEditModal
-          runId={runId}
-          employeeIds={[...selected]}
-          onClose={() => setMassEdit(false)}
-          onApplied={() => { setMassEdit(false); setSelected(new Set()); }}
-        />
+        <MassEditModal runId={runId} employeeIds={[...selected]} onClose={() => setMassEdit(false)}
+          onApplied={() => { setMassEdit(false); setSelected(new Set()); }} />
       )}
-
       {backPayOpen && (
-        <BackPayModal
-          runId={runId}
-          employeeIds={empIds}
-          nameMap={nameMap}
-          onClose={() => setBackPayOpen(false)}
-          onApplied={() => setBackPayOpen(false)}
-        />
+        <BackPayModal runId={runId} employeeIds={empIds} nameMap={nameMap}
+          onClose={() => setBackPayOpen(false)} onApplied={() => setBackPayOpen(false)} />
       )}
     </div>
   );
 }
-
-// ── Worksheet: back-pay (retro) dialog ──────────────────────────────────────────
 
 function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
   runId: string; employeeIds: string[];
@@ -896,15 +721,14 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
   const previewMut = usePayrollMutation(financePayrollApi.backPayPreview);
   const addMut     = usePayrollMutation(financePayrollApi.backPayAdd);
   const [empId, setEmpId]   = useState('');
-  const [fromMonth, setFrom] = useState('');          // yyyy-mm from <input type=month>
-  const [effectiveDate, setEffDate] = useState('');   // YYYY-MM-DD (when correction took effect)
+  const [fromMonth, setFrom] = useState('');
+  const [effectiveDate, setEffDate] = useState('');
   const [base, setBase]     = useState('');
   const [reason, setReason] = useState('');
   const [preview, setPreview] = useState<import('@api/finance/payroll').BackPayBreakdown | null>(null);
 
   const fromPeriodMonth = fromMonth ? `${fromMonth}-01` : '';
   const correctedPeriodBase = parseFloat(base);
-  // effectiveDate is optional — falls back to fromPeriodMonth in the backend.
   const effDate = effectiveDate || undefined;
   const canPreview = !!empId && !!fromPeriodMonth && correctedPeriodBase > 0;
   const canAdd = canPreview && !!reason.trim() && !!preview && preview.totalDelta > 0;
@@ -992,8 +816,6 @@ function BackPayModal({ runId, employeeIds, nameMap, onClose, onApplied }: {
   );
 }
 
-// ── Worksheet: virtualized row list (windowed — no external dep) ─────────────────
-
 interface GridRow { employeeId: string; name: string; gross: number; deductions: number; net: number; ovr: number }
 
 function WorksheetVirtualRows({ rows, rowHeight, viewportHeight, selectable, selected, onToggle }: {
@@ -1026,8 +848,6 @@ function WorksheetVirtualRows({ rows, rowHeight, viewportHeight, selectable, sel
     </div>
   );
 }
-
-// ── Worksheet: mass-edit dialog (one adjustment → many selected employees) ───────
 
 function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
   runId: string; employeeIds: string[]; onClose: () => void; onApplied: () => void;
@@ -1088,9 +908,9 @@ function MassEditModal({ runId, employeeIds, onClose, onApplied }: {
   );
 }
 
-// ── Tab: GL (general-ledger posting) ────────────────────────────────────────────
+// ── GL (general-ledger posting) ─────────────────────────────────────────────────
 
-function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
+export function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNode {
   const { data: p, isLoading } = useRunGlPreview(runId);
   const postMut    = usePayrollMutation(financePayrollApi.glPost);
   const reverseMut = usePayrollMutation(financePayrollApi.glReverse);
@@ -1173,9 +993,9 @@ function GlTab({ runId, runStatus }: { runId: string; runStatus: string }): VNod
   );
 }
 
-// ── Tab: Exports ──────────────────────────────────────────────────────────────
+// ── Exports ─────────────────────────────────────────────────────────────────────
 
-function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean }): VNode {
+export function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean }): VNode {
   const { data: exports, isLoading, refetch } = useRunExports(runId);
   const downloadMut = useExportDownload();
   const regenMut    = usePayrollMutation(financePayrollApi.exportRun);
@@ -1216,15 +1036,7 @@ function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean })
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
       {exports.map((exp: PayrollExport) => (
-        <div
-          key={exp.id}
-          style={{
-            padding: '10px 12px',
-            background: 'var(--hrfin-surface-2)',
-            border: '1px solid var(--hrfin-border)',
-            borderRadius: 8,
-          }}
-        >
+        <div key={exp.id} style={{ padding: '10px 12px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)', borderRadius: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ flex: 1 }}>
               <b style={{ fontSize: 13 }}>{exp.exportNo}</b>
@@ -1234,381 +1046,21 @@ function ExportsTab({ runId, canExport }: { runId: string; canExport: boolean })
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6 }}>
-              <button
-                type="button"
-                class="hrfin-action"
-                style={{ fontSize: 11, padding: '4px 10px' }}
-                onClick={() => void handleDownload(exp)}
-                disabled={downloadMut.isPending}
-              >
+              <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => void handleDownload(exp)} disabled={downloadMut.isPending}>
                 {downloadMut.isPending ? '…' : 'Download'}
               </button>
-              <button
-                type="button"
-                class="hrfin-action"
-                style={{ fontSize: 11, padding: '4px 10px' }}
-                onClick={() => copyId(exp.id)}
-                title={`Export ID: ${exp.id}`}
-              >
+              <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '4px 10px' }} onClick={() => copyId(exp.id)} title={`Export ID: ${exp.id}`}>
                 Copy ID
               </button>
               {canExport && (
-                <button
-                  type="button"
-                  class="hrfin-action"
-                  style={{ fontSize: 11, padding: '4px 10px' }}
-                  disabled={regenMut.isPending}
-                  onClick={() => void handleRegenerate(exp)}
-                >
+                <button type="button" class="hrfin-action" style={{ fontSize: 11, padding: '4px 10px' }} disabled={regenMut.isPending} onClick={() => void handleRegenerate(exp)}>
                   Regenerate
                 </button>
               )}
             </div>
           </div>
-          {/* View audit — link to audit tab */}
-          <button
-            type="button"
-            style={{ background: 'none', border: 'none', cursor: 'pointer',
-                     fontSize: 11, color: 'var(--hrfin-accent)', marginTop: 4, padding: 0 }}
-            onClick={() => {
-              // Switch to audit tab (parent state managed via the AuditTab)
-              const auditBtn = document.querySelector<HTMLButtonElement>('.hrfin-tabs button[data-tab="audit"]');
-              auditBtn?.click();
-            }}
-          >
-            View audit trail →
-          </button>
         </div>
       ))}
     </div>
-  );
-}
-
-// ── Tab: Approvals ────────────────────────────────────────────────────────────
-
-function ApprovalsTab({ run }: { run: PayrollRun }): VNode {
-  return (
-    <div class="hrfin-metric-list">
-      <div class="hrfin-metric-row">
-        <span>Workflow ID</span>
-        <b style={{ fontSize: 11, fontFamily: 'monospace' }}>{run.workflowId ?? 'Direct approve (no workflow)'}</b>
-      </div>
-      <div class="hrfin-metric-row">
-        <span>Submitted</span>
-        <b>{run.status === 'pending_approval' || run.approvedBy ? 'Yes' : 'No'}</b>
-      </div>
-      <div class="hrfin-metric-row">
-        <span>Approved by</span>
-        <span>{run.approvedBy ? <EmployeeCell employeeId={run.approvedBy} /> : <em style={{ color: 'var(--hrfin-text-secondary)' }}>Pending</em>}</span>
-      </div>
-      <div class="hrfin-metric-row">
-        <span>Current status</span>
-        <HrfinPill tone={runStatusTone(run.status)}>{humanize(run.status)}</HrfinPill>
-      </div>
-      {run.status === 'pending_approval' && (
-        <div style={{ background: 'rgba(251,191,36,0.08)', border: '1px solid rgba(251,191,36,0.25)',
-                      borderRadius: 8, padding: '12px 14px', fontSize: 12, marginTop: 8 }}>
-          <strong>SoD note:</strong> The approver must be a different Finance Manager than the preparer.
-          The system enforces this at the approval step.
-        </div>
-      )}
-    </div>
-  );
-}
-
-// ── Tab: Timeline ─────────────────────────────────────────────────────────────
-
-function TimelineTab({ run }: { run: PayrollRun }): VNode {
-  const events: { label: string; value: string | null }[] = [
-    { label: 'Created',       value: run.createdAt },
-    { label: 'Inputs locked', value: run.inputLockedAt },
-    { label: 'Locked',        value: run.lockedAt },
-    { label: 'Reopened',      value: run.reopenedAt ?? null },
-    { label: 'Exported',      value: run.exportedAt ?? null },
-    { label: 'Updated',       value: run.updatedAt },
-  ];
-
-  return (
-    <div class="hrfin-metric-list">
-      {events.map(ev => (
-        <div key={ev.label} class="hrfin-metric-row">
-          <span>{ev.label}</span>
-          <b style={{ fontSize: 12, color: ev.value ? 'inherit' : 'var(--hrfin-text-secondary)' }}>
-            {ev.value ? fmtDateTime(ev.value) : '—'}
-          </b>
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Tab: Audit ────────────────────────────────────────────────────────────────
-
-function AuditTab({ runId }: { runId: string }): VNode {
-  const { data: entries, isLoading } = useRunAuditLog(runId);
-
-  if (isLoading) return <div class="hrfin-empty">Loading audit log…</div>;
-  if (!entries || entries.length === 0) return <div class="hrfin-empty">No audit events recorded for this run yet.</div>;
-
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-      {entries.map((e: RunAuditLogEntry) => (
-        <div
-          key={e.id}
-          style={{
-            padding: '8px 12px',
-            background: 'var(--hrfin-surface-2)',
-            border: '1px solid var(--hrfin-border)',
-            borderRadius: 6,
-            fontSize: 12,
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span style={{ fontWeight: 600, fontFamily: 'monospace', fontSize: 11 }}>{e.action}</span>
-            <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', whiteSpace: 'nowrap', marginLeft: 8 }}>
-              {fmtDateTime(e.createdAt)}
-            </span>
-          </div>
-          {e.actorId && (
-            <div style={{ marginTop: 2, fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
-              by <EmployeeCell employeeId={e.actorId} />
-            </div>
-          )}
-          {e.reason && (
-            <div style={{ marginTop: 2, fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
-              Reason: {e.reason}
-            </div>
-          )}
-          {e.newState && Object.keys(e.newState).length > 0 && (
-            <details style={{ marginTop: 4 }}>
-              <summary style={{ fontSize: 11, cursor: 'pointer', color: 'var(--hrfin-text-secondary)' }}>
-                State change
-              </summary>
-              <pre style={{ fontSize: 10, margin: '4px 0 0', color: 'var(--hrfin-text-secondary)',
-                            whiteSpace: 'pre-wrap', wordBreak: 'break-all' }}>
-                {JSON.stringify(e.newState, null, 2)}
-              </pre>
-            </details>
-          )}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// ── Tab: Related ──────────────────────────────────────────────────────────────
-
-function RelatedTab({
-  run,
-  canManage,
-  onBridgeDisb,
-  onBridgeRem,
-}: {
-  run:         PayrollRun;
-  canManage:   boolean;
-  onBridgeDisb: () => void;
-  onBridgeRem:  () => void;
-}): VNode {
-  return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-      <div style={{ background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                    borderRadius: 8, padding: '14px 16px' }}>
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Disbursement</div>
-        <p style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', margin: '0 0 10px' }}>
-          Create a disbursement record to manage the bank transfer payment for this payroll run.
-          Idempotent — safe to click again if you need the disbursement ID.
-        </p>
-        {canManage && run.status === 'locked' ? (
-          <button type="button" class="hrfin-action is-primary" onClick={onBridgeDisb}>
-            Create / Open Disbursement
-          </button>
-        ) : (
-          <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
-            Available once the run is locked.
-          </span>
-        )}
-      </div>
-
-      <div style={{ background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                    borderRadius: 8, padding: '14px 16px' }}>
-        <div style={{ fontWeight: 600, fontSize: 13, marginBottom: 8 }}>Statutory Remittances</div>
-        <p style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)', margin: '0 0 10px' }}>
-          Create remittance records for PAYE/BIR, NIS/NIBTT, or Health Surcharge. Each authority
-          gets its own remittance record. Idempotent per (run, authority) pair.
-        </p>
-        {canManage && run.status === 'locked' ? (
-          <button type="button" class="hrfin-action is-primary" onClick={onBridgeRem}>
-            Create Remittance
-          </button>
-        ) : (
-          <span style={{ fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>
-            Available once the run is locked.
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}
-
-// ── Lifecycle footer ──────────────────────────────────────────────────────────
-
-export interface PayRunDrawerActions {
-  onLockInputs:  (run: PayrollRun) => void;
-  onCalculate:   (run: PayrollRun) => void;
-  onSubmit:      (run: PayrollRun) => void;
-  onApprove:     (run: PayrollRun) => void;
-  onReject:      (run: PayrollRun) => void;
-  onLockRun:     (run: PayrollRun) => void;
-  onExport:      (run: PayrollRun) => void;
-  onReopen:      (run: PayrollRun) => void;
-  onGenPayslips: (run: PayrollRun) => void;
-}
-
-function DrawerFooter({
-  run,
-  canManage,
-  canApprove,
-  actions,
-}: {
-  run:        PayrollRun;
-  canManage:  boolean;
-  canApprove: boolean;
-  actions:    PayRunDrawerActions;
-}): VNode {
-  const s = run.status;
-  return (
-    <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', width: '100%' }}>
-      {s === 'draft'           && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockInputs(run)}>Lock Inputs</button>}
-      {['input_locked', 'returned'].includes(s) && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onCalculate(run)}>Calculate</button>}
-      {['calculated', 'returned'].includes(s)   && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onSubmit(run)}>{s === 'returned' ? 'Resubmit for Approval' : 'Submit for Approval'}</button>}
-      {s === 'pending_approval' && canApprove && <button class="hrfin-action is-primary" onClick={() => actions.onApprove(run)}>Approve</button>}
-      {s === 'pending_approval' && canApprove && <button class="hrfin-action is-danger"  onClick={() => actions.onReject(run)}>Reject</button>}
-      {s === 'approved'      && canManage  && <button class="hrfin-action is-primary" onClick={() => actions.onLockRun(run)}>Lock Run</button>}
-      {s === 'locked'        && canManage  && <button class="hrfin-action"            onClick={() => actions.onExport(run)}>Export</button>}
-      {s === 'locked'        && canManage  && <button class="hrfin-action"            onClick={() => actions.onGenPayslips(run)}>Generate Payslips</button>}
-      {s === 'locked'        && canApprove && <button class="hrfin-action"            style={{ marginLeft: 'auto' }} onClick={() => actions.onReopen(run)}>Reopen</button>}
-    </div>
-  );
-}
-
-// ── Main component ────────────────────────────────────────────────────────────
-
-export function PayRunDrawer({
-  runId,
-  open,
-  onClose,
-  canManage,
-  canApprove,
-  actions,
-}: {
-  runId:      string | null;
-  open:       boolean;
-  onClose:    () => void;
-  canManage:  boolean;
-  canApprove: boolean;
-  actions:    PayRunDrawerActions;
-}): VNode {
-  const [tab, setTab] = useState<Tab>('summary');
-  const [showDisb, setShowDisb] = useState(false);
-  const [showRem,  setShowRem]  = useState(false);
-
-  const runQ = usePayrollRun(runId);
-  const run  = runQ.data;
-
-  const _blockerCount = 0;  // Computed in WarningsTab when rendered
-
-  return (
-    <>
-      <Drawer
-        open={open}
-        onClose={onClose}
-        panelClass="hrfin"
-        title={run?.runNo ?? 'Payroll Run'}
-        sub={run ? `${run.periodMonth.slice(0, 7)} · ${humanize(run.payFrequency)} · ${run.employeeCount} employees` : ''}
-        foot={run && (canManage || canApprove) ? (
-          <DrawerFooter run={run} canManage={canManage} canApprove={canApprove} actions={actions} />
-        ) : undefined}
-      >
-        {!run ? (
-          <div class="hrfin">
-            <div class="hrfin-empty">Loading run…</div>
-          </div>
-        ) : (
-          <div class="hrfin">
-            {/* KPI strip */}
-            <div style={{ display: 'flex', gap: 16, marginBottom: 16, flexWrap: 'wrap' }}>
-              <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                            borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Net Payroll</div>
-                <div style={{ fontSize: 20, fontWeight: 500, color: 'var(--hrfin-accent)' }}>{fmtMoney(run.netTotal)}</div>
-              </div>
-              <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                            borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Gross</div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>{fmtMoney(run.grossTotal)}</div>
-              </div>
-              <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                            borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Employees</div>
-                <div style={{ fontSize: 18, fontWeight: 600 }}>{run.employeeCount}</div>
-              </div>
-              <div style={{ flex: '1 1 80px', background: 'var(--hrfin-surface-2)', border: '1px solid var(--hrfin-border)',
-                            borderRadius: 8, padding: '10px 14px' }}>
-                <div style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)', textTransform: 'uppercase', letterSpacing: '.05em', marginBottom: 4 }}>Status</div>
-                <div style={{ marginTop: 2 }}>
-                  <HrfinPill tone={runStatusTone(run.status)}>{humanize(run.status)}</HrfinPill>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div class="hrfin-tabs" style={{ marginBottom: 16 }}>
-              {TABS.map(t => (
-                <button key={t.key} type="button" class={t.key === tab ? 'is-active' : ''} onClick={() => setTab(t.key)}>
-                  {t.label}
-                </button>
-              ))}
-            </div>
-
-            {/* Tab body */}
-            {tab === 'summary'   && <SummaryTab run={run} />}
-            {tab === 'lines'     && <RunLinesTab runId={run.id} />}
-            {tab === 'inputs'    && <InputsTab runId={run.id} runStatus={run.status} canManage={canManage} />}
-            {tab === 'worksheet' && <WorksheetTab runId={run.id} runStatus={run.status} />}
-            {tab === 'warnings'  && <WarningsTab runId={run.id} canManage={canManage} />}
-            {tab === 'payslips'  && <PayslipsTab run={run} canManage={canManage} />}
-            {tab === 'exports'   && <ExportsTab runId={run.id} canExport={canApprove || canManage} />}
-            {tab === 'gl'        && <GlTab runId={run.id} runStatus={run.status} />}
-            {tab === 'approvals' && <ApprovalsTab run={run} />}
-            {tab === 'timeline'  && <TimelineTab run={run} />}
-            {tab === 'audit'     && <AuditTab runId={run.id} />}
-            {tab === 'related'   && (
-              <RelatedTab
-                run={run}
-                canManage={canManage}
-                onBridgeDisb={() => setShowDisb(true)}
-                onBridgeRem={() => setShowRem(true)}
-              />
-            )}
-          </div>
-        )}
-      </Drawer>
-
-      {/* Bridge dialogs — rendered outside the drawer to avoid stacking context issues */}
-      {showDisb && run && (
-        <PayCreateDisbursementDialog
-          run={run}
-          onClose={() => setShowDisb(false)}
-          onCreated={() => setShowDisb(false)}
-        />
-      )}
-      {showRem && run && (
-        <PayCreateRemittanceDialog
-          run={run}
-          onClose={() => setShowRem(false)}
-          onCreated={() => setShowRem(false)}
-        />
-      )}
-    </>
   );
 }

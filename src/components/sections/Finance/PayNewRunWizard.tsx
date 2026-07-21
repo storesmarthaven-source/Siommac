@@ -53,6 +53,67 @@ const FIELD_STYLE = {
   width: '100%', boxSizing: 'border-box' as const,
 };
 
+// ── F-02 (E2E-PPR-006b): typed create-time blockers ─────────────────────────────
+// create_run_tx resolves + pins the governed pay policy (and, for a working_days
+// policy, the F-CAL work calendar) atomically; any failure is a typed PR4xx the API
+// surfaces verbatim. Map each to an actionable message instead of a raw code toast.
+// These are CREATE-time only — lock-time codes (policy.source_missing:*, policy.
+// cost_centre_missing) belong to the run drawer's lock action, not this wizard.
+interface CreateBlocker { title: string; detail: string; field?: 'payGroupId' }
+const CREATE_BLOCKERS: Record<string, CreateBlocker> = {
+  'policy.pay_group_required': {
+    title: 'Pay group required',
+    detail: 'Every payroll run must be scoped to a pay group so its governed pay policy can be resolved. Select a pay group and try again.',
+    field: 'payGroupId',
+  },
+  'policy.missing': {
+    title: 'No active pay policy for this pay group and period',
+    detail: 'No approved pay-policy version covers the whole pay period for this pay group. Activate and assign a policy in Payroll Setup → Pay Policy before creating the run.',
+  },
+  'policy.ambiguous': {
+    title: 'More than one active pay policy applies',
+    detail: 'Two or more active policy assignments cover this period for the pay group. Resolve the overlap in Payroll Setup → Pay Policy, then retry.',
+  },
+  'calendar.unresolved': {
+    title: 'No work calendar covers this period',
+    detail: 'This policy prorates by working days, but no work-calendar assignment covers the whole pay period for this pay group. Assign a published work calendar in Work Calendar setup.',
+  },
+  'calendar.split_period': {
+    title: 'Work calendar changes mid-period',
+    detail: 'More than one work-calendar assignment applies within this period and none covers it end-to-end. Align the assignment windows so a single calendar covers the whole period.',
+  },
+  'calendar.jurisdiction_mismatch': {
+    title: 'Holiday calendar jurisdiction mismatch',
+    detail: 'The resolved holiday calendar’s jurisdiction does not match the pay group’s statutory country. Assign a work calendar whose holiday set matches the pay group jurisdiction.',
+  },
+  'calendar.zero_working_days': {
+    title: 'No working days in this period',
+    detail: 'The resolved work calendar has zero working days across the whole pay period, so a working-days proration cannot be computed. Check the calendar’s working weekdays and holidays for this period.',
+  },
+  'calendar.version_unpublished': {
+    title: 'Work calendar version not published',
+    detail: 'The resolved work-calendar version is not published. Publish it in Work Calendar setup, then retry.',
+  },
+  'calendar.holiday_set_unpublished': {
+    title: 'Holiday set not published',
+    detail: 'The resolved holiday set is not published. Publish it in Work Calendar setup, then retry.',
+  },
+  'calendar.version_period_uncovered': {
+    title: 'Work calendar does not cover the whole period',
+    detail: 'The resolved work-calendar version’s effective window does not cover the whole pay period. Extend or reassign the calendar version.',
+  },
+};
+
+/** Match a create failure message against the typed blocker codes (longest-code
+ * first, so `calendar.version_unpublished` wins over any shorter prefix). */
+export function matchCreateBlocker(message: string): (CreateBlocker & { code: string }) | null {
+  const codes = Object.keys(CREATE_BLOCKERS).sort((a, b) => b.length - a.length);
+  for (const code of codes) {
+    if (message.includes(code)) return { code, ...CREATE_BLOCKERS[code]! };
+  }
+  return null;
+}
+
 // ── Step sub-components ───────────────────────────────────────────────────────
 
 function Step0Fields({
@@ -99,7 +160,7 @@ function Step0Fields({
         </label>
 
         <label style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-          <span style={{ fontSize: 12, fontWeight: 600 }}>Pay group</span>
+          <span style={{ fontSize: 12, fontWeight: 600 }}>Pay group *</span>
           <select
             value={payGroupId}
             onChange={e => {
@@ -115,16 +176,18 @@ function Step0Fields({
                 setPayGroup('');
               }
             }}
-            style={FIELD_STYLE}
+            style={{ ...FIELD_STYLE, borderColor: errors.payGroupId ? 'var(--danger)' : 'var(--hrfin-border)' }}
           >
-            <option value="">All active employees (ad-hoc)</option>
+            <option value="" disabled>Select a pay group…</option>
             {groups.map(g => (
               <option key={g.id} value={g.id}>{g.name} · {g.frequency}{g.memberCount != null ? ` (${g.memberCount})` : ''}</option>
             ))}
           </select>
-          <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>
-            {payGroupId ? 'Frequency & population come from the group.' : 'Ad-hoc: pays all active employees at the frequency below.'}
-          </span>
+          {errors.payGroupId
+            ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>{errors.payGroupId}</span>
+            : groups.length === 0 && !payGroupsQ.isLoading
+              ? <span style={{ fontSize: 11, color: 'var(--danger)' }}>No pay groups configured — create one in Payroll Setup first.</span>
+              : <span style={{ fontSize: 11, color: 'var(--hrfin-text-secondary)' }}>Required — resolves the governed pay policy, frequency &amp; population.</span>}
         </label>
       </div>
 
@@ -357,6 +420,7 @@ function Step4PreCheck({
 }): VNode {
   const issues: string[] = [];
   if (!periodMonth) issues.push('Pay month is required.');
+  if (!payGroup) issues.push('Pay group is required — every run is pay-group-scoped.');
   const wk = parseFloat(weeksInPeriod);
   if (isNaN(wk) || wk < 0.5 || wk > 5.5) {
     issues.push('Weeks in period must be between 0.5 and 5.5.');
@@ -435,6 +499,7 @@ function Step5Review({
   payGroup,
   payDate,
   cutOffDate,
+  blocker,
 }: {
   periodMonth:   string;
   payFrequency:  string;
@@ -442,12 +507,22 @@ function Step5Review({
   payGroup:      string;
   payDate:       string;
   cutOffDate:    string;
+  blocker:       (CreateBlocker & { code: string }) | null;
 }): VNode {
   return (
     <div class="hrfin" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
       <p style={{ fontSize: 13, color: 'var(--hrfin-text-secondary)', margin: 0 }}>
         Review the run details before creating.
       </p>
+
+      {blocker && (
+        <div role="alert" style={{ background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.3)',
+                      borderRadius: 8, padding: '12px 14px', fontSize: 13 }}>
+          <strong style={{ color: 'var(--danger)' }}>Can’t create this run — {blocker.title}</strong>
+          <p style={{ margin: '6px 0 0', fontSize: 12, color: 'var(--hrfin-text-secondary)' }}>{blocker.detail}</p>
+          <p style={{ margin: '6px 0 0', fontSize: 11, color: 'var(--hrfin-text-secondary)', fontFamily: 'var(--font-mono, monospace)' }}>{blocker.code}</p>
+        </div>
+      )}
       <div class="hrfin-metric-list">
         <div class="hrfin-metric-row">
           <span>Pay month</span><b>{periodMonth.slice(0, 7)}</b>
@@ -511,11 +586,16 @@ export function PayNewRunWizard({
   const [payDate, setPayDate]         = useState('');
   const [cutOffDate, setCutOffDate]   = useState('');
 
+  // F-02: a resolved typed create blocker (policy/calendar), surfaced on Review.
+  const [blocker, setBlocker] = useState<(CreateBlocker & { code: string }) | null>(null);
+
   const createMut = usePayrollMutation(financePayrollApi.createRun);
 
   const errors: Record<string, string> = {};
   if (step === 0) {
     if (!periodMonth) errors.periodMonth = 'Pay month is required.';
+    // F-02 (DEC-PPR-021): every new run is pay-group-scoped — payGroupId is required.
+    if (!payGroupId) errors.payGroupId = 'Pay group is required.';
     const wk = parseFloat(weeksInPeriod);
     if (isNaN(wk) || wk < 0.5 || wk > 5.5) errors.weeks = 'Weeks must be 0.5–5.5.';
     if (payDate && cutOffDate && payDate < cutOffDate) {
@@ -523,32 +603,48 @@ export function PayNewRunWizard({
     }
   }
 
-  const canProceed = step !== 0 || (!!periodMonth && !errors.weeks && !errors.payDate);
+  const canProceed = step !== 0 || (!!periodMonth && !!payGroupId && !errors.weeks && !errors.payDate);
   const isLastStep = step === STEP_LABELS.length - 1;
+
+  function goToStep(s: number): void {
+    setBlocker(null);   // stale blocker cleared whenever the config changes
+    setStep(s);
+  }
 
   async function handlePrimary(): Promise<void> {
     if (!isLastStep) {
       if (step === 0 && !canProceed) return;
-      setStep(s => s + 1);
+      goToStep(step + 1);
       return;
     }
 
-    // Final step: create the run
-    if (!periodMonth) { toast('Pay month is required.'); return; }
+    // Final step: create the run. The server resolves + pins the governed policy
+    // (and work calendar) atomically; a typed PR4xx becomes an actionable blocker.
+    if (!periodMonth || !payGroupId) { setStep(0); return; }
+    setBlocker(null);
     try {
       const run = await createMut.mutateAsync({
         periodMonth:   iso8601Month(periodMonth),
         payFrequency,
         weeksInPeriod: parseFloat(weeksInPeriod),
         payGroup:      payGroup.trim() || undefined,
-        payGroupId:    payGroupId || undefined,
+        payGroupId,
         payDate:       payDate || undefined,
         cutOffDate:    cutOffDate || undefined,
       });
       toast(`Payroll run ${run.runNo} created as draft.`);
       onCreated(run);
     } catch (e) {
-      toast(e instanceof Error ? e.message : 'Failed to create payroll run.');
+      const msg = e instanceof Error ? e.message : '';
+      const b = matchCreateBlocker(msg);
+      if (b) {
+        setBlocker(b);
+        toast(b.title);
+        // A missing pay group is a step-0 fix — send the user back to correct it.
+        if (b.field === 'payGroupId') setStep(0);
+      } else {
+        toast(msg || 'Failed to create payroll run.');
+      }
     }
   }
 
@@ -559,7 +655,7 @@ export function PayNewRunWizard({
       stepCount={STEP_LABELS.length}
       activeStep={step}
       onClose={onClose}
-      onBack={step > 0 ? () => setStep(s => s - 1) : undefined}
+      onBack={step > 0 ? () => goToStep(step - 1) : undefined}
       primaryLabel={
         createMut.isPending ? 'Creating…'
           : isLastStep ? 'Create Draft Run'
@@ -602,6 +698,7 @@ export function PayNewRunWizard({
           payGroup={payGroup}
           payDate={payDate}
           cutOffDate={cutOffDate}
+          blocker={blocker}
         />
       )}
     </HrfinWizardModal>

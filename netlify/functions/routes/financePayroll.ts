@@ -15,6 +15,7 @@ import { z, zv } from '../lib/validate';
 import {
   listPayrollRuns,
   getPayrollRun,
+  getRunPolicyEvidence,
   createPayrollRun,
   lockInputs,
   calculateRun,
@@ -233,6 +234,24 @@ router.post('/payroll/runs/get', async c => {
   try {
     const data = await getPayrollRun(v.data.id);
     if (!data) return c.json({ success: false, message: 'Payroll run not found.' }, 404 as 200);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/policy-evidence  (F-02 API-PPR-005, §6d)
+// Read the pinned pay-policy manifest + immutable lock evidence (source conflicts,
+// excluded employees) and — for a working_days run — the resolved calendar block
+// with per-employee working_days numerators. Defaults to the run's current input
+// snapshot; an explicit inputSnapshotId is validated to belong to the run.
+router.post('/payroll/runs/policy-evidence', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({
+    runId:           z.string().uuid(),
+    inputSnapshotId: z.string().uuid().optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getRunPolicyEvidence(v.data.runId, v.data.inputSnapshotId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

@@ -35,6 +35,13 @@
 //   T10 → E2E-PPR-023/025/028/041 (calc consumes the pinned snapshot, never re-resolves; recalc
 //         reuses the pin; pinned run survives policy/calendar retirement — R7/DEC-PPR-004).
 //   T11 → E2E-PPR-009 (reopen/relock fresh evidence, partial) + consecutive-run reuse + FK-safe cleanup.
+//   T13 → E2E-PPR-033 (read surface R8): run get returns the exact pinned payPolicy (API-PPR-004);
+//         policy-evidence (API-PPR-005) defaults to current_input_snapshot_id, accepts an explicit
+//         inputSnapshotId (validated to the run), surfaces the manifest + immutable lock evidence,
+//         resolves names; view_all gated (401/403).
+//   T14 → E2E-PPR-042 (read surface R8): policy-evidence calendar block — resolved work/holiday
+//         NAMES + short holiday checksum + resolution scope + periodDenominator + per-employee
+//         employees[] (numerator/denominator/excludedCount), NO raw UUID.
 //
 // Deferred per the contract (NOT live here — traced to their owning gate):
 //   • U-PPR-001..008 (DB/unit): resolver whole-period/version boundary + ambiguity (E2E-PPR-003/004/005),
@@ -43,8 +50,9 @@
 //     ownership (E2E-PPR-038 — DEC-PPR-017).
 //   • C-PPR-003 (concurrency): create-vs-calendar-end/cancel race (E2E-PPR-029/035, DEC-PPR-016).
 //   • PERF-PPR-001: 2000-employee lock-inputs benchmark (one work_calendar_working_days per emp).
-//   • UI-PPR-001..005 browser-QA gate (DEC-PPR-020): chips + evidence panel + create-run typed blockers
-//     (E2E-PPR-006b/033/042 + calendar negatives E2E-PPR-034/037).
+//   • UI-PPR-001..005 browser-QA gate (DEC-PPR-020): the RENDERED chips + evidence panel + create-run
+//     typed blockers (E2E-PPR-006b + calendar negatives E2E-PPR-034/037). The read-surface DATA routes
+//     behind them (E2E-PPR-033/042) are now covered LIVE by T13/T14 above.
 // GAP flagged honestly: calendar create-time negatives (E2E-PPR-034 unresolved / 035 split / 037
 //     jurisdiction / 038 zero) are covered only at U-PPR/C-PPR level here; add focused live blocks in a
 //     follow-up if the operator wants them live in this suite.
@@ -390,6 +398,76 @@ export default async function run(h) {
     const runId = cr.body.data.id; ids.runIds.push(runId);
     const row = await sb.from('finance_payroll_runs').select('pay_policy_version_id').eq('id', runId).single();
     expect(row.data.pay_policy_version_id === ids.versionId, 'second run must resolve+pin the same active policy');
+  });
+
+  // ── Read surface (R8) — the run-detail UI's data routes (API-PPR-004/005). ────
+  // The main run is fully locked (T6) + calculated (T7); its snapshot + policy +
+  // calendar evidence are immutable, so these reads are stable here.
+  const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+  await test('T13 E2E-PPR-033 — run get returns exact payPolicy; policy-evidence defaults + explicit snapshot; names resolved; view_all gated', async () => {
+    // (a) runs/get carries the pinned payPolicy chip data (API-PPR-004).
+    const got = await api('finance/payroll/runs/get', T.appr, { id: ids.mainRunId });
+    ok(got, `get run: ${got.body.message}`);
+    const pp = got.body.data.payPolicy;
+    expect(pp && pp.versionId === ids.versionId, 'get payPolicy.versionId must equal the pinned version');
+    expect(pp.required === true, 'payPolicy.required must be true');
+    expect(typeof pp.policyName === 'string' && pp.policyName.includes(TAG), `payPolicy.policyName must resolve (got ${pp.policyName})`);
+    expect(typeof pp.versionNo === 'number', 'payPolicy.versionNo must resolve');
+    expect(pp.calendar && pp.calendar.workCalendarVersionId === ids.wcVerId, 'payPolicy.calendar pins the resolved work version');
+    expect(Number(pp.calendar.periodDenominator) > 0, 'payPolicy.calendar.periodDenominator > 0');
+
+    // (b) policy-evidence defaults to the run's current input snapshot (finding #10).
+    const evDefault = await api('finance/payroll/runs/policy-evidence', T.appr, { runId: ids.mainRunId });
+    ok(evDefault, `policy-evidence default: ${evDefault.body.message}`);
+    const ed = evDefault.body.data;
+    expect(ed.inputSnapshotId === ids.mainSnapshotId, 'policy-evidence defaults to current_input_snapshot_id');
+    expect(/^[0-9a-f]{64}$/.test(ed.checksum || ''), `manifest checksum present (got ${ed.checksum})`);
+    expect(Array.isArray(ed.components) && ed.components.some(c => c.componentCode === 'basic'), 'manifest components[] includes the basic component');
+    expect(Array.isArray(ed.sourceRules) && ed.sourceRules.length === 4, `manifest sourceRules[] = 4 (got ${ed.sourceRules?.length})`);
+    expect(Array.isArray(ed.costingRules) && ed.costingRules.some(cr => cr.dimension === 'cost_centre'), 'manifest costingRules[] includes cost_centre');
+    expect(ed.statutory && typeof ed.statutory === 'object' && !Array.isArray(ed.statutory), 'statutory object present');
+    // Immutable lock evidence surfaced from the snapshot source_summary.
+    expect((ed.excludedEmployees ?? []).some(e => e.employeeId === U.C), 'excludedEmployees surfaces empC');
+    expect((ed.sourceConflicts ?? []).some(c => c.employeeId === U.B && c.sourceType === 'approved_leave'), 'sourceConflicts surfaces empB approved_leave');
+
+    // (c) explicit inputSnapshotId (post-relock history) returns the SAME manifest.
+    const evExplicit = await api('finance/payroll/runs/policy-evidence', T.appr, { runId: ids.mainRunId, inputSnapshotId: ids.mainSnapshotId });
+    ok(evExplicit, `policy-evidence explicit: ${evExplicit.body.message}`);
+    expect(evExplicit.body.data.checksum === ed.checksum, 'explicit snapshot returns the same manifest checksum');
+
+    // (d) a snapshot that does not belong to the run is rejected (404, not cross-run leak).
+    const foreign = await api('finance/payroll/runs/policy-evidence', T.appr, { runId: ids.mainRunId, inputSnapshotId: uuid() });
+    fails(foreign); expect(foreign.status === 404, `foreign snapshot expected 404, got ${foreign.status}`);
+
+    // (e) access control (§9): view_all required — unauth 401, non-participant employee 403.
+    const unauth = await api('finance/payroll/runs/policy-evidence', null, { runId: ids.mainRunId });
+    expect(unauth.status === 401, `policy-evidence unauth expected 401, got ${unauth.status}`);
+    const denied = await api('finance/payroll/runs/policy-evidence', T.plain, { runId: ids.mainRunId });
+    fails(denied); expect(denied.status === 403, `policy-evidence plain employee expected 403, got ${denied.status}`);
+  });
+
+  await test('T14 E2E-PPR-042 — policy-evidence calendar block: resolved names + per-employee working_days, no raw UUID', async () => {
+    const ev = await api('finance/payroll/runs/policy-evidence', T.appr, { runId: ids.mainRunId });
+    ok(ev, `policy-evidence: ${ev.body.message}`);
+    const cal = ev.body.data.calendar;
+    expect(cal, 'calendar block present for a working_days run');
+    expect(typeof cal.workCalendarName === 'string' && cal.workCalendarName.includes(TAG), `workCalendarName resolved (got ${cal.workCalendarName})`);
+    expect(typeof cal.workCalendarVersionNo === 'number', 'workCalendarVersionNo resolved');
+    expect(typeof cal.holidayCalendarName === 'string' && cal.holidayCalendarName.includes(TAG), `holidayCalendarName resolved (got ${cal.holidayCalendarName})`);
+    expect(/^[0-9a-f]{12}$/.test(cal.holidayChecksumShort || ''), `short holiday checksum (got ${cal.holidayChecksumShort})`);
+    expect(cal.resolution && cal.resolution.scope === 'pay_group', `resolution.scope = pay_group (got ${cal.resolution?.scope})`);
+    expect(typeof cal.resolution.assignmentId === 'string' && cal.resolution.assignmentId.length > 0, 'resolution.assignmentId present (internal id)');
+    expect(Number(cal.periodDenominator) > 0, 'calendar periodDenominator > 0');
+
+    expect(Array.isArray(cal.employees) && cal.employees.length >= 1, `employees[] present (got ${cal.employees?.length})`);
+    const rowA = cal.employees.find(e => e.employeeId === U.A);
+    expect(rowA, 'employees[] includes empA');
+    expect(rowA.employeeName === 'PPR Emp A', `empA name resolved, no raw UUID (got ${rowA.employeeName})`);
+    expect(Number(rowA.numerator) > 0 && Number(rowA.denominator) > 0 && Number(rowA.numerator) <= Number(rowA.denominator), `empA numerator/denominator sane (got ${rowA.numerator}/${rowA.denominator})`);
+    expect(typeof rowA.excludedCount === 'number', 'excludedCount is numeric');
+    // No employees[] row may show a raw UUID as its display name (finding: no raw UUID).
+    expect(cal.employees.every(e => typeof e.employeeName === 'string' && e.employeeName.length > 0 && !UUID_RE.test(e.employeeName)), 'no employees[] row shows a raw UUID name');
   });
 
   // ── T12 (table-driven): create-time calendar failures propagate ATOMICALLY ───
