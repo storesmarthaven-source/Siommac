@@ -299,7 +299,7 @@ function InternalNote({ message }: { message: Message }) {
   );
 }
 
-function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, onOpenCollaboration, onJump }: {
+export function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, onOpenCollaboration, onJump }: {
   message: Message; currentUserId: string; onReply: () => void; onPreview: (attachment: Attachment) => void; onActivity: () => void; onOpenCollaboration: (card: CollaborationCard) => void; onJump: (id: string) => void;
 }) {
   const { snapshot, actions } = useMessaging();

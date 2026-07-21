@@ -11,8 +11,9 @@ import { describe, it, expect, vi } from 'vitest';
 import { QueryClient, QueryClientProvider } from '@tanstack/preact-query';
 import { h } from 'preact';
 
-const apiPost = vi.fn(() => Promise.resolve({ success: true, data: { lastReadSequence: 5 } }));
-vi.mock('@lib/api', () => ({ apiPost: (...a: unknown[]) => apiPost(...a) }));
+vi.mock('@lib/api', () => ({
+  apiPost: vi.fn(() => Promise.resolve({ success: true, data: { lastReadSequence: 5 } })),
+}));
 
 import { useMarkTicketRead } from './communications';
 import { ticketKeys } from './queryKeys';
