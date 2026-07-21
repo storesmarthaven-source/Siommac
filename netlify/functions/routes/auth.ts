@@ -154,6 +154,8 @@ export async function buildSessionPayload(
       valid_from:  o.valid_from  ?? null,
       valid_until: o.valid_until ?? null,
       revoked_at:  o.revoked_at  ?? null,
+      set_by:      o.set_by      ?? null,
+      set_at:      o.set_at      ?? null,
     })),
     // ── Passkey prompt signal (optional — UI shows a setup nudge) ───────────
     hasPasskey,
@@ -702,6 +704,8 @@ router.post('/getMyPermissionOverrides', async c => {
       valid_from:  o.valid_from  ?? null,
       valid_until: o.valid_until ?? null,
       revoked_at:  o.revoked_at  ?? null,
+      set_by:      o.set_by      ?? null,
+      set_at:      o.set_at      ?? null,
     })),
   });
 });

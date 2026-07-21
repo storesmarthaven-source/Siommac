@@ -113,9 +113,10 @@ export const PermissionOverrideSchema = z.object({
   valid_from:  z.string().nullable().optional(),
   valid_until: z.string().nullable().optional(),
   revoked_at:  z.string().nullable().optional(),
-  // Provenance (optional — not sent by the refresh path, unused by the resolver).
-  set_by:     z.string().optional(),                    // username of the setter
-  set_at:     z.iso.datetime({ offset: true }).optional(),
+  // Provenance — who set the override and when. Nullable: the backend sends null
+  // when the columns are unset; unused by the resolver, surfaced in Account Security.
+  set_by:     z.string().nullable().optional(),         // setter id
+  set_at:     z.string().nullable().optional(),
 });
 
 export type PermissionOverride = z.infer<typeof PermissionOverrideSchema>;

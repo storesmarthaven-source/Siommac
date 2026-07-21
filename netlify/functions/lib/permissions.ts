@@ -990,6 +990,10 @@ export interface PermissionOverrideRow {
   valid_from?: string | null;
   valid_until?: string | null;
   revoked_at?: string | null;
+  // Audit provenance — who set the override and when. Surfaced to the client so the
+  // Account Security / RBAC views can show the grant's origin (not used by resolveWithSet).
+  set_by?:     string | null;
+  set_at?:     string | null;
 }
 
 /**
