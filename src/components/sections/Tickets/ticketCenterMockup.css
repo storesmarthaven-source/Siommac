@@ -1,20 +1,89 @@
 /* Approved Ticket Center mockup port. Kept separate from dropdown styles so the
    application page can match the signed-off concept without changing top-bar UI. */
-.tc-page{min-height:0;padding:10px 15px 14px;display:grid;grid-template-rows:auto minmax(0,1fr);gap:9px;background:#f8fafc}
-.tc-page-header{height:64px;display:grid;grid-template-columns:minmax(245px,.42fr) minmax(650px,1.58fr);align-items:center;overflow:hidden;border:1px solid var(--tc-line);border-radius:8px;background:#fff;box-shadow:0 1px 2px rgba(12,36,72,.04)}
-.tc-page-title{padding:0 18px 0 20px;display:flex;align-items:center;gap:12px}.tc-page-title h1{margin:0;font-size:27px;font-weight:600;letter-spacing:-.4px;white-space:nowrap}.tc-page-title button{height:32px;margin-left:auto;padding:0 11px;color:#fff;border:0;border-radius:6px;background:var(--tc-blue);font-size:11px;font-weight:600;cursor:pointer}.tc-page-title button i{margin-right:5px}
-.tc-summary{height:100%;border:0;border-left:1px solid var(--tc-line);border-radius:0;box-shadow:none}.tc-summary>div{padding:7px 13px;gap:9px}.tc-summary>div>i{width:32px;height:32px;border-radius:7px}.tc-summary span{min-width:0;flex:1;flex-direction:row;align-items:center;justify-content:space-between;gap:8px}.tc-summary small{overflow:hidden;color:#55657b;font-weight:600;text-overflow:ellipsis;white-space:nowrap}.tc-summary strong{font-size:20px}
-.tc-workspace{min-height:0;grid-template-columns:minmax(390px,430px) minmax(650px,1fr);gap:10px;overflow:hidden}.tc-list-panel,.tc-thread-panel{border-radius:8px}.tc-list-head h2{padding:16px 16px 11px;font-size:20px;font-weight:500}.tc-scopes{padding-bottom:9px}.tc-list-group{height:36px}.tc-ticket-row{min-height:96px;padding:11px 12px 9px}.tc-ticket-name strong{font-weight:500}.tc-ticket-number{display:none}.tc-ticket-subject{margin:7px 0 8px}.tc-list-foot{height:48px;background:#fff}
+/* ── Ticket Center: account pill · slot band · workspace fuse into ONE card ────
+   The header is portalled into the global top bar's white slot band (#topbar-nav-
+   slot — see the .tc-band portal in TicketCenter.tsx) and the workspace continues
+   flush beneath it: the exact join the Messenger uses. The pill drops its bottom
+   gap/radius, the band goes flat and hands its bottom border down as the column
+   divider, and the workspace runs on with bottom-only radius. All scoped via
+   :has(.tc-page) so the chrome only applies while Ticket Center is the ACTIVE
+   panel (panels stay mounted, just hidden, when another section is open). */
+.app-section.active:has(.tc-page){display:flex;flex-direction:column}
+.app-section.active:has(.tc-page)>*{flex:1;min-height:0}
+.main-content:has(> .app-section.active .tc-page) .app-topbar{margin-bottom:0;border-radius:12px 12px 0 0}
+.main-content:has(> .app-section.active .tc-page) .app-topbar-footer.has-nav.app-topbar-footer--slot{border-radius:0;padding:0;height:56px;display:grid;grid-template-columns:minmax(340px,370px) minmax(650px,1fr);gap:0;align-items:stretch}
+
+/* The page fills the content area with no gutters, so its list | thread columns
+   line up exactly under the band's title | summary columns above. */
+.tc-page{min-height:0;padding:0;display:grid;grid-template-rows:minmax(0,1fr);gap:0;background:transparent}
+
+/* The band's two cells become the slot's grid columns (display:contents drops the
+   .tc-band wrapper) so they sit exactly over the list | thread panels below. Left =
+   the "Recent Tickets" title (the scope tabs live in the list header); right =
+   summary KPIs. Colours are LITERAL, not var(--tc-*): the band is portalled into
+   the top-bar slot OUTSIDE .tc-page, where those custom properties are out of scope
+   (they silently fail). Icons are Lucide (@ui LucideIcon → inline svg). */
+.tc-band{display:contents}
+.app-topbar-footer--slot .tc-band-head{min-width:0;height:100%;padding:0 16px;display:flex;align-items:center;gap:13px;border-right:1px solid #dfe6ef}
+.app-topbar-footer--slot .tc-band-head h1{margin:0;overflow:hidden;color:#1b2d54;font-size:19px;font-weight:600;letter-spacing:-.3px;text-overflow:ellipsis;white-space:nowrap}
+/* New ticket sits at the RIGHT of the header (margin-left:auto) — a white button
+   with Siomac-navy icon + text. Literal colours: the band is outside .tc-page. */
+.app-topbar-footer--slot .tc-band-new{height:30px;margin-left:auto;padding:0 13px;display:inline-flex;align-items:center;gap:7px;color:#1b2d54;border:1px solid #d3d9e4;border-radius:9px;background:#fff;font-size:12.5px;font-weight:600;white-space:nowrap;cursor:pointer}
+.app-topbar-footer--slot .tc-band-new:hover{border-color:#c3cddd;background:#f6f8fb}
+.app-topbar-footer--slot .tc-band-new svg{width:15px;height:15px;color:#1b2d54}
+.app-topbar-footer--slot .tc-band-stats{height:100%;display:grid;grid-template-columns:repeat(4,minmax(0,1fr));align-items:stretch}
+.app-topbar-footer--slot .tc-band-stats>.tc-kpi{min-width:0;padding:0 14px;display:flex;align-items:center;gap:10px;border-right:1px solid #dfe6ef}
+.app-topbar-footer--slot .tc-band-stats>.tc-kpi:last-child{border-right:0}
+.tc-kpi-ic{width:30px;height:30px;flex:none;display:grid;place-items:center;border-radius:8px}
+.tc-kpi--blue .tc-kpi-ic{color:#3b82f6;background:#eaf1fe}
+.tc-kpi--purple .tc-kpi-ic{color:#8b5cf6;background:#f2effe}
+.tc-kpi--red .tc-kpi-ic{color:#dc2626;background:#fdecec}
+.tc-kpi--amber .tc-kpi-ic{color:#f59e0b;background:#fdf3e0}
+.tc-kpi-body{min-width:0;display:flex;flex-direction:column;line-height:1.1}
+.tc-kpi-num{color:#06183a;font-size:19px;font-weight:600;letter-spacing:-.01em}
+.tc-kpi-name{overflow:hidden;color:#7a8698;font-size:11px;font-weight:600;text-overflow:ellipsis;white-space:nowrap}
+/* New ticket lives in the list header now (out of the scope band), a subtle white
+   icon button — the same treatment as the Messenger's compose button. */
+.tc-page-gap{display:inline-flex;align-items:flex-end;padding:0 1px;color:#8a96a8;font-size:12px;user-select:none}
+/* No more detached dot in its own left column (the "left accent") and no selected
+   left bar. The status now rides the avatar as a colour-coded corner badge —
+   larger, one colour per status (resolved = green); unread rings the avatar. */
+.tc-ticket-row{grid-template-columns:38px minmax(0,1fr)}
+.tc-ticket-row.selected{box-shadow:none;background:#f1f7ff}
+.tc-avatar-wrap{position:relative;width:38px;height:38px;align-self:start}
+.tc-avatar-wrap.unread{box-shadow:0 0 0 2px #fff,0 0 0 4px rgba(20,110,232,.5);border-radius:50%}
+.tc-status-dot{position:absolute;right:-2px;bottom:-2px;width:12px;height:12px;border:2px solid #fff;border-radius:50%;background:#94a3b8}
+.tc-status-dot.open{background:#3b82f6}
+.tc-status-dot.assigned{background:#6366f1}
+.tc-status-dot.in_progress{background:#8b5cf6}
+.tc-status-dot.reopened{background:#f97316}
+.tc-status-dot.waiting_requester{background:#f59e0b}
+.tc-status-dot.resolved{background:#16a34a}
+.tc-status-dot.closed{background:#94a3b8}
+.tc-status-dot.cancelled{background:#dc2626}
+/* Resolved tickets read as done: a soft green wash and slightly faded content
+   (the green corner badge stays crisp so the status still reads at a glance). */
+.tc-ticket-row.resolved{background:#eef9f1}
+.tc-ticket-row.resolved:hover{background:#e6f5ec}
+.tc-ticket-row.resolved.selected{background:#e0f3e7}
+.tc-ticket-row.resolved .tc-avatar,.tc-ticket-row.resolved .tc-ticket-copy{opacity:.68}
+/* Scope tabs restored to the list header (Queue / Assigned / All), now with
+   Lucide icons — the .tc-scopes grid layout is unchanged from before. */
+.tc-scopes button{display:inline-flex;align-items:center;justify-content:center;gap:6px}
+.tc-scopes button svg{width:14px;height:14px}
+.tc-self-scope{display:flex;align-items:center;gap:7px}
+.tc-self-scope svg{width:14px;height:14px}
+.tc-workspace{min-height:0;grid-template-columns:minmax(340px,370px) minmax(650px,1fr);gap:0;overflow:hidden;border:1px solid #dfe5ee;border-top:0;border-radius:0 0 12px 12px;background:#fff}.tc-list-panel,.tc-thread-panel{border:0;border-radius:0;box-shadow:none}.tc-list-panel{border-right:1px solid var(--tc-line)}.tc-list-head h2{padding:16px 16px 11px;font-size:20px;font-weight:500}.tc-scopes{padding-bottom:9px}.tc-list-group{height:36px}.tc-ticket-row{min-height:78px;padding:9px 12px 8px;gap:8px}.tc-ticket-name strong{font-weight:500}.tc-ticket-number{display:none}.tc-ticket-subject{margin:5px 0 6px}.tc-list-foot{height:48px;background:#fff}
 .tc-thread-head{min-height:110px}.tc-thread-title h2{font-weight:500}.tc-thread-title>.tc-pills{gap:8px}.tc-thread-title>.tc-pills .tc-pill{padding:5px 10px;font-size:12px;font-weight:400}.tc-conversation{padding:18px 22px 8px}.tc-composer{margin:0;border-top:1px solid var(--tc-line);box-shadow:0 -5px 18px rgba(15,37,68,.035)}
 .tc-recipient{min-height:48px;padding:7px 16px}.tc-recipient-chip{padding:4px 9px;color:#33455d;border-radius:14px;background:#eef2f7}.tc-recipient>small{color:#8793a4;font-size:10px}.tc-recipient>div{margin-left:auto}.tc-format{height:43px;padding:0 16px}.tc-format select{height:30px;padding:0 24px 0 4px;color:#415169;border:0;background:#fff;font-size:12px}.tc-editor{min-height:96px;max-height:190px;padding:14px 16px}.tc-composer>footer{height:48px;padding:0 16px}.tc-composer>footer .tc-emoji{width:28px;height:28px;margin:0;padding:0;color:#53627a;border:0;background:transparent}.tc-composer>footer>button:last-child{height:34px}.tc-composer.internal .tc-recipient,.tc-composer.internal .tc-format,.tc-composer.internal footer{background:#fffcf5}
 .tc-details-drawer.tc-mockup-drawer{width:min(500px,calc(100vw - 24px));color:#fff;background:#1b2d54}.tc-mockup-drawer .ui-rdrawer-top{min-height:64px;padding:0 20px;background:#374669}.tc-mockup-drawer .ui-rdrawer-title{color:#fff;font-size:20px}.tc-mockup-drawer .ui-rdrawer-sub{color:rgba(226,238,252,.68);font-size:12px}.tc-mockup-drawer .ui-icon-action{color:rgba(255,255,255,.82);border-color:rgba(255,255,255,.12);background:rgba(255,255,255,.08)}.tc-mockup-drawer .ui-rdrawer-scroll{background:#1b2d54}
 .tc-drawer-body{padding:20px 18px 24px}.tc-drawer-document-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px}.tc-drawer-document-head>div{min-width:0}.tc-drawer-document-head h3{margin:0;color:#fff;font-size:20px;letter-spacing:-.02em}.tc-drawer-document-head p{margin:5px 0 0;color:rgba(226,238,252,.6);font-size:12px}.tc-drawer-pill{padding:5px 9px;flex:none;color:#bbf7d0;border-radius:12px;background:rgba(34,197,94,.18);font-size:11px;font-weight:600}.tc-drawer-pill.waiting_requester{color:#fde68a;background:rgba(245,158,11,.18)}.tc-drawer-pill.resolved,.tc-drawer-pill.closed{color:#dbeafe;background:rgba(255,255,255,.1)}.tc-drawer-pill.cancelled{color:#fecaca;background:rgba(239,68,68,.18)}
 .tc-drawer-ribbon{margin-top:12px;padding:9px 12px;display:flex;align-items:center;gap:9px;color:#dbeafe;border:1px solid rgba(96,165,250,.25);border-radius:10px;background:rgba(96,165,250,.12)}.tc-drawer-ribbon.overdue{color:#fecaca;border-color:rgba(239,68,68,.28);background:rgba(239,68,68,.14)}.tc-drawer-ribbon strong,.tc-drawer-ribbon small{display:block}.tc-drawer-ribbon strong{font-size:12px}.tc-drawer-ribbon small{margin-top:2px;color:rgba(219,234,254,.72);font-size:10px}
 .tc-drawer-stat-grid{margin:14px 0 16px;display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px}.tc-drawer-stat-grid>div{min-width:0;padding:11px 12px;border:1px solid rgba(255,255,255,.12);border-radius:10px;background:rgba(255,255,255,.07)}.tc-drawer-stat-grid small,.tc-drawer-stat-grid strong,.tc-drawer-stat-grid span{display:block}.tc-drawer-stat-grid small{margin-bottom:4px;color:rgba(226,238,252,.68);font-size:10px;text-transform:uppercase}.tc-drawer-stat-grid strong{margin-bottom:2px;overflow:hidden;color:#fff;font-size:19px;text-overflow:ellipsis;white-space:nowrap}.tc-drawer-stat-grid span{color:rgba(226,238,252,.62);font-size:10px}
-.tc-drawer-tabs{margin:0 -18px 18px;padding:0 18px;display:flex;align-items:center;gap:15px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.1)}.tc-drawer-tabs button{position:relative;height:42px;padding:0;flex:none;color:rgba(226,238,252,.62);border:0;background:transparent;font-size:13px;font-weight:600}.tc-drawer-tabs button.active{color:#fff}.tc-drawer-tabs button.active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px 3px 0 0;background:#808ba8}
+.tc-drawer-tabs{margin:0 -18px 18px;padding:0 18px;display:flex;align-items:center;gap:15px;overflow-x:auto;border-bottom:1px solid rgba(255,255,255,.1)}.tc-drawer-tabs button{position:relative;height:42px;padding:0;flex:none;color:rgba(226,238,252,.62);border:0;background:transparent;font-size:12px;font-weight:600}.tc-drawer-tabs button.active{color:#fff}.tc-drawer-tabs button.active:after{content:"";position:absolute;left:0;right:0;bottom:0;height:3px;border-radius:3px 3px 0 0;background:#808ba8}
 .tc-drawer-section{margin-bottom:18px}.tc-drawer-section>header{margin-bottom:9px;display:flex;align-items:center;justify-content:space-between}.tc-drawer-section>header>span{color:rgba(226,238,252,.82);font-size:11px;font-weight:700;letter-spacing:.05em;text-transform:uppercase}.tc-drawer-section>header button,.tc-drawer-section>header label{color:#bfdbfe;border:0;background:transparent;font-size:11px;cursor:pointer}.tc-drawer-section>header input{display:none}
-.tc-drawer-field-grid{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:7px}.tc-drawer-field-grid>div{min-width:0;padding:9px 11px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.07)}.tc-drawer-field-grid dt{margin-bottom:4px;color:rgba(226,238,252,.68);font-size:10px;text-transform:uppercase}.tc-drawer-field-grid dd{margin:0;overflow:hidden;color:#fff;font-size:13px;text-overflow:ellipsis;white-space:nowrap}
-.tc-drawer-steps{display:flex;align-items:flex-start}.tc-drawer-steps>div{width:72px;display:flex;flex-direction:column;align-items:center;text-align:center}.tc-drawer-steps>span{height:2px;min-width:14px;flex:1;margin-top:5px;background:rgba(255,255,255,.16)}.tc-drawer-steps>span.done{background:#60a5fa}.tc-drawer-steps i{width:12px;height:12px;border:2px solid rgba(226,238,252,.45);border-radius:50%}.tc-drawer-steps .done i{border-color:#60a5fa;background:#60a5fa}.tc-drawer-steps .current i{border:3px solid #1b2d54;background:#fbbf24;box-shadow:0 0 0 2px #fbbf24}.tc-drawer-steps strong{margin-top:8px;color:rgba(226,238,252,.58);font-size:10.5px}.tc-drawer-steps .done strong,.tc-drawer-steps .current strong{color:#fff}.tc-drawer-steps small{margin-top:3px;color:rgba(226,238,252,.42);font-size:9.5px}
+.tc-drawer-field-grid{margin:0;display:grid;grid-template-columns:1fr 1fr;gap:7px}.tc-drawer-field-grid>div{min-width:0;padding:9px 11px;border:1px solid rgba(255,255,255,.12);border-radius:9px;background:rgba(255,255,255,.07)}.tc-drawer-field-grid dt{margin-bottom:4px;color:rgba(226,238,252,.68);font-size:10px;text-transform:uppercase}.tc-drawer-field-grid dd{margin:0;overflow:hidden;color:#fff;font-size:12px;text-overflow:ellipsis;white-space:nowrap}
+.tc-drawer-steps{display:flex;align-items:flex-start}.tc-drawer-steps>div{width:72px;display:flex;flex-direction:column;align-items:center;text-align:center}.tc-drawer-steps>span{height:2px;min-width:14px;flex:1;margin-top:5px;background:rgba(255,255,255,.16)}.tc-drawer-steps>span.done{background:#60a5fa}.tc-drawer-steps i{width:12px;height:12px;border:2px solid rgba(226,238,252,.45);border-radius:50%}.tc-drawer-steps .done i{border-color:#60a5fa;background:#60a5fa}.tc-drawer-steps .current i{border:3px solid #1b2d54;background:#fbbf24;box-shadow:0 0 0 2px #fbbf24}.tc-drawer-steps strong{margin-top:8px;color:rgba(226,238,252,.58);font-size:10.5px}.tc-drawer-steps .done strong,.tc-drawer-steps .current strong{color:#fff}.tc-drawer-steps small{margin-top:3px;color:rgba(226,238,252,.42);font-size:10px}
 .tc-drawer-tags{display:flex;align-items:center;flex-wrap:wrap;gap:6px}.tc-drawer-tags>span{padding:5px 8px;color:#bfdbfe;border:0;border-radius:5px;background:rgba(96,165,250,.18);font-size:11px}.tc-drawer-file,.tc-person-row{border-bottom-color:rgba(255,255,255,.1)}.tc-person-row em{color:#bfdbfe;font-size:10px;font-style:normal}.tc-drawer-activity{margin:0;padding:0;list-style:none}.tc-drawer-activity li{position:relative;padding:0 0 18px 22px;display:flex}.tc-drawer-activity li>i{position:absolute;top:4px;left:2px;width:9px;height:9px;border-radius:50%;background:#60a5fa;box-shadow:0 0 0 3px rgba(96,165,250,.16)}.tc-drawer-activity li:after{content:"";position:absolute;top:15px;bottom:2px;left:6px;width:1px;background:rgba(255,255,255,.14)}.tc-drawer-activity li:last-child:after{display:none}.tc-drawer-activity li>span{display:flex;flex-direction:column}.tc-drawer-activity strong{color:#fff;font-size:12px}.tc-drawer-activity small{margin-top:4px;color:rgba(226,238,252,.58);font-size:10px}
 .tc-quick-views{grid-column:1/-1;padding-bottom:8px;display:grid;gap:3px;border-bottom:1px solid var(--tc-line)}.tc-quick-views>strong{padding:0 2px 5px;color:#66758b;font-size:10px;text-transform:uppercase}.tc-quick-views button{height:31px;padding:0 8px;display:flex;align-items:center;color:#45536a;border:0;border-radius:5px;background:transparent;font-size:11px;text-align:left}.tc-quick-views button:hover,.tc-quick-views button.active{color:#176bc7;background:#edf5ff}.tc-quick-views button b{margin-left:auto;color:#758197;font-size:10px}.tc-list-pages{margin-left:auto;display:flex;gap:3px}.tc-list-pages button{width:27px;height:27px;color:#59677b;border:1px solid var(--tc-line);border-radius:4px;background:#fff}.tc-list-pages button.active{color:#fff;border-color:var(--tc-blue);background:var(--tc-blue)}.tc-list-foot>button:last-child{margin-left:8px}
-@media(max-width:1180px){.tc-page-header{grid-template-columns:235px minmax(600px,1fr)}.tc-page-title button{width:32px;padding:0;font-size:0}.tc-page-title button i{margin:0;font-size:11px}.tc-summary>div{padding:7px 9px}.tc-workspace{grid-template-columns:minmax(360px,390px) minmax(600px,1fr)}}
+@media(max-width:1180px){.main-content:has(> .app-section.active .tc-page) .app-topbar-footer.has-nav.app-topbar-footer--slot{grid-template-columns:minmax(320px,350px) minmax(600px,1fr)}.app-topbar-footer--slot .tc-band-head h1{font-size:17px}.app-topbar-footer--slot .tc-band-stats>div{padding:0 10px;gap:8px}.tc-workspace{grid-template-columns:minmax(320px,350px) minmax(600px,1fr)}}

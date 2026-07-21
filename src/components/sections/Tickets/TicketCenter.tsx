@@ -1,5 +1,7 @@
 import { Fragment, type VNode } from 'preact';
+import { createPortal } from 'preact/compat';
 import { useEffect, useMemo, useRef, useState } from 'preact/hooks';
+import { useActiveSection } from '@/shell/sections/useActiveSection';
 import {
   getTicketAttachmentUrl,
   uploadTicketAttachment,
@@ -15,7 +17,7 @@ import {
 } from '@api/communications';
 import { useSessionStore } from '@store/session';
 import { toast } from '@store/ui';
-import { Drawer, Modal, PanelEmpty } from '@ui';
+import { Drawer, LucideIcon, Modal, PanelEmpty } from '@ui';
 import { TicketCreateDialog } from './TicketCreateDialog';
 import './ticketCenter.css';
 import './ticketCenterMockup.css';
@@ -26,9 +28,24 @@ type ActionDialog = 'resolve' | 'priority' | 'tag' | null;
 type QuickView = 'all' | 'waiting_requester' | 'overdue' | 'due_today' | 'resolved';
 
 const OPEN_STATUSES = new Set(['open', 'assigned', 'in_progress', 'waiting_requester', 'reopened']);
+const PAGE_SIZE = 6;
 
 function titleCase(value: string): string {
   return value.replace(/_/g, ' ').replace(/\b\w/g, (char: string) => char.toUpperCase());
+}
+
+// Compact pager: show every page up to 7, otherwise first + last + a window of
+// neighbours around the current page, with 'gap' markers for the elided ranges.
+function pagerWindow(current: number, total: number): (number | 'gap')[] {
+  if (total <= 7) return Array.from({ length: total }, (_, i) => i + 1);
+  const items: (number | 'gap')[] = [1];
+  const start = Math.max(2, current - 1);
+  const end = Math.min(total - 1, current + 1);
+  if (start > 2) items.push('gap');
+  for (let p = start; p <= end; p++) items.push(p);
+  if (end < total - 1) items.push('gap');
+  items.push(total);
+  return items;
 }
 
 function initials(profile: TicketUserProfile | null, fallback = 'T'): string {
@@ -205,9 +222,11 @@ function TicketRow({ ticket, selected, onClick }: { ticket: CanonicalTicket; sel
   const requester = ticket.requester;
   const systemTag = ticket.tags.find(tag => tag.kind === 'system');
   return (
-    <button type="button" class={`tc-ticket-row${selected ? ' selected' : ''}`} onClick={onClick}>
-      <span class={`tc-unread${ticket.unreadCount > 0 ? ' on' : ''}`} />
-      <Avatar profile={requester} fallback={ticket.ticketNumber} />
+    <button type="button" class={`tc-ticket-row${selected ? ' selected' : ''}${ticket.status === 'resolved' ? ' resolved' : ''}`} onClick={onClick}>
+      <span class={`tc-avatar-wrap${ticket.unreadCount > 0 ? ' unread' : ''}`}>
+        <Avatar profile={requester} fallback={ticket.ticketNumber} />
+        <span class={`tc-status-dot ${ticket.status}`} title={titleCase(ticket.status)} />
+      </span>
       <span class="tc-ticket-copy">
         <span class="tc-ticket-name"><strong>{requester?.displayName ?? ticket.ticketNumber}</strong><time>{relativeTime(ticket.lastActivityAt)}</time></span>
         <span class="tc-ticket-number">{ticket.ticketNumber}</span>
@@ -260,6 +279,7 @@ function MockupTicketDetailsDrawer({ open, tab, setTab, detail, isWatcher, nowMs
 }
 
 export function TicketCenter(): VNode {
+  const isTicketsActive = useActiveSection()('s-tickets');
   const currentUserId = useSessionStore(state => state.userId);
   const currentName = useSessionStore(state => state.fullName);
   const currentPhoto = useSessionStore(state => state.profileImage);
@@ -275,6 +295,7 @@ export function TicketCenter(): VNode {
   const [requestTypeCode, setRequestTypeCode] = useState('');
   const [tagKey, setTagKey] = useState('');
   const [selectedId, setSelectedId] = useState('');
+  const [page, setPage] = useState(1);
   const [requestedTicketNumber, setRequestedTicketNumber] = useState('');
   const [drawerOpen, setDrawerOpen] = useState(false);
   const [drawerTab, setDrawerTab] = useState<DrawerTab>('Details');
@@ -331,6 +352,15 @@ export function TicketCenter(): VNode {
     if (selectedId && firstTicket && !displayTickets.some(row => row.id === selectedId)) setSelectedId(firstTicket.id);
     if (selectedId && displayTickets.length === 0) setSelectedId('');
   }, [displayTickets, selectedId]);
+
+  // Show PAGE_SIZE (6) tickets per page. currentPage is clamped so a shrinking
+  // list (after a filter) never strands the view on an empty page.
+  const pageCount = Math.max(1, Math.ceil(displayTickets.length / PAGE_SIZE));
+  const currentPage = Math.min(page, pageCount);
+  const pagedTickets = displayTickets.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  // Return to page 1 whenever the filter/scope/search inputs change (not on refetch).
+  useEffect(() => { setPage(1); }, [scope, querySearch, status, priority, queueCode, requestTypeCode, tagKey, quickView]);
 
   useEffect(() => {
     const onOpen = (event: Event) => {
@@ -443,29 +473,46 @@ export function TicketCenter(): VNode {
   }, [allTickets]);
   const isWatcher = detail?.participants.some(row => row.userId === currentUserId && row.role === 'watcher') ?? false;
 
+  const navSlot = typeof document !== 'undefined' ? document.getElementById('topbar-nav-slot') : null;
+  // Join the header into the global top bar (beside the account pill) while the
+  // Ticket Center is the ACTIVE panel — the same #topbar-nav-slot portal the
+  // Messenger uses. Gated on the active section so this chrome never leaks onto
+  // other pages (the panel stays mounted while hidden).
+  const bandHeader = isTicketsActive && navSlot
+    ? createPortal(
+        <div class="tc-band">
+          <div class="tc-band-head"><h1>Recent Tickets</h1><button type="button" class="tc-band-new" onClick={() => setCreateOpen(true)}><LucideIcon name="Plus" size={15} /><span>New ticket</span></button></div>
+          <div class="tc-band-stats" aria-label="Ticket summary">
+            <div class="tc-kpi tc-kpi--blue"><span class="tc-kpi-ic"><LucideIcon name="Inbox" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{summaryQ.data?.ticketsOpen ?? allTickets.filter(row => OPEN_STATUSES.has(row.status)).length}</span><span class="tc-kpi-name">Open</span></div></div>
+            <div class="tc-kpi tc-kpi--purple"><span class="tc-kpi-ic"><LucideIcon name="Mail" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{summaryQ.data?.ticketsUnread ?? 0}</span><span class="tc-kpi-name">Unread</span></div></div>
+            <div class="tc-kpi tc-kpi--red"><span class="tc-kpi-ic"><LucideIcon name="Clock" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{overdue}</span><span class="tc-kpi-name">Overdue</span></div></div>
+            <div class="tc-kpi tc-kpi--amber"><span class="tc-kpi-ic"><LucideIcon name="Calendar" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{dueToday}</span><span class="tc-kpi-name">Due today</span></div></div>
+          </div>
+        </div>,
+        navSlot,
+      )
+    : null;
+
   return (
     <div class="tc-page">
-      <header class="tc-page-header">
-        <div class="tc-page-title"><h1>Ticket Center</h1><button type="button" onClick={() => setCreateOpen(true)}><i class="fas fa-plus" /> New ticket</button></div>
-        <div class="tc-summary" aria-label="Ticket summary">
-          <div><i class="fas fa-inbox blue" /><span><small>Open tickets</small><strong>{summaryQ.data?.ticketsOpen ?? allTickets.filter(row => OPEN_STATUSES.has(row.status)).length}</strong></span></div>
-          <div><i class="fas fa-envelope purple" /><span><small>Unread</small><strong>{summaryQ.data?.ticketsUnread ?? 0}</strong></span></div>
-          <div><i class="fas fa-clock red" /><span><small>Overdue</small><strong>{overdue}</strong></span></div>
-          <div><i class="fas fa-calendar-day amber" /><span><small>Due today</small><strong>{dueToday}</strong></span></div>
-        </div>
-      </header>
+      {bandHeader}
       <main class="tc-workspace">
         <section class="tc-list-panel">
           <header class="tc-list-head">
-            <h2>Recent Tickets</h2>
             <div class="tc-search"><i class="fas fa-search" /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search tickets" /><button class={filtersOpen ? 'active' : ''} onClick={() => setFiltersOpen(open => !open)} aria-label="Filters"><i class="fas fa-filter" /></button></div>
-            {hasQueueAccess ? <div class="tc-scopes">
-              {([
-                ['queue', 'Queue', 'fa-list'],
-                ['assigned', 'Assigned', 'fa-user'],
-                ['all', 'All', 'fa-ticket'],
-              ] as const).map(([key, label, icon]) => <button class={scope === key ? 'active' : ''} onClick={() => setScope(key)} key={key}><i class={`fas ${icon}`} />{label}</button>)}
-            </div> : <div class="tc-self-scope"><i class="fas fa-user" /> My requests</div>}
+            {hasQueueAccess ? (
+              <div class="tc-scopes">
+                {([
+                  ['queue', 'Queue', 'List'],
+                  ['assigned', 'Assigned', 'User'],
+                  ['all', 'All', 'Ticket'],
+                ] as const).map(([key, label, icon]) => (
+                  <button type="button" class={scope === key ? 'active' : ''} onClick={() => setScope(key)} key={key}><LucideIcon name={icon} size={14} />{label}</button>
+                ))}
+              </div>
+            ) : (
+              <div class="tc-self-scope"><LucideIcon name="User" size={14} /> My requests</div>
+            )}
             {filtersOpen && <div class="tc-filters">
               <div class="tc-quick-views">
                 <strong>Views</strong>
@@ -489,9 +536,9 @@ export function TicketCenter(): VNode {
             {listQ.isLoading && <div class="tc-list-state">Loading tickets…</div>}
             {listQ.isError && <div class="tc-list-state">Tickets could not be loaded.<button onClick={() => void listQ.refetch()}>Try again</button></div>}
             {!listQ.isLoading && !listQ.isError && displayTickets.length === 0 && <div class="tc-list-state"><i class="fas fa-ticket" />No tickets match these filters.</div>}
-            {displayTickets.map(row => <TicketRow key={row.id} ticket={row} selected={row.id === selectedId} onClick={() => selectTicket(row.id)} />)}
+            {pagedTickets.map(row => <TicketRow key={row.id} ticket={row} selected={row.id === selectedId} onClick={() => selectTicket(row.id)} />)}
           </div>
-          <footer class="tc-list-foot"><span>1–{displayTickets.length} of {displayTickets.length}</span><div class="tc-list-pages"><button type="button" disabled>‹</button><button type="button" class="active">1</button><button type="button" disabled>›</button></div><button onClick={() => void listQ.refetch()}><i class="fas fa-rotate" /> Refresh</button></footer>
+          <footer class="tc-list-foot"><span>{displayTickets.length === 0 ? '0' : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayTickets.length)}`} of {displayTickets.length}</span><div class="tc-list-pages"><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} aria-label="Previous page">‹</button>{pagerWindow(currentPage, pageCount).map((p, i) => p === 'gap' ? <span class="tc-page-gap" key={`gap${i}`}>…</span> : <button type="button" key={p} class={p === currentPage ? 'active' : ''} onClick={() => setPage(p)}>{p}</button>)}<button type="button" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)} aria-label="Next page">›</button></div><button onClick={() => void listQ.refetch()}><i class="fas fa-rotate" /> Refresh</button></footer>
         </section>
         <section class="tc-thread-panel">
           {!selectedId ? <div class="tc-thread-empty"><i class="fas fa-ticket" /><h2>Select a ticket</h2><p>Choose a ticket to see its conversation and actions.</p></div> : (
