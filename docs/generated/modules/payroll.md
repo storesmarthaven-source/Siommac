@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `6d36b57b9aee2890d13cb024`
+Source fingerprint: `e530eea9d6cc2b16ad1e4e84`
 
-Files: 152 | Symbols: 1486 | Widgets: 10 | Unique mounted endpoints: 127 | Route definitions: 127 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 22
+Files: 152 | Symbols: 1493 | Widgets: 10 | Unique mounted endpoints: 127 | Route definitions: 127 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 22
 
 ## Widgets and Tiles
 
@@ -399,7 +399,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Finance Payroll Setup - Pay Policies Phase A | 13 | 17 | `scripts/e2e/suites/payrollPayPolicies.mjs` |
 | payrollPayPolicyRun | 16 | 16 | `scripts/e2e/suites/payrollPayPolicyRun.mjs` |
 | Payroll Population Reconciliation (create-run wizard Slice 2) | 11 | 1 | `scripts/e2e/suites/payrollPopulationRecon.mjs` |
-| Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 37 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
+| Finance — Payroll Runs Register (runs/list + run-views + runs/calendar) | 38 | 7 | `scripts/e2e/suites/payrollRunsRegister.mjs` |
 | Payroll -- Scale (1000+ employee run) | 19 | 13 | `scripts/e2e/suites/payrollScale.mjs` |
 | Payroll — Statutory Forms (employer profile + TD4) | 17 | 7 | `scripts/e2e/suites/payrollStatutoryForms.mjs` |
 | Payroll — statutory-version snapshot binding (2a) | 7 | 6 | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` |
@@ -430,7 +430,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicies.mjs` | 268 |
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 616 |
 | e2e-suite | `scripts/e2e/suites/payrollPopulationRecon.mjs` | 275 |
-| e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 837 |
+| e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 881 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 398 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 292 |
@@ -446,7 +446,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/MyPayslipsOverview.tsx` | 153 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.loadingGate.test.tsx` | 157 |
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 923 |
-| frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 390 |
+| frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 403 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.test.tsx` | 198 |
@@ -522,5 +522,5 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/payrollControlCenter.ts` | 185 |
 | shared-types | `types/payrollFindings.ts` | 164 |
 | shared-types | `types/payrollPayPolicies.ts` | 106 |
-| shared-types | `types/payrollRuns.ts` | 161 |
+| shared-types | `types/payrollRuns.ts` | 180 |
 
