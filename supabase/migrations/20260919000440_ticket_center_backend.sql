@@ -274,12 +274,21 @@ set participant_role = case
     end,
     removed_at = null;
 
-insert into public.ticket_participants (ticket_id, user_id, participant_role)
-select ticket_id, user_id, 'watcher'
-from public.ticket_watchers
-on conflict (ticket_id, user_id) do nothing;
+-- Migrate legacy watchers into participants, then retire the table. Guarded with
+-- to_regclass so the source migration stays RERUNNABLE: after a prior apply already
+-- dropped ticket_watchers, this whole block is skipped (a bare INSERT ... FROM
+-- ticket_watchers would otherwise raise 42P01 on re-run).
+do $$
+begin
+  if to_regclass('public.ticket_watchers') is not null then
+    insert into public.ticket_participants (ticket_id, user_id, participant_role)
+    select ticket_id, user_id, 'watcher'
+    from public.ticket_watchers
+    on conflict (ticket_id, user_id) do nothing;
 
-drop table if exists public.ticket_watchers;
+    drop table public.ticket_watchers;
+  end if;
+end $$;
 
 create table if not exists public.ticket_tags (
   ticket_id     uuid not null references public.tickets(id) on delete cascade,

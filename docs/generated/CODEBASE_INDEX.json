@@ -1,9 +1,9 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "ca020d989f9a6314dbdef4a9b325b22b43688caf",
+    "head": "3aa41ea03a57a2fedc4660fdf302937b9c4bc56d",
     "branch": "main",
-    "fingerprint": "09175a5e32400c3b4578854c",
+    "fingerprint": "c1ed8d4ad12e007300e3b4da",
     "indexedFiles": 1469
   },
   "summary": {
@@ -152660,161 +152660,161 @@
       "name": "public.ticket_tags",
       "kind": "table",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 284,
+      "line": 293,
       "module": "communications"
     },
     {
       "name": "ticket_tags_key_idx",
       "kind": "index",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 295,
+      "line": 304,
       "module": "communications"
     },
     {
       "name": "public.ticket_attachments",
       "kind": "table",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 320,
+      "line": 329,
       "module": "communications"
     },
     {
       "name": "ticket_attachments_ticket_idx",
       "kind": "index",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 333,
+      "line": 342,
       "module": "communications"
     },
     {
       "name": "ticket_comments_ticket_sequence_uidx",
       "kind": "index",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 354,
+      "line": 363,
       "module": "communications"
     },
     {
       "name": "ticket_comments_request_uidx",
       "kind": "index",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 356,
+      "line": 365,
       "module": "communications"
     },
     {
       "name": "ticket_events_ticket_sequence_uidx",
       "kind": "index",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 374,
+      "line": 383,
       "module": "communications"
     },
     {
       "name": "ticket_internal.command_receipts",
       "kind": "table",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 385,
+      "line": 394,
       "module": "communications"
     },
     {
       "name": "ticket_internal.user_has_permission",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 397,
+      "line": 406,
       "module": "communications"
     },
     {
       "name": "ticket_internal.handler_user_ids",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 437,
+      "line": 446,
       "module": "communications"
     },
     {
       "name": "ticket_internal.record_event",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 455,
+      "line": 464,
       "module": "communications"
     },
     {
       "name": "ticket_internal.notify_users",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 526,
+      "line": 535,
       "module": "communications"
     },
     {
       "name": "public.ticket_create_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 638,
+      "line": 647,
       "module": "communications"
     },
     {
       "name": "public.ticket_comment_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 895,
+      "line": 904,
       "module": "communications"
     },
     {
       "name": "public.ticket_command_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1091,
+      "line": 1100,
       "module": "communications"
     },
     {
       "name": "public.ticket_mark_read_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1424,
+      "line": 1433,
       "module": "communications"
     },
     {
       "name": "public.ticket_attachment_complete_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1482,
+      "line": 1491,
       "module": "communications"
     },
     {
       "name": "public.ticket_request_types_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1600,
+      "line": 1609,
       "module": "communications"
     },
     {
       "name": "public.ticket_requester_search",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1645,
+      "line": 1654,
       "module": "communications"
     },
     {
       "name": "public.ticket_list_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1685,
+      "line": 1694,
       "module": "communications"
     },
     {
       "name": "public.ticket_get_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1788,
+      "line": 1797,
       "module": "communications"
     },
     {
       "name": "public.ticket_summary_for_actor",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1917,
+      "line": 1926,
       "module": "communications"
     },
     {
       "name": "public.ticket_overdue_sweep_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000440_ticket_center_backend.sql",
-      "line": 1955,
+      "line": 1964,
       "module": "communications"
     },
     {
