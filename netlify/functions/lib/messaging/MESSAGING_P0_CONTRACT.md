@@ -45,7 +45,7 @@ Mapped in `messagingRpc.ts` → `msgRpcHttpError()`.
 | `messaging_add_participants_tx` | `message_participants` (UPSERT re-entry), system post, `message_event_outbox`, `app_events` | `deliverEventNotifications`, `emitSignal(all_active, 'messages')` |
 | `messaging_remove_participant_tx` | `message_participants.removed_at`, system post, `message_event_outbox`, `app_events` | `emitSignal(remaining_participants, 'messages')` |
 | `messaging_pin_tx` | `message_pins`, thread `version`, `app_events` | `emitSignal(all_active, 'messages')` |
-| `messaging_mark_read_tx` | `message_participants.last_read_sequence`, `message_post_receipts` (bounded) | `emitSignal([actor], 'summary')` |
+| `messaging_mark_read_tx` | `message_participants.last_read_sequence`, `message_post_receipts` (bounded) | `emitSignal([actor], 'summary')` + `emitSignal(active_participants, 'messages')` (so the SENDER's read receipts refresh) |
 
 ---
 

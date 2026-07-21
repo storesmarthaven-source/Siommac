@@ -294,12 +294,13 @@ export function useBroadcastNotification() {
 export function useMarkNotificationRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (notificationId: string) =>
-      apiPost<{ success: boolean }>(
-        'communications/notifications/markRead',
-        { notificationId },
-        { retryable: false },
-      ),
+    mutationFn: async (notificationId: string) => {
+      const res = await apiPost<{ success: boolean; message?: string }>(
+        'communications/notifications/markRead', { notificationId }, { retryable: false },
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to mark notification read');
+      return res;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: notificationKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -310,12 +311,13 @@ export function useMarkNotificationRead() {
 export function useMarkAllNotificationsRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { module?: string } = {}) =>
-      apiPost<{ success: boolean }>(
-        'communications/notifications/markAllRead',
-        args,
-        { retryable: false },
-      ),
+    mutationFn: async (args: { module?: string } = {}) => {
+      const res = await apiPost<{ success: boolean; message?: string }>(
+        'communications/notifications/markAllRead', args, { retryable: false },
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to mark all notifications read');
+      return res;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: notificationKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -326,12 +328,13 @@ export function useMarkAllNotificationsRead() {
 export function useArchiveNotification() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { notificationId?: string; all?: boolean }) =>
-      apiPost<{ success: boolean }>(
-        'communications/notifications/archive',
-        args,
-        { retryable: false },
-      ),
+    mutationFn: async (args: { notificationId?: string; all?: boolean }) => {
+      const res = await apiPost<{ success: boolean; message?: string }>(
+        'communications/notifications/archive', args, { retryable: false },
+      );
+      if (!res.success) throw new Error(res.message ?? 'Failed to archive notification');
+      return res;
+    },
     onSuccess: () => {
       void qc.invalidateQueries({ queryKey: notificationKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
@@ -542,10 +545,15 @@ export function useThreadPosts(threadId: string) {
 export function useMarkThreadRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (args: { threadId: string; upToSequence?: number }) =>
-      apiPost<{ success: boolean; data: { lastReadSequence: number } }>(
+    mutationFn: async (args: { threadId: string; upToSequence?: number }) => {
+      // apiPost resolves { success:false } WITHOUT throwing — so check it, or the
+      // UI would clear unread state on a backend rejection.
+      const res = await apiPost<{ success: boolean; data?: { lastReadSequence: number }; message?: string }>(
         'communications/messages/markRead', args, { retryable: false },
-      ),
+      );
+      if (!res.success || !res.data) throw new Error(res.message ?? 'Failed to mark thread read');
+      return res.data;
+    },
     onSuccess: (_r: unknown, args: { threadId: string; upToSequence?: number }) => {
       // Refresh the reader's own posts (their receipts) + thread list + badge.
       // Other participants (incl. the sender) refetch via the realtime
@@ -1016,14 +1024,16 @@ export function useMarkTicketRead() {
     onMutate: async (args: { ticketId: string; sequence?: number | null }) => {
       await qc.cancelQueries({ queryKey: ticketKeys.all });
       await qc.cancelQueries({ queryKey: communicationKeys.summary() });
-      const listSnapshots = qc.getQueriesData<CanonicalTicket[]>({ queryKey: [...ticketKeys.all, 'list'] });
+      // The list cache is TicketListPage ({ items, total, nextCursor }), NOT a
+      // bare array — map old.items (treating it as an array wiped the cache).
+      const listSnapshots = qc.getQueriesData<TicketListPage>({ queryKey: [...ticketKeys.all, 'list'] });
       const summarySnapshot = qc.getQueryData<CommsSummary>(communicationKeys.summary());
       const detailSnapshot = qc.getQueryData<CanonicalTicketDetail>(ticketKeys.detail(args.ticketId));
       const wasUnread =
-        listSnapshots.some(([, data]) => data?.some(t => t.id === args.ticketId && t.unreadCount > 0))
+        listSnapshots.some(([, data]) => data?.items.some(t => t.id === args.ticketId && t.unreadCount > 0))
         || (detailSnapshot?.unreadCount ?? 0) > 0;
-      qc.setQueriesData<CanonicalTicket[]>({ queryKey: [...ticketKeys.all, 'list'] }, old =>
-        old?.map(t => (t.id === args.ticketId ? { ...t, unreadCount: 0, lastReadSequence: t.activitySequence } : t)));
+      qc.setQueriesData<TicketListPage>({ queryKey: [...ticketKeys.all, 'list'] }, old =>
+        old ? { ...old, items: old.items.map(t => (t.id === args.ticketId ? { ...t, unreadCount: 0, lastReadSequence: t.activitySequence } : t)) } : old);
       if (detailSnapshot) {
         qc.setQueryData<CanonicalTicketDetail>(ticketKeys.detail(args.ticketId), { ...detailSnapshot, unreadCount: 0 });
       }

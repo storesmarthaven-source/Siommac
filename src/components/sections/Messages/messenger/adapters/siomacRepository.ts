@@ -269,7 +269,12 @@ export class SiomacMessagingRepository implements MessagingRepository {
   }
 
   async markRead(threadId: string, _userId: string): Promise<void> {
-    await apiPost('communications/messages/markRead', { threadId }, { retryable: false });
+    // apiPost resolves { success:false } WITHOUT throwing — throw so the
+    // provider's optimistic unread-clear reverts when the backend rejects.
+    const res = await apiPost<{ success: boolean; message?: string }>(
+      'communications/messages/markRead', { threadId }, { retryable: false },
+    );
+    if (!res.success) throw new Error(res.message ?? 'Failed to mark thread read');
   }
 
   async setMuted(threadId: string, muted: boolean, _actorId: string): Promise<void> {

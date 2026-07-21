@@ -323,11 +323,13 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
       <div className="sm-message__main">
         <header className="sm-message__meta"><strong>{author.name}</strong><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></header>
         {replySource ? <button className="sm-reply-reference" type="button" onClick={() => onJump(replySource.id)}><Reply /><span><strong>{userById(snapshot, replySource.authorId).name}</strong><em>{replySource.body || replySource.attachments[0]?.name}</em></span></button> : null}
-        {message.body ? <div className="sm-bubble"><span><RichMessage html={message.html} /></span>{isSelf ? <MessageStatus message={message} /> : null}</div> : null}
+        {message.body ? <div className="sm-bubble"><span><RichMessage html={message.html} /></span></div> : null}
         {message.attachments.map((attachment) => <AttachmentCard key={attachment.id} attachment={attachment} liked={liked} onPreview={() => onPreview(attachment)} onOpen={() => void actions.download(attachment)} onPin={() => void actions.togglePin(message.id)} onLike={() => void actions.toggleReaction(message.id, "👍")} />)}
         {message.link ? <LinkCard link={message.link} /> : null}
         {message.card ? <CollaborationRecordCard card={message.card} owner={userById(snapshot, message.card.ownerId)} collaborators={message.card.collaboratorIds.map((id) => userById(snapshot, id))} onOpen={() => onOpenCollaboration(message.card!)} onComment={onReply} onActivity={onActivity} onPin={() => void actions.togglePin(message.id)} /> : null}
         {message.reactions.length > 0 ? <div className="sm-reactions">{message.reactions.map((reaction) => <button type="button" key={reaction.emoji} title={`${reaction.userIds.length} reaction${reaction.userIds.length === 1 ? "" : "s"}`} onClick={() => void actions.toggleReaction(message.id, reaction.emoji)}>{reaction.emoji}<span>{reaction.userIds.length}</span></button>)}</div> : null}
+        {/* Sender-only receipt row — shown for EVERY outgoing message (text, attachment, link, or card), so an attachment-only message still gets a read state. */}
+        {isSelf ? <div className="sm-message__receipt"><MessageStatus message={message} /></div> : null}
         <div className="sm-message-actions" aria-label="Message actions">
           <button type="button" onClick={onReply}><Reply />Reply</button>
           {pinAction ? <button type="button" onClick={() => void actions.togglePin(message.id)}>{pinAction === "unpin" ? <PinOff /> : <Pin />}{pinAction === "unpin" ? "Unpin" : "Pin"}</button> : null}
@@ -341,7 +343,7 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
 
 // Sender-only receipt. A real read (readByCount > 0, from message_post_receipts)
 // wins over the delivery state; otherwise fall back to sending/delivered/sent.
-function MessageStatus({ message }: { message: Message }) {
+export function MessageStatus({ message }: { message: Message }) {
   if (message.delivery === "sending") return <span className="sm-delivery" title="Sending"><Check /></span>;
   if (message.readByCount > 0) {
     return (

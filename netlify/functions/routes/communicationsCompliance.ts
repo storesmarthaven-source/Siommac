@@ -193,7 +193,7 @@ const ExportDownloadSchema = z.object({
   idempotencyKey: z.uuid(),
 });
 
-function notifyCompliance(params: {
+async function notifyCompliance(params: {
   eventType: string;
   sourceEntityType: 'message_compliance_case' | 'message_thread_access_grant';
   sourceEntityId: string;
@@ -204,10 +204,13 @@ function notifyCompliance(params: {
   recipients: string[];
   title: string;
   body: string;
-}): void {
+}): Promise<void> {
   const recipients = [...new Set(params.recipients)].filter(Boolean);
   if (recipients.length === 0) return;
-  void deliverEventNotifications({
+  // Serverless can exit before a fire-and-forget insert lands — await it, but a
+  // delivery failure must NOT fail the compliance mutation (best-effort + log).
+  try {
+    await deliverEventNotifications({
     eventType: params.eventType,
     sourceModule: 'communications',
     sourceEntityType: params.sourceEntityType,
@@ -228,7 +231,10 @@ function notifyCompliance(params: {
       actionRoute: 'messages/compliance',
       type: params.eventType,
     },
-  }, params.eventId);
+    }, params.eventId);
+  } catch (err) {
+    console.error('[compliance] notification delivery failed:', (err as { message?: string }).message ?? err);
+  }
 }
 
 router.post('/communications/compliance/summary/get', async c => {
@@ -274,7 +280,7 @@ router.post('/communications/compliance/cases/request', async c => {
     const approvers = (await listActiveCompliancePermissionHolders(
       'communications.compliance_read',
     )).filter(userId => userId !== actor.id);
-    notifyCompliance({
+    await notifyCompliance({
       eventType: 'communications.compliance.case_requested',
       sourceEntityType: 'message_compliance_case',
       sourceEntityId: result.caseId,
@@ -305,7 +311,7 @@ router.post('/communications/compliance/cases/decide', async c => {
   );
   const detail = await getComplianceCase(actor, { caseId: result.caseId });
   if (!result.duplicate) {
-    notifyCompliance({
+    await notifyCompliance({
       eventType: result.status === 'approved'
         ? 'communications.compliance.case_approved'
         : 'communications.compliance.case_rejected',
@@ -411,7 +417,7 @@ router.post('/communications/compliance/grants/revoke', async c => {
     evidence: complianceEvidenceContext(),
   });
   if (!result.duplicate) {
-    notifyCompliance({
+    await notifyCompliance({
       eventType: 'communications.compliance.grant_revoked',
       sourceEntityType: 'message_thread_access_grant',
       sourceEntityId: result.grantId,

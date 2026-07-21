@@ -122,7 +122,7 @@
 .sm-message__meta { margin: 0 0 6px; display: flex; align-items: baseline; gap: 9px; }
 .sm-message__meta strong { font-size: 13px; font-weight: 600; }
 .sm-message__meta time { color: #78889c; font-size: 10px; }
-.sm-bubble { position: relative; width: fit-content; min-width: 74px; max-width: min(100%, 42rem); padding: 8px 43px 8px 11px; border: 1px solid #d8e2ed; border-radius: 8px; color: #33465d; background: var(--sm-received-bubble); font-size: var(--sm-message-font-size); line-height: 1.4; overflow-wrap: anywhere; }
+.sm-bubble { position: relative; width: fit-content; min-width: 74px; max-width: min(100%, 42rem); padding: 8px 11px; border: 1px solid #d8e2ed; border-radius: 8px; color: #33465d; background: var(--sm-received-bubble); font-size: var(--sm-message-font-size); line-height: 1.4; overflow-wrap: anywhere; }
 .sm-message.is-admin .sm-bubble { border-color: var(--sm-admin-bubble); color: #fff; background: var(--sm-admin-bubble); }
 .sm-bubble strong { font-weight: 600; }
 /* Rich-text bodies — the shared subset (headings, paragraphs, lists, alignment).
@@ -133,11 +133,12 @@
 .sm-bubble li { margin: .12em 0; }
 .sm-bubble > span > :first-child { margin-top: 0; }
 .sm-bubble > span > :last-child { margin-bottom: 0; }
-.sm-delivery { position: absolute; right: 8px; bottom: 7px; display: inline-flex; color: #8ca0b7; }
-.sm-message.is-admin .sm-delivery { color: #b9ccdf; }
+/* Receipt row — a sender-only status line below every outgoing message. */
+.sm-message__receipt { display: flex; justify-content: flex-end; margin-top: 3px; padding-right: 2px; }
+.sm-delivery { display: inline-flex; align-items: center; gap: 4px; color: #8ca0b7; }
 .sm-delivery.is-read { color: #38a8f4; }
-.sm-message.is-admin .sm-delivery.is-read { color: #6fc4ff; }
-.sm-delivery svg { font-size: 15px; }
+.sm-delivery svg { font-size: 14px; }
+.sm-delivery em { font-style: normal; font-size: 11px; }
 .sm-reply-reference { width: min(100%, 520px); margin: 0 0 6px 14px; padding: 7px 9px; border: 0; border-left: 3px solid #879caf; border-radius: 0 5px 5px 0; display: flex; gap: 7px; text-align: left; background: #eef3f7; cursor: pointer; }
 .sm-reply-reference > svg { flex: 0 0 auto; margin-top: 2px; font-size: 13px; }
 .sm-reply-reference span { min-width: 0; display: grid; }

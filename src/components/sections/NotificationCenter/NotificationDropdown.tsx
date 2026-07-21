@@ -71,7 +71,7 @@ export function NotificationDropdown(): VNode {
     actionRequiredOnly: tab === 'action',
   };
   // Gate on modal open state — no background fetches while the dropdown is hidden.
-  const { data, isLoading, refetch } = useNotifications(args, { enabled: isOpen });
+  const { data, isLoading, isError, refetch } = useNotifications(args, { enabled: isOpen });
   // Belt-and-suspenders: also filter client-side so the tabs are correct even if
   // an older deployed backend ignores the unreadOnly / actionRequiredOnly args.
   const rows = (data ?? []).filter(n => {
@@ -143,7 +143,16 @@ export function NotificationDropdown(): VNode {
       {/* Body */}
       <div style={{ flex: 1, overflowY: 'auto', minHeight: '120px' }}>
         {isLoading && <div style={{ padding: '24px', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.82rem' }}>Loading…</div>}
-        {!isLoading && rows.length === 0 && (
+        {!isLoading && isError && (
+          <div style={{ padding: '32px 20px', textAlign: 'center' }}>
+            <i class="fas fa-triangle-exclamation" style={{ fontSize: '1.8rem', color: 'var(--text-muted)', opacity: 0.5 }} />
+            <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '10px' }}>Notifications could not be loaded</div>
+            <button class="hse-btn" style={{ marginTop: '14px' }} onClick={() => void refetch()}>
+              <i class="fas fa-rotate-right" /> Try again
+            </button>
+          </div>
+        )}
+        {!isLoading && !isError && rows.length === 0 && (
           <div style={{ padding: '32px 20px', textAlign: 'center' }}>
             <i class="fas fa-bell-slash" style={{ fontSize: '2rem', color: 'var(--text-muted)', opacity: 0.4 }} />
             <div style={{ fontWeight: 'var(--font-weight-bold)', color: 'var(--siomac-navy)', marginTop: '10px' }}>You're all caught up</div>
