@@ -1729,7 +1729,10 @@ export async function calculateRun(
     deductionTotal:   round2(totalDeductions),
     netTotal:         round2(totalNet),
     nisEmployerTotal: round2(totalNisEmployer),
-    employeeCount:    empIds.length,
+    // The calculated population = one line per NON-excluded employee (R4
+    // block_employee_calculation produces no line); the publish RPC asserts
+    // totals.employeeCount === line count, netting out the excluded set.
+    employeeCount:    lineRows.length,
   };
   const calcEventInput = {
     eventType: 'finance.payroll.run.calculated',
@@ -1737,7 +1740,7 @@ export async function calculateRun(
     actorUserId: actorId, severity: (warningRows.length > 0 ? 'warning' : 'success') as 'warning' | 'success',
     payload: {
       runNo:         run.runNo,
-      employeeCount: empIds.length,
+      employeeCount: lineRows.length,
       grossTotal:    calcTotals.grossTotal,
       netTotal:      calcTotals.netTotal,
       warningCount:  warningRows.length,

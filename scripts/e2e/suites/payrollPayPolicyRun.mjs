@@ -86,6 +86,7 @@ export default async function run(h) {
   const ids = {
     policyId: null, versionId: null, workflowId: null,
     hcvId: null, wcVerId: null,
+    hcCalIds: [], wcCalIds: [],   // holiday/work CALENDAR ids (for id-scoped purge in cleanup)
     pgMain: null, pgBank: null, pgCost: null,
     polAsg: [], calAsg: [], runIds: [], calcVersionIds: [], cfPayGroups: [],
   };
@@ -105,7 +106,10 @@ export default async function run(h) {
       try { await sb.from('finance_payroll_runs').delete().eq('id', rid); } catch {}
     }
     for (const a of ids.calAsg) { try { await api('hr/work-calendars/assignment/command', T.hr, { requestKey: uuid(), reason: 'e2e cleanup', command: 'cancel_assignment', assignmentId: a }); } catch {} }
-    try { await sb.rpc('work_calendar_purge_tx', { p_work_calendar_ids: null, p_holiday_calendar_ids: null }); } catch {}
+    // Purge the SPECIFIC calendars this run created (null purges nothing). Immutable
+    // published versions block a plain delete + the app_users SET-NULL cascade, so the
+    // purge RPC (which bypasses immutability) must remove them before the HR user.
+    try { await sb.rpc('work_calendar_purge_tx', { p_work_calendar_ids: ids.wcCalIds, p_holiday_calendar_ids: ids.hcCalIds }); } catch {}
     for (const pg of [ids.pgMain, ids.pgBank, ids.pgCost, ...ids.cfPayGroups]) {
       if (!pg) continue;
       try { await sb.from('finance_pay_group_policy_assignments').delete().eq('pay_group_id', pg); } catch {}
@@ -117,6 +121,13 @@ export default async function run(h) {
     try { await sb.from('finance_employee_bank_accounts').delete().in('employee_id', empIds); } catch {}
     try { await sb.from('hr_leave_requests').delete().in('employee_id', empIds); } catch {}
     try { await sb.from('hr_employee_statutory_profiles').delete().in('employee_id', empIds); } catch {}
+    // The HR actor publishes work/holiday calendars → work_calendar_command_receipts +
+    // audit/event rows reference it (FK); clear them so the app_users delete isn't blocked
+    // (otherwise the HR user leaks one row per run).
+    try { await sb.from('work_calendar_command_receipts').delete().in('actor_id', Object.values(U)); } catch {}
+    try { await sb.from('workflow_audit_log').delete().in('actor_id', Object.values(U)); } catch {}
+    try { await sb.from('app_events').delete().in('actor_user_id', Object.values(U)); } catch {}
+    try { await sb.from('hr_audit_log').delete().in('actor_id', Object.values(U)); } catch {}
     try { await sb.from('app_users').delete().in('id', Object.values(U)); } catch {}
   });
 
@@ -129,12 +140,23 @@ export default async function run(h) {
       effectiveFrom: '2026-01-01', effectiveTo: '2026-12-31',
     }));
     expect(cv.status === 200, `create holiday version: ${cv.status} ${JSON.stringify(cv.body).slice(0, 160)}`);
-    const verId = cv.body.data.version.id; const lock = cv.body.data.version.lockVersion;
-    const calId = cv.body.data.calendar.id;
-    const cget = await api('hr/work-calendars/read', T.hr, { action: 'get_holiday_calendar', id: calId });
+    const verId = cv.body.data.version.id;
+    if (cv.body.data.calendar?.id) ids.hcCalIds.push(cv.body.data.calendar.id);   // for id-scoped purge
+    // F-CAL forbids publishing an empty holiday set (calendar.holiday_set_empty) — seed ONE
+    // holiday on 01 Jan (outside the March/April test periods, so working-days counts stay > 0).
+    const add = await api('hr/work-calendars/holiday-set/command', T.hr, cal({
+      command: 'add_holiday', versionId: verId, expectedLockVersion: cv.body.data.version.lockVersion,
+      holiday: {
+        holidayDate: '2026-01-01', nameStatutory: "New Year's Day", nameCommon: 'New Year',
+        holidayType: 'statutory', sourceReference: 'e2e-fixture', sourcePublishedDate: '2025-12-01',
+        provenanceNote: 'e2e fixture holiday',
+      },
+    }));
+    expect(add.status === 200, `add holiday: ${add.status} ${JSON.stringify(add.body).slice(0, 160)}`);
     const pub = await api('hr/work-calendars/holiday-set/command', T.hr, cal({
-      command: 'publish_version', versionId: verId, expectedVersionLockVersion: lock,
-      expectedCalendarLockVersion: cget.body.data.calendar.lockVersion,
+      command: 'publish_version', versionId: verId,
+      expectedVersionLockVersion: add.body.data.version.lockVersion,
+      expectedCalendarLockVersion: add.body.data.calendar.lockVersion,
     }));
     expect(pub.status === 200, `publish holiday set: ${pub.status} ${JSON.stringify(pub.body).slice(0, 160)}`);
     return verId;
@@ -147,6 +169,7 @@ export default async function run(h) {
     }));
     expect(cv.status === 200, `create work version: ${cv.status} ${JSON.stringify(cv.body).slice(0, 160)}`);
     const verId = cv.body.data.version.id; const calId = cv.body.data.calendar.id;
+    ids.wcCalIds.push(calId);   // for id-scoped purge in cleanup
     const cget = await api('hr/work-calendars/read', T.hr, { action: 'get_work_calendar', id: calId });
     const pub = await api('hr/work-calendars/version/command', T.hr, cal({
       command: 'publish_version', versionId: verId, expectedVersionLockVersion: cv.body.data.version.lockVersion,
@@ -164,12 +187,19 @@ export default async function run(h) {
     ids.calAsg.push(asg.body.data.assignment?.id ?? asg.body.data.assignmentId);
   }
 
+  // Matches the real F-01 create-draft contract (financePayPolicies.ts `draft`): code +
+  // description + changeSummary + dayBoundary, component required/sortOrder, NO workforceType,
+  // NO costingRules (F-01 has no costing-rule route — seeded directly in activatePolicy).
   const policyDraft = () => ({
-    name: `PPR Policy ${TAG}`, policyType: 'standard_salary', workforceType: 'salaried',
-    ownerId: U.prep, effectiveFrom: '2026-01-01', effectiveTo: null,
+    code: `PPR${TAG.slice(-6)}`, name: `PPR Policy ${TAG}`, description: 'F-02 e2e governed policy.',
+    // effectiveFrom must be covered by the active TT statutory version (eff 2026-01-05) or
+    // preflight raises statutory.missing; the run periods (Mar/Apr) are still after it.
+    policyType: 'standard_salary', ownerId: U.prep, effectiveFrom: '2026-01-05', effectiveTo: null,
+    changeSummary: 'F-02 e2e initial governed policy', dayBoundary: 'calendar_day',
     components: [{
       componentId, calculationBasis: 'salary_period', rateSource: 'employee_contract',
       eligibilitySource: 'effective_employment', ruleParameters: { proration: 'working_days' },
+      required: true, sortOrder: 0,
     }],
     sourceRules: [
       { sourceType: 'payment_destination', ownerRole: 'finance_staff', required: true, reconciliationKey: 'employee_effective_date', lateInputPolicy: 'exclude_and_review', conflictSeverity: 'blocker', conflictOutcome: 'block_input_lock' },
@@ -177,14 +207,24 @@ export default async function run(h) {
       { sourceType: 'approved_time', ownerRole: 'hr_manager', required: true, reconciliationKey: 'employee_work_date', lateInputPolicy: 'correction_candidate', conflictSeverity: 'warning', conflictOutcome: 'create_correction_candidate' },
       { sourceType: 'statutory_profile', ownerRole: 'finance_manager', required: true, reconciliationKey: 'employee_effective_date', lateInputPolicy: 'exclude_and_review', conflictSeverity: 'blocker', conflictOutcome: 'block_employee_calculation' },
     ],
-    costingRules: [{ dimension: 'cost_centre', resolutionSource: 'employee_assignment', required: true, missingOutcome: 'block_input_lock' }],
   });
 
   async function activatePolicy() {
     const created = await api('finance/payroll/policies/create-draft', T.prep, { ...policyDraft(), idempotencyKey: `${TAG}:pol:draft` });
     ok(created, `create-draft: ${created.body.message}`);
     ids.policyId = created.body.data.policyId; ids.versionId = created.body.data.versionId;
-    const submitted = await api('finance/payroll/policies/submit', T.prep, { versionId: ids.versionId, idempotencyKey: `${TAG}:pol:submit` });
+    // F-01 create-draft auto-creates a default cost_centre costing rule (unique per
+    // version+dimension). Upsert it to required + block_input_lock so F-02 lock enforces
+    // cost_centre_missing (T5). Cascade-deleted with the policy in cleanup.
+    const cr = await sb.from('finance_pay_policy_costing_rules').upsert({
+      policy_version_id: ids.versionId, dimension: 'cost_centre',
+      resolution_source: 'employee_assignment', required: true, missing_outcome: 'block_input_lock',
+    }, { onConflict: 'policy_version_id,dimension' });
+    expect(!cr.error, `seed cost_centre costing rule: ${cr.error?.message}`);
+    const submitted = await api('finance/payroll/policies/submit', T.prep, {
+      versionId: ids.versionId, idempotencyKey: `${TAG}:pol:submit`,
+      certifications: { rulesReviewed: true, sourcesOwned: true, statutoryPaymentReady: true },
+    });
     ok(submitted, `submit: ${submitted.body.message}`); ids.workflowId = submitted.body.data.workflowId;
     // HR then Finance approve the two workflow steps (creator ≠ approver enforced).
     for (const who of [T.hr, T.appr]) {

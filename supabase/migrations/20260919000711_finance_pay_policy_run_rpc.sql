@@ -198,7 +198,9 @@ begin
 
   -- ── F-02 policy resolution + pin (whole-period coverage of assignment AND version) ──
   v_period := daterange(p_period_start, p_period_end + 1, '[)');
-  select count(*), min(v.id), min(v.canonical_checksum)
+  -- min() has no uuid aggregate; min(id::text)::uuid picks the single matching
+  -- version deterministically (only consumed when v_policy_match = 1).
+  select count(*), min(v.id::text)::uuid, min(v.canonical_checksum)
     into v_policy_match, v_policy_version_id, v_policy_checksum
     from public.finance_pay_group_policy_assignments a
     join public.finance_pay_policy_versions v on v.id = a.policy_version_id
@@ -1493,6 +1495,7 @@ declare
   -- never duplicate findings or events.
   v_source_conflict_count integer := 0;
   v_excluded_count        integer := 0;
+  v_excluded_ids          text[] := '{}';   -- R4 block_employee_calculation employees (no calc line)
 begin
   if p_actor_id is null or btrim(p_actor_id) = '' then
     raise exception 'finance_payroll_calculation_publish: actor is required'
@@ -1587,11 +1590,24 @@ begin
     raise exception 'finance_payroll_calculation_publish: every line requires one unique employee'
       using errcode = 'PR422';
   end if;
+  -- F-02 R4: block_employee_calculation employees are frozen in the snapshot
+  -- source_summary and receive NO calculation line, so the population + count
+  -- checks below net them out of the snapshot side (empty array ⇒ no-op for
+  -- legacy runs without exclusions).
+  select coalesce(array_agg(distinct e->>'employeeId'), '{}')
+    into v_excluded_ids
+    from public.finance_payroll_input_snapshots s
+    cross join lateral jsonb_array_elements(
+      coalesce(s.source_summary->'excludedEmployees', '[]'::jsonb)) as e
+   where s.id = v_attempt.input_snapshot_id
+     and nullif(e->>'employeeId', '') is not null;
+
   if exists (
     (
       select distinct s.employee_id
         from public.finance_payroll_input_snapshot_lines s
        where s.input_snapshot_id = v_attempt.input_snapshot_id
+         and s.employee_id <> all(v_excluded_ids)
       except
       select distinct l.employee_id
         from jsonb_to_recordset(p_lines) as l(employee_id text)
@@ -1604,6 +1620,7 @@ begin
       select distinct s.employee_id
         from public.finance_payroll_input_snapshot_lines s
        where s.input_snapshot_id = v_attempt.input_snapshot_id
+         and s.employee_id <> all(v_excluded_ids)
     )
   ) then
     raise exception 'finance_payroll_calculation_publish: calculated employee population does not match the frozen input snapshot'
@@ -1613,6 +1630,7 @@ begin
     select count(distinct s.employee_id)
       from public.finance_payroll_input_snapshot_lines s
      where s.input_snapshot_id = v_attempt.input_snapshot_id
+       and s.employee_id <> all(v_excluded_ids)
   ) is distinct from (p_totals->>'employeeCount')::integer then
     raise exception 'finance_payroll_calculation_publish: frozen input employee count does not match calculation totals'
       using errcode = 'PR422';
