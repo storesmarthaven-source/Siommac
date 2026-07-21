@@ -49,6 +49,7 @@ import {
   createMessageThread,
   emitSignal,
   postMessage,
+  addInternalNote,
   listThreadsForUser,
   getThread,
   getThreadPosts,
@@ -583,6 +584,39 @@ router.post('/communications/messages/post', async c => {
     return c.json({ success: false, message: result.message ?? 'Failed' }, status);
   }
   return c.json({ success: true, postId: result.postId, threadId: result.threadId, createdAt: result.createdAt });
+});
+
+// POST /api/communications/messages/internal-note
+// Author-only internal note (text only — no attachments / replyTo / links / priority).
+const InternalNoteSchema = z.object({
+  threadId:         z.uuid(),
+  body:             z.string().min(1).max(10000),
+  clientMessageKey: z.string().min(1).max(200),
+});
+
+router.post('/communications/messages/internal-note', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  if (!(await userCan(user, 'communications.messages.post'))) {
+    return c.json({ success: false, message: 'Not permitted to post messages' }, 403 as 200);
+  }
+  const body = c.get('body');
+  const v = zv(c, InternalNoteSchema, body.args);
+  if (!v.ok) return v.response;
+
+  const text = v.data.body.trim();
+  if (!text) return c.json({ success: false, message: 'An internal note requires text' }, 400 as 200);
+
+  const result = await addInternalNote({
+    threadId:         v.data.threadId,
+    actorId:          user.id,
+    body:             text,
+    clientMessageKey: v.data.clientMessageKey,
+  });
+  if (!result.ok) {
+    const status = (result.status ?? 500) as 200;
+    return c.json({ success: false, message: result.message ?? 'Failed' }, status);
+  }
+  return c.json({ success: true, post: result.post, duplicate: result.duplicate });
 });
 
 // POST /api/communications/messages/attachments/upload-url

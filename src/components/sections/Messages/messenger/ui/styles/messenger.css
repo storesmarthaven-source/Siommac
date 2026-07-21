@@ -228,8 +228,20 @@
 
 .sm-composer { position: relative; grid-row: 5; padding: 14px 18px 18px; border-top: 1px solid var(--sm-line); background: #fff; }
 .sm-composer__surface { border: 1px solid #d3dfeb; border-radius: 7px; overflow: visible; background: #fff; }
-.sm-composer__tabs { height: 34px; padding: 0 13px; border-bottom: 1px solid #e4eaf1; display: flex; align-items: center; }
+.sm-composer__tabs { height: 34px; padding: 0 13px; border-bottom: 1px solid #e4eaf1; display: flex; align-items: center; gap: 4px; }
 .sm-composer__tabs span { height: 34px; padding: 0 2px; border-bottom: 2px solid var(--sm-navy); display: flex; align-items: center; font-size: 11px; font-weight: 600; }
+.sm-composer__tabs button { height: 34px; padding: 0 6px; border: 0; border-bottom: 2px solid transparent; background: transparent; color: #6b7a90; font-size: 11px; font-weight: 600; cursor: pointer; }
+.sm-composer__tabs button.is-active { color: var(--sm-navy); border-bottom-color: var(--sm-navy); }
+/* ── Internal note (author-only) — amber affordances ── */
+.sm-composer__surface--note { border-color: #e6c26a; background: #fff9e9; }
+.sm-composer__surface--note .sm-composer__tabs { border-bottom-color: #f0dca6; }
+.sm-composer__surface--note .sm-composer__tabs button.is-active { color: #9a6b0a; border-bottom-color: #d99a12; }
+.sm-composer__note-hint { display: flex; align-items: center; gap: 6px; padding: 6px 13px 0; color: #9a6b0a; font-size: 11px; }
+.sm-composer__note-hint svg { width: 13px; height: 13px; }
+.sm-message--note .sm-message__meta--note { display: flex; align-items: center; gap: 6px; color: #9a6b0a; }
+.sm-message--note .sm-message__meta--note strong { color: #9a6b0a; font-weight: 600; }
+.sm-message--note .sm-message__meta--note svg { width: 13px; height: 13px; }
+.sm-message--note .sm-bubble--note { border-color: #e6c26a; color: #6b4e0a; background: #fff6df; }
 .sm-rich-editor-wrap { position: relative; }
 .sm-rich-editor-wrap.is-empty::before { position: absolute; top: 14px; left: 14px; content: attr(data-placeholder); color: #8493a7; font-size: var(--sm-message-font-size); pointer-events: none; }
 .sm-rich-editor { min-height: 74px; max-height: 180px; padding: 13px 14px; outline: 0; overflow-y: auto; color: #33465e; font-size: var(--sm-message-font-size); line-height: 1.45; }

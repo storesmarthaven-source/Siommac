@@ -25,6 +25,7 @@ import { createHash } from 'node:crypto';
 import { createTicketTx } from './tickets/ticketRpc';
 import {
   createThreadTx, sendMessageTx, addParticipantsTx, removeParticipantTx, markReadTx,
+  msgRpcHttpError,
 } from './messaging/messagingRpc';
 import type {
   MessageThread, MessageParticipant, MessagePost, MessageAttachment,
@@ -530,6 +531,7 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
     .select('thread_id, created_at')
     .in('thread_id', threadIds)
     .neq('author_user_id', userId)
+    .eq('is_internal', false)   // another author's internal note never marks a thread unread
     .is('deleted_at', null) as { data: { thread_id: string; created_at: string }[] | null };
 
   const unreadThreads = new Set<string>();
@@ -731,6 +733,87 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
       { ok: false, message: err.message ?? 'Internal error' },
       status ? { status } : {},
     );
+  }
+}
+
+// ── addInternalNote ──────────────────────────────────────────────────────────
+// Author-only internal note. The RPC is side-effect-free (no sequence/version
+// bump, no thread-summary change, no receipts/outbox/participant notifications).
+// The ONLY post-commit signal is a 'messages' refetch to the AUTHOR's own
+// sessions — never to other participants.
+export type AddInternalNoteResult =
+  | { ok: true; post: MessagePost; duplicate: boolean }
+  | { ok: false; message: string; status?: number };
+
+export async function addInternalNote(input: {
+  threadId: string; actorId: string; body: string; clientMessageKey: string;
+}): Promise<AddInternalNoteResult> {
+  try {
+    const { data, error } = await sb.rpc('messaging_add_internal_note_tx', {
+      p_thread_id:      input.threadId,
+      p_actor_id:       input.actorId,
+      p_body:           input.body,
+      p_client_msg_key: input.clientMessageKey,
+    }) as {
+      data: {
+        postId: string; threadId: string; authorUserId: string;
+        body: string; createdAt: string; isInternal: boolean; duplicate: boolean;
+      } | null;
+      error: { code?: string | null; message: string } | null;
+    };
+    if (error) throw msgRpcHttpError(error);
+    const r = data!;
+
+    const { data: au } = await sb
+      .from('app_users')
+      .select('full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version')
+      .eq('id', input.actorId)
+      .maybeSingle<{
+        full_name: string | null; email: string; role: string | null;
+        profile_image_url: string | null; profile_image_thumb_url: string | null;
+        profile_image: string | null; profile_image_version: number | null;
+      }>();
+
+    const post: MessagePost = {
+      id:              r.postId,
+      threadId:        r.threadId,
+      authorUserId:    r.authorUserId,
+      authorName:      au?.full_name ?? null,
+      authorEmail:     au?.email ?? null,
+      body:            r.body,
+      isSystem:        false,
+      isInternal:      true,
+      attachmentCount: 0,
+      editedAt:        null,
+      deletedAt:       null,
+      createdAt:       r.createdAt,
+      attachments:     [],
+      postType:        'message',
+      authorRoleKey:   au?.role ?? null,
+      authorProfileImage: cachedProfileUrl(au),
+      authorInitials:  initialsOf(au?.full_name ?? au?.email),
+      authorProfileImageVersion: au?.profile_image_version ?? 1,
+      priority:        'normal',
+      isPinned:        false,
+      pinnedBy:        null,
+      allowedPinActions: [],
+      replyToPost:     null,
+      deliveryStatus:  undefined,
+      readByCount:     0,
+      reactions:       [],
+      sequence:        null,
+      clientIdempotencyKey: input.clientMessageKey,
+    };
+
+    // Author-only refetch — NEVER signal other participants.
+    void emitSignal([input.actorId], 'messages');
+    return { ok: true, post, duplicate: r.duplicate };
+  } catch (e: unknown) {
+    const err = e as { status?: number; message?: string };
+    console.error('[communications] addInternalNote failed:', err.message ?? e);
+    const out: { ok: false; message: string; status?: number } = { ok: false, message: err.message ?? 'Internal error' };
+    if (err.status) out.status = err.status;
+    return out;
   }
 }
 
@@ -1111,6 +1194,7 @@ export async function getThreadPosts(
       author_user_id:   string | null;
       body:             string | null;
       is_system:        boolean;
+      is_internal:      boolean;
       attachment_count: number;
       edited_at:        string | null;
       deleted_at:       string | null;
@@ -1142,8 +1226,10 @@ export async function getThreadPosts(
 
     let q = sb
       .from('message_posts')
-      .select('id, thread_id, author_user_id, body, is_system, attachment_count, edited_at, deleted_at, deleted_by, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
+      .select('id, thread_id, author_user_id, body, is_system, is_internal, attachment_count, edited_at, deleted_at, deleted_by, created_at, post_type, system_event_type, system_event_payload, priority, reply_to_post_id, delivery_status, sequence, client_idempotency_key, app_users!author_user_id(full_name, email, role, profile_image_url, profile_image_thumb_url, profile_image, profile_image_version)')
       .eq('thread_id', threadId)
+      // Author-only internal notes: never return another author's internal note.
+      .or(`is_internal.eq.false,author_user_id.eq.${userId}`)
       .order('created_at', { ascending: direction === 'forward' })
       .order('id',         { ascending: direction === 'forward' })
       .limit(limit);
@@ -1200,7 +1286,9 @@ export async function getThreadPosts(
       const { data: rp } = await sb
         .from('message_posts')
         .select('id, body, app_users!author_user_id(full_name, email)')
-        .in('id', replyIds) as { data: { id: string; body: string | null; app_users: { full_name: string | null; email: string } | null }[] | null };
+        .in('id', replyIds)
+        // Never preview another author's internal note as a reply target.
+        .or(`is_internal.eq.false,author_user_id.eq.${userId}`) as { data: { id: string; body: string | null; app_users: { full_name: string | null; email: string } | null }[] | null };
       for (const r of rp ?? []) replyMap.set(r.id, { id: r.id, authorName: r.app_users?.full_name ?? null, preview: (r.body ?? '').slice(0, 120) });
     }
 
@@ -1237,6 +1325,7 @@ export async function getThreadPosts(
     const resultPosts: PostRow[] = (posts ?? []).map(p => {
       const au = p.app_users;
       const authorName = au?.full_name ?? null;
+      const isNote = p.is_internal;   // author-only internal note
       return {
         id:              p.id,
         threadId:        p.thread_id,
@@ -1245,12 +1334,13 @@ export async function getThreadPosts(
         authorEmail:     au?.email ?? null,
         body:            p.body,
         isSystem:        p.is_system,
-        attachmentCount: p.attachment_count,
+        isInternal:      isNote,
+        attachmentCount: isNote ? 0 : p.attachment_count,
         editedAt:        p.edited_at,
         deletedAt:       p.deleted_at,
         deletedBy:       p.deleted_by,
         createdAt:       p.created_at,
-        attachments:     attachMap.get(p.id) ?? [],
+        attachments:     isNote ? [] : (attachMap.get(p.id) ?? []),
         // ── Rich Add-On ──
         postType:           (p.post_type ?? 'message') as PostRow['postType'],
         systemEventType:    (p.system_event_type ?? null) as PostRow['systemEventType'],
@@ -1260,16 +1350,16 @@ export async function getThreadPosts(
         authorInitials:     initialsOf(authorName ?? au?.email),
         authorProfileImageVersion: au?.profile_image_version ?? 1,
         priority:           (p.priority ?? 'normal') as PostRow['priority'],
-        isPinned:           pinnedPosts.has(p.id),
-        pinnedBy:           pinnedByMap.get(p.id) ?? null,
-        allowedPinActions:  pinnedPosts.has(p.id)
+        isPinned:           isNote ? false : pinnedPosts.has(p.id),
+        pinnedBy:           isNote ? null : (pinnedByMap.get(p.id) ?? null),
+        allowedPinActions:  isNote ? [] : (pinnedPosts.has(p.id)
           ? ((pinnedByMap.get(p.id) === userId || callerIsOwner) ? ['unpin' as const] : [])
-          : ['pin' as const],
-        replyToPost:        p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null,
-        deliveryStatus:     (p.delivery_status ?? undefined) as PostRow['deliveryStatus'],
-        readByCount:        readCountMap.get(p.id) ?? 0,
-        reactions:          [...(reactionsMap.get(p.id) ?? new Map<string, string[]>())].map(([emoji, userIds]) => ({ emoji, userIds })),
-        sequence:           p.sequence ?? null,
+          : ['pin' as const]),
+        replyToPost:        isNote ? null : (p.reply_to_post_id ? (replyMap.get(p.reply_to_post_id) ?? null) : null),
+        deliveryStatus:     isNote ? undefined : ((p.delivery_status ?? undefined) as PostRow['deliveryStatus']),
+        readByCount:        isNote ? 0 : (readCountMap.get(p.id) ?? 0),
+        reactions:          isNote ? [] : [...(reactionsMap.get(p.id) ?? new Map<string, string[]>())].map(([emoji, userIds]) => ({ emoji, userIds })),
+        sequence:           isNote ? null : (p.sequence ?? null),
         clientIdempotencyKey: p.client_idempotency_key ?? null,
       };
     });
@@ -1459,7 +1549,10 @@ export async function listThreadActivity(
     const [postsRes, pinsRes, partsRes] = await Promise.all([
       sb.from('message_posts')
         .select('id, author_user_id, is_system, system_event_type, attachment_count, deleted_at, created_at')
-        .eq('thread_id', threadId).order('created_at', { ascending: false }).limit(120),
+        .eq('thread_id', threadId)
+        // Activity/history must not reveal another author's internal note.
+        .or(`is_internal.eq.false,author_user_id.eq.${userId}`)
+        .order('created_at', { ascending: false }).limit(120),
       sb.from('message_pins')
         .select('id, pinned_by, pinned_at, unpinned_at, unpinned_by')
         .eq('thread_id', threadId).order('pinned_at', { ascending: false }).limit(60),
@@ -1830,6 +1923,8 @@ export async function searchMessages(userId: string, query: string, limit = 20):
       .select('id, thread_id, body, created_at, app_users!author_user_id(full_name, email), message_threads(subject)')
       .in('thread_id', threadIds)
       .is('deleted_at', null)
+      // Author-only internal notes are never returned to other participants.
+      .or(`is_internal.eq.false,author_user_id.eq.${userId}`)
       .ilike('body', `%${query}%`)
       .order('created_at', { ascending: false })
       .limit(limit) as { data: PostWithAuthorAndThread[] | null };

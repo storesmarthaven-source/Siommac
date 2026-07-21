@@ -193,6 +193,8 @@ export async function listPins(threadId: string, userId: string, userRole?: stri
     sb.from('app_users').select('id, full_name, email').in('id', pinnerIds),
     postIds.length > 0
       ? sb.from('message_posts').select('id, body, author_user_id, created_at').in('id', postIds)
+          // Author-only internal notes are never surfaced through pin previews.
+          .or(`is_internal.eq.false,author_user_id.eq.${userId}`)
       : Promise.resolve({ data: null, error: null }),
   ]);
   if (usersRes.error || postsRes.error) {

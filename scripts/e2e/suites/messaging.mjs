@@ -524,4 +524,172 @@ export default async function run(h) {
     const threads = r.body.data ?? r.body;
     expect(Array.isArray(threads), 'threads endpoint did not return an array');
   });
+
+  // ─────────────────── § 10  INTERNAL NOTES (author-only) ─────────────────────
+  // An internal note lives in message_posts (is_internal=true), is visible ONLY
+  // to its author, and has ZERO side-effects on the thread: no sequence/version
+  // bump, no preview change, no receipts, no outbox delivery, no participant
+  // notification, no unread increment for anyone else.
+  h.section('Messaging › Internal notes (author-only)');
+
+  let noteThreadId;
+  let noteBaseline;            // { last_post_at, version, last_post_preview, next_message_sequence }
+  let noteOutboxBaseline = 0;  // outbox rows for the thread before the note
+  let notePostId;
+  const NOTE_KEY = `${TAG}:internal-note-1`;
+  const NOTE_BODY = `${TAG} confidential internal note — eyes only`;
+
+  await test('setup: thread admin+B, B reads it (unread=0), capture baseline', async () => {
+    const r = await api('communications/messages/createThread', T.admin, {
+      threadType:         'group',
+      subject:            `${TAG} note thread`,
+      participantUserIds: [b.id],
+      body:               'first ordinary message',
+    });
+    ok(r);
+    noteThreadId = r.body.threadId;
+    ctx.threadIds.push(noteThreadId);
+    ctx.postIds.push(r.body.postId);
+    // B reads the thread so their unread baseline is 0 (isolates the note's effect).
+    ok(await api('communications/messages/markRead', T.b, { threadId: noteThreadId }));
+
+    const { data } = await sb.from('message_threads')
+      .select('last_post_at, version, last_post_preview, next_message_sequence')
+      .eq('id', noteThreadId).single();
+    noteBaseline = data;
+    const { count } = await sb.from('message_event_outbox')
+      .select('id', { count: 'exact', head: true }).eq('thread_id', noteThreadId);
+    noteOutboxBaseline = count ?? 0;
+  });
+
+  await test('author adds an internal note → DTO isInternal=true, sequence=null', async () => {
+    const r = await api('communications/messages/internal-note', T.admin, {
+      threadId: noteThreadId, body: NOTE_BODY, clientMessageKey: NOTE_KEY,
+    });
+    ok(r);
+    expect(r.body.post && r.body.post.isInternal === true, 'note DTO missing / not isInternal');
+    expect(r.body.post.sequence === null || r.body.post.sequence == null, 'note DTO carries a sequence');
+    expect(r.body.duplicate === false, 'first note wrongly flagged duplicate');
+    notePostId = r.body.post.id;
+    ctx.postIds.push(notePostId);
+  });
+
+  await test('AUTHOR sees the note in posts; B (participant) does NOT', async () => {
+    const authorPosts = await api('communications/messages/posts', T.admin, {
+      threadId: noteThreadId, limit: 50,
+    });
+    ok(authorPosts);
+    expect((authorPosts.body.data ?? []).some(p => p.id === notePostId && p.isInternal === true),
+      'author cannot see own internal note in posts');
+
+    const bPosts = await api('communications/messages/posts', T.b, {
+      threadId: noteThreadId, limit: 50,
+    });
+    ok(bPosts);
+    expect(!(bPosts.body.data ?? []).some(p => p.id === notePostId),
+      'other participant B can see the internal note in posts');
+  });
+
+  await test('note is excluded from B search + B activity; author search finds it', async () => {
+    const bSearch = await api('communications/messages/search', T.b, { query: 'confidential internal note' });
+    ok(bSearch);
+    expect(!(bSearch.body.data ?? []).some(hit => hit.postId === notePostId),
+      'B search surfaced the internal note');
+
+    const bActivity = await api('communications/messages/activity', T.b, { threadId: noteThreadId });
+    ok(bActivity);
+    expect(!(bActivity.body.data ?? []).some(e => e.id === `post-${notePostId}`),
+      'B activity surfaced the internal note');
+
+    const aSearch = await api('communications/messages/search', T.admin, { query: 'confidential internal note' });
+    ok(aSearch);
+    expect((aSearch.body.data ?? []).some(hit => hit.postId === notePostId),
+      'author search did not find own internal note');
+  });
+
+  await test('ZERO thread side-effects: preview/last_post_at/version/sequence unchanged', async () => {
+    const { data: after } = await sb.from('message_threads')
+      .select('last_post_at, version, last_post_preview, next_message_sequence')
+      .eq('id', noteThreadId).single();
+    expect(after.last_post_at === noteBaseline.last_post_at, 'note changed last_post_at');
+    expect(after.version === noteBaseline.version, `note changed thread version (${noteBaseline.version}→${after.version})`);
+    expect(after.last_post_preview === noteBaseline.last_post_preview, 'note changed last_post_preview');
+    expect(after.next_message_sequence === noteBaseline.next_message_sequence,
+      `note bumped next_message_sequence (${noteBaseline.next_message_sequence}→${after.next_message_sequence})`);
+
+    const { data: noteRow } = await sb.from('message_posts')
+      .select('sequence, is_internal').eq('id', notePostId).single();
+    expect(noteRow.sequence === null, 'note row has a sequence');
+    expect(noteRow.is_internal === true, 'note row not flagged is_internal');
+  });
+
+  await test('NO receipts, NO outbox delivery, NO unread bump for B', async () => {
+    const { count: rc } = await sb.from('message_post_receipts')
+      .select('post_id', { count: 'exact', head: true }).eq('post_id', notePostId);
+    expect((rc ?? 0) === 0, `note created ${rc} delivery receipts`);
+
+    const { count: oc } = await sb.from('message_event_outbox')
+      .select('id', { count: 'exact', head: true }).eq('thread_id', noteThreadId);
+    expect((oc ?? 0) === noteOutboxBaseline, `note created an outbox delivery row (${noteOutboxBaseline}→${oc})`);
+
+    // B's unread for the thread must still be 0 (they read it at baseline; the note is invisible).
+    const bThreads = await api('communications/messages/threads', T.b, { tab: 'all', limit: 100 });
+    ok(bThreads);
+    const row = (bThreads.body.data ?? []).find(t => t.id === noteThreadId);
+    expect(!row || (row.unreadCount ?? 0) === 0, `internal note marked the thread unread for B (${row?.unreadCount})`);
+  });
+
+  await test('SIDE-EFFECT: exactly one app_event + one audit_log for the note', async () => {
+    const { data: ev } = await sb.from('app_events')
+      .select('id, actor_user_id')
+      .eq('source_entity_id', noteThreadId)
+      .eq('event_type', 'communications.message.internal_note_added');
+    expect((ev ?? []).length === 1, `expected 1 internal_note_added app_event, got ${(ev ?? []).length}`);
+    expect((ev ?? []).every(e => e.actor_user_id === admin.id), 'note app_event has wrong actor');
+
+    const { count: al } = await sb.from('audit_logs')
+      .select('id', { count: 'exact', head: true })
+      .eq('record_id', notePostId)
+      .eq('action', 'communications.message.internal_note');
+    expect((al ?? 0) === 1, `expected 1 internal_note audit_log, got ${al}`);
+  });
+
+  await test('IDEMPOTENT: duplicate note (same key) yields one row + one event', async () => {
+    const r = await api('communications/messages/internal-note', T.admin, {
+      threadId: noteThreadId, body: NOTE_BODY, clientMessageKey: NOTE_KEY,
+    });
+    ok(r);
+    expect(r.body.duplicate === true, 'duplicate note not flagged duplicate');
+    expect(r.body.post.id === notePostId, 'duplicate note created a different post id');
+
+    const { count: pc } = await sb.from('message_posts')
+      .select('id', { count: 'exact', head: true })
+      .eq('thread_id', noteThreadId).eq('author_user_id', admin.id).eq('client_idempotency_key', NOTE_KEY);
+    expect((pc ?? 0) === 1, `expected 1 note row after duplicate, got ${pc}`);
+
+    const { count: ec } = await sb.from('app_events')
+      .select('id', { count: 'exact', head: true })
+      .eq('source_entity_id', noteThreadId)
+      .eq('event_type', 'communications.message.internal_note_added');
+    expect((ec ?? 0) === 1, `duplicate created a second app_event (${ec})`);
+  });
+
+  await test('ACCESS: non-participant C cannot add an internal note (403)', async () => {
+    const r = await api('communications/messages/internal-note', T.c, {
+      threadId: noteThreadId, body: `${TAG} intruder note`, clientMessageKey: `${TAG}:intruder`,
+    });
+    fails(r, 'non-participant C was allowed to add an internal note');
+  });
+
+  await test('ordinary messages still deliver to B after an internal note', async () => {
+    const r = await api('communications/messages/post', T.admin, {
+      threadId: noteThreadId, body: `${TAG} ordinary followup after note`,
+    });
+    ok(r);
+    ctx.postIds.push(r.body.postId);
+    const bPosts = await api('communications/messages/posts', T.b, { threadId: noteThreadId, limit: 50 });
+    ok(bPosts);
+    expect((bPosts.body.data ?? []).some(p => p.id === r.body.postId),
+      'B did not receive the ordinary followup after the note');
+  });
 }

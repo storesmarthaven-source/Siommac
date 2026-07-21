@@ -96,6 +96,9 @@ export interface Message {
    *  pin/unpin commands from this list; the server stays the enforcer. */
   pinActions: ("pin" | "unpin")[];
   deleted: boolean;
+  /** Author-only internal note. Rendered as an amber note block; carries no
+   *  delivery/reactions/reply/pin/forward affordances. */
+  isInternal?: boolean;
   system?: { event: "joined" | "added" | "removed" | "created"; subjectUserId: UserId };
 }
 

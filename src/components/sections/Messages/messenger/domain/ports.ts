@@ -25,6 +25,8 @@ export interface MessagingRepository {
   loadPreferences(userId: UserId): Promise<ChatPreferences>;
   savePreferences(userId: UserId, preferences: ChatPreferences): Promise<void>;
   send(threadId: ThreadId, authorId: UserId, draft: MessageDraft): Promise<Message>;
+  /** Author-only internal note (text only). Returns the committed note. */
+  addInternalNote(threadId: ThreadId, authorId: UserId, body: string): Promise<Message>;
   createGroup(name: string, participantIds: UserId[], actorId: UserId): Promise<Thread>;
   deleteMessage(messageId: MessageId): Promise<void>;
   togglePin(messageId: MessageId, actorId: UserId): Promise<void>;

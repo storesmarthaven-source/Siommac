@@ -9,11 +9,11 @@
    contenteditable reads) mutate their own refs and call Date.now exclusively
    from event handlers/effects; the compiler rules cannot prove event-only
    execution for plain component-body functions shared across handlers. */
-import { CheckCircle2, FileUp, Link, Send, Smile, Trash2, UploadCloud, X } from "./icons";
+import { CheckCircle2, FileUp, Link, LockKeyhole, Send, Smile, Trash2, UploadCloud, X } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
 import { linkPreviewFromUrl, sanitizeComposerHtml } from "../../domain/format";
-import { isSendKey, shouldRestoreReply } from "./composerLogic";
+import { isSendKey, shouldRestoreReply, canSendInMode, swapModeText } from "./composerLogic";
 import { TYPING_REFRESH_MS } from "../../adapters/siomacRealtime";
 import { useMessaging } from "../../app/MessagingProvider";
 import { AttachmentCard, LinkCard } from "./MessageCards";
@@ -59,8 +59,29 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
   useEffect(() => { replyToRef.current = replyTo; }, [replyTo]);
   const [attachOpen, setAttachOpen] = useState(false);
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
+  // Reply | Internal note. Each mode keeps its OWN editor text — switching stashes
+  // the current text and restores the other's, so neither is lost.
+  const [mode, setMode] = useState<"reply" | "note">("reply");
+  const modeStash = useRef<{ reply: string; note: string }>({ reply: "", note: "" });
+  const isNote = mode === "note";
   const isUploading = attachments.some((attachment) => attachment.transferState !== "available");
-  const canSend = (body.trim().length > 0 || attachments.length > 0 || link) && !sending && !isUploading;
+  const canSend = canSendInMode({
+    mode, text: body, hasAttachments: attachments.length > 0, hasLink: !!link,
+    sending, uploading: isUploading,
+  });
+
+  function switchMode(next: "reply" | "note") {
+    if (next === mode) return;
+    const { text: restored, stash } = swapModeText(mode, next, body, modeStash.current);
+    modeStash.current = stash;
+    setMode(next);
+    setBody(restored); setHtml(restored);
+    // bodyRef mirrors the REPLY text for the draft flush — only re-seed it when
+    // returning to reply, never with note text.
+    if (next === "reply") bodyRef.current = restored;
+    if (editorRef.current) editorRef.current.textContent = restored;
+    if (next === "note") { stopTyping(); onClearReply(); }   // notes have no reply / typing
+  }
 
   useEffect(() => () => { uploads.current.forEach((controller) => controller.abort()); }, []);
 
@@ -93,6 +114,7 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     // text typed in the previous thread stayed visible in (and could be saved
     // against) the newly-opened one.
     setBody(""); setHtml(""); setAttachments([]); setLink(undefined);
+    setMode("reply"); modeStash.current = { reply: "", note: "" };
     if (editorRef.current) editorRef.current.innerHTML = "";
     void actions.getDraft(threadId).then((draft) => {
       if (cancelled || !draft?.body) return;
@@ -143,6 +165,9 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     const cleanHtml = sanitizeComposerHtml(editor.innerHTML).replace(/\u200B/g, "");
     const text = editor.innerText.replace(/\u00A0/g, " ").replace(/\u200B/g, "");
     setBody(text); setHtml(cleanHtml);
+    // Internal-note mode is text-only: no server draft, no typing broadcast, no
+    // link auto-detection, and bodyRef stays the REPLY draft mirror.
+    if (isNote) return;
     scheduleDraftSave(text);
     if (text.trim()) publishTyping(); else stopTyping();
     const pastedUrl = urlPattern.exec(text)?.[0];
@@ -234,8 +259,28 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     catch { /* Keep the inline field open for correction. */ }
   }
 
+  async function sendNote() {
+    if (!canSend) return;
+    setSending(true);
+    const text = body.trim();
+    stopTyping();
+    // Clear immediately (the optimistic note bubble is already in the thread);
+    // restore the note text verbatim on failure. No draft, reply, or attachments.
+    const restore = body;
+    setBody(""); setHtml(""); modeStash.current.note = "";
+    if (editorRef.current) editorRef.current.innerHTML = "";
+    onSent();
+    try {
+      await actions.addInternalNote(threadId, text);
+    } catch {
+      setBody(restore); setHtml(restore); modeStash.current.note = restore;
+      if (editorRef.current) editorRef.current.textContent = restore;
+    } finally { setSending(false); }
+  }
+
   async function send() {
     if (!canSend) return;
+    if (isNote) { await sendNote(); return; }   // internal-note path — text only, author-only
     setSending(true);
     const draft: MessageDraft = {
       body: body.trim(), html: html || body.trim(), attachments,
@@ -270,17 +315,21 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
   const placeholderVisible = useMemo(() => body.length === 0, [body]);
   return (
     <footer className="sm-composer">
-      {replyTo ? <div className="sm-composer__reply"><span><b>Replying to message</b><em>{replyTo.body || replyTo.attachments[0]?.name}</em></span><button className="sm-icon-button" type="button" aria-label="Cancel reply" onClick={onClearReply}><X /></button></div> : null}
+      {!isNote && replyTo ? <div className="sm-composer__reply"><span><b>Replying to message</b><em>{replyTo.body || replyTo.attachments[0]?.name}</em></span><button className="sm-icon-button" type="button" aria-label="Cancel reply" onClick={onClearReply}><X /></button></div> : null}
       {attachments.length > 0 ? <div className="sm-composer__attachments">{attachments.map((attachment) => <div className="sm-composer__attachment" key={attachment.id}><AttachmentCard attachment={attachment} interactive={false} /><button className="sm-icon-button" type="button" aria-label={`Remove ${attachment.name}`} onClick={() => removeAttachment(attachment.id)}><X /></button></div>)}</div> : null}
       {link ? <div className="sm-composer__link"><LinkCard link={link} /><button className="sm-icon-button" type="button" aria-label="Remove link" onClick={() => setLink(undefined)}><X /></button></div> : null}
       {emojiOpen ? <div className="sm-emoji-popover" role="dialog" aria-label="Choose an emoji">{emojis.map((emoji) => <button type="button" key={emoji} onClick={() => insertEmoji(emoji)}>{emoji}</button>)}</div> : null}
       {linkOpen ? <div className="sm-link-entry"><Link /><input autoFocus type="url" value={linkValue} placeholder="Paste a link" onInput={(event) => setLinkValue(event.currentTarget.value)} onKeyDown={(event) => { if (event.key === "Enter") addLink(); }} /><button type="button" onClick={addLink}>Add</button></div> : null}
-      <div className="sm-composer__surface">
-        <div className="sm-composer__tabs"><span>Reply</span></div>
-        <div className={`sm-rich-editor-wrap ${placeholderVisible ? "is-empty" : ""}`} data-placeholder="Type your message...">
+      <div className={`sm-composer__surface${isNote ? " sm-composer__surface--note" : ""}`}>
+        <div className="sm-composer__tabs" role="tablist" aria-label="Composer mode">
+          <button type="button" role="tab" aria-selected={!isNote} className={!isNote ? "is-active" : ""} onClick={() => switchMode("reply")}>Reply</button>
+          <button type="button" role="tab" aria-selected={isNote} className={isNote ? "is-active" : ""} onClick={() => switchMode("note")}>Internal note</button>
+        </div>
+        {isNote ? <div className="sm-composer__note-hint"><LockKeyhole /><span>Only you can see this.</span></div> : null}
+        <div className={`sm-rich-editor-wrap ${placeholderVisible ? "is-empty" : ""}`} data-placeholder={isNote ? "Add an internal note..." : "Type your message..."}>
           {/* isComposing guard: Enter that CONFIRMS an IME composition (CJK and
               other composed input) must not send the half-typed message. */}
-          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label="Message" aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (isSendKey(event)) { event.preventDefault(); void send(); } }} />
+          <div ref={editorRef} className="sm-rich-editor" role="textbox" aria-label={isNote ? "Internal note" : "Message"} aria-multiline="true" contentEditable onInput={readEditor} onPaste={() => window.setTimeout(readEditor)} onKeyDown={(event) => { if (isSendKey(event)) { event.preventDefault(); void send(); } }} />
         </div>
         <div className="sm-composer__toolbar">
           <span>
@@ -288,8 +337,8 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
             <button className={`sm-icon-button sm-format-button ${activeFormats.bold ? "is-active" : ""}`} type="button" aria-label="Bold" aria-pressed={activeFormats.bold} title="Bold" onMouseDown={(event) => event.preventDefault()} onClick={() => format("bold")}><span className="sm-format-glyph is-bold" aria-hidden="true">B</span></button>
             <button className={`sm-icon-button sm-format-button ${activeFormats.italic ? "is-active" : ""}`} type="button" aria-label="Italic" aria-pressed={activeFormats.italic} title="Italic" onMouseDown={(event) => event.preventDefault()} onClick={() => format("italic")}><span className="sm-format-glyph is-italic" aria-hidden="true">I</span></button>
             <button className={`sm-icon-button sm-format-button ${activeFormats.underline ? "is-active" : ""}`} type="button" aria-label="Underline" aria-pressed={activeFormats.underline} title="Underline" onMouseDown={(event) => event.preventDefault()} onClick={() => format("underline")}><span className="sm-format-glyph is-underline" aria-hidden="true">U</span></button>
-            <button className="sm-icon-button" type="button" aria-label="Attach files" onClick={openAttachmentDialog}><FileUp /></button>
-            <button className="sm-icon-button" type="button" aria-label="Insert link" aria-expanded={linkOpen} onClick={() => setLinkOpen((value) => !value)}><Link /></button>
+            {!isNote ? <button className="sm-icon-button" type="button" aria-label="Attach files" onClick={openAttachmentDialog}><FileUp /></button> : null}
+            {!isNote ? <button className="sm-icon-button" type="button" aria-label="Insert link" aria-expanded={linkOpen} onClick={() => setLinkOpen((value) => !value)}><Link /></button> : null}
           </span>
           <button className="sm-send-button" type="button" disabled={!canSend} aria-label={isUploading ? "Wait for uploads to finish" : "Send message"} onClick={() => void send()}><Send /></button>
         </div>

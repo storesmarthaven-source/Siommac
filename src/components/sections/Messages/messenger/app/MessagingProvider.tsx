@@ -27,6 +27,8 @@ interface MessagingActions {
   /** Make a thread active: lazy-load its messages (cached until invalidated). */
   selectThread(threadId: ThreadId): Promise<void>;
   send(threadId: ThreadId, draft: MessageDraft): Promise<void>;
+  /** Author-only internal note (text only). Never delivered to other participants. */
+  addInternalNote(threadId: ThreadId, body: string): Promise<void>;
   createGroup(name: string, participantIds: UserId[], firstMessage: string): Promise<Thread>;
   remove(messageId: MessageId): Promise<void>;
   togglePin(messageId: MessageId): Promise<void>;
@@ -348,6 +350,39 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
           return next;
         });
         toast.error(cause instanceof Error ? cause.message : "The message could not be sent");
+        throw cause;
+      }
+    },
+    addInternalNote: async (threadId, body) => {
+      // Author-only optimistic note bubble; swap in the committed note on success,
+      // remove on failure. NO thread bump — internal notes never change thread
+      // activity, preview, unread, or other participants' state.
+      const pendingId = `pending-${crypto.randomUUID()}`;
+      const pending: Message = {
+        id: pendingId, clientKey: pendingId, threadId, authorId: currentUserId,
+        body, html: body, createdAt: new Date().toISOString(),
+        attachments: [], reactions: [], delivery: "sent", pinned: false, pinActions: [], deleted: false,
+        isInternal: true,
+      };
+      setMessagesByThread((current) => {
+        const next = new Map(current);
+        next.set(threadId, [...(next.get(threadId) ?? []), pending]);
+        return next;
+      });
+      try {
+        const message = await repository.addInternalNote(threadId, currentUserId, body);
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, (next.get(threadId) ?? []).map((item) => item.id === pendingId ? { ...message, clientKey: pendingId } : item));
+          return next;
+        });
+      } catch (cause) {
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, (next.get(threadId) ?? []).filter((item) => item.id !== pendingId));
+          return next;
+        });
+        toast.error(cause instanceof Error ? cause.message : "The internal note could not be saved");
         throw cause;
       }
     },

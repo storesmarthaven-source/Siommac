@@ -255,9 +255,13 @@ export function MessageThread({ thread, onPreview, onActivity, onOpenCollaborati
               onActivity={onActivity}
             />
           ) : null}
-          {messages.map((message) => message.system ? <SystemEvent key={message.clientKey ?? message.id} message={message} /> : (
-            <MessageRow key={message.clientKey ?? message.id} message={message} currentUserId={currentUser.id} onReply={() => setReplyTo(message)} onPreview={onPreview} onActivity={onActivity} onOpenCollaboration={onOpenCollaboration} onJump={jumpTo} />
-          ))}
+          {messages.map((message) => message.system
+            ? <SystemEvent key={message.clientKey ?? message.id} message={message} />
+            : message.isInternal
+              ? <InternalNote key={message.clientKey ?? message.id} message={message} />
+              : (
+                <MessageRow key={message.clientKey ?? message.id} message={message} currentUserId={currentUser.id} onReply={() => setReplyTo(message)} onPreview={onPreview} onActivity={onActivity} onOpenCollaboration={onOpenCollaboration} onJump={jumpTo} />
+              ))}
         </div>
       </div>
       {!atBottom ? <button className="sm-scroll-latest" type="button" aria-label="Scroll to latest message" onClick={() => scrollToBottom()}><ChevronDown /></button> : null}
@@ -276,6 +280,23 @@ export function MessageThread({ thread, onPreview, onActivity, onOpenCollaborati
 
 function SystemEvent({ message }: { message: Message }) {
   return <div id={`message-${message.id}`} className={`sm-system-event sm-system-event--${message.system?.event ?? "joined"}`}><Users /><span>{message.body}</span></div>;
+}
+
+// Author-only internal note — amber block, rendered inline with messages. Carries
+// NO delivery status, reactions, reply, pin, or forward controls.
+function InternalNote({ message }: { message: Message }) {
+  const { snapshot } = useMessaging();
+  if (!snapshot) return null;
+  const author = userById(snapshot, message.authorId);
+  return (
+    <article id={`message-${message.id}`} className="sm-message is-self sm-message--note">
+      <Avatar user={author} size="medium" />
+      <div className="sm-message__main">
+        <header className="sm-message__meta sm-message__meta--note"><LockKeyhole /><strong>Internal note · Only you can see this.</strong><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></header>
+        <div className="sm-bubble sm-bubble--note"><span><RichMessage html={message.html || message.body} /></span></div>
+      </div>
+    </article>
+  );
 }
 
 function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, onOpenCollaboration, onJump }: {

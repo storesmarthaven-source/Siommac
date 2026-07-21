@@ -80,6 +80,10 @@ export interface MessagePost {
   authorEmail:     string | null;
   body:            string | null;   // null ⇒ system-event post (renders from payload)
   isSystem:        boolean;
+  /** Author-only internal note. Visible ONLY to authorUserId. For an internal
+   *  note: sequence is null, delivery/read state is absent, and attachments,
+   *  reactions, pins, replies and priority actions are unavailable. */
+  isInternal?:     boolean;
   attachmentCount: number;
   editedAt:        string | null;   // null ⇒ not edited
   deletedAt:       string | null;   // null ⇒ not deleted
