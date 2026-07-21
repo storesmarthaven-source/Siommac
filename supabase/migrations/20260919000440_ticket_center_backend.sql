@@ -199,25 +199,30 @@ end $$;
 -- don't inherit — each grant is explicit. Superadmin is allow-all elsewhere; listed
 -- here for completeness. Keep in sync with src/lib/permissions.ts + netlify BE
 -- permissions.ts role sets.
-insert into public.role_permissions (role_name, permission) values
-  -- create_self: every application role (self-service)
-  ('superadmin','tickets.create_self'), ('admin','tickets.create_self'),
-  ('manager','tickets.create_self'), ('employee','tickets.create_self'),
-  ('hr_staff','tickets.create_self'), ('hr_manager','tickets.create_self'),
-  ('hse_staff','tickets.create_self'), ('hse_manager','tickets.create_self'),
-  ('finance_staff','tickets.create_self'), ('finance_manager','tickets.create_self'),
-  ('payroll_staff','tickets.create_self'), ('operations_staff','tickets.create_self'),
+-- create_self: EVERY application role. Driven off the roles table so it covers any
+-- custom role too and can never violate the role_permissions -> roles(name) FK.
+insert into public.role_permissions (role_name, permission)
+select r.name, 'tickets.create_self'
+from public.roles r
+on conflict (role_name, permission) do nothing;
+
+-- Mode-specific grants — only for roles that actually exist (the exists-guard skips
+-- any missing role rather than tripping the FK). Keep in sync with the FE + BE
+-- permissions.ts role sets (superadmin is allow-all; listed for completeness).
+insert into public.role_permissions (role_name, permission)
+select g.role_name, g.permission
+from (values
   -- create_team: manager + admin/superadmin
-  ('superadmin','tickets.create_team'), ('admin','tickets.create_team'),
-  ('manager','tickets.create_team'),
+  ('superadmin','tickets.create_team'), ('admin','tickets.create_team'), ('manager','tickets.create_team'),
   -- create_on_behalf: admin/superadmin only
   ('superadmin','tickets.create_on_behalf'), ('admin','tickets.create_on_behalf'),
   -- create_internal: admin/superadmin + module service-queue handler roles
   ('superadmin','tickets.create_internal'), ('admin','tickets.create_internal'),
   ('hr_staff','tickets.create_internal'), ('hr_manager','tickets.create_internal'),
-  ('hse_staff','tickets.create_internal'), ('hse_manager','tickets.create_internal'),
-  ('finance_staff','tickets.create_internal'), ('finance_manager','tickets.create_internal'),
-  ('payroll_staff','tickets.create_internal'), ('operations_staff','tickets.create_internal')
+  ('hse_staff','tickets.create_internal'),
+  ('finance_staff','tickets.create_internal'), ('finance_manager','tickets.create_internal')
+) as g(role_name, permission)
+where exists (select 1 from public.roles r where r.name = g.role_name)
 on conflict (role_name, permission) do nothing;
 
 alter table public.tickets

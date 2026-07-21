@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `eda2199376d19269f52bedf8`
+Source fingerprint: `09175a5e32400c3b4578854c`
 
 Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
