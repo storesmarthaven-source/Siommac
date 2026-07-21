@@ -863,7 +863,11 @@ router.post('/calendar/update', async c => {
       actorUserId: user.id,
       severity: 'info',
       payload: { title: p.title ?? row.title, scope, occurrenceDate },
-      dedupeKey: `calendar.activity.rescheduled:${entryId}:${occurrenceDate ?? 'series'}:${row.updated_at}:${scheduleIdentity}`,
+      // Content-derived dedupe: activity + occurrence + the RESULTING schedule.
+      // Must NOT include row.updated_at — it changes on every save, so an idempotent
+      // re-save to the same schedule would otherwise mint a fresh key and a duplicate
+      // attendee notification (the retry must dedupe to exactly one).
+      dedupeKey: `calendar.activity.rescheduled:${entryId}:${occurrenceDate ?? 'series'}:${scheduleIdentity}`,
       explicitRecipients: rescheduleRecipients.map(userId => ({ userId, reason: 'assignee' as const })),
       notification: {
         type: 'calendar.activity.rescheduled',

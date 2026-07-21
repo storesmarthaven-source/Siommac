@@ -710,6 +710,12 @@ export default async function run(h) {
     ok(post); rrPostId = post.body.postId; ctx.postIds.push(rrPostId);
     const { data: prow } = await sb.from('message_posts').select('sequence').eq('id', rrPostId).single();
     rrSeq = prow.sequence;
+    // Provision a realtime channel for BOTH participants: /communications/summary
+    // upserts user_realtime_channels (_ensureRealtimeChannel). emitSignal only writes
+    // a communication_signals row for users who have a live channel, so without this
+    // markRead's messages-signal has no target and the SIDE-EFFECT assertion below fails.
+    await api('communications/summary', T.admin);
+    await api('communications/summary', T.b);
   });
 
   await test('B has an UNREAD receipt; admin sees readByCount 0', async () => {
