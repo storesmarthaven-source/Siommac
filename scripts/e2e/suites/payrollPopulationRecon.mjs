@@ -138,7 +138,9 @@ export default async function run(h) {
 
     const rn = await sb.from('finance_payroll_runs').insert({
       run_no: `RUN-PRCN-${sfx}`,
+      // period_month must match date_trunc('month', pay_date) — keep pay_date in January.
       period_month: '2031-01-01', period_start: '2031-01-01', period_end: '2031-01-31',
+      pay_date: '2031-01-31',
       run_type: 'scheduled', pay_frequency: 'monthly', sequence_no: 1,
       status: 'released', pay_group_id: pgA, statutory_version_id: statVersionId,
       pay_policy_required: false, employee_count: 3,
