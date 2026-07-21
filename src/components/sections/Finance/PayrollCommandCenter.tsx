@@ -29,7 +29,8 @@ import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session'
 import { humanize } from './financeShared';
 import { usePayrollMutation, financePayrollApi } from '@api/finance/payroll';
 import { PayNewRunWizard } from './PayNewRunWizard';
-import { PayRunDrawer, type PayRunDrawerActions } from './PayRunDrawer';
+import { PayRunDetailPage } from './PayRunDetailPage';
+import { type PayRunDrawerActions } from './payRunDetail/interactiveTabs';
 import {
   usePayrollControlCenter, defaultControlCenterWindow, isControlCenterDenied,
   type PayrollControlCenterParams, type PayrollControlCenterResponse, type PayrollRunRegisterTab,
@@ -466,6 +467,20 @@ export function PayrollCommandCenter(): VNode {
       render: () => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} /> },
   };
 
+  // A selected run replaces the command-center board with the full-page run
+  // workspace (in-place detail, mirroring OffboardingOverview → CaseDetail).
+  if (drawerRunId && drawerOpen) {
+    return (
+      <PayRunDetailPage
+        runId={drawerRunId}
+        onBack={() => { setDrawerOpen(false); setDrawerRunId(null); }}
+        canManage={data?.capabilities.canManageRun ?? false}
+        canApprove={data?.capabilities.canApprove ?? false}
+        actions={drawerActions}
+      />
+    );
+  }
+
   return (
     <>
       {showChrome ? header : <SkeletonHeader />}
@@ -522,11 +537,6 @@ export function PayrollCommandCenter(): VNode {
         />
       )}
 
-      {/* Run workspace/drawer — the target of every row/deadline/intervention/approval open */}
-      <PayRunDrawer
-        runId={drawerRunId} open={drawerOpen} onClose={() => setDrawerOpen(false)}
-        canManage={data?.capabilities.canManageRun ?? false} canApprove={data?.capabilities.canApprove ?? false}
-        actions={drawerActions} />
     </>
   );
 }

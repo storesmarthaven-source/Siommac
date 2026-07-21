@@ -36,7 +36,7 @@ vi.mock('@api/finance/payroll', () => ({
   usePayrollMutation: () => ({ mutateAsync: vi.fn() }),
   financePayrollApi: {},
 }));
-vi.mock('./PayRunDrawer', () => ({ PayRunDrawer: () => null }));
+vi.mock('./PayRunDetailPage', () => ({ PayRunDetailPage: () => null }));
 vi.mock('./PayNewRunWizard', () => ({ PayNewRunWizard: () => null }));
 // Stub the RGL board. It's a RENDER SPY (records the pageKey it mounts with) so the test can
 // prove both boards mount only once the page is ready — never behind the skeleton.

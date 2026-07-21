@@ -139,6 +139,7 @@ import {
   payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
@@ -190,6 +191,11 @@ export default async function run(h) {
         await sb.from('hr_audit_log').delete().eq('record_id', ctx.templateId);
         await sb.from('app_events').delete().eq('source_entity_id', ctx.templateId);
       } catch {}
+    }
+    // F-02: remove the seeded policy assignment + policy BEFORE the pay group (runs
+    // already deleted above, so the run→version pin no longer blocks it).
+    if (ctx.policyFixture) {
+      try { await ctx.policyFixture.cleanup(); } catch {}
     }
     // P2-b: clean up the scoped pay group (delete assignments first, then group)
     if (ctx.payGroupId) {
@@ -257,6 +263,9 @@ export default async function run(h) {
       effectiveFrom: testPeriod,
     });
     ok(assignR, 'assign employee to pay group failed: ' + assignR.body.message);
+
+    // F-02: seed the active policy so create_run_tx can pin it (non-working_days).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.payGroupId, actorId: fmgr1Id, tag: TAG });
   });
 
   await test('finance_manager creates a payroll run scoped to the pay group', async () => {

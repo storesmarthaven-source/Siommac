@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `c1ed8d4ad12e007300e3b4da`
+Source fingerprint: `cbdf55f79407e51fd5c146ec`
 
-Files: 122 | Symbols: 1714 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 176 | E2E suites: 9
+Files: 129 | Symbols: 1789 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -188,10 +188,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Helper | Caller | Location |
 |---|---|---|---|
-| `/api/communications/tickets/create` | `apiPost` | `handleCreateTicket` | `src/components/sections/Finance/PayRunDrawer.tsx:355` |
-| `/api/finance/payroll/inputs/edit` | `apiPost` | `handleEditAmount` | `src/components/sections/Finance/PayRunDrawer.tsx:226` |
-| `/api/finance/payroll/inputs/exclude` | `apiPost` | `handleExclude` | `src/components/sections/Finance/PayRunDrawer.tsx:243` |
-| `/api/finance/payroll/payslips/notify` | `apiPost` | `res` | `src/components/sections/Finance/PayRunDrawer.tsx:529` |
+| `/api/communications/tickets/create` | `apiPost` | `handleCreateTicket` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:275` |
+| `/api/finance/payroll/inputs/edit` | `apiPost` | `handleEditAmount` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:155` |
+| `/api/finance/payroll/inputs/exclude` | `apiPost` | `handleExclude` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:172` |
+| `/api/finance/payroll/payslips/notify` | `apiPost` | `res` | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx:412` |
 
 ## Key Components, Hooks, and UI Functions
 
@@ -302,6 +302,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useApprovalsQueue` | function / hook | `src/api/finance/overview.ts:130` | `-` |
 | `useActOnApproval` | function / hook | `src/api/finance/overview.ts:146` | `-` |
 | `useSpendBudgetSeries` | function / hook | `src/api/finance/overview.ts:170` | `-` |
+| `usePayPolicies` | function / hook | `src/api/finance/payPolicies.ts:56` | `-` |
+| `usePayPolicy` | function / hook | `src/api/finance/payPolicies.ts:59` | `-` |
+| `usePayPolicyMutation` | function / hook | `src/api/finance/payPolicies.ts:65` | `-` |
 | `useGlAccounts` | function / hook | `src/api/finance/pickers.ts:64` | `-` |
 | `useCostCentres` | function / hook | `src/api/finance/pickers.ts:74` | `-` |
 | `useTaxCodes` | function / hook | `src/api/finance/pickers.ts:84` | `-` |
@@ -354,10 +357,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `IconChevronLeftBadge` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:38` | `-` |
 | `IconCoins` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:44` | `-` |
 | `IconBook` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:45` | `-` |
-| `IconClock` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:46` | `-` |
-| `IconShield` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:47` | `-` |
-| `IconEye` | function / component | `src/components/sections/Finance/_shared/sfpKit.tsx:48` | `-` |
-| ... | 55 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 76 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -438,6 +438,24 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.workflow_submit_for_record_tx` | `supabase/migrations/20260919000215_workflow_submit_tx_remittance.sql:19` |
 | function | `public.workflow_submit_for_record_tx` | `supabase/migrations/20260919000217_workflow_submit_tx_finance_hr_batch.sql:34` |
 | function | `public.finance_statutory_workflow_transition_tx` | `supabase/migrations/20260919000400_finance_statutory_workflow_transition_tx.sql:16` |
+| table | `public.finance_pay_policies` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:8` |
+| table | `public.finance_pay_policy_versions` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:24` |
+| table | `public.finance_pay_policy_components` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:57` |
+| table | `public.finance_pay_policy_source_rules` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:79` |
+| table | `public.finance_pay_policy_costing_rules` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:98` |
+| table | `public.finance_pay_group_policy_assignments` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:109` |
+| table | `public.finance_pay_policy_command_receipts` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:132` |
+| trigger | `finance_pay_policies_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:164` |
+| trigger | `finance_pay_policy_versions_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:166` |
+| trigger | `finance_pay_policy_components_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:168` |
+| trigger | `finance_pay_policy_sources_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:170` |
+| trigger | `finance_pay_policy_assignments_updated_at` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:172` |
+| function | `public.finance_pay_policy_preflight` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:272` |
+| function | `public.finance_pay_policy_draft_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:345` |
+| function | `public.finance_pay_policy_copy_version_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:393` |
+| function | `public.finance_pay_policy_submit_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:447` |
+| function | `public.finance_pay_policy_workflow_transition_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:488` |
+| function | `public.finance_pay_policy_admin_command_tx` | `supabase/migrations/20260919000600_finance_pay_policy_setup.sql:530` |
 
 ## E2E Suites
 
@@ -469,6 +487,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/financeLookups.ts` | 108 |
 | backend-route | `netlify/functions/routes/financeNis.ts` | 109 |
 | backend-route | `netlify/functions/routes/financeOverview.ts` | 124 |
+| backend-route | `netlify/functions/routes/financePayPolicies.ts` | 253 |
 | backend-route | `netlify/functions/routes/financePickers.ts` | 81 |
 | backend-route | `netlify/functions/routes/financeRemittances.ts` | 324 |
 | backend-route | `netlify/functions/routes/financeStatutory.ts` | 435 |
@@ -492,6 +511,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/finance/keys.ts` | 160 |
 | frontend-api | `src/api/finance/lookups.ts` | 181 |
 | frontend-api | `src/api/finance/overview.ts` | 178 |
+| frontend-api | `src/api/finance/payPolicies.ts` | 72 |
 | frontend-api | `src/api/finance/pickers.ts` | 112 |
 | frontend-api | `src/api/finance/remittances.ts` | 279 |
 | frontend-api | `src/api/finance/statutory.ts` | 325 |
@@ -526,8 +546,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
 | frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 91 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
-| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 610 |
-| frontend-page | `src/components/sections/Finance/PayRunDrawer.tsx` | 1615 |
+| frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 707 |
+| frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 264 |
 | frontend-page | `src/components/sections/Finance/PayWarningResolveDialog.tsx` | 96 |
 | frontend-page | `src/components/sections/Finance/PayablesOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/Finance/RemittancesOverview.tsx` | 1840 |
@@ -548,4 +568,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
 | frontend-page | `src/components/sections/Finance/module.ts` | 114 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/interactiveTabs.tsx` | 1067 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/panels.tsx` | 640 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/parts.tsx` | 126 |
+| frontend-page | `src/components/sections/Finance/payRunDetail/payRunDetail.test.tsx` | 161 |
 

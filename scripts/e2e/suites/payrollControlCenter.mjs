@@ -18,6 +18,7 @@ import {
   payrollCalculationCommand, payrollLockCommand, payrollCertificationCommand,
   payrollFundingCommand, payrollReleaseCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export const title = 'Finance — Payroll Command Center (control-center/get)';
 
@@ -108,6 +109,7 @@ export default async function run(h) {
       await h.mustDelete('finance_payroll_runs', q => q.in('id', runIds));
     }
     if (ctx.bankAccountIds.length) await h.mustDelete('finance_employee_bank_accounts', q => q.in('id', ctx.bankAccountIds));
+    if (ctx.policyFixtureA) await ctx.policyFixtureA.cleanup();
     const pgs = [ctx.payGroupA, ctx.payGroupB].filter(Boolean);
     if (pgs.length) {
       await h.mustDelete('finance_employee_pay_group_assignments', q => q.in('pay_group_id', pgs));
@@ -197,6 +199,9 @@ export default async function run(h) {
     const b = await api('finance/payroll/pay-groups/create', T.fmgr1, { code: `CCB-${TAG.slice(-8)}`, name: `CC E2E Group B ${TAG}`, frequency: 'monthly', statutoryCountry: 'TT' });
     ok(b, `pay group B: ${b.body.message}`); ctx.payGroupB = b.body.data.id;
     for (const e of [emp1.id, emp2.id]) ok(await api('finance/payroll/pay-groups/assign', T.fmgr1, { employeeId: e, payGroupId: ctx.payGroupA, effectiveFrom: '2000-01-01' }), `assign ${e}`);
+    // F-02: group A's runs go through create_run_tx (driveToPendingApproval) → seed
+    // its active policy. Group B is direct-seeded (legacy, pay_policy_required=false).
+    ctx.policyFixtureA = await attachActivePolicy({ sb, payGroupId: ctx.payGroupA, actorId: fmgr1.id, tag: TAG });
   });
 
   // ── A1: real lifecycle → pending_approval (assigned work) ───────────────────

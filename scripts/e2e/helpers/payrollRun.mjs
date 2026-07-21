@@ -375,6 +375,12 @@ export function payrollRunSeed({
     pay_frequency: payFrequency,
     pay_date: payDate,
     weeks_in_period: contributionWeeks,
+    // F-02 (mig 710): a directly-seeded run bypasses create_run_tx, so it is a
+    // legacy/historical row — pay_policy_required=false is the historical-row
+    // discriminator (DEC-PPR-021). Without this the column's new `default true`
+    // + CHECK (required=false OR pins present) would reject a pin-less seed.
+    // Overridable via ...row for a suite that seeds a pinned run on purpose.
+    pay_policy_required: false,
     ...row,
   };
 }

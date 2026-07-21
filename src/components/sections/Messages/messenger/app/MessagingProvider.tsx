@@ -351,6 +351,38 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
         throw cause;
       }
     },
+    addInternalNote: async (threadId, body) => {
+      // Author-only optimistic note bubble; swap in the committed note on success,
+      // remove on failure. No thread bump — internal notes never change thread activity.
+      const pendingId = `pending-${crypto.randomUUID()}`;
+      const pending: Message = {
+        id: pendingId, clientKey: pendingId, threadId, authorId: currentUserId,
+        body, html: body, createdAt: new Date().toISOString(),
+        attachments: [], reactions: [], delivery: "sent", pinned: false, pinActions: [], deleted: false,
+        isInternal: true,
+      };
+      setMessagesByThread((current) => {
+        const next = new Map(current);
+        next.set(threadId, [...(next.get(threadId) ?? []), pending]);
+        return next;
+      });
+      try {
+        const message = await repository.addInternalNote(threadId, currentUserId, body);
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, (next.get(threadId) ?? []).map((item) => item.id === pendingId ? { ...message, clientKey: pendingId } : item));
+          return next;
+        });
+      } catch (cause) {
+        setMessagesByThread((current) => {
+          const next = new Map(current);
+          next.set(threadId, (next.get(threadId) ?? []).filter((item) => item.id !== pendingId));
+          return next;
+        });
+        toast.error(cause instanceof Error ? cause.message : "The internal note could not be saved");
+        throw cause;
+      }
+    },
     createGroup: async (name, participantIds, firstMessage) => {
       const thread = await repository.createGroup(name, participantIds, currentUserId, firstMessage);
       activeThreadId.current = thread.id;

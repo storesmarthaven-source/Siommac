@@ -34,11 +34,12 @@ import {
   payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, mint, sb, TAG, acquireActors } = h;
 
-  const ctx = { runId: null, v1Id: null, v2Id: null, empId: null, createdUserIds: [] };
+  const ctx = { runId: null, v1Id: null, v2Id: null, empId: null, payGroupId: null, policyFixture: null, createdUserIds: [] };
   let fmgrId, fmgrToken;
   const TAXABLE_PAY = 30000; // injected taxable earning so PAYE is observable regardless of roster setup
 
@@ -53,6 +54,12 @@ export default async function run(h) {
         await sb.from('hr_audit_log').delete().eq('record_id', ctx.runId);
         await sb.from('app_events').delete().eq('source_entity_id', ctx.runId);
       } catch {}
+    }
+    // F-02: seeded policy assignment + policy BEFORE the pay group (runs deleted above).
+    if (ctx.policyFixture) { try { await ctx.policyFixture.cleanup(); } catch {} }
+    if (ctx.payGroupId) {
+      try { await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.payGroupId); } catch {}
+      try { await sb.from('finance_pay_groups').delete().eq('id', ctx.payGroupId); } catch {}
     }
     // Remove the throwaway V2 (this run's, plus any orphan from a crashed prior run).
     try {
@@ -87,6 +94,20 @@ export default async function run(h) {
     ctx.empId = empR.actors[0].id;
     ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];
     fmgrToken = mint({ id: fmgrId, username: mgrR.actors[0].username, role: 'finance_manager', department_id: null });
+
+    // F-02: create_run_tx now requires a pay-group-scoped run with a resolvable
+    // active policy. Create a one-member group (only ctx.empId), assign the
+    // employee, and seed the non-working_days policy fixture so the run below pins it.
+    const pg = await api('finance/payroll/pay-groups/create', fmgrToken, {
+      code: 'SNAP-' + TAG.slice(-8), name: `Snapshot E2E ${TAG}`, frequency: 'monthly', statutoryCountry: 'TT',
+    });
+    ok(pg, `create snapshot pay group failed: ${pg.body.message}`);
+    ctx.payGroupId = pg.body.data.id;
+    ok(
+      await api('finance/payroll/pay-groups/assign', fmgrToken, { employeeId: ctx.empId, payGroupId: ctx.payGroupId, effectiveFrom: '2000-01-01' }),
+      'assign employee to snapshot pay group',
+    );
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.payGroupId, actorId: fmgrId, tag: TAG });
   });
 
   // ── Baseline calculate against V1 ───────────────────────────────────────────
@@ -99,6 +120,7 @@ export default async function run(h) {
       idempotencyKey: `${TAG}:statutory-snapshot:run:create`,
       periodStart: payrollPeriod('payrollStatutorySnapshot', 'run', TAG),
       weeksInPeriod: 4.333,
+      payGroupId: ctx.payGroupId,
     }));
     ok(cr, `create failed: ${cr.body.message}`);
     expect(cr.body.data.statutoryVersionId === ctx.v1Id,

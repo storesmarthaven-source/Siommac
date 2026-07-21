@@ -1469,6 +1469,41 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create pay groups (weekly / fortnightly / semi-monthly / monthly) and assign employees to them. Pay groups drive a run\'s frequency and which employees it pays.',
     risk: 'medium',
   },
+  'finance.payroll.policies.view': {
+    module: 'Finance', group: 'Payroll Setup', label: 'View Pay Policies',
+    description: 'View governed local T&T pay policies, versions, validation evidence and pay-group usage.',
+    risk: 'medium',
+  },
+  'finance.payroll.policies.draft': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Draft Pay Policies',
+    description: 'Create and edit effective-dated local T&T pay-policy drafts.',
+    risk: 'high',
+  },
+  'finance.payroll.policies.submit': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Submit Pay Policies',
+    description: 'Certify and submit complete pay-policy versions into the central approval workflow.',
+    risk: 'high',
+  },
+  'finance.payroll.policies.source_approve': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Review Pay-Policy Sources',
+    description: 'Review HR-owned compensation, time and leave source controls for a pay policy.',
+    risk: 'high',
+  },
+  'finance.payroll.policies.statutory_approve': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Review Pay-Policy Statutory Controls',
+    description: 'Review local PAYE, NIS and Health Surcharge binding controls for a pay policy.',
+    risk: 'high',
+  },
+  'finance.payroll.policies.activate': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Activate Pay Policies',
+    description: 'Independently activate or retire an approved effective-dated pay policy.',
+    risk: 'critical',
+  },
+  'finance.payroll.policies.assign': {
+    module: 'Finance', group: 'Payroll Setup', label: 'Assign Pay Policies',
+    description: 'Assign active pay-policy versions to pay groups with effective-date overlap controls.',
+    risk: 'high',
+  },
   'finance.payroll.worksheet.override': {
     module: 'Finance', group: 'Payroll Runs',
     label: 'Override Payroll Worksheet',

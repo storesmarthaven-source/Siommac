@@ -241,6 +241,25 @@ function buildNisContributionPeriods(input: {
 
 // ── DTOs ─────────────────────────────────────────────────────────────────────
 
+/** F-02: pinned pay policy (+ work-calendar pin) for the run-detail chips.
+ * Policy name/version are resolved from the F-01 tables (F-02 reads F-01 per §10);
+ * the calendar block carries the pinned identity + resolution facts, with the
+ * display NAME resolved by the policy-evidence route (§6d) which owns F-CAL display. */
+export interface PayrollRunPayPolicy {
+  versionId: string;
+  checksum: string | null;
+  required: boolean;
+  policyName: string | null;
+  versionNo: number | null;
+  calendar: {
+    workCalendarVersionId: string;
+    workCalendarChecksum: string | null;
+    holidayCalendarChecksum: string | null;
+    scope: string | null;
+    periodDenominator: string | null;
+  } | null;
+}
+
 export interface PayrollRunDto {
   id: string;
   runNo: string;
@@ -279,6 +298,8 @@ export interface PayrollRunDto {
   releasedAt: string | null;
   exportedAt: string | null;
   templateId: string | null;
+  /** F-02 (API-PPR-004): pinned policy + calendar, name-resolved; null on legacy/unpinned runs. */
+  payPolicy: PayrollRunPayPolicy | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -357,6 +378,15 @@ interface DbRunRow {
   reopen_reason: string | null; released_by: string | null; released_at: string | null;
   exported_at: string | null;
   template_id: string | null;
+  // F-02 policy + calendar pins (mig 710)
+  pay_policy_version_id: string | null;
+  pay_policy_checksum: string | null;
+  pay_policy_required: boolean;
+  work_calendar_version_id: string | null;
+  holiday_calendar_version_id: string | null;
+  work_calendar_checksum: string | null;
+  holiday_calendar_checksum: string | null;
+  calendar_resolution: { scope?: string; periodDenominator?: string; assignmentId?: string } | null;
   created_at: string; updated_at: string;
 }
 
@@ -409,6 +439,7 @@ function toRunDto(r: DbRunRow): PayrollRunDto {
     reopenReason: r.reopen_reason, releasedBy: r.released_by, releasedAt: r.released_at,
     exportedAt: r.exported_at,
     templateId: r.template_id ?? null,
+    payPolicy: null, // enriched by getPayrollRun via resolveRunPayPolicy (async name resolution)
     createdAt: r.created_at, updatedAt: r.updated_at,
   };
 }
@@ -504,11 +535,248 @@ export async function listPayrollRuns(opts: ListRunsOptions = {}): Promise<Payro
   return ((data ?? []) as DbRunRow[]).map(toRunDto);
 }
 
+// F-02 (API-PPR-004): resolve the pinned policy (name/version from F-01) + the
+// calendar pin facts. Reads F-01 tables only (§10); the calendar display NAME is
+// owned by the policy-evidence route (§6d), so no F-CAL table is read here.
+async function resolveRunPayPolicy(r: DbRunRow): Promise<PayrollRunPayPolicy> {
+  const ver = (await sb.from('finance_pay_policy_versions')
+    .select('version_no, policy_id').eq('id', r.pay_policy_version_id ?? '').maybeSingle())
+    .data as { version_no: number; policy_id: string } | null;
+  const policyName = ver?.policy_id
+    ? ((await sb.from('finance_pay_policies').select('name').eq('id', ver.policy_id).maybeSingle())
+        .data as { name: string } | null)?.name ?? null
+    : null;
+  return {
+    versionId: r.pay_policy_version_id ?? '',
+    checksum: r.pay_policy_checksum,
+    required: r.pay_policy_required,
+    policyName,
+    versionNo: ver?.version_no ?? null,
+    calendar: r.work_calendar_version_id
+      ? {
+          workCalendarVersionId: r.work_calendar_version_id,
+          workCalendarChecksum: r.work_calendar_checksum,
+          holidayCalendarChecksum: r.holiday_calendar_checksum,
+          scope: r.calendar_resolution?.scope ?? null,
+          periodDenominator: r.calendar_resolution?.periodDenominator ?? null,
+        }
+      : null,
+  };
+}
+
 export async function getPayrollRun(id: string): Promise<PayrollRunDto | null> {
   const { data, error } = await sb.from('finance_payroll_runs')
     .select('*').eq('id', id).maybeSingle<DbRunRow>();
   if (error) throw Object.assign(new Error('getPayrollRun: ' + error.message), { status: 500 });
-  return data ? toRunDto(data) : null;
+  if (!data) return null;
+  const dto = toRunDto(data);
+  if (data.pay_policy_required && data.pay_policy_version_id) {
+    dto.payPolicy = await resolveRunPayPolicy(data);
+  }
+  return dto;
+}
+
+// ── F-02 (API-PPR-005): policy-evidence read (§6d) ──────────────────────────────
+
+/** Resolve app_users display names for a set of ids (batch; avoids an N+1 and
+ * keeps raw UUIDs out of the evidence DTO — every employees[] row gets a name). */
+async function resolveEmployeeNames(ids: string[]): Promise<Map<string, string>> {
+  const map = new Map<string, string>();
+  const uniq = [...new Set(ids)].filter(Boolean);
+  if (uniq.length === 0) return map;
+  const { data } = await sb.from('app_users')
+    .select('id, full_name, first_name, last_name')
+    .in('id', uniq);
+  for (const u of (data ?? []) as
+       { id: string; full_name: string | null; first_name: string | null; last_name: string | null }[]) {
+    const name = (u.full_name ?? '').trim()
+      || `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim()
+      || u.id;
+    map.set(u.id, name);
+  }
+  return map;
+}
+
+/** One per-employee working_days evidence row, display-resolved (no raw UUID). */
+export interface PolicyEvidenceCalendarEmployee {
+  employeeId: string;
+  employeeName: string;
+  numerator: string;
+  denominator: string;
+  clampFrom: string | null;
+  clampTo: string | null;
+  excludedCount: number;
+}
+
+/** §6d calendar block — present only when the run is calendar-pinned (working_days). */
+export interface PolicyEvidenceCalendar {
+  workCalendarName: string | null;
+  workCalendarVersionNo: number | null;
+  holidayCalendarName: string | null;
+  holidayChecksumShort: string | null;
+  resolution: { scope: string | null; assignmentId: string | null };
+  periodDenominator: string | null;
+  employees: PolicyEvidenceCalendarEmployee[];
+}
+
+/** §6d policy-evidence DTO — the pinned policy manifest projection + the immutable
+ * lock conflict/exclusion evidence + (when calendar-pinned) the working_days block. */
+export interface PolicyEvidenceDto {
+  runId: string;
+  inputSnapshotId: string;
+  checksum: string | null;
+  components: Record<string, unknown>[];
+  sourceRules: Record<string, unknown>[];
+  costingRules: Record<string, unknown>[];
+  statutory: Record<string, unknown>;
+  sourceConflicts: Record<string, unknown>[];
+  excludedEmployees: Record<string, unknown>[];
+  calendar: PolicyEvidenceCalendar | null;
+}
+
+/**
+ * F-02 policy-evidence read (contract §6d, finding #10). Returns the pinned
+ * policy manifest (components / source rules / costing rules / statutory) + its
+ * checksum for a run's input snapshot, PLUS the immutable lock evidence
+ * (source conflicts + excluded employees from the snapshot source_summary) and,
+ * for a calendar-pinned working_days run, a resolved `calendar` block with the
+ * per-employee working_days numerators.
+ *
+ * Defaults to the run's `current_input_snapshot_id`; an explicit `inputSnapshotId`
+ * is validated to belong to THIS run (snapshot history after a relock). Evidence
+ * only exists after inputs are locked, so a run with no snapshot 404s.
+ */
+export async function getRunPolicyEvidence(
+  runId: string,
+  inputSnapshotId?: string,
+): Promise<PolicyEvidenceDto> {
+  // Raw run columns — the calendar pin ids/checksum are not all on the run DTO.
+  const { data: run, error: runErr } = await sb.from('finance_payroll_runs')
+    .select('id, current_input_snapshot_id, pay_policy_required, work_calendar_version_id, ' +
+            'holiday_calendar_version_id, holiday_calendar_checksum, calendar_resolution')
+    .eq('id', runId)
+    .maybeSingle<{
+      id: string;
+      current_input_snapshot_id: string | null;
+      pay_policy_required: boolean;
+      work_calendar_version_id: string | null;
+      holiday_calendar_version_id: string | null;
+      holiday_calendar_checksum: string | null;
+      calendar_resolution: { scope?: string; periodDenominator?: string; assignmentId?: string } | null;
+    }>();
+  if (runErr) throw Object.assign(new Error('getRunPolicyEvidence/run: ' + runErr.message), { status: 500 });
+  if (!run)   throw Object.assign(new Error('Payroll run not found.'), { status: 404 });
+
+  // §6d: default to the current snapshot; an explicit id must belong to this run.
+  const targetSnapshotId = inputSnapshotId ?? run.current_input_snapshot_id;
+  if (!targetSnapshotId) {
+    throw Object.assign(
+      new Error('This run has no locked input snapshot yet. Lock inputs to generate policy evidence.'),
+      { status: 404 });
+  }
+  const { data: snap, error: snapErr } = await sb.from('finance_payroll_input_snapshots')
+    .select('id, run_id, source_summary')
+    .eq('id', targetSnapshotId)
+    .maybeSingle<{ id: string; run_id: string; source_summary: Record<string, unknown> | null }>();
+  if (snapErr) throw Object.assign(new Error('getRunPolicyEvidence/snapshot: ' + snapErr.message), { status: 500 });
+  if (!snap || snap.run_id !== runId) {
+    throw Object.assign(new Error('Input snapshot does not belong to this run.'), { status: 404 });
+  }
+
+  // Policy manifest — exactly one per snapshot; absent for legacy non-pinned runs.
+  const { data: ev, error: evErr } = await sb.from('finance_payroll_run_policy_evidence')
+    .select('checksum, manifest')
+    .eq('input_snapshot_id', targetSnapshotId)
+    .maybeSingle<{ checksum: string; manifest: Record<string, unknown> }>();
+  if (evErr) throw Object.assign(new Error('getRunPolicyEvidence/evidence: ' + evErr.message), { status: 500 });
+
+  const manifest = (ev?.manifest ?? {}) as {
+    components?: Record<string, unknown>[];
+    sourceRules?: Record<string, unknown>[];
+    costingRules?: Record<string, unknown>[];
+    statutory?: Record<string, unknown>;
+  };
+  const summary = (snap.source_summary ?? {}) as {
+    sourceConflicts?: Record<string, unknown>[];
+    excludedEmployees?: Record<string, unknown>[];
+  };
+
+  // §6d calendar block — resolved DISPLAY names of the PINNED work/holiday
+  // calendars + the per-employee working_days evidence. These are READ-ONLY
+  // display lookups of F-CAL tables, explicitly required by §6d; N7b forbids
+  // WRITES to F-CAL, not display reads (flagged per the contract).
+  let calendar: PolicyEvidenceCalendar | null = null;
+  if (run.work_calendar_version_id) {
+    const [wcVerRes, calEvRes] = await Promise.all([
+      sb.from('work_calendar_versions')
+        .select('version_no, work_calendar_id')
+        .eq('id', run.work_calendar_version_id)
+        .maybeSingle<{ version_no: number; work_calendar_id: string }>(),
+      sb.from('finance_payroll_run_calendar_evidence')
+        .select('employee_id, numerator, period_denominator, clamp_from, clamp_to, excluded')
+        .eq('input_snapshot_id', targetSnapshotId)
+        .order('employee_id', { ascending: true }),
+    ]);
+    const wcVer = wcVerRes.data;
+
+    const workCalendarName = wcVer?.work_calendar_id
+      ? ((await sb.from('work_calendars').select('name').eq('id', wcVer.work_calendar_id)
+          .maybeSingle<{ name: string }>()).data?.name ?? null)
+      : null;
+
+    let holidayCalendarName: string | null = null;
+    if (run.holiday_calendar_version_id) {
+      const hcVer = (await sb.from('holiday_calendar_versions')
+        .select('holiday_calendar_id').eq('id', run.holiday_calendar_version_id)
+        .maybeSingle<{ holiday_calendar_id: string }>()).data;
+      if (hcVer?.holiday_calendar_id) {
+        holidayCalendarName = (await sb.from('holiday_calendars').select('name')
+          .eq('id', hcVer.holiday_calendar_id).maybeSingle<{ name: string }>()).data?.name ?? null;
+      }
+    }
+
+    const calRows = (calEvRes.data ?? []) as {
+      employee_id: string; numerator: number | string; period_denominator: number | string;
+      clamp_from: string | null; clamp_to: string | null; excluded: unknown;
+    }[];
+    const nameMap = await resolveEmployeeNames(calRows.map(r => r.employee_id));
+
+    calendar = {
+      workCalendarName,
+      workCalendarVersionNo: wcVer?.version_no ?? null,
+      holidayCalendarName,
+      holidayChecksumShort: run.holiday_calendar_checksum
+        ? run.holiday_calendar_checksum.slice(0, 12)
+        : null,
+      resolution: {
+        scope:        run.calendar_resolution?.scope ?? null,
+        assignmentId: run.calendar_resolution?.assignmentId ?? null,
+      },
+      periodDenominator: run.calendar_resolution?.periodDenominator ?? null,
+      employees: calRows.map(r => ({
+        employeeId:    r.employee_id,
+        employeeName:  nameMap.get(r.employee_id) ?? r.employee_id,
+        numerator:     String(r.numerator),
+        denominator:   String(r.period_denominator),
+        clampFrom:     r.clamp_from,
+        clampTo:       r.clamp_to,
+        excludedCount: Array.isArray(r.excluded) ? r.excluded.length : 0,
+      })),
+    };
+  }
+
+  return {
+    runId,
+    inputSnapshotId:   targetSnapshotId,
+    checksum:          ev?.checksum ?? null,
+    components:        manifest.components ?? [],
+    sourceRules:       manifest.sourceRules ?? [],
+    costingRules:      manifest.costingRules ?? [],
+    statutory:         manifest.statutory ?? {},
+    sourceConflicts:   summary.sourceConflicts ?? [],
+    excludedEmployees: summary.excludedEmployees ?? [],
+    calendar,
+  };
 }
 
 /**
@@ -720,13 +988,14 @@ export async function lockInputs(
   }
 
   const EMP_COLS =
-    'id, pay_basis, monthly_salary, hourly_rate, department_id, status, start_date, end_date';
+    'id, pay_basis, monthly_salary, hourly_rate, department_id, cost_center, status, start_date, end_date';
   type EmpRow = {
     id: string;
     pay_basis: string | null;
     monthly_salary: number | null;
     hourly_rate: number | null;
     department_id: string | null;
+    cost_center: string | null;
     status: string;
     start_date: string | null;
     end_date: string | null;
@@ -867,6 +1136,71 @@ export async function lockInputs(
   // and recalculate never double-deduct.
   const loanInstallments = await loadLoanInstallments(empList.map(e => e.id), periodStart);
 
+  // ── 3d. F-02 R4: per-employee source presence for the pinned policy's rules ──
+  // Derived here, server-side, from the SAME canonical reads that build the inputs
+  // and folded into each employee's base_pay line metadata. Because the lock route
+  // builds p_inputs (a caller only sends {id, idempotencyKey}), this presence is
+  // intrinsic to the locked payload — it cannot be fabricated or drift. Only the
+  // sources the pinned policy actually references are read/populated; a policy with
+  // no source/costing rules (incl. legacy fixtures) skips this entirely and the RPC
+  // enforcement no-ops. lock_inputs_tx then fails-closed on block_input_lock /
+  // cost_centre and persists the rest as immutable conflict evidence.
+  let sourcePresence: Map<string, Record<string, boolean | string | null>> | null = null;
+  {
+    const pinRow = (await sb.from('finance_payroll_runs')
+      .select('pay_policy_version_id, pay_policy_required')
+      .eq('id', runId)
+      .single()).data as { pay_policy_version_id: string | null; pay_policy_required: boolean | null } | null;
+    const policyVersionId = pinRow?.pay_policy_version_id ?? null;
+    if (pinRow?.pay_policy_required && policyVersionId) {
+      const [srcRulesRes, costRulesRes] = await Promise.all([
+        sb.from('finance_pay_policy_source_rules').select('source_type').eq('policy_version_id', policyVersionId),
+        sb.from('finance_pay_policy_costing_rules').select('dimension').eq('policy_version_id', policyVersionId),
+      ]);
+      const needed = new Set(((srcRulesRes.data ?? []) as { source_type: string }[]).map(r => r.source_type));
+      const needsCostCentre = ((costRulesRes.data ?? []) as { dimension: string }[]).some(r => r.dimension === 'cost_centre');
+      if (needed.size > 0 || needsCostCentre) {
+        const empIds = empList.map(e => e.id);
+        const leaveSet = new Set<string>();
+        const statSet = new Set<string>();
+        const bankSet = new Set<string>();
+        for (const ids of chunk(empIds, 300)) {
+          if (needed.has('approved_leave')) {
+            const { data } = await sb.from('hr_leave_requests')
+              .select('employee_id')
+              .eq('status', 'approved')
+              .lte('from_date', periodEnd)
+              .gte('to_date', periodStart)
+              .in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) leaveSet.add(r.employee_id);
+          }
+          if (needed.has('statutory_profile')) {
+            const { data } = await sb.from('hr_employee_statutory_profiles')
+              .select('employee_id').in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) statSet.add(r.employee_id);
+          }
+          if (needed.has('payment_destination')) {
+            const { data } = await sb.from('finance_employee_bank_accounts')
+              .select('employee_id').eq('is_primary', true).eq('is_active', true).in('employee_id', ids);
+            for (const r of (data ?? []) as { employee_id: string }[]) bankSet.add(r.employee_id);
+          }
+        }
+        sourcePresence = new Map();
+        for (const emp of empList) {
+          const hasPayItem = payItems.some((p: { employee_id: string }) => p.employee_id === emp.id);
+          const s: Record<string, boolean | string | null> = {};
+          if (needed.has('approved_time')) s.approved_time = tsByEmp.has(emp.id);
+          if (needed.has('approved_compensation')) s.approved_compensation = hasPayItem || (emp.pay_basis === 'salary' && emp.monthly_salary != null);
+          if (needed.has('approved_leave')) s.approved_leave = leaveSet.has(emp.id);
+          if (needed.has('statutory_profile')) s.statutory_profile = statSet.has(emp.id);
+          if (needed.has('payment_destination')) s.payment_destination = bankSet.has(emp.id);
+          if (needsCostCentre) s.cost_centre = emp.cost_center ?? null;
+          sourcePresence.set(emp.id, s);
+        }
+      }
+    }
+  }
+
   // ── 4. Build input rows ───────────────────────────────────────────────────
   const inputRows: Record<string, unknown>[] = [];
 
@@ -918,6 +1252,9 @@ export async function lockInputs(
         employment_start:       emp.start_date,
         employment_end:         emp.end_date,
         nis_contribution_weeks: nisContributionWeeks,
+        // F-02 R4: pinned-policy source presence (only present when the policy has
+        // source/costing rules) — lock_inputs_tx enforces/persists from this.
+        ...(sourcePresence ? { sources: sourcePresence.get(emp.id) ?? {} } : {}),
         ...(isSalary
           ? { monthly_salary: emp.monthly_salary ?? 0 }
           : { hourly_rate: hourlyRate, worked_hours: workedHours }),
@@ -1130,6 +1467,23 @@ export async function calculateRun(
     throw Object.assign(new Error(`This run has ${empIds.length} employees, above the supported single-run ceiling of ${MAX_RUN_EMPLOYEES}. Split it into multiple pay groups.`), { status: 422 });
   }
 
+  // ── F-02 R4: consume the persisted block_employee_calculation exclusions from the
+  // snapshot's immutable lock evidence. Calculation NEVER re-evaluates live sources —
+  // it only honors what was frozen at lock; an excluded employee gets no line. The
+  // review/correction conflicts are materialized into findings by the atomic calc
+  // publish RPC (finance_payroll_calculation_publish_tx), not here.
+  const excludedEmployees = new Set<string>();
+  if (run.currentInputSnapshotId) {
+    const snapRow = (await sb.from('finance_payroll_input_snapshots')
+      .select('source_summary')
+      .eq('id', run.currentInputSnapshotId)
+      .single()).data;
+    const summary = snapRow?.source_summary as { excludedEmployees?: { employeeId?: string }[] } | null | undefined;
+    for (const ex of (summary?.excludedEmployees ?? [])) {
+      if (ex.employeeId) excludedEmployees.add(ex.employeeId);
+    }
+  }
+
   // Batch-load every statutory profile once (was an N+1: one query per employee).
   const profileMap = await getStatutoryProfilesByEmployees(empIds, 'TT');
 
@@ -1145,6 +1499,7 @@ export async function calculateRun(
   let totalNisEmployer = 0;
 
   for (const empId of empIds) {
+    if (excludedEmployees.has(empId)) continue; // R4: block_employee_calculation (persisted at lock)
     const empInputs = allInputs.filter(i => i.employeeId === empId);
 
     // ── NIS checks (§13) ────────────────────────────────────────────────────
@@ -1374,7 +1729,10 @@ export async function calculateRun(
     deductionTotal:   round2(totalDeductions),
     netTotal:         round2(totalNet),
     nisEmployerTotal: round2(totalNisEmployer),
-    employeeCount:    empIds.length,
+    // The calculated population = one line per NON-excluded employee (R4
+    // block_employee_calculation produces no line); the publish RPC asserts
+    // totals.employeeCount === line count, netting out the excluded set.
+    employeeCount:    lineRows.length,
   };
   const calcEventInput = {
     eventType: 'finance.payroll.run.calculated',
@@ -1382,7 +1740,7 @@ export async function calculateRun(
     actorUserId: actorId, severity: (warningRows.length > 0 ? 'warning' : 'success') as 'warning' | 'success',
     payload: {
       runNo:         run.runNo,
-      employeeCount: empIds.length,
+      employeeCount: lineRows.length,
       grossTotal:    calcTotals.grossTotal,
       netTotal:      calcTotals.netTotal,
       warningCount:  warningRows.length,

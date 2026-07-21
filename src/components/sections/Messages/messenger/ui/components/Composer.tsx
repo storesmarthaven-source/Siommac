@@ -9,7 +9,7 @@
    contenteditable reads) mutate their own refs and call Date.now exclusively
    from event handlers/effects; the compiler rules cannot prove event-only
    execution for plain component-body functions shared across handlers. */
-import { CheckCircle2, FileUp, Link, Send, Smile, Trash2, UploadCloud, X } from "./icons";
+import { CheckCircle2, FileUp, Link, LockKeyhole, Send, Smile, Trash2, UploadCloud, X } from "./icons";
 import { useEffect, useMemo, useRef, useState } from "preact/hooks";
 import type { Attachment, LinkPreview, Message, MessageDraft } from "../../domain/models";
 import { linkPreviewFromUrl, sanitizeComposerHtml } from "../../domain/format";
@@ -59,8 +59,28 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
   useEffect(() => { replyToRef.current = replyTo; }, [replyTo]);
   const [attachOpen, setAttachOpen] = useState(false);
   const [activeFormats, setActiveFormats] = useState({ bold: false, italic: false, underline: false });
+  // Reply | Internal note. Each mode keeps its OWN editor text — switching modes
+  // stashes the current text and restores the other's, so neither is lost.
+  const [mode, setMode] = useState<"reply" | "note">("reply");
+  const modeStash = useRef<{ reply: string; note: string }>({ reply: "", note: "" });
+  const isNote = mode === "note";
   const isUploading = attachments.some((attachment) => attachment.transferState !== "available");
-  const canSend = (body.trim().length > 0 || attachments.length > 0 || link) && !sending && !isUploading;
+  const canSend = isNote
+    ? (body.trim().length > 0 && !sending)
+    : ((body.trim().length > 0 || attachments.length > 0 || link) && !sending && !isUploading);
+
+  function switchMode(next: "reply" | "note") {
+    if (next === mode) return;
+    modeStash.current[mode] = body;   // save the current editor text for this mode
+    const restored = modeStash.current[next];
+    setMode(next);
+    setBody(restored); setHtml(restored);
+    // bodyRef mirrors the REPLY text for the draft flush — only re-seed it when
+    // returning to reply, never with note text.
+    if (next === "reply") bodyRef.current = restored;
+    if (editorRef.current) editorRef.current.textContent = restored;
+    if (next === "note") { stopTyping(); onClearReply(); }   // notes have no reply / typing
+  }
 
   useEffect(() => () => { uploads.current.forEach((controller) => controller.abort()); }, []);
 
@@ -93,6 +113,7 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     // text typed in the previous thread stayed visible in (and could be saved
     // against) the newly-opened one.
     setBody(""); setHtml(""); setAttachments([]); setLink(undefined);
+    setMode("reply"); modeStash.current = { reply: "", note: "" };
     if (editorRef.current) editorRef.current.innerHTML = "";
     void actions.getDraft(threadId).then((draft) => {
       if (cancelled || !draft?.body) return;
@@ -143,6 +164,9 @@ export function Composer({ threadId, replyTo, onClearReply, onRestoreReply, onSe
     const cleanHtml = sanitizeComposerHtml(editor.innerHTML).replace(/\u200B/g, "");
     const text = editor.innerText.replace(/\u00A0/g, " ").replace(/\u200B/g, "");
     setBody(text); setHtml(cleanHtml);
+    // Internal-note mode is text-only: no server draft, no typing broadcast, no
+    // link auto-detection, and bodyRef stays the REPLY draft mirror.
+    if (isNote) return;
     scheduleDraftSave(text);
     if (text.trim()) publishTyping(); else stopTyping();
     const pastedUrl = urlPattern.exec(text)?.[0];

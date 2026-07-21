@@ -35,6 +35,7 @@ import {
   payrollPeriod,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -52,6 +53,7 @@ export default async function run(h) {
     try { if (ctx.runId) await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    try { if (ctx.policyFixture) await ctx.policyFixture.cleanup(); } catch {}
     try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
     try { if (ctx.group2Id) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.group2Id); } catch {}
     try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
@@ -94,6 +96,8 @@ export default async function run(h) {
     ok(r, 'create pay group failed');
     expect(r.body.data.frequency === 'weekly', 'group frequency must be weekly');
     ctx.groupId = r.body.data.id;
+    // F-02: seed the active policy so create_run_tx can pin the weekly run below.
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.groupId, actorId: fmgrId, tag: TAG });
   });
 
   await test('plain employee CANNOT assign employees (403)', async () => {

@@ -47,6 +47,7 @@ import {
   payrollRunCommand,
   payrollRunSeed,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export const title = 'Finance — Payroll Runs (Phase 3 — full lifecycle)';
 
@@ -294,6 +295,12 @@ export default async function run(h) {
       await h.mustDelete('finance_employee_bank_accounts',
         query => query.in('id', ctx.bankAccountIds));
     }
+    // F-02: remove the seeded policy assignment + policy BEFORE the pay group
+    // (assignment→group + assignment→version are `on delete restrict`); runs were
+    // already deleted above so the run→version pin no longer blocks it.
+    if (ctx.policyFixture) {
+      await ctx.policyFixture.cleanup();
+    }
     if (ctx.mainPayGroupId) {
       await h.mustDelete('finance_employee_pay_group_assignments',
         query => query.eq('pay_group_id', ctx.mainPayGroupId));
@@ -366,6 +373,11 @@ export default async function run(h) {
       });
       ok(assignment, `main pay group assignment failed: ${assignment.body.message}`);
     }
+
+    // F-02: migration 711's create_run_tx requires an active, whole-period policy
+    // assignment for the pay group. Seed the non-working_days prerequisite so base
+    // pay stays full-period (the behaviour this suite already asserts).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.mainPayGroupId, actorId: fmgr1Id, tag: TAG });
   });
 
   // ═══════════════════════════════════════════════════════════════════════════
@@ -1085,6 +1097,7 @@ export default async function run(h) {
     const cr = await api('finance/payroll/runs/create', fmgr1Token, payrollRunCommand({
       idempotencyKey: `${TAG}:run:submit-denied:create`,
       periodStart: payrollPeriod('financePayroll', 'denySubmit', TAG),
+      payGroupId: ctx.mainPayGroupId,   // F-02: every run is pay-group-scoped (fixture policy on the main group)
     }));
     ok(cr, 'could not create a secondary draft run for deny test');
     const draftId = cr.body.data.id;
@@ -3265,6 +3278,9 @@ export default async function run(h) {
     const gr = await api('finance/payroll/pay-groups/create', fmgr1Token, { code, name: `Hourly Group ${TAG}`, frequency: 'monthly' });
     ok(gr, `create pay group failed: ${gr.body.message}`);
     hrly.groupId = gr.body.data.id;
+    // F-02 (mig 711): every run resolves an active policy on its pay group — attach the
+    // shared non-working_days fixture policy to the hourly group too (cleaned up below).
+    hrly.policyFixture = await attachActivePolicy({ sb, payGroupId: hrly.groupId, actorId: fmgr1Id, tag: TAG });
 
     for (const id of [hrly.empAId, hrly.empBId]) {
       const ar = await api('finance/payroll/pay-groups/assign', fmgr1Token, { employeeId: id, payGroupId: hrly.groupId, effectiveFrom: '2031-01-01' });
@@ -3381,6 +3397,7 @@ export default async function run(h) {
       expect(await h.mustDelete('hr_timesheets',
         query => query.eq('id', hrly.tsId)), 'hourly timesheet cleanup failed');
     }
+    if (hrly.policyFixture) await hrly.policyFixture.cleanup();   // policy assignment → policy (mig 710 restrict FK), BEFORE the pay group
     if (hrly.groupId) {
       expect(await h.mustDelete('finance_employee_pay_group_assignments',
         query => query.eq('pay_group_id', hrly.groupId)), 'hourly assignment cleanup failed');

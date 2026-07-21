@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `c1ed8d4ad12e007300e3b4da`
+Source fingerprint: `cbdf55f79407e51fd5c146ec`
 
 Files: 45 | Symbols: 378 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -139,7 +139,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SecurityPolicyTab` | function / component | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx:138` | `-` |
 | `UserSecurityPanel` | function / component | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx:25` | `-` |
 | `AuthGate` | function / component | `src/components/shared/AuthGate.tsx:93` | `-` |
-| `useCan` | function / hook | `src/lib/permissions.ts:1448` | `-` |
+| `useCan` | function / hook | `src/lib/permissions.ts:1465` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

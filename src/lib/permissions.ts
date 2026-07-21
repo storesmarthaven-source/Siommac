@@ -464,6 +464,13 @@ export const PERMISSION_KEYS = [
   'finance.payroll.gl.preview',     // finance: preview the GL journal for a run (read-only)
   'finance.payroll.gl.post',        // finance: post/reverse a run's GL journal (ledger write)
   'finance.payroll.paygroups.manage', // finance: create pay groups + assign employees
+  'finance.payroll.policies.view',
+  'finance.payroll.policies.draft',
+  'finance.payroll.policies.submit',
+  'finance.payroll.policies.source_approve',
+  'finance.payroll.policies.statutory_approve',
+  'finance.payroll.policies.activate',
+  'finance.payroll.policies.assign',
   'finance.payroll.worksheet.override', // finance: add/remove per-employee run overrides
   'finance.payroll.overtime.rules.manage', // finance: manage overtime rule engine (multipliers)
   'finance.payroll.loans.manage',     // finance: create/submit/settle employee loans & salary advances
@@ -638,6 +645,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'hr.overtime.reports.view', 'hr.overtime.reports.export',
     // HR statutory profile capture (NIS)
     'hr.employee.statutory.view', 'hr.employee.statutory.capture',
+    'finance.payroll.policies.view', 'finance.payroll.policies.source_approve',
     // HR Contract Management — full (incl. terminate + templates)
     'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
   ]),
@@ -663,6 +671,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
     'finance.payroll.paygroups.manage',
+    'finance.payroll.policies.view',
+    'finance.payroll.policies.draft',
+    'finance.payroll.policies.submit',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
     'finance.payroll.loans.manage',
@@ -722,6 +733,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     'finance.payroll.gl.preview',
     'finance.payroll.gl.post',
     'finance.payroll.paygroups.manage',
+    'finance.payroll.policies.view',
+    'finance.payroll.policies.draft',
+    'finance.payroll.policies.submit',
+    'finance.payroll.policies.statutory_approve',
+    'finance.payroll.policies.activate',
+    'finance.payroll.policies.assign',
     'finance.payroll.worksheet.override',
     'finance.payroll.overtime.rules.manage',
     'finance.payroll.loans.manage',

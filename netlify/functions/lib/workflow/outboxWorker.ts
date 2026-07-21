@@ -213,6 +213,15 @@ const RECEIPT_HANDLERS: Partial<Record<string, SourceTransitionHandler>> = {
       }
     },
   },
+  'finance_pay_policy:finance_pay_policy_approval': {
+    async commit({ transitionId, sourceRecordId, actorId, outcome, comment, inputHash }) {
+      const { error } = await sb.rpc('finance_pay_policy_workflow_transition_tx', {
+        p_transition_id: transitionId, p_version_id: sourceRecordId, p_actor_id: actorId,
+        p_target_status: outcome, p_comment: comment, p_input_hash: inputHash,
+      });
+      if (error) throw Object.assign(new Error(`pay-policy source transition: ${error.message}`), { code: (error as { code?: string }).code });
+    },
+  },
 };
 
 /** Run the module's source mutation for a terminal outcome — receipt RPC when

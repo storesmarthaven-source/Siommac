@@ -11,6 +11,24 @@ import { apiPost } from '@lib/api';
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 
+/** F-02: pinned pay policy (+ work-calendar pin) for the run-detail chips.
+ * Mirrors the backend PayrollRunPayPolicy DTO (payrollRuns.ts). Null on
+ * legacy/unpinned runs. */
+export interface PayrollRunPayPolicy {
+  versionId: string;
+  checksum: string | null;
+  required: boolean;
+  policyName: string | null;
+  versionNo: number | null;
+  calendar: {
+    workCalendarVersionId: string;
+    workCalendarChecksum: string | null;
+    holidayCalendarChecksum: string | null;
+    scope: string | null;
+    periodDenominator: string | null;
+  } | null;
+}
+
 export interface PayrollRun {
   id: string;
   runNo: string;
@@ -29,6 +47,7 @@ export interface PayrollRun {
   netTotal: number;
   nisEmployerTotal: number;
   workflowId: string | null;
+  currentInputSnapshotId: string | null;
   inputLockedBy: string | null;
   inputLockedAt: string | null;
   createdBy: string | null;
@@ -42,6 +61,8 @@ export interface PayrollRun {
   createdAt: string;
   updatedAt: string;
   templateId: string | null;
+  /** F-02 (API-PPR-004): pinned policy + calendar; null on legacy/unpinned runs. */
+  payPolicy: PayrollRunPayPolicy | null;
 }
 
 export interface PayrollRunInput {
@@ -96,6 +117,77 @@ export interface PayrollRunWarning {
   resolved: boolean;
   resolvedBy: string | null;
   resolvedAt: string | null;
+}
+
+// ── F-02 policy-evidence (API-PPR-005, contract §6d) ─────────────────────────────
+// Mirrors the backend PolicyEvidenceDto (payrollRuns.ts). The manifest item shapes
+// mirror the manifest built by finance_payroll_lock_inputs_tx (mig 711).
+
+export interface PolicyEvidenceComponent {
+  componentId: string;
+  componentCode: string | null;
+  calculationBasis: string | null;
+  rateSource: string | null;
+  eligibilitySource: string | null;
+  ruleParameters: Record<string, unknown> | null;
+  isRequired: boolean;
+  sortOrder: number;
+}
+export interface PolicyEvidenceSourceRule {
+  sourceType: string;
+  ownerRole: string | null;
+  required: boolean;
+  reconciliationKey: string | null;
+  cutoffPolicy: string | null;
+  lateInputPolicy: string | null;
+  conflictSeverity: string | null;
+  conflictOutcome: string | null;
+}
+export interface PolicyEvidenceCostingRule {
+  dimension: string;
+  resolutionSource: string | null;
+  required: boolean;
+  missingOutcome: string | null;
+}
+export interface PolicyEvidenceConflict {
+  employeeId: string;
+  sourceType: string;
+  conflictOutcome: string;
+  reasonCode: string;
+}
+export interface PolicyEvidenceExcluded {
+  employeeId: string;
+  reasonCode: string;
+}
+export interface PolicyEvidenceCalendarEmployee {
+  employeeId: string;
+  employeeName: string;
+  numerator: string;
+  denominator: string;
+  clampFrom: string | null;
+  clampTo: string | null;
+  excludedCount: number;
+}
+export interface PolicyEvidenceCalendar {
+  workCalendarName: string | null;
+  workCalendarVersionNo: number | null;
+  holidayCalendarName: string | null;
+  holidayChecksumShort: string | null;
+  resolution: { scope: string | null; assignmentId: string | null };
+  periodDenominator: string | null;
+  employees: PolicyEvidenceCalendarEmployee[];
+}
+export interface PolicyEvidence {
+  runId: string;
+  inputSnapshotId: string;
+  checksum: string | null;
+  components: PolicyEvidenceComponent[];
+  sourceRules: PolicyEvidenceSourceRule[];
+  costingRules: PolicyEvidenceCostingRule[];
+  statutory: Record<string, unknown>;
+  sourceConflicts: PolicyEvidenceConflict[];
+  excludedEmployees: PolicyEvidenceExcluded[];
+  calendar: PolicyEvidenceCalendar | null;
 }
 
 export interface Payslip {
@@ -335,6 +427,70 @@ export interface ResolveWarningResult {
   resolvedAt: string;
 }
 
+// ── Run workspace / release preflight / calculation versions (full-page run detail) ──
+// Thin FE mirrors of the backend DTOs (workspace.ts / releases.ts / execution.ts).
+
+export interface PayrollInputSnapshotInfo {
+  id: string; snapshotNo: number; checksum: string;
+  employeeCount: number; inputCount: number;
+  sourceSummary: Record<string, unknown>;
+  lockedBy: string | null; lockedAt: string;
+}
+export interface PayrollCalculationVersion {
+  id: string; runId: string; attemptId: string | null; inputSnapshotId: string;
+  versionNo: number; checksum: string; employeeCount: number;
+  grossTotal: number; deductionTotal: number; netTotal: number; nisEmployerTotal: number;
+  statutoryVersionId: string; publishedBy: string | null; publishedAt: string;
+}
+export interface PayrollCalculationAttempt {
+  id: string; runId: string; inputSnapshotId: string; attemptNo: number;
+  status: 'running' | 'succeeded' | 'failed' | 'cancelled'; stage: string; progress: number;
+  correlationId: string; errorCode: string | null; errorMessage: string | null;
+  createdBy: string | null; startedAt: string; leaseExpiresAt: string; completedAt: string | null;
+}
+export type PayrollFindingSeverity = 'info' | 'warning' | 'blocker';
+export type PayrollFindingState = 'open' | 'in_progress' | 'resolved' | 'waived';
+export interface PayrollFindingSummary {
+  total: number; actionable: number; blockers: number; warnings: number; info: number;
+  byState: Record<string, number>; byDomain: Record<string, number>;
+}
+export interface PayrollControlFinding {
+  id: string; runId: string; calculationVersionId: string;
+  sourceType: string; sourceId: string; findingType: string;
+  domain: string; severity: PayrollFindingSeverity; state: PayrollFindingState;
+  title: string; detail: string; employeeId: string | null; assigneeId: string | null;
+  dueAt: string | null; version: number;
+  resolutionNote: string | null; resolvedBy: string | null; resolvedAt: string | null;
+  waiverReason: string | null; waivedBy: string | null; waivedAt: string | null; waiverExpiresAt: string | null;
+  createdAt: string; updatedAt: string;
+}
+export interface PayrollRunWorkspace {
+  run: PayrollRun;
+  inputSnapshot: PayrollInputSnapshotInfo | null;
+  currentCalculationVersion: PayrollCalculationVersion | null;
+  calculationAttempts: PayrollCalculationAttempt[];
+  findingSummary: PayrollFindingSummary;
+  priorityFindings: PayrollControlFinding[];
+  audit: RunAuditLogEntry[];
+}
+export interface PayrollReleasePreflight {
+  runId: string; runNo: string; status: string; ready: boolean; alreadyReleased: boolean;
+  blockers: { code: string; message: string }[];
+  calculationVersionId: string | null; certificationId: string | null;
+  fundingConfirmationId: string | null; glJournalId: string | null;
+  glDebit: number; glCredit: number;
+  invalidGlAccountCount: number; invalidNisPeriodCount: number;
+  payslipCount: number; renderedPayslipCount: number;
+  missingBankAccountCount: number; disbursementId: string | null;
+  netPayroll: number; employeeCount: number;
+}
+export interface PayrollCalculationComparison {
+  runId: string; from: PayrollCalculationVersion; to: PayrollCalculationVersion;
+  totals: { grossDelta: number; deductionDelta: number; netDelta: number; nisEmployerDelta: number; employeeCountDelta: number };
+  changedEmployees: number; addedEmployees: number; removedEmployees: number;
+  changes: { employeeId: string; change: 'added' | 'removed' | 'changed'; grossDelta: number; deductionDelta: number; netDelta: number }[];
+}
+
 // ── Core call helper ────────────────────────────────────────────────────────────
 
 async function call<T>(path: string, args: object = {}): Promise<T> {
@@ -354,7 +510,7 @@ export const financePayrollApi = {
   calculate:   (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/calculate', a),
   // idempotencyKey is REQUIRED and must be stable across retries of one submit attempt
   // (the caller generates it once and reuses it) — a per-call key can't recover a lost
-  // response. See PayrollOverview submit handler.
+  // response. See PayrollCommandCenter submit handler.
   submitRun:   (a: { id: string; idempotencyKey: string }) => call<PayrollRun>('finance/payroll/runs/submit', a),
   approveRun:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/approve', a),
   rejectRun:   (a: { id: string; reason: string })     => call<PayrollRun>('finance/payroll/runs/reject', a),
@@ -366,6 +522,15 @@ export const financePayrollApi = {
   listInputs:   (a: { runId: string })                 => call<PayrollRunInput[]>('finance/payroll/inputs/list', a),
   listRunLines: (a: { runId: string })                 => call<PayrollRunLine[]>('finance/payroll/run-lines/list', a),
   listWarnings: (a: { runId: string })                 => call<PayrollRunWarning[]>('finance/payroll/warnings/list', a),
+  // F-02 (API-PPR-005): pinned policy-evidence manifest + calendar block for a run
+  // snapshot. Defaults to the run's current snapshot; pass inputSnapshotId for history.
+  getPolicyEvidence: (a: { runId: string; inputSnapshotId?: string }) =>
+    call<PolicyEvidence>('finance/payroll/runs/policy-evidence', a),
+  // Full-page run-detail composite + readiness + calc-version reads.
+  getWorkspace:        (a: { id: string })                        => call<PayrollRunWorkspace>('finance/payroll/runs/workspace', a),
+  releasePreflight:    (a: { runId: string })                     => call<PayrollReleasePreflight>('finance/payroll/releases/preflight', a),
+  listCalcVersions:    (a: { runId: string })                     => call<PayrollCalculationVersion[]>('finance/payroll/calculations/versions/list', a),
+  compareCalcVersions: (a: { fromVersionId: string; toVersionId: string }) => call<PayrollCalculationComparison>('finance/payroll/calculations/compare', a),
 
   // Exports
   listExports:  (a: { runId: string })                 => call<PayrollExport[]>('finance/payroll/exports/list', a),
@@ -461,6 +626,8 @@ export const financePayrollApi = {
 export const financePayrollKeys = {
   runs:     (o: object = {}) => ['finance', 'payroll', 'runs', o] as const,
   run:      (id: string)     => ['finance', 'payroll', 'run', id] as const,
+  policyEvidence: (runId: string, snapshotId?: string) =>
+    ['finance', 'payroll', 'policy-evidence', runId, snapshotId ?? 'current'] as const,
   inputs:   (id: string)     => ['finance', 'payroll', 'inputs', id] as const,
   runLines: (id: string)     => ['finance', 'payroll', 'run-lines', id] as const,
   warnings: (id: string)     => ['finance', 'payroll', 'warnings', id] as const,
@@ -480,6 +647,47 @@ export function usePayrollRun(id: string | null) {
 }
 export function useRunLines(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.runLines(runId ?? ''), queryFn: () => financePayrollApi.listRunLines({ runId: runId! }), enabled: !!runId });
+}
+/** F-02: policy-evidence for a run's snapshot (defaults to current snapshot server-side). */
+export function usePolicyEvidence(runId: string | null, inputSnapshotId?: string) {
+  return useQuery({
+    queryKey: financePayrollKeys.policyEvidence(runId ?? '', inputSnapshotId),
+    queryFn:  () => financePayrollApi.getPolicyEvidence(
+      inputSnapshotId ? { runId: runId!, inputSnapshotId } : { runId: runId! }),
+    enabled:  !!runId,
+  });
+}
+/** Composite run-detail read (run + snapshot + calc version + attempts + findings + audit). */
+export function useRunWorkspace(runId: string | null) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'workspace', runId ?? ''],
+    queryFn:  () => financePayrollApi.getWorkspace({ id: runId! }),
+    enabled:  !!runId,
+  });
+}
+/** Release readiness gates + blockers + downstream (funding/cert/GL/payslip/bank) flags. */
+export function useReleasePreflight(runId: string | null) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'preflight', runId ?? ''],
+    queryFn:  () => financePayrollApi.releasePreflight({ runId: runId! }),
+    enabled:  !!runId,
+  });
+}
+/** Published calculation versions for a run (reconciliation history). */
+export function useCalculationVersions(runId: string | null) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'calc-versions', runId ?? ''],
+    queryFn:  () => financePayrollApi.listCalcVersions({ runId: runId! }),
+    enabled:  !!runId,
+  });
+}
+/** Within-run per-employee delta between two calculation versions. */
+export function useCalculationComparison(fromVersionId: string | null, toVersionId: string | null) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'calc-compare', fromVersionId ?? '', toVersionId ?? ''],
+    queryFn:  () => financePayrollApi.compareCalcVersions({ fromVersionId: fromVersionId!, toVersionId: toVersionId! }),
+    enabled:  !!fromVersionId && !!toVersionId,
+  });
 }
 export function useRunWarnings(runId: string | null) {
   return useQuery({ queryKey: financePayrollKeys.warnings(runId ?? ''), queryFn: () => financePayrollApi.listWarnings({ runId: runId! }), enabled: !!runId });

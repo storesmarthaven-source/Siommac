@@ -34,6 +34,7 @@ import {
   payrollReopenCommand,
   payrollRunCommand,
 } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG, acquireActors } = h;
@@ -59,6 +60,7 @@ export default async function run(h) {
     try { if (ctx.runId) await sb.from('finance_payroll_run_lines').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_run_warnings').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    try { if (ctx.policyFixture) await ctx.policyFixture.cleanup(); } catch {}
     try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
     try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
     try { if (ctx.versionId) await sb.from('finance_statutory_versions').delete().eq('id', ctx.versionId); } catch {}
@@ -296,6 +298,8 @@ export default async function run(h) {
     const ar = await api('finance/payroll/pay-groups/assign', fmgrToken, { employeeId: empId, payGroupId: groupId, effectiveFrom: '2029-01-01' });
     ok(ar, `assign failed: ${ar.body.message}`);
     ctx.groupId = groupId;
+    // F-02: seed the active policy so create_run_tx can pin it (non-working_days).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: groupId, actorId: fmgrId, tag: TAG });
 
     // Create the run as the MAKER (finance_staff) so the finance_manager can
     // approve it without tripping segregation-of-duties (creator != approver).

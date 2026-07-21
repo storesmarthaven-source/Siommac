@@ -30,6 +30,7 @@ function seedDateFromTag(tag, salt) {
 }
 
 import { payrollRunCommand, payrollPeriod } from '../helpers/payrollRun.mjs';
+import { attachActivePolicy } from '../helpers/payPolicyFixture.mjs';
 
 export default async function run(h) {
   const { api, test, expect, ok, fails, mint, sb, TAG } = h;
@@ -45,6 +46,7 @@ export default async function run(h) {
   h.onCleanup(async () => {
     try { if (ctx.runId) await sb.from('finance_payroll_run_inputs').delete().eq('run_id', ctx.runId); } catch {}
     try { if (ctx.runId) await sb.from('finance_payroll_runs').delete().eq('id', ctx.runId); } catch {}
+    try { if (ctx.policyFixture) await ctx.policyFixture.cleanup(); } catch {}
     try { if (ctx.groupId) await sb.from('finance_employee_pay_group_assignments').delete().eq('pay_group_id', ctx.groupId); } catch {}
     try { if (ctx.groupId) await sb.from('finance_pay_groups').delete().eq('id', ctx.groupId); } catch {}
     try { await sb.from('hr_overtime_entries').delete().eq('employee_id', emp1Id); } catch {}
@@ -74,6 +76,8 @@ export default async function run(h) {
     expect(!gErr, 'seed group failed: ' + gErr?.message);
     ctx.groupId = g.id;
     await sb.from('finance_employee_pay_group_assignments').insert({ employee_id: emp1Id, pay_group_id: ctx.groupId, effective_from: '2000-01-01' });
+    // F-02: seed the active policy so create_run_tx can pin it (non-working_days).
+    ctx.policyFixture = await attachActivePolicy({ sb, payGroupId: ctx.groupId, actorId: fmgrId, tag: TAG });
 
     // Approved OT: entry multiplier 1.5, but tagged public_holiday → the rule (2.5) should win.
     const { error: otErr } = await sb.from('hr_overtime_entries').insert({

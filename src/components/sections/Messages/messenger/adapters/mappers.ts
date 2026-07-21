@@ -106,8 +106,9 @@ export function mapPost(p: PostDTO): Message {
     delivery: mapDelivery(p.deliveryStatus),
     pinned: p.isPinned ?? false,
     pinnedBy: p.pinnedBy ?? null,
-    pinActions: p.allowedPinActions ?? (p.isPinned ?? false ? [] : ["pin"]),
+    pinActions: p.isInternal ? [] : (p.allowedPinActions ?? (p.isPinned ?? false ? [] : ["pin"])),
     deleted: p.deletedAt != null,
+    ...(p.isInternal ? { isInternal: true } : {}),
     ...(sysEvent ? { system: { event: sysEvent, subjectUserId: subjectUserIdOf(p.systemEventPayload) } } : {}),
   };
 }
