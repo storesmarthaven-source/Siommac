@@ -781,9 +781,12 @@ export function useMessageRecipients(query = '') {
 
 // ── Tickets ───────────────────────────────────────────────────────────────────
 
+export type TicketScope = 'mine' | 'assigned' | 'queue' | 'all';
+export type TicketStatusGroup = 'active' | 'resolved' | 'archived' | 'all';
+
 export interface TicketListArgs extends Record<string, unknown> {
-  status?:    string | null;
-  scope?:     'mine' | 'assigned' | 'queue' | 'all';
+  statusGroup?: TicketStatusGroup | null;
+  scope?:     TicketScope;
   queueCode?: string | null;
   priority?:  'low' | 'medium' | 'high' | 'critical' | null;
   requestTypeCode?: string | null;
@@ -793,18 +796,61 @@ export interface TicketListArgs extends Record<string, unknown> {
   cursor?:    string | null;
 }
 
+export interface TicketListPage {
+  items: CanonicalTicket[];
+  /** Count of the COMPLETE selected scope+filter set (server-computed, before cursor/limit). */
+  total: number;
+  nextCursor: string | null;
+}
+
 export function useMyTickets(args: TicketListArgs = {}) {
   return useQuery({
     queryKey: ticketKeys.list(args),
-    queryFn:  async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: CanonicalTicket[] }>(
+    queryFn:  async ({ signal }: QueryFunctionContext): Promise<TicketListPage> => {
+      const res = await apiPost<{ success: boolean; data: CanonicalTicket[]; nextCursor?: string | null; total?: number }>(
         'communications/tickets/list',
         { scope: 'mine', limit: 50, ...args },
         { signal },
       );
       if (!res.success) throw new Error('Failed to load tickets');
+      return {
+        items: res.data,
+        total: typeof res.total === 'number' ? res.total : res.data.length,
+        nextCursor: res.nextCursor ?? null,
+      };
+    },
+  });
+}
+
+export interface TicketStatusGroupCounts { active: number; resolved: number; archived: number; all: number }
+
+export interface TicketNavContext {
+  capabilities: {
+    isHandler: boolean;
+    handledServiceAreas: { code: string; label: string }[];
+  };
+  counts: {
+    inbox: number;
+    mine: TicketStatusGroupCounts;
+    assigned: TicketStatusGroupCounts;
+    all: TicketStatusGroupCounts;
+  };
+}
+
+// Server-authoritative nav context: capabilities (isHandler + handled service
+// areas, from permissions) + per-scope/status-group counts over the full visible
+// set. The UI must never derive handler access or totals from a loaded page.
+export function useTicketNavContext() {
+  return useQuery({
+    queryKey: [...ticketKeys.all, 'nav-context'],
+    queryFn: async ({ signal }: QueryFunctionContext): Promise<TicketNavContext> => {
+      const res = await apiPost<{ success: boolean; data: TicketNavContext }>(
+        'communications/tickets/nav-context', {}, { signal },
+      );
+      if (!res.success) throw new Error('Failed to load ticket navigation context');
       return res.data;
     },
+    staleTime: 30_000,
   });
 }
 

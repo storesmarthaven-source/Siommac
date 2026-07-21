@@ -115,84 +115,86 @@ allDayStart	function	platform	false		netlify/functions/lib/calendarReminderSweep
 dueInstant	function	platform	false		netlify/functions/lib/calendarReminderSweep.ts	66	
 recordDelivery	function	platform	false		netlify/functions/lib/calendarReminderSweep.ts	73	
 runCalendarReminderSweep	function	platform	true		netlify/functions/lib/calendarReminderSweep.ts	131	
-MESSAGES_BUCKET	variable	communications	true		netlify/functions/lib/communications.ts	35	
-cachedProfileUrl	function	communications	false		netlify/functions/lib/communications.ts	46	
-initialsOf	function	communications	false		netlify/functions/lib/communications.ts	67	
-ThreadAccessVia	type	communications	true		netlify/functions/lib/communications.ts	86	
-ThreadAccessResult	interface	communications	true		netlify/functions/lib/communications.ts	88	
-recordViewPermissionKey	function	communications	false		netlify/functions/lib/communications.ts	101	
-communicationsReadUnavailable	function	communications	false		netlify/functions/lib/communications.ts	110	
-resolveThreadReadAccess	function	communications	true		netlify/functions/lib/communications.ts	122	
-ResolveRecordThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	174	
-ResolveRecordThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	184	
-resolveRecordThread	function	communications	true		netlify/functions/lib/communications.ts	192	
-emitSignal	function	communications	true		netlify/functions/lib/communications.ts	294	
-CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	338	
-getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	362	
-NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	407	getCommsSummary
-_getTicketSummary	function	communications	false		netlify/functions/lib/communications.ts	429	
-_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	441	
-_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	447	
-_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	465	
-tsMs	function	communications	false		netlify/functions/lib/communications.ts	504	
-_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	506	
-CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	544	
-CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	559	
-createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	569	
-PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	650	
-PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	662	
-postMessage	function	communications	true		netlify/functions/lib/communications.ts	672	
-ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	739	
-ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	741	
-ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	750	
-ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	751	
-ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	753	
-parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	762	
-formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	772	
-listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	776	
-ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	781	listThreadsForUser
-ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	810	listThreadsForUser
-GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	972	
-getThread	function	communications	true		netlify/functions/lib/communications.ts	983	
-PostRow	type	communications	true		netlify/functions/lib/communications.ts	1080	
-AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1081	
-GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1083	
-getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1091	
-RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1108	getThreadPosts
-MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1294	
-MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1303	
-searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1314	
-Row	interface	communications	false		netlify/functions/lib/communications.ts	1323	searchMessagePosts
-SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1351	
-s	function	communications	false		netlify/functions/lib/communications.ts	1358	
-SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1363	
-resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1391	
-sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1418	
-ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1429	
-listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1442	
-PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1455	listThreadActivity
-PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1456	listThreadActivity
-PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1457	listThreadActivity
-MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1523	
-createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1536	
-CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1544	
-createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1557	
-getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1593	
-markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1634	
-archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1654	
-muteThread	function	communications	true		netlify/functions/lib/communications.ts	1666	
-setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1681	
-addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1711	
-removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1767	
-SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	1798	
-searchMessages	function	communications	true		netlify/functions/lib/communications.ts	1807	
-PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	1819	searchMessages
-RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	1854	
-getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	1856	
-UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1858	getMessageRecipients
-CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	1892	
-CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	1904	
-createTicket	function	communications	true		netlify/functions/lib/communications.ts	1910	
+MESSAGES_BUCKET	variable	communications	true		netlify/functions/lib/communications.ts	36	
+cachedProfileUrl	function	communications	false		netlify/functions/lib/communications.ts	47	
+initialsOf	function	communications	false		netlify/functions/lib/communications.ts	68	
+ThreadAccessVia	type	communications	true		netlify/functions/lib/communications.ts	87	
+ThreadAccessResult	interface	communications	true		netlify/functions/lib/communications.ts	89	
+recordViewPermissionKey	function	communications	false		netlify/functions/lib/communications.ts	102	
+communicationsReadUnavailable	function	communications	false		netlify/functions/lib/communications.ts	111	
+resolveThreadReadAccess	function	communications	true		netlify/functions/lib/communications.ts	123	
+ResolveRecordThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	175	
+ResolveRecordThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	185	
+resolveRecordThread	function	communications	true		netlify/functions/lib/communications.ts	193	
+emitSignal	function	communications	true		netlify/functions/lib/communications.ts	295	
+CommsSummary	interface	communications	true		netlify/functions/lib/communications.ts	339	
+getCommsSummary	function	communications	true		netlify/functions/lib/communications.ts	363	
+NotifFlags	interface	communications	false		netlify/functions/lib/communications.ts	408	getCommsSummary
+_getTicketSummary	function	communications	false		netlify/functions/lib/communications.ts	430	
+_countFromSettled	function	communications	false		netlify/functions/lib/communications.ts	442	
+_countWorkflowTasks	function	communications	false		netlify/functions/lib/communications.ts	448	
+_ensureRealtimeChannel	function	communications	false		netlify/functions/lib/communications.ts	466	
+tsMs	function	communications	false		netlify/functions/lib/communications.ts	505	
+_countUnreadThreads	function	communications	false		netlify/functions/lib/communications.ts	507	
+CreateThreadInput	interface	communications	true		netlify/functions/lib/communications.ts	546	
+CreateThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	561	
+createMessageThread	function	communications	true		netlify/functions/lib/communications.ts	571	
+PostMessageInput	interface	communications	true		netlify/functions/lib/communications.ts	652	
+PostMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	664	
+postMessage	function	communications	true		netlify/functions/lib/communications.ts	674	
+AddInternalNoteResult	type	communications	true		netlify/functions/lib/communications.ts	744	
+addInternalNote	function	communications	true		netlify/functions/lib/communications.ts	748	
+ThreadTab	type	communications	true		netlify/functions/lib/communications.ts	822	
+ListThreadsInput	interface	communications	true		netlify/functions/lib/communications.ts	824	
+ThreadRow	type	communications	true		netlify/functions/lib/communications.ts	833	
+ParticipantProfile	type	communications	true		netlify/functions/lib/communications.ts	834	
+ListThreadsResult	interface	communications	true		netlify/functions/lib/communications.ts	836	
+parseKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	845	
+formatKeyCursor	function	communications	true		netlify/functions/lib/communications.ts	855	
+listThreadsForUser	function	communications	true		netlify/functions/lib/communications.ts	859	
+ParticipantWithThread	interface	communications	false		netlify/functions/lib/communications.ts	864	listThreadsForUser
+ThreadPageRow	interface	communications	false		netlify/functions/lib/communications.ts	893	listThreadsForUser
+GetThreadResult	interface	communications	true		netlify/functions/lib/communications.ts	1055	
+getThread	function	communications	true		netlify/functions/lib/communications.ts	1066	
+PostRow	type	communications	true		netlify/functions/lib/communications.ts	1163	
+AttachmentRow	type	communications	true		netlify/functions/lib/communications.ts	1164	
+GetThreadPostsResult	interface	communications	true		netlify/functions/lib/communications.ts	1166	
+getThreadPosts	function	communications	true		netlify/functions/lib/communications.ts	1174	
+RawPost	interface	communications	false		netlify/functions/lib/communications.ts	1191	getThreadPosts
+MessageSearchHit	interface	communications	true		netlify/functions/lib/communications.ts	1384	
+MessageSearchResult	interface	communications	true		netlify/functions/lib/communications.ts	1393	
+searchMessagePosts	function	communications	true		netlify/functions/lib/communications.ts	1404	
+Row	interface	communications	false		netlify/functions/lib/communications.ts	1413	searchMessagePosts
+SourceRecordResolver	interface	communications	false		netlify/functions/lib/communications.ts	1441	
+s	function	communications	false		netlify/functions/lib/communications.ts	1448	
+SOURCE_RECORD_RESOLVERS	object	communications	false		netlify/functions/lib/communications.ts	1453	
+resolveSourceRecords	function	communications	false		netlify/functions/lib/communications.ts	1481	
+sourceRecordFor	function	communications	false		netlify/functions/lib/communications.ts	1508	
+ListThreadActivityResult	interface	communications	true		netlify/functions/lib/communications.ts	1519	
+listThreadActivity	function	communications	true		netlify/functions/lib/communications.ts	1532	
+PostSlim	interface	communications	false		netlify/functions/lib/communications.ts	1545	listThreadActivity
+PinSlim	interface	communications	false		netlify/functions/lib/communications.ts	1546	listThreadActivity
+PartSlim	interface	communications	false		netlify/functions/lib/communications.ts	1547	listThreadActivity
+MessageAttachmentUploadUrlResult	interface	communications	true		netlify/functions/lib/communications.ts	1616	
+createMessageAttachmentUploadUrl	function	communications	true		netlify/functions/lib/communications.ts	1629	
+CreateMessageAttachmentInput	interface	communications	true		netlify/functions/lib/communications.ts	1637	
+createMessageAttachmentRecord	function	communications	true		netlify/functions/lib/communications.ts	1650	
+getAttachmentUrl	function	communications	true		netlify/functions/lib/communications.ts	1686	
+markThreadRead	function	communications	true		netlify/functions/lib/communications.ts	1727	
+archiveThread	function	communications	true		netlify/functions/lib/communications.ts	1747	
+muteThread	function	communications	true		netlify/functions/lib/communications.ts	1759	
+setThreadFavourite	function	communications	true		netlify/functions/lib/communications.ts	1774	
+addThreadParticipants	function	communications	true		netlify/functions/lib/communications.ts	1804	
+removeThreadParticipant	function	communications	true		netlify/functions/lib/communications.ts	1860	
+SearchMessageResult	interface	communications	true		netlify/functions/lib/communications.ts	1891	
+searchMessages	function	communications	true		netlify/functions/lib/communications.ts	1900	
+PostWithAuthorAndThread	interface	communications	false		netlify/functions/lib/communications.ts	1912	searchMessages
+RecipientProfile	type	communications	true		netlify/functions/lib/communications.ts	1949	
+getMessageRecipients	function	communications	true		netlify/functions/lib/communications.ts	1951	
+UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1953	getMessageRecipients
+CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	1987	
+CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	1999	
+createTicket	function	communications	true		netlify/functions/lib/communications.ts	2005	
 SUPABASE_URL	variable	platform	false		netlify/functions/lib/db.ts	3	
 SUPABASE_SERVICE_ROLE_KEY	variable	platform	false		netlify/functions/lib/db.ts	4	
 SUPABASE_ANON_KEY	variable	platform	false		netlify/functions/lib/db.ts	5	
@@ -2067,15 +2069,15 @@ unpinMessage	function	platform	true		netlify/functions/lib/messagingRich.ts	109
 softDeleteMessage	function	platform	true		netlify/functions/lib/messagingRich.ts	132	
 ListPinsResult	type	platform	true		netlify/functions/lib/messagingRich.ts	156	
 listPins	function	platform	true		netlify/functions/lib/messagingRich.ts	161	
-pinnedThreadSummary	function	platform	true		netlify/functions/lib/messagingRich.ts	219	
-saveDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	249	
-getDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	263	
-deleteDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	273	
-updatePresence	function	platform	true		netlify/functions/lib/messagingRich.ts	281	
-OnlineUser	interface	platform	true		netlify/functions/lib/messagingRich.ts	292	
-listOnlineUsers	function	platform	true		netlify/functions/lib/messagingRich.ts	295	
-initialsOf	function	platform	false		netlify/functions/lib/messagingRich.ts	321	
-toggleReaction	function	platform	true		netlify/functions/lib/messagingRich.ts	328	
+pinnedThreadSummary	function	platform	true		netlify/functions/lib/messagingRich.ts	221	
+saveDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	251	
+getDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	265	
+deleteDraft	function	platform	true		netlify/functions/lib/messagingRich.ts	275	
+updatePresence	function	platform	true		netlify/functions/lib/messagingRich.ts	283	
+OnlineUser	interface	platform	true		netlify/functions/lib/messagingRich.ts	294	
+listOnlineUsers	function	platform	true		netlify/functions/lib/messagingRich.ts	297	
+initialsOf	function	platform	false		netlify/functions/lib/messagingRich.ts	323	
+toggleReaction	function	platform	true		netlify/functions/lib/messagingRich.ts	330	
 STRICT	variable	platform	false		netlify/functions/lib/moduleMutationRuns.ts	21	
 RunWriteError	type	platform	false		netlify/functions/lib/moduleMutationRuns.ts	25	
 reportRunWriteFailure	function	platform	false		netlify/functions/lib/moduleMutationRuns.ts	36	
@@ -2357,29 +2359,32 @@ requireStepUp	function	platform	true		netlify/functions/lib/stepUp.ts	36
 throwStepUpRequired	function	platform	false		netlify/functions/lib/stepUp.ts	75	
 TicketMutationResult	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	3	
 TicketListResult	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	17	
-TicketUserProfile	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	22	
-TicketOverdueSweepResult	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	30	
-RpcError	interface	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	35	
-RpcResponse	interface	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	41	
-STATUS_BY_SQLSTATE	object	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	46	
-throwRpcError	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	54	
-ticketRpc	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	66	
-optionalString	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	73	
-ticketUserProfiles	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	77	
-withProfile	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	114	
-mutationResult	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	127	
-createTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	157	
-commentTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	189	
-commandTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	207	
-markTicketReadTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	225	
-completeTicketAttachmentTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	239	
-listTicketRequestTypes	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	253	
-TicketRequesterOption	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	265	
-searchTicketRequesters	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	267	
-listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	283	
-getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	327	
-runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	362	
-cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	374	
+TicketStatusGroupCounts	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	24	
+TicketNavContext	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	31	
+TicketUserProfile	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	44	
+TicketOverdueSweepResult	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	52	
+RpcError	interface	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	57	
+RpcResponse	interface	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	63	
+STATUS_BY_SQLSTATE	object	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	68	
+throwRpcError	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	76	
+ticketRpc	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	88	
+optionalString	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	95	
+ticketUserProfiles	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	99	
+withProfile	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	136	
+mutationResult	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	149	
+createTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	179	
+commentTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	211	
+commandTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	229	
+markTicketReadTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	247	
+completeTicketAttachmentTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	261	
+listTicketRequestTypes	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	275	
+TicketRequesterOption	interface	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	287	
+searchTicketRequesters	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	289	
+listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	305	
+navContextForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	350	
+getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	366	
+runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	401	
+cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	413	
 ENCRYPTION_KEY_HEX	variable	platform	false		netlify/functions/lib/totp.ts	19	
 CHALLENGE_TTL_MS	variable	platform	false		netlify/functions/lib/totp.ts	20	
 MAX_ATTEMPTS	variable	platform	false		netlify/functions/lib/totp.ts	21	
@@ -2765,50 +2770,51 @@ writeException	function	platform	false		netlify/functions/routes/calendar.ts	744
 UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	766	
 StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	883	
 CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	933	
-router	variable	communications	false		netlify/functions/routes/communications.ts	101	
-NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	113	
-PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	237	
-MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	264	
-BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	291	
-ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	352	
-ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	379	
-PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	403	
-MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	434	
-RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	476	
-CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	507	
-PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	547	
-AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	590	
-AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	612	
-MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	638	
-ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	654	
-MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	671	
-FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	685	
-ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	705	
-ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	725	
-SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	761	
-RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	777	
-AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	793	
-PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	817	
-UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	848	
-DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	865	
-ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	893	
-PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	913	
-DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	936	
-DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	952	
-PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	977	
-signalTicketMutation	function	communications	false		netlify/functions/routes/communications.ts	1002	
-RequestTypesSchema	variable	communications	false		netlify/functions/routes/communications.ts	1009	
-RequesterSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	1024	
-CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1040	
-TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1107	
-TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1143	
-CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1154	
-TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1175	
-TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1196	
-TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1214	
-TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1257	
-TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1295	
-TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1317	
+router	variable	communications	false		netlify/functions/routes/communications.ts	103	
+NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	115	
+PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	239	
+MuteSchema	variable	communications	false		netlify/functions/routes/communications.ts	266	
+BroadcastSchema	variable	communications	false		netlify/functions/routes/communications.ts	293	
+ThreadsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	354	
+ThreadGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	381	
+PostsSchema	variable	communications	false		netlify/functions/routes/communications.ts	405	
+MessageSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	436	
+RecordThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	478	
+CreateThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	509	
+PostMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	549	
+InternalNoteSchema	variable	communications	false		netlify/functions/routes/communications.ts	592	
+AttachUploadUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	625	
+AttachCreateSchema	variable	communications	false		netlify/functions/routes/communications.ts	647	
+MarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	673	
+ArchiveSchema	variable	communications	false		netlify/functions/routes/communications.ts	689	
+MuteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	706	
+FavouriteThreadSchema	variable	communications	false		netlify/functions/routes/communications.ts	720	
+ParticipantsAddSchema	variable	communications	false		netlify/functions/routes/communications.ts	740	
+ParticipantsRemoveSchema	variable	communications	false		netlify/functions/routes/communications.ts	760	
+SearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	796	
+RecipientsSchema	variable	communications	false		netlify/functions/routes/communications.ts	812	
+AttachUrlSchema	variable	communications	false		netlify/functions/routes/communications.ts	828	
+PinSchema	variable	communications	false		netlify/functions/routes/communications.ts	852	
+UnpinSchema	variable	communications	false		netlify/functions/routes/communications.ts	883	
+DeleteMessageSchema	variable	communications	false		netlify/functions/routes/communications.ts	900	
+ToggleReactionSchema	variable	communications	false		netlify/functions/routes/communications.ts	928	
+PinsListSchema	variable	communications	false		netlify/functions/routes/communications.ts	948	
+DraftSaveSchema	variable	communications	false		netlify/functions/routes/communications.ts	971	
+DraftGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	987	
+PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	1012	
+signalTicketMutation	function	communications	false		netlify/functions/routes/communications.ts	1037	
+RequestTypesSchema	variable	communications	false		netlify/functions/routes/communications.ts	1044	
+RequesterSearchSchema	variable	communications	false		netlify/functions/routes/communications.ts	1059	
+CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1075	
+TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1142	
+TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1185	
+CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1196	
+TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1217	
+TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1238	
+TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1256	
+TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1299	
+TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1337	
+TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1359	
 router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
 args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	37	
 CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	40	
@@ -3774,7 +3780,9 @@ run	function	settings	true	test	scripts/e2e/suites/settings.mjs	6
 findSetting	function	settings	false	test	scripts/e2e/suites/settings.mjs	31	run
 title	variable	communications	true	test	scripts/e2e/suites/ticketCenter.mjs	9	
 run	function	communications	true	test	scripts/e2e/suites/ticketCenter.mjs	11	
-key	function	communications	false	test	scripts/e2e/suites/ticketCenter.mjs	16	run
+key	function	communications	false	test	scripts/e2e/suites/ticketCenter.mjs	21	run
+makeScopeTicket	function	communications	false	test	scripts/e2e/suites/ticketCenter.mjs	610	run
+scopeIds	function	communications	false	test	scripts/e2e/suites/ticketCenter.mjs	623	run
 title	variable	testing	true	test	scripts/e2e/suites/training.mjs	18	
 run	function	testing	true	test	scripts/e2e/suites/training.mjs	20	
 future	function	testing	false	test	scripts/e2e/suites/training.mjs	27	run
@@ -4022,21 +4030,27 @@ useRemoveThreadParticipant	function	communications	true	hook	src/api/communicati
 useResolveRecordThread	function	communications	true	hook	src/api/communications.ts	734	
 useMessageSearch	function	communications	true	hook	src/api/communications.ts	749	
 useMessageRecipients	function	communications	true	hook	src/api/communications.ts	766	
-TicketListArgs	interface	communications	true		src/api/communications.ts	784	
-useMyTickets	function	communications	true	hook	src/api/communications.ts	796	
-useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	811	
-TicketRequesterOption	interface	communications	true		src/api/communications.ts	826	
-useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	830	
-useTicket	function	communications	true	hook	src/api/communications.ts	849	
-CreateTicketArgs	interface	communications	true		src/api/communications.ts	865	
-useCreateTicket	function	communications	true	hook	src/api/communications.ts	878	
-CommentTicketArgs	interface	communications	true		src/api/communications.ts	897	
-useCommentTicket	function	communications	true	hook	src/api/communications.ts	903	
-UpdateTicketArgs	interface	communications	true		src/api/communications.ts	922	
-useUpdateTicket	function	communications	true	hook	src/api/communications.ts	931	
-useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	950	
-uploadTicketAttachment	function	communications	true		src/api/communications.ts	999	
-getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1026	
+TicketScope	type	communications	true		src/api/communications.ts	784	
+TicketStatusGroup	type	communications	true		src/api/communications.ts	785	
+TicketListArgs	interface	communications	true		src/api/communications.ts	787	
+TicketListPage	interface	communications	true		src/api/communications.ts	799	
+useMyTickets	function	communications	true	hook	src/api/communications.ts	806	
+TicketStatusGroupCounts	interface	communications	true		src/api/communications.ts	825	
+TicketNavContext	interface	communications	true		src/api/communications.ts	827	
+useTicketNavContext	function	communications	true	hook	src/api/communications.ts	843	
+useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	857	
+TicketRequesterOption	interface	communications	true		src/api/communications.ts	872	
+useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	876	
+useTicket	function	communications	true	hook	src/api/communications.ts	895	
+CreateTicketArgs	interface	communications	true		src/api/communications.ts	911	
+useCreateTicket	function	communications	true	hook	src/api/communications.ts	924	
+CommentTicketArgs	interface	communications	true		src/api/communications.ts	943	
+useCommentTicket	function	communications	true	hook	src/api/communications.ts	949	
+UpdateTicketArgs	interface	communications	true		src/api/communications.ts	968	
+useUpdateTicket	function	communications	true	hook	src/api/communications.ts	977	
+useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	996	
+uploadTicketAttachment	function	communications	true		src/api/communications.ts	1045	
+getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1072	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
 ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
 asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	
@@ -8662,6 +8676,7 @@ SiomacRepository	type	communications	true		src/components/sections/Messages/mess
 SiomacMessagingAdapters	interface	communications	true		src/components/sections/Messages/messenger/adapters/index.ts	49	
 createSiomacMessagingAdapters	function	communications	true		src/components/sections/Messages/messenger/adapters/index.ts	56	
 thread	function	communications	false	test	src/components/sections/Messages/messenger/adapters/mappers.test.ts	5	
+post	function	communications	false	test	src/components/sections/Messages/messenger/adapters/mappers.test.ts	32	
 ATTACHMENT_KIND	object	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	21	
 mapTransferState	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	27	
 mapAttachment	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	36	
@@ -8671,12 +8686,12 @@ BODY_URL	variable	communications	false		src/components/sections/Messages/messeng
 subjectUserIdOf	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	74	
 linkFromBody	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	79	
 mapPost	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	85	
-toPresence	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	116	
-mapParticipantToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	120	
-mapOnlineToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	130	
-mapKind	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	141	
-directCounterpart	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	146	
-mapThread	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	150	
+toPresence	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	117	
+mapParticipantToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	121	
+mapOnlineToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	131	
+mapKind	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	142	
+directCounterpart	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	147	
+mapThread	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	151	
 UploadUrlResult	interface	communications	false		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	10	
 SiomacAttachmentService	class	communications	true		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	12	
 upload	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	13	SiomacAttachmentService
@@ -8711,29 +8726,30 @@ searchMessages	method	communications	false		src/components/sections/Messages/mes
 loadPreferences	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	166	SiomacMessagingRepository
 savePreferences	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	177	SiomacMessagingRepository
 send	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	182	SiomacMessagingRepository
-createGroup	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	213	SiomacMessagingRepository
-deleteMessage	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	235	SiomacMessagingRepository
-togglePin	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	239	SiomacMessagingRepository
-markRead	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	259	SiomacMessagingRepository
-setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	263	SiomacMessagingRepository
-setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	267	SiomacMessagingRepository
-invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	271	SiomacMessagingRepository
-removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	275	SiomacMessagingRepository
-listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	281	SiomacMessagingRepository
-listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	287	SiomacMessagingRepository
-toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	299	SiomacMessagingRepository
-setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	304	SiomacMessagingRepository
+addInternalNote	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	214	SiomacMessagingRepository
+createGroup	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	225	SiomacMessagingRepository
+deleteMessage	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	247	SiomacMessagingRepository
+togglePin	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	251	SiomacMessagingRepository
+markRead	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	271	SiomacMessagingRepository
+setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	275	SiomacMessagingRepository
+setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	279	SiomacMessagingRepository
+invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	283	SiomacMessagingRepository
+removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	287	SiomacMessagingRepository
+listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	293	SiomacMessagingRepository
+listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	299	SiomacMessagingRepository
+toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	311	SiomacMessagingRepository
+setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	316	SiomacMessagingRepository
 MessagingActions	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	25	
-MessagingContextValue	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	62	
-MessagingContext	variable	communications	false	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	78	
-MessagingProviderProps	interface	communications	true		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	80	
-MessagingProvider	function	communications	true	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	88	
-preserveClientKeys	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	119	MessagingProvider
-mergeThreadMessages	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	165	MessagingProvider
-patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	363	actions
-flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	384	actions
-toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	405	actions
-useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	589	
+MessagingContextValue	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	64	
+MessagingContext	variable	communications	false	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	80	
+MessagingProviderProps	interface	communications	true		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	82	
+MessagingProvider	function	communications	true	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	90	
+preserveClientKeys	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	121	MessagingProvider
+mergeThreadMessages	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	167	MessagingProvider
+patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	398	actions
+flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	419	actions
+toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	440	actions
+useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	624	
 userById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	7	
 threadById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	12	
 messagesForThread	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	18	
@@ -8771,14 +8787,14 @@ LinkPreview	interface	communications	true		src/components/sections/Messages/mess
 CollaborationCard	interface	communications	true	ui-tile	src/components/sections/Messages/messenger/domain/models.ts	53	
 Reaction	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	67	
 Message	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	72	
-Thread	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	102	
-ActivityEntry	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	128	
-MessageDraft	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	137	
-WorkspaceSnapshot	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	145	
+Thread	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	105	
+ActivityEntry	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	131	
+MessageDraft	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	140	
+WorkspaceSnapshot	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	148	
 RealtimeEvent	type	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	18	
 MessagingRepository	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	23	
-AttachmentService	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	41	
-RealtimeGateway	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	46	
+AttachmentService	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	43	
+RealtimeGateway	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	48	
 MessageDensity	type	communications	true		src/components/sections/Messages/messenger/domain/preferences.ts	5	
 MessageTextSize	type	communications	true		src/components/sections/Messages/messenger/domain/preferences.ts	6	
 ConversationSurface	type	communications	true		src/components/sections/Messages/messenger/domain/preferences.ts	7	
@@ -8866,23 +8882,31 @@ urlPattern	variable	communications	false		src/components/sections/Messages/messe
 FormatCommand	type	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	24	
 commandState	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	26	
 Composer	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Composer.tsx	28	
-publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	72	Composer
-stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	79	Composer
-scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	116	Composer
-update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	130	Composer
-readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	140	Composer
-format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	152	Composer
-insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	180	Composer
-addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	195	Composer
-removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	217	Composer
-openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	222	Composer
-cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	227	Composer
-addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	232	Composer
-send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	237	Composer
+switchMode	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	73	Composer
+publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	93	Composer
+stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	100	Composer
+scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	138	Composer
+update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	152	Composer
+readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	162	Composer
+format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	177	Composer
+insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	205	Composer
+addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	220	Composer
+removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	242	Composer
+openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	247	Composer
+cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	252	Composer
+addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	257	Composer
+sendNote	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	262	Composer
+send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	281	Composer
 msg	function	communications	false	test	src/components/sections/Messages/messenger/ui/components/composerLogic.test.ts	7	
 SendKeyEvent	interface	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	8	
 isSendKey	function	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	22	
 shouldRestoreReply	function	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	37	
+ComposerMode	type	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	44	
+SendGateInput	interface	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	46	
+canSendInMode	function	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	65	
+ModeStash	interface	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	72	
+ModeSwap	interface	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	73	
+swapModeText	function	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	85	
 DetailsPanelProps	interface	communications	false		src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	18	
 DetailsPanel	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	27	
 SummaryMetric	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/DetailsPanel.tsx	143	
@@ -8988,11 +9012,12 @@ MessageThread	function	communications	true	component	src/components/sections/Mes
 markIfVisible	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	102	MessageThread
 handleListScroll	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	179	MessageThread
 jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	186	MessageThread
-SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	277	
-MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	281	
-MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	321	
-RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	327	
-renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	333	
+SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	281	
+InternalNote	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	287	
+MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	302	
+MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	342	
+RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	348	
+renderRichNode	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	354	
 tabs	array	communications	false		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	17	
 threadInQueue	function	communications	true		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	23	
 QueueHeader	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	31	
@@ -9689,54 +9714,82 @@ ticketModule	object	communications	true		src/components/sections/Tickets/module.
 mountTicketCenter	function	communications	true		src/components/sections/Tickets/mount.ts	7	
 unmountTicketCenter	function	communications	true		src/components/sections/Tickets/mount.ts	11	
 mountTicketDropdown	function	communications	true		src/components/sections/Tickets/mount.ts	15	
-mocks	variable	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	5	
-requester	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	12	
-handler	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	13	
-ticket	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	14	
-detail	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	40	
-Scope	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	25	
-DrawerTab	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	26	
-ActionDialog	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	27	
-QuickView	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	28	
-OPEN_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	30	
-PAGE_SIZE	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	31	
-titleCase	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	33	
-pagerWindow	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	39	
-initials	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	51	
-relativeTime	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	55	
-formatDate	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	63	
-durationBetween	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	68	
-dueRemaining	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	77	
-recordText	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	88	
-recordIdentifier	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	93	
-fileSize	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	98	
-serializeInlineNode	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	104	
-editorToMarkdown	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	128	
-appendBlock	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	130	editorToMarkdown
-safeLink	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	155	
-InlineTicketText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	159	
-TicketRichText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	181	
-TicketPills	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	205	
-Avatar	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	215	
-TicketRow	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	221	
-MockupTicketDetailsDrawer	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	240	
-TicketCenter	function	communications	true	component	src/components/sections/Tickets/TicketCenter.tsx	281	
-onOpen	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	366	TicketCenter
-selectTicket	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	403	TicketCenter
-runAction	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	409	TicketCenter
-sendComment	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	422	TicketCenter
-format	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	435	TicketCenter
-attach	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	441	TicketCenter
-download	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	455	TicketCenter
-TicketCreateDialog	function	communications	true	component	src/components/sections/Tickets/TicketCreateDialog.tsx	7	
-close	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	31	TicketCreateDialog
-submit	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	38	TicketCreateDialog
-closeModal	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	7	
-openCenter	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	12	
-titleCase	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	20	
-TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	24	
-TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	36	
-open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	53	TicketDropdown
+mocks	variable	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	6	
+requester	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	13	
+handler	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	14	
+ticket	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	15	
+resolvedTicket	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	41	
+closedTicket	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	42	
+ALL	array	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	43	
+ACTIVE	variable	communications	false	component,test	src/components/sections/Tickets/TicketCenter.test.tsx	44	
+detail	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	46	
+detailsById	object	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	57	
+nav	variable	communications	false	test	src/components/sections/Tickets/TicketCenter.test.tsx	64	
+Scope	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	27	
+DrawerTab	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	28	
+ActionDialog	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	29	
+StatusGroup	type	communications	false		src/components/sections/Tickets/TicketCenter.tsx	30	
+READ_ONLY_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	35	
+RESOLVED_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	36	
+ARCHIVED_STATUSES	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	37	
+statusGroupForStatus	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	39	
+CATEGORY_BUCKET	object	communications	false		src/components/sections/Tickets/TicketCenter.tsx	47	
+categoryBucket	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	51	
+SCOPE_META	object	communications	false		src/components/sections/Tickets/TicketCenter.tsx	55	
+PAGE_SIZE	variable	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	59	
+titleCase	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	61	
+pagerWindow	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	67	
+initials	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	79	
+relativeTime	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	83	
+formatDate	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	91	
+durationBetween	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	96	
+dueRemaining	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	105	
+recordText	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	116	
+recordIdentifier	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	121	
+fileSize	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	126	
+serializeInlineNode	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	132	
+editorToMarkdown	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	156	
+appendBlock	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	158	editorToMarkdown
+safeLink	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	183	
+InlineTicketText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	187	
+TicketRichText	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	209	
+TicketPills	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	233	
+Avatar	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	243	
+TicketRow	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	249	
+MockupTicketDetailsDrawer	function	communications	false	component	src/components/sections/Tickets/TicketCenter.tsx	267	
+TicketCenter	function	communications	true	component	src/components/sections/Tickets/TicketCenter.tsx	308	
+onOpen	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	413	TicketCenter
+selectTicket	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	448	TicketCenter
+runAction	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	454	TicketCenter
+sendComment	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	467	TicketCenter
+format	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	480	TicketCenter
+attach	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	487	TicketCenter
+download	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	501	TicketCenter
+scopeBadge	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	529	TicketCenter
+grants	variable	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	7	
+employeeTypes	array	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	9	
+internalTypes	array	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	12	
+mocks	variable	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	16	
+grant	function	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	34	
+CreationMode	type	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	14	
+MODE_ORDER	array	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	17	
+MODE_META	object	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	19	
+initials	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	26	
+RequesterPicker	function	communications	false	component	src/components/sections/Tickets/TicketCreateDialog.tsx	33	
+handler	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	58	RequesterPicker
+select	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	69	RequesterPicker
+TicketCreateDialog	function	communications	true	component	src/components/sections/Tickets/TicketCreateDialog.tsx	132	
+markTouched	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	173	TicketCreateDialog
+resetAll	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	177	TicketCreateDialog
+changeMode	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	187	TicketCreateDialog
+close	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	229	TicketCreateDialog
+submit	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	235	TicketCreateDialog
+closeModal	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	8	
+openCenter	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	13	
+titleCase	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	21	
+TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	25	
+TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	37	
+open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	61	TicketDropdown
 lIco	function	platform	false		src/components/shared/AccountPill.tsx	34	
 IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	38	
 IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	39	
@@ -11553,15 +11606,15 @@ MessageParticipant	interface	platform	true		types/messaging.ts	33
 MessageAttachment	interface	platform	true		types/messaging.ts	45	
 MessagePostReaction	interface	platform	true		types/messaging.ts	69	
 MessagePost	interface	platform	true		types/messaging.ts	75	
-MessageThread	interface	platform	true		types/messaging.ts	120	
-ThreadSourceRecord	interface	platform	true		types/messaging.ts	164	
-ThreadActivityEntry	interface	platform	true		types/messaging.ts	177	
-MessagePin	interface	platform	true		types/messaging.ts	187	
-ThreadContextResponse	interface	platform	true		types/messaging.ts	204	
-MessageRealtimeReason	type	platform	true		types/messaging.ts	248	
-MessageThreadDetail	interface	platform	true		types/messaging.ts	255	
-MessageRecipient	interface	platform	true		types/messaging.ts	260	
-ComplianceThread	interface	platform	true		types/messaging.ts	271	
+MessageThread	interface	platform	true		types/messaging.ts	124	
+ThreadSourceRecord	interface	platform	true		types/messaging.ts	168	
+ThreadActivityEntry	interface	platform	true		types/messaging.ts	181	
+MessagePin	interface	platform	true		types/messaging.ts	191	
+ThreadContextResponse	interface	platform	true		types/messaging.ts	208	
+MessageRealtimeReason	type	platform	true		types/messaging.ts	252	
+MessageThreadDetail	interface	platform	true		types/messaging.ts	259	
+MessageRecipient	interface	platform	true		types/messaging.ts	264	
+ComplianceThread	interface	platform	true		types/messaging.ts	275	
 ComplianceCaseType	type	platform	true		types/messagingCompliance.ts	9	
 ComplianceCaseStatus	type	platform	true		types/messagingCompliance.ts	16	
 ComplianceAccessEventType	type	platform	true		types/messagingCompliance.ts	22	

@@ -89,6 +89,7 @@ import {
   getTicketForActor,
   listTicketRequestTypes,
   listTicketsForActor,
+  navContextForActor,
   markTicketReadTx,
   searchTicketRequesters,
   runTicketOverdueSweep,
@@ -614,7 +615,7 @@ router.post('/communications/messages/internal-note', async c => {
   });
   if (!result.ok) {
     const status = (result.status ?? 500) as 200;
-    return c.json({ success: false, message: result.message ?? 'Failed' }, status);
+    return c.json({ success: false, message: result.message }, status);
   }
   return c.json({ success: true, post: result.post, duplicate: result.duplicate });
 });
@@ -1139,10 +1140,8 @@ router.post('/communications/tickets/create', async c => {
 });
 
 const TicketListSchema = z.object({
-  status:    z.enum([
-    'open','assigned','in_progress','waiting_requester',
-    'resolved','closed','reopened','cancelled',
-  ]).nullable().optional(),
+  // Status-GROUP navigation filtering (not exact status). Inbox is active-only via scope.
+  statusGroup: z.enum(['active','resolved','archived','all']).nullable().optional(),
   scope:     z.enum(['mine','assigned','queue','all']).default('mine'),
   queueCode: z.string().min(1).max(100).nullable().optional(),
   priority: z.enum(['low','medium','high','critical']).nullable().optional(),
@@ -1162,7 +1161,7 @@ router.post('/communications/tickets/list', async c => {
   const data = await listTicketsForActor({
     actorId: user.id,
     scope: v.data.scope,
-    status: v.data.status,
+    statusGroup: v.data.statusGroup,
     queueCode: v.data.queueCode,
     priority: v.data.priority,
     requestTypeCode: v.data.requestTypeCode,
@@ -1171,7 +1170,16 @@ router.post('/communications/tickets/list', async c => {
     limit: v.data.limit,
     before: v.data.cursor,
   });
-  return c.json({ success: true, data: data.items, nextCursor: data.nextCursor });
+  return c.json({ success: true, data: data.items, nextCursor: data.nextCursor, total: data.total });
+});
+
+// Server-authoritative navigation context: capabilities (isHandler + handled
+// service areas, from permissions only) + per-scope, per-status-group counts over
+// the actor's full visible set. The FE must not derive access or totals from a page.
+router.post('/communications/tickets/nav-context', async c => {
+  const user = await requirePermission(c, 'communications.view');
+  const data = await navContextForActor(user.id);
+  return c.json({ success: true, data });
 });
 
 const TicketIdSchema = z.object({ ticketId: z.uuid() });

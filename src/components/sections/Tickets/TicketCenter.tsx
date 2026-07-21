@@ -10,6 +10,7 @@ import {
   useMarkTicketRead,
   useMyTickets,
   useTicket,
+  useTicketNavContext,
   useUpdateTicket,
   type CanonicalTicket,
   type TicketListArgs,
@@ -17,17 +18,44 @@ import {
 } from '@api/communications';
 import { useSessionStore } from '@store/session';
 import { toast } from '@store/ui';
+import { useCan } from '@lib/permissions';
 import { Drawer, LucideIcon, Modal, PanelEmpty } from '@ui';
 import { TicketCreateDialog } from './TicketCreateDialog';
 import './ticketCenter.css';
 import './ticketCenterMockup.css';
 
-type Scope = 'queue' | 'assigned' | 'all';
+type Scope = 'mine' | 'assigned' | 'queue' | 'all';
 type DrawerTab = 'Details' | 'Attachments' | 'Participants' | 'Activity';
 type ActionDialog = 'resolve' | 'priority' | 'tag' | null;
-type QuickView = 'all' | 'waiting_requester' | 'overdue' | 'due_today' | 'resolved';
+type StatusGroup = 'active' | 'resolved' | 'archived' | 'all';
 
-const OPEN_STATUSES = new Set(['open', 'assigned', 'in_progress', 'waiting_requester', 'reopened']);
+// Status GROUPS map many statuses to one nav bucket; the server enforces the
+// mapping in ticket_list_for_actor. Active = live work, Resolved = fulfilled
+// (read-only, reopenable), Archived = closed/cancelled (audit).
+const READ_ONLY_STATUSES = new Set(['resolved', 'closed', 'cancelled']);
+const RESOLVED_STATUSES = new Set(['resolved']);
+const ARCHIVED_STATUSES = new Set(['closed', 'cancelled']);
+
+function statusGroupForStatus(status: string): Exclude<StatusGroup, 'all'> {
+  if (RESOLVED_STATUSES.has(status)) return 'resolved';
+  if (ARCHIVED_STATUSES.has(status)) return 'archived';
+  return 'active';
+}
+
+// Service area (queue) -> stable category colour bucket. The pill TEXT is the
+// ticket's own category; only the COLOUR bucket is derived from the service area.
+const CATEGORY_BUCKET: Record<string, string> = {
+  general: 'general', hr: 'hr', attendance: 'hr', payroll: 'payroll_finance',
+  it: 'it', facilities: 'facilities', hse: 'hse',
+};
+function categoryBucket(queueCode: string): string {
+  return CATEGORY_BUCKET[queueCode] ?? 'neutral';
+}
+
+const SCOPE_META: Record<Scope, string> = {
+  mine: 'My Tickets', assigned: 'Assigned to Me', queue: 'Inbox', all: 'All Tickets',
+};
+
 const PAGE_SIZE = 6;
 
 function titleCase(value: string): string {
@@ -149,7 +177,7 @@ function editorToMarkdown(editor: HTMLElement): string {
   };
   [...editor.childNodes].forEach(appendBlock);
   const serialized = lines.join('\n').replace(/\n{3,}/g, '\n\n').trim();
-  return serialized || editor.innerText?.trim() || editor.textContent?.trim() || '';
+  return serialized || editor.innerText.trim() || editor.textContent.trim() || '';
 }
 
 function safeLink(value: string): string | null {
@@ -157,18 +185,18 @@ function safeLink(value: string): string | null {
 }
 
 function InlineTicketText({ value }: { value: string }): VNode {
-  const parts: Array<string | VNode> = [];
+  const parts: (string | VNode)[] = [];
   const pattern = /(\*\*[^*\n]+\*\*|\*[^*\n]+\*|\+\+[^+\n]+\+\+|\[[^\]\n]+\]\([^) \n]+\))/g;
   let cursor = 0;
   for (const match of value.matchAll(pattern)) {
-    const index = match.index ?? 0;
+    const index = match.index;
     if (index > cursor) parts.push(value.slice(cursor, index));
     const token = match[0];
     if (token.startsWith('**')) parts.push(<strong>{token.slice(2, -2)}</strong>);
     else if (token.startsWith('*')) parts.push(<em>{token.slice(1, -1)}</em>);
     else if (token.startsWith('++')) parts.push(<u>{token.slice(2, -2)}</u>);
     else {
-      const link = token.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+      const link = /^\[([^\]]+)\]\(([^)]+)\)$/.exec(token);
       const href = link?.[2] ? safeLink(link[2]) : null;
       parts.push(href ? <a href={href} target="_blank" rel="noopener noreferrer">{link?.[1]}</a> : token);
     }
@@ -184,9 +212,9 @@ function TicketRichText({ value }: { value: string }): VNode {
   let index = 0;
   while (index < lines.length) {
     const line = lines[index] ?? '';
-    if (/^- /.test(line)) {
+    if (line.startsWith("- ")) {
       const items: string[] = [];
-      while (index < lines.length && /^- /.test(lines[index] ?? '')) items.push((lines[index++] ?? '').slice(2));
+      while (index < lines.length && (lines[index] ?? '').startsWith("- ")) items.push((lines[index++] ?? '').slice(2));
       blocks.push(<ul>{items.map(item => <li><InlineTicketText value={item} /></li>)}</ul>);
       continue;
     }
@@ -206,8 +234,8 @@ function TicketPills({ ticket }: { ticket: CanonicalTicket }): VNode {
   return (
     <div class="tc-pills">
       <span class={`tc-pill status ${ticket.status}`}>{titleCase(ticket.status)}</span>
-      <span class={`tc-pill priority ${ticket.priority}`}><i />{titleCase(ticket.priority)} priority</span>
-      <span class="tc-pill queue">{ticket.queueCode.replace(/_/g, ' ')}</span>
+      <span class={`tc-pill priority ${ticket.priority}`}><i />{titleCase(ticket.priority)} severity</span>
+      <span class={`tc-pill category cat-${categoryBucket(ticket.queueCode)}`}>{titleCase(ticket.category)}</span>
     </div>
   );
 }
@@ -220,7 +248,6 @@ function Avatar({ profile, fallback, small = false }: { profile: TicketUserProfi
 
 function TicketRow({ ticket, selected, onClick }: { ticket: CanonicalTicket; selected: boolean; onClick: () => void }): VNode {
   const requester = ticket.requester;
-  const systemTag = ticket.tags.find(tag => tag.kind === 'system');
   return (
     <button type="button" class={`tc-ticket-row${selected ? ' selected' : ''}${ticket.status === 'resolved' ? ' resolved' : ''}`} onClick={onClick}>
       <span class={`tc-avatar-wrap${ticket.unreadCount > 0 ? ' unread' : ''}`}>
@@ -231,7 +258,7 @@ function TicketRow({ ticket, selected, onClick }: { ticket: CanonicalTicket; sel
         <span class="tc-ticket-name"><strong>{requester?.displayName ?? ticket.ticketNumber}</strong><time>{relativeTime(ticket.lastActivityAt)}</time></span>
         <span class="tc-ticket-number">{ticket.ticketNumber}</span>
         <span class="tc-ticket-subject">{ticket.subject}</span>
-        <TicketPills ticket={{ ...ticket, queueCode: systemTag?.label ?? ticket.queueCode }} />
+        <TicketPills ticket={ticket} />
       </span>
     </button>
   );
@@ -284,12 +311,18 @@ export function TicketCenter(): VNode {
   const currentName = useSessionStore(state => state.fullName);
   const currentPhoto = useSessionStore(state => state.profileImage);
   const currentProfile: TicketUserProfile | null = currentUserId ? { id: currentUserId, displayName: currentName ?? 'You', email: null, role: null, photoUrl: currentPhoto } : null;
-  const [scope, setScope] = useState<Scope>('queue');
+  // useCan is a hook — call each unconditionally (a `||` chain would make the later
+  // calls conditional and violate rules-of-hooks), then combine the booleans.
+  const canCreateSelf = useCan('tickets.create_self');
+  const canCreateTeam = useCan('tickets.create_team');
+  const canCreateOnBehalf = useCan('tickets.create_on_behalf');
+  const canCreateInternal = useCan('tickets.create_internal');
+  const canCreateAny = canCreateSelf || canCreateTeam || canCreateOnBehalf || canCreateInternal;
+  const [scope, setScope] = useState<Scope>('mine');
+  const [statusGroup, setStatusGroup] = useState<StatusGroup>('active');
   const [search, setSearch] = useState('');
   const [querySearch, setQuerySearch] = useState('');
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [quickView, setQuickView] = useState<QuickView>('all');
-  const [status, setStatus] = useState('');
   const [priority, setPriority] = useState('');
   const [queueCode, setQueueCode] = useState('');
   const [requestTypeCode, setRequestTypeCode] = useState('');
@@ -315,72 +348,94 @@ export function TicketCenter(): VNode {
     return () => window.clearTimeout(timer);
   }, [search]);
 
+  // Inbox (queue scope) is always active-only and hides the status dropdown.
+  const effectiveStatusGroup: StatusGroup = scope === 'queue' ? 'active' : statusGroup;
+
   const listArgs: TicketListArgs = {
     scope,
+    statusGroup: effectiveStatusGroup,
     search: querySearch || null,
-    status: status || null,
     priority: (priority || null) as TicketListArgs['priority'],
     queueCode: queueCode || null,
     requestTypeCode: requestTypeCode || null,
     tagKey: tagKey || null,
     limit: 100,
   };
+  const navQ = useTicketNavContext();
+  const isHandler = navQ.data?.capabilities.isHandler ?? false;
+  const navCounts = navQ.data?.counts;
+  const handledServiceAreas = navQ.data?.capabilities.handledServiceAreas ?? [];
   const listQ = useMyTickets(listArgs);
-  const allQ = useMyTickets({ scope: 'all', limit: 100 });
+  // Full visible set (first page) ONLY to populate advanced-filter option lists
+  // and resolve open-by-number — never for counts or handler access (server-owned).
+  const optionsQ = useMyTickets({ scope: 'all', statusGroup: 'all', limit: 100 });
   const detailQ = useTicket(selectedId);
   const summaryQ = useCommsSummary();
   const comment = useCommentTicket();
   const update = useUpdateTicket();
   const markRead = useMarkTicketRead();
-  const tickets = useMemo(() => listQ.data ?? [], [listQ.data]);
-  const allTickets = useMemo(() => allQ.data ?? [], [allQ.data]);
+  // The server already scoped + status-grouped the list; the page IS the display set.
+  const displayTickets = useMemo(() => listQ.data?.items ?? [], [listQ.data]);
+  const total = listQ.data?.total ?? 0;
+  const optionTickets = useMemo(() => optionsQ.data?.items ?? [], [optionsQ.data]);
   const detail = detailQ.data;
   const ticket = detail?.ticket;
-  const displayTickets = useMemo(() => tickets.filter(row => {
-    if (quickView === 'all') return true;
-    if (quickView === 'waiting_requester' || quickView === 'resolved') return row.status === quickView;
-    if (!row.resolutionDueAt || !OPEN_STATUSES.has(row.status)) return false;
-    const due = new Date(row.resolutionDueAt);
-    if (quickView === 'overdue') return due.getTime() < referenceNow;
-    const now = new Date(referenceNow);
-    return due.getFullYear() === now.getFullYear() && due.getMonth() === now.getMonth() && due.getDate() === now.getDate();
-  }), [quickView, referenceNow, tickets]);
+
+  // Apply the role-aware default scope once capabilities load, and never leave a
+  // non-handler sitting on a handler-only scope (permission loss → My Tickets).
+  const scopeDefaultedRef = useRef(false);
+  useEffect(() => {
+    if (navQ.isLoading || navQ.data === undefined) return;
+    if (!scopeDefaultedRef.current) {
+      scopeDefaultedRef.current = true;
+      setScope(isHandler ? 'queue' : 'mine');
+      return;
+    }
+    if (!isHandler && scope !== 'mine') setScope('mine');
+  }, [navQ.isLoading, navQ.data, isHandler, scope]);
 
   useEffect(() => {
     const firstTicket = displayTickets[0];
     if (!selectedId && firstTicket) setSelectedId(firstTicket.id);
-    if (selectedId && firstTicket && !displayTickets.some(row => row.id === selectedId)) setSelectedId(firstTicket.id);
     if (selectedId && displayTickets.length === 0) setSelectedId('');
   }, [displayTickets, selectedId]);
 
-  // Show PAGE_SIZE (6) tickets per page. currentPage is clamped so a shrinking
-  // list (after a filter) never strands the view on an empty page.
+  // Show PAGE_SIZE (6) tickets per page over the loaded page; the footer total is
+  // the server-authoritative count of the complete scope+filter set.
   const pageCount = Math.max(1, Math.ceil(displayTickets.length / PAGE_SIZE));
   const currentPage = Math.min(page, pageCount);
   const pagedTickets = displayTickets.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
 
-  // Return to page 1 whenever the filter/scope/search inputs change (not on refetch).
-  useEffect(() => { setPage(1); }, [scope, querySearch, status, priority, queueCode, requestTypeCode, tagKey, quickView]);
+  // Return to page 1 whenever the filter/scope/status/search inputs change.
+  useEffect(() => { setPage(1); }, [scope, statusGroup, querySearch, priority, queueCode, requestTypeCode, tagKey]);
 
   useEffect(() => {
     const onOpen = (event: Event) => {
-      const id = (event as CustomEvent<{ ticketId?: string; ticketNumber?: string; create?: boolean }>).detail;
-      if (id?.ticketId) setSelectedId(id.ticketId);
-      if (id?.ticketNumber) setRequestedTicketNumber(id.ticketNumber);
-      if (id?.create) setCreateOpen(true);
+      const id = (event as CustomEvent<{ ticketId?: string; ticketNumber?: string; status?: string; create?: boolean }>).detail;
+      if (id.create) setCreateOpen(true);
+      // Land on a scope + status group that contains the opened ticket so the list
+      // highlights it (the thread panel loads by id regardless).
+      if (id.status) {
+        setStatusGroup(statusGroupForStatus(id.status));
+        setScope(isHandler ? 'all' : 'mine');
+      }
+      if (id.ticketId) setSelectedId(id.ticketId);
+      if (id.ticketNumber) setRequestedTicketNumber(id.ticketNumber);
     };
     window.addEventListener('siomac:openTicket', onOpen);
     return () => window.removeEventListener('siomac:openTicket', onOpen);
-  }, []);
+  }, [isHandler]);
 
   useEffect(() => {
     if (!requestedTicketNumber) return;
-    const match = allTickets.find(row => row.ticketNumber === requestedTicketNumber);
+    const match = optionTickets.find(row => row.ticketNumber === requestedTicketNumber);
     if (match) {
+      setStatusGroup(statusGroupForStatus(match.status));
+      setScope(isHandler ? 'all' : 'mine');
       setSelectedId(match.id);
       setRequestedTicketNumber('');
     }
-  }, [allTickets, requestedTicketNumber]);
+  }, [optionTickets, requestedTicketNumber, isHandler]);
 
   useEffect(() => {
     if (!detail || detail.unreadCount <= 0) return;
@@ -389,16 +444,6 @@ export function TicketCenter(): VNode {
     markedReadRef.current = key;
     markRead.mutate({ ticketId: selectedId, sequence: detail.ticket.activitySequence });
   }, [detail, markRead, selectedId]);
-
-  const overdue = useMemo(() => allTickets.filter(row => OPEN_STATUSES.has(row.status) && row.resolutionDueAt && new Date(row.resolutionDueAt).getTime() < referenceNow).length, [allTickets, referenceNow]);
-  const dueToday = useMemo(() => {
-    const now = new Date(referenceNow);
-    return allTickets.filter(row => {
-      if (!OPEN_STATUSES.has(row.status) || !row.resolutionDueAt) return false;
-      const due = new Date(row.resolutionDueAt);
-      return due.getFullYear() === now.getFullYear() && due.getMonth() === now.getMonth() && due.getDate() === now.getDate();
-    }).length;
-  }, [allTickets, referenceNow]);
 
   function selectTicket(id: string): void {
     setSelectedId(id);
@@ -434,6 +479,7 @@ export function TicketCenter(): VNode {
 
   function format(command: string, value?: string): void {
     editorRef.current?.focus();
+    // eslint-disable-next-line @typescript-eslint/no-deprecated -- execCommand is the only synchronous contenteditable formatting API; no replacement exists
     document.execCommand(command, false, value);
     setBody(editorRef.current ? editorToMarkdown(editorRef.current) : '');
   }
@@ -463,14 +509,30 @@ export function TicketCenter(): VNode {
 
   const requester = ticket?.requester ?? null;
   const activeStatus = ticket?.status ?? '';
-  const hasQueueAccess = allTickets.some(row => row.canHandle);
-  const queueOptions = useMemo(() => [...new Set(allTickets.map(row => row.queueCode))].sort(), [allTickets]);
-  const requestTypeOptions = useMemo(() => [...new Set(allTickets.map(row => row.requestTypeCode))].sort(), [allTickets]);
+  const isReadOnly = READ_ONLY_STATUSES.has(activeStatus);
+  // Service-area filter options come from the actor's handled areas (handlers) so
+  // they never depend on which tickets happened to load; request-type / tag options
+  // are suggestions derived from the visible page.
+  const queueOptions = useMemo(
+    () => (isHandler
+      ? handledServiceAreas.map(area => area.code)
+      : [...new Set(optionTickets.map(row => row.queueCode))].sort()),
+    [isHandler, handledServiceAreas, optionTickets],
+  );
+  const requestTypeOptions = useMemo(() => [...new Set(optionTickets.map(row => row.requestTypeCode))].sort(), [optionTickets]);
   const tagOptions = useMemo(() => {
     const map = new Map<string, string>();
-    allTickets.forEach(row => row.tags.forEach(tag => map.set(tag.key, tag.label)));
+    optionTickets.forEach(row => row.tags.forEach(tag => map.set(tag.key, tag.label)));
     return [...map.entries()].sort((a, b) => a[1].localeCompare(b[1]));
-  }, [allTickets]);
+  }, [optionTickets]);
+  // Count badge for a scope tab; follows the selected status group (Inbox is always active).
+  function scopeBadge(target: Scope): number {
+    if (!navCounts) return 0;
+    if (target === 'queue') return navCounts.inbox;
+    if (target === 'assigned') return navCounts.assigned[statusGroup];
+    if (target === 'all') return navCounts.all[statusGroup];
+    return navCounts.mine[statusGroup];
+  }
   const isWatcher = detail?.participants.some(row => row.userId === currentUserId && row.role === 'watcher') ?? false;
 
   const navSlot = typeof document !== 'undefined' ? document.getElementById('topbar-nav-slot') : null;
@@ -481,12 +543,12 @@ export function TicketCenter(): VNode {
   const bandHeader = isTicketsActive && navSlot
     ? createPortal(
         <div class="tc-band">
-          <div class="tc-band-head"><h1>Recent Tickets</h1><button type="button" class="tc-band-new" onClick={() => setCreateOpen(true)}><LucideIcon name="Plus" size={15} /><span>New ticket</span></button></div>
+          <div class="tc-band-head"><h1>Recent Tickets</h1>{canCreateAny && <button type="button" class="tc-band-new" onClick={() => setCreateOpen(true)}><LucideIcon name="Plus" size={15} /><span>New ticket</span></button>}</div>
           <div class="tc-band-stats" aria-label="Ticket summary">
-            <div class="tc-kpi tc-kpi--blue"><span class="tc-kpi-ic"><LucideIcon name="Inbox" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{summaryQ.data?.ticketsOpen ?? allTickets.filter(row => OPEN_STATUSES.has(row.status)).length}</span><span class="tc-kpi-name">Open</span></div></div>
+            <div class="tc-kpi tc-kpi--blue"><span class="tc-kpi-ic"><LucideIcon name="Inbox" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{navCounts?.all.active ?? 0}</span><span class="tc-kpi-name">Active</span></div></div>
             <div class="tc-kpi tc-kpi--purple"><span class="tc-kpi-ic"><LucideIcon name="Mail" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{summaryQ.data?.ticketsUnread ?? 0}</span><span class="tc-kpi-name">Unread</span></div></div>
-            <div class="tc-kpi tc-kpi--red"><span class="tc-kpi-ic"><LucideIcon name="Clock" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{overdue}</span><span class="tc-kpi-name">Overdue</span></div></div>
-            <div class="tc-kpi tc-kpi--amber"><span class="tc-kpi-ic"><LucideIcon name="Calendar" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{dueToday}</span><span class="tc-kpi-name">Due today</span></div></div>
+            <div class="tc-kpi tc-kpi--red"><span class="tc-kpi-ic"><LucideIcon name="CircleCheck" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{navCounts?.all.resolved ?? 0}</span><span class="tc-kpi-name">Resolved</span></div></div>
+            <div class="tc-kpi tc-kpi--amber"><span class="tc-kpi-ic"><LucideIcon name="Layers" size={15} /></span><div class="tc-kpi-body"><span class="tc-kpi-num">{navCounts?.all.all ?? 0}</span><span class="tc-kpi-name">All</span></div></div>
           </div>
         </div>,
         navSlot,
@@ -500,37 +562,39 @@ export function TicketCenter(): VNode {
         <section class="tc-list-panel">
           <header class="tc-list-head">
             <div class="tc-search"><i class="fas fa-search" /><input value={search} onInput={event => setSearch(event.currentTarget.value)} placeholder="Search tickets" /><button class={filtersOpen ? 'active' : ''} onClick={() => setFiltersOpen(open => !open)} aria-label="Filters"><i class="fas fa-filter" /></button></div>
-            {hasQueueAccess ? (
+            {isHandler ? (
               <div class="tc-scopes">
                 {([
-                  ['queue', 'Queue', 'List'],
-                  ['assigned', 'Assigned', 'User'],
-                  ['all', 'All', 'Ticket'],
+                  ['queue', 'Inbox', 'Inbox'],
+                  ['assigned', 'Assigned to Me', 'User'],
+                  ['all', 'All Tickets', 'Ticket'],
                 ] as const).map(([key, label, icon]) => (
-                  <button type="button" class={scope === key ? 'active' : ''} onClick={() => setScope(key)} key={key}><LucideIcon name={icon} size={14} />{label}</button>
+                  <button type="button" class={scope === key ? 'active' : ''} onClick={() => setScope(key)} key={key}><LucideIcon name={icon} size={14} />{label}<b>{scopeBadge(key)}</b></button>
                 ))}
               </div>
             ) : (
-              <div class="tc-self-scope"><LucideIcon name="User" size={14} /> My requests</div>
+              <div class="tc-self-scope"><LucideIcon name="User" size={14} /> My Tickets<b>{scopeBadge('mine')}</b></div>
+            )}
+            {scope !== 'queue' && (
+              <div class="tc-statusfilter">
+                <label>Status
+                  <select value={statusGroup} onChange={event => setStatusGroup(event.currentTarget.value as StatusGroup)}>
+                    <option value="active">Active</option>
+                    <option value="resolved">Resolved</option>
+                    <option value="archived">Archived</option>
+                    <option value="all">All</option>
+                  </select>
+                </label>
+              </div>
             )}
             {filtersOpen && <div class="tc-filters">
-              <div class="tc-quick-views">
-                <strong>Views</strong>
-                {([
-                  ['waiting_requester', 'Waiting on requester', allTickets.filter(row => row.status === 'waiting_requester').length],
-                  ['overdue', 'Overdue', overdue],
-                  ['due_today', 'Due today', dueToday],
-                  ['resolved', 'Resolved', allTickets.filter(row => row.status === 'resolved').length],
-                ] as const).map(([key, label, count]) => <button type="button" class={quickView === key ? 'active' : ''} onClick={() => setQuickView(quickView === key ? 'all' : key)}><span>{label}</span><b>{count}</b></button>)}
-              </div>
-              <label>Status<select value={status} onChange={event => setStatus(event.currentTarget.value)}><option value="">All statuses</option><option value="open">Open</option><option value="assigned">Assigned</option><option value="in_progress">In progress</option><option value="waiting_requester">Waiting on requester</option><option value="resolved">Resolved</option><option value="closed">Closed</option></select></label>
-              <label>Priority<select value={priority} onChange={event => setPriority(event.currentTarget.value)}><option value="">All priorities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
-              <label>Queue<select value={queueCode} onChange={event => setQueueCode(event.currentTarget.value)}><option value="">All queues</option>{queueOptions.map(code => <option value={code} key={code}>{titleCase(code)}</option>)}</select></label>
+              <label>Severity<select value={priority} onChange={event => setPriority(event.currentTarget.value)}><option value="">All severities</option><option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option></select></label>
+              <label>Service area<select value={queueCode} onChange={event => setQueueCode(event.currentTarget.value)}><option value="">All service areas</option>{queueOptions.map(code => <option value={code} key={code}>{titleCase(code)}</option>)}</select></label>
               <label>Request type<select value={requestTypeCode} onChange={event => setRequestTypeCode(event.currentTarget.value)}><option value="">All request types</option>{requestTypeOptions.map(code => <option value={code} key={code}>{titleCase(code)}</option>)}</select></label>
               <label>Tag<select value={tagKey} onChange={event => setTagKey(event.currentTarget.value)}><option value="">All tags</option>{tagOptions.map(([key, label]) => <option value={key} key={key}>{label}</option>)}</select></label>
-              <button onClick={() => { setQuickView('all'); setStatus(''); setPriority(''); setQueueCode(''); setRequestTypeCode(''); setTagKey(''); }}>Clear</button>
+              <button onClick={() => { setPriority(''); setQueueCode(''); setRequestTypeCode(''); setTagKey(''); }}>Clear</button>
             </div>}
-            <div class="tc-list-group"><strong>{titleCase(scope)} tickets ({displayTickets.length})</strong><span>Newest</span></div>
+            <div class="tc-list-group"><strong>{SCOPE_META[scope]} ({total})</strong><span>Newest</span></div>
           </header>
           <div class="tc-ticket-scroll">
             {listQ.isLoading && <div class="tc-list-state">Loading tickets…</div>}
@@ -538,7 +602,7 @@ export function TicketCenter(): VNode {
             {!listQ.isLoading && !listQ.isError && displayTickets.length === 0 && <div class="tc-list-state"><i class="fas fa-ticket" />No tickets match these filters.</div>}
             {pagedTickets.map(row => <TicketRow key={row.id} ticket={row} selected={row.id === selectedId} onClick={() => selectTicket(row.id)} />)}
           </div>
-          <footer class="tc-list-foot"><span>{displayTickets.length === 0 ? '0' : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayTickets.length)}`} of {displayTickets.length}</span><div class="tc-list-pages"><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} aria-label="Previous page">‹</button>{pagerWindow(currentPage, pageCount).map((p, i) => p === 'gap' ? <span class="tc-page-gap" key={`gap${i}`}>…</span> : <button type="button" key={p} class={p === currentPage ? 'active' : ''} onClick={() => setPage(p)}>{p}</button>)}<button type="button" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)} aria-label="Next page">›</button></div><button onClick={() => void listQ.refetch()}><i class="fas fa-rotate" /> Refresh</button></footer>
+          <footer class="tc-list-foot"><span>{displayTickets.length === 0 ? '0' : `${(currentPage - 1) * PAGE_SIZE + 1}–${Math.min(currentPage * PAGE_SIZE, displayTickets.length)}`} of {total}</span><div class="tc-list-pages"><button type="button" disabled={currentPage <= 1} onClick={() => setPage(currentPage - 1)} aria-label="Previous page">‹</button>{pagerWindow(currentPage, pageCount).map((p, i) => p === 'gap' ? <span class="tc-page-gap" key={`gap${i}`}>…</span> : <button type="button" key={p} class={p === currentPage ? 'active' : ''} onClick={() => setPage(p)}>{p}</button>)}<button type="button" disabled={currentPage >= pageCount} onClick={() => setPage(currentPage + 1)} aria-label="Next page">›</button></div><button onClick={() => void listQ.refetch()}><i class="fas fa-rotate" /> Refresh</button></footer>
         </section>
         <section class="tc-thread-panel">
           {!selectedId ? <div class="tc-thread-empty"><i class="fas fa-ticket" /><h2>Select a ticket</h2><p>Choose a ticket to see its conversation and actions.</p></div> : (
@@ -546,19 +610,19 @@ export function TicketCenter(): VNode {
               <header class="tc-thread-head">
                 <div class="tc-thread-title"><small>{ticket?.ticketNumber ?? 'Loading…'}</small><h2>{ticket?.subject ?? 'Loading ticket…'}</h2>{ticket && <TicketPills ticket={ticket} />}</div>
                 {ticket && <div class="tc-actions">
-                  {detail?.canHandle && <button class={isWatcher ? 'active' : ''} aria-label={isWatcher ? 'Unwatch ticket' : 'Watch ticket'} onClick={() => runAction(isWatcher ? 'unwatch' : 'watch')}><i class={`${isWatcher ? 'fas' : 'far'} fa-star`} /></button>}
+                  {detail.canHandle && <button class={isWatcher ? 'active' : ''} aria-label={isWatcher ? 'Unwatch ticket' : 'Watch ticket'} onClick={() => runAction(isWatcher ? 'unwatch' : 'watch')}><i class={`${isWatcher ? 'fas' : 'far'} fa-star`} /></button>}
                   <button aria-label="Open activity" onClick={() => { setDrawerTab('Activity'); setDrawerOpen(true); }}><i class="fas fa-clock-rotate-left" /></button>
                   <button aria-label="More ticket actions" onClick={() => setMoreOpen(open => !open)}><i class="fas fa-ellipsis-vertical" /></button>
                   <span />
-                  {detail?.canHandle && ticket.assigneeUserId !== currentUserId && <button onClick={() => currentUserId && runAction('assign', { assigneeId: currentUserId })}>Assign to me</button>}
-                  {detail?.canHandle && ['open', 'assigned', 'reopened'].includes(activeStatus) && <button onClick={() => runAction('start')}>Start</button>}
+                  {detail.canHandle && ticket.assigneeUserId !== currentUserId && <button onClick={() => currentUserId && runAction('assign', { assigneeId: currentUserId })}>Assign to me</button>}
+                  {detail.canHandle && ['open', 'assigned', 'reopened'].includes(activeStatus) && <button onClick={() => runAction('start')}>Start</button>}
                   <button class="details" onClick={() => { setDrawerTab('Details'); setDrawerOpen(true); }}>Ticket details <i class="fas fa-chevron-right" /></button>
-                  {detail?.canHandle && OPEN_STATUSES.has(activeStatus) && <button class="resolve" onClick={() => { setActionValue('fulfilled'); setActionDialog('resolve'); }}><i class="fas fa-check" /> Resolve</button>}
+                  {detail.canHandle && !isReadOnly && activeStatus && <button class="resolve" onClick={() => { setActionValue('fulfilled'); setActionDialog('resolve'); }}><i class="fas fa-check" /> Resolve</button>}
                   {moreOpen && <div class="tc-action-menu">
-                    {detail?.canHandle && <button onClick={() => runAction('wait_requester')}>Waiting on requester</button>}
-                    {detail?.canHandle && <button onClick={() => setActionDialog('priority')}>Change priority</button>}
-                    {detail?.canHandle && <button onClick={() => setActionDialog('tag')}>Add tag</button>}
-                    {detail?.canHandle && activeStatus === 'resolved' && <button onClick={() => runAction('close')}>Close ticket</button>}
+                    {detail.canHandle && <button onClick={() => runAction('wait_requester')}>Waiting on requester</button>}
+                    {detail.canHandle && <button onClick={() => setActionDialog('priority')}>Change priority</button>}
+                    {detail.canHandle && <button onClick={() => setActionDialog('tag')}>Add tag</button>}
+                    {detail.canHandle && activeStatus === 'resolved' && <button onClick={() => runAction('close')}>Close ticket</button>}
                     {['resolved', 'closed'].includes(activeStatus) && <button onClick={() => runAction('reopen')}>Reopen ticket</button>}
                     {!['closed', 'cancelled'].includes(activeStatus) && <button class="danger" onClick={() => runAction('cancel')}>Cancel ticket</button>}
                   </div>}
@@ -585,7 +649,13 @@ export function TicketCenter(): VNode {
                   </>
                 )}
               </div>
-              {detail && !['closed', 'cancelled'].includes(activeStatus) && (
+              {detail && isReadOnly && (
+                <div class="tc-readonly-note">
+                  <i class="fas fa-lock" />
+                  <span>This ticket is {titleCase(activeStatus)} and read-only.{detail.canHandle && activeStatus === 'resolved' ? ' Reopen it to add a reply.' : ''}</span>
+                </div>
+              )}
+              {detail && !isReadOnly && (
                 <div class={`tc-composer${composerMode === 'internal' ? ' internal' : ''}`}>
                   <div class="tc-recipient"><Avatar small profile={currentProfile} /><strong>{composerMode === 'internal' ? 'Internal note' : 'Reply to:'}</strong>{composerMode === 'reply' && <span class="tc-recipient-chip">{requester?.displayName ?? 'Requester'}</span>}<div><button class={composerMode === 'reply' ? 'active' : ''} onClick={() => setComposerMode('reply')}>Reply</button>{detail.canHandle && <button class={composerMode === 'internal' ? 'active' : ''} onClick={() => setComposerMode('internal')}><i class="fas fa-note-sticky" /> Internal note</button>}</div><small>{composerMode === 'internal' ? 'Visible to handlers only' : `Visible to ${requester?.displayName ?? 'requester'}`}</small></div>
                   <div class="tc-format">

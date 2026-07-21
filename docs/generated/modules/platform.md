@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `27ec2ca1b3f578c39eefb12b`
+Source fingerprint: `3417e14fd3eaf7b67790cf26`
 
-Files: 289 | Symbols: 2629 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 293 | E2E suites: 0
+Files: 289 | Symbols: 2629 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -394,6 +394,8 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.calendar_attendee_respond_tx` | `supabase/migrations/20260919000438_calendar_reminders_and_attendee_responses.sql:186` |
 | function | `public.calendar_record_delivery_tx` | `supabase/migrations/20260919000438_calendar_reminders_and_attendee_responses.sql:280` |
 | function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000439_messaging_thread_list_performance.sql:24` |
+| function | `public.messaging_add_internal_note_tx` | `supabase/migrations/20260919000441_messaging_internal_notes.sql:26` |
+| function | `public.messaging_search_posts_page` | `supabase/migrations/20260919000441_messaging_internal_notes.sql:140` |
 | table | `if` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:31` |
 | table | `public.approval_seen_receipts` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:44` |
 | function | `public.work_calendar_valid_weekdays` | `supabase/migrations/20260919000700_shared_work_calendar.sql:24` |
@@ -517,7 +519,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | shared-types | `types/db.ts` | 244 |
 | shared-types | `types/hrContracts.ts` | 179 |
 | shared-types | `types/hrDocuments.ts` | 132 |
-| shared-types | `types/messaging.ts` | 283 |
+| shared-types | `types/messaging.ts` | 287 |
 | shared-types | `types/messagingCompliance.ts` | 318 |
 | shared-types | `types/supabase.ts` | 135 |
 | shared-types | `types/workCalendars.ts` | 145 |

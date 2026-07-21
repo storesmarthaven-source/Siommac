@@ -115,7 +115,7 @@ values
    'Follow up an overdue filing or missing authority receipt.', 'finance_compliance', 'high',
    120, 480, array['Finance','Compliance'], true),
   ('general_support', 'general', 'General support',
-   'General support request used for migrated tickets and approved module integrations.', 'general', 'medium',
+   'General support request used for migrated tickets and approved module integrations.', 'general', 'low',
    480, 2880, array['Support'], false)
 on conflict (code) do update
 set queue_code = excluded.queue_code,
@@ -1691,10 +1691,17 @@ as $$
   ) r;
 $$;
 
+-- Renamed p_status -> p_status_group (status GROUP filtering, not exact status)
+-- and split scope enforcement so `queue` and `all` are DISTINCT. A parameter
+-- rename requires drop+recreate; the type signature is unchanged so the final
+-- revoke/grant block below still matches by argument types.
+drop function if exists public.ticket_list_for_actor(
+  text,text,text,text,text,text,text,text,integer,timestamptz
+);
 create or replace function public.ticket_list_for_actor(
   p_actor_id text,
   p_scope text,
-  p_status text,
+  p_status_group text,
   p_queue_code text,
   p_priority text,
   p_request_type_code text,
@@ -1709,7 +1716,9 @@ stable
 security invoker
 set search_path = public, ticket_internal
 as $$
-  with visible as (
+  with matching as (
+    -- The COMPLETE scope + status-group + filter set (no cursor / no limit).
+    -- Drives `total`; the page below applies the keyset cursor + limit.
     select t.*,
            coalesce(tp.last_read_sequence, 0) as last_read_sequence,
            greatest(t.activity_sequence - coalesce(tp.last_read_sequence, 0), 0) as unread_count,
@@ -1724,18 +1733,25 @@ as $$
       tp.user_id is not null
       or ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
     )
-      and (
-        coalesce(p_scope, 'mine') not in ('mine','assigned')
-        or (
-          coalesce(p_scope, 'mine') = 'mine'
-          and (t.requester_user_id = p_actor_id or tp.user_id is not null)
-        )
-        or (
-          p_scope = 'assigned'
-          and t.assignee_user_id = p_actor_id
-        )
-      )
-      and (p_status is null or t.status = p_status)
+      -- Scope: mine / assigned / queue / all are DISTINCT (queue <> all).
+      and case coalesce(nullif(trim(p_scope), ''), 'mine')
+        when 'mine'     then (t.requester_user_id = p_actor_id or tp.user_id is not null)
+        when 'assigned' then (t.assignee_user_id = p_actor_id)
+        when 'queue'    then (
+                          ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
+                          and t.assignee_user_id is null
+                          and t.status in ('open','assigned','in_progress','waiting_requester','reopened')
+                        )
+        when 'all'      then true
+        else (t.requester_user_id = p_actor_id or tp.user_id is not null)
+      end
+      -- Status GROUP -> statuses (Inbox is already active-only via the scope clause).
+      and case coalesce(nullif(trim(p_status_group), ''), 'all')
+        when 'active'   then t.status in ('open','assigned','in_progress','waiting_requester','reopened')
+        when 'resolved' then t.status = 'resolved'
+        when 'archived' then t.status in ('closed','cancelled')
+        else true
+      end
       and (p_queue_code is null or t.queue_code = p_queue_code)
       and (p_priority is null or t.priority = p_priority)
       and (p_request_type_code is null or t.request_type_code = p_request_type_code)
@@ -1752,46 +1768,136 @@ as $$
         or t.subject ilike '%' || trim(p_search) || '%'
         or t.description ilike '%' || trim(p_search) || '%'
       )
-      and (p_before is null or t.last_activity_at < p_before)
-    order by t.last_activity_at desc, t.id desc
+  ),
+  page as (
+    select * from matching
+    where (p_before is null or last_activity_at < p_before)
+    order by last_activity_at desc, id desc
     limit least(greatest(coalesce(p_limit, 50), 1), 100)
   )
   select jsonb_build_object(
-    'items', coalesce(jsonb_agg(jsonb_build_object(
-      'id', v.id,
-      'ticketNumber', v.ticket_number,
-      'requestTypeCode', v.request_type_code,
-      'queueCode', v.queue_code,
-      'category', v.category,
-      'priority', v.priority,
-      'status', v.status,
-      'subject', v.subject,
-      'requesterUserId', v.requester_user_id,
-      'assigneeUserId', v.assignee_user_id,
-      'responseDueAt', v.response_due_at,
-      'resolutionDueAt', v.resolution_due_at,
-      'lastActivityAt', v.last_activity_at,
-      'activitySequence', v.activity_sequence,
-      'lastReadSequence', v.last_read_sequence,
-      'unreadCount', v.unread_count,
-      'isConfidential', v.is_confidential,
-      'canHandle', v.can_handle,
-      'tags', coalesce((
-        select jsonb_agg(jsonb_build_object(
-          'key', tt.tag_key, 'label', tt.label, 'kind', tt.tag_kind
-        ) order by tt.tag_kind, tt.label)
-        from public.ticket_tags tt where tt.ticket_id = v.id
-      ), '[]'::jsonb),
-      'createdAt', v.created_at,
-      'version', v.version
-    ) order by v.last_activity_at desc, v.id desc), '[]'::jsonb),
-    'nextCursor', case
-      when count(*) = least(greatest(coalesce(p_limit, 50), 1), 100)
-      then min(v.last_activity_at)
-      else null
-    end
+    'items', coalesce((
+      select jsonb_agg(jsonb_build_object(
+        'id', p.id,
+        'ticketNumber', p.ticket_number,
+        'requestTypeCode', p.request_type_code,
+        'queueCode', p.queue_code,
+        'category', p.category,
+        'priority', p.priority,
+        'status', p.status,
+        'subject', p.subject,
+        'requesterUserId', p.requester_user_id,
+        'assigneeUserId', p.assignee_user_id,
+        'responseDueAt', p.response_due_at,
+        'resolutionDueAt', p.resolution_due_at,
+        'lastActivityAt', p.last_activity_at,
+        'activitySequence', p.activity_sequence,
+        'lastReadSequence', p.last_read_sequence,
+        'unreadCount', p.unread_count,
+        'isConfidential', p.is_confidential,
+        'canHandle', p.can_handle,
+        'tags', coalesce((
+          select jsonb_agg(jsonb_build_object(
+            'key', tt.tag_key, 'label', tt.label, 'kind', tt.tag_kind
+          ) order by tt.tag_kind, tt.label)
+          from public.ticket_tags tt where tt.ticket_id = p.id
+        ), '[]'::jsonb),
+        'createdAt', p.created_at,
+        'version', p.version
+      ) order by p.last_activity_at desc, p.id desc)
+      from page p
+    ), '[]'::jsonb),
+    'nextCursor', (
+      select case
+        when count(*) = least(greatest(coalesce(p_limit, 50), 1), 100)
+        then min(last_activity_at)
+        else null
+      end
+      from page
+    ),
+    'total', (select count(*) from matching)
+  );
+$$;
+
+-- ── ticket_nav_context_for_actor ───────────────────────────────────────────────
+-- Server-authoritative navigation context: capabilities (is the actor a handler,
+-- and of which service areas) resolved from PERMISSIONS ONLY (never inferred from
+-- returned ticket rows), plus per-scope, per-status-group counts computed over the
+-- actor's FULL visible set (never a page). The frontend must not derive access or
+-- totals from a loaded list page.
+create or replace function public.ticket_nav_context_for_actor(
+  p_actor_id text
+)
+returns jsonb
+language sql
+stable
+security invoker
+set search_path = public, ticket_internal
+as $$
+  with handled as (
+    select q.code, q.label
+    from public.ticket_queues q
+    where q.is_active
+      and ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
+  ),
+  visible as (
+    select t.status,
+           t.requester_user_id,
+           t.assignee_user_id,
+           (tp.user_id is not null) as is_participant,
+           ticket_internal.user_has_permission(p_actor_id, q.handler_permission) as can_handle
+    from public.tickets t
+    join public.ticket_queues q on q.code = t.queue_code
+    left join public.ticket_participants tp
+      on tp.ticket_id = t.id and tp.user_id = p_actor_id and tp.removed_at is null
+    where tp.user_id is not null
+       or ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
+  ),
+  scoped as (
+    select
+      count(*) filter (where can_handle and assignee_user_id is null
+        and status in ('open','assigned','in_progress','waiting_requester','reopened')) as inbox,
+      -- mine (requester or active participant)
+      count(*) filter (where is_participant or requester_user_id = p_actor_id) as mine_all,
+      count(*) filter (where (is_participant or requester_user_id = p_actor_id)
+        and status in ('open','assigned','in_progress','waiting_requester','reopened')) as mine_active,
+      count(*) filter (where (is_participant or requester_user_id = p_actor_id) and status = 'resolved') as mine_resolved,
+      count(*) filter (where (is_participant or requester_user_id = p_actor_id)
+        and status in ('closed','cancelled')) as mine_archived,
+      -- assigned
+      count(*) filter (where assignee_user_id = p_actor_id) as assigned_all,
+      count(*) filter (where assignee_user_id = p_actor_id
+        and status in ('open','assigned','in_progress','waiting_requester','reopened')) as assigned_active,
+      count(*) filter (where assignee_user_id = p_actor_id and status = 'resolved') as assigned_resolved,
+      count(*) filter (where assignee_user_id = p_actor_id and status in ('closed','cancelled')) as assigned_archived,
+      -- all (full visible set)
+      count(*) as all_all,
+      count(*) filter (where status in ('open','assigned','in_progress','waiting_requester','reopened')) as all_active,
+      count(*) filter (where status = 'resolved') as all_resolved,
+      count(*) filter (where status in ('closed','cancelled')) as all_archived
+    from visible
+  ),
+  caps as (
+    select
+      exists (select 1 from handled) as is_handler,
+      coalesce((
+        select jsonb_agg(jsonb_build_object('code', code, 'label', label) order by label)
+        from handled
+      ), '[]'::jsonb) as areas
   )
-  from visible v;
+  select jsonb_build_object(
+    'capabilities', jsonb_build_object(
+      'isHandler', c.is_handler,
+      'handledServiceAreas', c.areas
+    ),
+    'counts', jsonb_build_object(
+      'inbox', s.inbox,
+      'mine',     jsonb_build_object('active', s.mine_active,     'resolved', s.mine_resolved,     'archived', s.mine_archived,     'all', s.mine_all),
+      'assigned', jsonb_build_object('active', s.assigned_active, 'resolved', s.assigned_resolved, 'archived', s.assigned_archived, 'all', s.assigned_all),
+      'all',      jsonb_build_object('active', s.all_active,      'resolved', s.all_resolved,      'archived', s.all_archived,      'all', s.all_all)
+    )
+  )
+  from scoped s, caps c;
 $$;
 
 create or replace function public.ticket_get_for_actor(
@@ -2045,6 +2151,8 @@ revoke all on function public.ticket_requester_search(text,text,text,integer)
 revoke all on function public.ticket_list_for_actor(
   text,text,text,text,text,text,text,text,integer,timestamptz
 ) from public, anon, authenticated;
+revoke all on function public.ticket_nav_context_for_actor(text)
+  from public, anon, authenticated;
 revoke all on function public.ticket_get_for_actor(text,uuid)
   from public, anon, authenticated;
 revoke all on function public.ticket_summary_for_actor(text)
@@ -2074,6 +2182,8 @@ grant execute on function public.ticket_requester_search(text,text,text,integer)
 grant execute on function public.ticket_list_for_actor(
   text,text,text,text,text,text,text,text,integer,timestamptz
 ) to service_role;
+grant execute on function public.ticket_nav_context_for_actor(text)
+  to service_role;
 grant execute on function public.ticket_get_for_actor(text,uuid)
   to service_role;
 grant execute on function public.ticket_summary_for_actor(text)

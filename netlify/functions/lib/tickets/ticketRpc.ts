@@ -17,6 +17,28 @@ export interface TicketMutationResult {
 export interface TicketListResult {
   items: Record<string, unknown>[];
   nextCursor: string | null;
+  /** Count of the COMPLETE selected scope+filter set (before cursor/limit). */
+  total: number;
+}
+
+export interface TicketStatusGroupCounts {
+  active: number;
+  resolved: number;
+  archived: number;
+  all: number;
+}
+
+export interface TicketNavContext {
+  capabilities: {
+    isHandler: boolean;
+    handledServiceAreas: { code: string; label: string }[];
+  };
+  counts: {
+    inbox: number;
+    mine: TicketStatusGroupCounts;
+    assigned: TicketStatusGroupCounts;
+    all: TicketStatusGroupCounts;
+  };
 }
 
 export interface TicketUserProfile {
@@ -283,7 +305,7 @@ export async function searchTicketRequesters(
 export async function listTicketsForActor(input: {
   actorId: string;
   scope: 'mine' | 'assigned' | 'queue' | 'all';
-  status?: string | null;
+  statusGroup?: 'active' | 'resolved' | 'archived' | 'all' | null;
   queueCode?: string | null;
   priority?: string | null;
   requestTypeCode?: string | null;
@@ -295,7 +317,7 @@ export async function listTicketsForActor(input: {
   const { data, error } = await ticketRpc('ticket_list_for_actor', {
     p_actor_id: input.actorId,
     p_scope: input.scope,
-    p_status: input.status ?? null,
+    p_status_group: input.statusGroup ?? null,
     p_queue_code: input.queueCode ?? null,
     p_priority: input.priority ?? null,
     p_request_type_code: input.requestTypeCode ?? null,
@@ -321,7 +343,24 @@ export async function listTicketsForActor(input: {
       ),
     ),
     nextCursor: typeof row.nextCursor === 'string' ? row.nextCursor : null,
+    total: typeof row.total === 'number' ? row.total : items.length,
   };
+}
+
+export async function navContextForActor(actorId: string): Promise<TicketNavContext> {
+  const { data, error } = await ticketRpc('ticket_nav_context_for_actor', {
+    p_actor_id: actorId,
+  });
+  if (error) throwRpcError(error);
+  return (data ?? {
+    capabilities: { isHandler: false, handledServiceAreas: [] },
+    counts: {
+      inbox: 0,
+      mine:     { active: 0, resolved: 0, archived: 0, all: 0 },
+      assigned: { active: 0, resolved: 0, archived: 0, all: 0 },
+      all:      { active: 0, resolved: 0, archived: 0, all: 0 },
+    },
+  }) as TicketNavContext;
 }
 
 export async function getTicketForActor(

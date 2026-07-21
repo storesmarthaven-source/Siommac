@@ -2,6 +2,7 @@ import { type VNode } from 'preact';
 import { useEffect, useState } from 'preact/hooks';
 import { useCommsSummary, useMarkTicketRead, useMyTickets, type CanonicalTicket } from '@api/communications';
 import { showSection, setHdrBadge } from '@components/nav/navCore';
+import { useCan } from '@lib/permissions';
 import { TicketCreateDialog } from './TicketCreateDialog';
 
 function closeModal(): void {
@@ -28,7 +29,7 @@ function TicketItem({ ticket, onOpen }: { ticket: CanonicalTicket; onOpen: (tick
   return (
     <button class="tc-drop-item" onClick={() => onOpen(ticket)}>
       {avatar ? <img src={avatar} alt="" /> : <span>{initials}</span>}
-      <div><header><strong>{name}</strong><small>{ticket.ticketNumber}</small></header><p>{ticket.subject}</p><footer><em class={ticket.status}>{titleCase(ticket.status)}</em><i>{titleCase(ticket.priority)}</i>{ticket.unreadCount > 0 && <b>{ticket.unreadCount}</b>}</footer></div>
+      <div><header><strong>{name}</strong><small>{ticket.ticketNumber}</small></header><p>{ticket.subject}</p><footer><em class={ticket.status}>{titleCase(ticket.status)}</em><i class={ticket.priority}>{titleCase(ticket.priority)}</i>{ticket.unreadCount > 0 && <b>{ticket.unreadCount}</b>}</footer></div>
     </button>
   );
 }
@@ -36,6 +37,13 @@ function TicketItem({ ticket, onOpen }: { ticket: CanonicalTicket; onOpen: (tick
 export function TicketDropdown(): VNode {
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [createOpen, setCreateOpen] = useState(false);
+  // useCan is a hook — call each unconditionally (a `||` chain would make the later
+  // calls conditional and violate rules-of-hooks), then combine the booleans.
+  const canCreateSelf = useCan('tickets.create_self');
+  const canCreateTeam = useCan('tickets.create_team');
+  const canCreateOnBehalf = useCan('tickets.create_on_behalf');
+  const canCreateInternal = useCan('tickets.create_internal');
+  const canCreateAny = canCreateSelf || canCreateTeam || canCreateOnBehalf || canCreateInternal;
   // Load every ticket the server authorizes the actor to see (participant OR
   // queue-handler), not just requester-owned tickets — otherwise handlers see an
   // unread count with nothing in the Unread tab. The backend gate stays authoritative.
@@ -48,7 +56,7 @@ export function TicketDropdown(): VNode {
     document.querySelectorAll('[data-pill-badge="ticket"]').forEach(element => setHdrBadge(element, summaryQ.data?.ticketsUnread ?? 0));
   }, [summaryQ.data?.ticketsUnread]);
 
-  const rows = (ticketsQ.data ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, 10);
+  const rows = (ticketsQ.data?.items ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, 10);
 
   function open(ticket: CanonicalTicket): void {
     if (ticket.unreadCount > 0) markRead.mutate({ ticketId: ticket.id, sequence: ticket.activitySequence });
@@ -65,7 +73,7 @@ export function TicketDropdown(): VNode {
         {!ticketsQ.isLoading && !ticketsQ.isError && rows.length === 0 && <p class="tc-drop-state"><i class="fas fa-ticket" />{tab === 'unread' ? 'No unread tickets.' : 'No tickets yet.'}</p>}
         {rows.map(ticket => <TicketItem key={ticket.id} ticket={ticket} onOpen={open} />)}
       </div>
-      <footer><button onClick={() => setCreateOpen(true)}><i class="fas fa-plus" /> New ticket</button><button onClick={() => openCenter()}>View all</button></footer>
+      <footer>{canCreateAny && <button onClick={() => setCreateOpen(true)}><i class="fas fa-plus" /> New ticket</button>}<button onClick={() => openCenter()}>View all</button></footer>
       <TicketCreateDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={ticketId => openCenter(ticketId)} />
     </div>
   );
