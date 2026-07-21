@@ -2045,6 +2045,19 @@ export interface CreateTicketResult {
   ticketNumber?: string;
 }
 
+/**
+ * Canonical server-side internal-ticket service. EVERY caller is a module
+ * integration raising INTERNAL work (blocked disbursement, missing receipt,
+ * remittance filing exception, backbone side-effect) — NOT an employee
+ * self-service request. It therefore creates the ticket in `internal` mode, which
+ * requires an is_internal_requestable request type (mig 20260919000440) and an
+ * actor holding tickets.create_internal (finance/hr/hse staff+manager+admin). The
+ * ticket, its ticket_event, app_event, audit_log and handler notification are all
+ * written in-transaction by ticket_create_tx. Best-effort: never throws (returns
+ * { ok: false } on failure); AWAIT it before a parent mutation returns/throws when
+ * the ticket is a contractual §2 side-effect (else a fire-and-forget promise is
+ * abandoned when the serverless response is sent).
+ */
 export async function createTicket(input: CreateTicketInput): Promise<CreateTicketResult> {
   try {
     const idempotencyKey = createHash('sha256').update(JSON.stringify({
@@ -2059,6 +2072,7 @@ export async function createTicket(input: CreateTicketInput): Promise<CreateTick
       actorId: input.requesterUserId,
       requesterId: input.requesterUserId,
       requestTypeCode: input.category,
+      creationMode: 'internal',   // system-generated internal work (not employee self-service)
       priority: input.priority,
       subject: input.subject,
       description: input.description,

@@ -618,7 +618,7 @@ export async function submitExpenseClaim(
         actionRequired: true,
         dedupeKey:      `finance.expense.receipt.missing.${id}`,
       });
-      void createTicket({
+      await createTicket({
         category:         'expense_receipt',
         priority:         'medium',
         subject:          `Missing receipt for expense claim ${existing.claimNo}`,

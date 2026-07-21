@@ -189,8 +189,10 @@ export async function listDisbursementLines(disbursementId: string): Promise<Dis
 export async function createDisbursement(opts: { payrollRunId: string; actorId: string; currency?: string; metadata?: Record<string, unknown>; }): Promise<DisbursementDto> {
   const computed = await computeFromRun(opts.payrollRunId);
   if (computed.missingBankAccounts.length > 0) {
-    // §8.1 — raise a ticket + thread so Finance is alerted to add missing bank accounts
-    void createTicket({
+    // §8.1 — raise a ticket + thread so Finance is alerted to add missing bank accounts.
+    // AWAITED: this function throws 422 below; a fire-and-forget ticket would be
+    // abandoned before it persists (the §2 blocked-disbursement ticket must exist).
+    await createTicket({
       category:          'finance_admin',
       priority:          'high',
       subject:           'Missing bank accounts blocking disbursement',
