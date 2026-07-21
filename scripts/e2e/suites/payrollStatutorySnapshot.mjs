@@ -88,8 +88,12 @@ export default async function run(h) {
   await test('acquire a finance_manager + a well-paid salaried employee', async () => {
     const mgrR = await acquireActors('finance_manager', 1, {});
     // High salary so chargeable income clears the personal allowance and PAYE > 0,
-    // making the run rate-sensitive (a rate change is observable).
-    const empR = await acquireActors('employee', 1, { pay_basis: 'salary', monthly_salary: 30000.00 });
+    // making the run rate-sensitive (a rate change is observable). forceSynthetic:
+    // a real-roster employee may already hold a pay-group assignment, which would
+    // trip the one-active-group exclusion constraint when we assign to our snapshot
+    // pay group below ("employee already has a pay-group assignment").
+    const empR = await acquireActors('employee', 1,
+      { pay_basis: 'salary', monthly_salary: 30000.00 }, {}, { forceSynthetic: true });
     fmgrId = mgrR.actors[0].id;
     ctx.empId = empR.actors[0].id;
     ctx.createdUserIds = [...mgrR.createdIds, ...empR.createdIds];

@@ -270,18 +270,18 @@ export default async function run(h) {
   // ═══════════════════════════════════════════════════════════════════════════
   await test('T1 provision users, statutory version, pay groups, F-CAL, policy, employees + sources', async () => {
     const { error } = await sb.from('app_users').insert([
-      { id: U.prep, username: `${TAG}_prep`, full_name: 'PPR Preparer', role: 'finance_staff', status: 'active', employment_type: 'employee' },
-      { id: U.hr, username: `${TAG}_hr`, full_name: 'PPR HR', role: 'hr_manager', status: 'active', employment_type: 'employee' },
-      { id: U.appr, username: `${TAG}_fin`, full_name: 'PPR Finance', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: U.plain, username: `${TAG}_emp`, full_name: 'PPR Plain', role: 'employee', status: 'active', employment_type: 'employee' },
-      ...['A', 'B', 'C', 'D', 'E'].map(k => ({ id: U[k], username: `${TAG}_e${k.toLowerCase()}`, full_name: `PPR Emp ${k}`, role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 })),
+      { id: U.prep, username: `${TAG}_ppr_prep`, full_name: 'PPR Preparer', role: 'finance_staff', status: 'active', employment_type: 'employee' },
+      { id: U.hr, username: `${TAG}_ppr_hr`, full_name: 'PPR HR', role: 'hr_manager', status: 'active', employment_type: 'employee' },
+      { id: U.appr, username: `${TAG}_ppr_fin`, full_name: 'PPR Finance', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: U.plain, username: `${TAG}_ppr_emp`, full_name: 'PPR Plain', role: 'employee', status: 'active', employment_type: 'employee' },
+      ...['A', 'B', 'C', 'D', 'E'].map(k => ({ id: U[k], username: `${TAG}_ppr_e${k.toLowerCase()}`, full_name: `PPR Emp ${k}`, role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 })),
     ]);
     expect(!error, `seed users: ${error?.message}`);
     T = {
-      prep: mint({ id: U.prep, username: `${TAG}_prep`, role: 'finance_staff', department_id: null }),
-      hr: mint({ id: U.hr, username: `${TAG}_hr`, role: 'hr_manager', department_id: null }),
-      appr: mint({ id: U.appr, username: `${TAG}_fin`, role: 'finance_manager', department_id: null }),
-      plain: mint({ id: U.plain, username: `${TAG}_emp`, role: 'employee', department_id: null }),
+      prep: mint({ id: U.prep, username: `${TAG}_ppr_prep`, role: 'finance_staff', department_id: null }),
+      hr: mint({ id: U.hr, username: `${TAG}_ppr_hr`, role: 'hr_manager', department_id: null }),
+      appr: mint({ id: U.appr, username: `${TAG}_ppr_fin`, role: 'finance_manager', department_id: null }),
+      plain: mint({ id: U.plain, username: `${TAG}_ppr_emp`, role: 'employee', department_id: null }),
     };
 
     const activeVer = await sb.from('finance_statutory_versions').select('id').eq('is_active', true).eq('jurisdiction', 'TT').limit(1);
