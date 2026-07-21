@@ -642,14 +642,16 @@ PayGroupDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	1
 DbPayGroupRow	interface	payroll	false		netlify/functions/lib/finance/payGroups.ts	26	
 toDto	function	payroll	false		netlify/functions/lib/finance/payGroups.ts	33	
 listPayGroups	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	43	
-getPayGroup	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	63	
-CreatePayGroupInput	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	71	
-createPayGroup	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	80	
-AssignEmployeeInput	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	112	
-assignEmployee	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	119	
-listGroupMemberIds	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	163	
-PayGroupMemberDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	180	
-listGroupMembers	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	182	
+PayrollReasonCodeDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	64	
+listReasonCodes	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	66	
+getPayGroup	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	79	
+CreatePayGroupInput	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	87	
+createPayGroup	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	96	
+AssignEmployeeInput	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	128	
+assignEmployee	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	135	
+listGroupMemberIds	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	179	
+PayGroupMemberDto	interface	payroll	true		netlify/functions/lib/finance/payGroups.ts	196	
+listGroupMembers	function	payroll	true		netlify/functions/lib/finance/payGroups.ts	198	
 Row	type	finance	false		netlify/functions/lib/finance/payPolicies.ts	9	
 asText	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	10	
 hash	function	finance	false		netlify/functions/lib/finance/payPolicies.ts	11	
@@ -709,31 +711,31 @@ evaluateReadinessGates	function	payroll	true		netlify/functions/lib/finance/payr
 PayrollRunType	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	6	
 PayrollRunStatus	type	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	12	
 CreatePayrollRunCommand	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	25	
-CalculationAttemptRow	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	40	
-PayrollCalculationAttempt	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	57	
-CalculationVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	74	
-PayrollCalculationVersion	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	91	
-toAttempt	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	108	
-toVersion	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	127	
-ATTEMPT_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	146	
-VERSION_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	148	
-rpcData	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	151	
-createPayrollRunCommand	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	156	
-publishInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	188	
-replayInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	227	
-startCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	248	
-listCalculationAttempts	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	270	
-getCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	291	
-listCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	307	
-getCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	323	
-VersionLineRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	339	
-PayrollCalculationComparison	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	351	
-compareCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	374	
-round2	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	426	compareCalculationVersions
-deductions	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	427	compareCalculationVersions
-publishCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	475	
-failCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	507	
-calculationFailure	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	524	
+CalculationAttemptRow	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	48	
+PayrollCalculationAttempt	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	65	
+CalculationVersionRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	82	
+PayrollCalculationVersion	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	99	
+toAttempt	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	116	
+toVersion	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	135	
+ATTEMPT_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	154	
+VERSION_COLUMNS	variable	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	156	
+rpcData	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	159	
+createPayrollRunCommand	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	164	
+publishInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	204	
+replayInputSnapshot	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	243	
+startCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	264	
+listCalculationAttempts	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	286	
+getCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	307	
+listCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	323	
+getCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	339	
+VersionLineRow	interface	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	355	
+PayrollCalculationComparison	interface	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	367	
+compareCalculationVersions	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	390	
+round2	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	442	compareCalculationVersions
+deductions	function	payroll	false		netlify/functions/lib/finance/payroll/execution.ts	443	compareCalculationVersions
+publishCalculationVersion	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	491	
+failCalculationAttempt	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	523	
+calculationFailure	function	payroll	true		netlify/functions/lib/finance/payroll/execution.ts	540	
 PayrollExportFormat	type	payroll	true		netlify/functions/lib/finance/payroll/exportContent.ts	3	
 payrollExportChecksum	function	payroll	true		netlify/functions/lib/finance/payroll/exportContent.ts	7	
 PayrollFindingDomain	type	payroll	true		netlify/functions/lib/finance/payroll/findings.ts	6	
@@ -977,23 +979,41 @@ listRunWarnings	function	payroll	true		netlify/functions/lib/finance/payrollRuns
 RunAuditLogEntry	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	863	
 listRunAuditLog	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	877	
 CreateRunInput	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	904	
-createPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	923	
-lockInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	953	
-EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	992	lockInputs
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1085	lockInputs
-calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1394	
-round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1726	calculateRun
-maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1819	
-PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1828	
-getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1843	
-ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1905	
-downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1921	
-submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1978	
-decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2050	
-emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2118	
-lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2165	
-reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2212	
-notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2247	
+createPayrollRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	931	
+lockInputs	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	968	
+EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1007	lockInputs
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1100	lockInputs
+calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1409	
+round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1741	calculateRun
+maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1834	
+PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1843	
+getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1858	
+PopulationReconciliationRule	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1925	
+PopulationReconciliationDept	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1934	
+PopulationReconciliationPriorRun	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1939	
+PopulationReconciliationResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1946	
+getPopulationReconciliation	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1956	
+UserRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1967	getPopulationReconciliation
+InputSourceReadiness	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2103	
+InputReadinessResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2111	
+getInputSourceReadiness	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2119	
+MemberRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2129	getInputSourceReadiness
+PgQuery	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2156	getInputSourceReadiness
+pageByEmployee	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2157	getInputSourceReadiness
+maxTs	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2172	getInputSourceReadiness
+OtRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2199	getInputSourceReadiness
+TsRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2211	getInputSourceReadiness
+LvRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2222	getInputSourceReadiness
+LnRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2234	getInputSourceReadiness
+PiRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	2247	getInputSourceReadiness
+ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2263	
+downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2279	
+submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2336	
+decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2408	
+emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2476	
+lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2523	
+reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2570	
+notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2605	
 payPeriodsForFrequency	function	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	32	
 ComputeNisInput	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	45	
 ComputeNisResult	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	56	
@@ -2895,9 +2915,9 @@ requestKey	variable	finance	false		netlify/functions/routes/financePayPolicies.t
 component	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	22	
 sourceRule	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	45	
 draft	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	54	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	123	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	126	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	130	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	126	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	129	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	133	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3682,6 +3702,9 @@ seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	26
 BASE_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	37	
 run	function	payroll	true	test	scripts/e2e/suites/payrollGl.mjs	44	
 amountFor	function	payroll	false	test	scripts/e2e/suites/payrollGl.mjs	361	run
+title	variable	payroll	true	test	scripts/e2e/suites/payrollInputReadiness.mjs	18	
+run	function	payroll	true	test	scripts/e2e/suites/payrollInputReadiness.mjs	20	
+byKey	function	payroll	false	test	scripts/e2e/suites/payrollInputReadiness.mjs	131	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollLoans.mjs	21	
 seedDate	function	payroll	false	test	scripts/e2e/suites/payrollLoans.mjs	23	
 run	function	payroll	true	test	scripts/e2e/suites/payrollLoans.mjs	39	
@@ -3713,6 +3736,10 @@ seedPayGroup	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.
 assignMember	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	253	run
 setSources	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	256	run
 createRun	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	263	run
+metaCmd	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	341	run
+title	variable	payroll	true	test	scripts/e2e/suites/payrollPopulationRecon.mjs	19	
+run	function	payroll	true	test	scripts/e2e/suites/payrollPopulationRecon.mjs	21	
+ruleCount	function	payroll	false	test	scripts/e2e/suites/payrollPopulationRecon.mjs	204	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	27	
 run	function	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	29	
 seedRun	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	99	run
@@ -3970,6 +3997,8 @@ useTaskStatus	function	platform	true	hook	src/api/calendar.ts	122
 useCancelEntry	function	platform	true	hook	src/api/calendar.ts	135	
 useSetCalendarReminders	function	platform	true	hook	src/api/calendar.ts	148	
 useRespondToCalendarActivity	function	platform	true	hook	src/api/calendar.ts	161	
+Mark	type	communications	false	test	src/api/communications.markTicketRead.test.tsx	21	
+Probe	function	communications	false	component,test	src/api/communications.markTicketRead.test.tsx	22	
 MessagePin	type	communications	true		src/api/communications.ts	27	
 MessageThreadListItem	type	communications	true		src/api/communications.ts	32	
 MessageParticipantProfile	type	communications	true		src/api/communications.ts	33	
@@ -3998,62 +4027,62 @@ useMuteNotifications	function	communications	true	hook	src/api/communications.ts
 BroadcastArgs	interface	communications	true		src/api/communications.ts	276	
 useBroadcastNotification	function	communications	true	hook	src/api/communications.ts	285	
 useMarkNotificationRead	function	communications	true	hook	src/api/communications.ts	294	
-useMarkAllNotificationsRead	function	communications	true	hook	src/api/communications.ts	310	
-useArchiveNotification	function	communications	true	hook	src/api/communications.ts	326	
-useMessageThreads	function	communications	true	hook	src/api/communications.ts	344	
-useMessagePosts	function	communications	true	hook	src/api/communications.ts	360	
-PostMessageArgs	interface	communications	true		src/api/communications.ts	376	
-usePostMessage	function	communications	true	hook	src/api/communications.ts	384	
-AttachmentUploadUrlResult	interface	communications	true		src/api/communications.ts	401	
-useMessageAttachmentUploadUrl	function	communications	true	hook	src/api/communications.ts	410	
-useCreateMessageAttachment	function	communications	true	hook	src/api/communications.ts	423	
-CreateThreadArgs	interface	communications	true		src/api/communications.ts	435	
-useCreateMessageThread	function	communications	true	hook	src/api/communications.ts	446	
-ThreadFilters	interface	communications	true		src/api/communications.ts	471	
-useMessageThreadsFull	function	communications	true	hook	src/api/communications.ts	479	
-useThread	function	communications	true	hook	src/api/communications.ts	496	
-ThreadAccessError	class	communications	true		src/api/communications.ts	513	
-useThreadPosts	function	communications	true	hook	src/api/communications.ts	523	
-useMarkThreadRead	function	communications	true	hook	src/api/communications.ts	542	
-OnlineUser	interface	communications	true		src/api/communications.ts	562	
-PinnedThreadRow	interface	communications	true		src/api/communications.ts	563	
-usePinnedSummary	function	communications	true	hook	src/api/communications.ts	566	
-usePins	function	communications	true	hook	src/api/communications.ts	578	
-usePinMessage	function	communications	true	hook	src/api/communications.ts	589	
-useUnpinMessage	function	communications	true	hook	src/api/communications.ts	602	
-useDeleteMessage	function	communications	true	hook	src/api/communications.ts	616	
-useOnlineUsers	function	communications	true	hook	src/api/communications.ts	631	
-useDraft	function	communications	true	hook	src/api/communications.ts	644	
-useSaveDraft	function	communications	true	hook	src/api/communications.ts	655	
-useAttachmentUrl	function	communications	true	hook	src/api/communications.ts	665	
-useArchiveThread	function	communications	true	hook	src/api/communications.ts	674	
-useMuteThread	function	communications	true	hook	src/api/communications.ts	689	
-useAddThreadParticipants	function	communications	true	hook	src/api/communications.ts	702	
-useRemoveThreadParticipant	function	communications	true	hook	src/api/communications.ts	716	
-useResolveRecordThread	function	communications	true	hook	src/api/communications.ts	740	
-useMessageSearch	function	communications	true	hook	src/api/communications.ts	755	
-useMessageRecipients	function	communications	true	hook	src/api/communications.ts	772	
-TicketScope	type	communications	true		src/api/communications.ts	790	
-TicketStatusGroup	type	communications	true		src/api/communications.ts	791	
-TicketListArgs	interface	communications	true		src/api/communications.ts	793	
-TicketListPage	interface	communications	true		src/api/communications.ts	805	
-useMyTickets	function	communications	true	hook	src/api/communications.ts	812	
-TicketStatusGroupCounts	interface	communications	true		src/api/communications.ts	832	
-TicketNavContext	interface	communications	true		src/api/communications.ts	834	
-useTicketNavContext	function	communications	true	hook	src/api/communications.ts	850	
-useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	864	
-TicketRequesterOption	interface	communications	true		src/api/communications.ts	879	
-useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	883	
-useTicket	function	communications	true	hook	src/api/communications.ts	902	
-CreateTicketArgs	interface	communications	true		src/api/communications.ts	918	
-useCreateTicket	function	communications	true	hook	src/api/communications.ts	931	
-CommentTicketArgs	interface	communications	true		src/api/communications.ts	950	
-useCommentTicket	function	communications	true	hook	src/api/communications.ts	956	
-UpdateTicketArgs	interface	communications	true		src/api/communications.ts	975	
-useUpdateTicket	function	communications	true	hook	src/api/communications.ts	984	
-useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	1003	
-uploadTicketAttachment	function	communications	true		src/api/communications.ts	1052	
-getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1079	
+useMarkAllNotificationsRead	function	communications	true	hook	src/api/communications.ts	311	
+useArchiveNotification	function	communications	true	hook	src/api/communications.ts	328	
+useMessageThreads	function	communications	true	hook	src/api/communications.ts	347	
+useMessagePosts	function	communications	true	hook	src/api/communications.ts	363	
+PostMessageArgs	interface	communications	true		src/api/communications.ts	379	
+usePostMessage	function	communications	true	hook	src/api/communications.ts	387	
+AttachmentUploadUrlResult	interface	communications	true		src/api/communications.ts	404	
+useMessageAttachmentUploadUrl	function	communications	true	hook	src/api/communications.ts	413	
+useCreateMessageAttachment	function	communications	true	hook	src/api/communications.ts	426	
+CreateThreadArgs	interface	communications	true		src/api/communications.ts	438	
+useCreateMessageThread	function	communications	true	hook	src/api/communications.ts	449	
+ThreadFilters	interface	communications	true		src/api/communications.ts	474	
+useMessageThreadsFull	function	communications	true	hook	src/api/communications.ts	482	
+useThread	function	communications	true	hook	src/api/communications.ts	499	
+ThreadAccessError	class	communications	true		src/api/communications.ts	516	
+useThreadPosts	function	communications	true	hook	src/api/communications.ts	526	
+useMarkThreadRead	function	communications	true	hook	src/api/communications.ts	545	
+OnlineUser	interface	communications	true		src/api/communications.ts	570	
+PinnedThreadRow	interface	communications	true		src/api/communications.ts	571	
+usePinnedSummary	function	communications	true	hook	src/api/communications.ts	574	
+usePins	function	communications	true	hook	src/api/communications.ts	586	
+usePinMessage	function	communications	true	hook	src/api/communications.ts	597	
+useUnpinMessage	function	communications	true	hook	src/api/communications.ts	610	
+useDeleteMessage	function	communications	true	hook	src/api/communications.ts	624	
+useOnlineUsers	function	communications	true	hook	src/api/communications.ts	639	
+useDraft	function	communications	true	hook	src/api/communications.ts	652	
+useSaveDraft	function	communications	true	hook	src/api/communications.ts	663	
+useAttachmentUrl	function	communications	true	hook	src/api/communications.ts	673	
+useArchiveThread	function	communications	true	hook	src/api/communications.ts	682	
+useMuteThread	function	communications	true	hook	src/api/communications.ts	697	
+useAddThreadParticipants	function	communications	true	hook	src/api/communications.ts	710	
+useRemoveThreadParticipant	function	communications	true	hook	src/api/communications.ts	724	
+useResolveRecordThread	function	communications	true	hook	src/api/communications.ts	748	
+useMessageSearch	function	communications	true	hook	src/api/communications.ts	763	
+useMessageRecipients	function	communications	true	hook	src/api/communications.ts	780	
+TicketScope	type	communications	true		src/api/communications.ts	798	
+TicketStatusGroup	type	communications	true		src/api/communications.ts	799	
+TicketListArgs	interface	communications	true		src/api/communications.ts	801	
+TicketListPage	interface	communications	true		src/api/communications.ts	813	
+useMyTickets	function	communications	true	hook	src/api/communications.ts	820	
+TicketStatusGroupCounts	interface	communications	true		src/api/communications.ts	840	
+TicketNavContext	interface	communications	true		src/api/communications.ts	842	
+useTicketNavContext	function	communications	true	hook	src/api/communications.ts	858	
+useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	872	
+TicketRequesterOption	interface	communications	true		src/api/communications.ts	887	
+useTicketRequesterSearch	function	communications	true	hook	src/api/communications.ts	891	
+useTicket	function	communications	true	hook	src/api/communications.ts	910	
+CreateTicketArgs	interface	communications	true		src/api/communications.ts	926	
+useCreateTicket	function	communications	true	hook	src/api/communications.ts	939	
+CommentTicketArgs	interface	communications	true		src/api/communications.ts	958	
+useCommentTicket	function	communications	true	hook	src/api/communications.ts	964	
+UpdateTicketArgs	interface	communications	true		src/api/communications.ts	983	
+useUpdateTicket	function	communications	true	hook	src/api/communications.ts	992	
+useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	1011	
+uploadTicketAttachment	function	communications	true		src/api/communications.ts	1062	
+getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1089	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
 ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
 asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	
@@ -4333,59 +4362,69 @@ NisProfileRow	interface	payroll	true		src/api/finance/payroll.ts	278
 RunAuditLogEntry	interface	payroll	true		src/api/finance/payroll.ts	297	
 PayrollRunType	type	payroll	true		src/api/finance/payroll.ts	307	
 CreateRunArgs	interface	payroll	true		src/api/finance/payroll.ts	315	
-PayGroup	interface	payroll	true		src/api/finance/payroll.ts	329	
-PayGroupMember	interface	payroll	true		src/api/finance/payroll.ts	341	
-LoanType	type	payroll	true		src/api/finance/payroll.ts	343	
-LoanStatus	type	payroll	true		src/api/finance/payroll.ts	344	
-EmployeeLoan	interface	payroll	true		src/api/finance/payroll.ts	345	
-OvertimeEventType	type	payroll	true		src/api/finance/payroll.ts	368	
-OvertimeRule	interface	payroll	true		src/api/finance/payroll.ts	371	
-PayrollOverride	interface	payroll	true		src/api/finance/payroll.ts	383	
-BackPayPeriod	interface	payroll	true		src/api/finance/payroll.ts	396	
-BackPayBreakdown	interface	payroll	true		src/api/finance/payroll.ts	403	
-PopulationPreview	interface	payroll	true		src/api/finance/payroll.ts	415	
-ExportDownload	interface	payroll	true		src/api/finance/payroll.ts	425	
-ResolveWarningResult	interface	payroll	true		src/api/finance/payroll.ts	435	
-PayrollInputSnapshotInfo	interface	payroll	true		src/api/finance/payroll.ts	445	
-PayrollCalculationVersion	interface	payroll	true		src/api/finance/payroll.ts	451	
-PayrollCalculationAttempt	interface	payroll	true		src/api/finance/payroll.ts	457	
-PayrollFindingSeverity	type	payroll	true		src/api/finance/payroll.ts	463	
-PayrollFindingState	type	payroll	true		src/api/finance/payroll.ts	464	
-PayrollFindingSummary	interface	payroll	true		src/api/finance/payroll.ts	465	
-PayrollControlFinding	interface	payroll	true		src/api/finance/payroll.ts	469	
-PayrollRunWorkspace	interface	payroll	true		src/api/finance/payroll.ts	479	
-PayrollReleasePreflight	interface	payroll	true		src/api/finance/payroll.ts	488	
-PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	499	
-call	function	payroll	false		src/api/finance/payroll.ts	508	
-financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	516	
-financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	638	
-usePayrollRuns	function	payroll	true	hook	src/api/finance/payroll.ts	654	
-usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	657	
-useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	660	
-usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	664	
-useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	673	
-useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	681	
-useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	689	
-useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	697	
-useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	704	
-useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	707	
-useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	710	
-usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	713	
-usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	716	
-useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	719	
-useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	722	
-useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	725	
-useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	728	
-useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	731	
-useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	734	
-useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	737	
-usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	744	
-usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	753	
-useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	764	
-useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	773	
-payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	781	
-usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	791	
-useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	802	
+PayrollReasonCode	interface	payroll	true		src/api/finance/payroll.ts	337	
+PayGroup	interface	payroll	true		src/api/finance/payroll.ts	339	
+PayGroupMember	interface	payroll	true		src/api/finance/payroll.ts	351	
+LoanType	type	payroll	true		src/api/finance/payroll.ts	353	
+LoanStatus	type	payroll	true		src/api/finance/payroll.ts	354	
+EmployeeLoan	interface	payroll	true		src/api/finance/payroll.ts	355	
+OvertimeEventType	type	payroll	true		src/api/finance/payroll.ts	378	
+OvertimeRule	interface	payroll	true		src/api/finance/payroll.ts	381	
+PayrollOverride	interface	payroll	true		src/api/finance/payroll.ts	393	
+BackPayPeriod	interface	payroll	true		src/api/finance/payroll.ts	406	
+BackPayBreakdown	interface	payroll	true		src/api/finance/payroll.ts	413	
+PopulationPreview	interface	payroll	true		src/api/finance/payroll.ts	425	
+PopulationReconciliationRule	interface	payroll	true		src/api/finance/payroll.ts	436	
+PopulationReconciliationDept	interface	payroll	true		src/api/finance/payroll.ts	445	
+PopulationReconciliationPriorRun	interface	payroll	true		src/api/finance/payroll.ts	450	
+PopulationReconciliation	interface	payroll	true		src/api/finance/payroll.ts	457	
+InputSourceReadiness	interface	payroll	true		src/api/finance/payroll.ts	464	
+InputReadiness	interface	payroll	true		src/api/finance/payroll.ts	472	
+ExportDownload	interface	payroll	true		src/api/finance/payroll.ts	476	
+ResolveWarningResult	interface	payroll	true		src/api/finance/payroll.ts	486	
+PayrollInputSnapshotInfo	interface	payroll	true		src/api/finance/payroll.ts	496	
+PayrollCalculationVersion	interface	payroll	true		src/api/finance/payroll.ts	502	
+PayrollCalculationAttempt	interface	payroll	true		src/api/finance/payroll.ts	508	
+PayrollFindingSeverity	type	payroll	true		src/api/finance/payroll.ts	514	
+PayrollFindingState	type	payroll	true		src/api/finance/payroll.ts	515	
+PayrollFindingSummary	interface	payroll	true		src/api/finance/payroll.ts	516	
+PayrollControlFinding	interface	payroll	true		src/api/finance/payroll.ts	520	
+PayrollRunWorkspace	interface	payroll	true		src/api/finance/payroll.ts	530	
+PayrollReleasePreflight	interface	payroll	true		src/api/finance/payroll.ts	539	
+PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	550	
+call	function	payroll	false		src/api/finance/payroll.ts	559	
+financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	567	
+financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	698	
+usePayrollRuns	function	payroll	true	hook	src/api/finance/payroll.ts	714	
+usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	717	
+useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	720	
+usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	724	
+useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	733	
+useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	741	
+useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	749	
+useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	757	
+useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	764	
+useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	767	
+useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	770	
+usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	773	
+useReasonCodes	function	payroll	true	hook	src/api/finance/payroll.ts	777	
+usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	783	
+useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	786	
+useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	789	
+useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	792	
+useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	795	
+useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	798	
+useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	801	
+useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	804	
+usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	811	
+usePopulationReconciliation	function	payroll	true	hook	src/api/finance/payroll.ts	817	
+useInputReadiness	function	payroll	true	hook	src/api/finance/payroll.ts	827	
+usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	840	
+useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	851	
+useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	860	
+payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	868	
+usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	878	
+useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	889	
 PayrollControlCenterParams	interface	payroll	true		src/api/finance/payroll/controlCenter.ts	42	
 defaultControlCenterWindow	function	payroll	true		src/api/finance/payroll/controlCenter.ts	54	
 iso	function	payroll	false		src/api/finance/payroll/controlCenter.ts	55	defaultControlCenterWindow
@@ -6554,20 +6593,27 @@ submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.t
 _AUTHORITIES	array	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	92	
 PayCreateRemittanceDialog	function	finance	true	component	src/components/sections/Finance/PayBridgeDialog.tsx	98	
 submit	function	finance	false		src/components/sections/Finance/PayBridgeDialog.tsx	114	PayCreateRemittanceDialog
-PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	34	
-WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	40	
-RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	42	
-STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	49	
-CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	60	
-CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	61	
-matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	75	
-lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	81	
-SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	91	
-PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	102	
-PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	113	
-selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	169	PayNewRunWizard
-goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	176	PayNewRunWizard
-create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	178	PayNewRunWizard
+PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	39	
+WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	45	
+RUN_TYPES	array	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	47	
+RECON_STATE_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	55	
+RECON_STATE_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	58	
+RECON_OWNER_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	61	
+READINESS_RC	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	66	
+READINESS_ICON	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	69	
+READINESS_LABEL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	72	
+READINESS_PILL	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	75	
+STEPS	variable	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	79	
+CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	90	
+CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	91	
+matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	105	
+lastOfMonth	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	111	
+SummaryCard	function	finance	false	component,ui-tile	src/components/sections/Finance/PayNewRunWizard.tsx	121	
+PendingBlock	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	132	
+PayNewRunWizard	function	finance	true	component	src/components/sections/Finance/PayNewRunWizard.tsx	143	
+selectGroup	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	212	PayNewRunWizard
+goToStep	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	219	PayNewRunWizard
+create	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	221	PayNewRunWizard
 draft	function	payroll	false	test	src/components/sections/Finance/payroll/setup/payPolicyRules.test.ts	4	
 buildPayPolicySources	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	3	
 payPolicyDraftStepInvalid	function	payroll	true		src/components/sections/Finance/payroll/setup/payPolicyRules.ts	13	
@@ -8687,7 +8733,7 @@ closeModal	function	communications	false		src/components/sections/Messages/Messa
 goToCenter	function	communications	false		src/components/sections/Messages/MessageDropdown.tsx	34	
 MessageDropdown	function	communications	true	component	src/components/sections/Messages/MessageDropdown.tsx	39	
 onDown	function	communications	false		src/components/sections/Messages/MessageDropdown.tsx	59	MessageDropdown
-openThread	function	communications	false		src/components/sections/Messages/MessageDropdown.tsx	88	MessageDropdown
+openThread	function	communications	false		src/components/sections/Messages/MessageDropdown.tsx	85	MessageDropdown
 initials	function	communications	false		src/components/sections/Messages/MessageDropdownItem.tsx	14	
 relativeTime	function	communications	false		src/components/sections/Messages/MessageDropdownItem.tsx	20	
 MessageDropdownItem	function	communications	true	component	src/components/sections/Messages/MessageDropdownItem.tsx	33	
@@ -8750,14 +8796,14 @@ createGroup	method	communications	false		src/components/sections/Messages/messen
 deleteMessage	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	247	SiomacMessagingRepository
 togglePin	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	251	SiomacMessagingRepository
 markRead	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	271	SiomacMessagingRepository
-setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	275	SiomacMessagingRepository
-setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	279	SiomacMessagingRepository
-invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	283	SiomacMessagingRepository
-removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	287	SiomacMessagingRepository
-listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	293	SiomacMessagingRepository
-listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	299	SiomacMessagingRepository
-toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	311	SiomacMessagingRepository
-setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	316	SiomacMessagingRepository
+setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	280	SiomacMessagingRepository
+setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	284	SiomacMessagingRepository
+invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	288	SiomacMessagingRepository
+removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	292	SiomacMessagingRepository
+listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	298	SiomacMessagingRepository
+listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	304	SiomacMessagingRepository
+toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	316	SiomacMessagingRepository
+setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	321	SiomacMessagingRepository
 MessagingActions	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	25	
 MessagingContextValue	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	64	
 MessagingContext	variable	communications	false	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	80	
@@ -9023,6 +9069,11 @@ cardModule	object	communications	true	ui-tile	src/components/sections/Messages/m
 cardTypeFor	function	communications	true	ui-tile	src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	87	
 openAppSection	function	communications	true		src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	95	
 CollaborationRecordCard	function	communications	true	component,ui-tile	src/components/sections/Messages/messenger/ui/components/MessageCards.tsx	99	
+me	object	communications	false	test	src/components/sections/Messages/messenger/ui/components/messageRow.attachmentReceipt.test.tsx	14	
+attachment	object	communications	false	test	src/components/sections/Messages/messenger/ui/components/messageRow.attachmentReceipt.test.tsx	25	
+attachmentOnly	object	communications	false	test	src/components/sections/Messages/messenger/ui/components/messageRow.attachmentReceipt.test.tsx	31	
+renderRow	function	communications	false	test	src/components/sections/Messages/messenger/ui/components/messageRow.attachmentReceipt.test.tsx	38	
+msg	function	communications	false	test	src/components/sections/Messages/messenger/ui/components/messageStatus.test.tsx	12	
 MessagesWorkspace	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	26	
 onOpenThread	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	47	MessagesWorkspace
 onOpenRecord	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessagesWorkspace.tsx	51	MessagesWorkspace
@@ -9040,9 +9091,9 @@ handleListScroll	function	communications	false		src/components/sections/Messages
 jumpTo	function	communications	false		src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	186	MessageThread
 SystemEvent	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	281	
 InternalNote	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	287	
-MessageRow	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	302	
-MessageStatus	function	communications	false	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	344	
-RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	360	
+MessageRow	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	302	
+MessageStatus	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	346	
+RichMessage	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/MessageThread.tsx	362	
 tabs	array	communications	false		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	17	
 threadInQueue	function	communications	true		src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	23	
 QueueHeader	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/ThreadSidebar.tsx	31	
@@ -9084,12 +9135,17 @@ NotificationCenter	function	communications	true	component	src/components/section
 onDown	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	80	NotificationCenter
 open	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	126	NotificationCenter
 clearFilters	function	communications	false		src/components/sections/NotificationCenter/NotificationCenter.tsx	131	NotificationCenter
+_isModalOpen	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	6	
+NotificationsArgs	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	11	
+NotificationsFn	type	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	12	
+notifications	variable	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	18	
+renderDropdown	function	communications	false	test	src/components/sections/NotificationCenter/NotificationDropdown.test.tsx	42	
 TABS	variable	communications	false	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	22	
 closeModal	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	29	
 goToCenter	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	34	
 NotificationDropdown	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdown.tsx	39	
 onDown	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	56	NotificationDropdown
-open	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	87	NotificationDropdown
+open	function	communications	false		src/components/sections/NotificationCenter/NotificationDropdown.tsx	85	NotificationDropdown
 NotificationDropdownItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationDropdownItem.tsx	14	
 NotificationItem	function	communications	true	component	src/components/sections/NotificationCenter/NotificationItem.tsx	14	
 Row	interface	communications	false		src/components/sections/NotificationCenter/NotificationPreferencesPanel.tsx	18	
@@ -9789,7 +9845,7 @@ sendComment	function	communications	false		src/components/sections/Tickets/Ticke
 format	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	445	TicketCenter
 attach	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	456	TicketCenter
 download	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	470	TicketCenter
-scopeBadge	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	498	TicketCenter
+scopeBadge	function	communications	false		src/components/sections/Tickets/TicketCenter.tsx	511	TicketCenter
 grants	variable	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	7	
 employeeTypes	array	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	9	
 internalTypes	array	communications	false	test	src/components/sections/Tickets/TicketCreateDialog.test.tsx	12	
@@ -9808,35 +9864,39 @@ resetAll	function	communications	false		src/components/sections/Tickets/TicketCr
 changeMode	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	187	TicketCreateDialog
 close	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	229	TicketCreateDialog
 submit	function	communications	false		src/components/sections/Tickets/TicketCreateDialog.tsx	235	TicketCreateDialog
-_isModalOpen	variable	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	17	
-TicketQueryResult	interface	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	22	
-TicketsArgs	type	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	29	
-TicketFn	type	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	30	
-myTickets	variable	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	31	
-makeResult	function	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	48	
-renderDropdown	function	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	59	
-closeModal	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	9	
-openCenter	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	14	
-titleCase	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	22	
-TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	26	
-TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	38	
-open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	63	TicketDropdown
-lIco	function	platform	false		src/components/shared/AccountPill.tsx	34	
-IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	38	
-IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	39	
-IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
-IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
-IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	42	
-roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	44	
-nav	function	platform	false		src/components/shared/AccountPill.tsx	54	
-doLogout	function	platform	false		src/components/shared/AccountPill.tsx	57	
-AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	61	
-AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	77	
-openMenu	function	platform	false		src/components/shared/AccountPill.tsx	100	AccountPill
-close	function	platform	false		src/components/shared/AccountPill.tsx	112	AccountPill
-onDoc	function	platform	false		src/components/shared/AccountPill.tsx	113	AccountPill
-onKey	function	platform	false		src/components/shared/AccountPill.tsx	114	AccountPill
-confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	127	AccountPill
+_isModalOpen	variable	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	18	
+TicketQueryResult	interface	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	23	
+TicketsArgs	type	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	30	
+TicketFn	type	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	31	
+myTickets	variable	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	32	
+makeResult	function	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	49	
+renderDropdown	function	communications	false	test	src/components/sections/Tickets/TicketDropdown.test.tsx	60	
+TICKET_DROPDOWN_PREVIEW_LIMIT	variable	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	8	
+closeModal	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	10	
+openCenter	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	15	
+titleCase	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	23	
+TicketItem	function	communications	false	component	src/components/sections/Tickets/TicketDropdown.tsx	27	
+TicketDropdown	function	communications	true	component	src/components/sections/Tickets/TicketDropdown.tsx	39	
+open	function	communications	false		src/components/sections/Tickets/TicketDropdown.tsx	61	TicketDropdown
+lIco	function	platform	false		src/components/shared/AccountPill.tsx	36	
+IcUser	function	platform	false	component	src/components/shared/AccountPill.tsx	40	
+IcSettings	function	platform	false	component	src/components/shared/AccountPill.tsx	41	
+IcAbout	function	platform	false	component	src/components/shared/AccountPill.tsx	42	
+IcMoon	function	platform	false	component	src/components/shared/AccountPill.tsx	43	
+IcLogout	function	platform	false	component	src/components/shared/AccountPill.tsx	44	
+roleLabel	function	platform	false		src/components/shared/AccountPill.tsx	46	
+nav	function	platform	false		src/components/shared/AccountPill.tsx	56	
+doLogout	function	platform	false		src/components/shared/AccountPill.tsx	59	
+badgeText	function	platform	false		src/components/shared/AccountPill.tsx	63	
+badgeStyle	function	platform	false		src/components/shared/AccountPill.tsx	68	
+actionLabel	function	platform	false		src/components/shared/AccountPill.tsx	72	
+AccountPillProps	interface	platform	true		src/components/shared/AccountPill.tsx	77	
+AccountPill	function	platform	true	component	src/components/shared/AccountPill.tsx	93	
+openMenu	function	platform	false		src/components/shared/AccountPill.tsx	120	AccountPill
+close	function	platform	false		src/components/shared/AccountPill.tsx	132	AccountPill
+onDoc	function	platform	false		src/components/shared/AccountPill.tsx	133	AccountPill
+onKey	function	platform	false		src/components/shared/AccountPill.tsx	134	AccountPill
+confirmLogout	function	platform	false		src/components/shared/AccountPill.tsx	147	AccountPill
 AuthGateProps	interface	security	false		src/components/shared/AuthGate.tsx	49	
 ROLE_RANK	object	security	false		src/components/shared/AuthGate.tsx	69	
 roleAtLeast	function	security	false		src/components/shared/AuthGate.tsx	81	

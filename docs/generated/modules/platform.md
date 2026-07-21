@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `4ba15e902c2b814f6a096ad5`
+Source fingerprint: `5d275b43280c025633a34b14`
 
-Files: 292 | Symbols: 2651 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 293 | Symbols: 2654 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -181,7 +181,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useApproveGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:287` | `-` |
 | `useRejectGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:315` | `-` |
 | `useCancelGrant` | function / hook | `src/components/sections/SuperadminConsole/hooks.ts:339` | `-` |
-| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:77` | `-` |
+| `AccountPill` | function / component | `src/components/shared/AccountPill.tsx:93` | `-` |
 | `Avatar` | function / component | `src/components/shared/Avatar.tsx:78` | `-` |
 | `Badge` | function / component | `src/components/shared/Badge.tsx:112` | `-` |
 | `ConfirmDialog` | function / component | `src/components/shared/ConfirmDialog.tsx:72` | `-` |
