@@ -1747,22 +1747,42 @@ export async function getAttachmentUrl(
 
 // ── markThreadRead ─────────────────────────────────────────────────────────────
 
-export async function markThreadRead(threadId: string, userId: string, upToSequence?: number): Promise<void> {
-  // ── Atomic RPC path ──
-  // The RPC: verifies participant → monotonic cursor update (greatest(current, requested))
-  // → set-based receipt update bounded by sequence. No unbounded IN-list.
-  // Post-commit: emitSignal to refresh badge counts.
-  try {
-    // When upToSequence is not provided (legacy callers), use a very large number
-    // so the cursor advances to cover all existing posts (safe because greatest() is monotonic).
-    const seq = upToSequence ?? Number.MAX_SAFE_INTEGER;
-    await markReadTx({ threadId, actorId: userId, upToSequence: seq });
-    void emitSignal([userId], 'summary');
-  } catch (e: unknown) {
-    // markThreadRead is fire-and-forget in most callers; log but don't throw.
-    const err = e as { message?: string };
-    console.error('[communications] markThreadRead RPC failed:', err.message ?? e);
-  }
+/** Active (removed_at is null) participant user ids for a thread. */
+async function getActiveThreadParticipantIds(threadId: string): Promise<string[]> {
+  const { data, error } = await sb
+    .from('message_participants')
+    .select('user_id')
+    .eq('thread_id', threadId)
+    .is('removed_at', null);
+  if (error) throw new Error(`Active participants query failed: ${error.message}`);
+  return data.map((row) => row.user_id as string);
+}
+
+export async function markThreadRead(
+  threadId: string,
+  userId: string,
+  upToSequence?: number,
+): Promise<{ lastReadSequence: number }> {
+  // Authoritative: the RPC verifies participant → monotonic cursor update
+  // (greatest(current, requested)) → set-based receipt update bounded by
+  // sequence. A failure here PROPAGATES so the route returns an error rather
+  // than a fake success.
+  // When upToSequence is absent (legacy callers), use a very large number so
+  // the cursor advances to cover all existing posts (greatest() is monotonic).
+  const seq = upToSequence ?? Number.MAX_SAFE_INTEGER;
+  const result = await markReadTx({ threadId, actorId: userId, upToSequence: seq });
+
+  // Post-commit signals: the reader's badge clears (summary), and every active
+  // participant refetches posts so the SENDER sees their message flip to read.
+  // allSettled + emitSignal's own error-swallowing keep a signal failure from
+  // failing the already-committed read.
+  const participants = await getActiveThreadParticipantIds(threadId);
+  await Promise.allSettled([
+    emitSignal([userId], 'summary'),
+    emitSignal(participants, 'messages'),
+  ]);
+
+  return result;
 }
 
 // ── archiveThread ──────────────────────────────────────────────────────────────

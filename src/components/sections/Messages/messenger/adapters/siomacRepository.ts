@@ -206,7 +206,7 @@ export class SiomacMessagingRepository implements MessagingRepository {
       body, html: draft.html || body, createdAt: new Date().toISOString(),
       ...(draft.replyToId ? { replyToId: draft.replyToId } : {}),
       ...(draft.link ? { link: draft.link } : {}),
-      attachments: draft.attachments, reactions: [], delivery: 'sent', pinned: false, pinActions: ['pin'], deleted: false,
+      attachments: draft.attachments, reactions: [], delivery: 'sent', readByCount: 0, pinned: false, pinActions: ['pin'], deleted: false,
     };
   }
 

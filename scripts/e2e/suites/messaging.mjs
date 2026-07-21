@@ -692,4 +692,68 @@ export default async function run(h) {
     expect((bPosts.body.data ?? []).some(p => p.id === r.body.postId),
       'B did not receive the ordinary followup after the note');
   });
+
+  // ─────────────────── § 11  READ RECEIPTS (sender sees read state) ────────────
+  // markThreadRead is authoritative: it sets B's receipts read_at, returns the
+  // cursor, and signals every participant so the SENDER's posts refetch with a
+  // real readByCount. Internal notes (no receipts) are never counted.
+  h.section('Messaging › Read receipts');
+
+  let rrThreadId, rrPostId, rrSeq;
+
+  await test('setup: thread admin+B; admin sends a message', async () => {
+    const r = await api('communications/messages/createThread', T.admin, {
+      threadType: 'group', subject: `${TAG} receipt thread`, participantUserIds: [b.id], body: 'first',
+    });
+    ok(r); rrThreadId = r.body.threadId; ctx.threadIds.push(rrThreadId); ctx.postIds.push(r.body.postId);
+    const post = await api('communications/messages/post', T.admin, { threadId: rrThreadId, body: `${TAG} receipt target` });
+    ok(post); rrPostId = post.body.postId; ctx.postIds.push(rrPostId);
+    const { data: prow } = await sb.from('message_posts').select('sequence').eq('id', rrPostId).single();
+    rrSeq = prow.sequence;
+  });
+
+  await test('B has an UNREAD receipt; admin sees readByCount 0', async () => {
+    const { data: rcpt } = await sb.from('message_post_receipts')
+      .select('read_at').eq('post_id', rrPostId).eq('user_id', b.id).single();
+    expect(rcpt, 'no receipt row for B'); expect(rcpt.read_at === null, 'B receipt already marked read');
+    const posts = await api('communications/messages/posts', T.admin, { threadId: rrThreadId, limit: 50 });
+    ok(posts);
+    const target = (posts.body.data ?? []).find(p => p.id === rrPostId);
+    expect(target, 'admin cannot see own message'); expect((target.readByCount ?? 0) === 0, `readByCount=${target?.readByCount} before read`);
+  });
+
+  await test('B marks read → route returns lastReadSequence, receipt set, admin sees readByCount 1', async () => {
+    const mr = await api('communications/messages/markRead', T.b, { threadId: rrThreadId, upToSequence: rrSeq });
+    ok(mr);
+    expect(typeof mr.body.data?.lastReadSequence === 'number', 'markRead did not return data.lastReadSequence');
+    const { data: rcpt } = await sb.from('message_post_receipts')
+      .select('read_at').eq('post_id', rrPostId).eq('user_id', b.id).single();
+    expect(rcpt.read_at !== null, 'B receipt not marked read after markRead');
+    const posts = await api('communications/messages/posts', T.admin, { threadId: rrThreadId, limit: 50 });
+    ok(posts);
+    const target = (posts.body.data ?? []).find(p => p.id === rrPostId);
+    expect((target.readByCount ?? 0) === 1, `readByCount=${target?.readByCount} after B read`);
+  });
+
+  await test('SIDE-EFFECT: markRead emitted a messages signal to participants', async () => {
+    const { data: sigs } = await sb.from('communication_signals')
+      .select('user_id, domain').eq('domain', 'messages').in('user_id', [admin.id, b.id]);
+    expect((sigs ?? []).length > 0, 'no messages signal for participants after markRead');
+  });
+
+  await test('internal notes are NOT counted as read for other participants', async () => {
+    const note = await api('communications/messages/internal-note', T.admin, {
+      threadId: rrThreadId, body: `${TAG} rr internal note`, clientMessageKey: `${TAG}:rr-note`,
+    });
+    ok(note); const notePostId = note.body.post.id; ctx.postIds.push(notePostId);
+    const { count: rc } = await sb.from('message_post_receipts')
+      .select('post_id', { count: 'exact', head: true }).eq('post_id', notePostId).eq('user_id', b.id);
+    expect((rc ?? 0) === 0, 'internal note created a receipt for B');
+    // B marks read again; the author-only note stays uncounted.
+    ok(await api('communications/messages/markRead', T.b, { threadId: rrThreadId }));
+    const authorPosts = await api('communications/messages/posts', T.admin, { threadId: rrThreadId, limit: 50 });
+    ok(authorPosts);
+    const noteRow = (authorPosts.body.data ?? []).find(p => p.id === notePostId);
+    expect(!noteRow || (noteRow.readByCount ?? 0) === 0, 'internal note readByCount is non-zero');
+  });
 }

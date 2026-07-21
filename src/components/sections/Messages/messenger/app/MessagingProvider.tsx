@@ -313,7 +313,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
         body: draft.body, html: draft.html || draft.body, createdAt: new Date().toISOString(),
         ...(draft.replyToId ? { replyToId: draft.replyToId } : {}),
         ...(draft.link ? { link: draft.link } : {}),
-        attachments: draft.attachments, reactions: [], delivery: "sending", pinned: false, pinActions: ["pin"], deleted: false,
+        attachments: draft.attachments, reactions: [], delivery: "sending", readByCount: 0, pinned: false, pinActions: ["pin"], deleted: false,
       };
       setMessagesByThread((current) => {
         const next = new Map(current);
@@ -361,7 +361,7 @@ export function MessagingProvider({ repository, realtime, attachments, currentUs
       const pending: Message = {
         id: pendingId, clientKey: pendingId, threadId, authorId: currentUserId,
         body, html: body, createdAt: new Date().toISOString(),
-        attachments: [], reactions: [], delivery: "sent", pinned: false, pinActions: [], deleted: false,
+        attachments: [], reactions: [], delivery: "sent", readByCount: 0, pinned: false, pinActions: [], deleted: false,
         isInternal: true,
       };
       setMessagesByThread((current) => {

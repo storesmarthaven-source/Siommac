@@ -323,7 +323,7 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
       <div className="sm-message__main">
         <header className="sm-message__meta"><strong>{author.name}</strong><time dateTime={message.createdAt}>{formatTime(message.createdAt)}</time></header>
         {replySource ? <button className="sm-reply-reference" type="button" onClick={() => onJump(replySource.id)}><Reply /><span><strong>{userById(snapshot, replySource.authorId).name}</strong><em>{replySource.body || replySource.attachments[0]?.name}</em></span></button> : null}
-        {message.body ? <div className="sm-bubble"><span><RichMessage html={message.html} /></span><MessageStatus message={message} /></div> : null}
+        {message.body ? <div className="sm-bubble"><span><RichMessage html={message.html} /></span>{isSelf ? <MessageStatus message={message} /> : null}</div> : null}
         {message.attachments.map((attachment) => <AttachmentCard key={attachment.id} attachment={attachment} liked={liked} onPreview={() => onPreview(attachment)} onOpen={() => void actions.download(attachment)} onPin={() => void actions.togglePin(message.id)} onLike={() => void actions.toggleReaction(message.id, "👍")} />)}
         {message.link ? <LinkCard link={message.link} /> : null}
         {message.card ? <CollaborationRecordCard card={message.card} owner={userById(snapshot, message.card.ownerId)} collaborators={message.card.collaboratorIds.map((id) => userById(snapshot, id))} onOpen={() => onOpenCollaboration(message.card!)} onComment={onReply} onActivity={onActivity} onPin={() => void actions.togglePin(message.id)} /> : null}
@@ -339,10 +339,19 @@ function MessageRow({ message, currentUserId, onReply, onPreview, onActivity, on
   );
 }
 
+// Sender-only receipt. A real read (readByCount > 0, from message_post_receipts)
+// wins over the delivery state; otherwise fall back to sending/delivered/sent.
 function MessageStatus({ message }: { message: Message }) {
-  if (message.delivery === "sending") return <span className="sm-delivery"><Check /></span>;
-  if (message.delivery === "sent") return <span className="sm-delivery"><Check /></span>;
-  return <span className={`sm-delivery ${message.delivery === "read" ? "is-read" : ""}`}><CheckCheck /></span>;
+  if (message.delivery === "sending") return <span className="sm-delivery" title="Sending"><Check /></span>;
+  if (message.readByCount > 0) {
+    return (
+      <span className="sm-delivery is-read" title={`Read by ${message.readByCount}`}>
+        <CheckCheck /><em>{message.readByCount === 1 ? "Read" : `Read by ${message.readByCount}`}</em>
+      </span>
+    );
+  }
+  if (message.delivery === "delivered" || message.delivery === "read") return <span className="sm-delivery" title="Delivered"><CheckCheck /></span>;
+  return <span className="sm-delivery" title="Sent"><Check /></span>;
 }
 
 // Render the sanitized rich-text body (inline marks, links, headings, lists,

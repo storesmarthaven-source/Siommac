@@ -89,6 +89,10 @@ export interface Message {
   card?: CollaborationCard;
   reactions: Reaction[];
   delivery: DeliveryState;
+  /** How many OTHER participants have read this post (server-derived from
+   *  message_post_receipts). Drives the sender's read receipt. 0 for internal
+   *  notes (author-only, no receipts). */
+  readByCount: number;
   pinned: boolean;
   /** Who holds the active pin (server-provided; null/absent when unpinned). */
   pinnedBy?: UserId | null;

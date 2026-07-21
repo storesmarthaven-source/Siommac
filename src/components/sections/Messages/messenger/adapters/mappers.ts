@@ -104,6 +104,7 @@ export function mapPost(p: PostDTO): Message {
     ...(link ? { link } : {}),
     reactions: (p.reactions ?? []).map(r => ({ emoji: r.emoji, userIds: r.userIds })),
     delivery: mapDelivery(p.deliveryStatus),
+    readByCount: p.isInternal ? 0 : (p.readByCount ?? 0),
     pinned: p.isPinned ?? false,
     pinnedBy: p.pinnedBy ?? null,
     pinActions: p.isInternal ? [] : (p.allowedPinActions ?? (p.isPinned ?? false ? [] : ["pin"])),

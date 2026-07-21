@@ -542,11 +542,15 @@ export function useThreadPosts(threadId: string) {
 export function useMarkThreadRead() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (threadId: string) =>
-      apiPost<{ success: boolean }>(
-        'communications/messages/markRead', { threadId }, { retryable: false },
+    mutationFn: (args: { threadId: string; upToSequence?: number }) =>
+      apiPost<{ success: boolean; data: { lastReadSequence: number } }>(
+        'communications/messages/markRead', args, { retryable: false },
       ),
-    onSuccess: (_r: unknown, _threadId: string) => {
+    onSuccess: (_r: unknown, args: { threadId: string; upToSequence?: number }) => {
+      // Refresh the reader's own posts (their receipts) + thread list + badge.
+      // Other participants (incl. the sender) refetch via the realtime
+      // 'messages' signal emitted by markThreadRead.
+      void qc.invalidateQueries({ queryKey: messageKeys.posts(args.threadId) });
       void qc.invalidateQueries({ queryKey: messageKeys.all });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },

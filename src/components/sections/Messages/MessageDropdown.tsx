@@ -86,7 +86,7 @@ export function MessageDropdown(): VNode {
   const markRead = useMarkThreadRead();
 
   function openThread(t: MessageThreadListItem) {
-    if (t.unreadCount > 0) markRead.mutate(t.id);
+    if (t.unreadCount > 0) markRead.mutate({ threadId: t.id });
     closeModal();
     showSection('s-messages');
     // Broadcast selected thread id for MessageCenter to pick up

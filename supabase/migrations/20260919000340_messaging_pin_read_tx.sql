@@ -385,7 +385,11 @@ begin
      and mp.thread_id = p_thread_id
      and mpr.user_id  = p_actor_id
      and mpr.read_at  is null
-     and (mp.sequence is null or mp.sequence <= v_new_seq);
+     and (mp.sequence is null or mp.sequence <= v_new_seq)
+     -- Never mark a hidden internal note as read for a non-author. (Internal
+     -- notes create no receipts today, so this is defensive; coalesce guards
+     -- DBs where 20260919000441 has not yet added is_internal.)
+     and (coalesce(mp.is_internal, false) = false or mp.author_user_id = p_actor_id);
 
   return jsonb_build_object('lastReadSequence', v_new_seq);
 end

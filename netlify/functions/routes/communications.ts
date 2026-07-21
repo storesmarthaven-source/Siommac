@@ -681,8 +681,8 @@ router.post('/communications/messages/markRead', async c => {
   const v = zv(c, MarkReadSchema, body.args);
   if (!v.ok) return v.response;
 
-  await markThreadRead(v.data.threadId, user.id, v.data.upToSequence);
-  return c.json({ success: true });
+  const data = await markThreadRead(v.data.threadId, user.id, v.data.upToSequence);
+  return c.json({ success: true, data });
 });
 
 // POST /api/communications/messages/archive
