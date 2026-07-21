@@ -1020,6 +1020,9 @@ const CreateTicketSchema = z.object({
   sourceModule:     z.string().nullable().optional(),
   sourceEntityType: z.string().nullable().optional(),
   sourceEntityId:   z.string().nullable().optional(),
+  creationMode:     z.enum(['self','team','on_behalf','internal']).optional(),
+  requesterId:      z.string().nullable().optional(),
+  creationReason:   z.string().max(1000).nullable().optional(),
   metadata:         z.record(z.string(), z.unknown()).optional(),
   idempotencyKey:   z.string().min(8).max(200).optional(),
 });
@@ -1039,6 +1042,9 @@ router.post('/communications/tickets/create', async c => {
     && payrollRunId !== null;
   const requestTypeCode = v.data.requestTypeCode
     ?? (legacyPayrollWarning ? 'finance_admin' : null);
+  // The auto-created payroll-warning ticket uses the internal finance_admin type,
+  // so it goes through internal mode (finance handlers hold tickets.create_internal).
+  const creationMode = legacyPayrollWarning ? 'internal' : (v.data.creationMode ?? 'self');
   const description = v.data.description ?? v.data.body ?? null;
   const idempotencyKey = v.data.idempotencyKey
     ?? (legacyPayrollWarning
@@ -1053,7 +1059,10 @@ router.post('/communications/tickets/create', async c => {
 
   const result = await createTicketTx({
     actorId: user.id,
-    requesterId: user.id,
+    // self/internal always record the actor as requester; team/on-behalf name another.
+    requesterId: (creationMode === 'self' || creationMode === 'internal') ? user.id : (v.data.requesterId ?? user.id),
+    creationMode,
+    creationReason: v.data.creationReason ?? null,
     requestTypeCode,
     subject: v.data.subject,
     description,

@@ -843,6 +843,9 @@ export interface CreateTicketArgs extends Record<string, unknown> {
   priority?:        'low' | 'medium' | 'high' | 'critical';
   subject:          string;
   description:      string;
+  creationMode?:    'self' | 'team' | 'on_behalf' | 'internal';
+  requesterId?:     string | null;
+  creationReason?:  string | null;
   sourceModule?:    string | null;
   sourceEntityType?: string | null;
   sourceEntityId?:  string | null;

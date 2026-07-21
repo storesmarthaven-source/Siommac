@@ -157,6 +157,8 @@ function mutationResult(data: unknown): TicketMutationResult {
 export async function createTicketTx(input: {
   actorId: string;
   requesterId?: string | null;
+  creationMode?: 'self' | 'team' | 'on_behalf' | 'internal';
+  creationReason?: string | null;
   requestTypeCode: string;
   subject: string;
   description: string;
@@ -176,6 +178,8 @@ export async function createTicketTx(input: {
     p_source_entity_type: input.sourceEntityType ?? null,
     p_source_entity_id: input.sourceEntityId ?? null,
     p_requester_id: input.requesterId ?? null,
+    p_creation_mode: input.creationMode ?? 'self',
+    p_creation_reason: input.creationReason ?? null,
     p_idempotency_key: input.idempotencyKey,
   });
   if (error) throwRpcError(error);

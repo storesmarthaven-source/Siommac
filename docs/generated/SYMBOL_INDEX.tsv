@@ -2337,15 +2337,15 @@ ticketUserProfiles	function	communications	false		netlify/functions/lib/tickets/
 withProfile	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	114	
 mutationResult	function	communications	false		netlify/functions/lib/tickets/ticketRpc.ts	127	
 createTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	157	
-commentTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	185	
-commandTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	203	
-markTicketReadTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	221	
-completeTicketAttachmentTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	235	
-listTicketRequestTypes	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	249	
-listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	257	
-getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	301	
-runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	336	
-cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	348	
+commentTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	189	
+commandTicketTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	207	
+markTicketReadTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	225	
+completeTicketAttachmentTx	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	239	
+listTicketRequestTypes	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	253	
+listTicketsForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	261	
+getTicketForActor	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	305	
+runTicketOverdueSweep	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	340	
+cleanupStaleTicketAttachments	function	communications	true		netlify/functions/lib/tickets/ticketRpc.ts	352	
 ENCRYPTION_KEY_HEX	variable	platform	false		netlify/functions/lib/totp.ts	19	
 CHALLENGE_TTL_MS	variable	platform	false		netlify/functions/lib/totp.ts	20	
 MAX_ATTEMPTS	variable	platform	false		netlify/functions/lib/totp.ts	21	
@@ -2763,15 +2763,15 @@ DraftGetSchema	variable	communications	false		netlify/functions/routes/communica
 PresenceSchema	variable	communications	false		netlify/functions/routes/communications.ts	976	
 signalTicketMutation	function	communications	false		netlify/functions/routes/communications.ts	1001	
 CreateTicketSchema	variable	communications	false		netlify/functions/routes/communications.ts	1014	
-TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1072	
-TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1108	
-CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1119	
-TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1140	
-TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1161	
-TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1179	
-TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1222	
-TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1260	
-TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1282	
+TicketListSchema	variable	communications	false		netlify/functions/routes/communications.ts	1081	
+TicketIdSchema	variable	communications	false		netlify/functions/routes/communications.ts	1117	
+CommentSchema	variable	communications	false		netlify/functions/routes/communications.ts	1128	
+TicketCommandSchema	variable	communications	false		netlify/functions/routes/communications.ts	1149	
+TicketMarkReadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1170	
+TicketAttachmentUploadSchema	variable	communications	false		netlify/functions/routes/communications.ts	1188	
+TicketAttachmentCompleteSchema	variable	communications	false		netlify/functions/routes/communications.ts	1231	
+TicketAttachmentGetSchema	variable	communications	false		netlify/functions/routes/communications.ts	1269	
+TicketSweepSchema	variable	communications	false		netlify/functions/routes/communications.ts	1291	
 router	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	36	
 args	function	communications	false		netlify/functions/routes/communicationsCompliance.ts	37	
 CASE_TYPES	variable	communications	false		netlify/functions/routes/communicationsCompliance.ts	40	
@@ -3963,14 +3963,14 @@ useMyTickets	function	communications	true	hook	src/api/communications.ts	796
 useTicketRequestTypes	function	communications	true	hook	src/api/communications.ts	811	
 useTicket	function	communications	true	hook	src/api/communications.ts	825	
 CreateTicketArgs	interface	communications	true		src/api/communications.ts	841	
-useCreateTicket	function	communications	true	hook	src/api/communications.ts	851	
-CommentTicketArgs	interface	communications	true		src/api/communications.ts	870	
-useCommentTicket	function	communications	true	hook	src/api/communications.ts	876	
-UpdateTicketArgs	interface	communications	true		src/api/communications.ts	895	
-useUpdateTicket	function	communications	true	hook	src/api/communications.ts	904	
-useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	923	
-uploadTicketAttachment	function	communications	true		src/api/communications.ts	972	
-getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	999	
+useCreateTicket	function	communications	true	hook	src/api/communications.ts	854	
+CommentTicketArgs	interface	communications	true		src/api/communications.ts	873	
+useCommentTicket	function	communications	true	hook	src/api/communications.ts	879	
+UpdateTicketArgs	interface	communications	true		src/api/communications.ts	898	
+useUpdateTicket	function	communications	true	hook	src/api/communications.ts	907	
+useMarkTicketRead	function	communications	true	hook	src/api/communications.ts	926	
+uploadTicketAttachment	function	communications	true		src/api/communications.ts	975	
+getTicketAttachmentUrl	function	communications	true		src/api/communications.ts	1002	
 asArgs	function	communications	false		src/api/communicationsCompliance.ts	34	
 ComplianceAccessError	class	communications	true		src/api/communicationsCompliance.ts	46	
 asComplianceAccessError	function	communications	true		src/api/communicationsCompliance.ts	60	

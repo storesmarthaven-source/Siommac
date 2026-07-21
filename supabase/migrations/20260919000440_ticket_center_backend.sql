@@ -624,6 +624,12 @@ $$;
 revoke all on all functions in schema ticket_internal from public, anon, authenticated;
 grant execute on all functions in schema ticket_internal to service_role;
 
+-- The signature gained p_creation_mode/p_creation_reason. create-or-replace cannot
+-- change arity, so drop the old 10-arg overload first (idempotent) — otherwise both
+-- overloads would coexist and callers could bind the stale one.
+drop function if exists public.ticket_create_tx(
+  text,text,text,text,text,text,text,text,text,text
+);
 create or replace function public.ticket_create_tx(
   p_actor_id text,
   p_request_type_code text,
@@ -634,6 +640,8 @@ create or replace function public.ticket_create_tx(
   p_source_entity_type text,
   p_source_entity_id text,
   p_requester_id text,
+  p_creation_mode text,
+  p_creation_reason text,
   p_idempotency_key text
 )
 returns jsonb
@@ -647,6 +655,8 @@ declare
   v_ticket public.tickets%rowtype;
   v_ticket_number text;
   v_requester_id text := coalesce(p_requester_id, p_actor_id);
+  v_mode text := lower(coalesce(nullif(trim(p_creation_mode), ''), 'self'));
+  v_reason text := nullif(trim(p_creation_reason), '');
   v_priority text;
   v_handlers text[];
   v_recipients text[];
@@ -688,12 +698,64 @@ begin
     raise exception using errcode = 'TK422', message = 'Request type is unavailable';
   end if;
 
-  if v_requester_id <> p_actor_id
-     and not ticket_internal.user_has_permission(
-       p_actor_id,
-       (select handler_permission from public.ticket_queues where code = v_type.queue_code)
-     ) then
-    raise exception using errcode = 'TK403', message = 'Cannot create a ticket for another user';
+  -- ── Creation-mode enforcement (authoritative; API/UI checks are supplementary) ──
+  if v_mode not in ('self','team','on_behalf','internal') then
+    raise exception using errcode = 'TK422', message = 'Invalid creation mode';
+  end if;
+
+  -- The request type must be allowed for the mode: internal types are never
+  -- offered to employee-facing modes, and employee types never to internal work.
+  if v_mode = 'internal' then
+    if not v_type.is_internal_requestable then
+      raise exception using errcode = 'TK422', message = 'Request type is not available for internal work';
+    end if;
+  elsif not v_type.is_employee_requestable then
+    raise exception using errcode = 'TK422', message = 'Request type is not available for employee requests';
+  end if;
+
+  if v_mode = 'self' then
+    if v_requester_id <> p_actor_id then
+      raise exception using errcode = 'TK422', message = 'Self-service tickets must be raised for yourself';
+    end if;
+    if not ticket_internal.user_has_permission(p_actor_id, 'tickets.create_self') then
+      raise exception using errcode = 'TK403', message = 'Not permitted to raise tickets';
+    end if;
+
+  elsif v_mode = 'team' then
+    if not ticket_internal.user_has_permission(p_actor_id, 'tickets.create_team') then
+      raise exception using errcode = 'TK403', message = 'Not permitted to raise tickets for team members';
+    end if;
+    if not exists (
+      select 1 from public.app_users
+      where id = v_requester_id and supervisor_id = p_actor_id and status = 'active'
+    ) then
+      raise exception using errcode = 'TK403', message = 'Requester is not your active direct report';
+    end if;
+
+  elsif v_mode = 'on_behalf' then
+    if v_requester_id = p_actor_id then
+      raise exception using errcode = 'TK422', message = 'On-behalf tickets must name another employee';
+    end if;
+    if v_reason is null then
+      raise exception using errcode = 'TK422', message = 'A reason is required for on-behalf tickets';
+    end if;
+    if not ticket_internal.user_has_permission(p_actor_id, 'tickets.create_on_behalf') then
+      raise exception using errcode = 'TK403', message = 'Not permitted to raise tickets on behalf of employees';
+    end if;
+    if not ticket_internal.user_has_permission(
+         p_actor_id,
+         (select handler_permission from public.ticket_queues where code = v_type.queue_code)
+       ) then
+      raise exception using errcode = 'TK403', message = 'Not a handler for the target queue';
+    end if;
+
+  else  -- internal
+    if v_requester_id <> p_actor_id then
+      raise exception using errcode = 'TK422', message = 'Internal work is recorded under its creator';
+    end if;
+    if not ticket_internal.user_has_permission(p_actor_id, 'tickets.create_internal') then
+      raise exception using errcode = 'TK403', message = 'Not permitted to raise internal work';
+    end if;
   end if;
 
   if nullif(trim(p_subject), '') is null or length(trim(p_subject)) > 200 then
@@ -715,7 +777,8 @@ begin
 
   insert into public.tickets (
     ticket_number, source_module, source_entity_type, source_entity_id,
-    requester_user_id, category, priority, status, sla_due_at,
+    requester_user_id, created_by_user_id, creation_mode, creation_reason,
+    category, priority, status, sla_due_at,
     response_due_at, resolution_due_at, response_target_minutes,
     resolution_target_minutes, request_type_code, queue_code,
     subject, description, is_confidential, last_activity_at,
@@ -727,6 +790,9 @@ begin
     nullif(trim(p_source_entity_type), ''),
     nullif(trim(p_source_entity_id), ''),
     v_requester_id,
+    p_actor_id,
+    v_mode,
+    v_reason,
     v_type.category,
     v_priority,
     'open',
@@ -771,7 +837,12 @@ begin
 
   v_event_id := ticket_internal.record_event(
     v_ticket, p_actor_id, 'created',
-    jsonb_build_object('requesterUserId', v_requester_id), 1
+    jsonb_build_object(
+      'requesterUserId', v_requester_id,
+      'createdByUserId', p_actor_id,
+      'creationMode', v_mode,
+      'creationReason', v_reason
+    ), 1
   );
 
   v_handlers := ticket_internal.handler_user_ids(v_type.queue_code, p_actor_id);
@@ -1882,7 +1953,7 @@ end;
 $$;
 
 revoke all on function public.ticket_create_tx(
-  text,text,text,text,text,text,text,text,text,text
+  text,text,text,text,text,text,text,text,text,text,text,text
 ) from public, anon, authenticated;
 revoke all on function public.ticket_comment_tx(
   text,uuid,text,boolean,text
@@ -1909,7 +1980,7 @@ revoke all on function public.ticket_overdue_sweep_tx(integer)
   from public, anon, authenticated;
 
 grant execute on function public.ticket_create_tx(
-  text,text,text,text,text,text,text,text,text,text
+  text,text,text,text,text,text,text,text,text,text,text,text
 ) to service_role;
 grant execute on function public.ticket_comment_tx(
   text,uuid,text,boolean,text

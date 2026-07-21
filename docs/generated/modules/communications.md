@@ -2,7 +2,7 @@
 
 # communications Module Map
 
-Source fingerprint: `0f6b3a08ffef18b72c5269e2`
+Source fingerprint: `82974925ad78d2a8908b358e`
 
 Files: 104 | Symbols: 945 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
 
@@ -72,17 +72,17 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:206` | res @ src/api/communications.ts:248 | communications |
 | `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:243` | useSetNotificationPreference @ src/api/communications.ts:261 | communications |
 | `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:104` | res @ src/api/communications.ts:203<br>res @ src/components/nav/badgeSync.ts:58 | communications, messengerRealtime, ticketCenter |
-| `/api/communications/tickets/attachments/complete` | `communications.view` | requirePermission | `TicketAttachmentCompleteSchema` | `netlify/functions/routes/communications.ts:1227` | completed @ src/api/communications.ts:990 | ticketCenter |
-| `/api/communications/tickets/attachments/get-url` | `communications.view` | requirePermission | `TicketAttachmentGetSchema` | `netlify/functions/routes/communications.ts:1264` | res @ src/api/communications.ts:1000 | ticketCenter |
-| `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1186` | reserved @ src/api/communications.ts:973 | ticketCenter |
-| `/api/communications/tickets/command` | `communications.view` | requirePermission | `TicketCommandSchema` | `netlify/functions/routes/communications.ts:1150` | res @ src/api/communications.ts:908 | communications, ticketCenter |
-| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1126` | res @ src/api/communications.ts:880 | communications, ticketCenter |
-| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1027` | res @ src/api/communications.ts:855<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications, ticketCenter |
-| `/api/communications/tickets/get` | `communications.view` | requirePermission | `TicketIdSchema` | `netlify/functions/routes/communications.ts:1110` | res @ src/api/communications.ts:829 | communications, ticketCenter |
-| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1087` | res @ src/api/communications.ts:800 | communications, ticketCenter |
-| `/api/communications/tickets/mark-read` | `communications.view` | requirePermission | `TicketMarkReadSchema` | `netlify/functions/routes/communications.ts:1166` | useMarkTicketRead @ src/api/communications.ts:927 | ticketCenter |
+| `/api/communications/tickets/attachments/complete` | `communications.view` | requirePermission | `TicketAttachmentCompleteSchema` | `netlify/functions/routes/communications.ts:1236` | completed @ src/api/communications.ts:993 | ticketCenter |
+| `/api/communications/tickets/attachments/get-url` | `communications.view` | requirePermission | `TicketAttachmentGetSchema` | `netlify/functions/routes/communications.ts:1273` | res @ src/api/communications.ts:1003 | ticketCenter |
+| `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1195` | reserved @ src/api/communications.ts:976 | ticketCenter |
+| `/api/communications/tickets/command` | `communications.view` | requirePermission | `TicketCommandSchema` | `netlify/functions/routes/communications.ts:1159` | res @ src/api/communications.ts:911 | communications, ticketCenter |
+| `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1135` | res @ src/api/communications.ts:883 | communications, ticketCenter |
+| `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1030` | res @ src/api/communications.ts:858<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications, ticketCenter |
+| `/api/communications/tickets/get` | `communications.view` | requirePermission | `TicketIdSchema` | `netlify/functions/routes/communications.ts:1119` | res @ src/api/communications.ts:829 | communications, ticketCenter |
+| `/api/communications/tickets/list` | `communications.view` | requirePermission | `TicketListSchema` | `netlify/functions/routes/communications.ts:1096` | res @ src/api/communications.ts:800 | communications, ticketCenter |
+| `/api/communications/tickets/mark-read` | `communications.view` | requirePermission | `TicketMarkReadSchema` | `netlify/functions/routes/communications.ts:1175` | useMarkTicketRead @ src/api/communications.ts:930 | ticketCenter |
 | `/api/communications/tickets/request-types` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:1008` | res @ src/api/communications.ts:815 | ticketCenter |
-| `/api/communications/tickets/run-overdue-sweep` | `tickets.manage` | requirePermission | `TicketSweepSchema` | `netlify/functions/routes/communications.ts:1286` | - | ticketCenter |
+| `/api/communications/tickets/run-overdue-sweep` | `tickets.manage` | requirePermission | `TicketSweepSchema` | `netlify/functions/routes/communications.ts:1295` | - | ticketCenter |
 | `/api/createTicket` | `-` | requireUser | `CreateTicketSchema` | `netlify/functions/routes/tickets.ts:20` | - | - |
 | `/api/deleteNotification` | `-` | requireUser | `MarkReadSchema` | `netlify/functions/routes/notify.ts:164` | res @ src/api/notifications.ts:103 | - |
 | `/api/deleteTicket` | `-` | requireUser | `GetTicketSchema` | `netlify/functions/routes/tickets.ts:126` | - | - |
@@ -170,15 +170,15 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `apiPost` | `res` | `src/api/communications.ts:248` |
 | `/api/communications/notifications/preferences/set` | `apiPost` | `useSetNotificationPreference` | `src/api/communications.ts:261` |
 | `/api/communications/summary` | `apiPost` | `res` | `src/api/communications.ts:203` |
-| `/api/communications/tickets/attachments/complete` | `apiPost` | `completed` | `src/api/communications.ts:990` |
-| `/api/communications/tickets/attachments/get-url` | `apiPost` | `res` | `src/api/communications.ts:1000` |
-| `/api/communications/tickets/attachments/upload-url` | `apiPost` | `reserved` | `src/api/communications.ts:973` |
-| `/api/communications/tickets/command` | `apiPost` | `res` | `src/api/communications.ts:908` |
-| `/api/communications/tickets/comment` | `apiPost` | `res` | `src/api/communications.ts:880` |
-| `/api/communications/tickets/create` | `apiPost` | `res` | `src/api/communications.ts:855` |
+| `/api/communications/tickets/attachments/complete` | `apiPost` | `completed` | `src/api/communications.ts:993` |
+| `/api/communications/tickets/attachments/get-url` | `apiPost` | `res` | `src/api/communications.ts:1003` |
+| `/api/communications/tickets/attachments/upload-url` | `apiPost` | `reserved` | `src/api/communications.ts:976` |
+| `/api/communications/tickets/command` | `apiPost` | `res` | `src/api/communications.ts:911` |
+| `/api/communications/tickets/comment` | `apiPost` | `res` | `src/api/communications.ts:883` |
+| `/api/communications/tickets/create` | `apiPost` | `res` | `src/api/communications.ts:858` |
 | `/api/communications/tickets/get` | `apiPost` | `res` | `src/api/communications.ts:829` |
 | `/api/communications/tickets/list` | `apiPost` | `res` | `src/api/communications.ts:800` |
-| `/api/communications/tickets/mark-read` | `apiPost` | `useMarkTicketRead` | `src/api/communications.ts:927` |
+| `/api/communications/tickets/mark-read` | `apiPost` | `useMarkTicketRead` | `src/api/communications.ts:930` |
 | `/api/communications/tickets/request-types` | `apiPost` | `res` | `src/api/communications.ts:815` |
 | `/api/deleteNotification` | `apiPost` | `res` | `src/api/notifications.ts:103` |
 | `/api/getMyNotifications` | `apiPost` | `res` | `src/api/notifications.ts:47` |
@@ -232,10 +232,10 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useMyTickets` | function / hook | `src/api/communications.ts:796` | `-` |
 | `useTicketRequestTypes` | function / hook | `src/api/communications.ts:811` | `-` |
 | `useTicket` | function / hook | `src/api/communications.ts:825` | `-` |
-| `useCreateTicket` | function / hook | `src/api/communications.ts:851` | `-` |
-| `useCommentTicket` | function / hook | `src/api/communications.ts:876` | `-` |
-| `useUpdateTicket` | function / hook | `src/api/communications.ts:904` | `-` |
-| `useMarkTicketRead` | function / hook | `src/api/communications.ts:923` | `-` |
+| `useCreateTicket` | function / hook | `src/api/communications.ts:854` | `-` |
+| `useCommentTicket` | function / hook | `src/api/communications.ts:879` | `-` |
+| `useUpdateTicket` | function / hook | `src/api/communications.ts:907` | `-` |
+| `useMarkTicketRead` | function / hook | `src/api/communications.ts:926` | `-` |
 | `useComplianceSummary` | function / hook | `src/api/communicationsCompliance.ts:80` | `-` |
 | `useComplianceCases` | function / hook | `src/api/communicationsCompliance.ts:91` | `-` |
 | `useComplianceCase` | function / hook | `src/api/communicationsCompliance.ts:109` | `-` |
@@ -428,16 +428,16 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `ticket_internal.handler_user_ids` | `supabase/migrations/20260919000440_ticket_center_backend.sql:432` |
 | function | `ticket_internal.record_event` | `supabase/migrations/20260919000440_ticket_center_backend.sql:450` |
 | function | `ticket_internal.notify_users` | `supabase/migrations/20260919000440_ticket_center_backend.sql:521` |
-| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:627` |
-| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:819` |
-| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1015` |
-| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1348` |
-| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1406` |
-| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1521` |
-| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1552` |
-| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1655` |
-| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1784` |
-| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1822` |
+| function | `public.ticket_create_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:633` |
+| function | `public.ticket_comment_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:890` |
+| function | `public.ticket_command_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1086` |
+| function | `public.ticket_mark_read_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1419` |
+| function | `public.ticket_attachment_complete_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1477` |
+| function | `public.ticket_request_types_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1592` |
+| function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1623` |
+| function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1726` |
+| function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1855` |
+| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1893` |
 
 ## E2E Suites
 
@@ -455,7 +455,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/communications.ts` | 1300 |
+| backend-route | `netlify/functions/routes/communications.ts` | 1309 |
 | backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 504 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
@@ -464,7 +464,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | e2e-suite | `scripts/e2e/suites/ticketCenter.mjs` | 436 |
-| frontend-api | `src/api/communications.ts` | 1006 |
+| frontend-api | `src/api/communications.ts` | 1009 |
 | frontend-api | `src/api/communicationsCompliance.ts` | 252 |
 | frontend-api | `src/api/notifications.ts` | 160 |
 | frontend-api | `src/api/schemas/notification.ts` | 106 |

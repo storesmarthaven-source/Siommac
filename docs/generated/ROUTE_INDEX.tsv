@@ -90,17 +90,17 @@ path	module	permission	guards	schema	file	line
 /api/communications/notifications/preferences/get	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	206
 /api/communications/notifications/preferences/set	communications	communications.view	requirePermission	PrefSetSchema	netlify/functions/routes/communications.ts	243
 /api/communications/summary	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	104
-/api/communications/tickets/attachments/complete	communications	communications.view	requirePermission	TicketAttachmentCompleteSchema	netlify/functions/routes/communications.ts	1227
-/api/communications/tickets/attachments/get-url	communications	communications.view	requirePermission	TicketAttachmentGetSchema	netlify/functions/routes/communications.ts	1264
-/api/communications/tickets/attachments/upload-url	communications	communications.view	requirePermission	TicketAttachmentUploadSchema	netlify/functions/routes/communications.ts	1186
-/api/communications/tickets/command	communications	communications.view	requirePermission	TicketCommandSchema	netlify/functions/routes/communications.ts	1150
-/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1126
-/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	1027
-/api/communications/tickets/get	communications	communications.view	requirePermission	TicketIdSchema	netlify/functions/routes/communications.ts	1110
-/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1087
-/api/communications/tickets/mark-read	communications	communications.view	requirePermission	TicketMarkReadSchema	netlify/functions/routes/communications.ts	1166
+/api/communications/tickets/attachments/complete	communications	communications.view	requirePermission	TicketAttachmentCompleteSchema	netlify/functions/routes/communications.ts	1236
+/api/communications/tickets/attachments/get-url	communications	communications.view	requirePermission	TicketAttachmentGetSchema	netlify/functions/routes/communications.ts	1273
+/api/communications/tickets/attachments/upload-url	communications	communications.view	requirePermission	TicketAttachmentUploadSchema	netlify/functions/routes/communications.ts	1195
+/api/communications/tickets/command	communications	communications.view	requirePermission	TicketCommandSchema	netlify/functions/routes/communications.ts	1159
+/api/communications/tickets/comment	communications	communications.view	requirePermission	CommentSchema	netlify/functions/routes/communications.ts	1135
+/api/communications/tickets/create	communications	communications.view	requirePermission	CreateTicketSchema	netlify/functions/routes/communications.ts	1030
+/api/communications/tickets/get	communications	communications.view	requirePermission	TicketIdSchema	netlify/functions/routes/communications.ts	1119
+/api/communications/tickets/list	communications	communications.view	requirePermission	TicketListSchema	netlify/functions/routes/communications.ts	1096
+/api/communications/tickets/mark-read	communications	communications.view	requirePermission	TicketMarkReadSchema	netlify/functions/routes/communications.ts	1175
 /api/communications/tickets/request-types	communications	communications.view	requirePermission		netlify/functions/routes/communications.ts	1008
-/api/communications/tickets/run-overdue-sweep	communications	tickets.manage	requirePermission	TicketSweepSchema	netlify/functions/routes/communications.ts	1286
+/api/communications/tickets/run-overdue-sweep	communications	tickets.manage	requirePermission	TicketSweepSchema	netlify/functions/routes/communications.ts	1295
 /api/confirm2faSetup	security			Setup2faConfirmSchema	netlify/functions/routes/auth.ts	479
 /api/createTicket	communications		requireUser	CreateTicketSchema	netlify/functions/routes/tickets.ts	20
 /api/deleteDepartment	hr	departments.delete	requirePermission	DeleteDepartmentSchema	netlify/functions/routes/departments.ts	78
