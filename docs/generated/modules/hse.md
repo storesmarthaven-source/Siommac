@@ -2,7 +2,7 @@
 
 # hse Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 87 | Symbols: 1275 | Widgets: 0 | Unique mounted endpoints: 144 | Route definitions: 144 mounted + 0 unmounted | API calls: 107 | DB objects: 65 | E2E suites: 4
 
@@ -492,7 +492,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/hseRiskJsa.ts` | 1950 |
 | e2e-suite | `scripts/e2e/suites/incidents.mjs` | 922 |
 | e2e-suite | `scripts/e2e/suites/inspections.mjs` | 386 |
-| e2e-suite | `scripts/e2e/suites/ptw.mjs` | 473 |
+| e2e-suite | `scripts/e2e/suites/ptw.mjs` | 475 |
 | e2e-suite | `scripts/e2e/suites/riskjsa.mjs` | 1157 |
 | frontend-api | `src/api/hse/incidents.ts` | 497 |
 | frontend-api | `src/api/hse/inspections.ts` | 422 |

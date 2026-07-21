@@ -2,7 +2,7 @@
 
 # workflow Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 47 | Symbols: 321 | Widgets: 0 | Unique mounted endpoints: 40 | Route definitions: 40 mounted + 0 unmounted | API calls: 8 | DB objects: 128 | E2E suites: 3
 
@@ -182,8 +182,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/workflowEngine.ts` | 345 |
 | backend-route | `netlify/functions/routes/workflows.ts` | 211 |
 | e2e-suite | `scripts/e2e/suites/orchestration.mjs` | 115 |
-| e2e-suite | `scripts/e2e/suites/workflow-engine.mjs` | 737 |
-| e2e-suite | `scripts/e2e/suites/workflowAdmin.mjs` | 327 |
+| e2e-suite | `scripts/e2e/suites/workflow-engine.mjs` | 749 |
+| e2e-suite | `scripts/e2e/suites/workflowAdmin.mjs` | 334 |
 | frontend-api | `src/api/orchestration.ts` | 47 |
 | frontend-api | `src/api/workflows.ts` | 233 |
 | frontend-page | `src/components/sections/HR/OnboardingHandoffsWorkspace.tsx` | 188 |

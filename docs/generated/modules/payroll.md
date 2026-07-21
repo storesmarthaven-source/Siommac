@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 150 | Symbols: 1452 | Widgets: 10 | Unique mounted endpoints: 127 | Route definitions: 127 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 22
 
@@ -429,7 +429,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 837 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 398 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
-| e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 288 |
+| e2e-suite | `scripts/e2e/suites/payrollStatutorySnapshot.mjs` | 292 |
 | e2e-suite | `scripts/e2e/suites/payrollVarianceReports.mjs` | 105 |
 | e2e-suite | `scripts/e2e/suites/payslipRender.mjs` | 681 |
 | e2e-suite | `scripts/e2e/suites/payslipTemplateApproval.mjs` | 517 |

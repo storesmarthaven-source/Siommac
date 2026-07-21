@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 129 | Symbols: 1793 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -199,8 +199,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 |---|---|---|---|
 | `ApKpis` | interface / ui-tile | `netlify/functions/lib/finance/accountsPayable.ts:172` | `-` |
 | `getApKpis` | function / ui-tile | `netlify/functions/lib/finance/accountsPayable.ts:178` | `-` |
-| `DisbursementKpis` | interface / ui-tile | `netlify/functions/lib/finance/disbursements.ts:683` | `-` |
-| `getDisbursementKpis` | function / ui-tile | `netlify/functions/lib/finance/disbursements.ts:694` | `-` |
+| `DisbursementKpis` | interface / ui-tile | `netlify/functions/lib/finance/disbursements.ts:685` | `-` |
+| `getDisbursementKpis` | function / ui-tile | `netlify/functions/lib/finance/disbursements.ts:696` | `-` |
 | `ExpenseKpis` | interface / ui-tile | `netlify/functions/lib/finance/expenses.ts:1116` | `-` |
 | `getExpenseKpis` | function / ui-tile | `netlify/functions/lib/finance/expenses.ts:1127` | `-` |
 | `FinanceOverviewKpis` | interface / ui-tile | `netlify/functions/lib/finance/overview.ts:21` | `-` |
@@ -499,7 +499,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/financeLookups.mjs` | 524 |
 | e2e-suite | `scripts/e2e/suites/financeOverview.mjs` | 447 |
 | e2e-suite | `scripts/e2e/suites/financePayComponents.mjs` | 578 |
-| e2e-suite | `scripts/e2e/suites/financeRemittances.mjs` | 621 |
+| e2e-suite | `scripts/e2e/suites/financeRemittances.mjs` | 622 |
 | e2e-suite | `scripts/e2e/suites/financeStatutory.mjs` | 1202 |
 | frontend-api | `src/api/finance/accountsPayable.ts` | 424 |
 | frontend-api | `src/api/finance/attachments.ts` | 193 |

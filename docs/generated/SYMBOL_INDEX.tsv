@@ -195,7 +195,7 @@ getMessageRecipients	function	communications	true		netlify/functions/lib/communi
 UserRow	interface	communications	false		netlify/functions/lib/communications.ts	1996	getMessageRecipients
 CreateTicketInput	interface	communications	true		netlify/functions/lib/communications.ts	2030	
 CreateTicketResult	interface	communications	true		netlify/functions/lib/communications.ts	2042	
-createTicket	function	communications	true		netlify/functions/lib/communications.ts	2048	
+createTicket	function	communications	true		netlify/functions/lib/communications.ts	2061	
 SUPABASE_URL	variable	platform	false		netlify/functions/lib/db.ts	3	
 SUPABASE_SERVICE_ROLE_KEY	variable	platform	false		netlify/functions/lib/db.ts	4	
 SUPABASE_ANON_KEY	variable	platform	false		netlify/functions/lib/db.ts	5	
@@ -436,31 +436,31 @@ listDisbursements	function	finance	true		netlify/functions/lib/finance/disbursem
 getDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	178	
 listDisbursementLines	function	finance	true		netlify/functions/lib/finance/disbursements.ts	183	
 createDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	189	
-submitDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	287	
-approveDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	339	
-resolveCompanyName	function	finance	false		netlify/functions/lib/finance/disbursements.ts	354	
-generateBankFile	function	finance	true		netlify/functions/lib/finance/disbursements.ts	368	
-Group	interface	finance	false		netlify/functions/lib/finance/disbursements.ts	401	generateBankFile
-rollback	function	finance	false		netlify/functions/lib/finance/disbursements.ts	429	generateBankFile
-manifestEsc	function	finance	false		netlify/functions/lib/finance/disbursements.ts	467	generateBankFile
-listDisbursementBankFiles	function	finance	true		netlify/functions/lib/finance/disbursements.ts	550	
-getDisbursementBankFileSignedUrl	function	finance	true		netlify/functions/lib/finance/disbursements.ts	564	
-markDisbursementPaid	function	finance	true		netlify/functions/lib/finance/disbursements.ts	604	
-cancelDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	617	
-getBankFileSignedUrl	function	finance	true		netlify/functions/lib/finance/disbursements.ts	636	
-DisbursementKpis	interface	finance	true	ui-tile	netlify/functions/lib/finance/disbursements.ts	683	
-getDisbursementKpis	function	finance	true	ui-tile	netlify/functions/lib/finance/disbursements.ts	694	
-DisbursementLineDetailDto	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	771	
-listDisbursementLinesDetail	function	finance	true		netlify/functions/lib/finance/disbursements.ts	776	
-DisbursementReportRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	805	
-listDisbursementsReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	807	
-DisbursementAuditEntry	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	817	
-listDisbursementAuditLog	function	finance	true		netlify/functions/lib/finance/disbursements.ts	827	
-listFinanceAuditLog	function	finance	true		netlify/functions/lib/finance/disbursements.ts	837	
-BankFileStatusRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	866	
-listBankFileStatusReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	883	
-BankAccountReadinessRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	910	
-listBankAccountReadinessReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	921	
+submitDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	289	
+approveDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	341	
+resolveCompanyName	function	finance	false		netlify/functions/lib/finance/disbursements.ts	356	
+generateBankFile	function	finance	true		netlify/functions/lib/finance/disbursements.ts	370	
+Group	interface	finance	false		netlify/functions/lib/finance/disbursements.ts	403	generateBankFile
+rollback	function	finance	false		netlify/functions/lib/finance/disbursements.ts	431	generateBankFile
+manifestEsc	function	finance	false		netlify/functions/lib/finance/disbursements.ts	469	generateBankFile
+listDisbursementBankFiles	function	finance	true		netlify/functions/lib/finance/disbursements.ts	552	
+getDisbursementBankFileSignedUrl	function	finance	true		netlify/functions/lib/finance/disbursements.ts	566	
+markDisbursementPaid	function	finance	true		netlify/functions/lib/finance/disbursements.ts	606	
+cancelDisbursement	function	finance	true		netlify/functions/lib/finance/disbursements.ts	619	
+getBankFileSignedUrl	function	finance	true		netlify/functions/lib/finance/disbursements.ts	638	
+DisbursementKpis	interface	finance	true	ui-tile	netlify/functions/lib/finance/disbursements.ts	685	
+getDisbursementKpis	function	finance	true	ui-tile	netlify/functions/lib/finance/disbursements.ts	696	
+DisbursementLineDetailDto	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	773	
+listDisbursementLinesDetail	function	finance	true		netlify/functions/lib/finance/disbursements.ts	778	
+DisbursementReportRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	807	
+listDisbursementsReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	809	
+DisbursementAuditEntry	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	819	
+listDisbursementAuditLog	function	finance	true		netlify/functions/lib/finance/disbursements.ts	829	
+listFinanceAuditLog	function	finance	true		netlify/functions/lib/finance/disbursements.ts	839	
+BankFileStatusRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	868	
+listBankFileStatusReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	885	
+BankAccountReadinessRow	interface	finance	true		netlify/functions/lib/finance/disbursements.ts	912	
+listBankAccountReadinessReport	function	finance	true		netlify/functions/lib/finance/disbursements.ts	923	
 SETTINGS_KEY	variable	finance	false		netlify/functions/lib/finance/employerProfile.ts	17	
 EmployerProfile	interface	finance	true		netlify/functions/lib/finance/employerProfile.ts	19	
 EMPTY	object	finance	false		netlify/functions/lib/finance/employerProfile.ts	32	
@@ -2171,20 +2171,20 @@ isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	488
 COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	508	
 ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	517	
 PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	987	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1003	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1028	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1038	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1039	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1042	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1058	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1093	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1105	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1106	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1109	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1119	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1132	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1140	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1151	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1007	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1032	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1042	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1043	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1046	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1062	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1097	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1109	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1110	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1113	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1123	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1136	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1144	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1155	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -2747,8 +2747,8 @@ deviceFrom	function	security	false		netlify/functions/routes/auth.ts	58
 PASSKEY_PROMPT_INTERVAL_MS	variable	security	false		netlify/functions/routes/auth.ts	67	
 shouldPromptForPasskey	function	security	false		netlify/functions/routes/auth.ts	74	
 buildSessionPayload	function	security	true		netlify/functions/routes/auth.ts	84	
-Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	349	
-checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	720	
+Verify2faExtSchema	variable	security	false		netlify/functions/routes/auth.ts	351	
+checkPasswordChangeLimit	variable	security	false		netlify/functions/routes/auth.ts	724	
 router	variable	security	false		netlify/functions/routes/auth2fa.ts	29	
 zAnyTotpCode	variable	security	false		netlify/functions/routes/auth2fa.ts	34	
 ConfirmSchema	variable	security	false		netlify/functions/routes/auth2fa.ts	38	
@@ -2789,8 +2789,8 @@ canReadEntry	function	platform	false		netlify/functions/routes/calendar.ts	703
 loadEditable	function	platform	false		netlify/functions/routes/calendar.ts	719	
 writeException	function	platform	false		netlify/functions/routes/calendar.ts	744	
 UpdateSchema	variable	platform	false		netlify/functions/routes/calendar.ts	766	
-StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	883	
-CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	933	
+StatusSchema	variable	platform	false		netlify/functions/routes/calendar.ts	887	
+CancelSchema	variable	platform	false		netlify/functions/routes/calendar.ts	937	
 router	variable	communications	false		netlify/functions/routes/communications.ts	103	
 NotifListSchema	variable	communications	false		netlify/functions/routes/communications.ts	115	
 PrefSetSchema	variable	communications	false		netlify/functions/routes/communications.ts	239	
@@ -3516,8 +3516,10 @@ sumM	function	communications	false	test	scripts/e2e/suites/communications.mjs	53
 waitForSignal	function	communications	false	test	scripts/e2e/suites/communications.mjs	535	run
 unreadOf	function	communications	false	test	scripts/e2e/suites/communications.mjs	678	run
 threadUnread	function	communications	false	test	scripts/e2e/suites/communications.mjs	679	run
-title	variable	communications	true	test	scripts/e2e/suites/communicationsBadges.mjs	16	
-run	function	communications	true	test	scripts/e2e/suites/communicationsBadges.mjs	18	
+title	variable	communications	true	test	scripts/e2e/suites/communicationsBadges.mjs	21	
+PRIMARY	array	communications	false	test	scripts/e2e/suites/communicationsBadges.mjs	23	
+SECONDARY	array	communications	false	test	scripts/e2e/suites/communicationsBadges.mjs	24	
+run	function	communications	true	test	scripts/e2e/suites/communicationsBadges.mjs	29	
 title	variable	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	24	
 CASE_DETAIL_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	26	
 CASE_SUMMARY_KEYS	array	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	33	
@@ -3535,11 +3537,11 @@ rows	function	communications	false	test	scripts/e2e/suites/communicationsComplia
 countRows	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	109	
 fetchArtifact	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	113	
 run	function	communications	true	test	scripts/e2e/suites/communicationsCompliance.mjs	126	
-requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	184	run
-approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	206	run
-readSummary	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	211	run
-assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	220	run
-requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	260	run
+requestDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	187	run
+approveDatedPermission	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	209	run
+readSummary	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	214	run
+assertEvidenceTriplet	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	223	run
+requestId	function	communications	false	test	scripts/e2e/suites/communicationsCompliance.mjs	263	run
 title	variable	finance	true	test	scripts/e2e/suites/financeAp.mjs	18	
 run	function	finance	true	test	scripts/e2e/suites/financeAp.mjs	20	
 title	variable	finance	true	test	scripts/e2e/suites/financeBudgets.mjs	36	
@@ -3834,31 +3836,31 @@ publishWorkCalendar	function	testing	false	test	scripts/e2e/suites/workCalendar.
 cvExtra	function	testing	false	test	scripts/e2e/suites/workCalendar.mjs	64	run
 title	variable	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	8	
 run	function	workflow	true	test	scripts/e2e/suites/workflow-engine.mjs	10	
-waitFor	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	24	run
-seedPermit	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	35	run
-openTask	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	94	run
-seedTemplate	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	312	run
-startWf	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	331	run
+waitFor	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	31	run
+seedPermit	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	42	run
+openTask	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	101	run
+seedTemplate	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	324	run
+startWf	function	workflow	false	test	scripts/e2e/suites/workflow-engine.mjs	343	run
 title	variable	workflow	true	test	scripts/e2e/suites/workflowAdmin.mjs	20	
 run	function	workflow	true	test	scripts/e2e/suites/workflowAdmin.mjs	22	
-waitFor	function	workflow	false	test	scripts/e2e/suites/workflowAdmin.mjs	55	run
+waitFor	function	workflow	false	test	scripts/e2e/suites/workflowAdmin.mjs	62	run
 MARKER	variable	testing	false		scripts/e2e/sweep-orphans.mjs	40	
 serviceClient	function	testing	true		scripts/e2e/sweep-orphans.mjs	43	
 USER_KEYED	array	testing	false		scripts/e2e/sweep-orphans.mjs	60	
-BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	118	
-TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	140	
-sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	158	
-vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	160	sweepOrphans
-chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	165	sweepOrphans
-sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	171	sweepOrphans
-collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	191	sweepOrphans
-sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	210	sweepOrphans
-sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	220	sweepOrphans
-sweepPayrollRunsOwnedBy	function	testing	false		scripts/e2e/sweep-orphans.mjs	244	sweepOrphans
-countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	245	sweepPayrollRunsOwnedBy
-delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	250	sweepPayrollRunsOwnedBy
-delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	259	sweepPayrollRunsOwnedBy
-selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	264	sweepPayrollRunsOwnedBy
+BUSINESS_TAGGED	array	testing	false		scripts/e2e/sweep-orphans.mjs	122	
+TEXT_PATTERNS	array	testing	false		scripts/e2e/sweep-orphans.mjs	144	
+sweepOrphans	function	testing	true		scripts/e2e/sweep-orphans.mjs	162	
+vlog	function	testing	false		scripts/e2e/sweep-orphans.mjs	164	sweepOrphans
+chunk	function	testing	false		scripts/e2e/sweep-orphans.mjs	169	sweepOrphans
+sweepByIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	175	sweepOrphans
+collectIds	function	testing	false		scripts/e2e/sweep-orphans.mjs	195	sweepOrphans
+sweepPlatformChains	function	testing	false		scripts/e2e/sweep-orphans.mjs	214	sweepOrphans
+sweepPattern	function	testing	false		scripts/e2e/sweep-orphans.mjs	224	sweepOrphans
+sweepPayrollRunsOwnedBy	function	testing	false		scripts/e2e/sweep-orphans.mjs	248	sweepOrphans
+countWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	249	sweepPayrollRunsOwnedBy
+delWhere	function	testing	false		scripts/e2e/sweep-orphans.mjs	254	sweepPayrollRunsOwnedBy
+delIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	263	sweepPayrollRunsOwnedBy
+selIn	function	testing	false		scripts/e2e/sweep-orphans.mjs	268	sweepPayrollRunsOwnedBy
 REQ	array	finance	false		scripts/e2e/verify-finance-ui.mjs	11	
 env	object	finance	false		scripts/e2e/verify-finance-ui.mjs	12	
 line	variable	finance	false		scripts/e2e/verify-finance-ui.mjs	13	
@@ -5130,7 +5132,7 @@ TwoFactorSetupRequiredSchema	variable	security	true		src/api/schemas/auth.ts	85
 PermissionKeySchema	variable	security	true		src/api/schemas/auth.ts	98	
 PermissionKey	type	security	true		src/api/schemas/auth.ts	103	
 PermissionOverrideSchema	variable	security	true		src/api/schemas/auth.ts	105	
-PermissionOverride	type	security	true		src/api/schemas/auth.ts	121	
+PermissionOverride	type	security	true		src/api/schemas/auth.ts	122	
 uuid	variable	hr	false		src/api/schemas/employee.ts	26	
 isoTimestamp	variable	hr	false		src/api/schemas/employee.ts	27	
 isoDate	variable	hr	false		src/api/schemas/employee.ts	28	

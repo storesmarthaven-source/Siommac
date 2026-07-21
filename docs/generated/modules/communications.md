@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
-Files: 112 | Symbols: 1042 | Widgets: 0 | Unique mounted endpoints: 81 | Route definitions: 82 mounted + 2 unmounted | API calls: 88 | DB objects: 155 | E2E suites: 6
+Files: 112 | Symbols: 1044 | Widgets: 0 | Unique mounted endpoints: 81 | Route definitions: 82 mounted + 2 unmounted | API calls: 88 | DB objects: 155 | E2E suites: 6
 
 ## Widgets and Tiles
 
@@ -72,7 +72,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/mute` | `communications.view` | requirePermission | `MuteSchema` | `netlify/functions/routes/communications.ts:272` | useMuteNotifications @ src/api/communications.ts:271 | communications, ticketCenter |
 | `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:209` | res @ src/api/communications.ts:249 | communications |
 | `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:246` | useSetNotificationPreference @ src/api/communications.ts:262 | communications |
-| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:107` | res @ src/api/communications.ts:203<br>res @ src/components/nav/badgeSync.ts:73 | communications, communicationsBadges, messengerRealtime, ticketCenter |
+| `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:107` | res @ src/api/communications.ts:203<br>res @ src/components/nav/badgeSync.ts:73 | communications, communicationsBadges, messaging, messengerRealtime, ticketCenter |
 | `/api/communications/tickets/attachments/complete` | `communications.view` | requirePermission | `TicketAttachmentCompleteSchema` | `netlify/functions/routes/communications.ts:1304` | completed @ src/api/communications.ts:1080 | ticketCenter |
 | `/api/communications/tickets/attachments/get-url` | `communications.view` | requirePermission | `TicketAttachmentGetSchema` | `netlify/functions/routes/communications.ts:1341` | res @ src/api/communications.ts:1090 | ticketCenter |
 | `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1263` | reserved @ src/api/communications.ts:1063 | ticketCenter |
@@ -454,7 +454,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 |---|---:|---:|---|
 | Communications (Notifications · Messages · Tickets) | 103 | 40 | `scripts/e2e/suites/communications.mjs` |
 | Communications Badge Sync (summary endpoint) | 5 | 1 | `scripts/e2e/suites/communicationsBadges.mjs` |
-| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 44 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
+| Messenger Compliance V1 (Cases, Scoped Read, Evidence, Exports) | 45 | 19 | `scripts/e2e/suites/communicationsCompliance.mjs` |
 | Messaging — Typing & Presence slice | 8 | 1 | `scripts/e2e/suites/messagingTypingPresence.mjs` |
 | Messenger — two-session realtime verification | 8 | 4 | `scripts/e2e/suites/messengerRealtime.mjs` |
 | Ticket Center | 46 | 15 | `scripts/e2e/suites/ticketCenter.mjs` |
@@ -469,9 +469,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | backend-route | `netlify/functions/routes/communicationsCompliance.ts` | 510 |
 | backend-route | `netlify/functions/routes/notifications.ts` | 146 |
 | backend-route | `netlify/functions/routes/tickets.ts` | 164 |
-| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1029 |
-| e2e-suite | `scripts/e2e/suites/communicationsBadges.mjs` | 93 |
-| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1218 |
+| e2e-suite | `scripts/e2e/suites/communications.mjs` | 1032 |
+| e2e-suite | `scripts/e2e/suites/communicationsBadges.mjs` | 86 |
+| e2e-suite | `scripts/e2e/suites/communicationsCompliance.mjs` | 1221 |
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | e2e-suite | `scripts/e2e/suites/ticketCenter.mjs` | 782 |

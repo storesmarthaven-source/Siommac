@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "a919097d8a54ae1e735bc84cc1f1cd594f9d0e15",
+    "head": "ba82d4a7e618ab62b29a2654f402680f4f773e78",
     "branch": "main",
-    "fingerprint": "ff43cfefbbb0631880309ae6",
-    "indexedFiles": 1501
+    "fingerprint": "c14c1744014d8e9168db52e9",
+    "indexedFiles": 1502
   },
   "summary": {
     "files": 1182,
-    "symbols": 11851,
+    "symbols": 11853,
     "widgets": 32,
     "routes": 918,
     "routeDefinitions": 919,
     "unmountedRoutes": 17,
     "apiCalls": 376,
-    "databaseObjects": 1309,
+    "databaseObjects": 1310,
     "e2eSuites": 75,
-    "e2eTests": 2398
+    "e2eTests": 2399
   },
   "modules": [
     {
@@ -75,7 +75,7 @@
       "id": "communications",
       "counts": {
         "files": 112,
-        "symbols": 1042,
+        "symbols": 1044,
         "widgets": 0,
         "routes": 81,
         "routeDefinitions": 84,
@@ -145,7 +145,7 @@
         "routes": 31,
         "routeDefinitions": 46,
         "apiCalls": 47,
-        "databaseObjects": 295,
+        "databaseObjects": 296,
         "e2eSuites": 0
       }
     },
@@ -232,7 +232,7 @@
       "module": "security",
       "role": "backend-lib",
       "lines": 493,
-      "hash": "ae1ca9378c87729a"
+      "hash": "9de17d7b6c4cbcbf"
     },
     {
       "path": "netlify/functions/lib/bootstrapEnv.ts",
@@ -266,8 +266,8 @@
       "path": "netlify/functions/lib/communications.ts",
       "module": "communications",
       "role": "backend-lib",
-      "lines": 2084,
-      "hash": "4a46b37bbd45ee63"
+      "lines": 2098,
+      "hash": "db8210b2aba06457"
     },
     {
       "path": "netlify/functions/lib/db.ts",
@@ -350,8 +350,8 @@
       "path": "netlify/functions/lib/finance/disbursements.ts",
       "module": "finance",
       "role": "backend-lib",
-      "lines": 945,
-      "hash": "cfd73aaf29162860"
+      "lines": 947,
+      "hash": "24e11d3305ee230f"
     },
     {
       "path": "netlify/functions/lib/finance/employerProfile.ts",
@@ -365,7 +365,7 @@
       "module": "finance",
       "role": "backend-lib",
       "lines": 1215,
-      "hash": "36c0e0d7d0a9da80"
+      "hash": "49cca5ff7148fbc9"
     },
     {
       "path": "netlify/functions/lib/finance/financeEvents.ts",
@@ -1225,8 +1225,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1162,
-      "hash": "2aefaf24eb9e64dd"
+      "lines": 1166,
+      "hash": "88e265bf2e4b958b"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -1743,8 +1743,8 @@
       "path": "netlify/functions/routes/auth.ts",
       "module": "security",
       "role": "backend-route",
-      "lines": 788,
-      "hash": "62e21d9b0ec4e11a"
+      "lines": 792,
+      "hash": "dd59197787f579da"
     },
     {
       "path": "netlify/functions/routes/auth2fa.ts",
@@ -1764,8 +1764,8 @@
       "path": "netlify/functions/routes/calendar.ts",
       "module": "platform",
       "role": "backend-route",
-      "lines": 997,
-      "hash": "c64c322fc9d76794"
+      "lines": 1001,
+      "hash": "8645088d243b18d7"
     },
     {
       "path": "netlify/functions/routes/communications.ts",
@@ -2317,22 +2317,22 @@
       "path": "scripts/e2e/suites/communications.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 1029,
-      "hash": "968cf8bd5f3c78c8"
+      "lines": 1032,
+      "hash": "0fd827a3e9031efd"
     },
     {
       "path": "scripts/e2e/suites/communicationsBadges.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 93,
-      "hash": "258a5beb2bcb0bd2"
+      "lines": 86,
+      "hash": "474e988e0d2df18c"
     },
     {
       "path": "scripts/e2e/suites/communicationsCompliance.mjs",
       "module": "communications",
       "role": "e2e-suite",
-      "lines": 1218,
-      "hash": "26498df88a7f210a"
+      "lines": 1221,
+      "hash": "fbd0726fa1c652f3"
     },
     {
       "path": "scripts/e2e/suites/financeAp.mjs",
@@ -2401,8 +2401,8 @@
       "path": "scripts/e2e/suites/financeRemittances.mjs",
       "module": "finance",
       "role": "e2e-suite",
-      "lines": 621,
-      "hash": "d3f83f62f498014f"
+      "lines": 622,
+      "hash": "819c7b0678dcd770"
     },
     {
       "path": "scripts/e2e/suites/financeStatutory.mjs",
@@ -2548,8 +2548,8 @@
       "path": "scripts/e2e/suites/messaging.mjs",
       "module": "testing",
       "role": "e2e-suite",
-      "lines": 760,
-      "hash": "ba9d1136f183c9ee"
+      "lines": 766,
+      "hash": "9d00a4e89424f7c5"
     },
     {
       "path": "scripts/e2e/suites/messagingFavourites.mjs",
@@ -2668,7 +2668,7 @@
       "module": "payroll",
       "role": "e2e-suite",
       "lines": 616,
-      "hash": "94e44deb1991befb"
+      "hash": "3c865829c12c171a"
     },
     {
       "path": "scripts/e2e/suites/payrollPopulationRecon.mjs",
@@ -2702,8 +2702,8 @@
       "path": "scripts/e2e/suites/payrollStatutorySnapshot.mjs",
       "module": "payroll",
       "role": "e2e-suite",
-      "lines": 288,
-      "hash": "98e10028ade7d50c"
+      "lines": 292,
+      "hash": "e27ae4014878caa8"
     },
     {
       "path": "scripts/e2e/suites/payrollVarianceReports.mjs",
@@ -2744,8 +2744,8 @@
       "path": "scripts/e2e/suites/ptw.mjs",
       "module": "hse",
       "role": "e2e-suite",
-      "lines": 473,
-      "hash": "f896a4dd4ece8de4"
+      "lines": 475,
+      "hash": "5eb97fd0ecaa3010"
     },
     {
       "path": "scripts/e2e/suites/rbacConsole.mjs",
@@ -2807,22 +2807,22 @@
       "path": "scripts/e2e/suites/workflow-engine.mjs",
       "module": "workflow",
       "role": "e2e-suite",
-      "lines": 737,
-      "hash": "5e7c35842416caa9"
+      "lines": 749,
+      "hash": "6cc9a4c8e46f6fec"
     },
     {
       "path": "scripts/e2e/suites/workflowAdmin.mjs",
       "module": "workflow",
       "role": "e2e-suite",
-      "lines": 327,
-      "hash": "b6b37f0658e11792"
+      "lines": 334,
+      "hash": "1ee82916f1551cf8"
     },
     {
       "path": "scripts/e2e/sweep-orphans.mjs",
       "module": "testing",
       "role": "tooling",
-      "lines": 487,
-      "hash": "fe71b30e20b1ecbb"
+      "lines": 491,
+      "hash": "8ba74fb7a80534bd"
     },
     {
       "path": "scripts/e2e/verify-finance-ui.mjs",
@@ -3241,8 +3241,8 @@
       "path": "src/api/schemas/auth.ts",
       "module": "security",
       "role": "frontend-api",
-      "lines": 122,
-      "hash": "012d991bcad4ff0f"
+      "lines": 123,
+      "hash": "9d99ae7aaad796e9"
     },
     {
       "path": "src/api/schemas/employee.ts",
@@ -10404,7 +10404,7 @@
       "name": "createTicket",
       "kind": "function",
       "file": "netlify/functions/lib/communications.ts",
-      "line": 2048,
+      "line": 2061,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -12818,7 +12818,7 @@
       "name": "submitDisbursement",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 287,
+      "line": 289,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12828,7 +12828,7 @@
       "name": "approveDisbursement",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 339,
+      "line": 341,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12838,7 +12838,7 @@
       "name": "resolveCompanyName",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 354,
+      "line": 356,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -12848,7 +12848,7 @@
       "name": "generateBankFile",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 368,
+      "line": 370,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12858,7 +12858,7 @@
       "name": "Group",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 401,
+      "line": 403,
       "module": "finance",
       "exported": false,
       "container": "generateBankFile",
@@ -12868,7 +12868,7 @@
       "name": "rollback",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 429,
+      "line": 431,
       "module": "finance",
       "exported": false,
       "container": "generateBankFile",
@@ -12878,7 +12878,7 @@
       "name": "manifestEsc",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 467,
+      "line": 469,
       "module": "finance",
       "exported": false,
       "container": "generateBankFile",
@@ -12888,7 +12888,7 @@
       "name": "listDisbursementBankFiles",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 550,
+      "line": 552,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12898,7 +12898,7 @@
       "name": "getDisbursementBankFileSignedUrl",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 564,
+      "line": 566,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12908,7 +12908,7 @@
       "name": "markDisbursementPaid",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 604,
+      "line": 606,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12918,7 +12918,7 @@
       "name": "cancelDisbursement",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 617,
+      "line": 619,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12928,7 +12928,7 @@
       "name": "getBankFileSignedUrl",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 636,
+      "line": 638,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12938,7 +12938,7 @@
       "name": "DisbursementKpis",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 683,
+      "line": 685,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12950,7 +12950,7 @@
       "name": "getDisbursementKpis",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 694,
+      "line": 696,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12962,7 +12962,7 @@
       "name": "DisbursementLineDetailDto",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 771,
+      "line": 773,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12972,7 +12972,7 @@
       "name": "listDisbursementLinesDetail",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 776,
+      "line": 778,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12982,7 +12982,7 @@
       "name": "DisbursementReportRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 805,
+      "line": 807,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -12992,7 +12992,7 @@
       "name": "listDisbursementsReport",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 807,
+      "line": 809,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13002,7 +13002,7 @@
       "name": "DisbursementAuditEntry",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 817,
+      "line": 819,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13012,7 +13012,7 @@
       "name": "listDisbursementAuditLog",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 827,
+      "line": 829,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13022,7 +13022,7 @@
       "name": "listFinanceAuditLog",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 837,
+      "line": 839,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13032,7 +13032,7 @@
       "name": "BankFileStatusRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 866,
+      "line": 868,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13042,7 +13042,7 @@
       "name": "listBankFileStatusReport",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 883,
+      "line": 885,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13052,7 +13052,7 @@
       "name": "BankAccountReadinessRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 910,
+      "line": 912,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -13062,7 +13062,7 @@
       "name": "listBankAccountReadinessReport",
       "kind": "function",
       "file": "netlify/functions/lib/finance/disbursements.ts",
-      "line": 921,
+      "line": 923,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -30188,7 +30188,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1003,
+      "line": 1007,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30198,7 +30198,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1028,
+      "line": 1032,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30208,7 +30208,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1038,
+      "line": 1042,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30218,7 +30218,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1039,
+      "line": 1043,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30228,7 +30228,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1042,
+      "line": 1046,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30238,7 +30238,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1058,
+      "line": 1062,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30248,7 +30248,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1093,
+      "line": 1097,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30258,7 +30258,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1105,
+      "line": 1109,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30268,7 +30268,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1106,
+      "line": 1110,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30278,7 +30278,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1109,
+      "line": 1113,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30288,7 +30288,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1119,
+      "line": 1123,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30298,7 +30298,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1132,
+      "line": 1136,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30308,7 +30308,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1140,
+      "line": 1144,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30318,7 +30318,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1151,
+      "line": 1155,
       "module": "security",
       "exported": true,
       "container": "",
@@ -35948,7 +35948,7 @@
       "name": "Verify2faExtSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 349,
+      "line": 351,
       "module": "security",
       "exported": false,
       "container": "",
@@ -35958,7 +35958,7 @@
       "name": "checkPasswordChangeLimit",
       "kind": "variable",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 720,
+      "line": 724,
       "module": "security",
       "exported": false,
       "container": "",
@@ -36368,7 +36368,7 @@
       "name": "StatusSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 883,
+      "line": 887,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -36378,7 +36378,7 @@
       "name": "CancelSchema",
       "kind": "variable",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 933,
+      "line": 937,
       "module": "platform",
       "exported": false,
       "container": "",
@@ -43708,9 +43708,33 @@
       "name": "title",
       "kind": "variable",
       "file": "scripts/e2e/suites/communicationsBadges.mjs",
-      "line": 16,
+      "line": 21,
       "module": "communications",
       "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "PRIMARY",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsBadges.mjs",
+      "line": 23,
+      "module": "communications",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "SECONDARY",
+      "kind": "array",
+      "file": "scripts/e2e/suites/communicationsBadges.mjs",
+      "line": 24,
+      "module": "communications",
+      "exported": false,
       "container": "",
       "tags": [
         "test"
@@ -43720,7 +43744,7 @@
       "name": "run",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsBadges.mjs",
-      "line": 18,
+      "line": 29,
       "module": "communications",
       "exported": true,
       "container": "",
@@ -43936,7 +43960,7 @@
       "name": "requestDatedPermission",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 184,
+      "line": 187,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -43948,7 +43972,7 @@
       "name": "approveDatedPermission",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 206,
+      "line": 209,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -43960,7 +43984,7 @@
       "name": "readSummary",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 211,
+      "line": 214,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -43972,7 +43996,7 @@
       "name": "assertEvidenceTriplet",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 220,
+      "line": 223,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -43984,7 +44008,7 @@
       "name": "requestId",
       "kind": "function",
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
-      "line": 260,
+      "line": 263,
       "module": "communications",
       "exported": false,
       "container": "run",
@@ -47524,7 +47548,7 @@
       "name": "waitFor",
       "kind": "function",
       "file": "scripts/e2e/suites/workflow-engine.mjs",
-      "line": 24,
+      "line": 31,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47536,7 +47560,7 @@
       "name": "seedPermit",
       "kind": "function",
       "file": "scripts/e2e/suites/workflow-engine.mjs",
-      "line": 35,
+      "line": 42,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47548,7 +47572,7 @@
       "name": "openTask",
       "kind": "function",
       "file": "scripts/e2e/suites/workflow-engine.mjs",
-      "line": 94,
+      "line": 101,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47560,7 +47584,7 @@
       "name": "seedTemplate",
       "kind": "function",
       "file": "scripts/e2e/suites/workflow-engine.mjs",
-      "line": 312,
+      "line": 324,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47572,7 +47596,7 @@
       "name": "startWf",
       "kind": "function",
       "file": "scripts/e2e/suites/workflow-engine.mjs",
-      "line": 331,
+      "line": 343,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47608,7 +47632,7 @@
       "name": "waitFor",
       "kind": "function",
       "file": "scripts/e2e/suites/workflowAdmin.mjs",
-      "line": 55,
+      "line": 62,
       "module": "workflow",
       "exported": false,
       "container": "run",
@@ -47650,7 +47674,7 @@
       "name": "BUSINESS_TAGGED",
       "kind": "array",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 118,
+      "line": 122,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -47660,7 +47684,7 @@
       "name": "TEXT_PATTERNS",
       "kind": "array",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 140,
+      "line": 144,
       "module": "testing",
       "exported": false,
       "container": "",
@@ -47670,7 +47694,7 @@
       "name": "sweepOrphans",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 158,
+      "line": 162,
       "module": "testing",
       "exported": true,
       "container": "",
@@ -47680,7 +47704,7 @@
       "name": "vlog",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 160,
+      "line": 164,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47690,7 +47714,7 @@
       "name": "chunk",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 165,
+      "line": 169,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47700,7 +47724,7 @@
       "name": "sweepByIds",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 171,
+      "line": 175,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47710,7 +47734,7 @@
       "name": "collectIds",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 191,
+      "line": 195,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47720,7 +47744,7 @@
       "name": "sweepPlatformChains",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 210,
+      "line": 214,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47730,7 +47754,7 @@
       "name": "sweepPattern",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 220,
+      "line": 224,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47740,7 +47764,7 @@
       "name": "sweepPayrollRunsOwnedBy",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 244,
+      "line": 248,
       "module": "testing",
       "exported": false,
       "container": "sweepOrphans",
@@ -47750,7 +47774,7 @@
       "name": "countWhere",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 245,
+      "line": 249,
       "module": "testing",
       "exported": false,
       "container": "sweepPayrollRunsOwnedBy",
@@ -47760,7 +47784,7 @@
       "name": "delWhere",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 250,
+      "line": 254,
       "module": "testing",
       "exported": false,
       "container": "sweepPayrollRunsOwnedBy",
@@ -47770,7 +47794,7 @@
       "name": "delIn",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 259,
+      "line": 263,
       "module": "testing",
       "exported": false,
       "container": "sweepPayrollRunsOwnedBy",
@@ -47780,7 +47804,7 @@
       "name": "selIn",
       "kind": "function",
       "file": "scripts/e2e/sweep-orphans.mjs",
-      "line": 264,
+      "line": 268,
       "module": "testing",
       "exported": false,
       "container": "sweepPayrollRunsOwnedBy",
@@ -61530,7 +61554,7 @@
       "name": "PermissionOverride",
       "kind": "type",
       "file": "src/api/schemas/auth.ts",
-      "line": 121,
+      "line": 122,
       "module": "security",
       "exported": true,
       "container": "",
@@ -133139,7 +133163,7 @@
       ],
       "schema": "ChangePasswordSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 722,
+      "line": 726,
       "module": "security"
     },
     {
@@ -133254,7 +133278,7 @@
       ],
       "schema": "CancelSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 939,
+      "line": 943,
       "module": "platform"
     },
     {
@@ -133345,7 +133369,7 @@
       ],
       "schema": "StatusSchema",
       "file": "netlify/functions/routes/calendar.ts",
-      "line": 890,
+      "line": 894,
       "module": "platform"
     },
     {
@@ -134257,7 +134281,7 @@
       "guards": [],
       "schema": "Setup2faConfirmSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 479,
+      "line": 481,
       "module": "security"
     },
     {
@@ -134350,7 +134374,7 @@
       ],
       "schema": "Disable2faSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 549,
+      "line": 551,
       "module": "security"
     },
     {
@@ -138050,7 +138074,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 536,
+      "line": 538,
       "module": "security"
     },
     {
@@ -138180,7 +138204,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 685,
+      "line": 687,
       "module": "security"
     },
     {
@@ -138206,7 +138230,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 670,
+      "line": 672,
       "module": "security"
     },
     {
@@ -143530,7 +143554,7 @@
       "guards": [],
       "schema": "LoginSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 165,
+      "line": 167,
       "module": "security"
     },
     {
@@ -143543,7 +143567,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 600,
+      "line": 602,
       "module": "security"
     },
     {
@@ -143698,7 +143722,7 @@
       "guards": [],
       "schema": "",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 577,
+      "line": 579,
       "module": "security"
     },
     {
@@ -143960,7 +143984,7 @@
       "guards": [],
       "schema": "Setup2faInitSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 442,
+      "line": 444,
       "module": "security"
     },
     {
@@ -144231,7 +144255,7 @@
       ],
       "schema": "UpdateColorSchemeSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 616,
+      "line": 618,
       "module": "security"
     },
     {
@@ -144271,7 +144295,7 @@
       ],
       "schema": "UpdateLayoutModeSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 625,
+      "line": 627,
       "module": "security"
     },
     {
@@ -144297,7 +144321,7 @@
       ],
       "schema": "UpdateMyProfileSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 634,
+      "line": 636,
       "module": "security"
     },
     {
@@ -144361,7 +144385,7 @@
       "guards": [],
       "schema": "Verify2faExtSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 356,
+      "line": 358,
       "module": "security"
     },
     {
@@ -144374,7 +144398,7 @@
       ],
       "schema": "VerifyPasswordSchema",
       "file": "netlify/functions/routes/auth.ts",
-      "line": 709,
+      "line": 713,
       "module": "security"
     },
     {
@@ -156605,6 +156629,13 @@
       "module": "communications"
     },
     {
+      "name": "public.messaging_list_threads_page",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000442_messaging_internal_note_unread_fix.sql",
+      "line": 22,
+      "module": "platform"
+    },
+    {
       "name": "public.finance_payroll_finding_activity",
       "kind": "table",
       "file": "supabase/migrations/20260919000450_finance_payroll_finding_activity.sql",
@@ -157983,19 +158014,19 @@
         },
         {
           "name": "ticket appears in list",
-          "line": 1009
+          "line": 1012
         },
         {
           "name": "get ticket detail",
-          "line": 1013
+          "line": 1016
         },
         {
           "name": "comment on ticket",
-          "line": 1017
+          "line": 1020
         },
         {
           "name": "start ticket",
-          "line": 1022
+          "line": 1025
         }
       ],
       "apiPaths": [
@@ -158049,23 +158080,23 @@
       "tests": [
         {
           "name": "summary returns success:true with all badge-count fields",
-          "line": 28
+          "line": 39
         },
         {
           "name": "all primary badge counts are non-negative integers",
-          "line": 53
+          "line": 52
         },
         {
           "name": "secondary badge counts are non-negative integers",
-          "line": 63
+          "line": 61
         },
         {
           "name": "summary works for a non-admin user and returns their own counts",
-          "line": 74
+          "line": 70
         },
         {
           "name": "unauthenticated request returns 401",
-          "line": 85
+          "line": 80
         }
       ],
       "apiPaths": [
@@ -158079,180 +158110,184 @@
       "file": "scripts/e2e/suites/communicationsCompliance.mjs",
       "tests": [
         {
+          "name": "compliance suite requires a disposable DB (E2E_DISPOSABLE_DB=1)",
+          "line": 131
+        },
+        {
           "name": "creates a tagged three-message conversation through the real HTTP API",
-          "line": 266
+          "line": 269
         },
         {
           "name": "unauthenticated and ordinary employees are denied compliance APIs",
-          "line": 297
+          "line": 300
         },
         {
           "name": "superadmin is fail-closed without an explicit dated compliance_read grant",
-          "line": 310
+          "line": 313
         },
         {
           "name": "maker requests a dated per-user compliance_read grant",
-          "line": 317
+          "line": 320
         },
         {
           "name": "permission maker cannot approve their own grant request",
-          "line": 342
+          "line": 345
         },
         {
           "name": "independent checker approves investigator compliance_read",
-          "line": 352
+          "line": 355
         },
         {
           "name": "independent checker approves investigator compliance_export",
-          "line": 367
+          "line": 370
         },
         {
           "name": "independent checker receives their own dated compliance_read authority",
-          "line": 384
+          "line": 387
         },
         {
           "name": "conversation search is metadata-only and returns the tagged thread",
-          "line": 397
+          "line": 400
         },
         {
           "name": "summary cards use one complete-dataset backend contract",
-          "line": 416
+          "line": 419
         },
         {
           "name": "requesting a case creates a pending metadata-only case",
-          "line": 439
+          "line": 442
         },
         {
           "name": "same-key same-payload case retry returns the original case and writes nothing new",
-          "line": 467
+          "line": 470
         },
         {
           "name": "same case key with a divergent payload is rejected with 409",
-          "line": 483
+          "line": 486
         },
         {
           "name": "case list/get shapes are metadata-only",
-          "line": 492
+          "line": 495
         },
         {
           "name": "message read is denied before independent case approval",
-          "line": 514
+          "line": 517
         },
         {
           "name": "case requester cannot approve their own case",
-          "line": 538
+          "line": 541
         },
         {
           "name": "independent checker cannot decide a case without fresh step-up",
-          "line": 548
+          "line": 551
         },
         {
           "name": "independent checker approves and creates one scoped grant",
-          "line": 557
+          "line": 560
         },
         {
           "name": "close capability and semantic KPI scopes match the approved case policy",
-          "line": 592
+          "line": 595
         },
         {
           "name": "case decision retry is idempotent and divergent reuse is 409",
-          "line": 625
+          "line": 628
         },
         {
           "name": "ordinary Messenger thread and posts remain denied despite scoped compliance grant",
-          "line": 650
+          "line": 653
         },
         {
           "name": "approved scoped read returns only the first exact message page",
-          "line": 671
+          "line": 674
         },
         {
           "name": "same-key read retry returns the same page and records each disclosure",
-          "line": 693
+          "line": 696
         },
         {
           "name": "same read key with a divergent limit is rejected with 409",
-          "line": 714
+          "line": 717
         },
         {
           "name": "next scoped page completes the exact body set and records page_read",
-          "line": 724
+          "line": 727
         },
         {
           "name": "access log is metadata-only and exposes the expected response shape",
-          "line": 755
+          "line": 758
         },
         {
           "name": "access evidence rejects service-role UPDATE and DELETE",
-          "line": 774
+          "line": 777
         },
         {
           "name": "export creation is denied without fresh step-up",
-          "line": 804
+          "line": 807
         },
         {
           "name": "export requires explicit compliance_export authority",
-          "line": 815
+          "line": 818
         },
         {
           "name": "creates and finalizes a real JSON export with metadata-only response",
-          "line": 831
+          "line": 834
         },
         {
           "name": "JSON export retry is idempotent and divergent purpose is 409",
-          "line": 849
+          "line": 852
         },
         {
           "name": "export download requires a current step-up token",
-          "line": 880
+          "line": 883
         },
         {
           "name": "downloads JSON through a five-minute private signed URL and verifies checksum/body set",
-          "line": 889
+          "line": 892
         },
         {
           "name": "JSON download retry records each signed-URL disclosure",
-          "line": 916
+          "line": 919
         },
         {
           "name": "creates and downloads a valid PDF export with matching SHA-256",
-          "line": 935
+          "line": 938
         },
         {
           "name": "export list is metadata-only and the storage bucket is private",
-          "line": 987
+          "line": 990
         },
         {
           "name": "grantee revokes their own scoped grant",
-          "line": 1023
+          "line": 1026
         },
         {
           "name": "grant revoke retry is idempotent and divergent reason is 409",
-          "line": 1037
+          "line": 1040
         },
         {
           "name": "revocation immediately denies scoped read and export download",
-          "line": 1058
+          "line": 1061
         },
         {
           "name": "requester closes the approved case with step-up",
-          "line": 1085
+          "line": 1088
         },
         {
           "name": "case close retry is idempotent and divergent reason is 409",
-          "line": 1098
+          "line": 1101
         },
         {
           "name": "closed case remains metadata-visible but denies message reads",
-          "line": 1119
+          "line": 1122
         },
         {
           "name": "creates and approves a short-lived independent case",
-          "line": 1161
+          "line": 1164
         },
         {
           "name": "case validity expiry denies a new scoped read without changing case evidence",
-          "line": 1194
+          "line": 1197
         }
       ],
       "apiPaths": [
@@ -160483,155 +160518,155 @@
         },
         {
           "name": "A3 atomic: retry same key returns original workflow (no double-create, exact counts, no strand)",
-          "line": 190
+          "line": 191
         },
         {
           "name": "A3 atomic: concurrent submits — exactly one succeeds, one workflow",
-          "line": 215
+          "line": 216
         },
         {
           "name": "A3 atomic: a submit without an idempotency key is rejected",
-          "line": 226
+          "line": 227
         },
         {
           "name": "A3 atomic: cleanup seeded run + remittances",
-          "line": 234
+          "line": 235
         },
         {
           "name": "employee is DENIED remittances/list",
-          "line": 249
+          "line": 250
         },
         {
           "name": "employee is DENIED remittances/create",
-          "line": 253
+          "line": 254
         },
         {
           "name": "finance_staff can VIEW (list) and CREATE (has manage) but is DENIED approve",
-          "line": 257
+          "line": 258
         },
         {
           "name": "compute NIS from the approved run → sums employee + employer portions",
-          "line": 273
+          "line": 274
         },
         {
           "name": "compute PAYE from the approved run → employee portion only",
-          "line": 283
+          "line": 284
         },
         {
           "name": "compute on a NON-approved (draft) run → refused (422)",
-          "line": 290
+          "line": 291
         },
         {
           "name": "finance_manager creates an NIS remittance (draft) from the run",
-          "line": 298
+          "line": 299
         },
         {
           "name": "§2 side-effect: finance.remittance.created event + audit row",
-          "line": 309
+          "line": 310
         },
         {
           "name": "submit (draft → submitted) starts the approval workflow",
-          "line": 322
+          "line": 323
         },
         {
           "name": "SoD: creator (fmgr1) cannot approve their own remittance → refused",
-          "line": 328
+          "line": 329
         },
         {
           "name": "a DIFFERENT finance_manager (fmgr2) can approve",
-          "line": 332
+          "line": 333
         },
         {
           "name": "mark-paid (approved → paid) with authority reference",
-          "line": 338
+          "line": 339
         },
         {
           "name": "mark-filed (paid → filed) with all Wave 2B fields",
-          "line": 344
+          "line": 345
         },
         {
           "name": "§2 side-effect: approved + paid + filed events all written",
-          "line": 361
+          "line": 362
         },
         {
           "name": "§2 side-effect (Gap 8): mark-filed creates a message thread anchored to the remittance",
-          "line": 373
+          "line": 374
         },
         {
           "name": "§2 side-effect (Gap 8): mark-filed notification written to notifications table",
-          "line": 385
+          "line": 386
         },
         {
           "name": "create a Health-Surcharge remittance then cancel it (with reason)",
-          "line": 402
+          "line": 403
         },
         {
           "name": "get returns the remittance with all Wave 2B fields the frontend consumes",
-          "line": 411
+          "line": 412
         },
         {
           "name": "lines/list-all returns lines with remittance context (authority + period + remittanceNo)",
-          "line": 427
+          "line": 428
         },
         {
           "name": "lines/list-all filtered by authority returns only matching lines",
-          "line": 440
+          "line": 441
         },
         {
           "name": "employee is DENIED lines/list-all",
-          "line": 449
+          "line": 450
         },
         {
           "name": "audit/list returns hr_audit_log entries for the remittance",
-          "line": 457
+          "line": 458
         },
         {
           "name": "employee is DENIED audit/list",
-          "line": 472
+          "line": 473
         },
         {
           "name": "reports/run returns remittance_summary with correct ReportResult shape",
-          "line": 480
+          "line": 481
         },
         {
           "name": "reports/run remittance_lines returns per-employee breakdown",
-          "line": 489
+          "line": 490
         },
         {
           "name": "reports/run authority_filing_status returns filing status per authority",
-          "line": 497
+          "line": 498
         },
         {
           "name": "reports/run with unknown report key returns 422",
-          "line": 503
+          "line": 504
         },
         {
           "name": "finance_staff is DENIED reports/run",
-          "line": 507
+          "line": 508
         },
         {
           "name": "employee is DENIED reports/run",
-          "line": 511
+          "line": 512
         },
         {
           "name": "take staffRemId (paye_bir) to filed without receipt reference — triggers §12 ticket",
-          "line": 527
+          "line": 528
         },
         {
           "name": "§12 / §20: ticket row created in tickets table when receipt reference is missing on mark-filed",
-          "line": 557
+          "line": 558
         },
         {
           "name": "finance_staff (has manage, not markFiled) is DENIED mark-filed",
-          "line": 578
+          "line": 579
         },
         {
           "name": "list can be searched by remittanceNo",
-          "line": 584
+          "line": 585
         },
         {
           "name": "CSV export (Gap 9) — list endpoint returns all fields the client-side CSV template uses",
-          "line": 594
+          "line": 595
         }
       ],
       "apiPaths": [
@@ -164282,19 +164317,19 @@
         },
         {
           "name": "B has an UNREAD receipt; admin sees readByCount 0",
-          "line": 715
+          "line": 721
         },
         {
           "name": "B marks read → route returns lastReadSequence, receipt set, admin sees readByCount 1",
-          "line": 725
+          "line": 731
         },
         {
           "name": "SIDE-EFFECT: markRead emitted a messages signal to participants",
-          "line": 738
+          "line": 744
         },
         {
           "name": "internal notes are NOT counted as read for other participants",
-          "line": 744
+          "line": 750
         }
       ],
       "apiPaths": [
@@ -164310,7 +164345,8 @@
         "/api/communications/messages/post",
         "/api/communications/messages/posts",
         "/api/communications/messages/search",
-        "/api/communications/messages/threads"
+        "/api/communications/messages/threads",
+        "/api/communications/summary"
       ]
     },
     {
@@ -166005,23 +166041,23 @@
         },
         {
           "name": "create + lock-inputs + calculate a run (snapshots V1)",
-          "line": 118
+          "line": 122
         },
         {
           "name": "capture the employee line under V1 (taxable gross must be > 0)",
-          "line": 155
+          "line": 159
         },
         {
           "name": "clone V1 into an inactive V2 with zero personal allowance",
-          "line": 169
+          "line": 173
         },
         {
           "name": "repoint run snapshot to V2, recalculate → PAYE follows V2, not the active version",
-          "line": 220
+          "line": 224
         },
         {
           "name": "finance_calculate_run_commit rolls back on a bad line — prior lines + status survive",
-          "line": 251
+          "line": 255
         }
       ],
       "apiPaths": [
@@ -166588,255 +166624,255 @@
       "tests": [
         {
           "name": "permit-types/list returns active types with flags",
-          "line": 82
+          "line": 84
         },
         {
           "name": "REMOVED: permit type no longer exposes requires_gas_test",
-          "line": 92
+          "line": 94
         },
         {
           "name": "ACCESS: permit-types/list denied without auth",
-          "line": 97
+          "line": 99
         },
         {
           "name": "permits/list returns array",
-          "line": 104
+          "line": 106
         },
         {
           "name": "permits/list response shape (contract the FE consumes)",
-          "line": 108
+          "line": 110
         },
         {
           "name": "permits/list filters by status",
-          "line": 119
+          "line": 121
         },
         {
           "name": "permits/list filters by permitType",
-          "line": 124
+          "line": 126
         },
         {
           "name": "ACCESS: permits/list denied without auth",
-          "line": 129
+          "line": 131
         },
         {
           "name": "VALIDATION: empty title → rejected",
-          "line": 136
+          "line": 138
         },
         {
           "name": "VALIDATION: missing permitType → rejected",
-          "line": 139
+          "line": 141
         },
         {
           "name": "VALIDATION: unknown permitType → rejected",
-          "line": 142
+          "line": 144
         },
         {
           "name": "VALIDATION: invalid riskLevel enum → rejected",
-          "line": 145
+          "line": 147
         },
         {
           "name": "VALIDATION: title > 300 chars → rejected",
-          "line": 148
+          "line": 150
         },
         {
           "name": "ACCESS: permits/create denied without auth",
-          "line": 151
+          "line": 153
         },
         {
           "name": "create permit (draft) returns id / permitNo / status",
-          "line": 159
+          "line": 161
         },
         {
           "name": "SIDE-EFFECT: permit row in DB with requires_* sourced from type config",
-          "line": 165
+          "line": 167
         },
         {
           "name": "SIDE-EFFECT: hse.permit.created app_event emitted",
-          "line": 170
+          "line": 172
         },
         {
           "name": "SIDE-EFFECT: hse_permit_audit_events has a \"created\" row",
-          "line": 178
+          "line": 180
         },
         {
           "name": "create with submitImmediately → status submitted",
-          "line": 185
+          "line": 187
         },
         {
           "name": "permits/get returns full payload with sub-register arrays",
-          "line": 193
+          "line": 195
         },
         {
           "name": "REMOVED: permit detail no longer carries a gas_tests key",
-          "line": 203
+          "line": 205
         },
         {
           "name": "permits/get without args → failure",
-          "line": 208
+          "line": 210
         },
         {
           "name": "permits/get non-existent → failure",
-          "line": 211
+          "line": 213
         },
         {
           "name": "permits/update edits a draft",
-          "line": 218
+          "line": 220
         },
         {
           "name": "VALIDATION: update non-UUID permitId → rejected",
-          "line": 223
+          "line": 225
         },
         {
           "name": "GATE: update rejected once permit leaves draft/changes_requested",
-          "line": 226
+          "line": 228
         },
         {
           "name": "lifecycle: submit (draft → submitted)",
-          "line": 236
+          "line": 238
         },
         {
           "name": "SIDE-EFFECT: \"submitted\" audit event written",
-          "line": 241
+          "line": 243
         },
         {
           "name": "lifecycle: advance (submitted → risk_review → awaiting_approval)",
-          "line": 248
+          "line": 250
         },
         {
           "name": "lifecycle: approve (awaiting_approval → approved)",
-          "line": 254
+          "line": 256
         },
         {
           "name": "lifecycle: activate (approved → active) passes the gate",
-          "line": 258
+          "line": 260
         },
         {
           "name": "lifecycle: suspend (active → suspended)",
-          "line": 262
+          "line": 264
         },
         {
           "name": "lifecycle: revalidate (suspended → active)",
-          "line": 266
+          "line": 268
         },
         {
           "name": "lifecycle: close (active → closed)",
-          "line": 270
+          "line": 272
         },
         {
           "name": "lifecycle: archive (closed → archived)",
-          "line": 274
+          "line": 276
         },
         {
           "name": "GATE: illegal transition rejected (archived → approve)",
-          "line": 278
+          "line": 280
         },
         {
           "name": "lifecycle: reject from awaiting_approval (reached via advance)",
-          "line": 282
+          "line": 284
         },
         {
           "name": "lifecycle: request-changes from awaiting_approval (reached via advance)",
-          "line": 290
+          "line": 292
         },
         {
           "name": "GATE: advance from draft → rejected",
-          "line": 297
+          "line": 299
         },
         {
           "name": "lifecycle: cancel a draft",
-          "line": 301
+          "line": 303
         },
         {
           "name": "extension: request-extension (active → extension_requested)",
-          "line": 306
+          "line": 308
         },
         {
           "name": "isolations/create inserts a pending point",
-          "line": 322
+          "line": 324
         },
         {
           "name": "isolations/list returns the created point",
-          "line": 333
+          "line": 335
         },
         {
           "name": "isolations/apply (pending → applied)",
-          "line": 338
+          "line": 340
         },
         {
           "name": "GATE: same person cannot verify what they applied",
-          "line": 343
+          "line": 345
         },
         {
           "name": "GATE: cannot apply an already-applied isolation",
-          "line": 346
+          "line": 348
         },
         {
           "name": "simops/check runs and returns a conflict count",
-          "line": 353
+          "line": 355
         },
         {
           "name": "simops/list returns array",
-          "line": 358
+          "line": 360
         },
         {
           "name": "approvals/list returns array",
-          "line": 366
+          "line": 368
         },
         {
           "name": "approvals/decide records a decision",
-          "line": 370
+          "line": 372
         },
         {
           "name": "VALIDATION: approvals/decide invalid decision enum → rejected",
-          "line": 380
+          "line": 382
         },
         {
           "name": "permits/stats returns the exact card contract",
-          "line": 387
+          "line": 389
         },
         {
           "name": "ACCESS: stats denied without auth",
-          "line": 401
+          "line": 403
         },
         {
           "name": "permit-templates/create",
-          "line": 409
+          "line": 411
         },
         {
           "name": "REMOVED: template create ignores requiresGasTest (no column)",
-          "line": 418
+          "line": 420
         },
         {
           "name": "permit-templates/list contains the created template",
-          "line": 427
+          "line": 429
         },
         {
           "name": "permit-templates/update edits a field",
-          "line": 433
+          "line": 435
         },
         {
           "name": "permit-templates/duplicate copies the row",
-          "line": 438
+          "line": 440
         },
         {
           "name": "permit-templates/deactivate flips active",
-          "line": 444
+          "line": 446
         },
         {
           "name": "gas-tests/list endpoint is gone",
-          "line": 453
+          "line": 455
         },
         {
           "name": "gas-tests/create endpoint is gone",
-          "line": 456
+          "line": 458
         },
         {
           "name": "ACCESS: core endpoints deny without auth",
-          "line": 463
+          "line": 465
         },
         {
           "name": "ACCESS: non-privileged user B denied on create + approve",
-          "line": 468
+          "line": 470
         }
       ],
       "apiPaths": [
@@ -168270,143 +168306,143 @@
       "tests": [
         {
           "name": "seed template + version + binding",
-          "line": 75
+          "line": 82
         },
         {
           "name": "start → instance in_progress + first task assigned to supervisor",
-          "line": 103
+          "line": 110
         },
         {
           "name": "started event + audit written (§2)",
-          "line": 119
+          "line": 126
         },
         {
           "name": "my-tasks shows the supervisor the assigned task",
-          "line": 129
+          "line": 136
         },
         {
           "name": "supervisor approves → advances to HSE step",
-          "line": 135
+          "line": 142
         },
         {
           "name": "ACCESS: employee cannot decide the HSE (role admin) task",
-          "line": 144
-        },
-        {
-          "name": "HSE (admin) approves → workflow completed + event",
           "line": 151
         },
         {
+          "name": "HSE (admin) approves → workflow completed + event",
+          "line": 158
+        },
+        {
           "name": "setup: intruder holds workflow.approve but is NOT the assignee",
-          "line": 187
+          "line": 199
         },
         {
           "name": "DENY (new engine): non-assignee approver → 403 on /workflow-engine/decide",
-          "line": 215
+          "line": 227
         },
         {
           "name": "DENY (legacy route): non-assignee approver → 403 on /workflows/decision",
-          "line": 222
+          "line": 234
         },
         {
           "name": "DENY (review finding): a manager holding only workflow.instances.reassign cannot decide a non-assigned task",
-          "line": 231
+          "line": 243
         },
         {
           "name": "bypass attempts left NO trace — task still pending, zero decisions",
-          "line": 250
+          "line": 262
         },
         {
           "name": "POSITIVE control: the real assignee CAN decide (new engine)",
-          "line": 260
+          "line": 272
         },
         {
           "name": "POSITIVE control: legacy route works for an elevated approver",
-          "line": 267
+          "line": 279
         },
         {
           "name": "decide commits transition + outbox + §2 rows atomically",
-          "line": 343
+          "line": 355
         },
         {
           "name": "IDEMPOTENCY: exact retry returns success and writes nothing new",
-          "line": 367
+          "line": 379
         },
         {
           "name": "IDEMPOTENCY: different payload for a decided task → 409",
-          "line": 377
+          "line": 389
         },
         {
           "name": "CONCURRENCY: two simultaneous decides → one success + one 409, one decision row",
-          "line": 383
+          "line": 395
         },
         {
           "name": "TERMINAL: rejection closes open siblings atomically",
-          "line": 401
+          "line": 413
         },
         {
           "name": "FAILURE: source-RPC failure leaves instance GATED, never completed (202)",
-          "line": 430
+          "line": 442
         },
         {
           "name": "FENCING: a stale lease cannot complete or fail a reclaimed job",
-          "line": 466
+          "line": 478
         },
         {
           "name": "DEAD-LETTER: exhausted retries → dead_letter + critical event + instance still gated",
-          "line": 487
+          "line": 499
         },
         {
           "name": "REPLAY: admin replay resets the job for a fresh cycle (audited)",
-          "line": 502
+          "line": 514
         },
         {
           "name": "DENY: unknown moduleKey → 403 (no permission mapping)",
-          "line": 526
-        },
-        {
-          "name": "DENY: UUID sourceRecordId not in table → 404",
           "line": 538
         },
         {
+          "name": "DENY: UUID sourceRecordId not in table → 404",
+          "line": 550
+        },
+        {
           "name": "DENY: text-ref sourceRecordId cannot bypass source authorization",
-          "line": 551
+          "line": 563
         },
         {
           "name": "ALLOW: valid source row → workflow created + canonical assignee",
-          "line": 567
+          "line": 579
         },
         {
           "name": "§2: workflow.started app_event + audit row emitted by primitive",
-          "line": 583
+          "line": 595
         },
         {
           "name": "IDEMPOTENCY: duplicate explicit start (same key) returns original workflowId",
-          "line": 592
+          "line": 604
         },
         {
           "name": "DENY: explicit start rejects caller-supplied assignees",
-          "line": 623
+          "line": 635
         },
         {
           "name": "DENY: explicit start rejects caller-supplied recordData",
-          "line": 637
+          "line": 649
         },
         {
           "name": "UNIQUE: first start on a fresh source record succeeds",
-          "line": 669
+          "line": 681
         },
         {
           "name": "UNIQUE: second start on the SAME active source record is rejected with 409",
-          "line": 684
+          "line": 696
         },
         {
           "name": "UNIQUE: cancelling the first workflow reaches terminal status",
-          "line": 704
+          "line": 716
         },
         {
           "name": "UNIQUE: new start is allowed after first workflow is cancelled",
-          "line": 716
+          "line": 728
         }
       ],
       "apiPaths": [
@@ -168428,87 +168464,87 @@
       "tests": [
         {
           "name": "provision synthetic users + a draft template + clone a real definition",
-          "line": 64
+          "line": 71
         },
         {
           "name": "templates/version/create makes a draft version (v1)",
-          "line": 86
-        },
-        {
-          "name": "version/create with an INVALID definition is rejected (400)",
           "line": 93
         },
         {
+          "name": "version/create with an INVALID definition is rejected (400)",
+          "line": 100
+        },
+        {
           "name": "employee is DENIED templates/version/create",
-          "line": 98
+          "line": 105
         },
         {
           "name": "templates/version/publish activates the version + template",
-          "line": 102
+          "line": 109
         },
         {
           "name": "employee is DENIED templates/version/publish",
-          "line": 122
-        },
-        {
-          "name": "bindings/create binds the module trigger to the template",
           "line": 129
         },
         {
+          "name": "bindings/create binds the module trigger to the template",
+          "line": 136
+        },
+        {
           "name": "bindings/create rejects missing scoped id and discarded global scope id",
-          "line": 138
+          "line": 145
         },
         {
           "name": "bindings/list returns the binding (filtered by module)",
-          "line": 154
+          "line": 161
         },
         {
           "name": "bindings/set-active toggles is_active (deactivate then activate)",
-          "line": 160
+          "line": 167
         },
         {
           "name": "employee is DENIED bindings/create + bindings/list",
-          "line": 171
+          "line": 178
         },
         {
           "name": "seed a running workflow instance + task",
-          "line": 179
+          "line": 186
         },
         {
           "name": "register lists instances (filtered by module)",
-          "line": 207
+          "line": 214
         },
         {
           "name": "get returns the workflow + tasks + decisions",
-          "line": 213
-        },
-        {
-          "name": "my-tasks returns an array for the caller",
           "line": 220
         },
         {
+          "name": "my-tasks returns an array for the caller",
+          "line": 227
+        },
+        {
           "name": "outbox/list exposes queue stats and honors workflow filtering",
-          "line": 226
+          "line": 233
         },
         {
           "name": "delegate the task to another user",
-          "line": 236
+          "line": 243
         },
         {
           "name": "reassign the task to another user",
-          "line": 260
+          "line": 267
         },
         {
           "name": "cancel is atomic, idempotent, and records exact side effects",
-          "line": 276
+          "line": 283
         },
         {
           "name": "audit/list returns the workflow audit trail",
-          "line": 311
+          "line": 318
         },
         {
           "name": "employee is DENIED register / get / audit / delegate / reassign / cancel",
-          "line": 317
+          "line": 324
         }
       ],
       "apiPaths": [

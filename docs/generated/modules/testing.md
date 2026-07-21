@@ -2,7 +2,7 @@
 
 # testing Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 26 | Symbols: 158 | Widgets: 0 | Unique mounted endpoints: 0 | Route definitions: 0 mounted + 0 unmounted | API calls: 0 | DB objects: 0 | E2E suites: 10
 
@@ -47,7 +47,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | Calendar | 29 | 11 | `scripts/e2e/suites/calendar.mjs` |
 | HR Documents | 27 | 9 | `scripts/e2e/suites/hrDocuments.mjs` |
 | HR/Finance — Employee Statutory Profile / NIS Verification (Phase 2.5) | 35 | 7 | `scripts/e2e/suites/hrStatutoryProfile.mjs` |
-| Messaging — P0 Hardening (create/send/membership/pin/read) | 64 | 13 | `scripts/e2e/suites/messaging.mjs` |
+| Messaging — P0 Hardening (create/send/membership/pin/read) | 64 | 14 | `scripts/e2e/suites/messaging.mjs` |
 | Messaging — Favourites slice | 9 | 3 | `scripts/e2e/suites/messagingFavourites.mjs` |
 | Messaging — Reactions slice | 13 | 5 | `scripts/e2e/suites/messagingReactions.mjs` |
 | Messenger — cursor pagination + content search | 16 | 5 | `scripts/e2e/suites/messengerPagination.mjs` |
@@ -64,7 +64,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/calendar.mjs` | 438 |
 | e2e-suite | `scripts/e2e/suites/hrDocuments.mjs` | 400 |
 | e2e-suite | `scripts/e2e/suites/hrStatutoryProfile.mjs` | 479 |
-| e2e-suite | `scripts/e2e/suites/messaging.mjs` | 760 |
+| e2e-suite | `scripts/e2e/suites/messaging.mjs` | 766 |
 | e2e-suite | `scripts/e2e/suites/messagingFavourites.mjs` | 112 |
 | e2e-suite | `scripts/e2e/suites/messagingReactions.mjs` | 180 |
 | e2e-suite | `scripts/e2e/suites/messengerPagination.mjs` | 210 |

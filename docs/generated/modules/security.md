@@ -2,7 +2,7 @@
 
 # security Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
 Files: 45 | Symbols: 378 | Widgets: 0 | Unique mounted endpoints: 51 | Route definitions: 51 mounted + 0 unmounted | API calls: 31 | DB objects: 65 | E2E suites: 4
 
@@ -33,32 +33,32 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/auth/2fa/disable` | `-` | requireUser | `DisableSchema` | `netlify/functions/routes/auth2fa.ts:164` | useDisableTotp @ src/api/security.ts:177 | - |
 | `/api/auth/2fa/setup` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:80` | useStartTotpSetup @ src/api/security.ts:150 | - |
 | `/api/auth/2fa/status` | `-` | requireUser | `-` | `netlify/functions/routes/auth2fa.ts:59` | useTotpStatus @ src/api/security.ts:138 | - |
-| `/api/auth/password/change` | `-` | requireUser | `ChangePasswordSchema` | `netlify/functions/routes/auth.ts:722` | res @ src/components/sections/Profile/api.ts:216 | - |
+| `/api/auth/password/change` | `-` | requireUser | `ChangePasswordSchema` | `netlify/functions/routes/auth.ts:726` | res @ src/components/sections/Profile/api.ts:216 | - |
 | `/api/auth/security/policy` | `-` | requireUser | `-` | `netlify/functions/routes/adminSecurity.ts:201` | useSecurityPolicy @ src/api/security.ts:436 | accountSecurity, securityPolicy |
 | `/api/auth/step-up/options` | `-` | requireUser | `-` | `netlify/functions/routes/authStepUp.ts:45` | ensureStepUp @ src/hooks/useStepUp.tsx:64 | accountSecurity |
 | `/api/auth/step-up/verify` | `-` | requireUser | `VerifySchema` | `netlify/functions/routes/authStepUp.ts:85` | res @ src/hooks/useStepUp.tsx:97<br>res @ src/hooks/useStepUp.tsx:118 | accountSecurity |
 | `/api/auth/trusted-devices/list` | `-` | requireUser | `-` | `netlify/functions/routes/trustedDevices.ts:37` | useTrustedDevices @ src/api/security.ts:293 | accountSecurity |
 | `/api/auth/trusted-devices/revoke` | `-` | requireUser | `-` | `netlify/functions/routes/trustedDevices.ts:81` | useRevokeTrustedDevice @ src/api/security.ts:308 | accountSecurity |
 | `/api/auth/trusted-devices/revoke-all` | `-` | - | `-` | `netlify/functions/routes/trustedDevices.ts:120` | useRevokeAllTrustedDevices @ src/api/security.ts:323 | accountSecurity |
-| `/api/confirm2faSetup` | `-` | - | `Setup2faConfirmSchema` | `netlify/functions/routes/auth.ts:479` | confirm2faSetupApi @ src/components/auth/api.ts:101 | - |
-| `/api/disable2fa` | `-` | requireUser | `Disable2faSchema` | `netlify/functions/routes/auth.ts:549` | - | - |
-| `/api/get2faStatus` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:536` | - | - |
-| `/api/getMyPermissionOverrides` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:685` | res @ src/api/auth.ts:32 | accountSecurity, permissionPropagation |
-| `/api/getMyRecentActivity` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:670` | res @ src/components/sections/Profile/api.ts:73 | - |
-| `/api/login` | `-` | - | `LoginSchema` | `netlify/functions/routes/auth.ts:165` | loginApi @ src/components/auth/api.ts:79 | - |
-| `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:600` | logoutApi @ src/components/auth/api.ts:109 | - |
-| `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:577` | - | - |
-| `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:442` | setup2faApi @ src/components/auth/api.ts:94 | - |
+| `/api/confirm2faSetup` | `-` | - | `Setup2faConfirmSchema` | `netlify/functions/routes/auth.ts:481` | confirm2faSetupApi @ src/components/auth/api.ts:101 | - |
+| `/api/disable2fa` | `-` | requireUser | `Disable2faSchema` | `netlify/functions/routes/auth.ts:551` | - | - |
+| `/api/get2faStatus` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:538` | - | - |
+| `/api/getMyPermissionOverrides` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:687` | res @ src/api/auth.ts:32 | accountSecurity, permissionPropagation |
+| `/api/getMyRecentActivity` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:672` | res @ src/components/sections/Profile/api.ts:73 | - |
+| `/api/login` | `-` | - | `LoginSchema` | `netlify/functions/routes/auth.ts:167` | loginApi @ src/components/auth/api.ts:79 | - |
+| `/api/logout` | `-` | requireUser | `-` | `netlify/functions/routes/auth.ts:602` | logoutApi @ src/components/auth/api.ts:109 | - |
+| `/api/refreshToken` | `-` | - | `-` | `netlify/functions/routes/auth.ts:579` | - | - |
+| `/api/setup2fa` | `-` | - | `Setup2faInitSchema` | `netlify/functions/routes/auth.ts:444` | setup2faApi @ src/components/auth/api.ts:94 | - |
 | `/api/superadmin/clearUserPermission` | `permissions.manage` | requirePermission | `ClearUserPermSchema` | `netlify/functions/routes/superadmin.ts:404` | - | permissionPropagation, rbacConsole |
 | `/api/superadmin/getRolePermissions` | `roles.manage` | requirePermission | `GetRolePermsSchema` | `netlify/functions/routes/superadmin.ts:709` | - | rbacConsole |
 | `/api/superadmin/getUserPermissions` | `permissions.manage` | requirePermission | `GetUserPermsSchema` | `netlify/functions/routes/superadmin.ts:321` | - | rbacConsole |
 | `/api/superadmin/setRolePermission` | `roles.manage` | requirePermission | `SetRolePermSchema` | `netlify/functions/routes/superadmin.ts:864` | - | rbacConsole |
 | `/api/superadmin/setUserPermission` | `permissions.manage` | requirePermission | `SetUserPermSchema` | `netlify/functions/routes/superadmin.ts:337` | - | communicationsCompliance, permissionPropagation, rbacConsole |
-| `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:616` | updateColorScheme @ src/components/nav/api.ts:22 | - |
-| `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:625` | updateLayoutMode @ src/components/nav/api.ts:25 | - |
-| `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:634` | res @ src/components/sections/Profile/api.ts:108 | - |
-| `/api/verify2fa` | `-` | - | `Verify2faExtSchema` | `netlify/functions/routes/auth.ts:356` | verify2faApi @ src/components/auth/api.ts:88 | - |
-| `/api/verifyPassword` | `-` | requireUser | `VerifyPasswordSchema` | `netlify/functions/routes/auth.ts:709` | - | - |
+| `/api/updateColorScheme` | `-` | requireUser | `UpdateColorSchemeSchema` | `netlify/functions/routes/auth.ts:618` | updateColorScheme @ src/components/nav/api.ts:22 | - |
+| `/api/updateLayoutMode` | `-` | requireUser | `UpdateLayoutModeSchema` | `netlify/functions/routes/auth.ts:627` | updateLayoutMode @ src/components/nav/api.ts:25 | - |
+| `/api/updateMyProfile` | `-` | requireUser | `UpdateMyProfileSchema` | `netlify/functions/routes/auth.ts:636` | res @ src/components/sections/Profile/api.ts:108 | - |
+| `/api/verify2fa` | `-` | - | `Verify2faExtSchema` | `netlify/functions/routes/auth.ts:358` | verify2faApi @ src/components/auth/api.ts:88 | - |
+| `/api/verifyPassword` | `-` | requireUser | `VerifyPasswordSchema` | `netlify/functions/routes/auth.ts:713` | - | - |
 | `/api/webauthn/auth/options` | `-` | - | `AuthOptionsSchema` | `netlify/functions/routes/webauthn.ts:289` | webauthnAuthOptions @ src/components/auth/api.ts:121 | accountSecurity |
 | `/api/webauthn/auth/verify` | `-` | - | `AuthVerifySchema` | `netlify/functions/routes/webauthn.ts:321` | webauthnAuthVerify @ src/components/auth/api.ts:140 | accountSecurity |
 | `/api/webauthn/credentials/delete` | `-` | - | `CredentialIdSchema` | `netlify/functions/routes/webauthn.ts:251` | useDeletePasskey @ src/api/security.ts:274 | accountSecurity |
@@ -186,7 +186,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | Role | Path | Lines |
 |---|---|---:|
 | backend-route | `netlify/functions/routes/adminSecurity.ts` | 261 |
-| backend-route | `netlify/functions/routes/auth.ts` | 788 |
+| backend-route | `netlify/functions/routes/auth.ts` | 792 |
 | backend-route | `netlify/functions/routes/auth2fa.ts` | 277 |
 | backend-route | `netlify/functions/routes/authStepUp.ts` | 178 |
 | backend-route | `netlify/functions/routes/permissionApprovals.ts` | 486 |
@@ -197,7 +197,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/permissionPropagation.mjs` | 332 |
 | e2e-suite | `scripts/e2e/suites/securityPolicy.mjs` | 93 |
 | frontend-api | `src/api/auth.ts` | 53 |
-| frontend-api | `src/api/schemas/auth.ts` | 122 |
+| frontend-api | `src/api/schemas/auth.ts` | 123 |
 | frontend-api | `src/api/security.ts` | 469 |
 | frontend-page | `src/components/sections/SuperadminConsole/tabs/SecurityPolicyTab.tsx` | 380 |
 | frontend-page | `src/components/sections/SuperadminConsole/tabs/UserSecurityPanel.tsx` | 259 |

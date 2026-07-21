@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `c14c1744014d8e9168db52e9`
 
-Files: 293 | Symbols: 2654 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 293 | Symbols: 2654 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 296 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -21,14 +21,14 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/addProjectSite` | `sites.add` | requirePermission | `AddSiteSchema` | `netlify/functions/routes/sites.ts:81` | res @ src/api/sites.ts:134<br>addProjectSiteApi @ src/components/sections/ProjectSites/api.ts:80 | - |
 | `/api/calendar/activity/create` | `calendar.activity.manage_own` | requirePermission | `CreateActivitySchema` | `netlify/functions/routes/calendar.ts:606` | useCreateActivity @ src/api/calendar.ts:101 | calendar |
 | `/api/calendar/activity/respond` | `calendar.view` | requirePermission | `AttendeeResponseSchema` | `netlify/functions/routes/calendar.ts:425` | useRespondToCalendarActivity @ src/api/calendar.ts:165 | calendar |
-| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:939` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
+| `/api/calendar/cancel` | `calendar.view` | requirePermission | `CancelSchema` | `netlify/functions/routes/calendar.ts:943` | useCancelEntry @ src/api/calendar.ts:139 | calendar |
 | `/api/calendar/get` | `calendar.view` | requirePermission | `GetSchema` | `netlify/functions/routes/calendar.ts:325` | res @ src/api/calendar.ts:58 | calendar |
 | `/api/calendar/list` | `calendar.view` | requirePermission | `ListSchema` | `netlify/functions/routes/calendar.ts:167` | res @ src/api/calendar.ts:45 | calendar |
 | `/api/calendar/reminders/get` | `calendar.view` | requirePermission | `ReminderGetSchema` | `netlify/functions/routes/calendar.ts:379` | res @ src/api/calendar.ts:72 | calendar |
 | `/api/calendar/reminders/run-sweep` | `-` | - | `z.object({ now: z.string().optional() })` | `netlify/functions/routes/calendar.ts:467` | - | calendar |
 | `/api/calendar/reminders/set` | `calendar.view` | requirePermission | `ReminderSetSchema` | `netlify/functions/routes/calendar.ts:399` | useSetCalendarReminders @ src/api/calendar.ts:152 | calendar |
 | `/api/calendar/task/create` | `calendar.task.manage_own` | requirePermission, userCan | `CreateTaskSchema` | `netlify/functions/routes/calendar.ts:523` | useCreateTask @ src/api/calendar.ts:89 | calendar |
-| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:890` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
+| `/api/calendar/task/status` | `calendar.view` | requirePermission, userCan | `StatusSchema` | `netlify/functions/routes/calendar.ts:894` | useTaskStatus @ src/api/calendar.ts:126 | calendar |
 | `/api/calendar/update` | `calendar.view` | requirePermission, userCan | `UpdateSchema` | `netlify/functions/routes/calendar.ts:784` | useUpdateEntry @ src/api/calendar.ts:113 | calendar |
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
@@ -396,6 +396,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000439_messaging_thread_list_performance.sql:24` |
 | function | `public.messaging_add_internal_note_tx` | `supabase/migrations/20260919000441_messaging_internal_notes.sql:26` |
 | function | `public.messaging_search_posts_page` | `supabase/migrations/20260919000441_messaging_internal_notes.sql:140` |
+| function | `public.messaging_list_threads_page` | `supabase/migrations/20260919000442_messaging_internal_note_unread_fix.sql:22` |
 | table | `if` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:31` |
 | table | `public.approval_seen_receipts` | `supabase/migrations/20260919000460_approval_seen_receipts.sql:44` |
 | function | `public.work_calendar_valid_weekdays` | `supabase/migrations/20260919000700_shared_work_calendar.sql:24` |
@@ -444,7 +445,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/calendar.ts` | 997 |
+| backend-route | `netlify/functions/routes/calendar.ts` | 1001 |
 | backend-route | `netlify/functions/routes/hrContracts.ts` | 170 |
 | backend-route | `netlify/functions/routes/hrStatutoryProfile.ts` | 87 |
 | backend-route | `netlify/functions/routes/hrWorkCalendars.ts` | 123 |
