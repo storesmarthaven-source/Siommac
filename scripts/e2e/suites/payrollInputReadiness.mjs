@@ -53,16 +53,16 @@ export default async function run(h) {
 
   await test('setup: pay groups, members, and one row per input source', async () => {
     const uRes = await sb.from('app_users').insert([
-      { id: U.fmgr,  username: `${TAG}_fmgr`,  full_name: 'PRIR Finance Mgr', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: U.plain, username: `${TAG}_plain`, full_name: 'PRIR Plain Emp',   role: 'employee',        status: 'active', employment_type: 'employee' },
-      { id: E.e1,   username: `${TAG}_e1`,   full_name: 'PRIR E1',   role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 },
-      { id: E.e2,   username: `${TAG}_e2`,   full_name: 'PRIR E2',   role: 'employee', status: 'active', employment_type: 'employee', pay_basis: null },
-      { id: E.solo, username: `${TAG}_solo`, full_name: 'PRIR Solo', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 },
+      { id: U.fmgr,  username: `${TAG}_ir_fmgr`,  full_name: 'PRIR Finance Mgr', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: U.plain, username: `${TAG}_ir_plain`, full_name: 'PRIR Plain Emp',   role: 'employee',        status: 'active', employment_type: 'employee' },
+      { id: E.e1,   username: `${TAG}_ir_e1`,   full_name: 'PRIR E1',   role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 },
+      { id: E.e2,   username: `${TAG}_ir_e2`,   full_name: 'PRIR E2',   role: 'employee', status: 'active', employment_type: 'employee', pay_basis: null },
+      { id: E.solo, username: `${TAG}_ir_solo`, full_name: 'PRIR Solo', role: 'employee', status: 'active', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000 },
     ]);
     expect(!uRes.error, `seed users: ${uRes.error?.message}`);
 
-    fmgrToken  = mint({ id: U.fmgr,  username: `${TAG}_fmgr`,  role: 'finance_manager', department_id: null });
-    plainToken = mint({ id: U.plain, username: `${TAG}_plain`, role: 'employee',        department_id: null });
+    fmgrToken  = mint({ id: U.fmgr,  username: `${TAG}_ir_fmgr`,  role: 'finance_manager', department_id: null });
+    plainToken = mint({ id: U.plain, username: `${TAG}_ir_plain`, role: 'employee',        department_id: null });
 
     const gA = await sb.from('finance_pay_groups').insert({ code: `PRIRA-${sfx}`, name: `PRIR A ${TAG}`, frequency: 'monthly', statutory_country: 'TT' }).select('id').single();
     expect(!gA.error, `pay group A: ${gA.error?.message}`); pgA = gA.data.id;

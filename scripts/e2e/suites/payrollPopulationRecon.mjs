@@ -83,20 +83,20 @@ export default async function run(h) {
 
     // Employees. term is INACTIVE (not counted as active / not in dept totals).
     const uRes = await sb.from('app_users').insert([
-      { id: U.fmgr,  username: `${TAG}_fmgr`,  full_name: 'PRCN Finance Mgr', role: 'finance_manager', status: 'active', employment_type: 'employee' },
-      { id: U.plain, username: `${TAG}_plain`, full_name: 'PRCN Plain Emp',   role: 'employee',        status: 'active', employment_type: 'employee' },
-      { id: E.clean,   username: `${TAG}_clean`,   full_name: 'PRCN Clean',   role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1 },
-      { id: E.newhire, username: `${TAG}_hire`,    full_name: 'PRCN Hire',    role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1, start_date: IN_PERIOD_HIRE },
-      { id: E.noBasis, username: `${TAG}_nobasis`, full_name: 'PRCN NoBasis', role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: null,     department_id: deptId2 },
-      { id: E.noStat,  username: `${TAG}_nostat`,  full_name: 'PRCN NoStat',  role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId2 },
-      { id: E.noBank,  username: `${TAG}_nobank`,  full_name: 'PRCN NoBank',  role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: null },
-      { id: E.term,    username: `${TAG}_term`,    full_name: 'PRCN Term',    role: 'employee', status: 'inactive', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1, end_date: IN_PERIOD_TERM },
-      { id: E.solo,    username: `${TAG}_solo`,    full_name: 'PRCN Solo',    role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1 },
+      { id: U.fmgr,  username: `${TAG}_rc_fmgr`,  full_name: 'PRCN Finance Mgr', role: 'finance_manager', status: 'active', employment_type: 'employee' },
+      { id: U.plain, username: `${TAG}_rc_plain`, full_name: 'PRCN Plain Emp',   role: 'employee',        status: 'active', employment_type: 'employee' },
+      { id: E.clean,   username: `${TAG}_rc_clean`,   full_name: 'PRCN Clean',   role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1 },
+      { id: E.newhire, username: `${TAG}_rc_hire`,    full_name: 'PRCN Hire',    role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1, start_date: IN_PERIOD_HIRE },
+      { id: E.noBasis, username: `${TAG}_rc_nobasis`, full_name: 'PRCN NoBasis', role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: null,     department_id: deptId2 },
+      { id: E.noStat,  username: `${TAG}_rc_nostat`,  full_name: 'PRCN NoStat',  role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId2 },
+      { id: E.noBank,  username: `${TAG}_rc_nobank`,  full_name: 'PRCN NoBank',  role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: null },
+      { id: E.term,    username: `${TAG}_rc_term`,    full_name: 'PRCN Term',    role: 'employee', status: 'inactive', employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1, end_date: IN_PERIOD_TERM },
+      { id: E.solo,    username: `${TAG}_rc_solo`,    full_name: 'PRCN Solo',    role: 'employee', status: 'active',   employment_type: 'employee', pay_basis: 'salary', monthly_salary: 9000, department_id: deptId1 },
     ]);
     expect(!uRes.error, `seed users: ${uRes.error?.message}`);
 
-    fmgrToken  = mint({ id: U.fmgr,  username: `${TAG}_fmgr`,  role: 'finance_manager', department_id: null });
-    plainToken = mint({ id: U.plain, username: `${TAG}_plain`, role: 'employee',        department_id: null });
+    fmgrToken  = mint({ id: U.fmgr,  username: `${TAG}_rc_fmgr`,  role: 'finance_manager', department_id: null });
+    plainToken = mint({ id: U.plain, username: `${TAG}_rc_plain`, role: 'employee',        department_id: null });
 
     // Two pay groups. A = the reconciled population; B = a fresh group with no
     // released run (exercises the null-prior-run branch).

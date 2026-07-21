@@ -13,7 +13,6 @@ import { Hono } from 'hono';
 import { requirePermission, userCan } from '../lib/auth';
 import { z, zv } from '../lib/validate';
 import {
-  listPayrollRuns,
   getPayrollRun,
   getRunPolicyEvidence,
   createPayrollRun,
@@ -119,7 +118,6 @@ import {
 } from '../lib/finance/loans';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
 import { runPayrollReport } from '../lib/finance/payrollReports';
-import type { ExportFormat } from '../lib/finance/payrollExports';
 import type { PayrollReportKey } from '../lib/finance/payrollReports';
 import type { HonoVariables } from '../../../types/api';
 
@@ -134,7 +132,7 @@ function routeErr(c: { json: (v: unknown, s: number) => Response }, e: unknown):
   const er = e as { status?: number; message?: string };
   return c.json(
     { success: false, message: er.message ?? 'Internal error' },
-    (er.status ?? 500) as 200,
+    er.status ?? 500,
   );
 }
 
@@ -157,7 +155,7 @@ router.post('/payroll/runs/list', async c => {
       'pending_approval','returned','approved','locked','released','exported','cancelled',
     ])).optional(),
     runTypes:    z.array(z.enum(['scheduled','off_cycle','correction','final_pay'])).optional(),
-    payGroupIds: z.array(z.string().uuid()).max(50).optional(),
+    payGroupIds: z.array(z.uuid()).max(50).optional(),
     periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),
     periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),
     sort:        z.enum(['pay_date_desc','pay_date_asc','updated_desc']).optional(),
@@ -187,7 +185,7 @@ router.post('/payroll/control-center/get', async c => {
       .refine(w => (Date.parse(w.to) - Date.parse(w.from)) <= 366 * 86_400_000, {
         message: 'window may not exceed 366 days',
       }),
-    payGroupIds: z.array(z.string().uuid()).max(25).optional(),
+    payGroupIds: z.array(z.uuid()).max(25).optional(),
     register: z.object({
       tab:    z.enum(['all', 'attention', 'approval', 'ready', 'released']).optional(),
       search: z.string().trim().max(100).optional(),
@@ -207,7 +205,7 @@ router.post('/payroll/control-center/get', async c => {
     const search = v.data.register?.search?.length ? v.data.register.search : null;
     const data = await getPayrollControlCenter({
       actorId:     actor.id,
-      actorRole:   actor.role ?? null,
+      actorRole:   actor.role,
       window:      v.data.window,
       payGroupIds: [...new Set(v.data.payGroupIds ?? [])],
       register: {
@@ -232,7 +230,7 @@ router.post('/payroll/control-center/get', async c => {
 // POST /api/finance/payroll/runs/get
 router.post('/payroll/runs/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayrollRun(v.data.id);
@@ -249,8 +247,8 @@ router.post('/payroll/runs/get', async c => {
 router.post('/payroll/runs/policy-evidence', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    runId:           z.string().uuid(),
-    inputSnapshotId: z.string().uuid().optional(),
+    runId:           z.uuid(),
+    inputSnapshotId: z.uuid().optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -268,10 +266,10 @@ router.post('/payroll/runs/create', async c => {
     periodStart:    z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     periodEnd:      z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     sequenceNo:     z.number().int().positive().optional(),
-    sourceRunId:    z.string().uuid().optional(),
+    sourceRunId:    z.uuid().optional(),
     payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly']).optional(),
     weeksInPeriod:  z.number().positive().optional(),
-    payGroupId:     z.string().uuid().optional(),
+    payGroupId:     z.uuid().optional(),
     payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     // Slice 1 run metadata
@@ -294,7 +292,7 @@ router.post('/payroll/runs/create', async c => {
 router.post('/payroll/runs/lock-inputs', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -312,7 +310,7 @@ router.post('/payroll/runs/lock-inputs', async c => {
 router.post('/payroll/runs/calculate', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -329,7 +327,7 @@ router.post('/payroll/runs/calculate', async c => {
 // POST /api/finance/payroll/inputs/list
 router.post('/payroll/inputs/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunInputs(v.data.runId);
@@ -344,7 +342,7 @@ router.post('/payroll/inputs/list', async c => {
 // POST /api/finance/payroll/run-lines/list
 router.post('/payroll/run-lines/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunLines(v.data.runId);
@@ -359,7 +357,7 @@ router.post('/payroll/run-lines/list', async c => {
 // POST /api/finance/payroll/warnings/list
 router.post('/payroll/warnings/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunWarnings(v.data.runId);
@@ -372,7 +370,7 @@ router.post('/payroll/warnings/list', async c => {
 // Permission: finance.payroll.view_all
 router.post('/payroll/runs/audit/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunAuditLog(v.data.runId);
@@ -389,7 +387,7 @@ router.post('/payroll/runs/audit/list', async c => {
 router.post('/payroll/runs/certify', async c => {
   const actor = await requirePermission(c, 'finance.payroll.certify');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
     attestations: z.object({
       populationReconciled: z.literal(true),
@@ -416,7 +414,7 @@ router.post('/payroll/runs/certify', async c => {
 // Permission: finance.payroll.run.manage (finance_staff or finance_manager).
 router.post('/payroll/runs/submit', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
-  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
+  const v = zv(c, z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await submitRun(v.data.id, actor.id, v.data.idempotencyKey);
@@ -431,7 +429,7 @@ router.post('/payroll/runs/submit', async c => {
 // Permission: finance.payroll.approve (finance_manager / admin only).
 router.post('/payroll/runs/approve', async c => {
   const actor = await requirePermission(c, 'finance.payroll.approve');
-  const v = zv(c, z.object({ id: z.string().uuid(), comment: z.string().max(2000).optional() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid(), comment: z.string().max(2000).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await decideRunApproval({ runId: v.data.id, actor: { id: actor.id, role: actor.role }, decision: 'approved', comment: v.data.comment });
@@ -447,7 +445,7 @@ router.post('/payroll/runs/approve', async c => {
 router.post('/payroll/runs/reject', async c => {
   const actor = await requirePermission(c, 'finance.payroll.approve');
   const v = zv(c, z.object({
-    id:     z.string().uuid(),
+    id:     z.uuid(),
     reason: z.string().min(1, 'Reason is required').max(500),
   }), b(c));
   if (!v.ok) return v.response;
@@ -463,7 +461,7 @@ router.post('/payroll/runs/reject', async c => {
 router.post('/payroll/runs/lock', async c => {
   const actor = await requirePermission(c, 'finance.payroll.lock');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -477,7 +475,7 @@ router.post('/payroll/runs/lock', async c => {
 // Returns authoritative release blockers for the current locked run version.
 router.post('/payroll/releases/preflight', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayrollReleasePreflight(v.data.runId);
@@ -490,9 +488,9 @@ router.post('/payroll/releases/preflight', async c => {
 router.post('/payroll/releases/confirm-funding', async c => {
   const actor = await requirePermission(c, 'finance.payroll.funding.approve');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
-    confirmedAmount: z.number().finite().nonnegative(),
+    confirmedAmount: z.number().nonnegative(),
     confirmationReference: z.string().trim().min(1).max(200),
     accountReference: z.string().trim().min(1).max(100).optional(),
     note: z.string().trim().max(2000).optional(),
@@ -512,7 +510,7 @@ router.post('/payroll/releases/confirm-funding', async c => {
 router.post('/payroll/releases/release', async c => {
   const actor = await requirePermission(c, 'finance.payroll.release');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -528,7 +526,7 @@ router.post('/payroll/releases/release', async c => {
 // POST /api/finance/payroll/releases/get-certificate
 router.post('/payroll/releases/get-certificate', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayrollReleaseCertificate(v.data.runId);
@@ -549,7 +547,7 @@ router.post('/payroll/releases/get-certificate', async c => {
 router.post('/payroll/runs/reopen', async c => {
   const actor = await requirePermission(c, 'finance.payroll.lock');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     reason: z.string().trim().min(1, 'Reason is required'),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
@@ -567,8 +565,8 @@ router.post('/payroll/runs/reopen', async c => {
 router.post('/payroll/runs/set-template', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
   const v = zv(c, z.object({
-    runId:      z.string().uuid(),
-    templateId: z.string().uuid().nullable().optional(),
+    runId:      z.uuid(),
+    templateId: z.uuid().nullable().optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -583,7 +581,7 @@ router.post('/payroll/runs/set-template', async c => {
 router.post('/payroll/runs/export', async c => {
   const actor = await requirePermission(c, 'finance.payroll.export');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
     format: z.enum(['csv', 'json']).optional(),
   }), b(c));
@@ -593,7 +591,7 @@ router.post('/payroll/runs/export', async c => {
       v.data.id,
       actor.id,
       v.data.idempotencyKey,
-      (v.data.format ?? 'csv') as ExportFormat,
+      v.data.format ?? 'csv',
     );
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
@@ -606,7 +604,7 @@ router.post('/payroll/runs/export', async c => {
 // POST /api/finance/payroll/exports/list
 router.post('/payroll/exports/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunExports(v.data.runId);
@@ -624,7 +622,7 @@ router.post('/payroll/exports/list', async c => {
 // Permission: finance.payroll.run.manage.
 router.post('/payroll/payslips/notify', async c => {
   const actor = await requirePermission(c, 'finance.payroll.run.manage');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await notifyPayslipEmployees(v.data.runId, actor.id);
@@ -637,7 +635,7 @@ router.post('/payroll/payslips/notify', async c => {
 // Finance-only: requires view_all.
 router.post('/payroll/payslips/generate', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await generatePayslips(v.data.runId, actor.id);
@@ -651,7 +649,7 @@ router.post('/payroll/payslips/generate', async c => {
 // Permission: finance.payroll.payslips.generate (write).
 router.post('/payroll/payslips/render-run', async c => {
   const actor = await requirePermission(c, 'finance.payroll.payslips.generate');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await renderRunPayslips(v.data.runId, actor.id);
@@ -664,7 +662,7 @@ router.post('/payroll/payslips/render-run', async c => {
 // Permission: finance.payroll.payslips.generate (write).
 router.post('/payroll/payslips/render', async c => {
   const actor = await requirePermission(c, 'finance.payroll.payslips.generate');
-  const v = zv(c, z.object({ payslipId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ payslipId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await renderPayslip(v.data.payslipId, actor.id);
@@ -677,7 +675,7 @@ router.post('/payroll/payslips/render', async c => {
 // Permission: finance.payroll.payslips.distribute (sends personal data externally).
 router.post('/payroll/payslips/deliver-run', async c => {
   const actor = await requirePermission(c, 'finance.payroll.payslips.distribute');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await deliverRunPayslips(v.data.runId, actor.id);
@@ -689,7 +687,7 @@ router.post('/payroll/payslips/deliver-run', async c => {
 // Email a single rendered payslip (e.g. resend to one employee).
 router.post('/payroll/payslips/deliver', async c => {
   const actor = await requirePermission(c, 'finance.payroll.payslips.distribute');
-  const v = zv(c, z.object({ payslipId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ payslipId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await deliverPayslip(v.data.payslipId, actor.id);
@@ -701,7 +699,7 @@ router.post('/payroll/payslips/deliver', async c => {
 // Delivery history for a run — Finance only.
 router.post('/payroll/payslips/deliveries/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listRunDeliveries(v.data.runId);
@@ -741,7 +739,7 @@ router.post('/payroll/overtime-rules/create', async c => {
 // POST /api/finance/payroll/overtime-rules/set-active
 router.post('/payroll/overtime-rules/set-active', async c => {
   const actor = await requirePermission(c, 'finance.payroll.overtime.rules.manage');
-  const v = zv(c, z.object({ id: z.string().uuid(), active: z.boolean() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid(), active: z.boolean() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await setOvertimeRuleActive(v.data.id, v.data.active, actor.id);
@@ -765,7 +763,7 @@ router.post('/payroll/loans/list', async c => {
 // POST /api/finance/payroll/loans/get
 router.post('/payroll/loans/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getLoan(v.data.id);
@@ -797,7 +795,7 @@ router.post('/payroll/loans/create', async c => {
 // POST /api/finance/payroll/loans/submit  — draft/rejected → pending_approval (workflow).
 router.post('/payroll/loans/submit', async c => {
   const actor = await requirePermission(c, 'finance.payroll.loans.manage');
-  const v = zv(c, z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
+  const v = zv(c, z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await submitLoan(v.data.id, actor.id, v.data.idempotencyKey);
@@ -808,7 +806,7 @@ router.post('/payroll/loans/submit', async c => {
 // POST /api/finance/payroll/loans/settle  — early settlement (active → settled).
 router.post('/payroll/loans/settle', async c => {
   const actor = await requirePermission(c, 'finance.payroll.loans.manage');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await settleLoan(v.data.id, actor.id);
@@ -819,7 +817,7 @@ router.post('/payroll/loans/settle', async c => {
 // POST /api/finance/payroll/loans/cancel
 router.post('/payroll/loans/cancel', async c => {
   const actor = await requirePermission(c, 'finance.payroll.loans.manage');
-  const v = zv(c, z.object({ id: z.string().uuid(), reason: z.string().max(500).optional() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid(), reason: z.string().max(500).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await cancelLoan(v.data.id, actor.id, v.data.reason);
@@ -834,7 +832,7 @@ router.post('/payroll/loans/cancel', async c => {
 router.post('/payroll/overrides/add', async c => {
   const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     employeeId: z.string().min(1),
     label: z.string().min(1).max(80),
     amount: z.number().positive(),
@@ -855,7 +853,7 @@ router.post('/payroll/overrides/add', async c => {
 router.post('/payroll/back-pay/preview', async c => {
   await requirePermission(c, 'finance.payroll.worksheet.override');
   const v = zv(c, z.object({
-    currentRunId: z.string().uuid(),
+    currentRunId: z.uuid(),
     employeeId: z.string().min(1),
     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     correctedPeriodBase: z.number().positive(),
@@ -875,7 +873,7 @@ router.post('/payroll/back-pay/preview', async c => {
 router.post('/payroll/back-pay/add', async c => {
   const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
   const v = zv(c, z.object({
-    currentRunId: z.string().uuid(),
+    currentRunId: z.uuid(),
     employeeId: z.string().min(1),
     fromPeriodMonth: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     correctedPeriodBase: z.number().positive(),
@@ -896,7 +894,7 @@ router.post('/payroll/back-pay/add', async c => {
 router.post('/payroll/overrides/add-bulk', async c => {
   const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     employeeIds: z.array(z.string().min(1)).min(1).max(BULK_OVERRIDE_MAX),
     label: z.string().min(1).max(80),
     amount: z.number().positive(),
@@ -915,7 +913,7 @@ router.post('/payroll/overrides/add-bulk', async c => {
 // POST /api/finance/payroll/overrides/remove
 router.post('/payroll/overrides/remove', async c => {
   const actor = await requirePermission(c, 'finance.payroll.worksheet.override');
-  const v = zv(c, z.object({ overrideId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ overrideId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await removeOverride(v.data.overrideId, actor.id);
@@ -926,7 +924,7 @@ router.post('/payroll/overrides/remove', async c => {
 // POST /api/finance/payroll/overrides/list  — Finance.
 router.post('/payroll/overrides/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listOverrides(v.data.runId);
@@ -961,7 +959,7 @@ router.post('/payroll/reason-codes/list', async c => {
 // POST /api/finance/payroll/pay-groups/get
 router.post('/payroll/pay-groups/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayGroup(v.data.id);
@@ -993,7 +991,7 @@ router.post('/payroll/pay-groups/assign', async c => {
   const actor = await requirePermission(c, 'finance.payroll.paygroups.manage');
   const v = zv(c, z.object({
     employeeId: z.string().min(1),
-    payGroupId: z.string().uuid(),
+    payGroupId: z.uuid(),
     effectiveFrom: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
     effectiveTo: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable().optional(),
   }), b(c));
@@ -1007,7 +1005,7 @@ router.post('/payroll/pay-groups/assign', async c => {
 // POST /api/finance/payroll/pay-groups/members  — assignments for a group.
 router.post('/payroll/pay-groups/members', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ payGroupId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ payGroupId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listGroupMembers(v.data.payGroupId);
@@ -1022,7 +1020,7 @@ router.post('/payroll/pay-groups/members', async c => {
 // and any missing account mappings. Read-only. Permission: finance.payroll.gl.preview.
 router.post('/payroll/gl/preview', async c => {
   await requirePermission(c, 'finance.payroll.gl.preview');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await previewRunGl(v.data.runId);
@@ -1037,7 +1035,7 @@ router.post('/payroll/gl/preview', async c => {
 router.post('/payroll/gl/post', async c => {
   const actor = await requirePermission(c, 'finance.payroll.gl.post');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -1057,7 +1055,7 @@ router.post('/payroll/gl/post', async c => {
 router.post('/payroll/gl/reverse', async c => {
   const actor = await requirePermission(c, 'finance.payroll.gl.post');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     reason: z.string().min(1),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
@@ -1077,7 +1075,7 @@ router.post('/payroll/gl/reverse', async c => {
 // Fetch the posted journal (header + lines) for a run, or null if unposted.
 router.post('/payroll/gl/get', async c => {
   await requirePermission(c, 'finance.payroll.gl.preview');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getRunGlJournal(v.data.runId);
@@ -1089,7 +1087,7 @@ router.post('/payroll/gl/get', async c => {
 // List all payslips for a run — Finance only.
 router.post('/payroll/payslips/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listPayslipsForRun(v.data.runId);
@@ -1112,7 +1110,7 @@ router.post('/payroll/payslips/my', async c => {
 // Get a single payslip. Employee self: self-scope enforced. Finance: no scope limit.
 router.post('/payroll/payslips/get', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_own');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     // Non-finance callers (view_own only) are scoped to own payslips.
@@ -1131,7 +1129,7 @@ router.post('/payroll/payslips/get', async c => {
 // Download is audited.
 router.post('/payroll/payslips/signed-url', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_own');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const hasViewAll = await userCan(actor, 'finance.payroll.view_all');
@@ -1172,8 +1170,8 @@ router.post('/payroll/reports/run', async c => {
 router.post('/payroll/findings/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
-    calculationVersionId: z.string().uuid().optional(),
+    runId: z.uuid(),
+    calculationVersionId: z.uuid().optional(),
     state: z.enum(['open', 'in_progress', 'resolved', 'waived']).optional(),
     severity: z.enum(['info', 'warning', 'blocker']).optional(),
     limit: z.number().int().min(1).max(200).optional(),
@@ -1188,7 +1186,7 @@ router.post('/payroll/findings/list', async c => {
 
 router.post('/payroll/runs/workspace', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayrollRunWorkspace(v.data.id);
@@ -1199,7 +1197,7 @@ router.post('/payroll/runs/workspace', async c => {
 router.post('/payroll/calculations/attempts/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    runId: z.string().uuid(),
+    runId: z.uuid(),
     limit: z.number().int().min(1).max(200).optional(),
     offset: z.number().int().min(0).optional(),
   }), b(c));
@@ -1212,7 +1210,7 @@ router.post('/payroll/calculations/attempts/list', async c => {
 
 router.post('/payroll/calculations/attempts/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getCalculationAttempt(v.data.id);
@@ -1225,7 +1223,7 @@ router.post('/payroll/calculations/attempts/get', async c => {
 
 router.post('/payroll/calculations/versions/list', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ runId: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await listCalculationVersions(v.data.runId);
@@ -1235,7 +1233,7 @@ router.post('/payroll/calculations/versions/list', async c => {
 
 router.post('/payroll/calculations/versions/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getCalculationVersion(v.data.id);
@@ -1249,8 +1247,8 @@ router.post('/payroll/calculations/versions/get', async c => {
 router.post('/payroll/calculations/compare', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    fromVersionId: z.string().uuid(),
-    toVersionId: z.string().uuid(),
+    fromVersionId: z.uuid(),
+    toVersionId: z.uuid(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -1264,7 +1262,7 @@ router.post('/payroll/calculations/compare', async c => {
 
 router.post('/payroll/findings/get', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const data = await getPayrollFinding(v.data.id);
@@ -1278,7 +1276,7 @@ router.post('/payroll/findings/get', async c => {
 router.post('/payroll/findings/assign', async c => {
   const actor = await requirePermission(c, 'finance.payroll.finding.assign');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     expectedVersion: z.number().int().positive(),
     idempotencyKey: z.string().trim().min(1).max(200),
     assigneeId: z.string().min(1).max(200),
@@ -1302,7 +1300,7 @@ router.post('/payroll/findings/assign', async c => {
 router.post('/payroll/findings/resolve', async c => {
   const actor = await requirePermission(c, 'finance.payroll.finding.resolve');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     expectedVersion: z.number().int().positive(),
     idempotencyKey: z.string().trim().min(1).max(200),
     note: z.string().trim().min(1).max(2000),
@@ -1326,11 +1324,11 @@ router.post('/payroll/findings/resolve', async c => {
 router.post('/payroll/findings/waive', async c => {
   const actor = await requirePermission(c, 'finance.payroll.finding.waive');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     expectedVersion: z.number().int().positive(),
     idempotencyKey: z.string().trim().min(1).max(200),
     reason: z.string().trim().min(1).max(2000),
-    expiresAt: z.string().datetime().optional(),
+    expiresAt: z.iso.datetime().optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -1350,7 +1348,7 @@ router.post('/payroll/findings/waive', async c => {
 router.post('/payroll/findings/reopen', async c => {
   const actor = await requirePermission(c, 'finance.payroll.finding.reopen');
   const v = zv(c, z.object({
-    id: z.string().uuid(),
+    id: z.uuid(),
     expectedVersion: z.number().int().positive(),
     idempotencyKey: z.string().trim().min(1).max(200),
     reason: z.string().trim().min(1).max(2000),
@@ -1384,7 +1382,7 @@ router.post('/payroll/findings/work-queue', async c => {
     kinds:         z.array(z.enum(['approval', 'blocker', 'warning'])).optional(),
     severities:    z.array(z.enum(['critical', 'high', 'medium', 'low'])).optional(),
     states:        z.array(z.enum(['open', 'in_progress', 'resolved', 'waived'])).optional(),
-    runIds:        z.array(z.string().uuid()).optional(),
+    runIds:        z.array(z.uuid()).optional(),
     ownerId:       z.string().max(200).optional(),
     search:        z.string().trim().max(200).optional(),
     selectedId:    z.string().max(220).optional(),
@@ -1411,7 +1409,7 @@ router.post('/payroll/findings/work-queue', async c => {
 router.post('/payroll/findings/detail', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    findingId:     z.string().uuid(),
+    findingId:     z.uuid(),
     activityCursor: z.string().max(200).optional(),
     activityLimit: z.number().int().min(1).max(100).optional(),
   }), b(c));
@@ -1431,7 +1429,7 @@ router.post('/payroll/findings/detail', async c => {
 router.post('/payroll/findings/escalate', async c => {
   const actor = await requirePermission(c, 'finance.payroll.finding.assign');
   const v = zv(c, z.object({
-    findingId:       z.string().uuid(),
+    findingId:       z.uuid(),
     expectedVersion: z.number().int().positive(),
     idempotencyKey:  z.string().trim().min(1).max(200),
     assigneeId:      z.string().min(1).max(200),
@@ -1457,7 +1455,7 @@ router.post('/payroll/findings/escalate', async c => {
 router.post('/payroll/findings/comment', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    findingId:       z.string().uuid(),
+    findingId:       z.uuid(),
     idempotencyKey:  z.string().trim().min(1).max(200),
     body:            z.string().trim().min(1).max(4000),
     expectedVersion: z.number().int().positive().optional(),
@@ -1499,7 +1497,7 @@ router.post('/payroll/runs/population-reconciliation', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const DATE = /^\d{4}-\d{2}-\d{2}$/;
   const v = zv(c, z.object({
-    payGroupId:  z.string().uuid(),
+    payGroupId:  z.uuid(),
     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),
     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),
   }).refine(d => d.periodStart <= d.periodEnd, {
@@ -1519,7 +1517,7 @@ router.post('/payroll/runs/input-readiness', async c => {
   await requirePermission(c, 'finance.payroll.view_all');
   const DATE = /^\d{4}-\d{2}-\d{2}$/;
   const v = zv(c, z.object({
-    payGroupId:  z.string().uuid(),
+    payGroupId:  z.uuid(),
     periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),
     periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),
   }).refine(d => d.periodStart <= d.periodEnd, {
@@ -1541,7 +1539,7 @@ router.post('/payroll/runs/input-readiness', async c => {
 router.post('/payroll/exports/download', async c => {
   const actor = await requirePermission(c, 'finance.payroll.export');
   const v = zv(c, z.object({
-    exportId: z.string().uuid(),
+    exportId: z.uuid(),
     idempotencyKey: z.string().trim().min(1).max(200),
   }), b(c));
   if (!v.ok) return v.response;
@@ -1596,7 +1594,7 @@ router.post('/payroll/run-views/create', async c => {
 router.post('/payroll/run-views/update', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_all');
   const v = zv(c, z.object({
-    id:      z.string().uuid(),
+    id:      z.uuid(),
     name:    z.string().trim().min(1).max(80).optional(),
     filters: z.record(z.string(), z.unknown()).optional(),
   }), b(c));
@@ -1612,7 +1610,7 @@ router.post('/payroll/run-views/update', async c => {
 // Owner, or team-manage for team views.
 router.post('/payroll/run-views/delete', async c => {
   const actor = await requirePermission(c, 'finance.payroll.view_all');
-  const v = zv(c, z.object({ id: z.string().uuid() }), b(c));
+  const v = zv(c, z.object({ id: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
     const canManageTeam = await userCan(actor, 'finance.payroll.run_views.manage_team');
@@ -1634,7 +1632,7 @@ router.post('/payroll/runs/calendar', async c => {
   const v = zv(c, z.object({
     from:        z.string().regex(DATE, 'from must be YYYY-MM-DD'),
     to:          z.string().regex(DATE, 'to must be YYYY-MM-DD'),
-    payGroupIds: z.array(z.string().uuid()).max(50).optional(),
+    payGroupIds: z.array(z.uuid()).max(50).optional(),
   }).refine(d => d.from <= d.to, { message: 'from must not be after to' }), b(c));
   if (!v.ok) return v.response;
   try {

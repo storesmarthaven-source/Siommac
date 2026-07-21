@@ -2915,9 +2915,9 @@ requestKey	variable	finance	false		netlify/functions/routes/financePayPolicies.t
 component	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	22	
 sourceRule	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	45	
 draft	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	54	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	126	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	129	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	133	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	124	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	127	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	131	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
