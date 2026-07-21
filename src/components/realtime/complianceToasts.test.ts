@@ -10,7 +10,14 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
-vi.mock('./notificationToasts', () => ({ maybeToastNotification: vi.fn() }));
+vi.mock('./notificationToasts', () => ({
+  maybeToastNotification: vi.fn(),
+  COMPLIANCE_TOAST_TYPES: new Set([
+    'iam.permission.compliance_grant_requested',
+    'communications.compliance.access_granted',
+    'communications.compliance.access_revoked',
+  ]),
+}));
 
 import { maybeToastNotification } from './notificationToasts';
 import {

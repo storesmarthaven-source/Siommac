@@ -3,6 +3,7 @@ import { QueryClientProvider } from '@tanstack/preact-query';
 import type { QueryClient } from '@tanstack/query-core';
 import { TicketCenter } from './TicketCenter';
 import { TicketDropdown } from './TicketDropdown';
+import { ErrorBoundary } from '@/components/shared/ErrorBoundary';
 
 export function mountTicketCenter(container: Element, opts: { queryClient: QueryClient }): void {
   render(h(QueryClientProvider, { client: opts.queryClient }, h(TicketCenter, null)), container);
@@ -13,5 +14,10 @@ export function unmountTicketCenter(container: Element): void {
 }
 
 export function mountTicketDropdown(container: Element, opts: { queryClient: QueryClient }): void {
-  render(h(QueryClientProvider, { client: opts.queryClient }, h(TicketDropdown, null)), container);
+  render(
+    h(QueryClientProvider, { client: opts.queryClient },
+      h(ErrorBoundary, { sectionName: 'Ticket Dropdown', children: h(TicketDropdown, null) }),
+    ),
+    container,
+  );
 }

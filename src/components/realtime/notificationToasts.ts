@@ -18,9 +18,20 @@ import { toast }                                    from "@ui/toast";
 import type { CanonicalNotification }               from "@api/communications";
 import type { NotificationPreferencesData }         from "@api/communications";
 import { openNotificationTarget }                   from "@sections/NotificationCenter/notifAction";
+import { showSection }                              from "@components/nav/navCore";
 
 // ── Re-export the canonical notification type for consumers ───────────────────
 export type { CanonicalNotification };
+
+// ── COMPLIANCE_TOAST_TYPES — canonical definition (moved here from
+// complianceToasts.ts to avoid a circular dependency: complianceToasts.ts
+// imports from notificationToasts.ts, so the reverse must not exist).
+// complianceToasts.ts re-imports this set from here.
+export const COMPLIANCE_TOAST_TYPES = new Set<string>([
+  'iam.permission.compliance_grant_requested',
+  'communications.compliance.access_granted',
+  'communications.compliance.access_revoked',
+]);
 
 // ── Session epoch — set once at page load; used for no-backfill guard ─────────
 
@@ -59,7 +70,7 @@ const BURST_WINDOW_MS = 2000;
 // ── Navigation (§0.2 + §0.3 guarded) ─────────────────────────────────────────
 
 function openTicketPanel(ticketNumber?: string | null): void {
-  window.Nav?.showSection?.("s-tickets");
+  showSection("s-tickets");
   if (ticketNumber) {
     window.dispatchEvent(new CustomEvent("siomac:openTicket", { detail: { ticketNumber } }));
   }
@@ -68,13 +79,13 @@ function openTicketPanel(ticketNumber?: string | null): void {
 function navigateToDomain(domain: string): void {
   if (domain === "messages") {
     // §0.2: correct id is 's-messages'
-    window.Nav?.showSection?.("s-messages");
+    showSection("s-messages");
   } else if (domain === "tickets") {
     // §0.2: tickets open the modal, not showSection
     openTicketPanel();
   } else {
     // §0.2: correct id is 's-notification-center' (NOT 's-notifications')
-    window.Nav?.showSection?.("s-notification-center");
+    showSection("s-notification-center");
   }
 }
 
@@ -191,6 +202,77 @@ export interface MaybeToastArgs {
    */
   coalesce?:    boolean;
 }
+
+// ── Generic notification surface ──────────────────────────────────────────────
+//
+// surfaceGenericNotificationToasts() is driven by the same realtime-signal path
+// that surfaceComplianceToasts() uses, but handles all NON-compliance types.
+// Compliance types are explicitly skipped here — complianceToasts.ts handles them
+// with a special id-based watermark + coalesce:false policy.
+
+/** Minimal notification row shape shared by NotificationRow (getMyNotifications)
+ *  and CanonicalNotification (useNotifications).  The `link` field maps to
+ *  `action_route` in the canonical form. */
+export interface NotifToastRow {
+  id:         string;
+  type:       string;
+  title:      string;
+  body:       string | null;
+  is_read:    boolean;
+  link:       string | null;
+  created_at: string | null;
+}
+
+/** Ids of notifications already surfaced as generic toasts this session —
+ *  prevents a double-toast when both a realtime signal AND a query invalidation
+ *  both cause a fetch that returns the same row. */
+const _seenGenericIds = new Set<string>();
+
+/**
+ * Surface new GENERIC (non-compliance) notifications as coalesced toasts.
+ * Compliance types are explicitly skipped — their dedicated path in
+ * complianceToasts.ts applies a stricter id-watermark and forces coalesce:false.
+ *
+ * Rows already surfaced this session (tracked by id) are silently skipped so
+ * a signal + query-invalidation arriving close together don't double-toast.
+ * The maybeToastNotification no-backfill guard still filters historical rows.
+ */
+export function surfaceGenericNotificationToasts(rows: readonly NotifToastRow[]): void {
+  for (const n of rows) {
+    // Compliance notifications are handled exclusively by surfaceComplianceToasts.
+    if (COMPLIANCE_TOAST_TYPES.has(n.type)) continue;
+    // Already surfaced this session — skip without re-toasting.
+    if (_seenGenericIds.has(n.id)) continue;
+    _seenGenericIds.add(n.id);
+
+    const notification: CanonicalNotification = {
+      id:              n.id,
+      type:            n.type,
+      title:           n.title,
+      body:            n.body ?? null,
+      created_at:      n.created_at ?? new Date().toISOString(),
+      is_read:         n.is_read,
+      action_route:    n.link ?? null,
+      severity:        'info',
+      module:          null,
+      source_type:     null,
+      source_id:       null,
+      metadata:        null,
+      action_required: false,
+      action_status:   'none',
+      due_at:          null,
+    };
+    // Standard coalesced path — burst window and no-backfill guard apply.
+    maybeToastNotification({ notification, domain: 'notifications', coalesce: true });
+  }
+}
+
+/** Test-only: clear the generic seen-set. */
+export function __resetGenericToastState(): void {
+  _seenGenericIds.clear();
+}
+
+// ── ─────────────────────────────────────────────────────────────────────────────
 
 export function maybeToastNotification({ notification, domain, prefs, coalesce = true }: MaybeToastArgs): void {
   // Direct path — compliance/security notifications fire the rich action-toast

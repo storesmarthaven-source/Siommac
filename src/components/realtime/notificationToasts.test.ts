@@ -21,6 +21,10 @@ import {
   isMutedByPreferences,
   maybeToastNotification,
   resetToastSessionClock,
+  surfaceGenericNotificationToasts,
+  __resetGenericToastState,
+  COMPLIANCE_TOAST_TYPES,
+  type NotifToastRow,
 } from './notificationToasts';
 
 function notification(
@@ -160,5 +164,87 @@ describe('notification toast bridge', () => {
 
     expect(toastMocks.action).not.toHaveBeenCalled();
     expect(toastMocks.rich).not.toHaveBeenCalled();
+  });
+});
+
+// ── surfaceGenericNotificationToasts + COMPLIANCE_TOAST_TYPES tests ───────────
+
+function notifRow(overrides: Partial<NotifToastRow> = {}): NotifToastRow {
+  return {
+    id:         crypto.randomUUID(),
+    type:       'ticket.created',
+    title:      'New ticket',
+    body:       null,
+    is_read:    false,
+    link:       null,
+    created_at: new Date(Date.now() + 1).toISOString(),
+    ...overrides,
+  };
+}
+
+describe('surfaceGenericNotificationToasts', () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    vi.setSystemTime(new Date('2026-07-20T12:00:00.000Z'));
+    toastMocks.mockClear();
+    toastMocks.action.mockClear();
+    toastMocks.rich.mockClear();
+    resetToastSessionClock();
+    __resetGenericToastState();
+  });
+
+  afterEach(() => {
+    vi.runOnlyPendingTimers();
+    vi.useRealTimers();
+  });
+
+  it('COMPLIANCE_TOAST_TYPES contains the three expected compliance types', () => {
+    expect(COMPLIANCE_TOAST_TYPES.has('communications.compliance.access_granted')).toBe(true);
+    expect(COMPLIANCE_TOAST_TYPES.has('communications.compliance.access_revoked')).toBe(true);
+    expect(COMPLIANCE_TOAST_TYPES.has('iam.permission.compliance_grant_requested')).toBe(true);
+    expect(COMPLIANCE_TOAST_TYPES.size).toBe(3);
+  });
+
+  it('does NOT toast compliance notification types (skips them)', () => {
+    surfaceGenericNotificationToasts([
+      notifRow({ type: 'communications.compliance.access_granted' }),
+      notifRow({ type: 'communications.compliance.access_revoked' }),
+      notifRow({ type: 'iam.permission.compliance_grant_requested' }),
+    ]);
+    vi.advanceTimersByTime(2_000);
+    expect(toastMocks).not.toHaveBeenCalled();
+    expect(toastMocks.action).not.toHaveBeenCalled();
+    expect(toastMocks.rich).not.toHaveBeenCalled();
+  });
+
+  it('toasts generic notification types', () => {
+    surfaceGenericNotificationToasts([notifRow({ type: 'ticket.created', title: 'A new ticket' })]);
+    vi.advanceTimersByTime(2_000);
+    // Burst window fired — one notification → individual toast, not burst.
+    expect(toastMocks).toHaveBeenCalledWith('A new ticket', expect.any(Object));
+  });
+
+  it('coalesces generic burst into one rich toast', () => {
+    surfaceGenericNotificationToasts([
+      notifRow({ type: 'ticket.created' }),
+      notifRow({ type: 'ticket.created' }),
+    ]);
+    vi.advanceTimersByTime(2_000);
+    // Two items in the same domain → burst toast.
+    expect(toastMocks.rich).toHaveBeenCalledWith(expect.objectContaining({
+      title: '2 new notifications',
+    }));
+  });
+
+  it('does not double-toast the same notification id (seen-set dedupe)', () => {
+    const row = notifRow({ type: 'ticket.updated' });
+    surfaceGenericNotificationToasts([row]);
+    surfaceGenericNotificationToasts([row]);  // same row, second fetch
+    vi.advanceTimersByTime(2_000);
+    // Only one toast, not two.
+    const totalCalls = toastMocks.mock.calls.length
+      + toastMocks.action.mock.calls.length
+      + toastMocks.rich.mock.calls.length;
+    expect(totalCalls).toBe(1);
   });
 });

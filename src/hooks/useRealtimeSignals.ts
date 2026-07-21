@@ -54,16 +54,26 @@ async function seedComplianceWatermark(): Promise<boolean> {
 }
 
 /**
- * Drive the compliance-access rich toast off the WORKING communication_signals
+ * Drive notification toasts off the WORKING communication_signals
  * (domain='notifications') signal — the `notifications` table is NOT in the realtime
- * publication, so its own subscription never fires. Fetch recent notifications and
- * hand them to surfaceComplianceToasts, which skips the mount watermark + already-
- * surfaced ids and fires each new compliance one DIRECTLY (no burst coalescing).
+ * publication, so its own subscription never fires.  Fetch recent notifications and
+ * hand them to BOTH toast routers:
+ *
+ *   surfaceComplianceToasts    — compliance/security types, coalesce:false, id-watermark
+ *   surfaceGenericNotificationToasts — all other types, standard burst coalescing
+ *
+ * Having both in the same fetch ensures a single round-trip surfaces everything.
  */
-async function surfaceComplianceFromNotifications(): Promise<void> {
-  const [{ getMyNotifications }, { surfaceComplianceToasts }, { useSessionStore }] = await Promise.all([
+async function surfaceNotificationsFromSignal(): Promise<void> {
+  const [
+    { getMyNotifications },
+    { surfaceComplianceToasts },
+    { surfaceGenericNotificationToasts },
+    { useSessionStore },
+  ] = await Promise.all([
     import('@api/notifications'),
     import('@components/realtime/complianceToasts'),
+    import('@components/realtime/notificationToasts'),
     import('@store/session'),
   ]);
   const userId = useSessionStore.getState().userId;
@@ -71,6 +81,7 @@ async function surfaceComplianceFromNotifications(): Promise<void> {
   let rows;
   try { rows = await getMyNotifications(userId); } catch { return; }
   surfaceComplianceToasts(rows);
+  surfaceGenericNotificationToasts(rows);
 }
 
 export function useRealtimeSignals(channelKey: string | null, realtimeToken: string | null = null): void {
@@ -130,7 +141,7 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
       seeding = false;
       if (disposed || !ok) return;   // seed failed → retry on the next signal
       ready = true;
-      if (pending) { pending = false; void surfaceComplianceFromNotifications(); }
+      if (pending) { pending = false; void surfaceNotificationsFromSignal(); }
     };
 
     // Tear down any existing subscription
@@ -175,7 +186,7 @@ export function useRealtimeSignals(channelKey: string | null, realtimeToken: str
             // signal is where the compliance toast fires. Only surface once the
             // watermark is seeded; otherwise queue (and kick a seed) so a historical
             // row can never toast during initialization.
-            if (ready) void surfaceComplianceFromNotifications();
+            if (ready) void surfaceNotificationsFromSignal();
             else { pending = true; void attemptSeedAndDrain(); }
           } else if (domain === 'messages') {
             void qc.invalidateQueries({ queryKey: messageKeys.all });

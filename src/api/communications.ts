@@ -224,9 +224,10 @@ export interface NotificationListArgs extends Record<string, unknown> {
   search?:             string | null;
 }
 
-export function useNotifications(args: NotificationListArgs = {}) {
+export function useNotifications(args: NotificationListArgs = {}, opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: notificationKeys.mine(args),
+    enabled:  opts?.enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: CanonicalNotification[]; nextCursor: string | null }>(
         'communications/notifications/list',
@@ -475,9 +476,10 @@ export interface ThreadFilters extends Record<string, unknown> {
 }
 
 /** Full thread list with richer typing — replaces the legacy useMessageThreads. */
-export function useMessageThreadsFull(filters: ThreadFilters = {}) {
+export function useMessageThreadsFull(filters: ThreadFilters = {}, opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: messageKeys.threads(filters),
+    enabled:  opts?.enabled,
     queryFn:  async ({ signal }: QueryFunctionContext) => {
       const res = await apiPost<{ success: boolean; data: MessageThreadListItem[]; nextCursor: string | null }>(
         'communications/messages/threads',
@@ -803,9 +805,10 @@ export interface TicketListPage {
   nextCursor: string | null;
 }
 
-export function useMyTickets(args: TicketListArgs = {}) {
+export function useMyTickets(args: TicketListArgs = {}, opts?: { enabled?: boolean }) {
   return useQuery({
     queryKey: ticketKeys.list(args),
+    enabled:  opts?.enabled,
     queryFn:  async ({ signal }: QueryFunctionContext): Promise<TicketListPage> => {
       const res = await apiPost<{ success: boolean; data: CanonicalTicket[]; nextCursor?: string | null; total?: number }>(
         'communications/tickets/list',

@@ -9,6 +9,7 @@ import { QueryClientProvider }  from '@tanstack/preact-query';
 import type { QueryClient }     from '@tanstack/query-core';
 import { NotificationCenter }   from './NotificationCenter';
 import { NotificationDropdown } from './NotificationDropdown';
+import { ErrorBoundary }        from '@/components/shared/ErrorBoundary';
 
 export function mountNotificationCenterSection(
   container: Element,
@@ -33,7 +34,7 @@ export function mountNotificationDropdown(
 ): void {
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(NotificationDropdown, null),
+      h(ErrorBoundary, { sectionName: 'Notification Dropdown', children: h(NotificationDropdown, null) }),
     ),
     container,
   );

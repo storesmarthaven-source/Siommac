@@ -9,11 +9,24 @@
  * (who have the nav item) ever issue the request. Reuses the .sb-nav-badge renderer.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
 vi.mock('@lib/superadminApi', () => ({ getApprovalCountsApi: vi.fn() }));
+vi.mock('@lib/api', () => ({
+  apiPost:                    vi.fn(),
+  apiPatch:                   vi.fn(),
+  apiGet:                     vi.fn(),
+  apiDelete:                  vi.fn(),
+  authPost:                   vi.fn(),
+  apiFetch:                   vi.fn(),
+  registerAuthExpiredHandler: vi.fn(),
+}));
+
 import { getApprovalCountsApi } from '@lib/superadminApi';
-import { syncApprovalNavBadge } from './badgeSync';
+import { apiPost } from '@lib/api';
+import { syncApprovalNavBadge, syncHeaderBadges, getLastGoodBadgeCounts, __resetBadgeSyncState } from './badgeSync';
+
+const mockApiPost = vi.mocked(apiPost);
 
 const mockCounts = vi.mocked(getApprovalCountsApi);
 
@@ -24,6 +37,74 @@ function buildSidebar(withApprovals: boolean): void {
 }
 const badge  = () => document.querySelector('#sidebarMenu button[data-section="s-ac-approvals"] .sb-nav-badge');
 const button = () => document.querySelector('#sidebarMenu button[data-section="s-ac-approvals"]');
+
+// ── syncHeaderBadges tests ────────────────────────────────────────────────────
+
+const summary = (overrides = {}) => ({
+  notificationsUnread: 3,
+  messagesUnread: 2,
+  ticketsUnread: 1,
+  notificationsTotal: 5,
+  notificationsActionRequired: 1,
+  notificationsCritical: 0,
+  notificationsArchived: 0,
+  ticketsOpen: 4,
+  workflowTasks: 0,
+  handoffFailures: 0,
+  realtimeChannelKey: null,
+  realtimeToken: null,
+  realtimeTokenExpiresAt: null,
+  ...overrides,
+});
+
+function buildBadgeDom(): void {
+  document.body.innerHTML = `
+    <span data-pill-badge="notif"></span>
+    <span data-pill-badge="msg"></span>
+    <span data-pill-badge="ticket"></span>
+  `;
+}
+
+describe('syncHeaderBadges', () => {
+  beforeEach(() => {
+    mockApiPost.mockReset();
+    __resetBadgeSyncState();
+    buildBadgeDom();
+  });
+
+  afterEach(() => {
+    document.body.innerHTML = '';
+  });
+
+  it('updates all three badges on success', async () => {
+    mockApiPost.mockResolvedValue({ success: true, data: summary() } as never);
+    await syncHeaderBadges();
+    expect(getLastGoodBadgeCounts()).toEqual({
+      notificationsUnread: 3,
+      messagesUnread: 2,
+      ticketsUnread: 1,
+    });
+  });
+
+  it('does not clear badges when the summary request fails (preserves last known counts)', async () => {
+    // First a good response to seed the last known counts.
+    mockApiPost.mockResolvedValueOnce({ success: true, data: summary({ notificationsUnread: 5 }) } as never);
+    await syncHeaderBadges();
+    expect(getLastGoodBadgeCounts()?.notificationsUnread).toBe(5);
+
+    // Then a failure.
+    mockApiPost.mockResolvedValueOnce({ success: false });
+    await syncHeaderBadges();
+    // Last good counts MUST be unchanged.
+    expect(getLastGoodBadgeCounts()?.notificationsUnread).toBe(5);
+  });
+
+  it('getLastGoodBadgeCounts is null before the first success', () => {
+    expect(getLastGoodBadgeCounts()).toBeNull();
+  });
+});
+
+// ── syncApprovalNavBadge tests ────────────────────────────────────────────────
 
 describe('syncApprovalNavBadge — unseen-driven badge', () => {
   beforeEach(() => { mockCounts.mockReset(); });

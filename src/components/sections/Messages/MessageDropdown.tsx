@@ -16,7 +16,8 @@ import {
   useMessageThreadsFull, useCommsSummary, useMarkThreadRead,
   type MessageThreadListItem,
 } from '@api/communications';
-import { showSection, setHdrBadge } from '@components/nav/navCore';
+import { showSection } from '@components/nav/navCore';
+import { useHeaderModalOpen } from '@/hooks/useHeaderModalOpen';
 import { MessageDropdownItem } from './MessageDropdownItem';
 import { ComposeThreadDialog } from './ComposeThreadDialog';
 
@@ -42,16 +43,15 @@ export function MessageDropdown(): VNode {
   const menuRef    = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
-  // Reset overflow menu when modal is closed
+  // Gate list fetches on modal visibility — avoids background fetches for a
+  // hidden dropdown. MutationObserver-based; NavController is the sole writer
+  // of the 'open' class on this element.
+  const isOpen = useHeaderModalOpen('hdrMsgModal');
+
+  // Reset overflow menu when modal is closed.
   useEffect(() => {
-    const modal = document.getElementById('hdrMsgModal');
-    if (!modal) return;
-    const obs = new MutationObserver(() => {
-      if (!modal.classList.contains('open')) setMenuOpen(false);
-    });
-    obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
-    return () => obs.disconnect();
-  }, []);
+    if (!isOpen) setMenuOpen(false);
+  }, [isOpen]);
 
   // Close overflow menu on outside click
   useEffect(() => {
@@ -68,15 +68,14 @@ export function MessageDropdown(): VNode {
   const { data: summary } = useCommsSummary();
   const unread = summary?.messagesUnread ?? 0;
 
-  // Keep header badge in sync
-  useEffect(() => {
-    document.querySelectorAll('[data-pill-badge="msg"]').forEach(el => setHdrBadge(el, unread));
-  }, [unread]);
-
   // One canonical list powers both tabs. The previous unread tab changed the
   // query key to `inbox`, causing a second cold request even though the all
   // response already carries each thread's authoritative unreadCount.
-  const { data, isLoading, isFetching, isError, refetch } = useMessageThreadsFull({ tab: 'all', limit: 30 });
+  // Gate on modal open state — no background fetches while the dropdown is hidden.
+  const { data, isLoading, isFetching, isError, refetch } = useMessageThreadsFull(
+    { tab: 'all', limit: 30 },
+    { enabled: isOpen },
+  );
 
   // Client-side filter for unread tab
   const rows = (data ?? []).filter(t => {

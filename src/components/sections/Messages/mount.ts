@@ -12,6 +12,7 @@ import type { QueryClient }    from '@tanstack/query-core';
 import { StepUpProvider }      from '@/hooks/useStepUp';
 import { MessengerWorkspace }  from './messenger/MessengerWorkspace';
 import { MessageDropdown }     from './MessageDropdown';
+import { ErrorBoundary }       from '@/components/shared/ErrorBoundary';
 
 export function mountMessageCenterSection(
   container: Element,
@@ -39,7 +40,7 @@ export function mountMessageDropdown(
 ): void {
   render(
     h(QueryClientProvider, { client: opts.queryClient },
-      h(MessageDropdown, null),
+      h(ErrorBoundary, { sectionName: 'Message Dropdown', children: h(MessageDropdown, null) }),
     ),
     container,
   );

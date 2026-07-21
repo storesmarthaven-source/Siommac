@@ -16,6 +16,21 @@ import type { CommsSummary }              from '@api/communications';
 
 const APPROVALS_SECTION_ID = 's-ac-approvals';
 
+/** Snapshot of the most recently known-good badge counts from communications/summary. */
+type BadgeCounts = Pick<CommsSummary, 'notificationsUnread' | 'messagesUnread' | 'ticketsUnread'>;
+let _lastGoodCounts: BadgeCounts | null = null;
+/** Throttle repeated failure log lines: at most one warning per 30 s. */
+let _lastFailureLogAt = 0;
+
+/** For tests: reset module-level state. */
+export function __resetBadgeSyncState(): void {
+  _lastGoodCounts = null;
+  _lastFailureLogAt = 0;
+}
+
+/** For tests: read the last successfully fetched badge counts. */
+export function getLastGoodBadgeCounts(): BadgeCounts | null { return _lastGoodCounts; }
+
 let _timer: ReturnType<typeof setTimeout> | null = null;
 
 /**
@@ -54,12 +69,26 @@ export async function doHdrBadgeSync(): Promise<void> {
   await Promise.allSettled([syncHeaderBadges(), syncApprovalNavBadge()]);
 }
 
-async function syncHeaderBadges(): Promise<void> {
+export async function syncHeaderBadges(): Promise<void> {
   const res = await apiPost<{ success: boolean; data: CommsSummary }>(
     'communications/summary', { args: {} },
   );
-  if (!res.success) return;
+  if (!res.success) {
+    // Preserve last known counts — do NOT zero the badges on a transient failure.
+    // The DOM stays unchanged; badgeSync will retry on the next scheduled call.
+    const now = Date.now();
+    if (now - _lastFailureLogAt > 30_000) {
+      _lastFailureLogAt = now;
+      console.warn('[badgeSync] communications/summary failed; retaining last known badge counts');
+    }
+    return;
+  }
   const c = res.data;
+  _lastGoodCounts = {
+    notificationsUnread: c.notificationsUnread,
+    messagesUnread:      c.messagesUnread,
+    ticketsUnread:       c.ticketsUnread,
+  };
 
   // Profile-pill badges — id-free, matched by data-pill-badge on every pill.
   document.querySelectorAll('[data-pill-badge="notif"]').forEach(el =>

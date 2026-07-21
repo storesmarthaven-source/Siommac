@@ -18,8 +18,11 @@
  * rows + one new row toasts only the new one.
  */
 
-import { maybeToastNotification } from './notificationToasts';
+import { maybeToastNotification, COMPLIANCE_TOAST_TYPES } from './notificationToasts';
 import type { CanonicalNotification } from '@api/communications';
+
+// Re-export so callers that imported COMPLIANCE_TOAST_TYPES from here don't break.
+export { COMPLIANCE_TOAST_TYPES };
 
 /** The minimal notification shape the compliance-toast path consumes. */
 export interface ComplianceNotifRow {
@@ -31,13 +34,6 @@ export interface ComplianceNotifRow {
   link:       string | null;
   created_at: string | null;
 }
-
-/** Compliance access notification types that warrant a live rich toast. */
-export const COMPLIANCE_TOAST_TYPES = new Set<string>([
-  'iam.permission.compliance_grant_requested',
-  'communications.compliance.access_granted',
-  'communications.compliance.access_revoked',
-]);
 
 // Ids present at mount (the watermark) OR already surfaced this session — never
 // re-toast these. Keyed on the seeded user so a re-login clears + re-seeds.

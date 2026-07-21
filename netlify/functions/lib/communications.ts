@@ -278,7 +278,7 @@ export async function resolveRecordThread(input: ResolveRecordThreadInput): Prom
       await sb.from('message_participants').update({ removed_at: null }).eq('id', part.id);
     }
 
-    void emitSignal([input.actorUserId], 'messages');
+    try { await emitSignal([input.actorUserId], 'messages'); } catch (e) { console.error('[communications] resolveRecordThread signal failed:', e); }
     return { ok: true, threadId, created };
   } catch (e) {
     console.error('[communications] resolveRecordThread failed:', e);
@@ -404,11 +404,24 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     _ensureRealtimeChannel(userId),
   ]);
 
+  // Fail-closed for primary badge domains — throw rather than silently returning 0.
+  // syncHeaderBadges() already returns early on non-success, so on failure the browser
+  // retains the last known badge counts instead of showing incorrect zeroes.
+  if (activeNotifsRes.status === 'rejected') {
+    throw new Error(`[communications] notification counts unavailable: ${String(activeNotifsRes.reason)}`);
+  }
+  if (msgRes.status === 'rejected') {
+    throw new Error(`[communications] message unread count unavailable: ${String(msgRes.reason)}`);
+  }
+  if (ticketRes.status === 'rejected') {
+    throw new Error(`[communications] ticket summary unavailable: ${String(ticketRes.reason)}`);
+  }
+
   // Derive the four active-notification counts from the single fetch.
+  // After the fail-closed throws above, activeNotifsRes is narrowed to PromiseFulfilledResult.
   interface NotifFlags { is_read: boolean; action_required: boolean; action_status: string; severity: string }
-  const activeNotifs: NotifFlags[] = activeNotifsRes.status === 'fulfilled'
-    ? ((activeNotifsRes.value as { data?: NotifFlags[] | null }).data ?? [])
-    : [];
+  const activeNotifs: NotifFlags[] =
+    (activeNotifsRes.value as { data?: NotifFlags[] | null }).data ?? [];
 
   return {
     notificationsUnread:         activeNotifs.filter(n => !n.is_read).length,
@@ -417,8 +430,8 @@ export async function getCommsSummary(userId: string, role: string): Promise<Com
     notificationsCritical:       activeNotifs.filter(n => n.severity === 'critical' && !n.is_read).length,
     notificationsArchived:       _countFromSettled(notifArchRes),
     messagesUnread:      _countFromSettled(msgRes),
-    ticketsOpen:         ticketRes.status === 'fulfilled' ? ticketRes.value.open : 0,
-    ticketsUnread:       ticketRes.status === 'fulfilled' ? ticketRes.value.unread : 0,
+    ticketsOpen:         ticketRes.value.open,
+    ticketsUnread:       ticketRes.value.unread,
     workflowTasks:       workflowRes.status === 'fulfilled' ? (workflowRes.value) : 0,
     handoffFailures:     _countFromSettled(handoffRes),
     realtimeChannelKey:  channelRes.status === 'fulfilled' ? (channelRes.value) : null,
@@ -526,13 +539,17 @@ async function _countUnreadThreads(userId: string): Promise<{ count: number | nu
   const readAtMs  = new Map(parts.map(p => [p.thread_id, p.last_read_at ? tsMs(p.last_read_at) : epochMs]));
   const threadIds = parts.map(p => p.thread_id);
 
-  const { data: posts } = await sb
+  const { data: posts, error: postsError } = await sb
     .from('message_posts')
     .select('thread_id, created_at')
     .in('thread_id', threadIds)
     .neq('author_user_id', userId)
     .eq('is_internal', false)   // another author's internal note never marks a thread unread
-    .is('deleted_at', null) as { data: { thread_id: string; created_at: string }[] | null };
+    .is('deleted_at', null) as {
+      data: { thread_id: string; created_at: string }[] | null;
+      error: { message: string } | null;
+    };
+  if (postsError) throw new Error(`[communications] _countUnreadThreads posts query failed: ${postsError.message}`);
 
   const unreadThreads = new Set<string>();
   for (const p of posts ?? []) {
@@ -602,40 +619,44 @@ export async function createMessageThread(input: CreateThreadInput): Promise<Cre
         .maybeSingle<{ full_name: string | null; email: string }>();
       const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
-      void emitSignal(others, 'messages');
+      try { await emitSignal(others, 'messages'); } catch (e) { console.error('[communications] createMessageThread signal failed:', e); }
       if (result.created) {
-        void deliverEventNotifications({
-          eventType:          'communications.thread.created',
-          sourceModule:       'communications',
-          sourceEntityType:   'message_thread',
-          sourceEntityId:     result.threadId,
-          actorUserId:        input.createdBy,
-          severity:           'info',
-          explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
-          notification: {
-            title:       'New conversation',
-            body:        input.subject
-              ? `${actorName} started a conversation: ${input.subject}`
-              : `${actorName} started a conversation`,
-            actionRoute: 's-messages',
-          },
-        }, result.eventId);
+        try {
+          await deliverEventNotifications({
+            eventType:          'communications.thread.created',
+            sourceModule:       'communications',
+            sourceEntityType:   'message_thread',
+            sourceEntityId:     result.threadId,
+            actorUserId:        input.createdBy,
+            severity:           'info',
+            explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+            notification: {
+              title:       'New conversation',
+              body:        input.subject
+                ? `${actorName} started a conversation: ${input.subject}`
+                : `${actorName} started a conversation`,
+              actionRoute: 's-messages',
+            },
+          }, result.eventId);
+        } catch (e) { console.error('[communications] createMessageThread notification delivery failed:', e); }
       } else {
-        void deliverEventNotifications({
-          eventType:          'communications.message.received',
-          sourceModule:       'communications',
-          sourceEntityType:   'message_thread',
-          sourceEntityId:     result.threadId,
-          actorUserId:        input.createdBy,
-          severity:           'info',
-          dedupeKey:          `msg:${result.threadId}:${result.postId}`,
-          explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
-          notification: {
-            title:       'New message',
-            body:        `${actorName} sent a message…`,
-            actionRoute: 's-messages',
-          },
-        }, result.eventId);
+        try {
+          await deliverEventNotifications({
+            eventType:          'communications.message.received',
+            sourceModule:       'communications',
+            sourceEntityType:   'message_thread',
+            sourceEntityId:     result.threadId,
+            actorUserId:        input.createdBy,
+            severity:           'info',
+            dedupeKey:          `msg:${result.threadId}:${result.postId}`,
+            explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+            notification: {
+              title:       'New message',
+              body:        `${actorName} sent a message…`,
+              actionRoute: 's-messages',
+            },
+          }, result.eventId);
+        } catch (e) { console.error('[communications] createMessageThread notification delivery failed:', e); }
       }
     }
 
@@ -695,7 +716,7 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
 
     // Post-commit: signal ALL participants + deliver notifications to others.
     const others = result.activeParticipantIds.filter(uid => uid !== input.currentUserId);
-    void emitSignal(result.activeParticipantIds, 'messages');
+    try { await emitSignal(result.activeParticipantIds, 'messages'); } catch (e) { console.error('[communications] postMessage signal failed:', e); }
 
     if (others.length > 0) {
       const { data: actor } = await sb
@@ -706,21 +727,23 @@ export async function postMessage(input: PostMessageInput): Promise<PostMessageR
       const actorName = actor?.full_name ?? actor?.email ?? 'Someone';
 
       // Delivery-only (the RPC already wrote the app_events row in-txn).
-      void deliverEventNotifications({
-        eventType:          'communications.message.received',
-        sourceModule:       'communications',
-        sourceEntityType:   'message_thread',
-        sourceEntityId:     input.threadId,
-        actorUserId:        input.currentUserId,
-        severity:           'info',
-        dedupeKey:          `msg:${input.threadId}:${result.postId}`,
-        explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
-        notification: {
-          title:       'New message',
-          body:        `${actorName} sent a message…`,
-          actionRoute: 's-messages',
-        },
-      }, result.eventId);
+      try {
+        await deliverEventNotifications({
+          eventType:          'communications.message.received',
+          sourceModule:       'communications',
+          sourceEntityType:   'message_thread',
+          sourceEntityId:     input.threadId,
+          actorUserId:        input.currentUserId,
+          severity:           'info',
+          dedupeKey:          `msg:${input.threadId}:${result.postId}`,
+          explicitRecipients: others.map(uid => ({ userId: uid, reason: 'explicit' as const })),
+          notification: {
+            title:       'New message',
+            body:        `${actorName} sent a message…`,
+            actionRoute: 's-messages',
+          },
+        }, result.eventId);
+      } catch (e) { console.error('[communications] postMessage notification delivery failed:', e); }
     }
 
     return { ok: true, postId: result.postId, threadId: input.threadId, createdAt: new Date().toISOString() };
@@ -806,7 +829,7 @@ export async function addInternalNote(input: {
     };
 
     // Author-only refetch — NEVER signal other participants.
-    void emitSignal([input.actorId], 'messages');
+    try { await emitSignal([input.actorId], 'messages'); } catch (e) { console.error('[communications] addInternalNote signal failed:', e); }
     return { ok: true, post, duplicate: r.duplicate };
   } catch (e: unknown) {
     const err = e as { status?: number; message?: string };

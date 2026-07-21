@@ -14,7 +14,8 @@ import {
   useMarkAllNotificationsRead, useArchiveNotification,
   type CanonicalNotification, type NotificationListArgs,
 } from '@api/communications';
-import { showSection, setHdrBadge } from '@components/nav/navCore';
+import { showSection } from '@components/nav/navCore';
+import { useHeaderModalOpen } from '@/hooks/useHeaderModalOpen';
 import { NotificationDropdownItem } from './NotificationDropdownItem';
 import { openNotificationTarget, openTicketNotification } from './notifAction';
 
@@ -41,16 +42,13 @@ export function NotificationDropdown(): VNode {
   const menuRef = useRef<HTMLDivElement>(null);
   const menuBtnRef = useRef<HTMLButtonElement>(null);
 
+  // Gate list fetches on modal visibility — no background fetches while hidden.
+  const isOpen = useHeaderModalOpen('hdrNotifModal');
+
   // Reset the overflow menu whenever the bell dialog is closed.
   useEffect(() => {
-    const modal = document.getElementById('hdrNotifModal');
-    if (!modal) return;
-    const obs = new MutationObserver(() => {
-      if (!modal.classList.contains('open')) setMenuOpen(false);
-    });
-    obs.observe(modal, { attributes: true, attributeFilter: ['class'] });
-    return () => obs.disconnect();
-  }, []);
+    if (!isOpen) setMenuOpen(false);
+  }, [isOpen]);
 
   // Close the overflow menu on an outside click (without blocking the X button).
   useEffect(() => {
@@ -67,19 +65,13 @@ export function NotificationDropdown(): VNode {
   const { data: summary } = useCommsSummary();
   const unread = summary?.notificationsUnread ?? 0;
 
-  // Drive the header bell badge straight from the summary the dropdown already
-  // loads — guarantees the count shows even if the imperative badgeSync poll
-  // hasn't run yet. (Always mounted, so this keeps the badge live app-wide.)
-  useEffect(() => {
-    document.querySelectorAll('[data-pill-badge="notif"]').forEach(el => setHdrBadge(el, unread));
-  }, [unread]);
-
   const args: NotificationListArgs = {
     limit: 30,
     unreadOnly:         tab === 'unread',
     actionRequiredOnly: tab === 'action',
   };
-  const { data, isLoading, refetch } = useNotifications(args);
+  // Gate on modal open state — no background fetches while the dropdown is hidden.
+  const { data, isLoading, refetch } = useNotifications(args, { enabled: isOpen });
   // Belt-and-suspenders: also filter client-side so the tabs are correct even if
   // an older deployed backend ignores the unreadOnly / actionRequiredOnly args.
   const rows = (data ?? []).filter(n => {

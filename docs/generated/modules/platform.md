@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `3417e14fd3eaf7b67790cf26`
+Source fingerprint: `b4fab664f8c20ece5909ae81`
 
-Files: 289 | Symbols: 2629 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 292 | Symbols: 2651 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -87,7 +87,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/calendar/task/create` | `apiPost` | `useCreateTask` | `src/api/calendar.ts:89` |
 | `/api/calendar/task/status` | `apiPost` | `useTaskStatus` | `src/api/calendar.ts:126` |
 | `/api/calendar/update` | `apiPost` | `useUpdateEntry` | `src/api/calendar.ts:113` |
-| `/api/communications/summary` | `apiPost` | `res` | `src/components/nav/badgeSync.ts:58` |
+| `/api/communications/summary` | `apiPost` | `res` | `src/components/nav/badgeSync.ts:73` |
 | `/api/deleteProjectSite` | `apiPost` | `res` | `src/api/sites.ts:152` |
 | `/api/deleteProjectSite` | `apiPost` | `deleteProjectSiteApi` | `src/components/sections/ProjectSites/api.ts:115` |
 | `/api/getAdminStats` | `apiPost` | `res` | `src/components/sections/AdminDashboard/api.ts:22` |
@@ -190,10 +190,11 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `Modal` | function / component | `src/components/shared/Modal.tsx:110` | `-` |
 | `Spinner` | function / component | `src/components/shared/Spinner.tsx:30` | `-` |
 | `UserPill` | function / component | `src/components/shared/UserPill.tsx:50` | `-` |
+| `useHeaderModalOpen` | function / hook | `src/hooks/useHeaderModalOpen.ts:21` | `-` |
 | `StepUpProvider` | function / component | `src/hooks/useStepUp.tsx:47` | `-` |
 | `useStepUp` | function / hook | `src/hooks/useStepUp.tsx:308` | `-` |
 | `useRecordQuery` | function / hook | `src/lib/recordQuery.ts:48` | `-` |
-| `AppShell` | function / component | `src/shell/AppShell.tsx:153` | `-` |
+| `AppShell` | function / component | `src/shell/AppShell.tsx:130` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
 | `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:571` | `-` |
@@ -280,8 +281,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `StatsCard` | function / component, ui-tile | `src/ui/components/StatsCard.tsx:70` | `-` |
 | `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:24` | `-` |
 | `Stepper` | function / component | `src/ui/components/Stepper.tsx:37` | `-` |
-| `SystemActionsPanel` | function / component | `src/ui/components/SystemActionsPanel.tsx:27` | `-` |
-| ... | 43 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 44 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

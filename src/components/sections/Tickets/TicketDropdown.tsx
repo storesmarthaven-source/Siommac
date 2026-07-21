@@ -1,7 +1,8 @@
 import { type VNode } from 'preact';
-import { useEffect, useState } from 'preact/hooks';
+import { useState } from 'preact/hooks';
 import { useCommsSummary, useMarkTicketRead, useMyTickets, type CanonicalTicket } from '@api/communications';
-import { showSection, setHdrBadge } from '@components/nav/navCore';
+import { showSection } from '@components/nav/navCore';
+import { useHeaderModalOpen } from '@/hooks/useHeaderModalOpen';
 import { useCan } from '@lib/permissions';
 import { TicketCreateDialog } from './TicketCreateDialog';
 
@@ -37,6 +38,10 @@ function TicketItem({ ticket, onOpen }: { ticket: CanonicalTicket; onOpen: (tick
 export function TicketDropdown(): VNode {
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [createOpen, setCreateOpen] = useState(false);
+
+  // Gate list fetches on modal visibility — no background fetches while hidden.
+  const isOpen = useHeaderModalOpen('hdrTicketModal');
+
   // useCan is a hook — call each unconditionally (a `||` chain would make the later
   // calls conditional and violate rules-of-hooks), then combine the booleans.
   const canCreateSelf = useCan('tickets.create_self');
@@ -47,14 +52,11 @@ export function TicketDropdown(): VNode {
   // Load every ticket the server authorizes the actor to see (participant OR
   // queue-handler), not just requester-owned tickets — otherwise handlers see an
   // unread count with nothing in the Unread tab. The backend gate stays authoritative.
-  const ticketsQ = useMyTickets({ scope: 'all', limit: 30 });
+  // Gate on modal open state — no background fetches while the dropdown is hidden.
+  const ticketsQ = useMyTickets({ scope: 'all', limit: 30 }, { enabled: isOpen });
   const summaryQ = useCommsSummary();
   const markRead = useMarkTicketRead();
   const unread = summaryQ.data?.ticketsUnread ?? 0;
-
-  useEffect(() => {
-    document.querySelectorAll('[data-pill-badge="ticket"]').forEach(element => setHdrBadge(element, summaryQ.data?.ticketsUnread ?? 0));
-  }, [summaryQ.data?.ticketsUnread]);
 
   const rows = (ticketsQ.data?.items ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, 10);
 
