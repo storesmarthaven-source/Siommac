@@ -930,9 +930,40 @@ export function useMarkTicketRead() {
         if (!res.success) throw new Error('Failed to mark ticket as read');
         return res.data;
       }),
-    onSuccess: (_result, args) => {
-      void qc.invalidateQueries({ queryKey: ticketKeys.detail(args.ticketId) });
+    // Optimistic: clear the ticket's unread indicator in every list cache and the
+    // detail, and drop the top-bar unread count by one — so the row and the badge
+    // update instantly. Snapshots are returned for rollback on failure.
+    onMutate: async (args: { ticketId: string; sequence?: number | null }) => {
+      await qc.cancelQueries({ queryKey: ticketKeys.all });
+      await qc.cancelQueries({ queryKey: communicationKeys.summary() });
+      const listSnapshots = qc.getQueriesData<CanonicalTicket[]>({ queryKey: [...ticketKeys.all, 'list'] });
+      const summarySnapshot = qc.getQueryData<CommsSummary>(communicationKeys.summary());
+      const detailSnapshot = qc.getQueryData<CanonicalTicketDetail>(ticketKeys.detail(args.ticketId));
+      const wasUnread =
+        listSnapshots.some(([, data]) => data?.some(t => t.id === args.ticketId && t.unreadCount > 0))
+        || (detailSnapshot?.unreadCount ?? 0) > 0;
+      qc.setQueriesData<CanonicalTicket[]>({ queryKey: [...ticketKeys.all, 'list'] }, old =>
+        old?.map(t => (t.id === args.ticketId ? { ...t, unreadCount: 0, lastReadSequence: t.activitySequence } : t)));
+      if (detailSnapshot) {
+        qc.setQueryData<CanonicalTicketDetail>(ticketKeys.detail(args.ticketId), { ...detailSnapshot, unreadCount: 0 });
+      }
+      if (wasUnread && summarySnapshot) {
+        qc.setQueryData<CommsSummary>(communicationKeys.summary(), {
+          ...summarySnapshot, ticketsUnread: Math.max(0, summarySnapshot.ticketsUnread - 1),
+        });
+      }
+      return { listSnapshots, summarySnapshot, detailSnapshot };
+    },
+    onError: (_err, args, ctx) => {
+      ctx?.listSnapshots.forEach(([key, data]) => qc.setQueryData(key, data));
+      if (ctx?.summarySnapshot) qc.setQueryData(communicationKeys.summary(), ctx.summarySnapshot);
+      if (ctx?.detailSnapshot) qc.setQueryData(ticketKeys.detail(args.ticketId), ctx.detailSnapshot);
+    },
+    // Reconcile with the server whatever the outcome — the spec requires invalidating
+    // ticketKeys.all, the selected detail, and the summary even on rollback.
+    onSettled: (_result, _err, args) => {
       void qc.invalidateQueries({ queryKey: ticketKeys.all });
+      void qc.invalidateQueries({ queryKey: ticketKeys.detail(args.ticketId) });
       void qc.invalidateQueries({ queryKey: communicationKeys.summary() });
     },
   });

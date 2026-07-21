@@ -1728,23 +1728,31 @@ stable
 security invoker
 set search_path = public, ticket_internal
 as $$
+  -- Every ticket the actor may see (participant OR queue handler), across ALL
+  -- statuses. `open` counts only active statuses; `unread` counts unread activity
+  -- on any non-archived ticket, so a newly RESOLVED ticket's unread does not vanish
+  -- (the old CTE filtered to active statuses BEFORE both counts).
   with visible as (
-    select t.id,
+    select t.status,
            t.activity_sequence,
            coalesce(tp.last_read_sequence, 0) as last_read_sequence
     from public.tickets t
     join public.ticket_queues q on q.code = t.queue_code
     left join public.ticket_participants tp
       on tp.ticket_id = t.id and tp.user_id = p_actor_id and tp.removed_at is null
-    where t.status in ('open','assigned','in_progress','waiting_requester','reopened')
-      and (
-        tp.user_id is not null
-        or ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
-      )
+    where (
+      tp.user_id is not null
+      or ticket_internal.user_has_permission(p_actor_id, q.handler_permission)
+    )
   )
   select jsonb_build_object(
-    'open', count(*),
-    'unread', count(*) filter (where activity_sequence > last_read_sequence)
+    'open', count(*) filter (
+      where status in ('open','assigned','in_progress','waiting_requester','reopened')
+    ),
+    'unread', count(*) filter (
+      where activity_sequence > last_read_sequence
+        and status not in ('closed','cancelled')
+    )
   )
   from visible;
 $$;

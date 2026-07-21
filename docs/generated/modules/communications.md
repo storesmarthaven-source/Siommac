@@ -2,9 +2,9 @@
 
 # communications Module Map
 
-Source fingerprint: `4bb88ee4e52196aa37aab23d`
+Source fingerprint: `c18383e46e06f4e22b21f90f`
 
-Files: 104 | Symbols: 943 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
+Files: 104 | Symbols: 945 | Widgets: 0 | Unique mounted endpoints: 78 | Route definitions: 79 mounted + 2 unmounted | API calls: 85 | DB objects: 151 | E2E suites: 5
 
 ## Widgets and Tiles
 
@@ -72,9 +72,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:206` | res @ src/api/communications.ts:248 | communications |
 | `/api/communications/notifications/preferences/set` | `communications.view` | requirePermission | `PrefSetSchema` | `netlify/functions/routes/communications.ts:243` | useSetNotificationPreference @ src/api/communications.ts:261 | communications |
 | `/api/communications/summary` | `communications.view` | requirePermission | `-` | `netlify/functions/routes/communications.ts:104` | res @ src/api/communications.ts:203<br>res @ src/components/nav/badgeSync.ts:58 | communications, messengerRealtime, ticketCenter |
-| `/api/communications/tickets/attachments/complete` | `communications.view` | requirePermission | `TicketAttachmentCompleteSchema` | `netlify/functions/routes/communications.ts:1227` | completed @ src/api/communications.ts:959 | ticketCenter |
-| `/api/communications/tickets/attachments/get-url` | `communications.view` | requirePermission | `TicketAttachmentGetSchema` | `netlify/functions/routes/communications.ts:1264` | res @ src/api/communications.ts:969 | ticketCenter |
-| `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1186` | reserved @ src/api/communications.ts:942 | ticketCenter |
+| `/api/communications/tickets/attachments/complete` | `communications.view` | requirePermission | `TicketAttachmentCompleteSchema` | `netlify/functions/routes/communications.ts:1227` | completed @ src/api/communications.ts:990 | ticketCenter |
+| `/api/communications/tickets/attachments/get-url` | `communications.view` | requirePermission | `TicketAttachmentGetSchema` | `netlify/functions/routes/communications.ts:1264` | res @ src/api/communications.ts:1000 | ticketCenter |
+| `/api/communications/tickets/attachments/upload-url` | `communications.view` | requirePermission | `TicketAttachmentUploadSchema` | `netlify/functions/routes/communications.ts:1186` | reserved @ src/api/communications.ts:973 | ticketCenter |
 | `/api/communications/tickets/command` | `communications.view` | requirePermission | `TicketCommandSchema` | `netlify/functions/routes/communications.ts:1150` | res @ src/api/communications.ts:908 | communications, ticketCenter |
 | `/api/communications/tickets/comment` | `communications.view` | requirePermission | `CommentSchema` | `netlify/functions/routes/communications.ts:1126` | res @ src/api/communications.ts:880 | communications, ticketCenter |
 | `/api/communications/tickets/create` | `communications.view` | requirePermission | `CreateTicketSchema` | `netlify/functions/routes/communications.ts:1027` | res @ src/api/communications.ts:855<br>handleCreateTicket @ src/components/sections/Finance/PayRunDrawer.tsx:355 | communications, ticketCenter |
@@ -170,9 +170,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/communications/notifications/preferences/get` | `apiPost` | `res` | `src/api/communications.ts:248` |
 | `/api/communications/notifications/preferences/set` | `apiPost` | `useSetNotificationPreference` | `src/api/communications.ts:261` |
 | `/api/communications/summary` | `apiPost` | `res` | `src/api/communications.ts:203` |
-| `/api/communications/tickets/attachments/complete` | `apiPost` | `completed` | `src/api/communications.ts:959` |
-| `/api/communications/tickets/attachments/get-url` | `apiPost` | `res` | `src/api/communications.ts:969` |
-| `/api/communications/tickets/attachments/upload-url` | `apiPost` | `reserved` | `src/api/communications.ts:942` |
+| `/api/communications/tickets/attachments/complete` | `apiPost` | `completed` | `src/api/communications.ts:990` |
+| `/api/communications/tickets/attachments/get-url` | `apiPost` | `res` | `src/api/communications.ts:1000` |
+| `/api/communications/tickets/attachments/upload-url` | `apiPost` | `reserved` | `src/api/communications.ts:973` |
 | `/api/communications/tickets/command` | `apiPost` | `res` | `src/api/communications.ts:908` |
 | `/api/communications/tickets/comment` | `apiPost` | `res` | `src/api/communications.ts:880` |
 | `/api/communications/tickets/create` | `apiPost` | `res` | `src/api/communications.ts:855` |
@@ -437,7 +437,7 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | function | `public.ticket_list_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1490` |
 | function | `public.ticket_get_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1593` |
 | function | `public.ticket_summary_for_actor` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1722` |
-| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1752` |
+| function | `public.ticket_overdue_sweep_tx` | `supabase/migrations/20260919000440_ticket_center_backend.sql:1760` |
 
 ## E2E Suites
 
@@ -464,7 +464,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/messagingTypingPresence.mjs` | 160 |
 | e2e-suite | `scripts/e2e/suites/messengerRealtime.mjs` | 228 |
 | e2e-suite | `scripts/e2e/suites/ticketCenter.mjs` | 436 |
-| frontend-api | `src/api/communications.ts` | 975 |
+| frontend-api | `src/api/communications.ts` | 1006 |
 | frontend-api | `src/api/communicationsCompliance.ts` | 252 |
 | frontend-api | `src/api/notifications.ts` | 160 |
 | frontend-api | `src/api/schemas/notification.ts` | 106 |
@@ -526,9 +526,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/NotificationCenter/notifAction.ts` | 66 |
 | frontend-page | `src/components/sections/NotificationCenter/notifMeta.ts` | 48 |
 | frontend-page | `src/components/sections/Tickets/TicketCenter.test.tsx` | 174 |
-| frontend-page | `src/components/sections/Tickets/TicketCenter.tsx` | 593 |
+| frontend-page | `src/components/sections/Tickets/TicketCenter.tsx` | 640 |
 | frontend-page | `src/components/sections/Tickets/TicketCreateDialog.tsx` | 99 |
-| frontend-page | `src/components/sections/Tickets/TicketDropdown.tsx` | 68 |
+| frontend-page | `src/components/sections/Tickets/TicketDropdown.tsx` | 73 |
 | frontend-page | `src/components/sections/Tickets/index.ts` | 6 |
 | frontend-page | `src/components/sections/Tickets/module.ts` | 25 |
 | frontend-page | `src/components/sections/Tickets/mount.ts` | 18 |

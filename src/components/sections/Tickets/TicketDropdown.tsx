@@ -9,10 +9,12 @@ function closeModal(): void {
   document.querySelectorAll('[data-pill-action].active').forEach(button => button.classList.remove('active'));
 }
 
-function openCenter(ticketId?: string): void {
+function openCenter(ticketId?: string, status?: string): void {
   closeModal();
   showSection('s-tickets');
-  if (ticketId) window.dispatchEvent(new CustomEvent('siomac:openTicket', { detail: { ticketId } }));
+  // Pass the status so the Ticket Center can route resolved tickets to the
+  // Resolved section instead of the active list.
+  if (ticketId) window.dispatchEvent(new CustomEvent('siomac:openTicket', { detail: { ticketId, status } }));
 }
 
 function titleCase(value: string): string {
@@ -34,20 +36,23 @@ function TicketItem({ ticket, onOpen }: { ticket: CanonicalTicket; onOpen: (tick
 export function TicketDropdown(): VNode {
   const [tab, setTab] = useState<'all' | 'unread'>('all');
   const [createOpen, setCreateOpen] = useState(false);
-  const ticketsQ = useMyTickets({ scope: 'mine', limit: 30 });
+  // Load every ticket the server authorizes the actor to see (participant OR
+  // queue-handler), not just requester-owned tickets — otherwise handlers see an
+  // unread count with nothing in the Unread tab. The backend gate stays authoritative.
+  const ticketsQ = useMyTickets({ scope: 'all', limit: 30 });
   const summaryQ = useCommsSummary();
   const markRead = useMarkTicketRead();
   const unread = summaryQ.data?.ticketsUnread ?? 0;
 
   useEffect(() => {
-    document.querySelectorAll('[data-pill-badge="ticket"]').forEach(element => setHdrBadge(element, summaryQ.data?.ticketsOpen ?? 0));
-  }, [summaryQ.data?.ticketsOpen]);
+    document.querySelectorAll('[data-pill-badge="ticket"]').forEach(element => setHdrBadge(element, summaryQ.data?.ticketsUnread ?? 0));
+  }, [summaryQ.data?.ticketsUnread]);
 
   const rows = (ticketsQ.data ?? []).filter(ticket => tab === 'all' || ticket.unreadCount > 0).slice(0, 10);
 
   function open(ticket: CanonicalTicket): void {
     if (ticket.unreadCount > 0) markRead.mutate({ ticketId: ticket.id, sequence: ticket.activitySequence });
-    openCenter(ticket.id);
+    openCenter(ticket.id, ticket.status);
   }
 
   return (

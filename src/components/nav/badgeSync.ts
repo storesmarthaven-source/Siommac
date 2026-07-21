@@ -69,7 +69,7 @@ async function syncHeaderBadges(): Promise<void> {
     setHdrBadge(el, c.messagesUnread),
   );
   document.querySelectorAll('[data-pill-badge="ticket"]').forEach(el =>
-    setHdrBadge(el, c.ticketsOpen),
+    setHdrBadge(el, c.ticketsUnread),
   );
 
   // Leave badge is not part of the comms summary — keep existing nav refresh
