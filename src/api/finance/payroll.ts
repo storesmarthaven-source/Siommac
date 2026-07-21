@@ -565,8 +565,8 @@ async function call<T>(path: string, args: object = {}): Promise<T> {
 // ── API object ──────────────────────────────────────────────────────────────────
 
 export const financePayrollApi = {
-  // Runs
-  listRuns:    (a: { status?: string; from?: string; to?: string; limit?: number } = {}) => call<PayrollRun[]>('finance/payroll/runs/list', a),
+  // Runs — the register list (runs/list) moved to the keyset contract in
+  // src/api/finance/payrollRunsRegister.ts (runsRegisterApi.list → PayrollRunListResult).
   getRun:      (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/get', a),
   createRun:   (a: CreateRunArgs)                       => call<PayrollRun>('finance/payroll/runs/create', a),
   lockInputs:  (a: { id: string })                     => call<PayrollRun>('finance/payroll/runs/lock-inputs', a),
@@ -710,10 +710,6 @@ export const financePayrollKeys = {
 };
 
 // ── Query hooks ─────────────────────────────────────────────────────────────────
-
-export function usePayrollRuns(opts: { status?: string; from?: string; to?: string; limit?: number } = {}) {
-  return useQuery({ queryKey: financePayrollKeys.runs(opts), queryFn: () => financePayrollApi.listRuns(opts) });
-}
 export function usePayrollRun(id: string | null) {
   return useQuery({ queryKey: financePayrollKeys.run(id ?? ''), queryFn: () => financePayrollApi.getRun({ id: id! }), enabled: !!id });
 }

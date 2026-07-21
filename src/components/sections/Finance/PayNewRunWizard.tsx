@@ -32,6 +32,7 @@ import {
   type PopulationReconciliationRule,
   type InputSourceReadiness,
 } from '@api/finance/payroll';
+import { runsRegisterApi } from '@api/finance/payrollRunsRegister';
 import './payrunWizard.css';
 
 // ── Constants ─────────────────────────────────────────────────────────────────
@@ -181,9 +182,11 @@ export function PayNewRunWizard({
     payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
   const readinessQ  = useInputReadiness(
     payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
+  // Correction source-run picker. runs/list is now the keyset register contract
+  // (PayrollRunListResult), so read .items — not an array — and use reference/state.
   const runsQ       = useQuery({
     queryKey: ['finance', 'payroll', 'runs', 'source-picker'],
-    queryFn:  () => financePayrollApi.listRuns({ limit: 50 }),
+    queryFn:  () => runsRegisterApi.list({ limit: 50 }),
     enabled:  runType === 'correction',
   });
   const reasonCodesQ = useReasonCodes(runType);
@@ -305,7 +308,7 @@ export function PayNewRunWizard({
                   <label>Source run *</label>
                   <select class={`select ${errors.sourceRunId ? 'err' : ''}`} value={sourceRunId} onChange={e => setSourceRun((e.currentTarget).value)}>
                     <option value="" disabled>Select the run this corrects…</option>
-                    {(runsQ.data ?? []).map(r => <option key={r.id} value={r.id}>{r.runNo} · {r.status}</option>)}
+                    {(runsQ.data?.items ?? []).map(r => <option key={r.id} value={r.id}>{r.reference} · {r.state}</option>)}
                   </select>
                   {errors.sourceRunId
                     ? <span class="err-msg">{errors.sourceRunId}</span>
