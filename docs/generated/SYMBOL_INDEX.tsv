@@ -4538,6 +4538,12 @@ useBuildTimesheet	function	hr	true	hook	src/api/hr/attendance.ts	115
 useSubmitTimesheet	function	hr	true	hook	src/api/hr/attendance.ts	116	
 useReopenTimesheet	function	hr	true	hook	src/api/hr/attendance.ts	117	
 fmtMinutes	function	hr	true		src/api/hr/attendance.ts	120	
+HrApiEnvelope	interface	hr	true		src/api/hr/client.ts	3	
+HrApiError	class	hr	true		src/api/hr/client.ts	10	
+requireHrSuccess	function	hr	true		src/api/hr/client.ts	33	
+requireHrData	function	hr	true		src/api/hr/client.ts	38	
+canonical	function	hr	false		src/api/hr/client.ts	46	
+withContentIdempotencyKey	function	hr	true		src/api/hr/client.ts	54	
 PayItemStatus	type	hr	true		src/api/hr/compensation.ts	12	
 PayItem	interface	hr	true		src/api/hr/compensation.ts	14	
 CreatePayItemArgs	interface	hr	true		src/api/hr/compensation.ts	36	
@@ -4555,8 +4561,8 @@ useContract	function	hr	true	hook	src/api/hr/contracts.ts	56
 useContractStats	function	hr	true	hook	src/api/hr/contracts.ts	59	
 useContractTemplates	function	hr	true	hook	src/api/hr/contracts.ts	62	
 useContractMutation	function	hr	true	hook	src/api/hr/contracts.ts	67	
-docsKeys	object	hr	false		src/api/hr/documents.ts	30	
-call	function	hr	false		src/api/hr/documents.ts	42	
+docsKeys	object	hr	false		src/api/hr/documents.ts	31	
+call	function	hr	false		src/api/hr/documents.ts	43	
 useDocumentsList	function	hr	true	hook	src/api/hr/documents.ts	50	
 useDocumentsStats	function	hr	true	hook	src/api/hr/documents.ts	60	
 useDocumentsExpiring	function	hr	true	hook	src/api/hr/documents.ts	70	
@@ -4567,65 +4573,66 @@ useRetireRequirement	function	hr	true	hook	src/api/hr/documents.ts	106
 useComplianceForEmployee	function	hr	true	hook	src/api/hr/documents.ts	117	
 useComplianceOverview	function	hr	true	hook	src/api/hr/documents.ts	126	
 useRunExpirySweep	function	hr	true	hook	src/api/hr/documents.ts	136	
-call	function	hr	false		src/api/hr/employeeImport.ts	13	
-ImportMode	type	hr	true		src/api/hr/employeeImport.ts	20	
-ImportPolicy	interface	hr	true		src/api/hr/employeeImport.ts	22	
-ImportUploadResult	interface	hr	true		src/api/hr/employeeImport.ts	37	
-ImportValidateSummary	interface	hr	true		src/api/hr/employeeImport.ts	41	
-ImportCommitResult	interface	hr	true		src/api/hr/employeeImport.ts	42	
-ImportReportRow	interface	hr	true		src/api/hr/employeeImport.ts	43	
-ImportReportError	interface	hr	true		src/api/hr/employeeImport.ts	47	
-ImportReport	interface	hr	true		src/api/hr/employeeImport.ts	48	
-hrImportApi	object	hr	true		src/api/hr/employeeImport.ts	56	
-WorkerType	type	hr	true		src/api/hr/employees.ts	17	
-TrainingStatus	type	hr	true		src/api/hr/employees.ts	18	
-PayrollReadinessStatus	type	hr	true		src/api/hr/employees.ts	19	
-HrEmployeeRow	interface	hr	true		src/api/hr/employees.ts	21	
-PayrollReadiness	interface	hr	true		src/api/hr/employees.ts	62	
-HrStatutoryRow	interface	hr	true		src/api/hr/employees.ts	68	
-HrEmployeeDetail	interface	hr	true		src/api/hr/employees.ts	87	
-HrDashboardStats	interface	hr	true		src/api/hr/employees.ts	95	
-HrWorkflowSummary	interface	hr	true		src/api/hr/employees.ts	102	
-HrEmployeeListFilter	interface	hr	true		src/api/hr/employees.ts	111	
-useHrEmployees	function	hr	true	hook	src/api/hr/employees.ts	116	
-EmployeeSortCol	type	hr	true		src/api/hr/employees.ts	127	
-HrEmployeePageFilter	interface	hr	true		src/api/hr/employees.ts	129	
-HrEmployeePageMeta	interface	hr	true		src/api/hr/employees.ts	136	
-HrEmployeePage	interface	hr	true		src/api/hr/employees.ts	142	
-useHrEmployeesPage	function	hr	true	hook	src/api/hr/employees.ts	148	
-fetchHrEmployeeDetail	function	hr	false		src/api/hr/employees.ts	161	
-useHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	169	
-usePrefetchHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	195	
-useHrDashboardStats	function	hr	true	hook	src/api/hr/employees.ts	207	
-useHrWorkflowSummary	function	hr	true	hook	src/api/hr/employees.ts	218	
-useHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	229	
-HrAuditEntry	interface	hr	true		src/api/hr/employees.ts	240	
-HrDocument	interface	hr	true		src/api/hr/employees.ts	252	
-HrTrainingSummary	interface	hr	true		src/api/hr/employees.ts	265	
-useHrAudit	function	hr	true	hook	src/api/hr/employees.ts	270	
-useHrDocuments	function	hr	true	hook	src/api/hr/employees.ts	282	
-useHrTrainingSummary	function	hr	true	hook	src/api/hr/employees.ts	294	
-HrOrgUnit	interface	hr	true		src/api/hr/employees.ts	306	
-HrSite	interface	hr	true		src/api/hr/employees.ts	307	
-useHrOrgUnits	function	hr	true	hook	src/api/hr/employees.ts	309	
-useHrSites	function	hr	true	hook	src/api/hr/employees.ts	319	
-CreateHrEmployeeArgs	interface	hr	true		src/api/hr/employees.ts	331	
-useCreateHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	342	
-ContactUpdateArgs	interface	hr	true		src/api/hr/employees.ts	351	
-useUpdateHrContact	function	hr	true	hook	src/api/hr/employees.ts	359	
-PhotoDecideArgs	interface	hr	true		src/api/hr/employees.ts	371	
-useDecideHrEmployeePhoto	function	hr	true	hook	src/api/hr/employees.ts	373	
-StatutoryUpdateArgs	interface	hr	true		src/api/hr/employees.ts	385	
-useUpdateHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	393	
-StatusChangeArgs	interface	hr	true		src/api/hr/employees.ts	405	
-useChangeHrStatus	function	hr	true	hook	src/api/hr/employees.ts	407	
-ChangeRequestArgs	interface	hr	true		src/api/hr/employees.ts	420	
-useCreateHrChangeRequest	function	hr	true	hook	src/api/hr/employees.ts	422	
-UploadDocArgs	interface	hr	true		src/api/hr/employees.ts	431	
-useUploadHrDocument	function	hr	true	hook	src/api/hr/employees.ts	433	
-useVerifyHrDocument	function	hr	true	hook	src/api/hr/employees.ts	453	
-useArchiveHrDocument	function	hr	true	hook	src/api/hr/employees.ts	462	
-getHrDocumentDownloadUrl	function	hr	true		src/api/hr/employees.ts	471	
+call	function	hr	false		src/api/hr/employeeImport.ts	14	
+ImportMode	type	hr	true		src/api/hr/employeeImport.ts	21	
+ImportPolicy	interface	hr	true		src/api/hr/employeeImport.ts	23	
+ImportUploadResult	interface	hr	true		src/api/hr/employeeImport.ts	38	
+ImportValidateSummary	interface	hr	true		src/api/hr/employeeImport.ts	42	
+ImportCommitResult	interface	hr	true		src/api/hr/employeeImport.ts	43	
+ImportReportRow	interface	hr	true		src/api/hr/employeeImport.ts	44	
+ImportReportError	interface	hr	true		src/api/hr/employeeImport.ts	48	
+ImportReport	interface	hr	true		src/api/hr/employeeImport.ts	49	
+hrImportApi	object	hr	true		src/api/hr/employeeImport.ts	57	
+hrPost	function	hr	false		src/api/hr/employees.ts	16	
+WorkerType	type	hr	true		src/api/hr/employees.ts	26	
+TrainingStatus	type	hr	true		src/api/hr/employees.ts	27	
+PayrollReadinessStatus	type	hr	true		src/api/hr/employees.ts	28	
+HrEmployeeRow	interface	hr	true		src/api/hr/employees.ts	30	
+PayrollReadiness	interface	hr	true		src/api/hr/employees.ts	71	
+HrStatutoryRow	interface	hr	true		src/api/hr/employees.ts	77	
+HrEmployeeDetail	interface	hr	true		src/api/hr/employees.ts	96	
+HrDashboardStats	interface	hr	true		src/api/hr/employees.ts	104	
+HrWorkflowSummary	interface	hr	true		src/api/hr/employees.ts	111	
+HrEmployeeListFilter	interface	hr	true		src/api/hr/employees.ts	120	
+useHrEmployees	function	hr	true	hook	src/api/hr/employees.ts	125	
+EmployeeSortCol	type	hr	true		src/api/hr/employees.ts	136	
+HrEmployeePageFilter	interface	hr	true		src/api/hr/employees.ts	138	
+HrEmployeePageMeta	interface	hr	true		src/api/hr/employees.ts	145	
+HrEmployeePage	interface	hr	true		src/api/hr/employees.ts	151	
+useHrEmployeesPage	function	hr	true	hook	src/api/hr/employees.ts	157	
+fetchHrEmployeeDetail	function	hr	false		src/api/hr/employees.ts	170	
+useHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	178	
+usePrefetchHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	204	
+useHrDashboardStats	function	hr	true	hook	src/api/hr/employees.ts	216	
+useHrWorkflowSummary	function	hr	true	hook	src/api/hr/employees.ts	227	
+useHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	238	
+HrAuditEntry	interface	hr	true		src/api/hr/employees.ts	249	
+HrDocument	interface	hr	true		src/api/hr/employees.ts	261	
+HrTrainingSummary	interface	hr	true		src/api/hr/employees.ts	274	
+useHrAudit	function	hr	true	hook	src/api/hr/employees.ts	279	
+useHrDocuments	function	hr	true	hook	src/api/hr/employees.ts	291	
+useHrTrainingSummary	function	hr	true	hook	src/api/hr/employees.ts	303	
+HrOrgUnit	interface	hr	true		src/api/hr/employees.ts	315	
+HrSite	interface	hr	true		src/api/hr/employees.ts	316	
+useHrOrgUnits	function	hr	true	hook	src/api/hr/employees.ts	318	
+useHrSites	function	hr	true	hook	src/api/hr/employees.ts	328	
+CreateHrEmployeeArgs	interface	hr	true		src/api/hr/employees.ts	340	
+useCreateHrEmployee	function	hr	true	hook	src/api/hr/employees.ts	351	
+ContactUpdateArgs	interface	hr	true		src/api/hr/employees.ts	360	
+useUpdateHrContact	function	hr	true	hook	src/api/hr/employees.ts	368	
+PhotoDecideArgs	interface	hr	true		src/api/hr/employees.ts	380	
+useDecideHrEmployeePhoto	function	hr	true	hook	src/api/hr/employees.ts	382	
+StatutoryUpdateArgs	interface	hr	true		src/api/hr/employees.ts	394	
+useUpdateHrStatutory	function	hr	true	hook	src/api/hr/employees.ts	402	
+StatusChangeArgs	interface	hr	true		src/api/hr/employees.ts	414	
+useChangeHrStatus	function	hr	true	hook	src/api/hr/employees.ts	416	
+ChangeRequestArgs	interface	hr	true		src/api/hr/employees.ts	429	
+useCreateHrChangeRequest	function	hr	true	hook	src/api/hr/employees.ts	431	
+UploadDocArgs	interface	hr	true		src/api/hr/employees.ts	440	
+useUploadHrDocument	function	hr	true	hook	src/api/hr/employees.ts	442	
+useVerifyHrDocument	function	hr	true	hook	src/api/hr/employees.ts	462	
+useArchiveHrDocument	function	hr	true	hook	src/api/hr/employees.ts	471	
+getHrDocumentDownloadUrl	function	hr	true		src/api/hr/employees.ts	480	
 call	function	hr	false		src/api/hr/leave.ts	16	
 hrLeaveApi	object	hr	true		src/api/hr/leave.ts	21	
 useLeaveTypes	function	hr	true	hook	src/api/hr/leave.ts	50	
@@ -4715,31 +4722,31 @@ useOnboardingDeleteTaskTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	3
 useOnboardingCreateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	374	
 useOnboardingUpdateHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	375	
 useOnboardingDeleteHandoffTemplate	function	hr	true	hook	src/api/hr/onboarding.ts	376	
-call	function	hr	false		src/api/hr/organization.ts	22	
+call	function	hr	false		src/api/hr/organization.ts	23	
 keyed	function	hr	false		src/api/hr/organization.ts	34	
-hrOrganizationApi	object	hr	true		src/api/hr/organization.ts	38	
-orgKeys	object	hr	true		src/api/hr/organization.ts	67	
-useOrgUnits	function	hr	true	hook	src/api/hr/organization.ts	81	
-useOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	82	
-useOrgStats	function	hr	true	hook	src/api/hr/organization.ts	83	
-useOrgHealth	function	hr	true	hook	src/api/hr/organization.ts	84	
-usePositions	function	hr	true	hook	src/api/hr/organization.ts	85	
-usePosition	function	hr	true	hook	src/api/hr/organization.ts	86	
-useCostCenters	function	hr	true	hook	src/api/hr/organization.ts	87	
-useOrgChangeRequests	function	hr	true	hook	src/api/hr/organization.ts	88	
-useOrgInvalidate	function	hr	false	hook	src/api/hr/organization.ts	94	
-useCreateOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	102	
-useUpdateOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	103	
-useMoveOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	104	
-useArchiveOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	105	
-useDeleteOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	106	
-useCreatePosition	function	hr	true	hook	src/api/hr/organization.ts	108	
-useUpdatePosition	function	hr	true	hook	src/api/hr/organization.ts	109	
-useRetirePosition	function	hr	true	hook	src/api/hr/organization.ts	110	
-useCreateCostCenter	function	hr	true	hook	src/api/hr/organization.ts	112	
-useUpdateCostCenter	function	hr	true	hook	src/api/hr/organization.ts	113	
-useRetireCostCenter	function	hr	true	hook	src/api/hr/organization.ts	114	
-useCancelOrgChange	function	hr	true	hook	src/api/hr/organization.ts	116	
+hrOrganizationApi	object	hr	true		src/api/hr/organization.ts	36	
+orgKeys	object	hr	true		src/api/hr/organization.ts	65	
+useOrgUnits	function	hr	true	hook	src/api/hr/organization.ts	79	
+useOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	80	
+useOrgStats	function	hr	true	hook	src/api/hr/organization.ts	81	
+useOrgHealth	function	hr	true	hook	src/api/hr/organization.ts	82	
+usePositions	function	hr	true	hook	src/api/hr/organization.ts	83	
+usePosition	function	hr	true	hook	src/api/hr/organization.ts	84	
+useCostCenters	function	hr	true	hook	src/api/hr/organization.ts	85	
+useOrgChangeRequests	function	hr	true	hook	src/api/hr/organization.ts	86	
+useOrgInvalidate	function	hr	false	hook	src/api/hr/organization.ts	92	
+useCreateOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	100	
+useUpdateOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	101	
+useMoveOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	102	
+useArchiveOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	103	
+useDeleteOrgUnit	function	hr	true	hook	src/api/hr/organization.ts	104	
+useCreatePosition	function	hr	true	hook	src/api/hr/organization.ts	106	
+useUpdatePosition	function	hr	true	hook	src/api/hr/organization.ts	107	
+useRetirePosition	function	hr	true	hook	src/api/hr/organization.ts	108	
+useCreateCostCenter	function	hr	true	hook	src/api/hr/organization.ts	110	
+useUpdateCostCenter	function	hr	true	hook	src/api/hr/organization.ts	111	
+useRetireCostCenter	function	hr	true	hook	src/api/hr/organization.ts	112	
+useCancelOrgChange	function	hr	true	hook	src/api/hr/organization.ts	114	
 OvertimeStatus	type	hr	true		src/api/hr/overtime.ts	12	
 OvertimeType	type	hr	true		src/api/hr/overtime.ts	15	
 OvertimeEntry	interface	hr	true		src/api/hr/overtime.ts	18	
@@ -5560,19 +5567,19 @@ savePalette	function	platform	true		src/components/nav/navCore.ts	544
 saveLayout	function	platform	true		src/components/nav/navCore.ts	567	
 showSection	function	platform	true		src/components/nav/navCore.ts	586	
 refreshSection	function	platform	true		src/components/nav/navCore.ts	645	
-setSkel	function	platform	true		src/components/nav/navCore.ts	694	
-skelStatValues	function	platform	true		src/components/nav/navCore.ts	699	
-skelTableRows	function	platform	true		src/components/nav/navCore.ts	706	
-skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	717	
-skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	724	
-skelList	function	platform	true		src/components/nav/navCore.ts	731	
-_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	740	
-setHdrBadge	function	platform	true		src/components/nav/navCore.ts	742	
-LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	764	
-_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	771	
-_setSbBadge	function	platform	false		src/components/nav/navCore.ts	773	
-setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	803	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	812	
+setSkel	function	platform	true		src/components/nav/navCore.ts	691	
+skelStatValues	function	platform	true		src/components/nav/navCore.ts	696	
+skelTableRows	function	platform	true		src/components/nav/navCore.ts	703	
+skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	714	
+skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	721	
+skelList	function	platform	true		src/components/nav/navCore.ts	728	
+_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	737	
+setHdrBadge	function	platform	true		src/components/nav/navCore.ts	739	
+LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	761	
+_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	768	
+_setSbBadge	function	platform	false		src/components/nav/navCore.ts	770	
+setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	800	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	809	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
@@ -5828,70 +5835,11 @@ ApiResult	interface	platform	false		src/components/sections/AdminDashboard/api.t
 unwrap	function	platform	false		src/components/sections/AdminDashboard/api.ts	17	
 getAdminStats	function	platform	true		src/components/sections/AdminDashboard/api.ts	21	
 getRecentAttendance	function	platform	true		src/components/sections/AdminDashboard/api.ts	26	
-AttendanceApiResponse	interface	hr	false		src/components/sections/Attendance/api.ts	18	
-listDailyLog	function	hr	true		src/components/sections/Attendance/api.ts	32	
-COLOR_PRESENT	variable	hr	false	component	src/components/sections/Attendance/AttendanceCharts.tsx	23	
-COLOR_LATE	variable	hr	false	component	src/components/sections/Attendance/AttendanceCharts.tsx	24	
-COLOR_ABSENT	variable	hr	false	component	src/components/sections/Attendance/AttendanceCharts.tsx	25	
-AnyChart	type	hr	false		src/components/sections/Attendance/AttendanceCharts.tsx	30	
-getChartConstructor	function	hr	false		src/components/sections/Attendance/AttendanceCharts.tsx	32	
-AttendanceChartsProps	interface	hr	false		src/components/sections/Attendance/AttendanceCharts.tsx	39	
-TrendChart	function	hr	false	component	src/components/sections/Attendance/AttendanceCharts.tsx	47	
-DistributionChart	function	hr	false	component	src/components/sections/Attendance/AttendanceCharts.tsx	152	
-label	method	hr	false		src/components/sections/Attendance/AttendanceCharts.tsx	197	DistributionChart
-AttendanceCharts	function	hr	true	component	src/components/sections/Attendance/AttendanceCharts.tsx	236	
-esc	function	hr	false		src/components/sections/Attendance/AttendanceSection.tsx	30	
-statusBadgeClass	function	hr	false		src/components/sections/Attendance/AttendanceSection.tsx	41	
-LOG_COLUMNS	array	hr	false		src/components/sections/Attendance/AttendanceSection.tsx	52	
-PhotoState	interface	hr	false		src/components/sections/Attendance/AttendanceSection.tsx	102	
-AttendanceSection	function	hr	true	component	src/components/sections/Attendance/AttendanceSection.tsx	110	
-statusBadgeClass	function	hr	false		src/components/sections/Attendance/EmployeeDetailModal.tsx	24	
-EmployeeDetailModalProps	interface	hr	false		src/components/sections/Attendance/EmployeeDetailModal.tsx	35	
-StatChip	function	hr	false	component	src/components/sections/Attendance/EmployeeDetailModal.tsx	44	
-EmployeeDetailModal	function	hr	true	component	src/components/sections/Attendance/EmployeeDetailModal.tsx	72	
-AttendanceFiltersBarProps	interface	hr	false		src/components/sections/Attendance/FiltersBar.tsx	28	
-ToggleBtn	function	hr	false	component	src/components/sections/Attendance/FiltersBar.tsx	55	
-AttendanceFiltersBar	function	hr	true	component	src/components/sections/Attendance/FiltersBar.tsx	77	
-useAttendanceData	function	hr	true	hook	src/components/sections/Attendance/hooks.ts	28	
-AttendanceMountOptions	interface	hr	true		src/components/sections/Attendance/mount.ts	29	
-mountAttendanceSection	function	hr	true		src/components/sections/Attendance/mount.ts	43	
-unmountAttendanceSection	function	hr	true		src/components/sections/Attendance/mount.ts	65	
-PhotoModalProps	interface	hr	false		src/components/sections/Attendance/PhotoModal.tsx	16	
-PhotoPane	function	hr	false	component	src/components/sections/Attendance/PhotoModal.tsx	25	
-PhotoModal	function	hr	true	component	src/components/sections/Attendance/PhotoModal.tsx	89	
-AttendanceStatCardsProps	interface	hr	false	ui-tile	src/components/sections/Attendance/StatCards.tsx	19	
-SkeletonCard	function	hr	false	component,ui-tile	src/components/sections/Attendance/StatCards.tsx	27	
-StatColor	type	hr	false		src/components/sections/Attendance/StatCards.tsx	42	
-StatCardProps	interface	hr	false	ui-tile	src/components/sections/Attendance/StatCards.tsx	44	
-StatCard	function	hr	false	component,ui-tile	src/components/sections/Attendance/StatCards.tsx	51	
-AttendanceStatCards	function	hr	true	component,ui-tile	src/components/sections/Attendance/StatCards.tsx	67	
-AttendanceRow	interface	hr	true		src/components/sections/Attendance/types.ts	13	
-AttendanceStats	interface	hr	true		src/components/sections/Attendance/types.ts	26	
-DailyTrend	interface	hr	true		src/components/sections/Attendance/types.ts	35	
-DateRange	interface	hr	true		src/components/sections/Attendance/types.ts	44	
-AttendanceData	interface	hr	true		src/components/sections/Attendance/types.ts	52	
-ConsistencyRow	interface	hr	true		src/components/sections/Attendance/types.ts	61	
-FilterMode	type	hr	true		src/components/sections/Attendance/types.ts	74	
-MonthFilter	interface	hr	true		src/components/sections/Attendance/types.ts	76	
-RangeFilter	interface	hr	true		src/components/sections/Attendance/types.ts	81	
-fmtLocalTime	function	hr	true		src/components/sections/Attendance/utils.ts	20	
-fmtDate	function	hr	true		src/components/sections/Attendance/utils.ts	34	
-MONTH_NAMES	variable	hr	false		src/components/sections/Attendance/utils.ts	47	
-getMonthName	function	hr	true		src/components/sections/Attendance/utils.ts	55	
-getYearOptions	function	hr	true		src/components/sections/Attendance/utils.ts	62	
-currentMonth	function	hr	true		src/components/sections/Attendance/utils.ts	70	
-currentYear	function	hr	true		src/components/sections/Attendance/utils.ts	77	
-STATUS_COLOR	object	hr	false		src/components/sections/Attendance/utils.ts	83	
-STATUS_BG_COLOR	object	hr	false		src/components/sections/Attendance/utils.ts	89	
-statusColor	function	hr	true		src/components/sections/Attendance/utils.ts	98	
-statusBgColor	function	hr	true		src/components/sections/Attendance/utils.ts	105	
-rateColor	function	hr	true		src/components/sections/Attendance/utils.ts	113	
-buildConsistencyFromRows	function	hr	true		src/components/sections/Attendance/utils.ts	128	
-MyStatusResponse	interface	hr	false		src/components/sections/AttendanceDashboard/api.ts	23	
-SitesResponse	interface	hr	false		src/components/sections/AttendanceDashboard/api.ts	28	
-getMyStatus	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	36	
-listProjectSites	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	50	
-markAttendance	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	60	
+MyStatusResponse	interface	hr	false		src/components/sections/AttendanceDashboard/api.ts	24	
+SitesResponse	interface	hr	false		src/components/sections/AttendanceDashboard/api.ts	30	
+getMyStatus	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	39	
+listProjectSites	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	52	
+markAttendance	function	hr	true		src/components/sections/AttendanceDashboard/api.ts	62	
 fmtLocalTime	function	hr	false		src/components/sections/AttendanceDashboard/AttendanceDashboard.tsx	42	
 haversineM	function	hr	false		src/components/sections/AttendanceDashboard/AttendanceDashboard.tsx	49	
 toRad	function	hr	false		src/components/sections/AttendanceDashboard/AttendanceDashboard.tsx	51	haversineM
@@ -6014,14 +5962,14 @@ listDepartments	function	hr	true		src/components/sections/Employees/api.ts	77
 listManagers	function	hr	true		src/components/sections/Employees/api.ts	82	
 AssignableRole	interface	hr	true		src/components/sections/Employees/api.ts	87	
 listAssignableRoles	function	hr	true		src/components/sections/Employees/api.ts	90	
-addDepartment	function	hr	true		src/components/sections/Employees/api.ts	95	
-updateDepartment	function	hr	true		src/components/sections/Employees/api.ts	100	
-deleteDepartment	function	hr	true		src/components/sections/Employees/api.ts	105	
-getMyHistory	function	hr	true		src/components/sections/Employees/api.ts	112	
-getDeptStats	function	hr	true		src/components/sections/Employees/api.ts	123	
-getDeptEmployees	function	hr	true		src/components/sections/Employees/api.ts	128	
-getAdminStats	function	hr	true		src/components/sections/Employees/api.ts	135	
-getRecentAttendance	function	hr	true		src/components/sections/Employees/api.ts	140	
+addDepartment	function	hr	true		src/components/sections/Employees/api.ts	97	
+updateDepartment	function	hr	true		src/components/sections/Employees/api.ts	102	
+deleteDepartment	function	hr	true		src/components/sections/Employees/api.ts	107	
+getMyHistory	function	hr	true		src/components/sections/Employees/api.ts	114	
+getDeptStats	function	hr	true		src/components/sections/Employees/api.ts	125	
+getDeptEmployees	function	hr	true		src/components/sections/Employees/api.ts	130	
+getAdminStats	function	hr	true		src/components/sections/Employees/api.ts	137	
+getRecentAttendance	function	hr	true		src/components/sections/Employees/api.ts	142	
 DepartmentModalProps	interface	hr	false		src/components/sections/Employees/DepartmentModal.tsx	18	
 FormState	interface	hr	false		src/components/sections/Employees/DepartmentModal.tsx	24	
 DepartmentModal	function	hr	true	component	src/components/sections/Employees/DepartmentModal.tsx	29	
@@ -7149,52 +7097,52 @@ submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	289	Docum
 StatutoryDialog	function	hr	true	component	src/components/sections/HR/ActionDialogs.tsx	317	
 set	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	326	StatutoryDialog
 submit	function	hr	false		src/components/sections/HR/ActionDialogs.tsx	337	StatutoryDialog
-ExcRow	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	27	
-STATUS_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	29	
-SOURCE_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	30	
-CORRECTABLE	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	31	
-toLocalInput	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	38	
-pad	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	41	toLocalInput
-Surface	type	hr	false		src/components/sections/HR/AttendanceOverview.tsx	45	
-SURFACES	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	47	
-tsTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	53	
-excTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	56	
-statTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	59	
-fmtTime	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	62	
-AttendanceOverview	function	hr	true	component	src/components/sections/HR/AttendanceOverview.tsx	64	
-run	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	86	AttendanceOverview
-excRecord	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	91	AttendanceOverview
-onWaive	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	96	AttendanceOverview
-onResolve	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	107	AttendanceOverview
-CorrectRecordModal	function	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	250	
-initialValue	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	252	CorrectRecordModal
-pickField	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	265	CorrectRecordModal
-currentDisplay	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	267	CorrectRecordModal
-newDisplay	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	274	CorrectRecordModal
-submit	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	282	CorrectRecordModal
-ParsedCsv	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	349	
-CSV_TEMPLATE	variable	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	351	
-parseAttendanceCsv	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	353	
-col	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	358	parseAttendanceCsv
-at	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	372	parseAttendanceCsv
-rowIsValid	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	386	
-ImportAttendanceModal	function	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	393	
-onFile	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	404	ImportAttendanceModal
-doImport	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	412	ImportAttendanceModal
-Surface	type	hr	false		src/components/sections/HR/CompensationOverview.tsx	27	
-empName	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	29	
-CompensationOverview	function	hr	true	component	src/components/sections/HR/CompensationOverview.tsx	31	
-PayItemsSurface	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	61	
-compName	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	65	PayItemsSurface
-payItemRecord	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	66	PayItemsSurface
-run	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	86	PayItemsSurface
-NewPayItemForm	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	140	
-submit	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	148	NewPayItemForm
-EMPTY_PROFILE	object	hr	false		src/components/sections/HR/CompensationOverview.tsx	223	
-StatutorySurface	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	228	
-set	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	238	StatutorySurface
-capture	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	251	StatutorySurface
-submit	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	268	StatutorySurface
+ExcRow	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	28	
+STATUS_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	30	
+SOURCE_OPTIONS	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	31	
+CORRECTABLE	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	32	
+toLocalInput	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	39	
+pad	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	42	toLocalInput
+Surface	type	hr	false		src/components/sections/HR/AttendanceOverview.tsx	46	
+SURFACES	array	hr	false		src/components/sections/HR/AttendanceOverview.tsx	48	
+tsTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	54	
+excTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	57	
+statTone	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	60	
+fmtTime	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	63	
+AttendanceOverview	function	hr	true	component	src/components/sections/HR/AttendanceOverview.tsx	65	
+run	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	90	AttendanceOverview
+excRecord	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	95	AttendanceOverview
+onWaive	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	100	AttendanceOverview
+onResolve	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	111	AttendanceOverview
+CorrectRecordModal	function	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	256	
+initialValue	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	258	CorrectRecordModal
+pickField	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	271	CorrectRecordModal
+currentDisplay	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	273	CorrectRecordModal
+newDisplay	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	280	CorrectRecordModal
+submit	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	288	CorrectRecordModal
+ParsedCsv	interface	hr	false		src/components/sections/HR/AttendanceOverview.tsx	355	
+CSV_TEMPLATE	variable	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	357	
+parseAttendanceCsv	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	359	
+col	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	364	parseAttendanceCsv
+at	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	378	parseAttendanceCsv
+rowIsValid	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	392	
+ImportAttendanceModal	function	hr	false	component	src/components/sections/HR/AttendanceOverview.tsx	399	
+onFile	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	410	ImportAttendanceModal
+doImport	function	hr	false		src/components/sections/HR/AttendanceOverview.tsx	418	ImportAttendanceModal
+Surface	type	hr	false		src/components/sections/HR/CompensationOverview.tsx	28	
+empName	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	30	
+CompensationOverview	function	hr	true	component	src/components/sections/HR/CompensationOverview.tsx	32	
+PayItemsSurface	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	64	
+compName	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	69	PayItemsSurface
+payItemRecord	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	70	PayItemsSurface
+run	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	90	PayItemsSurface
+NewPayItemForm	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	144	
+submit	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	152	NewPayItemForm
+EMPTY_PROFILE	object	hr	false		src/components/sections/HR/CompensationOverview.tsx	227	
+StatutorySurface	function	hr	false	component	src/components/sections/HR/CompensationOverview.tsx	232	
+set	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	242	StatutorySurface
+capture	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	255	StatutorySurface
+submit	function	hr	false		src/components/sections/HR/CompensationOverview.tsx	272	StatutorySurface
 EMPLOYMENT_TYPES	array	hr	false		src/components/sections/HR/CreateEmployeeWizard.tsx	26	
 NIS_STATUSES	array	hr	false		src/components/sections/HR/CreateEmployeeWizard.tsx	27	
 ROLES	array	hr	false		src/components/sections/HR/CreateEmployeeWizard.tsx	28	
@@ -7271,6 +7219,11 @@ StatsRow	function	hr	false	component	src/components/sections/HR/HRDocumentsOverv
 DocTab	type	hr	false		src/components/sections/HR/HRDocumentsOverview.tsx	701	
 TABS	array	hr	false		src/components/sections/HR/HRDocumentsOverview.tsx	703	
 HRDocumentsOverview	function	hr	true	component	src/components/sections/HR/HRDocumentsOverview.tsx	709	
+item	function	hr	false	test	src/components/sections/HR/hrFoundation.test.tsx	10	
+query	function	hr	false	test	src/components/sections/HR/hrFoundation.test.tsx	37	
+HrQueryStateLike	interface	hr	true		src/components/sections/HR/HRQueryState.tsx	4	
+messageFor	function	hr	false		src/components/sections/HR/HRQueryState.tsx	12	
+HRQueryNotice	function	hr	true	component	src/components/sections/HR/HRQueryState.tsx	24	
 humanize	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	22	
 requestRecord	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	23	
 statusTone	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	30	
@@ -7289,23 +7242,25 @@ submit	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	269	
 TriageTab	function	hr	false	component	src/components/sections/HR/HRRequestsOverview.tsx	310	
 handleCancel	function	hr	false		src/components/sections/HR/HRRequestsOverview.tsx	322	TriageTab
 HRRequestsOverview	function	hr	true	component	src/components/sections/HR/HRRequestsOverview.tsx	391	
-EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	31	
-ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
-ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
-DOC_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
-OFF_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	35	
-LEAVE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	36	
-TRANSFERS_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	37	
-REQ_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	38	
-ATTENDANCE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	39	
-ROSTER_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	40	
-COMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	41	
-OT_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	42	
-WORKCAL_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	43	
-isHrSection	function	hr	false		src/components/sections/HR/HRSection.tsx	45	
-HRSection	function	hr	true	component	src/components/sections/HR/HRSection.tsx	49	
-onSection	function	hr	false		src/components/sections/HR/HRSection.tsx	56	HRSection
-onOpenCase	function	hr	false		src/components/sections/HR/HRSection.tsx	63	HRSection
+EMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	32	
+ONB_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	33	
+ORG_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	34	
+DOC_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	35	
+OFF_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	36	
+LEAVE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	37	
+TRANSFERS_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	38	
+REQ_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	39	
+ATTENDANCE_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	40	
+ROSTER_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	41	
+COMP_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	42	
+OT_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	43	
+WORKCAL_ID	variable	hr	false	component	src/components/sections/HR/HRSection.tsx	44	
+HR_PAGE_PERMISSIONS	object	hr	false		src/components/sections/HR/HRSection.tsx	46	
+PermissionDenied	function	hr	false	component	src/components/sections/HR/HRSection.tsx	62	
+isHrSection	function	hr	false		src/components/sections/HR/HRSection.tsx	77	
+HRSection	function	hr	true	component	src/components/sections/HR/HRSection.tsx	81	
+onSection	function	hr	false		src/components/sections/HR/HRSection.tsx	90	HRSection
+onOpenCase	function	hr	false		src/components/sections/HR/HRSection.tsx	97	HRSection
 STEPS	array	hr	false		src/components/sections/HR/ImportWizard.tsx	20	
 ORDER	variable	hr	false	component	src/components/sections/HR/ImportWizard.tsx	28	
 FIELDS	array	hr	false		src/components/sections/HR/ImportWizard.tsx	30	
@@ -7330,49 +7285,49 @@ loadReport	function	hr	false		src/components/sections/HR/ImportWizard.tsx	146	Im
 doValidate	function	hr	false		src/components/sections/HR/ImportWizard.tsx	147	ImportWizard
 resolve	function	hr	false		src/components/sections/HR/ImportWizard.tsx	148	ImportWizard
 doCommit	function	hr	false		src/components/sections/HR/ImportWizard.tsx	149	ImportWizard
-STATUS_OPTIONS	array	hr	false		src/components/sections/HR/LeaveOverview.tsx	23	
-statusTone	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	31	
-humanize	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	38	
-SubmitDialogProps	interface	hr	false		src/components/sections/HR/LeaveOverview.tsx	44	
-workingDays	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	47	
-SubmitLeaveDialog	function	hr	false	component	src/components/sections/HR/LeaveOverview.tsx	56	
-handleSubmit	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	86	SubmitLeaveDialog
-LeaveOverview	function	hr	true	component	src/components/sections/HR/LeaveOverview.tsx	152	
-leaveRecord	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	159	LeaveOverview
-onReview	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	165	LeaveOverview
-handleCancel	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	210	LeaveOverview
+STATUS_OPTIONS	array	hr	false		src/components/sections/HR/LeaveOverview.tsx	24	
+statusTone	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	32	
+humanize	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	39	
+SubmitDialogProps	interface	hr	false		src/components/sections/HR/LeaveOverview.tsx	45	
+workingDays	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	48	
+SubmitLeaveDialog	function	hr	false	component	src/components/sections/HR/LeaveOverview.tsx	57	
+handleSubmit	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	87	SubmitLeaveDialog
+LeaveOverview	function	hr	true	component	src/components/sections/HR/LeaveOverview.tsx	153	
+leaveRecord	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	160	LeaveOverview
+onReview	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	166	LeaveOverview
+handleCancel	function	hr	false		src/components/sections/HR/LeaveOverview.tsx	211	LeaveOverview
 HR_ROOT_ID	variable	hr	false		src/components/sections/HR/module.ts	13	
 EMPLOYEE_MASTER_ITEM	object	hr	false		src/components/sections/HR/module.ts	15	
-ONBOARDING_ITEM	object	hr	false		src/components/sections/HR/module.ts	22	
-ORGANIZATION_ITEM	object	hr	false		src/components/sections/HR/module.ts	29	
-DOCUMENTS_ITEM	object	hr	false		src/components/sections/HR/module.ts	36	
-OFFBOARDING_ITEM	object	hr	false		src/components/sections/HR/module.ts	43	
-LEAVE_ITEM	object	hr	false		src/components/sections/HR/module.ts	50	
-TRANSFERS_ITEM	object	hr	false		src/components/sections/HR/module.ts	57	
-ATTENDANCE_ITEM	object	hr	false		src/components/sections/HR/module.ts	64	
-REQUESTS_ITEM	object	hr	false		src/components/sections/HR/module.ts	71	
-ROSTER_ITEM	object	hr	false		src/components/sections/HR/module.ts	78	
-COMPENSATION_ITEM	object	hr	false		src/components/sections/HR/module.ts	85	
-OVERTIME_ITEM	object	hr	false		src/components/sections/HR/module.ts	92	
-WORK_CALENDAR_ITEM	object	hr	false		src/components/sections/HR/module.ts	102	
-hrModule	object	hr	true		src/components/sections/HR/module.ts	110	
+ONBOARDING_ITEM	object	hr	false		src/components/sections/HR/module.ts	23	
+ORGANIZATION_ITEM	object	hr	false		src/components/sections/HR/module.ts	31	
+DOCUMENTS_ITEM	object	hr	false		src/components/sections/HR/module.ts	39	
+OFFBOARDING_ITEM	object	hr	false		src/components/sections/HR/module.ts	47	
+LEAVE_ITEM	object	hr	false		src/components/sections/HR/module.ts	55	
+TRANSFERS_ITEM	object	hr	false		src/components/sections/HR/module.ts	63	
+ATTENDANCE_ITEM	object	hr	false		src/components/sections/HR/module.ts	71	
+REQUESTS_ITEM	object	hr	false		src/components/sections/HR/module.ts	79	
+ROSTER_ITEM	object	hr	false		src/components/sections/HR/module.ts	87	
+COMPENSATION_ITEM	object	hr	false		src/components/sections/HR/module.ts	95	
+OVERTIME_ITEM	object	hr	false		src/components/sections/HR/module.ts	103	
+WORK_CALENDAR_ITEM	object	hr	false		src/components/sections/HR/module.ts	114	
+hrModule	object	hr	true		src/components/sections/HR/module.ts	122	
 mountHRSection	function	hr	true		src/components/sections/HR/mount.ts	10	
 unmountHRSection	function	hr	true		src/components/sections/HR/mount.ts	22	
-REASONS	array	hr	false		src/components/sections/HR/OffboardingOverview.tsx	25	
-STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	26	
-humanize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	27	
-statusTone	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	28	
-OffboardingOverview	function	hr	true	component	src/components/sections/HR/OffboardingOverview.tsx	32	
-NewCaseModal	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	90	
-submit	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	96	NewCaseModal
-CaseDetail	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	141	
-run	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	155	CaseDetail
-onPause	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	170	CaseDetail
-onResume	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	174	CaseDetail
-onReady	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	178	CaseDetail
-onComplete	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	182	CaseDetail
-onFinalize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	186	CaseDetail
-onCancel	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	195	CaseDetail
+REASONS	array	hr	false		src/components/sections/HR/OffboardingOverview.tsx	26	
+STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	27	
+humanize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	28	
+statusTone	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	29	
+OffboardingOverview	function	hr	true	component	src/components/sections/HR/OffboardingOverview.tsx	33	
+NewCaseModal	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	93	
+submit	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	99	NewCaseModal
+CaseDetail	function	hr	false	component	src/components/sections/HR/OffboardingOverview.tsx	144	
+run	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	158	CaseDetail
+onPause	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	173	CaseDetail
+onResume	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	177	CaseDetail
+onReady	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	181	CaseDetail
+onComplete	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	185	CaseDetail
+onFinalize	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	189	CaseDetail
+onCancel	function	hr	false		src/components/sections/HR/OffboardingOverview.tsx	198	CaseDetail
 STATUS_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	17	
 REASON_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	27	
 MODULE_META	object	widgets	false		src/components/sections/HR/offboardingWidgets.tsx	34	
@@ -7658,54 +7613,54 @@ dueView	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.t
 TaskDrawer	function	hr	false	component	src/components/sections/HR/OnboardingTasksWorkspace.tsx	335	
 submitNote	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	354	TaskDrawer
 onEvidenceFile	function	hr	false		src/components/sections/HR/OnboardingTasksWorkspace.tsx	360	TaskDrawer
-Opt	interface	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	34	
-ORG_UNIT_TYPES	array	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	35	
-toastResult	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	37	
-titleCase	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	41	
-ImpactModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	44	
-UNIT_TYPE_INFO	object	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	80	
-ancestorChain	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	90	
-placementPath	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	100	
-selfAndDescendants	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	107	
-UnitModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	125	
-submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	152	UnitModal
-MoveModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	243	
-submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	246	MoveModal
-PositionModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	283	
-submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	294	PositionModal
-nameFrom	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	318	PositionModal
-CostCenterModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	365	
-submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	376	CostCenterModal
-Tab	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	432	
-ModalState	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	433	
-OrgStructureOverview	function	hr	true	component	src/components/sections/HR/OrgStructureOverview.tsx	440	
-toggle	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	480	OrgStructureOverview
-runImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	482	OrgStructureOverview
-confirmImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	487	OrgStructureOverview
-onArchiveUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	496	OrgStructureOverview
-onDeleteUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	500	OrgStructureOverview
-onActivateUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	504	OrgStructureOverview
-StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	559	OrgStructureOverview
-HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	569	OrgStructureOverview
-renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	592	OrgStructureOverview
-PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	633	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	638	PositionsTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	642	PositionsTab
-CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	685	OrgStructureOverview
-onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	690	CostCentersTab
-onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	694	CostCentersTab
-ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	735	OrgStructureOverview
-onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	739	ChangeRequestsTab
-riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	744	ChangeRequestsTab
-empName	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	23	
-STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	25	
-OT_TYPES	array	hr	false		src/components/sections/HR/OvertimeOverview.tsx	33	
-otTypeLabel	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	40	
-OvertimeOverview	function	hr	true	component	src/components/sections/HR/OvertimeOverview.tsx	42	
-run	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	58	OvertimeOverview
-otRecord	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	62	OvertimeOverview
-LogOvertimeForm	function	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	152	
-submit	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	167	LogOvertimeForm
+Opt	interface	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	35	
+ORG_UNIT_TYPES	array	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	36	
+toastResult	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	38	
+titleCase	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	42	
+ImpactModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	45	
+UNIT_TYPE_INFO	object	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	81	
+ancestorChain	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	91	
+placementPath	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	101	
+selfAndDescendants	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	108	
+UnitModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	126	
+submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	153	UnitModal
+MoveModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	244	
+submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	247	MoveModal
+PositionModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	284	
+submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	295	PositionModal
+nameFrom	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	319	PositionModal
+CostCenterModal	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	366	
+submit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	377	CostCenterModal
+Tab	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	433	
+ModalState	type	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	434	
+OrgStructureOverview	function	hr	true	component	src/components/sections/HR/OrgStructureOverview.tsx	441	
+toggle	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	481	OrgStructureOverview
+runImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	483	OrgStructureOverview
+confirmImpact	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	488	OrgStructureOverview
+onArchiveUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	497	OrgStructureOverview
+onDeleteUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	501	OrgStructureOverview
+onActivateUnit	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	505	OrgStructureOverview
+StatRow	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	562	OrgStructureOverview
+HealthPanel	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	572	OrgStructureOverview
+renderTree	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	595	OrgStructureOverview
+PositionsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	636	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	641	PositionsTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	645	PositionsTab
+CostCentersTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	688	OrgStructureOverview
+onRetire	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	693	CostCentersTab
+onReactivate	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	697	CostCentersTab
+ChangeRequestsTab	function	hr	false	component	src/components/sections/HR/OrgStructureOverview.tsx	738	OrgStructureOverview
+onCancel	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	742	ChangeRequestsTab
+riskTone	function	hr	false		src/components/sections/HR/OrgStructureOverview.tsx	747	ChangeRequestsTab
+empName	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	24	
+STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	26	
+OT_TYPES	array	hr	false		src/components/sections/HR/OvertimeOverview.tsx	34	
+otTypeLabel	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	41	
+OvertimeOverview	function	hr	true	component	src/components/sections/HR/OvertimeOverview.tsx	43	
+run	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	59	OvertimeOverview
+otRecord	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	63	OvertimeOverview
+LogOvertimeForm	function	hr	false	component	src/components/sections/HR/OvertimeOverview.tsx	155	
+submit	function	hr	false		src/components/sections/HR/OvertimeOverview.tsx	170	LogOvertimeForm
 openOnboardingCase	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	48	
 fmtDate	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	54	
 fmtDateTime	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	60	
@@ -7733,27 +7688,27 @@ MORE_TABS	array	hr	false		src/components/sections/HR/ProfileDrawer.tsx	457
 DrawerSkeleton	function	hr	false	component	src/components/sections/HR/ProfileDrawer.tsx	461	
 ProfileDrawer	function	hr	true	component	src/components/sections/HR/ProfileDrawer.tsx	482	
 handlePhotoDecision	function	hr	false		src/components/sections/HR/ProfileDrawer.tsx	495	ProfileDrawer
-humanize	function	hr	false		src/components/sections/HR/RosterOverview.tsx	31	
-fmtDate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	32	
-isoWeekStart	function	hr	false		src/components/sections/HR/RosterOverview.tsx	33	
-isoWeekEnd	function	hr	false		src/components/sections/HR/RosterOverview.tsx	37	
-statusTone	function	hr	false		src/components/sections/HR/RosterOverview.tsx	41	
-Tab	type	hr	false		src/components/sections/HR/RosterOverview.tsx	49	
-RosterOverview	function	hr	true	component	src/components/sections/HR/RosterOverview.tsx	53	
-RostersTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	98	
-RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	158	
-rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	174	RosterDetail
-onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	180	RosterDetail
-onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	198	RosterDetail
-onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	216	RosterDetail
-onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	223	RosterDetail
-onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	254	RosterDetail
-TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	381	
-MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	509	
-NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	558	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	568	NewRosterModal
-NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	630	
-submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	634	NewShiftTemplateModal
+humanize	function	hr	false		src/components/sections/HR/RosterOverview.tsx	32	
+fmtDate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	33	
+isoWeekStart	function	hr	false		src/components/sections/HR/RosterOverview.tsx	34	
+isoWeekEnd	function	hr	false		src/components/sections/HR/RosterOverview.tsx	38	
+statusTone	function	hr	false		src/components/sections/HR/RosterOverview.tsx	42	
+Tab	type	hr	false		src/components/sections/HR/RosterOverview.tsx	50	
+RosterOverview	function	hr	true	component	src/components/sections/HR/RosterOverview.tsx	54	
+RostersTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	101	
+RosterDetail	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	162	
+rosterRecord	function	hr	false		src/components/sections/HR/RosterOverview.tsx	178	RosterDetail
+onPublish	function	hr	false		src/components/sections/HR/RosterOverview.tsx	184	RosterDetail
+onReopen	function	hr	false		src/components/sections/HR/RosterOverview.tsx	202	RosterDetail
+onSyncLeave	function	hr	false		src/components/sections/HR/RosterOverview.tsx	220	RosterDetail
+onGenerate	function	hr	false		src/components/sections/HR/RosterOverview.tsx	227	RosterDetail
+onCellClick	function	hr	false		src/components/sections/HR/RosterOverview.tsx	258	RosterDetail
+TemplatesTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	385	
+MyShiftsTab	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	516	
+NewRosterModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	565	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	575	NewRosterModal
+NewShiftTemplateModal	function	hr	false	component	src/components/sections/HR/RosterOverview.tsx	637	
+submit	function	hr	false		src/components/sections/HR/RosterOverview.tsx	641	NewShiftTemplateModal
 PillTone	type	hr	true		src/components/sections/HR/shared.tsx	12	
 humanize	function	hr	true		src/components/sections/HR/shared.tsx	15	
 rowName	function	hr	true		src/components/sections/HR/shared.tsx	19	
@@ -7794,18 +7749,18 @@ DateFld	function	hr	false	component	src/components/sections/HR/StartOnboardingWi
 WorkerSearchField	function	hr	false	component	src/components/sections/HR/StartOnboardingWizard.tsx	882	
 DocumentRequirementCard	function	hr	false	component,ui-tile	src/components/sections/HR/StartOnboardingWizard.tsx	908	
 handleWaive	function	hr	false		src/components/sections/HR/StartOnboardingWizard.tsx	918	DocumentRequirementCard
-STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	26	
-humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	28	
-statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
-TransfersOverview	function	hr	true	component	src/components/sections/HR/TransfersOverview.tsx	35	
-summarizeChanges	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	116	
-NewRequestModal	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	131	
-submit	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	155	NewRequestModal
-RequestDetail	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	260	
-transferRecord	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	270	RequestDetail
-decide	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	278	RequestDetail
-onCancel	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	299	RequestDetail
-FIELD_LABELS	array	hr	false		src/components/sections/HR/TransfersOverview.tsx	393	
+STATUS_FILTERS	variable	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	27	
+humanize	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	29	
+statusTone	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	30	
+TransfersOverview	function	hr	true	component	src/components/sections/HR/TransfersOverview.tsx	36	
+summarizeChanges	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	119	
+NewRequestModal	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	134	
+submit	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	158	NewRequestModal
+RequestDetail	function	hr	false	component	src/components/sections/HR/TransfersOverview.tsx	263	
+transferRecord	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	273	RequestDetail
+decide	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	281	RequestDetail
+onCancel	function	hr	false		src/components/sections/HR/TransfersOverview.tsx	302	RequestDetail
+FIELD_LABELS	array	hr	false		src/components/sections/HR/TransfersOverview.tsx	396	
 AreaPlaceholder	function	hse	false	component	src/components/sections/HSE/AreaRouter.tsx	27	
 AreaRouter	function	hse	true	component	src/components/sections/HSE/AreaRouter.tsx	50	
 ContractorRow	interface	hse	false		src/components/sections/HSE/Contractors.tsx	16	
@@ -10001,14 +9956,14 @@ SectionDef	interface	platform	true		src/config/index.ts	82
 UserRole	type	platform	true		src/config/index.ts	91	
 BASELINE_SECTIONS	array	platform	true		src/config/index.ts	99	
 SECTION_DEFS	object	platform	true		src/config/index.ts	108	
-COMMON_SECTIONS	array	platform	true		src/config/index.ts	139	
-Palette	interface	platform	true		src/config/index.ts	149	
-PALETTES	array	platform	true		src/config/index.ts	159	
-LayoutOption	interface	platform	true		src/config/index.ts	170	
-LAYOUTS	array	platform	true		src/config/index.ts	177	
-LayoutMode	type	platform	true		src/config/index.ts	182	
-ColorScheme	type	platform	true		src/config/index.ts	183	
-Theme	type	platform	true		src/config/index.ts	184	
+COMMON_SECTIONS	array	platform	true		src/config/index.ts	134	
+Palette	interface	platform	true		src/config/index.ts	144	
+PALETTES	array	platform	true		src/config/index.ts	154	
+LayoutOption	interface	platform	true		src/config/index.ts	165	
+LAYOUTS	array	platform	true		src/config/index.ts	172	
+LayoutMode	type	platform	true		src/config/index.ts	177	
+ColorScheme	type	platform	true		src/config/index.ts	178	
+Theme	type	platform	true		src/config/index.ts	179	
 BootstrapModalConfig	interface	platform	false		src/globals.d.ts	37	
 BootstrapModalInstance	interface	platform	false		src/globals.d.ts	38	
 BootstrapModalStatic	interface	platform	false		src/globals.d.ts	39	
@@ -10110,101 +10065,100 @@ _Nav	function	platform	false		src/lib/attSystem.ts	36
 _Dashboard	function	platform	false		src/lib/attSystem.ts	37	
 _LiveMap	function	platform	false		src/lib/attSystem.ts	38	
 _Payroll	function	platform	false		src/lib/attSystem.ts	39	
-_AttView	function	platform	false		src/lib/attSystem.ts	40	
-_SettingsView	function	platform	false		src/lib/attSystem.ts	41	
-_SiomacDB	function	platform	false		src/lib/attSystem.ts	42	
-_SwCacheMgr	function	platform	false		src/lib/attSystem.ts	43	
-_AppState	function	platform	false		src/lib/attSystem.ts	44	
-_swr	function	platform	false		src/lib/attSystem.ts	45	
-_swrLastHash	function	platform	false		src/lib/attSystem.ts	46	
-_rawApiW	function	platform	false		src/lib/attSystem.ts	47	
-_apiW	function	platform	false		src/lib/attSystem.ts	48	
-_cpop	function	platform	false		src/lib/attSystem.ts	49	
-_Swal	function	platform	false		src/lib/attSystem.ts	50	
-_SiomacConfig	function	platform	false		src/lib/attSystem.ts	51	
-currentColorScheme	variable	platform	false		src/lib/attSystem.ts	55	
-currentLayoutMode	variable	platform	false		src/lib/attSystem.ts	56	
-_currentProfileImage	variable	platform	false		src/lib/attSystem.ts	57	
-_attFpFrom	variable	platform	false		src/lib/attSystem.ts	59	
-_attFpTo	variable	platform	false		src/lib/attSystem.ts	60	
-_sessExpTimer	variable	platform	false		src/lib/attSystem.ts	62	
-_sessWarnTimer	variable	platform	false		src/lib/attSystem.ts	63	
-_sessTickTimer	variable	platform	false		src/lib/attSystem.ts	64	
-_sessWarned	variable	platform	false		src/lib/attSystem.ts	65	
-_lastActivityReset	variable	platform	false		src/lib/attSystem.ts	67	
-_activityHandler	variable	platform	false		src/lib/attSystem.ts	68	
-_sectionLoaded	object	platform	false		src/lib/attSystem.ts	70	
-_resetLoadedState	function	platform	false		src/lib/attSystem.ts	71	
-_photoCache	object	platform	false		src/lib/attSystem.ts	73	
-SESSION_KEY	variable	platform	false		src/lib/attSystem.ts	77	
-SESSION_DEFAULT_IDLE	variable	platform	false		src/lib/attSystem.ts	82	
-SESSION_REMEMBER_IDLE	variable	platform	false		src/lib/attSystem.ts	83	
-SESSION_WARN_AT	variable	platform	false		src/lib/attSystem.ts	84	
-SESSION_ACTIVITY_THROTTLE	variable	platform	false		src/lib/attSystem.ts	85	
-CONFIG	object	platform	false		src/lib/attSystem.ts	89	
-fmtLocalTime	function	platform	false		src/lib/attSystem.ts	98	
-escapeHtml	function	platform	false		src/lib/attSystem.ts	105	
-cssEscape	function	platform	false		src/lib/attSystem.ts	110	
-_patchPhotoCache	function	platform	false		src/lib/attSystem.ts	117	
-_clearPhotoCache	function	platform	false		src/lib/attSystem.ts	125	
-showSpinner	function	platform	false		src/lib/attSystem.ts	133	
-hideSpinner	function	platform	false		src/lib/attSystem.ts	136	
-showPopup	function	platform	false		src/lib/attSystem.ts	137	
-GeoResult	interface	platform	false		src/lib/attSystem.ts	142	
-getCurrentLocation	function	platform	false		src/lib/attSystem.ts	144	
-_spinBtn	function	platform	false		src/lib/attSystem.ts	159	
-ProfileAvEl	interface	platform	false		src/lib/attSystem.ts	168	
-_swapAvatarImg	function	platform	false		src/lib/attSystem.ts	170	
-applyImg	function	platform	false		src/lib/attSystem.ts	175	_swapAvatarImg
-applyFallback	function	platform	false		src/lib/attSystem.ts	185	_swapAvatarImg
-_syncPillAvatars	function	platform	false		src/lib/attSystem.ts	211	
-_setAttendanceAvatar	function	platform	false		src/lib/attSystem.ts	217	
-_profileToastTimer	variable	platform	false		src/lib/attSystem.ts	228	
-_profileToast	function	platform	false		src/lib/attSystem.ts	230	
-PREFIX	variable	platform	false		src/lib/attSystem.ts	242	
-PREFIX_LEN	variable	platform	false		src/lib/attSystem.ts	243	
-_buildMasked	function	platform	false		src/lib/attSystem.ts	245	
-_localDigits	function	platform	false		src/lib/attSystem.ts	252	
-setPhone	function	platform	true		src/lib/attSystem.ts	258	
-readPhone	function	platform	true		src/lib/attSystem.ts	264	
-onInput	function	platform	false		src/lib/attSystem.ts	274	
-onFocus	function	platform	false		src/lib/attSystem.ts	296	
-onKeydown	function	platform	false		src/lib/attSystem.ts	302	
-onBlur	function	platform	false		src/lib/attSystem.ts	313	
-SessionData	interface	platform	false		src/lib/attSystem.ts	330	
-_idleDeadline	function	platform	false		src/lib/attSystem.ts	353	
-saveSession	function	platform	false		src/lib/attSystem.ts	357	
-updateStoredSession	function	platform	false		src/lib/attSystem.ts	374	
-loadSession	function	platform	false		src/lib/attSystem.ts	382	
-clearSession	function	platform	false		src/lib/attSystem.ts	399	
-_armSessionTimers	function	platform	false		src/lib/attSystem.ts	407	
-_resetIdleDeadline	function	platform	false		src/lib/attSystem.ts	429	
-startSessionTimer	function	platform	false		src/lib/attSystem.ts	441	
-stopSessionTimer	function	platform	false		src/lib/attSystem.ts	460	
-handleSessionWarning	function	platform	false		src/lib/attSystem.ts	471	
-handleSessionExpired	function	platform	false		src/lib/attSystem.ts	477	
-updateSessionWidget	function	platform	false	ui-tile	src/lib/attSystem.ts	482	
-_completeLogin	function	platform	true		src/lib/attSystem.ts	517	
-applySession	function	platform	false		src/lib/attSystem.ts	562	
-handleLogout	function	platform	false		src/lib/attSystem.ts	669	
-stopCamera	function	platform	false		src/lib/attSystem.ts	746	
-startLocationTracking	function	platform	false		src/lib/attSystem.ts	757	
-updateLocationInfo	function	platform	false		src/lib/attSystem.ts	773	
-handleLocationError	function	platform	false		src/lib/attSystem.ts	797	
-_noSyncSections	variable	platform	false		src/lib/attSystem.ts	813	
-_userIsInteracting	function	platform	false		src/lib/attSystem.ts	815	
-startAutoSync	function	platform	false		src/lib/attSystem.ts	823	
-stopAutoSync	function	platform	false		src/lib/attSystem.ts	829	
-syncData	function	platform	false		src/lib/attSystem.ts	835	
-refreshCurrentView	function	platform	false		src/lib/attSystem.ts	840	
-updateClock	function	platform	false		src/lib/attSystem.ts	848	
-set	function	platform	false		src/lib/attSystem.ts	853	updateClock
-initializeDateSelectors	function	platform	false		src/lib/attSystem.ts	859	
-setupEventListeners	function	platform	false		src/lib/attSystem.ts	901	
-init	function	platform	true		src/lib/attSystem.ts	1237	
-AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1300	
-goTo	method	platform	false		src/lib/attSystem.ts	1302	AttendanceSystem
-_w	variable	platform	false		src/lib/attSystem.ts	1329	
+_SettingsView	function	platform	false		src/lib/attSystem.ts	40	
+_SiomacDB	function	platform	false		src/lib/attSystem.ts	41	
+_SwCacheMgr	function	platform	false		src/lib/attSystem.ts	42	
+_AppState	function	platform	false		src/lib/attSystem.ts	43	
+_swr	function	platform	false		src/lib/attSystem.ts	44	
+_swrLastHash	function	platform	false		src/lib/attSystem.ts	45	
+_rawApiW	function	platform	false		src/lib/attSystem.ts	46	
+_apiW	function	platform	false		src/lib/attSystem.ts	47	
+_cpop	function	platform	false		src/lib/attSystem.ts	48	
+_Swal	function	platform	false		src/lib/attSystem.ts	49	
+_SiomacConfig	function	platform	false		src/lib/attSystem.ts	50	
+currentColorScheme	variable	platform	false		src/lib/attSystem.ts	54	
+currentLayoutMode	variable	platform	false		src/lib/attSystem.ts	55	
+_currentProfileImage	variable	platform	false		src/lib/attSystem.ts	56	
+_attFpFrom	variable	platform	false		src/lib/attSystem.ts	58	
+_attFpTo	variable	platform	false		src/lib/attSystem.ts	59	
+_sessExpTimer	variable	platform	false		src/lib/attSystem.ts	61	
+_sessWarnTimer	variable	platform	false		src/lib/attSystem.ts	62	
+_sessTickTimer	variable	platform	false		src/lib/attSystem.ts	63	
+_sessWarned	variable	platform	false		src/lib/attSystem.ts	64	
+_lastActivityReset	variable	platform	false		src/lib/attSystem.ts	66	
+_activityHandler	variable	platform	false		src/lib/attSystem.ts	67	
+_sectionLoaded	object	platform	false		src/lib/attSystem.ts	69	
+_resetLoadedState	function	platform	false		src/lib/attSystem.ts	70	
+_photoCache	object	platform	false		src/lib/attSystem.ts	72	
+SESSION_KEY	variable	platform	false		src/lib/attSystem.ts	76	
+SESSION_DEFAULT_IDLE	variable	platform	false		src/lib/attSystem.ts	81	
+SESSION_REMEMBER_IDLE	variable	platform	false		src/lib/attSystem.ts	82	
+SESSION_WARN_AT	variable	platform	false		src/lib/attSystem.ts	83	
+SESSION_ACTIVITY_THROTTLE	variable	platform	false		src/lib/attSystem.ts	84	
+CONFIG	object	platform	false		src/lib/attSystem.ts	88	
+fmtLocalTime	function	platform	false		src/lib/attSystem.ts	97	
+escapeHtml	function	platform	false		src/lib/attSystem.ts	104	
+cssEscape	function	platform	false		src/lib/attSystem.ts	109	
+_patchPhotoCache	function	platform	false		src/lib/attSystem.ts	116	
+_clearPhotoCache	function	platform	false		src/lib/attSystem.ts	124	
+showSpinner	function	platform	false		src/lib/attSystem.ts	132	
+hideSpinner	function	platform	false		src/lib/attSystem.ts	135	
+showPopup	function	platform	false		src/lib/attSystem.ts	136	
+GeoResult	interface	platform	false		src/lib/attSystem.ts	141	
+getCurrentLocation	function	platform	false		src/lib/attSystem.ts	143	
+_spinBtn	function	platform	false		src/lib/attSystem.ts	158	
+ProfileAvEl	interface	platform	false		src/lib/attSystem.ts	167	
+_swapAvatarImg	function	platform	false		src/lib/attSystem.ts	169	
+applyImg	function	platform	false		src/lib/attSystem.ts	174	_swapAvatarImg
+applyFallback	function	platform	false		src/lib/attSystem.ts	184	_swapAvatarImg
+_syncPillAvatars	function	platform	false		src/lib/attSystem.ts	210	
+_setAttendanceAvatar	function	platform	false		src/lib/attSystem.ts	216	
+_profileToastTimer	variable	platform	false		src/lib/attSystem.ts	227	
+_profileToast	function	platform	false		src/lib/attSystem.ts	229	
+PREFIX	variable	platform	false		src/lib/attSystem.ts	241	
+PREFIX_LEN	variable	platform	false		src/lib/attSystem.ts	242	
+_buildMasked	function	platform	false		src/lib/attSystem.ts	244	
+_localDigits	function	platform	false		src/lib/attSystem.ts	251	
+setPhone	function	platform	true		src/lib/attSystem.ts	257	
+readPhone	function	platform	true		src/lib/attSystem.ts	263	
+onInput	function	platform	false		src/lib/attSystem.ts	273	
+onFocus	function	platform	false		src/lib/attSystem.ts	295	
+onKeydown	function	platform	false		src/lib/attSystem.ts	301	
+onBlur	function	platform	false		src/lib/attSystem.ts	312	
+SessionData	interface	platform	false		src/lib/attSystem.ts	329	
+_idleDeadline	function	platform	false		src/lib/attSystem.ts	352	
+saveSession	function	platform	false		src/lib/attSystem.ts	356	
+updateStoredSession	function	platform	false		src/lib/attSystem.ts	373	
+loadSession	function	platform	false		src/lib/attSystem.ts	381	
+clearSession	function	platform	false		src/lib/attSystem.ts	398	
+_armSessionTimers	function	platform	false		src/lib/attSystem.ts	406	
+_resetIdleDeadline	function	platform	false		src/lib/attSystem.ts	428	
+startSessionTimer	function	platform	false		src/lib/attSystem.ts	440	
+stopSessionTimer	function	platform	false		src/lib/attSystem.ts	459	
+handleSessionWarning	function	platform	false		src/lib/attSystem.ts	470	
+handleSessionExpired	function	platform	false		src/lib/attSystem.ts	476	
+updateSessionWidget	function	platform	false	ui-tile	src/lib/attSystem.ts	481	
+_completeLogin	function	platform	true		src/lib/attSystem.ts	516	
+applySession	function	platform	false		src/lib/attSystem.ts	561	
+handleLogout	function	platform	false		src/lib/attSystem.ts	668	
+stopCamera	function	platform	false		src/lib/attSystem.ts	745	
+startLocationTracking	function	platform	false		src/lib/attSystem.ts	756	
+updateLocationInfo	function	platform	false		src/lib/attSystem.ts	772	
+handleLocationError	function	platform	false		src/lib/attSystem.ts	796	
+_noSyncSections	variable	platform	false		src/lib/attSystem.ts	812	
+_userIsInteracting	function	platform	false		src/lib/attSystem.ts	814	
+startAutoSync	function	platform	false		src/lib/attSystem.ts	822	
+stopAutoSync	function	platform	false		src/lib/attSystem.ts	828	
+syncData	function	platform	false		src/lib/attSystem.ts	834	
+refreshCurrentView	function	platform	false		src/lib/attSystem.ts	839	
+updateClock	function	platform	false		src/lib/attSystem.ts	847	
+set	function	platform	false		src/lib/attSystem.ts	852	updateClock
+initializeDateSelectors	function	platform	false		src/lib/attSystem.ts	858	
+setupEventListeners	function	platform	false		src/lib/attSystem.ts	900	
+init	function	platform	true		src/lib/attSystem.ts	1175	
+AttendanceSystem	object	platform	true		src/lib/attSystem.ts	1238	
+goTo	method	platform	false		src/lib/attSystem.ts	1240	AttendanceSystem
+_w	variable	platform	false		src/lib/attSystem.ts	1267	
 AuthSuccess	interface	security	true		src/lib/auth.ts	56	
 Auth2faRequired	interface	security	true		src/lib/auth.ts	62	
 Auth2faSetupRequired	interface	security	true		src/lib/auth.ts	68	
@@ -10222,7 +10176,7 @@ _applyFullSession	function	security	false		src/lib/auth.ts	318
 makeSession	function	platform	false	test	src/lib/boot.test.ts	39	
 buildShellDom	function	platform	false	test	src/lib/boot.test.ts	58	
 teardownShellDom	function	platform	false	test	src/lib/boot.test.ts	72	
-stub	function	platform	false	test	src/lib/boot.test.ts	240	
+stub	function	platform	false	test	src/lib/boot.test.ts	238	
 DB_NAME	variable	platform	false		src/lib/cache.ts	25	
 DB_VERSION	variable	platform	false		src/lib/cache.ts	26	
 STORE	variable	platform	false		src/lib/cache.ts	27	
@@ -10336,19 +10290,19 @@ error	method	platform	false		src/lib/logger.ts	154	logger
 critical	method	platform	false		src/lib/logger.ts	158	logger
 makeModule	function	platform	false	test	src/lib/moduleRegistry.test.ts	12	
 granteeCan	function	platform	false	test	src/lib/moduleRegistry.test.ts	101	
-ModuleNavItem	interface	platform	true		src/lib/moduleRegistry.ts	28	
-ModuleNavGroup	interface	platform	true		src/lib/moduleRegistry.ts	44	
-ModuleMountContext	interface	platform	true		src/lib/moduleRegistry.ts	51	
-ModuleMount	interface	platform	true		src/lib/moduleRegistry.ts	58	
-AppRole	type	platform	true		src/lib/moduleRegistry.ts	70	
-ModuleDefinition	interface	platform	true		src/lib/moduleRegistry.ts	72	
-canAccessModuleNavItem	function	platform	true		src/lib/moduleRegistry.ts	88	
-_modules	variable	platform	false		src/lib/moduleRegistry.ts	99	
-registerModule	function	platform	true		src/lib/moduleRegistry.ts	102	
-getModules	function	platform	true		src/lib/moduleRegistry.ts	107	
-getModule	function	platform	true		src/lib/moduleRegistry.ts	112	
-getModulesForRole	function	platform	true		src/lib/moduleRegistry.ts	117	
-getModuleForSection	function	platform	true		src/lib/moduleRegistry.ts	122	
+ModuleNavItem	interface	platform	true		src/lib/moduleRegistry.ts	29	
+ModuleNavGroup	interface	platform	true		src/lib/moduleRegistry.ts	47	
+ModuleMountContext	interface	platform	true		src/lib/moduleRegistry.ts	54	
+ModuleMount	interface	platform	true		src/lib/moduleRegistry.ts	61	
+AppRole	type	platform	true		src/lib/moduleRegistry.ts	73	
+ModuleDefinition	interface	platform	true		src/lib/moduleRegistry.ts	75	
+canAccessModuleNavItem	function	platform	true		src/lib/moduleRegistry.ts	91	
+_modules	variable	platform	false		src/lib/moduleRegistry.ts	103	
+registerModule	function	platform	true		src/lib/moduleRegistry.ts	106	
+getModules	function	platform	true		src/lib/moduleRegistry.ts	111	
+getModule	function	platform	true		src/lib/moduleRegistry.ts	116	
+getModulesForRole	function	platform	true		src/lib/moduleRegistry.ts	121	
+getModuleForSection	function	platform	true		src/lib/moduleRegistry.ts	126	
 NS	variable	platform	false	test	src/lib/navVisibility.test.ts	12	
 items	array	platform	false	test	src/lib/navVisibility.test.ts	13	
 VisibilityItem	interface	platform	true		src/lib/navVisibility.ts	17	
@@ -10405,6 +10359,7 @@ permissionState	function	security	true		src/lib/permissions.ts	1419
 permissionGroups	function	security	true		src/lib/permissions.ts	1429	
 can	function	security	true		src/lib/permissions.ts	1449	
 useCan	function	security	true	hook	src/lib/permissions.ts	1465	
+useAnyCan	function	security	true	hook	src/lib/permissions.ts	1477	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -10568,12 +10523,12 @@ SubmitWorkflowInput	interface	workflow	true		src/lib/workflow/types.ts	186
 DEMO_ACTOR	object	workflow	false		src/lib/workflow/useWorkflow.ts	19	
 UseWorkflow	interface	workflow	true		src/lib/workflow/useWorkflow.ts	21	
 useWorkflow	function	workflow	true	hook	src/lib/workflow/useWorkflow.ts	36	
-queryClient	variable	platform	false		src/main.tsx	95	
-SCRIPTS	array	platform	false		src/main.tsx	105	
-loadScript	function	platform	false		src/main.tsx	127	
-loadScripts	function	platform	false		src/main.tsx	137	
-bootApp	function	platform	false		src/main.tsx	146	
-_mountEmp	function	platform	false		src/main.tsx	327	bootApp
+queryClient	variable	platform	false		src/main.tsx	94	
+SCRIPTS	array	platform	false		src/main.tsx	104	
+loadScript	function	platform	false		src/main.tsx	125	
+loadScripts	function	platform	false		src/main.tsx	135	
+bootApp	function	platform	false		src/main.tsx	144	
+_mountEmp	function	platform	false		src/main.tsx	319	bootApp
 CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	51	
 CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	64	
 ThemeBridge	function	platform	false	component	src/shell/AppShell.tsx	74	
@@ -10590,15 +10545,15 @@ MessageModal	function	communications	true	component	src/shell/modals/MessageModa
 NotificationModal	function	communications	true	component	src/shell/modals/NotificationModal.tsx	11	
 ProjectSiteModal	function	platform	true	component	src/shell/modals/ProjectSiteModal.tsx	15	
 TicketModal	function	communications	true	component	src/shell/modals/TicketModal.tsx	5	
-StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	29	
-PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	305	
-AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	426	
-AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	571	
+StatutoryRatesModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	27	
+PayrollSettingsModal	function	platform	false	component	src/shell/sections/AdminSections.tsx	303	
+AdminDashboardSection	function	platform	false	component	src/shell/sections/AdminSections.tsx	424	
+AdminSections	function	platform	true	component	src/shell/sections/AdminSections.tsx	569	
 AppSectionProps	interface	platform	false		src/shell/sections/AppSection.tsx	18	
 AppSection	function	platform	true	component	src/shell/sections/AppSection.tsx	26	
 EmpAttendanceSection	function	hr	false	component	src/shell/sections/EmployeeSections.tsx	23	
 EmployeeSections	function	hr	true	component	src/shell/sections/EmployeeSections.tsx	166	
-ManagerSections	function	platform	true	component	src/shell/sections/ManagerSections.tsx	18	
+ManagerSections	function	platform	true	component	src/shell/sections/ManagerSections.tsx	17	
 LiveMapSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	23	
 AboutSection	function	platform	false	component	src/shell/sections/SharedSections.tsx	99	
 SharedSections	function	platform	true	component	src/shell/sections/SharedSections.tsx	178	

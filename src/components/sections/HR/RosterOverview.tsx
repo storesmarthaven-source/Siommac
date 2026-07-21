@@ -25,6 +25,7 @@ import type {
   ShiftAssignment,
 } from '../../../../types/hrRoster';
 import './onboardingCase.css';
+import { HRQueryNotice } from './HRQueryState';
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
@@ -67,6 +68,8 @@ export function RosterOverview(): VNode {
         sub="Schedule shifts, manage rotation patterns, and publish rosters to employees."
       />
 
+      <HRQueryNotice queries={[_statsQ]} />
+
       {/* Tab bar */}
       <div class="obx-tabs" style={{ marginBottom: 16, borderBottom: '1px solid #e2e8f0', display: 'flex', gap: 4 }}>
         {canView && (
@@ -108,6 +111,7 @@ function RostersTab({ canManage, canPublish }: { canManage: boolean; canPublish:
 
   return (
     <div>
+      <HRQueryNotice queries={[rostersQ]} />
       <div style={{ display: 'flex', gap: 10, margin: '0 0 10px', alignItems: 'center' }}>
         <select class="ui-select" style={{ width: 180 }} value={statusFilter} onChange={e => setStatusFilter((e.target as HTMLSelectElement).value)}>
           {['all','draft','pending_approval','published','returned','archived'].map(s => (
@@ -118,7 +122,7 @@ function RostersTab({ canManage, canPublish }: { canManage: boolean; canPublish:
       </div>
 
       <div class="obx-section"><div class="obx-section-body">
-        {rostersQ.isLoading && !rostersQ.data
+        {rostersQ.isLoading
           ? <div class="obx-empty">Loading…</div>
           : !rows.length
           ? <EmptyState icon="fa-calendar-days" title="No rosters" text={canManage ? 'Create a roster to start scheduling.' : 'No rosters match this filter.'} />
@@ -383,6 +387,9 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
   const templatesQ  = useShiftTemplates({ activeOnly: false });
   const rotationsQ  = useRotationPatterns();
   const coverageQ   = useCoverageRequirements();
+  const templates = templatesQ.data ?? [];
+  const rotations = rotationsQ.data ?? [];
+  const coverage = coverageQ.data ?? [];
 
   const [newShiftOpen, setNewShiftOpen] = useState(false);
   const _upsertShift = useRosterMutation(hrRosterApi.upsertTemplate);
@@ -404,15 +411,15 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
             {canManage && <button class="obx-btn primary" onClick={() => setNewShiftOpen(true)}>+ New Shift Template</button>}
           </div>
           <div class="obx-section"><div class="obx-section-body">
-            {templatesQ.isLoading && !templatesQ.data
+            {templatesQ.isLoading
               ? <div class="obx-empty">Loading…</div>
-              : !(templatesQ.data ?? []).length
+              : !templates.length
               ? <EmptyState icon="fa-clock" title="No shift templates" text="Define Day/Night/Split shifts to use in rosters." />
               : (
                 <table class="obx-table">
                   <thead><tr><th>Code</th><th>Name</th><th>Start</th><th>End</th><th>Hours</th><th>Break</th><th>Site</th><th>Active</th>{canManage && <th />}</tr></thead>
                   <tbody>
-                    {(templatesQ.data ?? []).map(t => (
+                    {templates.map(t => (
                       <tr key={t.id}>
                         <td><b style={{ background: t.colour ?? '#e0f2fe', padding: '2px 8px', borderRadius: 4, fontSize: 12 }}>{t.code}</b></td>
                         <td>{t.name}</td>
@@ -453,15 +460,15 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
 
       {section === 'rotations' && (
         <div class="obx-section"><div class="obx-section-body">
-          {rotationsQ.isLoading && !rotationsQ.data
+          {rotationsQ.isLoading
             ? <div class="obx-empty">Loading…</div>
-            : !(rotationsQ.data ?? []).length
+            : !rotations.length
             ? <EmptyState icon="fa-rotate" title="No rotation patterns" text={canManage ? 'Create a pattern (e.g. 4-on-4-off) to auto-generate rosters.' : 'No rotation patterns defined.'} />
             : (
               <table class="obx-table">
                 <thead><tr><th>Code</th><th>Name</th><th>Cycle Days</th><th>Days defined</th><th>Active</th></tr></thead>
                 <tbody>
-                  {(rotationsQ.data ?? []).map(r => (
+                  {rotations.map(r => (
                     <tr key={r.id}>
                       <td><b>{r.code}</b></td><td>{r.name}</td>
                       <td class="obx-meta">{r.cycleDays}</td>
@@ -477,15 +484,15 @@ function TemplatesTab({ canManage }: { canManage: boolean }): VNode {
 
       {section === 'coverage' && (
         <div class="obx-section"><div class="obx-section-body">
-          {coverageQ.isLoading && !coverageQ.data
+          {coverageQ.isLoading
             ? <div class="obx-empty">Loading…</div>
-            : !(coverageQ.data ?? []).length
+            : !coverage.length
             ? <EmptyState icon="fa-people-group" title="No coverage requirements" text={canManage ? 'Define minimum headcount per shift to enable gap detection.' : 'No coverage requirements defined.'} />
             : (
               <table class="obx-table">
                 <thead><tr><th>Shift</th><th>Site</th><th>Department</th><th>Required</th><th>Day</th><th>Active</th></tr></thead>
                 <tbody>
-                  {(coverageQ.data ?? []).map(r => (
+                  {coverage.map(r => (
                     <tr key={r.id}>
                       <td><b>{r.shiftTemplateName ?? r.shiftTemplateId}</b></td>
                       <td class="obx-meta">{r.siteId ?? 'All'}</td>
@@ -522,7 +529,7 @@ function MyShiftsTab(): VNode {
         <input type="date" class="ui-input" value={to} onInput={e => setTo((e.target as HTMLInputElement).value)} />
       </div>
       <div class="obx-section"><div class="obx-section-body">
-        {shiftsQ.isLoading && !shiftsQ.data
+        {shiftsQ.isLoading
           ? <div class="obx-empty">Loading…</div>
           : !shifts.length
           ? <EmptyState icon="fa-calendar" title="No shifts scheduled" text="No published shifts found for this period." />

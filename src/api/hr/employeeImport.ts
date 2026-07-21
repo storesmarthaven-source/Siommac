@@ -9,10 +9,11 @@
  */
 
 import { apiPost } from '@lib/api';
+import { requireHrSuccess } from './client';
 
 async function call<T>(path: string, args: Record<string, unknown>): Promise<T> {
-  const res = await apiPost<{ success: boolean; data: T }>(path, args);
-  return res.data;
+  const res = await apiPost<{ success: boolean; data: T; message?: string }>(path, args);
+  return requireHrSuccess(res, path).data;
 }
 
 // ── contracts (mirror routes/hrEmployeeImport.ts) ──────────────────────────────

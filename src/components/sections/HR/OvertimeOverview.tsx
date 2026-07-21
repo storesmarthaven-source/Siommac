@@ -19,6 +19,7 @@ import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components
 import { useHrEmployees, type HrEmployeeRow } from '@api/hr/employees';
 import { fmtDate, humanize, statusTone } from '../Finance/financeShared';
 import '../Finance/finance.css';
+import { HRQueryNotice } from './HRQueryState';
 
 const empName = (e: HrEmployeeRow): string => (e.display_name ?? e.full_name ?? `${e.first_name ?? ''} ${e.last_name ?? ''}`.trim()) || e.username || e.id;
 
@@ -83,6 +84,8 @@ export function OvertimeOverview(): VNode {
         sub="Review, approve and track overtime. Approved overtime feeds the payroll run at the recorded multiplier."
       />
 
+      <HRQueryNotice queries={[entriesQ, empsQ]} />
+
       <div class="obx-repstats" style={{ margin: '4px 0 12px' }}>
         {STAT_ROW.map(s => (
           <div class="obx-repstat" key={s.label}>
@@ -104,7 +107,7 @@ export function OvertimeOverview(): VNode {
       {showForm && <LogOvertimeForm onDone={() => setShowForm(false)} />}
 
       <div class="obx-section"><div class="obx-section-body">
-        {entriesQ.isLoading && !entriesQ.data ? <div class="obx-empty">Loading…</div>
+        {entriesQ.isLoading ? <div class="obx-empty">Loading…</div>
           : !entries.length ? <EmptyState icon="fa-clock" title="No overtime entries" text="Overtime entries matching this filter will appear here." />
           : (
             <table class="obx-table">
@@ -167,7 +170,7 @@ function LogOvertimeForm({ onDone }: { onDone: () => void }): VNode {
   const submit = async (): Promise<void> => {
     if (!f.workDate || !(hoursNum > 0)) { void dialog.error('Work date and a positive number of hours are required.'); return; }
     if (dateInFuture) { void dialog.error('Overtime cannot be logged for a future date.'); return; }
-    if (!submitKeyRef.current) submitKeyRef.current = crypto.randomUUID();
+    submitKeyRef.current ??= crypto.randomUUID();
     try {
       // The stored multiplier is the type's indicative fallback; the payroll overtime rule
       // for this type is authoritative and re-resolves at lock-inputs time.

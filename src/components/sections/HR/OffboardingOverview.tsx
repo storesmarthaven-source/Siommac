@@ -21,6 +21,7 @@ import { useHrEmployees } from '@api/hr/employees';
 import type { OffboardingReason } from '../../../../types/hrOffboarding';
 import { OffboardingDashboard, OffboardingDashboardSkeleton } from './offboardingWidgets';
 import './onboardingCase.css';
+import { HRQueryNotice } from './HRQueryState';
 
 const REASONS: OffboardingReason[] = ['resignation', 'termination', 'redundancy', 'end_of_contract', 'retirement'];
 const STATUS_FILTERS = ['all', 'in_progress', 'open', 'paused', 'blocked', 'ready_for_exit', 'draft', 'completed', 'cancelled'] as const;
@@ -51,6 +52,8 @@ export function OffboardingOverview(): VNode {
         actions={canStart ? <button class="obx-btn primary" onClick={() => setNewOpen(true)}>+ New Case</button> : undefined}
       />
 
+      <HRQueryNotice queries={[casesQ, allCasesQ, statsQ]} />
+
       {statsQ.data
         ? <OffboardingDashboard stats={statsQ.data} cases={allCasesQ.data ?? []} onOpenCase={setSelectedId} onFilterStatus={st => setStatusFilter(st)} />
         : <OffboardingDashboardSkeleton />}
@@ -62,7 +65,7 @@ export function OffboardingOverview(): VNode {
       </div>
 
       <div class="obx-section"><div class="obx-section-body">
-        {casesQ.isLoading && !casesQ.data ? <div class="obx-empty">Loading…</div>
+        {casesQ.isLoading ? <div class="obx-empty">Loading…</div>
           : !rows.length ? <EmptyState icon="fa-door-open" title="No offboarding cases" text={canStart ? 'Start a case to begin an employee exit.' : 'No offboarding cases match this filter.'} />
           : (
             <table class="obx-table">
@@ -156,7 +159,7 @@ function CaseDetail({ caseId, onBack }: { caseId: string; onBack: () => void }):
     try { await p; toast(msg); } catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
   }
 
-  if (q.isLoading && !q.data) return <div class="hr-offboarding"><button class="obx-back" onClick={onBack}>← Offboarding</button><div class="obx-empty">Loading…</div></div>;
+  if (q.isLoading) return <div class="hr-offboarding"><button class="obx-back" onClick={onBack}>← Offboarding</button><div class="obx-empty">Loading…</div></div>;
   if (!q.data) return <div class="hr-offboarding"><button class="obx-back" onClick={onBack}>← Offboarding</button><div class="obx-empty">Case not found.</div></div>;
   const { case: c, tasks, handoffs, blockers } = q.data;
   const terminal = c.status === 'completed' || c.status === 'cancelled';

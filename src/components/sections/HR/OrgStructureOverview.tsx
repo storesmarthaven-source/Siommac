@@ -30,6 +30,7 @@ import type {
 } from '../../../../types/hrOrganization';
 import './onboardingCase.css';
 import './orgStructure.css';
+import { HRQueryNotice } from './HRQueryState';
 
 interface Opt { value: string; label: string }
 const ORG_UNIT_TYPES: OrgUnitType[] = ['company', 'division', 'department', 'team', 'crew', 'site_department'];
@@ -507,7 +508,7 @@ export function OrgStructureOverview(): VNode {
     catch (e) { toast(e instanceof Error ? e.message : 'Failed'); }
   }
 
-  const loadingUnits = unitsQ.isLoading && !unitsQ.data;
+  const loadingUnits = unitsQ.isLoading;
 
   return (
     <div class="hr-org-structure">
@@ -519,6 +520,8 @@ export function OrgStructureOverview(): VNode {
           : tab === 'costcenters' && canCc ? <button class="obx-btn primary" onClick={() => setModal({ kind: 'costcenter', editing: null })}>+ New Cost Centre</button>
           : undefined}
       />
+
+      <HRQueryNotice queries={[unitsQ, statsQ, healthQ, positionsQ, ccQ, peopleQ, sitesQ]} />
 
       <StatRow />
       <HealthPanel />
@@ -650,7 +653,7 @@ export function OrgStructureOverview(): VNode {
           <input class="ui-input" style={{ flex: 1 }} placeholder="Search positions…" value={q} onInput={e => setQ((e.target as HTMLInputElement).value)} />
           <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} class="obx-meta"><input type="checkbox" checked={showInactive} onChange={e => setShowInactive((e.target as HTMLInputElement).checked)} /> Show inactive</label>
         </div>
-        {positionsQ.isLoading && !positionsQ.data ? <div class="obx-empty">Loading…</div>
+        {positionsQ.isLoading ? <div class="obx-empty">Loading…</div>
           : !rows.length ? <EmptyState icon="fa-id-badge" title="No positions" text="No job positions match these filters." />
           : (
             <table class="obx-table">
@@ -702,7 +705,7 @@ export function OrgStructureOverview(): VNode {
           <input class="ui-input" style={{ flex: 1 }} placeholder="Search cost centres…" value={q} onInput={e => setQ((e.target as HTMLInputElement).value)} />
           <label style={{ display: 'inline-flex', gap: 6, alignItems: 'center' }} class="obx-meta"><input type="checkbox" checked={showInactive} onChange={e => setShowInactive((e.target as HTMLInputElement).checked)} /> Show inactive</label>
         </div>
-        {ccQ.isLoading && !ccQ.data ? <div class="obx-empty">Loading…</div>
+        {ccQ.isLoading ? <div class="obx-empty">Loading…</div>
           : !rows.length ? <EmptyState icon="fa-coins" title="No cost centres" text="No cost centres match these filters." />
           : (
             <table class="obx-table">
@@ -744,7 +747,7 @@ export function OrgStructureOverview(): VNode {
     const riskTone = (r: string): string => r === 'critical' ? 'critical' : r === 'high' ? 'warning' : 'info';
     return (
       <div class="obx-section"><div class="obx-section-body">
-        {crQ.isLoading && !crQ.data ? <div class="obx-empty">Loading…</div>
+        {crQ.isLoading ? <div class="obx-empty">Loading…</div>
           : !rows.length ? <EmptyState icon="fa-clipboard-check" title="No change requests" text="High-risk org changes that require approval will appear here." />
           : (
             <table class="obx-table">

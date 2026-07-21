@@ -101,8 +101,6 @@ declare global {
     Sites:          LegacyViewShim;
     Employees:      LegacyViewShim;
     Profile:        LegacyViewShim;
-    LeaveView:      LegacyViewShim;
-    AttendanceView: LegacyViewShim;
   }
 }
 

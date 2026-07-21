@@ -99,7 +99,7 @@ export interface NavGlobalCatalog {
 
 /** Display label for a nav group — the flat 'overview' group carries no label. */
 function groupDisplayLabel(g: NavGroupItem): string {
-  const l = (g.label ?? '').trim();
+  const l = g.label.trim();
   if (l) return l;
   if (g.id === 'overview') return 'Overview';
   return g.id.charAt(0).toUpperCase() + g.id.slice(1);
@@ -474,7 +474,7 @@ export function buildTopTabs(role: string): void {
   const { SECTION_DEFS, BASELINE_SECTIONS, COMMON_ITEMS } = cfg();
   const personal = isEmployeeRole() ? BASELINE_SECTIONS : [];
   // Top-tabs are flat: management first, then personal, then account.
-  const items = (SECTION_DEFS[role] ?? []).concat(personal, COMMON_ITEMS);
+  const items = (SECTION_DEFS[role] ?? []).concat(moduleSectionItems(role), personal, COMMON_ITEMS);
   const tabs = document.getElementById('topTabs');
   if (tabs) {
     tabs.innerHTML = items.map(it =>
@@ -675,7 +675,6 @@ export function refreshSection(id: string): void {
     case 's-emp-payroll':     win.Employees?.loadMyPayslips?.();               break;
     case 's-mgr-overview':    win.Employees?.loadDepartmentData?.();           break;
     case 's-mgr-employees':   win.Employees?.loadDepartmentEmployees?.();      break;
-    case 's-mgr-leaves':      win.Employees?.loadManagerLeaveApplications?.(); break;
     case 's-adm-dashboard':
       win.Employees?.loadDashboardData?.();
       (win.Dashboard as { loadDashboardCharts?: () => void; initDashboardLayoutEditor?: () => void } | undefined)?.loadDashboardCharts?.();
@@ -684,8 +683,6 @@ export function refreshSection(id: string): void {
     case 's-adm-employees':   win.Employees?.loadEmployeeList?.();             break;
     case 's-adm-departments': win.Employees?.loadDepartments?.();              break;
     case 's-adm-projects':    win.Sites?.loadProjectSites?.();                 break;
-    case 's-adm-attendance':  win.AttendanceView?.loadAttendanceData?.();      break;
-    case 's-adm-leaves':      win.LeaveView?.loadLeaveApplications?.();        break;
   }
 }
 
@@ -761,7 +758,7 @@ export function setHdrBadge(badge: Element | null, count: number, dot?: boolean)
 
 // ── Nav leave badges ──────────────────────────────────────────────────────────
 
-const LEAVE_SECTION_IDS = ['s-adm-leaves', 's-mgr-leaves', 's-emp-leave'];
+const LEAVE_SECTION_IDS = ['s-hr-leave', 's-emp-leave'];
 
 // Keyed by the BUTTON ELEMENT (not the section id) so a rebuilt sidebar — the DOM
 // is replaced wholesale on a permission refresh (NavController) — starts fresh: a

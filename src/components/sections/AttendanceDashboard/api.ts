@@ -11,6 +11,7 @@
  */
 
 import { apiPost } from '@lib/api';
+import { requireHrData, requireHrSuccess } from '@api/hr/client';
 import type {
   AttendanceStatus,
   ProjectSiteOption,
@@ -23,11 +24,13 @@ import type {
 interface MyStatusResponse {
   success: boolean;
   data?:   AttendanceStatus;
+  message?: string;
 }
 
 interface SitesResponse {
   success: boolean;
   data?:   ProjectSiteOption[];
+  message?: string;
 }
 
 // ── Fetchers ──────────────────────────────────────────────────────────────────
@@ -42,8 +45,7 @@ export async function getMyStatus(
     { username },
     { signal },
   );
-  if (res.success && res.data) return res.data;
-  return { hasCheckedIn: false, hasCheckedOut: false, checkInTime: null, checkOutTime: null, location: '' };
+  return requireHrData(res, 'getMyStatus');
 }
 
 /** Fetch the list of project sites for the check-in site selector. */
@@ -53,7 +55,7 @@ export async function listProjectSites(signal?: AbortSignal): Promise<ProjectSit
     {},
     { signal },
   );
-  return (res.success && res.data) ? res.data : [];
+  return requireHrData(res, 'listProjectSites');
 }
 
 /** Submit a check-in or check-out with a selfie photo and GPS location. */
@@ -64,8 +66,8 @@ export async function markAttendance(payload: {
   location:    Pick<LocationData, 'latitude' | 'longitude' | 'accuracy'> | null;
   siteId:      string;
 }): Promise<MarkAttendanceResponse> {
-  return apiPost<MarkAttendanceResponse>(
+  return requireHrSuccess(await apiPost<MarkAttendanceResponse>(
     'markAttendance',
     payload,
-  );
+  ), 'markAttendance');
 }

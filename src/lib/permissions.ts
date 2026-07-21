@@ -1472,3 +1472,16 @@ export function useCan(key: string): boolean {
     });
   });
 }
+
+/** Reactive OR-gate for pages that support distinct self-service/manage capabilities. */
+export function useAnyCan(keys: readonly string[]): boolean {
+  return useSessionStore((s) => {
+    if (!s.role) return false;
+    const context = {
+      role:            s.role,
+      rolePermissions: s.rolePermissions,
+      overrides:       s.permissionOverrides,
+    };
+    return keys.some(key => resolvePermission(key, context));
+  });
+}

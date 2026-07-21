@@ -45,7 +45,6 @@ try { document.body.setAttribute('data-theme', useUiStore.getState().theme); } c
 import { logger }                              from '@lib/logger';
 import { registerQueryClient }                from './store/data';
 import { createDefaultQueryClient, setQueryClient } from '@lib/queryClient';
-import { mountAttendanceSection }     from '@sections/Attendance';
 // mountAdminLeaveSection REMOVED — AdminLeave section retired; leave management
 // for admin/superadmin is now under HR ▸ Leave & Absence (s-hr-leave).
 import { LeaveOverview }              from '@sections/HR/LeaveOverview';
@@ -116,7 +115,6 @@ const SCRIPTS: readonly string[] = [
   // nav.js          → src/components/nav/
   // employees.js    → src/components/sections/Employees/
   // sites.js        → src/components/sections/ProjectSites/
-  // attendance-view.js → src/components/sections/Attendance/
   // leave.js        → src/components/sections/AdminLeave/
   // profile.js      → src/components/sections/Profile/
   // settings-view.js→ src/components/sections/Settings/
@@ -208,12 +206,6 @@ async function bootApp(): Promise<void> {
   const navcustRoot = document.getElementById('preact-navcust-root');
   if (navcustRoot) {
     mountNavCustomizer(navcustRoot);
-  }
-
-  // Attendance section (replaces attendance-view.js)
-  const attRoot = document.getElementById('preact-attendance-root');
-  if (attRoot) {
-    mountAttendanceSection(attRoot, { queryClient });
   }
 
   // Admin Leave section RETIRED — preact-admin-leave-root no longer rendered in the shell.
@@ -356,7 +348,6 @@ async function bootApp(): Promise<void> {
     loadDepartments:              () => { void queryClient.invalidateQueries({ queryKey: ['departments'] }); },
     // Leave queries now target the canonical HR leave service (hr/leave/*).
     loadLeaveRequests:            () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-my'] }); },
-    loadManagerLeaveApplications: () => { void queryClient.invalidateQueries({ queryKey: ['hr-leave-all'] }); },
     // ESS payslips now render the canonical Finance MyPayslipsOverview — the
     // nav shim refreshes ITS query key, not the retired legacy ['payslips'].
     loadMyPayslips:               () => { void queryClient.invalidateQueries({ queryKey: ['finance', 'payroll', 'payslips', 'my'] }); },
@@ -420,29 +411,6 @@ async function bootApp(): Promise<void> {
   (window as unknown as Record<string, unknown>).Profile = {
     loadMyProfile: () => {
       void queryClient.invalidateQueries({ queryKey: ['profile'] });
-    },
-  };
-
-  // window.LeaveView shim — invalidates the canonical HR leave query cache so
-  // LeaveOverview (now serving both admin and ESS) refreshes on nav.
-  (window as unknown as Record<string, unknown>).LeaveView = {
-    loadLeaveApplications: () => {
-      // Canonical HR leave query keys (hr/leave/* endpoints)
-      void queryClient.invalidateQueries({ queryKey: ['hr-leave-all'] });
-      void queryClient.invalidateQueries({ queryKey: ['hr-leave-my'] });
-      void queryClient.invalidateQueries({ queryKey: ['hr-leave-stats'] });
-    },
-    // Stubs for any legacy callers — no active callers remain after AdminLeave removal.
-    _lvCard:        () => '',
-    _diffLeaveList: () => undefined,
-  };
-
-  // window.AttendanceView shim — nav.js calls AttendanceView.loadAttendanceData()
-  // when navigating to s-adm-attendance. TanStack Query auto-refetches on focus,
-  // but we also invalidate the cache explicitly so a manual nav always refreshes.
-  (window as unknown as Record<string, unknown>).AttendanceView = {
-    loadAttendanceData: () => {
-      void queryClient.invalidateQueries({ queryKey: ['attendance', 'log'] });
     },
   };
 

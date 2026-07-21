@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `90d39a5c509ed98a22f83a22`
 
-Files: 293 | Symbols: 2654 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 293 | Symbols: 2653 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -33,7 +33,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/deleteProjectSite` | `sites.delete` | assertInScope, requirePermission | `DeleteSiteSchema` | `netlify/functions/routes/sites.ts:122` | res @ src/api/sites.ts:152<br>deleteProjectSiteApi @ src/components/sections/ProjectSites/api.ts:115 | - |
 | `/api/getMyPreferences` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:113` | res @ src/api/notifications.ts:137 | - |
 | `/api/getUnreadCount` | `-` | requireUser | `-` | `netlify/functions/routes/notify.ts:149` | res @ src/api/notifications.ts:73 | - |
-| `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:51<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
+| `/api/listProjectSites` | `-` | requireUser | `-` | `netlify/functions/routes/sites.ts:58` | initializeMap @ src/components/livemap/LiveMapModule.ts:192<br>res @ src/components/sections/AttendanceDashboard/api.ts:53<br>res @ src/components/sections/ProjectSites/api.ts:43 | - |
 | `/api/superadmin/complianceApproverAvailability` | `permissions.manage` | requirePermission | `ApproverAvailabilitySchema` | `netlify/functions/routes/superadmin.ts:394` | - | permissionPropagation |
 | `/api/superadmin/createRole` | `roles.manage` | requirePermission | `CreateRoleSchema` | `netlify/functions/routes/superadmin.ts:728` | - | rbacConsole |
 | `/api/superadmin/createRoleCategory` | `roles.manage` | requirePermission | `CreateCategorySchema` | `netlify/functions/routes/superadmin.ts:819` | - | rbacConsole |
@@ -136,8 +136,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:54` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:717` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:724` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:714` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:721` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
 | `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
@@ -197,9 +197,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `AppShell` | function / component | `src/shell/AppShell.tsx:130` | `-` |
 | `LoginShell` | function / component | `src/shell/LoginShell.tsx:51` | `-` |
 | `ProjectSiteModal` | function / component | `src/shell/modals/ProjectSiteModal.tsx:15` | `-` |
-| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:571` | `-` |
+| `AdminSections` | function / component | `src/shell/sections/AdminSections.tsx:569` | `-` |
 | `AppSection` | function / component | `src/shell/sections/AppSection.tsx:26` | `-` |
-| `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:18` | `-` |
+| `ManagerSections` | function / component | `src/shell/sections/ManagerSections.tsx:17` | `-` |
 | `SharedSections` | function / component | `src/shell/sections/SharedSections.tsx:178` | `-` |
 | `useActiveSection` | function / hook | `src/shell/sections/useActiveSection.ts:69` | `-` |
 | `useDataStore` | variable / hook | `src/store/data.ts:135` | `-` |
@@ -513,7 +513,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/SuperadminConsole/CriticalGrantDialog.tsx` | 119 |
 | frontend-page | `src/components/sections/SuperadminConsole/hooks.ts` | 353 |
 | frontend-page | `src/components/sections/SuperadminConsole/queryKeys.ts` | 25 |
-| frontend-page | `src/components/sections/index.ts` | 20 |
+| frontend-page | `src/components/sections/index.ts` | 19 |
 | shared-types | `types/api.ts` | 149 |
 | shared-types | `types/calendar.ts` | 167 |
 | shared-types | `types/db.ts` | 244 |

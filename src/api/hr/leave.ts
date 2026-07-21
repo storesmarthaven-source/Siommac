@@ -51,12 +51,12 @@ export function useLeaveTypes(includeInactive = false) {
   return useQuery({ queryKey: ['hr-leave-types', includeInactive], queryFn: () => hrLeaveApi.listTypes(includeInactive) });
 }
 
-export function useMyLeaveRequests(args?: LeaveListArgs) {
-  return useQuery({ queryKey: ['hr-leave-my', args], queryFn: () => hrLeaveApi.listMyRequests(args) });
+export function useMyLeaveRequests(args?: LeaveListArgs, enabled = true) {
+  return useQuery({ queryKey: ['hr-leave-my', args], queryFn: () => hrLeaveApi.listMyRequests(args), enabled });
 }
 
-export function useAllLeaveRequests(args?: LeaveListArgs) {
-  return useQuery({ queryKey: ['hr-leave-all', args], queryFn: () => hrLeaveApi.listAllRequests(args) });
+export function useAllLeaveRequests(args?: LeaveListArgs, enabled = true) {
+  return useQuery({ queryKey: ['hr-leave-all', args], queryFn: () => hrLeaveApi.listAllRequests(args), enabled });
 }
 
 export function useLeaveBalances(employeeId?: string, year?: number) {

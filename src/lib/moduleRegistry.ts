@@ -22,6 +22,7 @@
  */
 
 import type { NavGroupId } from '@components/nav/types';
+import type { UserRole } from '@api/schemas/auth';
 
 // ── Nav contribution ──────────────────────────────────────────────────────────
 
@@ -39,6 +40,8 @@ export interface ModuleNavItem {
   roles?: AppRole[];
   /** Optional capability required for this individual navigation item. */
   permission?: string;
+  /** Optional alternative capabilities; access passes when any one is granted. */
+  permissionsAny?: readonly string[];
 }
 
 export interface ModuleNavGroup {
@@ -67,7 +70,7 @@ export interface ModuleMount {
 
 // ── Module definition ─────────────────────────────────────────────────────────
 
-export type AppRole = 'superadmin' | 'admin' | 'manager' | 'employee';
+export type AppRole = UserRole;
 
 export interface ModuleDefinition {
   /** Stable unique id (e.g. 'hse'). */
@@ -91,7 +94,8 @@ export function canAccessModuleNavItem(
   hasPermission: (key: string) => boolean,
 ): boolean {
   if (item.roles && !item.roles.includes(role as AppRole)) return false;
-  return !item.permission || hasPermission(item.permission);
+  if (item.permission && !hasPermission(item.permission)) return false;
+  return !item.permissionsAny?.length || item.permissionsAny.some(hasPermission);
 }
 
 // ── Registry ──────────────────────────────────────────────────────────────────

@@ -88,8 +88,10 @@ export interface AssignableRole { name: string; label: string; }
 
 /** Roles selectable in the employee form (excludes superadmin). */
 export async function listAssignableRoles(signal?: AbortSignal): Promise<AssignableRole[]> {
-  const res = await apiPost<{ success: boolean; roles?: AssignableRole[] }>('listAssignableRoles', {}, signal ? { signal } : undefined);
-  return res.success && res.roles ? res.roles : [];
+  const res = await apiPost<{ success: boolean; roles?: AssignableRole[]; message?: string }>('listAssignableRoles', {}, signal ? { signal } : undefined);
+  if (!res.success) throw new Error(res.message ?? 'Could not load assignable roles.');
+  if (!res.roles) throw new Error('Assignable roles response was incomplete.');
+  return res.roles;
 }
 
 export async function addDepartment(payload: AddDepartmentPayload): Promise<{ id: string }> {

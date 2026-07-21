@@ -2,9 +2,9 @@
 
 # hr Module Map
 
-Source fingerprint: `ff43cfefbbb0631880309ae6`
+Source fingerprint: `90d39a5c509ed98a22f83a22`
 
-Files: 202 | Symbols: 2243 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 57 | DB objects: 156 | E2E suites: 14
+Files: 194 | Symbols: 2198 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 33 | DB objects: 156 | E2E suites: 14
 
 ## Widgets and Tiles
 
@@ -29,21 +29,21 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 
 | Path | Permission | Guards | Schema | Location | Frontend callers | E2E suites |
 |---|---|---|---|---|---|---|
-| `/api/addDepartment` | `departments.add` | requirePermission | `AddDepartmentSchema` | `netlify/functions/routes/departments.ts:51` | res @ src/api/employees.ts:95<br>res @ src/components/sections/Employees/api.ts:96 | - |
+| `/api/addDepartment` | `departments.add` | requirePermission | `AddDepartmentSchema` | `netlify/functions/routes/departments.ts:51` | res @ src/api/employees.ts:95<br>res @ src/components/sections/Employees/api.ts:98 | - |
 | `/api/addEmployee` | `employees.add` | requirePermission | `AddEmployeeSchema` | `netlify/functions/routes/employees.ts:63` | res @ src/api/employees.ts:67<br>res @ src/components/sections/Employees/api.ts:61 | - |
 | `/api/assignSiteEmployees` | `sites.assign_employees` | assertInScope, requirePermission | `AssignSiteEmployeesSchema` | `netlify/functions/routes/sites.ts:135` | res @ src/api/sites.ts:161<br>assignSiteEmployeesApi @ src/components/sections/ProjectSites/api.ts:127 | - |
-| `/api/deleteDepartment` | `departments.delete` | requirePermission | `DeleteDepartmentSchema` | `netlify/functions/routes/departments.ts:78` | res @ src/api/employees.ts:105<br>res @ src/components/sections/Employees/api.ts:106 | - |
+| `/api/deleteDepartment` | `departments.delete` | requirePermission | `DeleteDepartmentSchema` | `netlify/functions/routes/departments.ts:78` | res @ src/api/employees.ts:105<br>res @ src/components/sections/Employees/api.ts:108 | - |
 | `/api/deleteEmployee` | `employees.delete` | assertInScope, requirePermission | `DeleteEmployeeSchema` | `netlify/functions/routes/employees.ts:200` | res @ src/api/employees.ts:77<br>res @ src/components/sections/Employees/api.ts:71 | - |
-| `/api/getAdminStats` | `-` | requireRole | `-` | `netlify/functions/routes/attendance.ts:197` | res @ src/components/sections/AdminDashboard/api.ts:22<br>res @ src/components/sections/Employees/api.ts:136 | - |
+| `/api/getAdminStats` | `-` | requireRole | `-` | `netlify/functions/routes/attendance.ts:197` | res @ src/components/sections/AdminDashboard/api.ts:22<br>res @ src/components/sections/Employees/api.ts:138 | - |
 | `/api/getDashboardCharts` | `-` | requireRole | `-` | `netlify/functions/routes/attendance.ts:448` | res @ src/components/sections/Dashboard/api.ts:26 | - |
-| `/api/getDeptEmployees` | `-` | requireRole | `GetDeptStatsSchema` | `netlify/functions/routes/attendance.ts:528` | res @ src/components/sections/Employees/api.ts:129 | - |
-| `/api/getDeptStats` | `-` | requireRole | `GetDeptStatsSchema` | `netlify/functions/routes/attendance.ts:507` | res @ src/components/sections/Employees/api.ts:124 | - |
+| `/api/getDeptEmployees` | `-` | requireRole | `GetDeptStatsSchema` | `netlify/functions/routes/attendance.ts:528` | res @ src/components/sections/Employees/api.ts:131 | - |
+| `/api/getDeptStats` | `-` | requireRole | `GetDeptStatsSchema` | `netlify/functions/routes/attendance.ts:507` | res @ src/components/sections/Employees/api.ts:126 | - |
 | `/api/getEmployeeByUsername` | `-` | requireUser | `GetEmployeeSchema` | `netlify/functions/routes/employees.ts:241` | res @ src/api/employees.ts:61<br>res @ src/components/sections/Employees/api.ts:56<br>res @ src/components/sections/Profile/api.ts:51 | - |
 | `/api/getLiveAttendance` | `-` | requireRole | `GetLiveAttendanceSchema` | `netlify/functions/routes/attendance.ts:393` | res @ src/components/sections/LiveMap/api.ts:45<br>res @ src/components/sections/ProjectSites/api.ts:61 | - |
 | `/api/getMyChart` | `-` | requireUser | `GetMyChartSchema` | `netlify/functions/routes/attendance.ts:176` | res @ src/components/sections/Dashboard/api.ts:42 | - |
-| `/api/getMyHistory` | `-` | requireUser | `GetMyHistorySchema` | `netlify/functions/routes/attendance.ts:160` | res @ src/components/sections/Employees/api.ts:113 | - |
-| `/api/getMyStatus` | `-` | requireUser | `GetMyStatusSchema` | `netlify/functions/routes/attendance.ts:135` | res @ src/components/sections/AttendanceDashboard/api.ts:40 | - |
-| `/api/getRecentAttendance` | `-` | requireRole | `GetRecentAttendanceSchema` | `netlify/functions/routes/attendance.ts:224` | res @ src/components/sections/AdminDashboard/api.ts:27<br>res @ src/components/sections/Employees/api.ts:141 | - |
+| `/api/getMyHistory` | `-` | requireUser | `GetMyHistorySchema` | `netlify/functions/routes/attendance.ts:160` | res @ src/components/sections/Employees/api.ts:115 | - |
+| `/api/getMyStatus` | `-` | requireUser | `GetMyStatusSchema` | `netlify/functions/routes/attendance.ts:135` | res @ src/components/sections/AttendanceDashboard/api.ts:43 | - |
+| `/api/getRecentAttendance` | `-` | requireRole | `GetRecentAttendanceSchema` | `netlify/functions/routes/attendance.ts:224` | res @ src/components/sections/AdminDashboard/api.ts:27<br>res @ src/components/sections/Employees/api.ts:143 | - |
 | `/api/hr/attendance/compute/run` | `hr.attendance.compute.run` | requirePermission | `z.object({ recordId: z.string().uuid() })` | `netlify/functions/routes/hrAttendance.ts:158` | - | hrAttendance |
 | `/api/hr/attendance/exceptions/list` | `hr.attendance.exceptions.view` | requirePermission, userCan | `z.object({     employeeId:  z.string().optional(),     status:      z.string().optional(),     timesheetId: z.string().uuid().optional(),     fromDate:    z.string().optional(),     toDate:      z.string().optional(),     limit:       z.number().int().min(1).max(500).optional(),     offset:      z.number().int().min(0).optional(),   })` | `netlify/functions/routes/hrAttendance.ts:171` | - | hrAttendance |
 | `/api/hr/attendance/exceptions/resolve` | `hr.attendance.exceptions.manage` | requirePermission | `z.object({ exceptionId: z.string().uuid(), resolveNote: z.string().min(1).max(500) })` | `netlify/functions/routes/hrAttendance.ts:203` | - | hrAttendance |
@@ -78,33 +78,33 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/cost-centers/retire` | `hr.cost_centers.manage` | requirePermission | `z.object({ costCenterId: z.string().uuid(), ...GATED })` | `netlify/functions/routes/hr.ts:1056` | - | - |
 | `/api/hr/cost-centers/update` | `hr.cost_centers.manage` | requirePermission | `z.object({     costCenterId: z.string().uuid(), expectedUpdatedAt: z.string().nullable().optional(),     code: z.string().max(40).nullable().optional(), name: z.string().min(1).max(160).optional(),     currency: z.string().max(8).optional(), annualBudget: z.number().nullable().optional(),     departmentId: z.string().nullable().optional(), managerId: z.string().nullable().optional(), isActive: z.boolean().optional(),     ...GATED,   })` | `netlify/functions/routes/hr.ts:1042` | - | - |
 | `/api/hr/dashboard/kpis` | `hr.dashboard.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:1106` | - | hr |
-| `/api/hr/documents/archive` | `hr.employee_documents.archive` | requirePermission | `z.object({ documentId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1511` | useArchiveHrDocument @ src/api/hr/employees.ts:465 | hr |
+| `/api/hr/documents/archive` | `hr.employee_documents.archive` | requirePermission | `z.object({ documentId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1511` | - | hr |
 | `/api/hr/documents/compliance` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({     employeeId: z.string().optional(), departmentId: z.string().optional(), overview: z.boolean().optional(),   })` | `netlify/functions/routes/hr.ts:1594` | - | hrDocuments |
-| `/api/hr/documents/download-url` | `hr.employee_documents.download` | requirePermission, userCan | `z.object({ documentId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1524` | res @ src/api/hr/employees.ts:472 | - |
+| `/api/hr/documents/download-url` | `hr.employee_documents.download` | requirePermission, userCan | `z.object({ documentId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1524` | - | - |
 | `/api/hr/documents/expiring` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({ withinDays: z.number().int().positive().max(365).optional() })` | `netlify/functions/routes/hr.ts:1579` | - | hrDocuments |
-| `/api/hr/documents/expiry/run-sweep` | `-` | - | `z.object({ windows: z.array(z.number().int()).optional() })` | `netlify/functions/routes/hr.ts:1685` | useRunExpirySweep @ src/api/hr/documents.ts:140 | - |
+| `/api/hr/documents/expiry/run-sweep` | `-` | - | `z.object({ windows: z.array(z.number().int()).optional() })` | `netlify/functions/routes/hr.ts:1685` | - | - |
 | `/api/hr/documents/list` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({     q: z.string().optional(), employeeId: z.string().optional(), departmentId: z.string().optional(),     documentType: z.string().optional(), status: z.string().optional(), confidentiality: z.string().optional(),     expiryState: z.enum(['valid','expiring','expired','none']).optional(),     expiringWithinDays: z.number().int().positive().optional(),     page: z.number().int().positive().optional(), pageSize: z.number().int().positive().max(200).optional(),   })` | `netlify/functions/routes/hr.ts:1546` | - | hrDocuments |
 | `/api/hr/documents/requirements/create` | `hr.employee_documents.requirements.manage` | requirePermission | `z.object({     documentType: z.string().min(1).max(80), label: z.string().min(1).max(200),     appliesToScope: z.enum(['all','role','employment_type','department']),     appliesToValue: z.string().nullable().optional(),     requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),     minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),     metadata: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hr.ts:1630` | - | hrDocuments |
 | `/api/hr/documents/requirements/list` | `hr.employee_documents.view` | requirePermission | `z.object({ activeOnly: z.boolean().optional() })` | `netlify/functions/routes/hr.ts:1616` | - | hrDocuments |
 | `/api/hr/documents/requirements/retire` | `hr.employee_documents.requirements.manage` | requirePermission | `z.object({ requirementId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1670` | - | hrDocuments |
 | `/api/hr/documents/requirements/update` | `hr.employee_documents.requirements.manage` | requirePermission | `z.object({     requirementId: z.string().uuid(), label: z.string().min(1).max(200).optional(),     requiresExpiry: z.boolean().optional(), reminderDays: z.array(z.number().int()).optional(),     minConfidentiality: z.enum(['internal','confidential','restricted_hr','legal','medical']).nullable().optional(),     metadata: z.record(z.string(), z.unknown()).optional(),   })` | `netlify/functions/routes/hr.ts:1651` | - | hrDocuments |
 | `/api/hr/documents/stats` | `hr.employee_documents.view` | requirePermission, userCan | `-` | `netlify/functions/routes/hr.ts:1566` | - | hrDocuments |
-| `/api/hr/documents/verify` | `hr.employee_documents.verify` | requirePermission | `z.object({ documentId: z.string().uuid(), decision: z.enum(['approve', 'reject']), reason: z.string().max(500).optional() })` | `netlify/functions/routes/hr.ts:1492` | useVerifyHrDocument @ src/api/hr/employees.ts:457 | hr |
+| `/api/hr/documents/verify` | `hr.employee_documents.verify` | requirePermission | `z.object({ documentId: z.string().uuid(), decision: z.enum(['approve', 'reject']), reason: z.string().max(500).optional() })` | `netlify/functions/routes/hr.ts:1492` | - | hr |
 | `/api/hr/employee-change-requests/cancel` | `hr.view` | requirePermission, userCan | `z.object({ requestId: z.string().uuid() })` | `netlify/functions/routes/hr.ts:1323` | - | hrTransfers |
 | `/api/hr/employee-change-requests/decide` | `-` | requireUser, userCan | `z.object({ requestId: z.string().uuid(), decision: z.enum(['approve','reject','return']), comment: z.string().max(500).optional() })` | `netlify/functions/routes/hr.ts:1284` | - | hr, hrEmployeeMaster, hrTransfers |
 | `/api/hr/employee-change-requests/list` | `hr.view` | requirePermission | `z.object({ status: z.string().optional(), employeeId: z.string().optional() })` | `netlify/functions/routes/hr.ts:1272` | - | hr |
 | `/api/hr/employee-statutory/capture` | `hr.employee.statutory.capture` | requirePermission | `z.object({     employeeId:                   z.string(),     jurisdiction:                 z.string().optional(),     currency:                     z.string().optional(),     nisNumber:                    z.string().nullable().optional(),     nisApplicable:                z.boolean().optional(),     previousEmployerName:         z.string().nullable().optional(),     previousEmployerEndDate:      z.string().nullable().optional(),     openingYtdInsurableEarnings:  z.number().nonnegative().optional(),     openingYtdNisEmployee:        z.number().nonnegative().optional(),     openingYtdNisEmployer:        z.number().nonnegative().optional(),     openingBalanceAsOf:           z.string().nullable().optional(),   })` | `netlify/functions/routes/hrStatutoryProfile.ts:46` | - | hrStatutoryProfile |
 | `/api/hr/employee-statutory/get` | `hr.employee.statutory.view` | requirePermission | `z.object({     employeeId:   z.string(),     jurisdiction: z.string().optional(),   })` | `netlify/functions/routes/hrStatutoryProfile.ts:28` | - | hrStatutoryProfile |
 | `/api/hr/employee-statutory/submit` | `hr.employee.statutory.capture` | requirePermission | `z.object({ id: z.string().uuid(), idempotencyKey: z.string().min(1).max(200) })` | `netlify/functions/routes/hrStatutoryProfile.ts:73` | - | hrStatutoryProfile |
-| `/api/hr/employees/audit` | `hr.audit.view` | requirePermission | `z.object({ employeeId: z.string().min(1), limit: z.number().int().positive().max(200).optional() })` | `netlify/functions/routes/hr.ts:833` | res @ src/api/hr/employees.ts:276 | hrEmployeeMaster |
-| `/api/hr/employees/change-request` | `hr.view` | requirePermission | `z.object({     employeeId: z.string().min(1), changeType: z.enum(GENERIC_CHANGE_TYPES as unknown as [string, ...string[]]),     requestedValue: z.record(z.string(), z.unknown()), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1253` | useCreateHrChangeRequest @ src/api/hr/employees.ts:426 | hr, hrTransfers |
-| `/api/hr/employees/contact/update` | `hr.view` | requirePermission, userCan | `z.object({     employeeId: z.string().min(1),     mode:       z.enum(['direct', 'request']).optional(),     work:       z.object({ email: z.string().max(160).nullable().optional(), phone: z.string().max(60).nullable().optional() }).optional(),     personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),     emergency:  z.object({       name:         z.string().max(160).nullable().optional(),       phone:        z.string().max(60).nullable().optional(),       relationship: z.string().max(80).nullable().optional(),     }).optional(),     reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:613` | useUpdateHrContact @ src/api/hr/employees.ts:363 | hrEmployeeMaster |
-| `/api/hr/employees/create` | `hr.employees.create` | requirePermission | `z.object({     identity: z.object({       username:       z.string().min(1).max(80),       password:       z.string().min(6).max(200),       fullName:       z.string().min(1).max(200),       firstName:      z.string().max(120).optional(),       lastName:       z.string().max(120).optional(),       email:          z.string().max(160).optional(),       personalEmail:  z.string().max(160).optional(),       phone:          z.string().max(60).optional(),       employeeNumber: z.string().max(40).optional(),       dateOfBirth:    z.string().max(20).optional(),       nationality:    z.string().max(80).optional(),       preferredName:  z.string().max(160).optional(),       governmentId:   z.string().max(80).optional(),     }),     employment: z.object({       employmentType:   z.enum(EMPLOYMENT_TYPES).optional(),       contractorFlag:   z.boolean().optional(),       startDate:        z.string().optional(),       position:         z.string().max(160).optional(),       positionTitle:    z.string().max(120).optional(),       probationEndDate: z.string().max(20).optional(),       employeeGrade:    z.string().max(60).optional(),       workSchedule:     z.string().max(60).optional(),     }).optional(),     assignment: z.object({       departmentId: z.string().nullable().optional(),       siteId:       z.string().nullable().optional(),       positionId:   z.string().uuid().nullable().optional(),       supervisorId: z.string().nullable().optional(),       costCenter:   z.string().max(60).nullable().optional(),       effectiveDate: z.string().max(20).optional(),     }).optional(),     access:    z.object({       role:                   z.string().max(60).optional(),       permissionProfile:      z.string().max(60).optional(),       selfServiceProfile:     z.string().max(60).optional(),       requireMfa:             z.boolean().optional(),       onboardingRequirements: z.record(z.string(), z.boolean()).optional(),     }).optional(),     createLogin:  z.boolean().optional(),     recordStatus: z.string().max(40).optional(),     statutory: z.record(z.string(), z.unknown()).optional(),     onboarding: z.object({       createOnboardingCase: z.boolean().optional(),       packageKey:           z.string().optional(),     }).optional(),   })` | `netlify/functions/routes/hr.ts:318` | useCreateHrEmployee @ src/api/hr/employees.ts:346 | hrEmployeeMaster |
-| `/api/hr/employees/dashboard-stats` | `hr.employees.view` | requirePermission | `z.object({ siteId: z.string().optional(), departmentId: z.string().optional() })` | `netlify/functions/routes/hr.ts:421` | res @ src/api/hr/employees.ts:212 | hrEmployeeMaster |
-| `/api/hr/employees/documents/commit` | `hr.employee_documents.upload` | requirePermission | `z.object({     employeeId: z.string().min(1), documentType: z.string().min(1).max(80), title: z.string().min(1).max(200),     filePath: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().nullable().optional(),     // Bucket file_size_limit (migration 20260804000000) is authoritative; this is a friendly early reject.     fileSize: z.number().int().max(HR_DOC_MAX_BYTES, `File exceeds the ${Math.round(HR_DOC_MAX_BYTES / 1048576)} MB limit.`).nullable().optional(),     confidentiality: z.enum(['internal', 'confidential', 'restricted_hr', 'legal', 'medical']).default('internal'),     expiryDate: z.string().nullable().optional(),   })` | `netlify/functions/routes/hr.ts:1466` | useUploadHrDocument @ src/api/hr/employees.ts:443 | hr |
-| `/api/hr/employees/documents/list` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1441` | res @ src/api/hr/employees.ts:288 | hr, hrDocuments, hrEmployeeMaster |
-| `/api/hr/employees/documents/upload-url` | `hr.employee_documents.upload` | requirePermission | `z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1455` | signed @ src/api/hr/employees.ts:439 | hr |
-| `/api/hr/employees/get` | `hr.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:217` | res @ src/api/hr/employees.ts:162 | hr, hrEmployeeMaster |
+| `/api/hr/employees/audit` | `hr.audit.view` | requirePermission | `z.object({ employeeId: z.string().min(1), limit: z.number().int().positive().max(200).optional() })` | `netlify/functions/routes/hr.ts:833` | - | hrEmployeeMaster |
+| `/api/hr/employees/change-request` | `hr.view` | requirePermission | `z.object({     employeeId: z.string().min(1), changeType: z.enum(GENERIC_CHANGE_TYPES as unknown as [string, ...string[]]),     requestedValue: z.record(z.string(), z.unknown()), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1253` | - | hr, hrTransfers |
+| `/api/hr/employees/contact/update` | `hr.view` | requirePermission, userCan | `z.object({     employeeId: z.string().min(1),     mode:       z.enum(['direct', 'request']).optional(),     work:       z.object({ email: z.string().max(160).nullable().optional(), phone: z.string().max(60).nullable().optional() }).optional(),     personal:   z.object({ personalEmail: z.string().max(160).nullable().optional() }).optional(),     emergency:  z.object({       name:         z.string().max(160).nullable().optional(),       phone:        z.string().max(60).nullable().optional(),       relationship: z.string().max(80).nullable().optional(),     }).optional(),     reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:613` | - | hrEmployeeMaster |
+| `/api/hr/employees/create` | `hr.employees.create` | requirePermission | `z.object({     identity: z.object({       username:       z.string().min(1).max(80),       password:       z.string().min(6).max(200),       fullName:       z.string().min(1).max(200),       firstName:      z.string().max(120).optional(),       lastName:       z.string().max(120).optional(),       email:          z.string().max(160).optional(),       personalEmail:  z.string().max(160).optional(),       phone:          z.string().max(60).optional(),       employeeNumber: z.string().max(40).optional(),       dateOfBirth:    z.string().max(20).optional(),       nationality:    z.string().max(80).optional(),       preferredName:  z.string().max(160).optional(),       governmentId:   z.string().max(80).optional(),     }),     employment: z.object({       employmentType:   z.enum(EMPLOYMENT_TYPES).optional(),       contractorFlag:   z.boolean().optional(),       startDate:        z.string().optional(),       position:         z.string().max(160).optional(),       positionTitle:    z.string().max(120).optional(),       probationEndDate: z.string().max(20).optional(),       employeeGrade:    z.string().max(60).optional(),       workSchedule:     z.string().max(60).optional(),     }).optional(),     assignment: z.object({       departmentId: z.string().nullable().optional(),       siteId:       z.string().nullable().optional(),       positionId:   z.string().uuid().nullable().optional(),       supervisorId: z.string().nullable().optional(),       costCenter:   z.string().max(60).nullable().optional(),       effectiveDate: z.string().max(20).optional(),     }).optional(),     access:    z.object({       role:                   z.string().max(60).optional(),       permissionProfile:      z.string().max(60).optional(),       selfServiceProfile:     z.string().max(60).optional(),       requireMfa:             z.boolean().optional(),       onboardingRequirements: z.record(z.string(), z.boolean()).optional(),     }).optional(),     createLogin:  z.boolean().optional(),     recordStatus: z.string().max(40).optional(),     statutory: z.record(z.string(), z.unknown()).optional(),     onboarding: z.object({       createOnboardingCase: z.boolean().optional(),       packageKey:           z.string().optional(),     }).optional(),   })` | `netlify/functions/routes/hr.ts:318` | - | hrEmployeeMaster |
+| `/api/hr/employees/dashboard-stats` | `hr.employees.view` | requirePermission | `z.object({ siteId: z.string().optional(), departmentId: z.string().optional() })` | `netlify/functions/routes/hr.ts:421` | - | hrEmployeeMaster |
+| `/api/hr/employees/documents/commit` | `hr.employee_documents.upload` | requirePermission | `z.object({     employeeId: z.string().min(1), documentType: z.string().min(1).max(80), title: z.string().min(1).max(200),     filePath: z.string().min(1), fileName: z.string().min(1), mimeType: z.string().nullable().optional(),     // Bucket file_size_limit (migration 20260804000000) is authoritative; this is a friendly early reject.     fileSize: z.number().int().max(HR_DOC_MAX_BYTES, `File exceeds the ${Math.round(HR_DOC_MAX_BYTES / 1048576)} MB limit.`).nullable().optional(),     confidentiality: z.enum(['internal', 'confidential', 'restricted_hr', 'legal', 'medical']).default('internal'),     expiryDate: z.string().nullable().optional(),   })` | `netlify/functions/routes/hr.ts:1466` | - | hr |
+| `/api/hr/employees/documents/list` | `hr.employee_documents.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1441` | - | hr, hrDocuments, hrEmployeeMaster |
+| `/api/hr/employees/documents/upload-url` | `hr.employee_documents.upload` | requirePermission | `z.object({ fileName: z.string().min(1), mimeType: z.string().min(1) })` | `netlify/functions/routes/hr.ts:1455` | - | hr |
+| `/api/hr/employees/get` | `hr.view` | requirePermission, userCan | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:217` | - | hr, hrEmployeeMaster |
 | `/api/hr/employees/import/commit` | `hr.employees.import.commit` | requirePermission | `z.object({ batchId: z.string().uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:427` | - | hrEmployeeImport |
 | `/api/hr/employees/import/map-fields` | `hr.employees.import.map` | requirePermission | `z.object({ batchId: z.string().uuid(), mapping: z.record(z.string(), z.string()) })` | `netlify/functions/routes/hrEmployeeImport.ts:260` | - | hrEmployeeImport |
 | `/api/hr/employees/import/report` | `hr.employees.import.report.download` | requirePermission | `z.object({ batchId: z.string().uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:490` | - | hrEmployeeImport |
@@ -112,13 +112,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/employees/import/set-policy` | `hr.employees.import.map` | requirePermission | `z.object({ batchId: z.string().uuid(), policy: PolicySchema })` | `netlify/functions/routes/hrEmployeeImport.ts:271` | - | hrEmployeeImport |
 | `/api/hr/employees/import/upload` | `hr.employees.import.upload` | requirePermission | `z.object({     fileName:   z.string().min(1).max(255),     fileType:   z.enum(['csv']),     fileBase64: z.string().min(1),     importMode: z.enum(['create', 'update', 'create_update']).optional(),     defaultSiteId:       z.string().nullable().optional(),     defaultDepartmentId: z.string().nullable().optional(),   })` | `netlify/functions/routes/hrEmployeeImport.ts:214` | - | hrEmployeeImport, hrEmployeeSettings |
 | `/api/hr/employees/import/validate` | `hr.employees.import.validate` | requirePermission | `z.object({ batchId: z.string().uuid() })` | `netlify/functions/routes/hrEmployeeImport.ts:282` | - | hrEmployeeImport |
-| `/api/hr/employees/list` | `hr.view` | requirePermission | `z.object({     // Legacy single-value filters (kept for existing picker/dropdown callers).     status: z.string().optional(), departmentId: z.string().optional(),     employmentType: z.string().optional(), workerType: z.enum(['employee', 'contractor']).optional(),     search: z.string().optional(), limit: z.number().int().positive().max(500).optional(),     // Server-backed register filters (multi-select) + sort + pagination.     statuses: z.array(z.string()).optional(),     departmentIds: z.array(z.string()).optional(),     employmentTypes: z.array(z.string()).optional(),     trainingStatuses: z.array(z.enum(TRAINING_STATUSES)).optional(),     sortBy: z.enum(EMPLOYEE_SORT_COLS).optional(),     sortDir: z.enum(['asc', 'desc']).optional(),     page: z.number().int().positive().optional(),     pageSize: z.number().int().positive().max(200).optional(),   })` | `netlify/functions/routes/hr.ts:85` | res @ src/api/hr/employees.ts:121<br>res @ src/api/hr/employees.ts:154 | hr, hrEmployeeMaster |
-| `/api/hr/employees/photo/decide` | `hr.employees.photo_approve` | requirePermission | `z.object({ employeeId: z.string().min(1), approve: z.boolean(), reason: z.string().max(500).optional() })` | `netlify/functions/routes/hr.ts:263` | useDecideHrEmployeePhoto @ src/api/hr/employees.ts:377 | - |
-| `/api/hr/employees/status-change` | `hr.employees.status_change` | requirePermission | `z.object({     employeeId: z.string().min(1),     newStatus:  z.enum(HR_STATUSES),     reason:     z.string().max(500).optional(),     effectiveDate: z.string().optional(),   })` | `netlify/functions/routes/hr.ts:718` | useChangeHrStatus @ src/api/hr/employees.ts:411 | hr, hrEmployeeMaster |
-| `/api/hr/employees/statutory/get` | `hr.employees.statutory.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:538` | res @ src/api/hr/employees.ts:234 | hrEmployeeMaster |
-| `/api/hr/employees/statutory/update` | `hr.employees.statutory.update` | requirePermission | `z.object({     employeeId:             z.string().min(1),     nisNumber:              z.string().nullable().optional(),     nisStatus:              z.enum(NIS_STATUSES).optional(),     nisEffectiveDate:       z.string().nullable().optional(),     birFileNumber:          z.string().nullable().optional(),     payeApplicable:         z.boolean().optional(),     td1Received:            z.boolean().optional(),     td1EffectiveYear:       z.number().int().nullable().optional(),     hsApplicable:           z.boolean().optional(),     hsExemptionReason:      z.string().nullable().optional(),     hsEffectiveDate:        z.string().nullable().optional(),     hsVerificationRequired: z.boolean().optional(),     markVerified:           z.boolean().optional(),   })` | `netlify/functions/routes/hr.ts:548` | useUpdateHrStatutory @ src/api/hr/employees.ts:397 | hrEmployeeMaster |
+| `/api/hr/employees/list` | `hr.view` | requirePermission | `z.object({     // Legacy single-value filters (kept for existing picker/dropdown callers).     status: z.string().optional(), departmentId: z.string().optional(),     employmentType: z.string().optional(), workerType: z.enum(['employee', 'contractor']).optional(),     search: z.string().optional(), limit: z.number().int().positive().max(500).optional(),     // Server-backed register filters (multi-select) + sort + pagination.     statuses: z.array(z.string()).optional(),     departmentIds: z.array(z.string()).optional(),     employmentTypes: z.array(z.string()).optional(),     trainingStatuses: z.array(z.enum(TRAINING_STATUSES)).optional(),     sortBy: z.enum(EMPLOYEE_SORT_COLS).optional(),     sortDir: z.enum(['asc', 'desc']).optional(),     page: z.number().int().positive().optional(),     pageSize: z.number().int().positive().max(200).optional(),   })` | `netlify/functions/routes/hr.ts:85` | - | hr, hrEmployeeMaster |
+| `/api/hr/employees/photo/decide` | `hr.employees.photo_approve` | requirePermission | `z.object({ employeeId: z.string().min(1), approve: z.boolean(), reason: z.string().max(500).optional() })` | `netlify/functions/routes/hr.ts:263` | - | - |
+| `/api/hr/employees/status-change` | `hr.employees.status_change` | requirePermission | `z.object({     employeeId: z.string().min(1),     newStatus:  z.enum(HR_STATUSES),     reason:     z.string().max(500).optional(),     effectiveDate: z.string().optional(),   })` | `netlify/functions/routes/hr.ts:718` | - | hr, hrEmployeeMaster |
+| `/api/hr/employees/statutory/get` | `hr.employees.statutory.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:538` | - | hrEmployeeMaster |
+| `/api/hr/employees/statutory/update` | `hr.employees.statutory.update` | requirePermission | `z.object({     employeeId:             z.string().min(1),     nisNumber:              z.string().nullable().optional(),     nisStatus:              z.enum(NIS_STATUSES).optional(),     nisEffectiveDate:       z.string().nullable().optional(),     birFileNumber:          z.string().nullable().optional(),     payeApplicable:         z.boolean().optional(),     td1Received:            z.boolean().optional(),     td1EffectiveYear:       z.number().int().nullable().optional(),     hsApplicable:           z.boolean().optional(),     hsExemptionReason:      z.string().nullable().optional(),     hsEffectiveDate:        z.string().nullable().optional(),     hsVerificationRequired: z.boolean().optional(),     markVerified:           z.boolean().optional(),   })` | `netlify/functions/routes/hr.ts:548` | - | hrEmployeeMaster |
 | `/api/hr/employees/supervisor-change` | `hr.employees.supervisor_change` | requirePermission | `z.object({     employeeId: z.string().min(1), supervisorId: z.string().nullable(), reason: z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:791` | - | hr |
-| `/api/hr/employees/training-summary` | `hr.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:812` | res @ src/api/hr/employees.ts:300 | hr, hrEmployeeMaster |
+| `/api/hr/employees/training-summary` | `hr.view` | requirePermission | `z.object({ employeeId: z.string().min(1) })` | `netlify/functions/routes/hr.ts:812` | - | hr, hrEmployeeMaster |
 | `/api/hr/employees/transfer` | `hr.employees.transfer` | requirePermission | `z.object({     employeeId:   z.string().min(1),     departmentId: z.string().nullable().optional(),     siteId:       z.string().nullable().optional(),     positionId:   z.string().uuid().nullable().optional(),     reason:       z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:753` | - | hr |
 | `/api/hr/employees/update` | `employees.edit` | requirePermission | `z.object({     employeeId:     z.string().min(1),     firstName:      z.string().max(120).optional(),     lastName:       z.string().max(120).nullable().optional(),     displayName:    z.string().max(160).nullable().optional(),     personalEmail:  z.string().max(160).nullable().optional(),     phone:          z.string().max(60).nullable().optional(),     position:       z.string().max(160).nullable().optional(),     employmentType: z.enum(EMPLOYMENT_TYPES).optional(),     startDate:      z.string().nullable().optional(),     endDate:        z.string().nullable().optional(),     contractorFlag: z.boolean().optional(),   })` | `netlify/functions/routes/hr.ts:671` | - | hr |
 | `/api/hr/leave/accruals/run` | `hr.leave.accruals.run` | requirePermission | `-` | `netlify/functions/routes/hrLeave.ts:174` | - | hrLeave |
@@ -212,7 +212,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/organization/changes/list` | `hr.organization.view` | requirePermission | `z.object({     status: z.string().optional(), entityType: z.enum(['org_unit', 'position', 'cost_center']).optional(), limit: z.number().int().optional(),   })` | `netlify/functions/routes/hr.ts:1066` | - | hrOrganization |
 | `/api/hr/organization/health` | `hr.organization.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:943` | - | hrOrganization |
 | `/api/hr/organization/stats` | `hr.organization.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:937` | - | hrOrganization |
-| `/api/hr/organization/tree` | `hr.organization.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:865` | res @ src/api/hr/employees.ts:313 | hr, hrOrganization |
+| `/api/hr/organization/tree` | `hr.organization.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:865` | - | hr, hrOrganization |
 | `/api/hr/organization/unit/archive` | `hr.organization.manage` | requirePermission | `z.object({ unitId: z.string().min(1), ...GATED })` | `netlify/functions/routes/hr.ts:921` | - | hrOrganization |
 | `/api/hr/organization/unit/create` | `hr.organization.manage` | requirePermission | `z.object({     name: z.string().min(1).max(160), code: z.string().max(40).nullable().optional(),     orgUnitType: z.enum(ORG_UNIT_TYPES).optional(), parentId: z.string().nullable().optional(),     siteId: z.string().nullable().optional(), managerId: z.string().nullable().optional(),     costCenterId: z.string().uuid().nullable().optional(), description: z.string().max(500).nullable().optional(),     sortOrder: z.number().int().optional(),   })` | `netlify/functions/routes/hr.ts:882` | - | hrOrganization |
 | `/api/hr/organization/unit/delete` | `hr.organization.delete` | requirePermission | `z.object({ unitId: z.string().min(1), ...GATED })` | `netlify/functions/routes/hr.ts:929` | - | hrOrganization |
@@ -261,7 +261,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/roster/templates/list` | `hr.roster.view` | requirePermission | `z.object({ siteId: z.string().optional(), activeOnly: z.boolean().optional() })` | `netlify/functions/routes/hrRoster.ts:44` | - | hrRoster |
 | `/api/hr/roster/templates/remove` | `hr.roster.templates.manage` | requirePermission | `z.object({ id: z.string().uuid() })` | `netlify/functions/routes/hrRoster.ts:74` | - | - |
 | `/api/hr/roster/templates/upsert` | `hr.roster.templates.manage` | requirePermission | `z.object({     id:             z.string().uuid().optional(),     code:           z.string().min(1).max(20),     name:           z.string().min(1).max(100),     startsAt:       z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),     endsAt:         z.string().regex(/^\d{2}:\d{2}(:\d{2})?$/),     crossesMidnight: z.boolean().optional(),     breakMinutes:   z.number().int().min(0).optional(),     paidHours:      z.number().min(0).max(24),     colour:         z.string().max(20).nullable().optional(),     siteId:         z.string().nullable().optional(),     isActive:       z.boolean().optional(),   })` | `netlify/functions/routes/hrRoster.ts:53` | - | hrRoster |
-| `/api/hr/sites/list` | `hr.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:963` | res @ src/api/hr/employees.ts:323 | hrEmployeeMaster |
+| `/api/hr/sites/list` | `hr.view` | requirePermission | `-` | `netlify/functions/routes/hr.ts:963` | - | hrEmployeeMaster |
 | `/api/hr/transfers/list` | `hr.transfers.view` | requirePermission | `z.object({     status:     z.string().optional(),     employeeId: z.string().optional(),     limit:      z.number().int().positive().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1389` | - | hrTransfers |
 | `/api/hr/transfers/request` | `hr.transfers.request` | requirePermission | `z.object({     employeeId:    z.string().min(1),     departmentId:  z.string().nullable().optional(),     siteId:        z.string().nullable().optional(),     positionId:    z.string().uuid().nullable().optional(),     supervisorId:  z.string().nullable().optional(),     role:          z.string().nullable().optional(),     monthlySalary: z.number().positive().nullable().optional(),     hourlyRate:    z.number().positive().nullable().optional(),     effectiveDate: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'effectiveDate must be YYYY-MM-DD'),     reason:        z.string().max(500).optional(),   })` | `netlify/functions/routes/hr.ts:1345` | - | hrTransfers |
 | `/api/hr/work-calendars/assignment/command` | `hr.work_calendar.manage` | requirePermission | `assignSchema` | `netlify/functions/routes/hrWorkCalendars.ts:83` | - | payrollPayPolicyRun, workCalendar |
@@ -270,13 +270,13 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/hr/work-calendars/version/command` | `hr.work_calendar.manage` | requirePermission | `versionSchema` | `netlify/functions/routes/hrWorkCalendars.ts:66` | - | payrollPayPolicyRun, workCalendar |
 | `/api/listAssignableRoles` | `employees.edit` | requirePermission | `-` | `netlify/functions/routes/employees.ts:291` | res @ src/components/sections/Employees/api.ts:91 | - |
 | `/api/listAttendance` | `-` | requireRole | `ListAttendanceSchema` | `netlify/functions/routes/attendance.ts:255` | - | - |
-| `/api/listDailyLog` | `-` | requireRole | `ListDailyLogSchema` | `netlify/functions/routes/attendance.ts:303` | res @ src/components/sections/Attendance/api.ts:36 | - |
+| `/api/listDailyLog` | `-` | requireRole | `ListDailyLogSchema` | `netlify/functions/routes/attendance.ts:303` | - | - |
 | `/api/listDepartments` | `-` | requireUser | `-` | `netlify/functions/routes/departments.ts:46` | res @ src/api/employees.ts:84<br>res @ src/components/sections/Employees/api.ts:78<br>res @ src/components/sections/ProjectSites/api.ts:56 | - |
 | `/api/listEmployees` | `-` | requireRole | `-` | `netlify/functions/routes/employees.ts:26` | res @ src/api/employees.ts:55<br>res @ src/components/sections/Employees/api.ts:51 | - |
 | `/api/listManagers` | `-` | requireRole | `-` | `netlify/functions/routes/employees.ts:283` | res @ src/api/employees.ts:90<br>res @ src/components/sections/Employees/api.ts:83 | - |
 | `/api/listUserOptions` | `-` | requireUser | `-` | `netlify/functions/routes/employees.ts:316` | res @ src/api/employees.ts:47 | - |
-| `/api/markAttendance` | `-` | requireUser | `MarkAttendanceSchema` | `netlify/functions/routes/attendance.ts:34` | markProjectAttendance @ src/components/livemap/LiveMapModule.ts:874<br>markAttendance @ src/components/sections/AttendanceDashboard/api.ts:67 | - |
-| `/api/updateDepartment` | `departments.edit` | requirePermission | `UpdateDepartmentSchema` | `netlify/functions/routes/departments.ts:64` | res @ src/api/employees.ts:100<br>res @ src/components/sections/Employees/api.ts:101 | - |
+| `/api/markAttendance` | `-` | requireUser | `MarkAttendanceSchema` | `netlify/functions/routes/attendance.ts:34` | markProjectAttendance @ src/components/livemap/LiveMapModule.ts:874<br>markAttendance @ src/components/sections/AttendanceDashboard/api.ts:69 | - |
+| `/api/updateDepartment` | `departments.edit` | requirePermission | `UpdateDepartmentSchema` | `netlify/functions/routes/departments.ts:64` | res @ src/api/employees.ts:100<br>res @ src/components/sections/Employees/api.ts:103 | - |
 | `/api/updateEmployee` | `employees.edit` | assertInScope, requirePermission | `UpdateEmployeeSchema` | `netlify/functions/routes/employees.ts:130` | res @ src/api/employees.ts:72<br>res @ src/components/sections/Employees/api.ts:66 | - |
 
 ## Frontend API Calls
@@ -284,60 +284,36 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | Path | Helper | Caller | Location |
 |---|---|---|---|
 | `/api/addDepartment` | `apiPost` | `res` | `src/api/employees.ts:95` |
-| `/api/addDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:96` |
+| `/api/addDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:98` |
 | `/api/addEmployee` | `apiPost` | `res` | `src/api/employees.ts:67` |
 | `/api/addEmployee` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:61` |
 | `/api/checkIn` | `apiPost` | `res` | `src/api/attendance.ts:162` |
 | `/api/checkOut` | `apiPost` | `res` | `src/api/attendance.ts:174` |
 | `/api/deleteDepartment` | `apiPost` | `res` | `src/api/employees.ts:105` |
-| `/api/deleteDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:106` |
+| `/api/deleteDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:108` |
 | `/api/deleteEmployee` | `apiPost` | `res` | `src/api/employees.ts:77` |
 | `/api/deleteEmployee` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:71` |
-| `/api/getAdminStats` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:136` |
-| `/api/getDeptEmployees` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:129` |
-| `/api/getDeptStats` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:124` |
+| `/api/getAdminStats` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:138` |
+| `/api/getDeptEmployees` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:131` |
+| `/api/getDeptStats` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:126` |
 | `/api/getEmployeeByUsername` | `apiPost` | `res` | `src/api/employees.ts:61` |
 | `/api/getEmployeeByUsername` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:56` |
-| `/api/getMyHistory` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:113` |
-| `/api/getMyStatus` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:40` |
-| `/api/getRecentAttendance` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:141` |
-| `/api/hr/documents/archive` | `apiPost` | `useArchiveHrDocument` | `src/api/hr/employees.ts:465` |
-| `/api/hr/documents/download-url` | `apiPost` | `res` | `src/api/hr/employees.ts:472` |
-| `/api/hr/documents/expiry/run-sweep` | `apiPost` | `useRunExpirySweep` | `src/api/hr/documents.ts:140` |
-| `/api/hr/documents/verify` | `apiPost` | `useVerifyHrDocument` | `src/api/hr/employees.ts:457` |
-| `/api/hr/employees/audit` | `apiPost` | `res` | `src/api/hr/employees.ts:276` |
-| `/api/hr/employees/change-request` | `apiPost` | `useCreateHrChangeRequest` | `src/api/hr/employees.ts:426` |
-| `/api/hr/employees/contact/update` | `apiPost` | `useUpdateHrContact` | `src/api/hr/employees.ts:363` |
-| `/api/hr/employees/create` | `apiPost` | `useCreateHrEmployee` | `src/api/hr/employees.ts:346` |
-| `/api/hr/employees/dashboard-stats` | `apiPost` | `res` | `src/api/hr/employees.ts:212` |
-| `/api/hr/employees/documents/commit` | `apiPost` | `useUploadHrDocument` | `src/api/hr/employees.ts:443` |
-| `/api/hr/employees/documents/list` | `apiPost` | `res` | `src/api/hr/employees.ts:288` |
-| `/api/hr/employees/documents/upload-url` | `apiPost` | `signed` | `src/api/hr/employees.ts:439` |
-| `/api/hr/employees/get` | `apiPost` | `res` | `src/api/hr/employees.ts:162` |
-| `/api/hr/employees/list` | `apiPost` | `res` | `src/api/hr/employees.ts:121` |
-| `/api/hr/employees/list` | `apiPost` | `res` | `src/api/hr/employees.ts:154` |
-| `/api/hr/employees/photo/decide` | `apiPost` | `useDecideHrEmployeePhoto` | `src/api/hr/employees.ts:377` |
-| `/api/hr/employees/status-change` | `apiPost` | `useChangeHrStatus` | `src/api/hr/employees.ts:411` |
-| `/api/hr/employees/statutory/get` | `apiPost` | `res` | `src/api/hr/employees.ts:234` |
-| `/api/hr/employees/statutory/update` | `apiPost` | `useUpdateHrStatutory` | `src/api/hr/employees.ts:397` |
-| `/api/hr/employees/training-summary` | `apiPost` | `res` | `src/api/hr/employees.ts:300` |
-| `/api/hr/employees/workflow-summary` | `apiPost` | `res` | `src/api/hr/employees.ts:223` |
+| `/api/getMyHistory` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:115` |
+| `/api/getMyStatus` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:43` |
+| `/api/getRecentAttendance` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:143` |
 | `/api/hr/onboarding/task/evidence-upload-url` | `apiPost` | `signed` | `src/api/hr/onboarding.ts:77` |
-| `/api/hr/organization/tree` | `apiPost` | `res` | `src/api/hr/employees.ts:313` |
-| `/api/hr/sites/list` | `apiPost` | `res` | `src/api/hr/employees.ts:323` |
 | `/api/listAssignableRoles` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:91` |
-| `/api/listDailyLog` | `apiPost` | `res` | `src/components/sections/Attendance/api.ts:36` |
 | `/api/listDepartments` | `apiPost` | `res` | `src/api/employees.ts:84` |
 | `/api/listDepartments` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:78` |
 | `/api/listEmployees` | `apiPost` | `res` | `src/api/employees.ts:55` |
 | `/api/listEmployees` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:51` |
 | `/api/listManagers` | `apiPost` | `res` | `src/api/employees.ts:90` |
 | `/api/listManagers` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:83` |
-| `/api/listProjectSites` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:51` |
+| `/api/listProjectSites` | `apiPost` | `res` | `src/components/sections/AttendanceDashboard/api.ts:53` |
 | `/api/listUserOptions` | `apiPost` | `res` | `src/api/employees.ts:47` |
-| `/api/markAttendance` | `apiPost` | `markAttendance` | `src/components/sections/AttendanceDashboard/api.ts:67` |
+| `/api/markAttendance` | `apiPost` | `markAttendance` | `src/components/sections/AttendanceDashboard/api.ts:69` |
 | `/api/updateDepartment` | `apiPost` | `res` | `src/api/employees.ts:100` |
-| `/api/updateDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:101` |
+| `/api/updateDepartment` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:103` |
 | `/api/updateEmployee` | `apiPost` | `res` | `src/api/employees.ts:72` |
 | `/api/updateEmployee` | `apiPost` | `res` | `src/components/sections/Employees/api.ts:66` |
 
@@ -377,27 +353,27 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useComplianceForEmployee` | function / hook | `src/api/hr/documents.ts:117` | `-` |
 | `useComplianceOverview` | function / hook | `src/api/hr/documents.ts:126` | `-` |
 | `useRunExpirySweep` | function / hook | `src/api/hr/documents.ts:136` | `-` |
-| `useHrEmployees` | function / hook | `src/api/hr/employees.ts:116` | `-` |
-| `useHrEmployeesPage` | function / hook | `src/api/hr/employees.ts:148` | `-` |
-| `useHrEmployee` | function / hook | `src/api/hr/employees.ts:169` | `-` |
-| `usePrefetchHrEmployee` | function / hook | `src/api/hr/employees.ts:195` | `-` |
-| `useHrDashboardStats` | function / hook | `src/api/hr/employees.ts:207` | `-` |
-| `useHrWorkflowSummary` | function / hook | `src/api/hr/employees.ts:218` | `-` |
-| `useHrStatutory` | function / hook | `src/api/hr/employees.ts:229` | `-` |
-| `useHrAudit` | function / hook | `src/api/hr/employees.ts:270` | `-` |
-| `useHrDocuments` | function / hook | `src/api/hr/employees.ts:282` | `-` |
-| `useHrTrainingSummary` | function / hook | `src/api/hr/employees.ts:294` | `-` |
-| `useHrOrgUnits` | function / hook | `src/api/hr/employees.ts:309` | `-` |
-| `useHrSites` | function / hook | `src/api/hr/employees.ts:319` | `-` |
-| `useCreateHrEmployee` | function / hook | `src/api/hr/employees.ts:342` | `-` |
-| `useUpdateHrContact` | function / hook | `src/api/hr/employees.ts:359` | `-` |
-| `useDecideHrEmployeePhoto` | function / hook | `src/api/hr/employees.ts:373` | `-` |
-| `useUpdateHrStatutory` | function / hook | `src/api/hr/employees.ts:393` | `-` |
-| `useChangeHrStatus` | function / hook | `src/api/hr/employees.ts:407` | `-` |
-| `useCreateHrChangeRequest` | function / hook | `src/api/hr/employees.ts:422` | `-` |
-| `useUploadHrDocument` | function / hook | `src/api/hr/employees.ts:433` | `-` |
-| `useVerifyHrDocument` | function / hook | `src/api/hr/employees.ts:453` | `-` |
-| `useArchiveHrDocument` | function / hook | `src/api/hr/employees.ts:462` | `-` |
+| `useHrEmployees` | function / hook | `src/api/hr/employees.ts:125` | `-` |
+| `useHrEmployeesPage` | function / hook | `src/api/hr/employees.ts:157` | `-` |
+| `useHrEmployee` | function / hook | `src/api/hr/employees.ts:178` | `-` |
+| `usePrefetchHrEmployee` | function / hook | `src/api/hr/employees.ts:204` | `-` |
+| `useHrDashboardStats` | function / hook | `src/api/hr/employees.ts:216` | `-` |
+| `useHrWorkflowSummary` | function / hook | `src/api/hr/employees.ts:227` | `-` |
+| `useHrStatutory` | function / hook | `src/api/hr/employees.ts:238` | `-` |
+| `useHrAudit` | function / hook | `src/api/hr/employees.ts:279` | `-` |
+| `useHrDocuments` | function / hook | `src/api/hr/employees.ts:291` | `-` |
+| `useHrTrainingSummary` | function / hook | `src/api/hr/employees.ts:303` | `-` |
+| `useHrOrgUnits` | function / hook | `src/api/hr/employees.ts:318` | `-` |
+| `useHrSites` | function / hook | `src/api/hr/employees.ts:328` | `-` |
+| `useCreateHrEmployee` | function / hook | `src/api/hr/employees.ts:351` | `-` |
+| `useUpdateHrContact` | function / hook | `src/api/hr/employees.ts:368` | `-` |
+| `useDecideHrEmployeePhoto` | function / hook | `src/api/hr/employees.ts:382` | `-` |
+| `useUpdateHrStatutory` | function / hook | `src/api/hr/employees.ts:402` | `-` |
+| `useChangeHrStatus` | function / hook | `src/api/hr/employees.ts:416` | `-` |
+| `useCreateHrChangeRequest` | function / hook | `src/api/hr/employees.ts:431` | `-` |
+| `useUploadHrDocument` | function / hook | `src/api/hr/employees.ts:442` | `-` |
+| `useVerifyHrDocument` | function / hook | `src/api/hr/employees.ts:462` | `-` |
+| `useArchiveHrDocument` | function / hook | `src/api/hr/employees.ts:471` | `-` |
 | `useLeaveTypes` | function / hook | `src/api/hr/leave.ts:50` | `-` |
 | `useMyLeaveRequests` | function / hook | `src/api/hr/leave.ts:54` | `-` |
 | `useAllLeaveRequests` | function / hook | `src/api/hr/leave.ts:58` | `-` |
@@ -472,26 +448,26 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useOnboardingCreateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:374` | `-` |
 | `useOnboardingUpdateHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:375` | `-` |
 | `useOnboardingDeleteHandoffTemplate` | function / hook | `src/api/hr/onboarding.ts:376` | `-` |
-| `useOrgUnits` | function / hook | `src/api/hr/organization.ts:81` | `-` |
-| `useOrgUnit` | function / hook | `src/api/hr/organization.ts:82` | `-` |
-| `useOrgStats` | function / hook | `src/api/hr/organization.ts:83` | `-` |
-| `useOrgHealth` | function / hook | `src/api/hr/organization.ts:84` | `-` |
-| `usePositions` | function / hook | `src/api/hr/organization.ts:85` | `-` |
-| `usePosition` | function / hook | `src/api/hr/organization.ts:86` | `-` |
-| `useCostCenters` | function / hook | `src/api/hr/organization.ts:87` | `-` |
-| `useOrgChangeRequests` | function / hook | `src/api/hr/organization.ts:88` | `-` |
-| `useCreateOrgUnit` | function / hook | `src/api/hr/organization.ts:102` | `-` |
-| `useUpdateOrgUnit` | function / hook | `src/api/hr/organization.ts:103` | `-` |
-| `useMoveOrgUnit` | function / hook | `src/api/hr/organization.ts:104` | `-` |
-| `useArchiveOrgUnit` | function / hook | `src/api/hr/organization.ts:105` | `-` |
-| `useDeleteOrgUnit` | function / hook | `src/api/hr/organization.ts:106` | `-` |
-| `useCreatePosition` | function / hook | `src/api/hr/organization.ts:108` | `-` |
-| `useUpdatePosition` | function / hook | `src/api/hr/organization.ts:109` | `-` |
-| `useRetirePosition` | function / hook | `src/api/hr/organization.ts:110` | `-` |
-| `useCreateCostCenter` | function / hook | `src/api/hr/organization.ts:112` | `-` |
-| `useUpdateCostCenter` | function / hook | `src/api/hr/organization.ts:113` | `-` |
-| `useRetireCostCenter` | function / hook | `src/api/hr/organization.ts:114` | `-` |
-| `useCancelOrgChange` | function / hook | `src/api/hr/organization.ts:116` | `-` |
+| `useOrgUnits` | function / hook | `src/api/hr/organization.ts:79` | `-` |
+| `useOrgUnit` | function / hook | `src/api/hr/organization.ts:80` | `-` |
+| `useOrgStats` | function / hook | `src/api/hr/organization.ts:81` | `-` |
+| `useOrgHealth` | function / hook | `src/api/hr/organization.ts:82` | `-` |
+| `usePositions` | function / hook | `src/api/hr/organization.ts:83` | `-` |
+| `usePosition` | function / hook | `src/api/hr/organization.ts:84` | `-` |
+| `useCostCenters` | function / hook | `src/api/hr/organization.ts:85` | `-` |
+| `useOrgChangeRequests` | function / hook | `src/api/hr/organization.ts:86` | `-` |
+| `useCreateOrgUnit` | function / hook | `src/api/hr/organization.ts:100` | `-` |
+| `useUpdateOrgUnit` | function / hook | `src/api/hr/organization.ts:101` | `-` |
+| `useMoveOrgUnit` | function / hook | `src/api/hr/organization.ts:102` | `-` |
+| `useArchiveOrgUnit` | function / hook | `src/api/hr/organization.ts:103` | `-` |
+| `useDeleteOrgUnit` | function / hook | `src/api/hr/organization.ts:104` | `-` |
+| `useCreatePosition` | function / hook | `src/api/hr/organization.ts:106` | `-` |
+| `useUpdatePosition` | function / hook | `src/api/hr/organization.ts:107` | `-` |
+| `useRetirePosition` | function / hook | `src/api/hr/organization.ts:108` | `-` |
+| `useCreateCostCenter` | function / hook | `src/api/hr/organization.ts:110` | `-` |
+| `useUpdateCostCenter` | function / hook | `src/api/hr/organization.ts:111` | `-` |
+| `useRetireCostCenter` | function / hook | `src/api/hr/organization.ts:112` | `-` |
+| `useCancelOrgChange` | function / hook | `src/api/hr/organization.ts:114` | `-` |
 | `useOvertimeEntries` | function / hook | `src/api/hr/overtime.ts:68` | `-` |
 | `useOvertimeMutation` | function / hook | `src/api/hr/overtime.ts:72` | `-` |
 | `useRequestTypes` | function / hook | `src/api/hr/requests.ts:41` | `-` |
@@ -505,7 +481,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useRosters` | function / hook | `src/api/hr/roster.ts:99` | `-` |
 | `useRoster` | function / hook | `src/api/hr/roster.ts:106` | `-` |
 | `useCoverageGaps` | function / hook | `src/api/hr/roster.ts:114` | `-` |
-| ... | 92 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 86 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -634,15 +610,17 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/attendance.ts` | 180 |
 | frontend-api | `src/api/employees.ts` | 108 |
 | frontend-api | `src/api/hr/attendance.ts` | 125 |
+| frontend-api | `src/api/hr/client.test.ts` | 45 |
+| frontend-api | `src/api/hr/client.ts` | 68 |
 | frontend-api | `src/api/hr/compensation.ts` | 75 |
 | frontend-api | `src/api/hr/contracts.ts` | 77 |
-| frontend-api | `src/api/hr/documents.ts` | 144 |
-| frontend-api | `src/api/hr/employeeImport.ts` | 72 |
-| frontend-api | `src/api/hr/employees.ts` | 475 |
+| frontend-api | `src/api/hr/documents.ts` | 149 |
+| frontend-api | `src/api/hr/employeeImport.ts` | 73 |
+| frontend-api | `src/api/hr/employees.ts` | 484 |
 | frontend-api | `src/api/hr/leave.ts` | 130 |
 | frontend-api | `src/api/hr/offboarding.ts` | 59 |
 | frontend-api | `src/api/hr/onboarding.ts` | 377 |
-| frontend-api | `src/api/hr/organization.ts` | 117 |
+| frontend-api | `src/api/hr/organization.ts` | 115 |
 | frontend-api | `src/api/hr/overtime.ts` | 76 |
 | frontend-api | `src/api/hr/requests.ts` | 72 |
 | frontend-api | `src/api/hr/roster.ts` | 150 |
@@ -653,22 +631,10 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-api | `src/api/schemas/employee.ts` | 148 |
 | frontend-api | `src/api/schemas/leave.ts` | 62 |
 | frontend-page | `src/components/sections/AttendanceDashboard/AttendanceDashboard.tsx` | 604 |
-| frontend-page | `src/components/sections/AttendanceDashboard/api.ts` | 72 |
+| frontend-page | `src/components/sections/AttendanceDashboard/api.ts` | 74 |
 | frontend-page | `src/components/sections/AttendanceDashboard/index.ts` | 12 |
 | frontend-page | `src/components/sections/AttendanceDashboard/mount.ts` | 43 |
 | frontend-page | `src/components/sections/AttendanceDashboard/types.ts` | 51 |
-| frontend-page | `src/components/sections/Attendance/AttendanceCharts.tsx` | 244 |
-| frontend-page | `src/components/sections/Attendance/AttendanceSection.tsx` | 250 |
-| frontend-page | `src/components/sections/Attendance/EmployeeDetailModal.tsx` | 186 |
-| frontend-page | `src/components/sections/Attendance/FiltersBar.tsx` | 221 |
-| frontend-page | `src/components/sections/Attendance/PhotoModal.tsx` | 118 |
-| frontend-page | `src/components/sections/Attendance/StatCards.tsx` | 112 |
-| frontend-page | `src/components/sections/Attendance/api.ts` | 48 |
-| frontend-page | `src/components/sections/Attendance/hooks.ts` | 39 |
-| frontend-page | `src/components/sections/Attendance/index.ts` | 18 |
-| frontend-page | `src/components/sections/Attendance/mount.ts` | 68 |
-| frontend-page | `src/components/sections/Attendance/types.ts` | 85 |
-| frontend-page | `src/components/sections/Attendance/utils.ts` | 195 |
 | frontend-page | `src/components/sections/Employees/DepartmentModal.tsx` | 190 |
 | frontend-page | `src/components/sections/Employees/DepartmentsSection.tsx` | 213 |
 | frontend-page | `src/components/sections/Employees/EmployeeCard.tsx` | 119 |
@@ -678,24 +644,25 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Employees/HistorySection.tsx` | 230 |
 | frontend-page | `src/components/sections/Employees/ManagerDashboard.tsx` | 115 |
 | frontend-page | `src/components/sections/Employees/StatCard.tsx` | 85 |
-| frontend-page | `src/components/sections/Employees/api.ts` | 144 |
+| frontend-page | `src/components/sections/Employees/api.ts` | 146 |
 | frontend-page | `src/components/sections/Employees/hooks.ts` | 242 |
 | frontend-page | `src/components/sections/Employees/index.tsx` | 148 |
 | frontend-page | `src/components/sections/Employees/queryKeys.ts` | 49 |
 | frontend-page | `src/components/sections/Employees/types.ts` | 206 |
 | frontend-page | `src/components/sections/Employees/utils.ts` | 150 |
 | frontend-page | `src/components/sections/HR/ActionDialogs.tsx` | 381 |
-| frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 506 |
-| frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 343 |
+| frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 512 |
+| frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/CreateEmployeeWizard.tsx` | 366 |
 | frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 485 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
+| frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
 | frontend-page | `src/components/sections/HR/HRRequestsOverview.tsx` | 424 |
-| frontend-page | `src/components/sections/HR/HRSection.tsx` | 93 |
+| frontend-page | `src/components/sections/HR/HRSection.tsx` | 129 |
 | frontend-page | `src/components/sections/HR/ImportWizard.tsx` | 345 |
-| frontend-page | `src/components/sections/HR/LeaveOverview.tsx` | 301 |
-| frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 266 |
+| frontend-page | `src/components/sections/HR/LeaveOverview.tsx` | 304 |
+| frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 269 |
 | frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 94 |
 | frontend-page | `src/components/sections/HR/OnboardingBlockedBoard.tsx` | 157 |
 | frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 428 |
@@ -707,14 +674,15 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OnboardingPackageManager.tsx` | 135 |
 | frontend-page | `src/components/sections/HR/OnboardingReportsWorkspace.tsx` | 178 |
 | frontend-page | `src/components/sections/HR/OnboardingTasksWorkspace.tsx` | 458 |
-| frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 774 |
-| frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 230 |
+| frontend-page | `src/components/sections/HR/OrgStructureOverview.tsx` | 777 |
+| frontend-page | `src/components/sections/HR/OvertimeOverview.tsx` | 233 |
 | frontend-page | `src/components/sections/HR/ProfileDrawer.tsx` | 600 |
-| frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 679 |
+| frontend-page | `src/components/sections/HR/RosterOverview.tsx` | 686 |
 | frontend-page | `src/components/sections/HR/StartOnboardingWizard.tsx` | 974 |
-| frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 402 |
+| frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
+| frontend-page | `src/components/sections/HR/hrFoundation.test.tsx` | 69 |
 | frontend-page | `src/components/sections/HR/index.ts` | 10 |
-| frontend-page | `src/components/sections/HR/module.ts` | 125 |
+| frontend-page | `src/components/sections/HR/module.ts` | 137 |
 | frontend-page | `src/components/sections/HR/mount.ts` | 25 |
 | frontend-page | `src/components/sections/HR/onboardingCase.helpers.tsx` | 143 |
 | frontend-page | `src/components/sections/HR/onboardingStatus.ts` | 77 |

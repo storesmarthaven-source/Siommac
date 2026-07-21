@@ -9,6 +9,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { requireHrSuccess } from './client';
 import type {
   HrDocumentRow, DocumentFilters, DocumentsStats,
   DocumentRequirement, CreateRequirementArgs, UpdateRequirementArgs,
@@ -41,8 +42,7 @@ const docsKeys = {
 
 async function call<T>(path: string, args: unknown): Promise<T> {
   const res = await apiPost<{ success: boolean; data?: T; message?: string }>(path, args as Record<string, unknown>);
-  if (!res.success) throw new Error(res.message ?? `${path} failed`);
-  return res.data as T;
+  return requireHrSuccess(res, path).data as T;
 }
 
 // ── Cross-employee register ───────────────────────────────────────────────────
@@ -136,8 +136,13 @@ export function useComplianceOverview(departmentId?: string) {
 export function useRunExpirySweep() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: () =>
-      apiPost<{ success: boolean; data?: ExpirySweepResult; message?: string }>('hr/documents/expiry/run-sweep', {}),
+    mutationFn: async () => {
+      const path = 'hr/documents/expiry/run-sweep';
+      return requireHrSuccess(
+        await apiPost<{ success: boolean; data?: ExpirySweepResult; message?: string }>(path, {}),
+        path,
+      );
+    },
     onSuccess: () => { void qc.invalidateQueries({ queryKey: docsKeys.all }); },
   });
 }

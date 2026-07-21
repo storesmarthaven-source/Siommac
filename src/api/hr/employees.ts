@@ -9,8 +9,17 @@
 
 import { useQuery, useMutation, useQueryClient, type QueryFunctionContext } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import { requireHrSuccess } from './client';
 import { useRecordQuery } from '@lib/recordQuery';
 import { hrEmployeeKeys } from '../queryKeys';
+
+async function hrPost<T extends { success: boolean; message?: string }>(
+  path: string,
+  args: Record<string, unknown>,
+  options?: Parameters<typeof apiPost>[2],
+): Promise<T> {
+  return requireHrSuccess(await apiPost<T>(path, args, options), path);
+}
 
 // ── Canonical enums / shapes (match the backend) ──────────────────────────────
 
@@ -118,7 +127,7 @@ export function useHrEmployees(filter: HrEmployeeListFilter = {}) {
   return useQuery({
     queryKey: hrEmployeeKeys.list(f),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrEmployeeRow[] }>('hr/employees/list', f, { signal });
+      const res = await hrPost<{ success: boolean; data: HrEmployeeRow[] }>('hr/employees/list', f, { signal });
       return res.data;
     },
   });
@@ -151,7 +160,7 @@ export function useHrEmployeesPage(filter: HrEmployeePageFilter) {
     queryKey: hrEmployeeKeys.list({ page: true, ...f }),
     placeholderData: prev => prev,
     queryFn: async ({ signal }: QueryFunctionContext): Promise<HrEmployeePage> => {
-      const res = await apiPost<{ success: boolean; data: HrEmployeeRow[]; meta: HrEmployeePageMeta }>('hr/employees/list', f, { signal });
+      const res = await hrPost<{ success: boolean; data: HrEmployeeRow[]; meta: HrEmployeePageMeta }>('hr/employees/list', f, { signal });
       return { rows: res.data, meta: res.meta };
     },
   });
@@ -159,7 +168,7 @@ export function useHrEmployeesPage(filter: HrEmployeePageFilter) {
 
 // Shared fetch — used by the hook AND the hover-prefetch helper (no duplication).
 async function fetchHrEmployeeDetail(employeeId: string, signal?: AbortSignal): Promise<HrEmployeeDetail> {
-  const res = await apiPost<{ success: boolean; data: HrEmployeeDetail }>('hr/employees/get', { employeeId }, { signal });
+  const res = await hrPost<{ success: boolean; data: HrEmployeeDetail }>('hr/employees/get', { employeeId }, { signal });
   return res.data;
 }
 
@@ -209,7 +218,7 @@ export function useHrDashboardStats(filter: { siteId?: string; departmentId?: st
   return useQuery({
     queryKey: hrEmployeeKeys.dashboardStats(f),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: { stats: HrDashboardStats } }>('hr/employees/dashboard-stats', f, { signal });
+      const res = await hrPost<{ success: boolean; data: { stats: HrDashboardStats } }>('hr/employees/dashboard-stats', f, { signal });
       return res.data.stats;
     },
   });
@@ -220,7 +229,7 @@ export function useHrWorkflowSummary(employeeId: string | null) {
     queryKey: hrEmployeeKeys.workflowSummary(employeeId ?? ''),
     enabled:  !!employeeId,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrWorkflowSummary }>('hr/employees/workflow-summary', { employeeId }, { signal });
+      const res = await hrPost<{ success: boolean; data: HrWorkflowSummary }>('hr/employees/workflow-summary', { employeeId }, { signal });
       return res.data;
     },
   });
@@ -231,7 +240,7 @@ export function useHrStatutory(employeeId: string | null) {
     queryKey: hrEmployeeKeys.statutory(employeeId ?? ''),
     enabled:  !!employeeId,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: { statutory: HrStatutoryRow | null; readiness: PayrollReadiness } }>('hr/employees/statutory/get', { employeeId }, { signal });
+      const res = await hrPost<{ success: boolean; data: { statutory: HrStatutoryRow | null; readiness: PayrollReadiness } }>('hr/employees/statutory/get', { employeeId }, { signal });
       return res.data;
     },
   });
@@ -273,7 +282,7 @@ export function useHrAudit(employeeId: string | null) {
     enabled:  !!employeeId,
     retry:    false,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrAuditEntry[] }>('hr/employees/audit', { employeeId }, { signal });
+      const res = await hrPost<{ success: boolean; data: HrAuditEntry[] }>('hr/employees/audit', { employeeId }, { signal });
       return res.data;
     },
   });
@@ -285,7 +294,7 @@ export function useHrDocuments(employeeId: string | null) {
     enabled:  !!employeeId,
     retry:    false,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrDocument[] }>('hr/employees/documents/list', { employeeId }, { signal });
+      const res = await hrPost<{ success: boolean; data: HrDocument[] }>('hr/employees/documents/list', { employeeId }, { signal });
       return res.data;
     },
   });
@@ -297,7 +306,7 @@ export function useHrTrainingSummary(employeeId: string | null) {
     enabled:  !!employeeId,
     retry:    false,
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrTrainingSummary }>('hr/employees/training-summary', { employeeId }, { signal });
+      const res = await hrPost<{ success: boolean; data: HrTrainingSummary }>('hr/employees/training-summary', { employeeId }, { signal });
       return res.data;
     },
   });
@@ -310,7 +319,7 @@ export function useHrOrgUnits() {
   return useQuery({
     queryKey: hrEmployeeKeys.orgUnits(),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrOrgUnit[] }>('hr/organization/tree', {}, { signal });
+      const res = await hrPost<{ success: boolean; data: HrOrgUnit[] }>('hr/organization/tree', {}, { signal });
       return res.data;
     },
   });
@@ -320,7 +329,7 @@ export function useHrSites() {
   return useQuery({
     queryKey: hrEmployeeKeys.sites(),
     queryFn: async ({ signal }: QueryFunctionContext) => {
-      const res = await apiPost<{ success: boolean; data: HrSite[] }>('hr/sites/list', {}, { signal });
+      const res = await hrPost<{ success: boolean; data: HrSite[] }>('hr/sites/list', {}, { signal });
       return res.data;
     },
   });
@@ -343,7 +352,7 @@ export function useCreateHrEmployee() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: CreateHrEmployeeArgs) =>
-      apiPost<{ success: boolean; data: { employee_id: string; employee_no: string; status: string; payroll_readiness: PayrollReadinessStatus; onboarding_case_id: string | null; onboarding_error?: string | null; workflow_id: string | null } }>('hr/employees/create', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { employee_id: string; employee_no: string; status: string; payroll_readiness: PayrollReadinessStatus; onboarding_case_id: string | null; onboarding_error?: string | null; workflow_id: string | null } }>('hr/employees/create', args as unknown as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.all }),
   });
 }
@@ -360,7 +369,7 @@ export function useUpdateHrContact() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: ContactUpdateArgs) =>
-      apiPost<{ success: boolean; data: { mode: string; employee?: HrEmployeeRow; requestId?: string; changeNo?: string } }>('hr/employees/contact/update', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { mode: string; employee?: HrEmployeeRow; requestId?: string; changeNo?: string } }>('hr/employees/contact/update', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
@@ -374,7 +383,7 @@ export function useDecideHrEmployeePhoto() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: PhotoDecideArgs) =>
-      apiPost<{ success: boolean; message?: string }>('hr/employees/photo/decide', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; message?: string }>('hr/employees/photo/decide', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
@@ -394,7 +403,7 @@ export function useUpdateHrStatutory() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: StatutoryUpdateArgs) =>
-      apiPost<{ success: boolean; data: { payroll_readiness: PayrollReadinessStatus; blockers: string[]; financeHandoffEligible: boolean } }>('hr/employees/statutory/update', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { payroll_readiness: PayrollReadinessStatus; blockers: string[]; financeHandoffEligible: boolean } }>('hr/employees/statutory/update', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.statutory(vars.employeeId) });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
@@ -408,7 +417,7 @@ export function useChangeHrStatus() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: StatusChangeArgs) =>
-      apiPost<{ success: boolean; data: { employeeId: string; status: string } }>('hr/employees/status-change', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { employeeId: string; status: string } }>('hr/employees/status-change', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => {
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) });
       void qc.invalidateQueries({ queryKey: hrEmployeeKeys.lists() });
@@ -423,7 +432,7 @@ export function useCreateHrChangeRequest() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (args: ChangeRequestArgs) =>
-      apiPost<{ success: boolean; data: { id: string; change_no: string } }>('hr/employees/change-request', args as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { id: string; change_no: string } }>('hr/employees/change-request', args as unknown as Record<string, unknown>),
     onSuccess: (_d, vars) => qc.invalidateQueries({ queryKey: hrEmployeeKeys.detail(vars.employeeId) }),
   });
 }
@@ -436,11 +445,11 @@ export function useUploadHrDocument() {
     // Presigned-URL → direct PUT → commit (the standard HSE attachment flow): the
     // Lambda never holds the file bytes.
     mutationFn: async (a: UploadDocArgs) => {
-      const signed = await apiPost<{ success: boolean; uploadUrl: string; path: string }>(
+      const signed = await hrPost<{ success: boolean; uploadUrl: string; path: string }>(
         'hr/employees/documents/upload-url', { fileName: a.file.name, mimeType: a.file.type || 'application/octet-stream' }, { retryable: false });
       const put = await fetch(signed.uploadUrl, { method: 'PUT', headers: { 'Content-Type': a.file.type || 'application/octet-stream' }, body: a.file });
       if (!put.ok) throw new Error('File upload failed.');
-      return apiPost<{ success: boolean; data: { id: string } }>('hr/employees/documents/commit', {
+      return hrPost<{ success: boolean; data: { id: string } }>('hr/employees/documents/commit', {
         employeeId: a.employeeId, documentType: a.documentType, title: a.title, filePath: signed.path,
         fileName: a.file.name, mimeType: a.file.type || null, fileSize: a.file.size,
         confidentiality: a.confidentiality, expiryDate: a.expiryDate ?? null,
@@ -454,7 +463,7 @@ export function useVerifyHrDocument(employeeId: string | null) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (a: { documentId: string; decision: 'approve' | 'reject'; reason?: string }) =>
-      apiPost<{ success: boolean; data: { documentId: string; status: string } }>('hr/documents/verify', a as unknown as Record<string, unknown>),
+      hrPost<{ success: boolean; data: { documentId: string; status: string } }>('hr/documents/verify', a as unknown as Record<string, unknown>),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.documents(employeeId ?? '') }),
   });
 }
@@ -462,13 +471,13 @@ export function useVerifyHrDocument(employeeId: string | null) {
 export function useArchiveHrDocument(employeeId: string | null) {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (documentId: string) => apiPost<{ success: boolean }>('hr/documents/archive', { documentId }),
+    mutationFn: (documentId: string) => hrPost<{ success: boolean }>('hr/documents/archive', { documentId }),
     onSuccess: () => qc.invalidateQueries({ queryKey: hrEmployeeKeys.documents(employeeId ?? '') }),
   });
 }
 
 /** Audited presigned download — open the returned URL in a new tab. */
 export async function getHrDocumentDownloadUrl(documentId: string): Promise<string> {
-  const res = await apiPost<{ success: boolean; url: string }>('hr/documents/download-url', { documentId });
+  const res = await hrPost<{ success: boolean; url: string }>('hr/documents/download-url', { documentId });
   return res.url;
 }

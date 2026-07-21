@@ -4,7 +4,6 @@
  * HTML shells for manager-role section panels:
  *   • s-mgr-overview   — department overview (profile pill + Preact mount)
  *   • s-mgr-employees  — department employees (Preact mount)
- *   • s-mgr-leaves     — pending leaves (Preact mount)
  *
  * IDs are preserved exactly as in assets/partials/app-shell.html.
  *
@@ -29,9 +28,6 @@ export default function ManagerSections() {
         <div id="preact-mgr-employees-root" />
       </AppSection>
 
-      {/* s-mgr-leaves RETIRED — manager leave management now served by the HR module's
-          Leave & Absence tab (s-hr-leave / preact-hr-root). Managers have hr.leave.view_all
-          which makes LeaveOverview show all team requests with approve/reject/cancel. */}
     </>
   );
 }

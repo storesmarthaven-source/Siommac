@@ -22,6 +22,7 @@ import type { TransferRequestRow } from '../../../../types/hrTransfers';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import './onboardingCase.css';
+import { HRQueryNotice } from './HRQueryState';
 
 const STATUS_FILTERS = ['all', 'submitted', 'in_review', 'returned', 'applied', 'rejected', 'cancelled'] as const;
 
@@ -56,6 +57,8 @@ export function TransfersOverview(): VNode {
           : undefined}
       />
 
+      <HRQueryNotice queries={[transfersQ]} />
+
       <div style={{ display: 'flex', gap: 10, margin: '10px 0' }}>
         <select
           class="ui-select" style={{ width: 180 }}
@@ -69,7 +72,7 @@ export function TransfersOverview(): VNode {
       </div>
 
       <div class="obx-section"><div class="obx-section-body">
-        {transfersQ.isLoading && !transfersQ.data
+        {transfersQ.isLoading
           ? <div class="obx-empty">Loading…</div>
           : !rows.length
             ? <EmptyState icon="fa-right-left" title="No transfer requests" text={canRequest ? 'Submit a transfer or promotion request to get started.' : 'No requests match this filter.'} />

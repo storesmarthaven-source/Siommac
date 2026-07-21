@@ -37,7 +37,6 @@ function _Nav()         { return (w() as Record<string, unknown>).Nav         as
 function _Dashboard()   { return (w() as Record<string, unknown>).Dashboard   as Record<string, (...a: unknown[]) => unknown> | undefined; }
 function _LiveMap()     { return (w() as Record<string, unknown>).LiveMap     as Record<string, (...a: unknown[]) => unknown> | undefined; }
 function _Payroll()     { return (w() as Record<string, unknown>).Payroll     as Record<string, (...a: unknown[]) => unknown> | undefined; }
-function _AttView()     { return (w() as Record<string, unknown>).AttendanceView as Record<string, (...a: unknown[]) => unknown> | undefined; }
 function _SettingsView(){ return (w() as Record<string, unknown>).SettingsView as Record<string, (...a: unknown[]) => unknown> | undefined; }
 function _SiomacDB()    { return (w() as Record<string, unknown>).SiomacDB    as { warmSwr: () => Promise<void> } | undefined; }
 function _SwCacheMgr()  { return (w() as Record<string, unknown>).SwCacheManager as Record<string, (...a: unknown[]) => unknown> | undefined; }
@@ -902,7 +901,6 @@ function setupEventListeners(): void {
   const nav    = _Nav();
   const liveMap = _LiveMap();
   const payroll = _Payroll();
-  const attView = _AttView();
   const sv      = _SettingsView();
 
   // Mark attendance
@@ -916,7 +914,6 @@ function setupEventListeners(): void {
     if (tgt.matches('#attSearchInput')) {
       const rt = w()._renderAttTable as (() => void) | undefined;
       const rc = w()._renderAttConsistency as (() => void) | undefined;
-      attView?.loadAttendanceData?.();
       rt?.();
       rc?.();
     }
@@ -969,15 +966,6 @@ function setupEventListeners(): void {
       }
     }
 
-    if (tgt.matches('#attendanceMonth') || tgt.matches('#attendanceYear')) {
-      const as = _AppState();
-      if (((as?.get('attFilterMode') ?? 'month') as string) === 'month') attView?.loadAttendanceData?.();
-    }
-    if (tgt.matches('#attDeptFilter')) {
-      const rt = w()._renderAttTable       as (() => void) | undefined;
-      const rc = w()._renderAttConsistency as (() => void) | undefined;
-      rt?.(); rc?.();
-    }
     if (tgt.matches('#hrDeptFilter'))  payroll?._hrDept?.(tgt.value);
     if (tgt.matches('#hrRoleFilter'))  payroll?._hrRole?.(tgt.value);
     if (tgt.matches('#hrFileInput'))   {
@@ -993,56 +981,6 @@ function setupEventListeners(): void {
   // Click delegation
   document.addEventListener('click', (e) => {
     const tgt = e.target as Element;
-
-    // Attendance export
-    if (tgt.closest('#exportAttendanceBtn')) {
-      const btn = document.querySelector<HTMLElement>('.dt-button.buttons-csv, .dt-button.buttons-excel');
-      if (btn) btn.click(); else void showPopup('info', 'Export', 'Use the DataTable export buttons to download.');
-    }
-
-    // Attendance mode toggle
-    const modeBtn = tgt.closest<HTMLElement>('.att-mode-btn');
-    if (modeBtn) {
-      const mode = modeBtn.dataset.mode; if (!mode) return;
-      const as = _AppState();
-      as?.set('attFilterMode', mode);
-      document.querySelectorAll<HTMLElement>('.att-mode-btn').forEach(b => b.classList.toggle('active', b.dataset.mode === mode));
-      const monthPickers = document.getElementById('attMonthPickers');
-      const rangePickers = document.getElementById('attRangePickers');
-      if (monthPickers) monthPickers.style.display = mode === 'month' ? '' : 'none';
-      if (rangePickers) rangePickers.style.display = mode === 'range' ? '' : 'none';
-      if (mode === 'month') {
-        _swr()?.clearByPrefix('listDailyLog:');
-        _swrLastHash()?.forEach((_, k) => { if (k.startsWith('listDailyLog:')) _swrLastHash()?.delete(k); });
-        attView?.loadAttendanceData?.();
-      }
-    }
-
-    // Date range apply
-    if (tgt.closest('#attApplyRange')) {
-      const from = _attFpFrom?.selectedDates[0] ? _attFpFrom.formatDate(_attFpFrom.selectedDates[0], 'Y-m-d') : '';
-      if (!from) { void showPopup('warning', 'Date Required', 'Please select a start date.'); return; }
-      _swr()?.clearByPrefix('listDailyLog:');
-      _swrLastHash()?.forEach((_, k) => { if (k.startsWith('listDailyLog:')) _swrLastHash()?.delete(k); });
-      attView?.loadAttendanceData?.();
-    }
-
-    // Admin leave actions
-    const btnViewLeave   = tgt.closest<HTMLElement>('.btn-view-leave');
-    const btnPrintLeave  = tgt.closest<HTMLElement>('.btn-print-leave');
-    const btnEditLeave   = tgt.closest<HTMLElement>('.btn-edit-leave');
-    const btnDeleteLeave = tgt.closest<HTMLElement>('.btn-delete-leave');
-    const LeaveView = w().LeaveView as Record<string, (...a: unknown[]) => unknown> | undefined;
-    if (btnViewLeave)   LeaveView?.viewLeaveDoc?.(btnViewLeave.dataset.id, false);
-    if (btnPrintLeave)  LeaveView?.viewLeaveDoc?.(btnPrintLeave.dataset.id, true);
-    if (btnEditLeave)   { const fn = w().openEditLeaveModal as ((id: string) => void) | undefined; if (fn) fn(btnEditLeave.dataset.id ?? ''); }
-    if (btnDeleteLeave) { const fn = w().deleteLeaveRecord  as ((id: string) => void) | undefined; if (fn) fn(btnDeleteLeave.dataset.id ?? ''); }
-
-    // Attendance selfie + emp detail panel
-    const btnViewAtt = tgt.closest<HTMLElement>('.btn-view-att');
-    if (btnViewAtt) { const fn = w().viewAttendancePhotos as ((a: unknown, b: unknown, c: unknown) => void) | undefined; fn?.(btnViewAtt.dataset.in, btnViewAtt.dataset.out, btnViewAtt.dataset.name); }
-    const btnViewEmpDetail = tgt.closest<HTMLElement>('.btn-view-emp-detail');
-    if (btnViewEmpDetail) { const fn = w()._openAttEmpPanel as ((u: string) => void) | undefined; fn?.(btnViewEmpDetail.dataset.username ?? ''); }
 
     // Settings palette/layout
     const pCard = tgt.closest<HTMLElement>('.palette-card');

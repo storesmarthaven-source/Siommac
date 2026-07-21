@@ -23,6 +23,7 @@ import { openActionModal, toActionRecord, statusBadge } from '@/components/commo
 import { EnterpriseFormModal, type DialogContextPanelConfig } from '@/components/common/dialogs';
 import './onboardingCase.css';
 import '../Finance/finance.css';
+import { HRQueryNotice } from './HRQueryState';
 
 interface ExcRow { id: string; workDate: string; employeeId: string; exceptionType: string; minutes: number | null; status: string }
 
@@ -68,6 +69,9 @@ export function AttendanceOverview(): VNode {
   const recQ    = useAttendanceRecords({ limit: 100 });
   const tsQ     = useTimesheets({ limit: 100 });
   const excQ    = useAttendanceExceptions({ status: 'open', limit: 100 });
+  const records = recQ.data?.records ?? [];
+  const timesheets = tsQ.data?.timesheets ?? [];
+  const exceptions = excQ.data?.exceptions ?? [];
 
   const waiveMut   = useWaiveException();
   const resolveMut = useResolveException();
@@ -132,6 +136,8 @@ export function AttendanceOverview(): VNode {
         sub="Punch records, timesheets, and exceptions — verified work-time inputs for payroll."
       />
 
+      <HRQueryNotice queries={[statsQ, recQ, tsQ, excQ]} />
+
       <div class="obx-repstats" style={{ margin: '4px 0 12px' }}>
         {STAT_ROW.map(s => (
           <div class="obx-repstat" key={s.label}>
@@ -156,12 +162,12 @@ export function AttendanceOverview(): VNode {
             </div>
           )}
           <div class="obx-section-body">
-          {recQ.isLoading && !recQ.data ? <div class="obx-empty">Loading…</div>
-            : !(recQ.data?.records.length) ? <EmptyState icon="fa-clock" title="No attendance records" text="Punch records will appear here once employees clock in." />
+          {recQ.isLoading ? <div class="obx-empty">Loading…</div>
+            : !records.length ? <EmptyState icon="fa-clock" title="No attendance records" text="Punch records will appear here once employees clock in." />
             : (
               <table class="obx-table">
                 <thead><tr><th>Date</th><th>Employee</th><th>In</th><th>Out</th><th>Worked</th><th>Late</th><th>OT</th><th>Status</th>{canCorrect && <th style={{ textAlign: 'right' }}>Actions</th>}</tr></thead>
-                <tbody>{recQ.data.records.map(r => (
+                <tbody>{records.map(r => (
                   <tr key={r.id}>
                     <td><b>{r.workDate}</b></td>
                     <td class="obx-meta">{r.employeeId}</td>
@@ -182,12 +188,12 @@ export function AttendanceOverview(): VNode {
       {/* ── Timesheets ── */}
       {surface === 'timesheets' && (
         <div class="obx-section"><div class="obx-section-body">
-          {tsQ.isLoading && !tsQ.data ? <div class="obx-empty">Loading…</div>
-            : !(tsQ.data?.timesheets.length) ? <EmptyState icon="fa-file-lines" title="No timesheets" text="Build a timesheet from a period's attendance records to submit it for approval." />
+          {tsQ.isLoading ? <div class="obx-empty">Loading…</div>
+            : !timesheets.length ? <EmptyState icon="fa-file-lines" title="No timesheets" text="Build a timesheet from a period's attendance records to submit it for approval." />
             : (
               <table class="obx-table">
                 <thead><tr><th>Timesheet</th><th>Period</th><th>Worked</th><th>OT</th><th style={{ textAlign: 'center' }}>Exceptions</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>{tsQ.data.timesheets.map(t => {
+                <tbody>{timesheets.map(t => {
                   const canSubmit = canSubmitTs && (t.status === 'draft' || t.status === 'reopened' || t.status === 'rejected');
                   const canReopen = canApproveTs && t.status === 'approved';
                   return (
@@ -214,12 +220,12 @@ export function AttendanceOverview(): VNode {
       {/* ── Exceptions ── */}
       {surface === 'exceptions' && (
         <div class="obx-section"><div class="obx-section-body">
-          {excQ.isLoading && !excQ.data ? <div class="obx-empty">Loading…</div>
-            : !(excQ.data?.exceptions.length) ? <EmptyState icon="fa-triangle-exclamation" title="No open exceptions" text="Late arrivals, missing punches, and other exceptions surface here for review." />
+          {excQ.isLoading ? <div class="obx-empty">Loading…</div>
+            : !exceptions.length ? <EmptyState icon="fa-triangle-exclamation" title="No open exceptions" text="Late arrivals, missing punches, and other exceptions surface here for review." />
             : (
               <table class="obx-table">
                 <thead><tr><th>Date</th><th>Employee</th><th>Type</th><th>Minutes</th><th>Status</th><th>Actions</th></tr></thead>
-                <tbody>{excQ.data.exceptions.map(x => (
+                <tbody>{exceptions.map(x => (
                   <tr key={x.id}>
                     <td><b>{x.workDate}</b></td>
                     <td class="obx-meta">{x.employeeId}</td>
@@ -384,7 +390,7 @@ function parseAttendanceCsv(text: string): ParsedCsv {
 }
 
 function rowIsValid(r: AttendanceImportRow): boolean {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test((r.workDate ?? '').trim())) return false;
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(r.workDate.trim())) return false;
   if (!r.username && !r.employeeId) return false;
   if (!r.punchIn && !r.punchOut) return false;
   return true;
