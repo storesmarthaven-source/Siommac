@@ -381,6 +381,13 @@ export function PayrollCommandCenter(): VNode {
     setDrawerRunId(runId);
     setDrawerOpen(true);
   }, []);
+  // Deep-link from the Payroll Runs register: it stores a runId + navigates here.
+  // Consume the hint once on mount and open that run's full-page detail.
+  useEffect(() => {
+    let pending: string | null = null;
+    try { pending = sessionStorage.getItem('siomac_open_payroll_run'); sessionStorage.removeItem('siomac_open_payroll_run'); } catch { /* ignore */ }
+    if (pending) openRun(pending);
+  }, [openRun]);
   const refresh = useCallback(() => { void q.refetch(); }, [q]);
   // KPI drill-through: focus the run register on a tab (mirrors Statutory's goToRegisterTab).
   const focusRegister = useCallback((t: PayrollRunRegisterTab) => {
