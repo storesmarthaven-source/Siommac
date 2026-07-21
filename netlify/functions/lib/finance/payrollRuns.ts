@@ -2092,6 +2092,172 @@ export async function getPopulationReconciliation(
   };
 }
 
+// ── Input-source readiness (create-run wizard step 6, Slice 3) ──────────────────
+// Pay-group-scoped, read-only pre-lock readiness across the six input sources
+// lockInputs actually consumes: base compensation, overtime, timesheets, leave/
+// absences, loans/advances, and one-time adjustments (pay items). Per source it
+// reports the in-period record count, freshness (max updated_at), the owner, and
+// a state derived from pending-approval (nothing here is snapshotted — final
+// inputs still freeze at Lock Inputs). No mutation → cannot affect create.
+
+export interface InputSourceReadiness {
+  key:         string;
+  label:       string;
+  records:     number;
+  freshnessAt: string | null;   // most recent updated_at across the source's rows
+  ownerRole:   'hr' | 'finance' | 'payroll';
+  state:       'ready' | 'pending' | 'review';
+}
+export interface InputReadinessResult {
+  sources: InputSourceReadiness[];
+}
+
+/**
+ * Pre-lock readiness of the six payroll input sources for a pay-group-scoped run.
+ * Read-only estimate — inputs still freeze at Lock Inputs.
+ */
+export async function getInputSourceReadiness(
+  payGroupId:  string,
+  periodStart: string,
+  periodEnd:   string,
+): Promise<InputReadinessResult> {
+  const group = await getPayGroup(payGroupId);
+  if (!group) throw Object.assign(new Error('Pay group not found.'), { status: 404 });
+
+  const memberIds = await listGroupMemberIds(payGroupId, periodStart, periodEnd);
+
+  type MemberRow = {
+    id: string; pay_basis: string | null;
+    monthly_salary: number | null; hourly_rate: number | null;
+    status: string; start_date: string | null; end_date: string | null;
+  };
+  const members: MemberRow[] = [];
+  for (const ids of chunk(memberIds, 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('app_users')
+      .select('id, pay_basis, monthly_salary, hourly_rate, status, start_date, end_date')
+      .in('id', ids);
+    if (error) throw Object.assign(new Error('inputReadiness/members: ' + error.message), { status: 500 });
+    members.push(...(data ?? []) as MemberRow[]);
+  }
+
+  // Paid population = the same filter lockInputs applies (active, or terminated
+  // inside/after the period so final pay is still processed).
+  const paid = members.filter(m =>
+    (m.start_date === null || m.start_date <= periodEnd)
+    && (m.end_date === null || m.end_date >= periodStart)
+    && (m.status === 'active' || m.end_date !== null));
+  const scopeIds = paid.map(m => m.id);
+
+  // Fetch a source's rows for the scoped population, paginated over the id IN().
+  // The PostgREST builder is typed loosely here — its deep generics otherwise
+  // exceed the type-checker's instantiation depth for a shared helper.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  type PgQuery = any;
+  async function pageByEmployee<T>(
+    table: string,
+    cols: string,
+    addFilters: (q: PgQuery) => PgQuery,
+  ): Promise<T[]> {
+    const out: T[] = [];
+    for (const ids of chunk(scopeIds, 300)) {
+      if (ids.length === 0) continue;
+      const q = addFilters(sb.from(table).select(cols).in('employee_id', ids));
+      const { data, error } = await q;
+      if (error) throw Object.assign(new Error(`inputReadiness/${table}: ${error.message}`), { status: 500 });
+      out.push(...((data ?? []) as T[]));
+    }
+    return out;
+  }
+  const maxTs = (rows: Array<Record<string, unknown>>, keys: string[]): string | null => {
+    let max: string | null = null;
+    for (const r of rows) {
+      for (const k of keys) {
+        const v = r[k];
+        if (typeof v === 'string' && (max === null || v > max)) max = v;
+      }
+    }
+    return max;
+  };
+
+  const sources: InputSourceReadiness[] = [];
+
+  // 1. Base compensation — pay basis + a resolvable base amount on each member.
+  const baseMissing = paid.filter(m => {
+    if (!m.pay_basis) return true;
+    if (m.pay_basis === 'salary') return m.monthly_salary == null;
+    if (m.pay_basis === 'hourly') return m.hourly_rate == null;
+    return true;
+  }).length;
+  sources.push({
+    key: 'base_compensation', label: 'Base compensation',
+    records: paid.length - baseMissing, freshnessAt: null, ownerRole: 'hr',
+    state: baseMissing > 0 ? 'review' : 'ready',
+  });
+
+  // 2. Overtime — approved OT feeds the run; submitted entries await approval.
+  type OtRow = { status: string; updated_at: string };
+  const ot = await pageByEmployee<OtRow>('hr_overtime_entries', 'status, updated_at',
+    q => q.gte('work_date', periodStart).lte('work_date', periodEnd));
+  const otRecords = ot.filter(r => ['submitted', 'approved', 'paid'].includes(r.status));
+  const otPending = ot.filter(r => r.status === 'submitted').length;
+  sources.push({
+    key: 'overtime', label: 'Overtime', records: otRecords.length,
+    freshnessAt: maxTs(ot, ['updated_at']), ownerRole: 'hr',
+    state: otPending > 0 ? 'pending' : 'ready',
+  });
+
+  // 3. Timesheets — approved timesheets drive hourly base pay.
+  type TsRow = { status: string; updated_at: string | null; created_at: string };
+  const ts = await pageByEmployee<TsRow>('hr_timesheets', 'status, updated_at, created_at',
+    q => q.gte('period_start', periodStart).lte('period_start', periodEnd));
+  const tsPending = ts.filter(r => r.status !== 'approved' && r.status !== 'rejected').length;
+  sources.push({
+    key: 'timesheets', label: 'Timesheets', records: ts.length,
+    freshnessAt: maxTs(ts, ['updated_at', 'created_at']), ownerRole: 'hr',
+    state: tsPending > 0 ? 'pending' : 'ready',
+  });
+
+  // 4. Leave & absences — requests overlapping the period.
+  type LvRow = { status: string; updated_at: string | null; created_at: string };
+  const lv = await pageByEmployee<LvRow>('hr_leave_requests', 'status, updated_at, created_at',
+    q => q.lte('from_date', periodEnd).gte('to_date', periodStart));
+  const lvRecords = lv.filter(r => ['pending_approval', 'approved'].includes(r.status));
+  const lvPending = lv.filter(r => r.status === 'pending_approval').length;
+  sources.push({
+    key: 'leave', label: 'Leave & absences', records: lvRecords.length,
+    freshnessAt: maxTs(lv, ['updated_at', 'created_at']), ownerRole: 'hr',
+    state: lvPending > 0 ? 'pending' : 'ready',
+  });
+
+  // 5. Loans & advances — active loans due this period; pending ones await approval.
+  type LnRow = { status: string; updated_at: string; balance: number; start_period: string | null };
+  const ln = await pageByEmployee<LnRow>('finance_employee_loans', 'status, updated_at, balance, start_period',
+    q => q.in('status', ['active', 'pending_approval']));
+  const lnActive = ln.filter(r =>
+    r.status === 'active' && Number(r.balance) > 0 && (r.start_period == null || r.start_period <= periodEnd));
+  const lnPending = ln.filter(r => r.status === 'pending_approval').length;
+  sources.push({
+    key: 'loans', label: 'Loans & advances', records: lnActive.length,
+    freshnessAt: maxTs(ln, ['updated_at']), ownerRole: 'finance',
+    state: lnPending > 0 ? 'pending' : 'ready',
+  });
+
+  // 6. One-time adjustments — pay items effective in the period.
+  type PiRow = { status: string; updated_at: string };
+  const pi = await pageByEmployee<PiRow>('hr_employee_pay_items', 'status, updated_at',
+    q => q.lte('effective_from', periodEnd).or(`effective_to.is.null,effective_to.gte.${periodStart}`));
+  const piRecords = pi.filter(r => ['active', 'pending_approval'].includes(r.status));
+  const piPending = pi.filter(r => r.status === 'pending_approval').length;
+  sources.push({
+    key: 'adjustments', label: 'One-time adjustments', records: piRecords.length,
+    freshnessAt: maxTs(pi, ['updated_at']), ownerRole: 'hr',
+    state: piPending > 0 ? 'pending' : 'ready',
+  });
+
+  return { sources };
+}
+
 // ── Export content download ───────────────────────────────────────────────────
 
 export interface ExportDownloadResult {

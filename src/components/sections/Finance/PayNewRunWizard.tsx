@@ -23,12 +23,14 @@ import {
   usePayrollMutation,
   usePopulationPreview,
   usePopulationReconciliation,
+  useInputReadiness,
   usePayGroups,
   useReasonCodes,
   financePayrollApi,
   type PayrollRun,
   type PayrollRunType,
   type PopulationReconciliationRule,
+  type InputSourceReadiness,
 } from '@api/finance/payroll';
 import './payrunWizard.css';
 
@@ -58,6 +60,20 @@ const RECON_STATE_LABEL: Record<PopulationReconciliationRule['state'], string> =
 };
 const RECON_OWNER_LABEL: Record<PopulationReconciliationRule['ownerRole'], string> = {
   hr: 'HR', finance: 'Finance', payroll: 'Payroll',
+};
+
+// Input-source readiness presentation (Slice 3)
+const READINESS_RC: Record<InputSourceReadiness['state'], string> = {
+  ready: 'ok', pending: 'warn', review: 'bad',
+};
+const READINESS_ICON: Record<InputSourceReadiness['state'], string> = {
+  ready: '✓', pending: '…', review: '!',
+};
+const READINESS_LABEL: Record<InputSourceReadiness['state'], string> = {
+  ready: 'Ready', pending: 'Awaiting approval', review: 'Needs review',
+};
+const READINESS_PILL: Record<InputSourceReadiness['state'], string> = {
+  ready: 'green', pending: 'amber', review: 'red',
 };
 
 const STEPS = [
@@ -163,6 +179,8 @@ export function PayNewRunWizard({
   const populationQ = usePopulationPreview(periodMonth ? `${periodMonth}-01` : undefined);
   const reconQ      = usePopulationReconciliation(
     payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
+  const readinessQ  = useInputReadiness(
+    payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
   const runsQ       = useQuery({
     queryKey: ['finance', 'payroll', 'runs', 'source-picker'],
     queryFn:  () => financePayrollApi.listRuns({ limit: 50 }),
@@ -234,6 +252,7 @@ export function PayNewRunWizard({
 
   const pop = populationQ.data;
   const recon = reconQ.data;
+  const readiness = readinessQ.data;
   const runNumberHint = `PAY-${periodMonth ?? '————-——'}-${runType === 'scheduled' ? 'M01' : runType.slice(0, 3).toUpperCase()}`;
 
   return (
@@ -511,7 +530,22 @@ export function PayNewRunWizard({
           <section class="card">
             <div class="sec-head"><div class="sec-ico">6</div><div><div class="sec-title">Input-source readiness</div><div class="sec-sub">Freshness, approval state and ownership across every payroll input source.</div></div></div>
             <div class="panel-body">
-              <PendingBlock title="Available after Lock Inputs — live readiness in Slice 3" detail="Base compensation, overtime, timesheets, leave, loans and one-time adjustments are snapshotted at Lock Inputs. A pre-lock readiness view (record counts · freshness · owner · state) arrives with the input-source-readiness endpoint. Until then this is not shown as fabricated rows." />
+              {(!payGroupId || !periodStart || !periodEnd)
+                ? <PendingBlock title="Select a pay group and period" detail="Input-source readiness is scoped to the chosen pay group and run period. Set them in the earlier steps." />
+                : readinessQ.isLoading
+                  ? <span class="pcrw-skel" style={{ width: '100%', height: 200 }} />
+                  : readinessQ.isError
+                    ? <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">Readiness unavailable</div><div class="b-sub">Could not load input-source readiness. Retry, or continue — inputs still freeze at Lock Inputs.</div></div></div>
+                    : readiness && readiness.sources.map(s => (
+                      <div class="readiness-row" key={s.key}>
+                        <div class={`rc ${READINESS_RC[s.state]}`}>{READINESS_ICON[s.state]}</div>
+                        <div class="rt">
+                          <strong>{s.label}</strong>
+                          <small>{s.records} record{s.records === 1 ? '' : 's'} · {RECON_OWNER_LABEL[s.ownerRole]} · {s.freshnessAt ? `updated ${s.freshnessAt.slice(0, 10)}` : 'no dated feed'}</small>
+                        </div>
+                        <span class={`pill ${READINESS_PILL[s.state]}`}>{READINESS_LABEL[s.state]}</span>
+                      </div>
+                    ))}
             </div>
           </section>
         </div>

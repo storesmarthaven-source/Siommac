@@ -460,6 +460,19 @@ export interface PopulationReconciliation {
   priorRun:    PopulationReconciliationPriorRun;
 }
 
+// Input-source readiness (create-run wizard step 6, Slice 3) — pay-group-scoped.
+export interface InputSourceReadiness {
+  key:         string;
+  label:       string;
+  records:     number;
+  freshnessAt: string | null;
+  ownerRole:   'hr' | 'finance' | 'payroll';
+  state:       'ready' | 'pending' | 'review';
+}
+export interface InputReadiness {
+  sources: InputSourceReadiness[];
+}
+
 export interface ExportDownload {
   exportId:  string;
   exportNo:  string;
@@ -657,6 +670,10 @@ export const financePayrollApi = {
   populationReconciliation: (a: { payGroupId: string; periodStart: string; periodEnd: string }) =>
     call<PopulationReconciliation>('finance/payroll/runs/population-reconciliation', a),
 
+  // Input-source readiness (wizard step 6) — pay-group-scoped
+  inputReadiness: (a: { payGroupId: string; periodStart: string; periodEnd: string }) =>
+    call<InputReadiness>('finance/payroll/runs/input-readiness', a),
+
   // Export download (returns content + metadata for browser download)
   exportDownload: (a: { exportId: string }) =>
     call<ExportDownload>('finance/payroll/exports/download', a),
@@ -804,6 +821,16 @@ export function usePopulationReconciliation(
   return useQuery({
     queryKey: ['finance', 'payroll', 'population-reconciliation', payGroupId ?? '', periodStart ?? '', periodEnd ?? ''],
     queryFn:  () => financePayrollApi.populationReconciliation({ payGroupId: payGroupId!, periodStart: periodStart!, periodEnd: periodEnd! }),
+    enabled,
+  });
+}
+export function useInputReadiness(
+  payGroupId: string | undefined, periodStart: string | undefined, periodEnd: string | undefined,
+) {
+  const enabled = !!payGroupId && !!periodStart && !!periodEnd;
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'input-readiness', payGroupId ?? '', periodStart ?? '', periodEnd ?? ''],
+    queryFn:  () => financePayrollApi.inputReadiness({ payGroupId: payGroupId!, periodStart: periodStart!, periodEnd: periodEnd! }),
     enabled,
   });
 }
