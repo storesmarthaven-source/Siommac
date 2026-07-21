@@ -180,6 +180,7 @@ export default async function run(h) {
     const { data, error } = await sb.from('finance_remittances').insert({
       remittance_no: `REM-E2E-A3-${authority}-${TAG.slice(-6)}`,
       period_year: 2026, period_month: 6, authority, payroll_run_id: atomCtx.runId,
+      due_date: '2026-07-15',   // NOT NULL — statutory filing due date (mid next month)
       status: 'draft', created_by: fmgr1Id, total_due: 100, employee_portion: 40, employer_portion: 60,
     }).select('id').single();
     if (error) throw new Error(`seedDraftRem(${authority}): ${error.message}`);

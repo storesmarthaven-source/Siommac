@@ -66,13 +66,15 @@ export default async function run(h) {
   const status = async (id) => (await sb.from('hse_permits').select('status').eq('id', id).single()).data?.status;
 
   h.onCleanup(async () => {
-    if (ctx.templateIds.length) await sb.from('hse_permit_templates').delete().in('id', ctx.templateIds).catch(() => {});
+    // NOTE: supabase-js query builders are thenables, NOT real Promises — they have
+    // no `.catch()`. Use h.mustDelete (surfaces the error) instead of `.catch(()=>{})`.
+    if (ctx.templateIds.length) await h.mustDelete('hse_permit_templates', q => q.in('id', ctx.templateIds));
     if (ctx.permitIds.length) {
       const routes = ctx.permitIds.map(id => `hse/permits/${id}`);
-      await sb.from('notifications').delete().in('action_route', routes).catch(() => {});
-      if (ctx.permitRefs.length) await sb.from('app_events').delete().in('source_entity_id', ctx.permitRefs).catch(() => {});
+      await h.mustDelete('notifications', q => q.in('action_route', routes));
+      if (ctx.permitRefs.length) await h.mustDelete('app_events', q => q.in('source_entity_id', ctx.permitRefs));
       // children cascade from hse_permits (on delete cascade)
-      await sb.from('hse_permits').delete().in('id', ctx.permitIds).catch(() => {});
+      await h.mustDelete('hse_permits', q => q.in('id', ctx.permitIds));
     }
   });
 

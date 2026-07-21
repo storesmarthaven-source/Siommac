@@ -124,10 +124,13 @@ async function fetchArtifact(signedUrl, supabaseUrl) {
 }
 
 export default async function run(h) {
+  // This suite mutates compliance state that a shared DB can't safely reset between
+  // runs, so it only runs against a disposable DB. On the shared regression DB, record
+  // it as an explicit SKIP (env precondition) rather than crashing the whole run.
   if (process.env.E2E_DISPOSABLE_DB !== '1') {
-    throw new Error(
-      'communicationsCompliance requires E2E_DISPOSABLE_DB=1 and a database-owner reset after each run.',
-    );
+    await h.test('compliance suite requires a disposable DB (E2E_DISPOSABLE_DB=1)', () =>
+      h.skip('E2E_DISPOSABLE_DB=1 + database-owner reset required — env-skipped on shared DB'));
+    return;
   }
 
   const { api, test, expect, ok, fails, mint, mintStepUp, sb, TAG } = h;

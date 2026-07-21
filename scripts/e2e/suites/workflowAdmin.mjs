@@ -49,7 +49,14 @@ export default async function run(h) {
     try { await sb.from('module_workflow_bindings').delete().eq('template_id', ctx.templateId); } catch {}
     try { await sb.from('workflow_template_versions').delete().eq('template_id', ctx.templateId); } catch {}
     try { await sb.from('workflow_templates').delete().eq('id', ctx.templateId); } catch {}
-    try { await sb.from('app_users').delete().in('id', [emp.id, assignee.id]); } catch {}
+    // FK-order: workflow_decisions/audit reference the actor with a no-ON-DELETE FK.
+    // Delegate/reassign/cancel decisions on ANY instance (not just ctx.workflowId)
+    // by these users must clear BEFORE the user delete, else workflow_decisions_actor_id_fkey.
+    const wfUsers = [emp.id, assignee.id];
+    try { await sb.from('workflow_decisions').delete().in('actor_id', wfUsers); } catch {}
+    try { await sb.from('workflow_audit_log').delete().in('actor_id', wfUsers); } catch {}
+    try { await sb.from('workflow_tasks').delete().in('assigned_to', wfUsers); } catch {}
+    try { await sb.from('app_users').delete().in('id', wfUsers); } catch {}
   });
 
   const waitFor = async (check, ms = 8000) => {

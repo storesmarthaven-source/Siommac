@@ -72,6 +72,10 @@ const USER_KEYED = [
   ['hr_requests', 'requested_by'],
   ['finance_payroll_run_lines', 'employee_id'], ['finance_remittance_lines', 'employee_id'],
   ['hr_shift_assignments', 'employee_id'],
+  // Pay-group membership: a leftover assignment for a reused/synthetic employee id
+  // trips the one-active-group exclusion constraint ("employee already has a pay-group
+  // assignment covering part of that period") on a later run. Sweep by employee_id.
+  ['finance_employee_pay_group_assignments', 'employee_id'],
   // Payroll finding activity: actor_id is ON DELETE SET NULL (no update trigger), so it never
   // blocks the user delete — but sweep a test author's rows explicitly so they don't linger
   // with a null actor on any finding the run-cascade didn't reach (defense-in-depth, §15.3).

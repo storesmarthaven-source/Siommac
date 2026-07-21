@@ -994,8 +994,11 @@ export default async function run(h) {
   h.section('Communications › Tickets');
 
   await test('create ticket', async () => {
+    // Employee/self mode requires an is_employee_requestable type. 'general_support'
+    // is is_internal_requestable ONLY (internal-work mode) — 'general_hr' is the
+    // general self-service type (mig 20260919000440 request-type routing flags).
     const r = await api('communications/tickets/create', T.admin, {
-      requestTypeCode: 'general_support',
+      requestTypeCode: 'general_hr',
       priority: 'medium',
       subject: `${TAG} ticket`,
       description: 'integration test',

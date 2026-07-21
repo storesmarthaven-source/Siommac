@@ -19,7 +19,14 @@ export default async function run(h) {
   // real `employee` (created only if the roster has none) instead.
   const { actors: [supEmp], createdIds: supCreatedIds } = await h.acquireActors('employee', 1);
   const tSupEmp = mint(supEmp);
-  h.onCleanup(async () => { if (supCreatedIds?.length) { try { await sb.from('app_users').delete().in('id', supCreatedIds); } catch {} } });
+  h.onCleanup(async () => {
+    if (supCreatedIds?.length) {
+      // FK-order: clear decisions/audit these users authored (no-ON-DELETE actor_id) first.
+      try { await sb.from('workflow_decisions').delete().in('actor_id', supCreatedIds); } catch {}
+      try { await sb.from('workflow_audit_log').delete().in('actor_id', supCreatedIds); } catch {}
+      try { await sb.from('app_users').delete().in('id', supCreatedIds); } catch {}
+    }
+  });
 
   const waitFor = async (check, ms = 5000) => {
     const start = Date.now();
@@ -180,7 +187,12 @@ export default async function run(h) {
     try { await sb.from('workflow_instances').delete().eq('source_record_id', bypassRecordId); } catch {}
     if (bypass) {
       try { await sb.from('user_permissions').delete().eq('user_id', bypass.intruder.id).eq('permission', 'workflow.approve'); } catch {}
-      if (bypass.createdIds?.length) { try { await sb.from('app_users').delete().in('id', bypass.createdIds); } catch {} }
+      if (bypass.createdIds?.length) {
+        // FK-order: clear decisions/audit these users authored before deleting them.
+        try { await sb.from('workflow_decisions').delete().in('actor_id', bypass.createdIds); } catch {}
+        try { await sb.from('workflow_audit_log').delete().in('actor_id', bypass.createdIds); } catch {}
+        try { await sb.from('app_users').delete().in('id', bypass.createdIds); } catch {}
+      }
     }
   });
 
