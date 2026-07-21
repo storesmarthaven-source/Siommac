@@ -304,12 +304,24 @@ export interface RunAuditLogEntry {
   createdAt:     string;
 }
 
+export type PayrollRunType = 'scheduled' | 'off_cycle' | 'correction' | 'final_pay';
+
+/**
+ * Exact contract for POST /finance/payroll/runs/create (see financePayroll.ts).
+ * The route REQUIRES idempotencyKey + runType + periodStart + periodEnd; the
+ * caller derives periodStart/End from the chosen period and owns the idempotency
+ * key (stable across retries of one submit attempt).
+ */
 export interface CreateRunArgs {
-  periodMonth: string;      // YYYY-MM-DD (first of month)
-  payFrequency?: string;
+  idempotencyKey: string;   // caller-owned, stable across retries of one submit
+  runType: PayrollRunType;
+  periodStart: string;      // YYYY-MM-DD
+  periodEnd: string;        // YYYY-MM-DD
+  sequenceNo?: number;
+  sourceRunId?: string;     // required for correction runs (traceability)
+  payFrequency?: 'weekly' | 'fortnightly' | 'semi_monthly' | 'monthly';
   weeksInPeriod?: number;
-  payGroup?: string;
-  payGroupId?: string;      // when set, the group drives frequency + population
+  payGroupId?: string;      // scopes the run; drives frequency + population + policy
   payDate?: string;         // YYYY-MM-DD actual payment date
   cutOffDate?: string;      // YYYY-MM-DD cut-off date for changes
 }

@@ -481,6 +481,17 @@ export function PayrollCommandCenter(): VNode {
     );
   }
 
+  // The create-run wizard is a full-page workspace (mockup create-run.html),
+  // replacing the board in-place like the run detail above.
+  if (wizOpen) {
+    return (
+      <PayNewRunWizard
+        onClose={() => setWizOpen(false)}
+        onCreated={run => { setWizOpen(false); setTab('all'); setCursor(undefined); setDrawerRunId(run.id); setDrawerOpen(true); }}
+      />
+    );
+  }
+
   return (
     <>
       {showChrome ? header : <SkeletonHeader />}
@@ -528,14 +539,6 @@ export function PayrollCommandCenter(): VNode {
         </>
       )}
       </div>
-
-      {/* Create-run wizard — opens the newly-created run's drawer on completion */}
-      {wizOpen && (
-        <PayNewRunWizard
-          onClose={() => setWizOpen(false)}
-          onCreated={run => { setWizOpen(false); setTab('all'); setCursor(undefined); setDrawerRunId(run.id); setDrawerOpen(true); }}
-        />
-      )}
 
     </>
   );
