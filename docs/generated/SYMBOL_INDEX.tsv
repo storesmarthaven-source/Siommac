@@ -8671,12 +8671,12 @@ BODY_URL	variable	communications	false		src/components/sections/Messages/messeng
 subjectUserIdOf	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	74	
 linkFromBody	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	79	
 mapPost	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	85	
-toPresence	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	117	
-mapParticipantToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	121	
-mapOnlineToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	131	
-mapKind	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	142	
-directCounterpart	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	147	
-mapThread	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	151	
+toPresence	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	116	
+mapParticipantToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	120	
+mapOnlineToUser	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	130	
+mapKind	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	141	
+directCounterpart	function	communications	false		src/components/sections/Messages/messenger/adapters/mappers.ts	146	
+mapThread	function	communications	true		src/components/sections/Messages/messenger/adapters/mappers.ts	150	
 UploadUrlResult	interface	communications	false		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	10	
 SiomacAttachmentService	class	communications	true		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	12	
 upload	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacAttachments.ts	13	SiomacAttachmentService
@@ -8711,19 +8711,18 @@ searchMessages	method	communications	false		src/components/sections/Messages/mes
 loadPreferences	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	166	SiomacMessagingRepository
 savePreferences	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	177	SiomacMessagingRepository
 send	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	182	SiomacMessagingRepository
-addInternalNote	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	214	SiomacMessagingRepository
-createGroup	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	225	SiomacMessagingRepository
-deleteMessage	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	247	SiomacMessagingRepository
-togglePin	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	251	SiomacMessagingRepository
-markRead	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	271	SiomacMessagingRepository
-setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	275	SiomacMessagingRepository
-setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	279	SiomacMessagingRepository
-invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	283	SiomacMessagingRepository
-removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	287	SiomacMessagingRepository
-listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	293	SiomacMessagingRepository
-listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	299	SiomacMessagingRepository
-toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	311	SiomacMessagingRepository
-setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	316	SiomacMessagingRepository
+createGroup	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	213	SiomacMessagingRepository
+deleteMessage	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	235	SiomacMessagingRepository
+togglePin	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	239	SiomacMessagingRepository
+markRead	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	259	SiomacMessagingRepository
+setMuted	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	263	SiomacMessagingRepository
+setArchived	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	267	SiomacMessagingRepository
+invite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	271	SiomacMessagingRepository
+removeParticipant	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	275	SiomacMessagingRepository
+listActivity	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	281	SiomacMessagingRepository
+listRecipients	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	287	SiomacMessagingRepository
+toggleReaction	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	299	SiomacMessagingRepository
+setFavourite	method	communications	false		src/components/sections/Messages/messenger/adapters/siomacRepository.ts	304	SiomacMessagingRepository
 MessagingActions	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	25	
 MessagingContextValue	interface	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	62	
 MessagingContext	variable	communications	false	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	78	
@@ -8731,10 +8730,10 @@ MessagingProviderProps	interface	communications	true		src/components/sections/Me
 MessagingProvider	function	communications	true	component	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	88	
 preserveClientKeys	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	119	MessagingProvider
 mergeThreadMessages	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	165	MessagingProvider
-patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	395	actions
-flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	416	actions
-toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	437	actions
-useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	621	
+patch	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	363	actions
+flip	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	384	actions
+toggle	function	communications	false		src/components/sections/Messages/messenger/app/MessagingProvider.tsx	405	actions
+useMessaging	function	communications	true	hook	src/components/sections/Messages/messenger/app/MessagingProvider.tsx	589	
 userById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	7	
 threadById	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	12	
 messagesForThread	function	communications	true		src/components/sections/Messages/messenger/app/selectors.ts	18	
@@ -8772,10 +8771,10 @@ LinkPreview	interface	communications	true		src/components/sections/Messages/mess
 CollaborationCard	interface	communications	true	ui-tile	src/components/sections/Messages/messenger/domain/models.ts	53	
 Reaction	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	67	
 Message	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	72	
-Thread	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	105	
-ActivityEntry	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	131	
-MessageDraft	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	140	
-WorkspaceSnapshot	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	148	
+Thread	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	102	
+ActivityEntry	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	128	
+MessageDraft	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	137	
+WorkspaceSnapshot	interface	communications	true		src/components/sections/Messages/messenger/domain/models.ts	145	
 RealtimeEvent	type	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	18	
 MessagingRepository	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	23	
 AttachmentService	interface	communications	true		src/components/sections/Messages/messenger/domain/ports.ts	41	
@@ -8867,20 +8866,19 @@ urlPattern	variable	communications	false		src/components/sections/Messages/messe
 FormatCommand	type	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	24	
 commandState	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	26	
 Composer	function	communications	true	component	src/components/sections/Messages/messenger/ui/components/Composer.tsx	28	
-switchMode	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	72	Composer
-publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	90	Composer
-stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	97	Composer
-scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	134	Composer
-update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	148	Composer
-readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	158	Composer
-format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	170	Composer
-insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	198	Composer
-addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	213	Composer
-removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	235	Composer
-openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	240	Composer
-cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	245	Composer
-addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	250	Composer
-send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	255	Composer
+publishTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	72	Composer
+stopTyping	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	79	Composer
+scheduleDraftSave	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	116	Composer
+update	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	130	Composer
+readEditor	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	140	Composer
+format	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	152	Composer
+insertEmoji	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	180	Composer
+addFiles	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	195	Composer
+removeAttachment	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	217	Composer
+openAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	222	Composer
+cancelAttachmentDialog	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	227	Composer
+addLink	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	232	Composer
+send	function	communications	false		src/components/sections/Messages/messenger/ui/components/Composer.tsx	237	Composer
 msg	function	communications	false	test	src/components/sections/Messages/messenger/ui/components/composerLogic.test.ts	7	
 SendKeyEvent	interface	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	8	
 isSendKey	function	communications	true		src/components/sections/Messages/messenger/ui/components/composerLogic.ts	22	

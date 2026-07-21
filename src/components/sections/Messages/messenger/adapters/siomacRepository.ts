@@ -210,18 +210,6 @@ export class SiomacMessagingRepository implements MessagingRepository {
     };
   }
 
-  // Author-only internal note — text only (no attachments / reply / link / priority).
-  async addInternalNote(threadId: string, _authorId: string, body: string): Promise<Message> {
-    const res = await apiPost<{ success: boolean; post?: PostDTO; message?: string }>(
-      'communications/messages/internal-note',
-      { threadId, body, clientMessageKey: crypto.randomUUID() },
-      { retryable: false },
-    );
-    if (!res.success || !res.post) throw new Error(res.message ?? 'Failed to add internal note.');
-    this.threadOfPost.set(res.post.id, threadId);
-    return mapPost(res.post);
-  }
-
   async createGroup(name: string, participantIds: string[], actorId: string, firstMessage?: string): Promise<Thread> {
     // createThread requires a body or an attachment, so group creation carries a
     // REQUIRED first message (the group form enforces it — no fabricated body).
