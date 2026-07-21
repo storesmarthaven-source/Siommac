@@ -963,17 +963,17 @@ EmpRow	type	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	992	lock
 round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1085	lockInputs
 calculateRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1394	
 round2	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1726	calculateRun
-maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1816	
-PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1825	
-getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1840	
-ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1902	
-downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1918	
-submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1975	
-decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2047	
-emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2115	
-lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2162	
-reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2209	
-notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2244	
+maskNisNumber	function	payroll	false		netlify/functions/lib/finance/payrollRuns.ts	1819	
+PopulationPreviewResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1828	
+getEmployeePopulationPreview	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1843	
+ExportDownloadResult	interface	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1905	
+downloadRunExport	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1921	
+submitRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	1978	
+decideRunApproval	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2050	
+emitRunApprovedSideEffects	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2118	
+lockRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2165	
+reopenRun	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2212	
+notifyPayslipEmployees	function	payroll	true		netlify/functions/lib/finance/payrollRuns.ts	2247	
 payPeriodsForFrequency	function	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	32	
 ComputeNisInput	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	45	
 ComputeNisResult	interface	payroll	true		netlify/functions/lib/finance/payrollStatutory.ts	56	
@@ -3476,9 +3476,9 @@ BASE_GL_MAPPINGS	array	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	72	
 run	function	payroll	true	test	scripts/e2e/suites/financePayroll.mjs	81	
 waitFor	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	120	run
-seedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1169	run
-seedCalculatedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1184	run
-runPayslipFlow	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1616	run
+seedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1170	run
+seedCalculatedRun	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1185	run
+runPayslipFlow	function	payroll	false	test	scripts/e2e/suites/financePayroll.mjs	1617	run
 title	variable	payroll	true	test	scripts/e2e/suites/financePayslipsEss.mjs	33	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/financePayslipsEss.mjs	38	
 run	function	payroll	true	test	scripts/e2e/suites/financePayslipsEss.mjs	49	
@@ -3633,17 +3633,17 @@ exactKeys	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicies.mjs	
 run	function	payroll	true	test	scripts/e2e/suites/payrollPayPolicies.mjs	10	
 draft	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicies.mjs	46	run
 run	function	payroll	true	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	71	
-cal	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	124	run
-publishHolidaySet	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	126	run
-publishWorkCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	142	run
-assignCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	158	run
-policyDraft	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	167	run
-activatePolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	183	run
-assignPolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	200	run
-seedPayGroup	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	208	run
-assignMember	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	213	run
-setSources	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	216	run
-createRun	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	223	run
+cal	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	135	run
+publishHolidaySet	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	137	run
+publishWorkCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	164	run
+assignCalendar	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	181	run
+policyDraft	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	193	run
+activatePolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	212	run
+assignPolicy	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	240	run
+seedPayGroup	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	248	run
+assignMember	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	253	run
+setSources	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	256	run
+createRun	function	payroll	false	test	scripts/e2e/suites/payrollPayPolicyRun.mjs	263	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	27	
 run	function	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	29	
 seedRun	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	99	run
@@ -6510,7 +6510,7 @@ PAY_FREQS	array	finance	false		src/components/sections/Finance/PayNewRunWizard.t
 WEEKS_MAP	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	42	
 iso8601Month	function	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	44	
 FIELD_STYLE	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	48	
-CreateBlocker	type	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	62	
+CreateBlocker	interface	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	62	
 CREATE_BLOCKERS	object	finance	false		src/components/sections/Finance/PayNewRunWizard.tsx	63	
 matchCreateBlocker	function	finance	true		src/components/sections/Finance/PayNewRunWizard.tsx	109	
 Step0Fields	function	finance	false	component	src/components/sections/Finance/PayNewRunWizard.tsx	119	

@@ -2,7 +2,7 @@
 
 # payroll Module Map
 
-Source fingerprint: `76f832aa58ee260f68ac2922`
+Source fingerprint: `6ee69f23680b42952fcaef8c`
 
 Files: 148 | Symbols: 1414 | Widgets: 10 | Unique mounted endpoints: 124 | Route definitions: 124 mounted + 0 unmounted | API calls: 5 | DB objects: 205 | E2E suites: 20
 
@@ -365,9 +365,9 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | trigger | `trg_finance_payroll_run_policy_evidence_immutable` | `supabase/migrations/20260919000710_finance_pay_policy_run_pin.sql:134` |
 | trigger | `trg_finance_payroll_run_calendar_evidence_immutable` | `supabase/migrations/20260919000710_finance_pay_policy_run_pin.sql:140` |
 | function | `public.finance_payroll_create_run_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:27` |
-| function | `public.finance_payroll_lock_inputs_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:440` |
-| function | `public.finance_payroll_calculation_start_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:1096` |
-| function | `public.finance_payroll_calculation_publish_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:1468` |
+| function | `public.finance_payroll_lock_inputs_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:442` |
+| function | `public.finance_payroll_calculation_start_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:1098` |
+| function | `public.finance_payroll_calculation_publish_tx` | `supabase/migrations/20260919000711_finance_pay_policy_run_rpc.sql:1470` |
 
 ## E2E Suites
 
@@ -402,7 +402,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 |---|---|---:|
 | backend-route | `netlify/functions/routes/financePayroll.ts` | 1611 |
 | backend-route | `netlify/functions/routes/financePayslipTemplates.ts` | 177 |
-| e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3416 |
+| e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3421 |
 | e2e-suite | `scripts/e2e/suites/financePayslipsEss.mjs` | 340 |
 | e2e-suite | `scripts/e2e/suites/payrollBackPay.mjs` | 316 |
 | e2e-suite | `scripts/e2e/suites/payrollControlCenter.mjs` | 428 |
@@ -413,7 +413,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollOvertimeRules.mjs` | 139 |
 | e2e-suite | `scripts/e2e/suites/payrollPayGroups.mjs` | 215 |
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicies.mjs` | 268 |
-| e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 529 |
+| e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 569 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 837 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 398 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
