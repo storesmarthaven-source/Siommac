@@ -22,11 +22,13 @@ import { toast } from '@store';
 import {
   usePayrollMutation,
   usePopulationPreview,
+  usePopulationReconciliation,
   usePayGroups,
   useReasonCodes,
   financePayrollApi,
   type PayrollRun,
   type PayrollRunType,
+  type PopulationReconciliationRule,
 } from '@api/finance/payroll';
 import './payrunWizard.css';
 
@@ -46,6 +48,17 @@ const RUN_TYPES: { value: PayrollRunType; title: string; desc: string }[] = [
   { value: 'correction', title: 'Correction run',     desc: 'Correct a released payroll with traceability to the source run.' },
   { value: 'final_pay',  title: 'Final pay',          desc: 'Termination settlement for one or more employees.' },
 ];
+
+// Population-reconciliation rule presentation (Slice 2)
+const RECON_STATE_PILL: Record<PopulationReconciliationRule['state'], string> = {
+  included: 'green', warning: 'amber', review: 'blue', blocker: 'red',
+};
+const RECON_STATE_LABEL: Record<PopulationReconciliationRule['state'], string> = {
+  included: 'Included', warning: 'Warning', review: 'Review', blocker: 'Blocker',
+};
+const RECON_OWNER_LABEL: Record<PopulationReconciliationRule['ownerRole'], string> = {
+  hr: 'HR', finance: 'Finance', payroll: 'Payroll',
+};
 
 const STEPS = [
   { key: 'type',       label: 'Run Type',            sub: 'Purpose and ownership' },
@@ -148,6 +161,8 @@ export function PayNewRunWizard({
   const groups      = payGroupsQ.data ?? [];
   const periodMonth = periodStart ? periodStart.slice(0, 7) : undefined;
   const populationQ = usePopulationPreview(periodMonth ? `${periodMonth}-01` : undefined);
+  const reconQ      = usePopulationReconciliation(
+    payGroupId || undefined, periodStart || undefined, periodEnd || undefined);
   const runsQ       = useQuery({
     queryKey: ['finance', 'payroll', 'runs', 'source-picker'],
     queryFn:  () => financePayrollApi.listRuns({ limit: 50 }),
@@ -218,6 +233,7 @@ export function PayNewRunWizard({
   }
 
   const pop = populationQ.data;
+  const recon = reconQ.data;
   const runNumberHint = `PAY-${periodMonth ?? '————-——'}-${runType === 'scheduled' ? 'M01' : runType.slice(0, 3).toUpperCase()}`;
 
   return (
@@ -426,17 +442,65 @@ export function PayNewRunWizard({
                 </div>
               )}
             <div class="panel-body stack">
-              {(pop?.missingPayBasis ?? 0) > 0 && <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">{pop?.missingPayBasis} missing pay basis</div><div class="b-sub">These employees have no pay_basis and will be excluded at Lock Inputs. Set it in the HR profile.</div></div></div>}
-              {(pop?.missingStatutoryProfile ?? 0) > 0 && <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">{pop?.missingStatutoryProfile} missing statutory profile</div><div class="b-sub">No NIS/statutory profile — NIS will not be computed for these employees until it is created in HR.</div></div></div>}
-              <PendingBlock title="Per-rule reconciliation & department distribution (Slice 2)" detail="The full reconciliation table (rule · owner · state · action) and department breakdown come from the population-reconciliation endpoint." />
+              {(!payGroupId || !periodStart || !periodEnd)
+                ? <PendingBlock title="Select a pay group and period to reconcile" detail="The per-rule reconciliation, department distribution and prior-run comparison are scoped to the chosen pay group and run period. Set them in the earlier steps." />
+                : reconQ.isLoading
+                  ? <span class="pcrw-skel" style={{ width: '100%', height: 160 }} />
+                  : reconQ.isError
+                    ? <div class="banner danger"><div class="b-ico">!</div><div><div class="b-title">Reconciliation unavailable</div><div class="b-sub">Could not load the population reconciliation. Retry, or continue — final membership still freezes at Lock Inputs.</div></div></div>
+                    : recon && (
+                      <>
+                        <div class="table-wrap">
+                          <table class="data-table">
+                            <thead><tr><th>Rule</th><th class="num">Count</th><th>Owner</th><th>State</th><th>Action</th></tr></thead>
+                            <tbody>
+                              {recon.rules.map(r => (
+                                <tr key={r.key}>
+                                  <td><strong>{r.label}</strong><div class="cell-sub">{r.rule}</div></td>
+                                  <td class="num">{r.count}</td>
+                                  <td>{RECON_OWNER_LABEL[r.ownerRole]}</td>
+                                  <td><span class={`pill ${RECON_STATE_PILL[r.state]}`}>{RECON_STATE_LABEL[r.state]}</span></td>
+                                  <td>{r.count > 0 && r.action ? r.action : '—'}</td>
+                                </tr>
+                              ))}
+                            </tbody>
+                          </table>
+                        </div>
+                        <div>
+                          <div class="mini-head">Department distribution</div>
+                          {recon.departments.length === 0
+                            ? <div class="cell-sub" style={{ padding: '4px 2px' }}>No active employees in this pay group for the period.</div>
+                            : (
+                              <div class="table-wrap">
+                                <table class="data-table">
+                                  <thead><tr><th>Department</th><th class="num">Employees</th></tr></thead>
+                                  <tbody>
+                                    {recon.departments.map(d => (
+                                      <tr key={d.departmentId ?? 'unassigned'}><td>{d.name}</td><td class="num">{d.count}</td></tr>
+                                    ))}
+                                  </tbody>
+                                </table>
+                              </div>
+                            )}
+                        </div>
+                      </>
+                    )}
             </div>
           </section>
           <aside class="pcrw-aside">
             <SummaryCard title="Snapshot" rows={[
-              ['Population source', 'Active employees'],
+              ['Population source', payGroupName || 'Pay group members'],
               ['Frozen at', 'Lock Inputs'],
               ['Preview basis', periodMonth ?? 'set a period'],
             ]} />
+            {recon && (
+              <SummaryCard title="Vs last released run" rows={[
+                ['Last released', recon.priorRun.runId ? `${recon.priorRun.releasedPopulation} paid` : 'None found'],
+                ['Proposed now', `${recon.priorRun.proposed} employees`],
+                ['Added', `+${recon.priorRun.added}`],
+                ['Removed', `−${recon.priorRun.removed}`],
+              ]} />
+            )}
           </aside>
         </div>
       )}

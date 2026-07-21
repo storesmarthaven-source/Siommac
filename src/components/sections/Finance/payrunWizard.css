@@ -134,6 +134,8 @@
 .pcrw .data-table tr.on { background: rgba(79,70,229,.05); }
 .pcrw .data-table tr.selectable { cursor: pointer; }
 .pcrw .data-table tr.selectable:hover { background: var(--pcrw-surface-2); }
+.pcrw .data-table td .cell-sub { font-size: 11px; color: var(--pcrw-muted); margin-top: 3px; }
+.pcrw .mini-head { font-size: 10.5px; text-transform: uppercase; letter-spacing: .04em; color: var(--pcrw-muted); font-weight: 800; margin: 4px 0 8px; }
 
 /* ── Check / readiness rows ─────────────────────────────────────────────── */
 .pcrw .check-row { display: flex; gap: 12px; align-items: flex-start; padding: 12px 0; border-bottom: 1px solid var(--pcrw-border-soft); cursor: pointer; }

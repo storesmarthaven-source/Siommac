@@ -28,6 +28,7 @@ import {
   listRunWarnings,
   listRunAuditLog,
   getEmployeePopulationPreview,
+  getPopulationReconciliation,
   downloadRunExport,
   notifyPayslipEmployees,
   setRunTemplate,
@@ -1486,6 +1487,26 @@ router.post('/payroll/runs/population-preview', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await getEmployeePopulationPreview(v.data.periodMonth);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/runs/population-reconciliation
+// Pay-group-scoped, read-only reconciliation for wizard step 5: per-rule
+// population breakdown + department distribution + diff vs the last released run.
+router.post('/payroll/runs/population-reconciliation', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const DATE = /^\d{4}-\d{2}-\d{2}$/;
+  const v = zv(c, z.object({
+    payGroupId:  z.string().uuid(),
+    periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),
+    periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),
+  }).refine(d => d.periodStart <= d.periodEnd, {
+    message: 'periodStart must not be after periodEnd', path: ['periodEnd'],
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await getPopulationReconciliation(v.data.payGroupId, v.data.periodStart, v.data.periodEnd);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

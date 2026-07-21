@@ -432,6 +432,34 @@ export interface PopulationPreview {
   missingStatutoryProfile: number;
 }
 
+// Population reconciliation (create-run wizard step 5, Slice 2) — pay-group-scoped.
+export interface PopulationReconciliationRule {
+  key:       string;
+  label:     string;
+  count:     number;
+  rule:      string;
+  ownerRole: 'hr' | 'finance' | 'payroll';
+  state:     'included' | 'review' | 'blocker' | 'warning';
+  action:    string | null;
+}
+export interface PopulationReconciliationDept {
+  departmentId: string | null;
+  name:         string;
+  count:        number;
+}
+export interface PopulationReconciliationPriorRun {
+  runId:              string | null;
+  releasedPopulation: number;
+  added:              number;
+  removed:            number;
+  proposed:           number;
+}
+export interface PopulationReconciliation {
+  rules:       PopulationReconciliationRule[];
+  departments: PopulationReconciliationDept[];
+  priorRun:    PopulationReconciliationPriorRun;
+}
+
 export interface ExportDownload {
   exportId:  string;
   exportNo:  string;
@@ -625,6 +653,10 @@ export const financePayrollApi = {
   populationPreview: (a: { periodMonth?: string } = {}) =>
     call<PopulationPreview>('finance/payroll/runs/population-preview', a),
 
+  // Population reconciliation (wizard step 5) — pay-group-scoped
+  populationReconciliation: (a: { payGroupId: string; periodStart: string; periodEnd: string }) =>
+    call<PopulationReconciliation>('finance/payroll/runs/population-reconciliation', a),
+
   // Export download (returns content + metadata for browser download)
   exportDownload: (a: { exportId: string }) =>
     call<ExportDownload>('finance/payroll/exports/download', a),
@@ -763,6 +795,16 @@ export function usePopulationPreview(periodMonth?: string) {
   return useQuery({
     queryKey: ['finance', 'payroll', 'population-preview', periodMonth],
     queryFn:  () => financePayrollApi.populationPreview(periodMonth ? { periodMonth } : {}),
+  });
+}
+export function usePopulationReconciliation(
+  payGroupId: string | undefined, periodStart: string | undefined, periodEnd: string | undefined,
+) {
+  const enabled = !!payGroupId && !!periodStart && !!periodEnd;
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'population-reconciliation', payGroupId ?? '', periodStart ?? '', periodEnd ?? ''],
+    queryFn:  () => financePayrollApi.populationReconciliation({ payGroupId: payGroupId!, periodStart: periodStart!, periodEnd: periodEnd! }),
+    enabled,
   });
 }
 

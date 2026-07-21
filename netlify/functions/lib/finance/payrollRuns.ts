@@ -21,7 +21,7 @@ import { emitAppEvent, deliverEventNotifications } from '../appEvents';
 import { writeHrAudit } from '../hr/employeeCore';
 import { getStatutoryVersion, listNisClasses, assertDifferentApprover } from './statutoryConfig';
 import { computeRunLine, payPeriodsForFrequency } from './payrollStatutory';
-import { listGroupMemberIds } from './payGroups';
+import { listGroupMemberIds, getPayGroup } from './payGroups';
 import { loadActiveOvertimeRules, resolveOvertimeMultiplier, type OvertimeRule } from './overtimeRules';
 import { loadLoanInstallments } from './loans';
 import { getStatutoryProfilesByEmployees } from '../hr/statutoryProfileCore';
@@ -1912,6 +1912,183 @@ export async function getEmployeePopulationPreview(
   return {
     total: active.length, salaried, hourly, missingPayBasis: missing,
     newHires, terminations, missingStatutoryProfile,
+  };
+}
+
+// ── Population reconciliation (create-run wizard step 5, Slice 2) ────────────────
+// Pay-group-scoped, read-only. Reuses the population-preview classification logic
+// but scopes it to a pay group's period membership, and adds: a per-rule
+// breakdown (each defect with its owner + disposition + remediation), the
+// department distribution of the active population, and a diff against the last
+// RELEASED run for the same pay group. No mutation → cannot affect create.
+
+export interface PopulationReconciliationRule {
+  key:       string;
+  label:     string;
+  count:     number;
+  rule:      string;   // the plain-language rule the count is derived from
+  ownerRole: 'hr' | 'finance' | 'payroll';
+  state:     'included' | 'review' | 'blocker' | 'warning';
+  action:    string | null;   // remediation guidance; null when nothing to do
+}
+export interface PopulationReconciliationDept {
+  departmentId: string | null;
+  name:         string;
+  count:        number;
+}
+export interface PopulationReconciliationPriorRun {
+  runId:              string | null;
+  releasedPopulation: number;   // employees paid on the last released run
+  added:              number;   // in the proposed population, not in the prior release
+  removed:            number;   // in the prior release, not in the proposed population
+  proposed:           number;   // employees who would be included on this run
+}
+export interface PopulationReconciliationResult {
+  rules:       PopulationReconciliationRule[];
+  departments: PopulationReconciliationDept[];
+  priorRun:    PopulationReconciliationPriorRun;
+}
+
+/**
+ * Reconcile the employee population for a pay-group-scoped run before Lock Inputs.
+ * Read-only estimate — final membership still freezes at Lock Inputs.
+ */
+export async function getPopulationReconciliation(
+  payGroupId:  string,
+  periodStart: string,
+  periodEnd:   string,
+): Promise<PopulationReconciliationResult> {
+  const group = await getPayGroup(payGroupId);
+  if (!group) throw Object.assign(new Error('Pay group not found.'), { status: 404 });
+
+  // Base population = members whose assignment covers the run period.
+  const memberIds = await listGroupMemberIds(payGroupId, periodStart, periodEnd);
+
+  type UserRow = {
+    id: string; pay_basis: string | null; status: string;
+    start_date: string | null; end_date: string | null; department_id: string | null;
+  };
+  const users: UserRow[] = [];
+  for (const ids of chunk(memberIds, 300)) {   // chunk the IN() — 1000+ ids overflow the URL
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('app_users')
+      .select('id, pay_basis, status, start_date, end_date, department_id')
+      .in('id', ids);
+    if (error) throw Object.assign(new Error('populationRecon/users: ' + error.message), { status: 500 });
+    users.push(...(data ?? []) as UserRow[]);
+  }
+
+  const active   = users.filter(u => u.status === 'active');
+  const activeIds = active.map(u => u.id);
+
+  // Missing statutory profile — jurisdiction follows the pay group's country.
+  const profiles = await getStatutoryProfilesByEmployees(activeIds, group.statutoryCountry);
+  const missingStatutory = active.filter(u => !profiles.has(u.id)).length;
+
+  // Missing primary bank account — active + primary is required to disburse by EFT.
+  const bankedIds = new Set<string>();
+  for (const ids of chunk(activeIds, 300)) {
+    if (ids.length === 0) continue;
+    const { data, error } = await sb.from('finance_employee_bank_accounts')
+      .select('employee_id')
+      .eq('is_primary', true)
+      .eq('is_active', true)
+      .in('employee_id', ids);
+    if (error) throw Object.assign(new Error('populationRecon/bank: ' + error.message), { status: 500 });
+    for (const r of (data ?? []) as { employee_id: string }[]) bankedIds.add(r.employee_id);
+  }
+  const missingBank = activeIds.filter(id => !bankedIds.has(id)).length;
+
+  const withPayBasis   = active.filter(u => !!u.pay_basis);
+  const missingPayBasis = active.length - withPayBasis.length;
+  const newHires = active.filter(u =>
+    u.start_date && u.start_date >= periodStart && u.start_date <= periodEnd).length;
+  // Terminations: non-active members whose employment ended inside the period.
+  const terminations = users.filter(u =>
+    u.status !== 'active' && u.end_date && u.end_date >= periodStart && u.end_date <= periodEnd).length;
+
+  const rules: PopulationReconciliationRule[] = [
+    { key: 'included', label: 'Active — will be included', count: withPayBasis.length,
+      rule: 'Active pay-group members with a pay basis set are included at Lock Inputs.',
+      ownerRole: 'payroll', state: 'included', action: null },
+    { key: 'new_hires', label: 'New hires this period', count: newHires,
+      rule: 'Members whose start date falls inside the run period.',
+      ownerRole: 'hr', state: 'warning',
+      action: newHires ? 'Confirm start dates and proration in HR before Lock Inputs.' : null },
+    { key: 'terminations', label: 'Terminations this period', count: terminations,
+      rule: 'Members whose employment ended inside the run period.',
+      ownerRole: 'hr', state: 'review',
+      action: terminations ? 'Confirm final-pay handling before Lock Inputs.' : null },
+    { key: 'missing_pay_basis', label: 'Missing pay basis', count: missingPayBasis,
+      rule: 'Active members with no pay basis are excluded at Lock Inputs.',
+      ownerRole: 'hr', state: 'blocker',
+      action: missingPayBasis ? 'Set the pay basis on the HR employee profile.' : null },
+    { key: 'missing_statutory_profile', label: 'Missing statutory profile', count: missingStatutory,
+      rule: `Active members with no ${group.statutoryCountry} statutory profile — NIS/PAYE cannot be computed.`,
+      ownerRole: 'hr', state: 'warning',
+      action: missingStatutory ? 'Create the statutory profile in HR.' : null },
+    { key: 'missing_primary_bank', label: 'Missing primary bank account', count: missingBank,
+      rule: 'Active members with no active primary bank account cannot be paid by EFT.',
+      ownerRole: 'finance', state: 'review',
+      action: missingBank ? 'Capture a primary bank account before disbursement.' : null },
+  ];
+
+  // Department distribution of the active population.
+  const deptCounts = new Map<string | null, number>();
+  for (const u of active) {
+    const key = u.department_id ?? null;
+    deptCounts.set(key, (deptCounts.get(key) ?? 0) + 1);
+  }
+  const deptIds = [...deptCounts.keys()].filter((k): k is string => !!k);
+  const deptNames = new Map<string, string>();
+  if (deptIds.length > 0) {
+    const { data, error } = await sb.from('departments').select('id, name').in('id', deptIds);
+    if (error) throw Object.assign(new Error('populationRecon/depts: ' + error.message), { status: 500 });
+    for (const r of (data ?? []) as { id: string; name: string }[]) deptNames.set(r.id, r.name);
+  }
+  const departments: PopulationReconciliationDept[] = [...deptCounts.entries()]
+    .map(([id, count]) => ({
+      departmentId: id,
+      name: id ? (deptNames.get(id) ?? id) : 'Unassigned',
+      count,
+    }))
+    .sort((a, b) => b.count - a.count || a.name.localeCompare(b.name));
+
+  // Diff vs the last RELEASED run for this pay group.
+  const { data: priorRows, error: priorErr } = await sb.from('finance_payroll_runs')
+    .select('id, released_at, period_end')
+    .eq('pay_group_id', payGroupId)
+    .eq('status', 'released')
+    .order('released_at', { ascending: false, nullsFirst: false })
+    .order('period_end', { ascending: false })
+    .limit(1);
+  if (priorErr) throw Object.assign(new Error('populationRecon/prior: ' + priorErr.message), { status: 500 });
+  const prior = (priorRows ?? [])[0] as { id: string } | undefined;
+
+  // Proposed population = who would actually be paid (active + pay basis set).
+  const proposedIds = new Set(withPayBasis.map(u => u.id));
+  const priorIds = new Set<string>();
+  let runId: string | null = null;
+  if (prior) {
+    runId = prior.id;
+    const lineRows = await selectAllRows<{ employee_id: string }>(() =>
+      sb.from('finance_payroll_run_lines').select('employee_id').eq('run_id', prior.id).order('employee_id'));
+    for (const r of lineRows) priorIds.add(r.employee_id);
+  }
+  let added = 0, removed = 0;
+  for (const id of proposedIds) if (!priorIds.has(id)) added++;
+  for (const id of priorIds) if (!proposedIds.has(id)) removed++;
+
+  return {
+    rules,
+    departments,
+    priorRun: {
+      runId,
+      releasedPopulation: priorIds.size,
+      added,
+      removed,
+      proposed: proposedIds.size,
+    },
   };
 }
 
