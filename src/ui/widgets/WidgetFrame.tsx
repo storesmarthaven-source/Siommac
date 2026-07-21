@@ -5,7 +5,10 @@
 // A PREVIEW widget is draggable from its WHOLE frame (so you can grab anywhere to move it);
 // its Add/Discard buttons stopPropagation on mousedown so clicking them never starts a drag.
 import type { VNode, TargetedMouseEvent } from 'preact';
+import { useState } from 'preact/hooks';
 import { resolveBoardWidget } from './resolveBoardWidget';
+import { findWidgetDef } from './registry';
+import { WidgetConfigureModal } from './WidgetConfigureModal';
 import { WidgetRenderer } from './WidgetRenderer';
 import { useMountReveal } from './motion';
 import type { BoardWidgetInstance, LocalWidgetMap } from './types';
@@ -13,7 +16,7 @@ import type { BoardWidgetInstance, LocalWidgetMap } from './types';
 // Pressing an action button must not start a drag.
 const noDrag = (e: TargetedMouseEvent<HTMLButtonElement>): void => e.stopPropagation();
 
-export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove }: {
+export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMount = true, onCommitPreview, onDiscardPreview, onRemove, onConfigure }: {
   item: BoardWidgetInstance;
   editing?: boolean;
   isPreview?: boolean;
@@ -24,7 +27,9 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
   onCommitPreview?: () => void;
   onDiscardPreview?: () => void;
   onRemove?: () => void;
+  onConfigure?: (config: Record<string, unknown>) => void;
 }): VNode {
+  const [configOpen, setConfigOpen] = useState(false);
   const resolved = resolveBoardWidget(item.widgetId, local);
   const title = item.titleOverride ?? resolved?.title ?? '';
   const bare = resolved?.chrome === 'none';
@@ -41,6 +46,11 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
       <button type="button" class="wbi-act muted" onMouseDown={noDrag} onClick={onDiscardPreview}>Discard</button>
     </span>
   );
+  const definition = findWidgetDef(item.widgetId);
+  const configure = editing && !isPreview && definition?.configSchema.length ? (
+    <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={() => setConfigOpen(true)} aria-label="Configure widget"><i class="fas fa-gear" /></button>
+  ) : null;
+  const configModal = definition ? <WidgetConfigureModal open={configOpen} widget={definition} config={item.config} sizeKey={item.sizeKey} pageKey={item.pageKey} zoneId={item.zoneId} onClose={() => setConfigOpen(false)} onSave={next => { onConfigure?.(next); setConfigOpen(false); }} /> : null;
 
   if (bare) {
     const showTools = isPreview ?? editing;
@@ -53,11 +63,11 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
               ? <><span class="wbi-preview-chip">Preview</span>{previewActions}</>
               : <>
                   <i class="fas fa-grip-vertical wbi-grip" aria-hidden="true" />
-                  {onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}
+                  {configure}{onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}
                 </>}
           </div>
         )}
-        <div class="wbi-bare-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>
+        <div class="wbi-bare-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>{configModal}
       </div>
     );
   }
@@ -69,11 +79,9 @@ export function WidgetFrame({ item, editing, isPreview, local, demo, revealOnMou
         {isPreview
           ? <span class="wbi-preview-chip">Preview — not added</span>
           : <span class="wbi-title"><i class="fas fa-grip-vertical wbi-grip" aria-hidden="true" /> {title}</span>}
-        {isPreview ? previewActions : (editing && onRemove ? (
-          <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button>
-        ) : null)}
+        {isPreview ? previewActions : <>{configure}{editing && onRemove ? <button type="button" class="wbi-remove" onMouseDown={noDrag} onClick={onRemove} aria-label="Remove widget"><i class="fas fa-xmark" /></button> : null}</>}
       </header>
-      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>
+      <div class="wbi-body"><WidgetRenderer item={item} preview={isPreview} local={local} demo={demo} /></div>{configModal}
     </section>
   );
 }

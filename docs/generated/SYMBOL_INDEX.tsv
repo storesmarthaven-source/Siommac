@@ -2165,26 +2165,26 @@ COMPLIANCE_APPROVER_KEYS	variable	security	true		netlify/functions/lib/permissio
 ApproverCandidate	interface	security	true		netlify/functions/lib/permissionApprovalScope.ts	39	
 selectEligibleApprovers	function	security	true		netlify/functions/lib/permissionApprovalScope.ts	56	
 PERMISSION_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	26	
-PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	467	
-CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	476	
-isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	488	
-COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	508	
-ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	517	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	987	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1003	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1028	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1038	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1039	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1042	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1058	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1093	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1105	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1106	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1109	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1119	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1132	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1140	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1151	
+PermissionKey	type	security	true		netlify/functions/lib/permissions.ts	471	
+CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	480	
+isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	492	
+COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	512	
+ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	521	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	991	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1007	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1032	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1042	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1043	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1046	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1062	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1097	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1109	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1110	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1113	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1123	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1136	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1144	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1155	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -3271,7 +3271,8 @@ cleanOrder	function	widgets	false		netlify/functions/routes/uiPrefs.ts	41
 clampInt	function	widgets	false		netlify/functions/routes/uiPrefs.ts	132	
 capStr	function	widgets	false		netlify/functions/routes/uiPrefs.ts	134	
 safeConfig	function	widgets	false		netlify/functions/routes/uiPrefs.ts	136	
-cleanInstanceLayout	function	widgets	false		netlify/functions/routes/uiPrefs.ts	142	
+safeResponsive	function	widgets	false		netlify/functions/routes/uiPrefs.ts	142	
+cleanInstanceLayout	function	widgets	false		netlify/functions/routes/uiPrefs.ts	154	
 router	variable	security	false		netlify/functions/routes/webauthn.ts	46	
 RegisterVerifySchema	variable	security	false		netlify/functions/routes/webauthn.ts	50	
 CredentialIdSchema	variable	security	false		netlify/functions/routes/webauthn.ts	63	
@@ -5056,16 +5057,16 @@ useDeleteRequirement	function	hse	true	hook	src/api/hse/training.ts	199
 AssignTrainingArgs	interface	hse	true		src/api/hse/training.ts	206	
 useAssignTraining	function	hse	true	hook	src/api/hse/training.ts	210	
 useAssignmentAction	function	hse	true	hook	src/api/hse/training.ts	217	
-LayoutResponse	interface	widgets	true		src/api/layout.ts	12	
-getLayout	function	widgets	true		src/api/layout.ts	19	
-saveLayoutOverride	function	widgets	true		src/api/layout.ts	25	
-saveLayoutDefault	function	widgets	true		src/api/layout.ts	31	
-resetLayoutOverride	function	widgets	true		src/api/layout.ts	37	
-InstanceLayoutResponse	interface	widgets	true		src/api/layout.ts	43	
-getInstanceLayout	function	widgets	true		src/api/layout.ts	53	
-saveInstanceLayout	function	widgets	true		src/api/layout.ts	60	
-saveInstanceLayoutDefault	function	widgets	true		src/api/layout.ts	66	
-resetInstanceLayout	function	widgets	true		src/api/layout.ts	72	
+LayoutResponse	interface	widgets	true		src/api/layout.ts	13	
+getLayout	function	widgets	true		src/api/layout.ts	20	
+saveLayoutOverride	function	widgets	true		src/api/layout.ts	26	
+saveLayoutDefault	function	widgets	true		src/api/layout.ts	32	
+resetLayoutOverride	function	widgets	true		src/api/layout.ts	38	
+InstanceLayoutResponse	interface	widgets	true		src/api/layout.ts	44	
+getInstanceLayout	function	widgets	true		src/api/layout.ts	56	
+saveInstanceLayout	function	widgets	true		src/api/layout.ts	68	
+saveInstanceLayoutDefault	function	widgets	true		src/api/layout.ts	74	
+resetInstanceLayout	function	widgets	true		src/api/layout.ts	80	
 PAGE_SIZE	variable	communications	false		src/api/notifications.ts	34	
 getMyNotifications	function	communications	true		src/api/notifications.ts	43	
 getUnreadCount	function	communications	true		src/api/notifications.ts	72	
@@ -6708,20 +6709,20 @@ commandCenterReady	function	payroll	true		src/components/sections/Finance/Payrol
 SkeletonBody	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	244	
 SkeletonHeader	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	259	
 PayrollCommandCenter	function	payroll	true	component	src/components/sections/Finance/PayrollCommandCenter.tsx	273	
-placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	310	PayrollCommandCenter
-promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	312	PayrollCommandCenter
-runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	336	PayrollCommandCenter
-submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	342	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	548	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	609	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	641	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	700	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	720	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	768	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	772	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	773	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	824	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	881	
+placeBottom	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	311	PayrollCommandCenter
+promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	313	PayrollCommandCenter
+runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	337	PayrollCommandCenter
+submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	343	PayrollCommandCenter
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	551	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	612	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	644	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	703	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	723	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	771	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	775	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	776	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	827	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	884	
 empName	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	56	
 todayIso	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	59	
 FREQUENCIES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	61	
@@ -10346,20 +10347,20 @@ ctx	function	security	false	test	src/lib/permissions.test.ts	28
 override	function	security	false	test	src/lib/permissions.test.ts	36	
 expired	function	security	false	test	src/lib/permissions.test.ts	251	
 PERMISSION_KEYS	variable	security	true		src/lib/permissions.ts	55	
-PermissionKey	type	security	true		src/lib/permissions.ts	547	
-CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	552	
-COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	580	
-EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	595	
-ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	621	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1331	
-resolvePermission	function	security	true		src/lib/permissions.ts	1362	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1407	
-PermissionState	type	security	true		src/lib/permissions.ts	1413	
-permissionState	function	security	true		src/lib/permissions.ts	1419	
-permissionGroups	function	security	true		src/lib/permissions.ts	1429	
-can	function	security	true		src/lib/permissions.ts	1449	
-useCan	function	security	true	hook	src/lib/permissions.ts	1465	
-useAnyCan	function	security	true	hook	src/lib/permissions.ts	1477	
+PermissionKey	type	security	true		src/lib/permissions.ts	551	
+CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	556	
+COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	584	
+EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	599	
+ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	625	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1335	
+resolvePermission	function	security	true		src/lib/permissions.ts	1366	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1411	
+PermissionState	type	security	true		src/lib/permissions.ts	1417	
+permissionState	function	security	true		src/lib/permissions.ts	1423	
+permissionGroups	function	security	true		src/lib/permissions.ts	1433	
+can	function	security	true		src/lib/permissions.ts	1453	
+useCan	function	security	true	hook	src/lib/permissions.ts	1469	
+useAnyCan	function	security	true	hook	src/lib/permissions.ts	1481	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -11071,12 +11072,20 @@ ToastOptions	interface	platform	true		src/ui/toast/toastTypes.ts	30
 ToastActionOptions	interface	platform	true		src/ui/toast/toastTypes.ts	40	
 ToastRichOptions	interface	platform	true		src/ui/toast/toastTypes.ts	51	
 ToastRecord	interface	platform	true		src/ui/toast/toastTypes.ts	63	
+WidgetAccessContext	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	5	
+WidgetAccessDecision	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	6	
+resolveWidgetAccess	function	widgets	true	ui-tile	src/ui/widgets/access.ts	7	
 WidgetBundle	interface	widgets	true	ui-tile	src/ui/widgets/bundles.ts	53	
 WIDGET_BUNDLES	array	widgets	true	ui-tile	src/ui/widgets/bundles.ts	73	
 resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	126	
 commitPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/commitPreviewWidget.ts	5	
 createPreviewWidgetInstance	function	widgets	true	ui-tile	src/ui/widgets/createPreviewWidgetInstance.ts	5	
 createWidgetInstance	function	widgets	true	ui-tile	src/ui/widgets/createWidgetInstance.ts	4	
+sources	variable	widgets	false		src/ui/widgets/dataSources.ts	3	
+registerWidgetDataSource	function	widgets	true	ui-tile	src/ui/widgets/dataSources.ts	4	
+findWidgetDataSource	function	widgets	true	ui-tile	src/ui/widgets/dataSources.ts	10	
+listWidgetDataSources	function	widgets	true	ui-tile	src/ui/widgets/dataSources.ts	11	
+clearWidgetDataSourcesForTests	function	widgets	true	ui-tile	src/ui/widgets/dataSources.ts	12	
 SIZE_GRID	object	widgets	false		src/ui/widgets/declarative/declarativeToWidgetDef.tsx	9	
 cap	function	widgets	false		src/ui/widgets/declarative/declarativeToWidgetDef.tsx	13	
 sizeDef	function	widgets	false		src/ui/widgets/declarative/declarativeToWidgetDef.tsx	14	
@@ -11108,6 +11117,12 @@ DeclarativeView	type	widgets	true		src/ui/widgets/declarative/types.ts	24
 DeclarativeWidgetSpec	interface	widgets	true	ui-tile	src/ui/widgets/declarative/types.ts	26	
 DeclarativePackageManifest	interface	widgets	true		src/ui/widgets/declarative/types.ts	39	
 defineWidget	function	widgets	true	ui-tile	src/ui/widgets/defineWidget.ts	9	
+policies	variable	widgets	false		src/ui/widgets/governance.ts	2	
+setWidgetGovernancePolicies	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	3	
+getWidgetGovernancePolicy	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	4	
+listWidgetGovernancePolicies	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	5	
+effectiveWidgetPolicy	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	6	
+isWidgetDiscoverable	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	7	
 ellip	object	widgets	true		src/ui/widgets/inlinePrimitives.tsx	11	
 humanize	function	widgets	true		src/ui/widgets/inlinePrimitives.tsx	14	
 Empty	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	17	
@@ -11121,6 +11136,12 @@ X	function	widgets	false	component	src/ui/widgets/inlinePrimitives.tsx	71	TrendA
 Y	function	widgets	false	component	src/ui/widgets/inlinePrimitives.tsx	72	TrendArea
 MiniBars	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	84	
 DonutPct	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	107	
+sizeKeys	array	widgets	false		src/ui/widgets/migration.ts	3	
+isSizeKey	function	widgets	false		src/ui/widgets/migration.ts	4	
+object	function	widgets	false		src/ui/widgets/migration.ts	5	
+integer	function	widgets	false		src/ui/widgets/migration.ts	6	
+migrateBoardLayout	function	widgets	true		src/ui/widgets/migration.ts	12	
+createV3Layout	function	widgets	true		src/ui/widgets/migration.ts	40	
 reducedMotion	function	widgets	true		src/ui/widgets/motion.ts	19	
 Stoppable	interface	widgets	false		src/ui/widgets/motion.ts	24	
 stop	function	widgets	false		src/ui/widgets/motion.ts	25	
@@ -11128,6 +11149,12 @@ MountRevealOpts	interface	widgets	true		src/ui/widgets/motion.ts	27
 useMountReveal	function	widgets	true	hook	src/ui/widgets/motion.ts	34	
 useValuePulse	function	widgets	true	hook	src/ui/widgets/motion.ts	51	
 useStaggerReveal	function	widgets	true	hook	src/ui/widgets/motion.ts	66	
+BREAKPOINT_COLUMNS	object	widgets	true		src/ui/widgets/placement.ts	3	
+deriveResponsivePlacements	function	widgets	true		src/ui/widgets/placement.ts	5	
+derive	function	widgets	false		src/ui/widgets/placement.ts	6	deriveResponsivePlacements
+def	function	widgets	false	test	src/ui/widgets/platform.test.tsx	11	
+instance	object	widgets	false	test	src/ui/widgets/platform.test.tsx	18	
+none	function	widgets	false	test	src/ui/widgets/platform.test.tsx	41	
 ONB_PAGES	array	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	18	
 ONB_ZONES	array	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	19	
 ONB_SOURCE	object	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	20	
@@ -11178,44 +11205,56 @@ SIZE_ORDER	array	widgets	true		src/ui/widgets/size.ts	10
 sizeRank	function	widgets	true		src/ui/widgets/size.ts	12	
 isSizeAtLeast	function	widgets	true		src/ui/widgets/size.ts	17	
 splitCommittedAndPreview	function	widgets	true		src/ui/widgets/splitCommittedAndPreview.ts	6	
-ModuleKey	type	widgets	true		src/ui/widgets/types.ts	20	
-WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	22	
-WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	27	
-WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	29	
-WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	34	
-WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	37	
-WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	46	
-WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	53	
-WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	65	
-WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	70	
-WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	72	
-WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	81	
-WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	83	
-WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	86	
-WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	96	
-WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	104	
-WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	112	
-WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	123	
-WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	129	
-WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	190	
-PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	211	
-BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	218	
-LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	228	
-LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	246	
-BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	248	
-isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	254	
-emptyLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	9	
-layoutSignature	function	widgets	false		src/ui/widgets/useBoardLayout.ts	17	
-layoutsEqual	function	widgets	false		src/ui/widgets/useBoardLayout.ts	27	
-UseBoardLayoutResult	interface	widgets	true		src/ui/widgets/useBoardLayout.ts	29	
-useBoardLayout	function	widgets	true	hook	src/ui/widgets/useBoardLayout.ts	44	
-setCachedLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	70	useBoardLayout
-persist	function	widgets	false		src/ui/widgets/useBoardLayout.ts	74	useBoardLayout
-updateZoneLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	80	useBoardLayout
-addWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	83	useBoardLayout
-removeWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	86	useBoardLayout
-setAsDefault	function	widgets	false		src/ui/widgets/useBoardLayout.ts	94	useBoardLayout
-resetLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	127	useBoardLayout
+WIDGET_CONTRACT_VERSION	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	20	
+WIDGET_DESKTOP_COLUMNS	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	21	
+WidgetContractVersion	type	widgets	true	ui-tile	src/ui/widgets/types.ts	22	
+WidgetRuntimeState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	23	
+WidgetGovernanceState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	26	
+WidgetBreakpoint	type	widgets	true	ui-tile	src/ui/widgets/types.ts	27	
+WidgetPlacement	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	29	
+WidgetResponsivePlacements	type	widgets	true	ui-tile	src/ui/widgets/types.ts	30	
+WidgetGovernancePolicy	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	32	
+WidgetDataSourceRegistration	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	43	
+ModuleKey	type	widgets	true		src/ui/widgets/types.ts	53	
+WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	55	
+WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	60	
+WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	62	
+WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	67	
+WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	70	
+WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	79	
+WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	86	
+WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	98	
+WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	103	
+WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	105	
+WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	114	
+WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	116	
+WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	119	
+WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	129	
+WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	137	
+WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	145	
+WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	156	
+WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	162	
+WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	227	
+PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	249	
+BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	256	
+LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	266	
+LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	284	
+BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	286	
+isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	295	
+emptyLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	10	
+layoutSignature	function	widgets	false		src/ui/widgets/useBoardLayout.ts	18	
+layoutsEqual	function	widgets	false		src/ui/widgets/useBoardLayout.ts	28	
+UseBoardLayoutResult	interface	widgets	true		src/ui/widgets/useBoardLayout.ts	30	
+useBoardLayout	function	widgets	true	hook	src/ui/widgets/useBoardLayout.ts	50	
+setCachedLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	78	useBoardLayout
+stage	function	widgets	false		src/ui/widgets/useBoardLayout.ts	82	useBoardLayout
+updateZoneLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	87	useBoardLayout
+addWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	90	useBoardLayout
+removeWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	93	useBoardLayout
+saveLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	96	useBoardLayout
+cancelLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	104	useBoardLayout
+setAsDefault	function	widgets	false		src/ui/widgets/useBoardLayout.ts	117	useBoardLayout
+resetLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	150	useBoardLayout
 WidgetValidationIssue	interface	widgets	true	ui-tile	src/ui/widgets/validation.ts	13	
 WidgetValidationResult	interface	widgets	true	ui-tile	src/ui/widgets/validation.ts	19	
 ID_PATTERN	variable	widgets	false		src/ui/widgets/validation.ts	26	
@@ -11223,11 +11262,11 @@ validateWidgetDef	function	widgets	true	ui-tile	src/ui/widgets/validation.ts	28
 err	function	widgets	false		src/ui/widgets/validation.ts	30	validateWidgetDef
 warn	function	widgets	false		src/ui/widgets/validation.ts	31	validateWidgetDef
 WidgetBoardProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoard.tsx	11	
-WidgetBoard	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoard.tsx	71	
+WidgetBoard	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoard.tsx	73	
 WidgetBoardToolbarProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoardToolbar.tsx	16	
-WidgetBoardToolbar	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardToolbar.tsx	35	
-confirmReset	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	39	WidgetBoardToolbar
-copyLayout	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	48	WidgetBoardToolbar
+WidgetBoardToolbar	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardToolbar.tsx	37	
+confirmReset	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	41	WidgetBoardToolbar
+copyLayout	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	50	WidgetBoardToolbar
 ReactGridLayout	variable	widgets	false	component	src/ui/widgets/WidgetBoardZone.tsx	30	
 WidgetBoardZoneProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoardZone.tsx	32	
 itemInteractive	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	72	
@@ -11235,35 +11274,39 @@ minGridFor	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	79
 clampToMinGrid	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	96	
 wantsFit	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	106	
 WidgetBoardZone	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardZone.tsx	110	
-canResolve	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	118	WidgetBoardZone
-persist	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	167	WidgetBoardZone
-VARIANT_TONE	object	widgets	false		src/ui/widgets/WidgetCatalog.tsx	8	
-sizeLabel	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	13	
-WidgetCatalog	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	18	
+canResolve	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	117	WidgetBoardZone
+persist	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	160	WidgetBoardZone
+STATE_LABEL	variable	widgets	false	component	src/ui/widgets/WidgetCatalog.tsx	10	
+VARIANT_TONE	object	widgets	false		src/ui/widgets/WidgetCatalog.tsx	15	
+sizeLabel	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	20	
+WidgetCatalog	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	25	
 WidgetConfigFieldRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigFieldRenderer.tsx	7	
 WidgetConfigureModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigureModal.tsx	11	
 formatRefresh	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	12	
 WidgetDetailPanel	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	17	
 togglePkgMenu	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	30	WidgetDetailPanel
-noDrag	function	widgets	false		src/ui/widgets/WidgetFrame.tsx	14	
-WidgetFrame	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetFrame.tsx	16	
-BundlesSectionProps	interface	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	36	
-BundlesSection	function	widgets	false	component	src/ui/widgets/WidgetLibraryModal.tsx	46	
-addBundle	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	55	BundlesSection
-WidgetLibraryModalProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	120	
-WidgetLibraryModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	138	
-onPackageFile	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	166	WidgetLibraryModal
-onUninstall	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	182	WidgetLibraryModal
-toggleChecked	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	206	WidgetLibraryModal
-addCheckedWidgets	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	209	WidgetLibraryModal
-selectWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	225	WidgetLibraryModal
-handleAdd	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	226	WidgetLibraryModal
-handlePreview	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	231	WidgetLibraryModal
+noDrag	function	widgets	false		src/ui/widgets/WidgetFrame.tsx	17	
+WidgetFrame	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetFrame.tsx	19	
+LibraryView	type	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	26	
+BundlesSectionProps	interface	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	41	
+BundlesSection	function	widgets	false	component	src/ui/widgets/WidgetLibraryModal.tsx	51	
+addBundle	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	60	BundlesSection
+WidgetLibraryModalProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	125	
+WidgetLibraryModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	143	
+onPackageFile	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	173	WidgetLibraryModal
+onUninstall	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	189	WidgetLibraryModal
+toggleChecked	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	214	WidgetLibraryModal
+addCheckedWidgets	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	217	WidgetLibraryModal
+selectWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	244	WidgetLibraryModal
+handleAdd	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	245	WidgetLibraryModal
+handlePreview	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	250	WidgetLibraryModal
 WidgetLivePreview	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLivePreview.tsx	8	
+content	object	widgets	false		src/ui/widgets/WidgetPlaceholder.tsx	4	
+WidgetPlaceholder	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetPlaceholder.tsx	9	
 CANVAS_W	variable	widgets	false	component	src/ui/widgets/WidgetPreviewScaler.tsx	9	
 WidgetPreviewScaler	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetPreviewScaler.tsx	11	
 apply	function	widgets	false		src/ui/widgets/WidgetPreviewScaler.tsx	20	WidgetPreviewScaler
-WidgetRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetRenderer.tsx	17	
+WidgetRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetRenderer.tsx	18	
 WidgetSizeSelector	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetSizeSelector.tsx	5	
 ImportMetaEnv	interface	platform	false		src/vite-env.d.ts	14	
 ImportMeta	interface	platform	false		src/vite-env.d.ts	28	

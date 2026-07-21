@@ -4,6 +4,13 @@
 import type { VNode } from 'preact';
 import type { WidgetDef } from './types';
 import { WidgetPreviewScaler } from './WidgetPreviewScaler';
+import { resolveWidgetAccess } from './access';
+import { can } from '@lib/permissions';
+
+const STATE_LABEL = {
+  'live-api': 'Live API', 'static-preview': 'Static preview', restricted: 'Restricted',
+  'action-gated': 'Action gated', disabled: 'Disabled', missing: 'Missing',
+} as const;
 
 const VARIANT_TONE: Record<string, string> = {
   donut: 'success', 'task-board': 'warning', risk: 'danger', people: 'teal',
@@ -43,6 +50,7 @@ export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, l
               const added = placedIds.has(w.id);
               const tone = VARIANT_TONE[w.previewVariant] ?? '';
               const checkable = !!onToggleCheck && !locked && !added;
+              const access = resolveWidgetAccess(w, { pageKey, has: can });
               return (
                 <article
                   key={w.id}
@@ -51,7 +59,7 @@ export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, l
                 >
                   {checkable ? (
                     <label class="wlib-tile-check" onClick={e => e.stopPropagation()}>
-                      <input type="checkbox" checked={checkedIds?.has(w.id) ?? false} onChange={() => onToggleCheck?.(w.id)} aria-label={`Select ${w.title}`} />
+                      <input type="checkbox" checked={checkedIds?.has(w.id) ?? false} onChange={() => onToggleCheck(w.id)} aria-label={`Select ${w.title}`} />
                     </label>
                   ) : null}
                   <div class="wlib-tile-top">
@@ -66,6 +74,7 @@ export function WidgetCatalog({ widgets, pageKey, selectedWidgetId, placedIds, l
                       : null}
                   </div>
                   <div class="wlib-tile-badges">
+                    <span class={`wlib-pill state-${access.state}`}>{STATE_LABEL[access.state]}</span>
                     {locked ? <span class="wlib-pill"><i class="fas fa-lock" /> Locked</span> : <span class="wlib-pill primary">{sizeLabel(w)}</span>}
                     {added ? <span class="wlib-pill success">Added</span> : null}
                   </div>

@@ -254,3 +254,8 @@
 @media (prefers-reduced-motion: reduce) {
   .wbi-edit-banner-wrap, .wbi-edit-banner { transition: none; }
 }
+
+.wbi-placeholder { height: 100%; min-height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 8px; padding: 20px; text-align: center; color: var(--text-muted, #667085); background: repeating-linear-gradient(135deg, rgba(102,112,133,.04), rgba(102,112,133,.04) 8px, transparent 8px, transparent 16px); border: 1px dashed rgba(102,112,133,.35); border-radius: 10px; }
+.wbi-placeholder i { font-size: 22px; }
+.wbi-placeholder strong { color: var(--text-primary, #344054); }
+.wbi-placeholder span { max-width: 34rem; font-size: 12px; line-height: 1.45; }

@@ -1025,6 +1025,10 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
   'ui.layout.default.manage':   { module: 'System', group: 'Dashboards', label: 'Set Default Board Layout', description: 'Set the organisation-wide default dashboard layout.', risk: 'medium' },
   'ui.widgets.packages.view':   { module: 'System', group: 'Widgets', label: 'View Widget Packages', description: 'Read installed widget packages (needed to render boards).', risk: 'low' },
   'ui.widgets.packages.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Packages', description: 'Install or uninstall org-wide widget packages.', risk: 'medium' },
+  'ui.widgets.governance.view': { module: 'System', group: 'Widgets', label: 'View Widget Governance', description: 'View widget enablement and placement policy.', risk: 'low' },
+  'ui.widgets.governance.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Governance', description: 'Manage widget enablement and placement policy.', risk: 'medium' },
+  'ui.widgets.sources.view': { module: 'System', group: 'Widgets', label: 'View Widget Data Sources', description: 'View approved authenticated widget data sources.', risk: 'low' },
+  'ui.widgets.sources.manage': { module: 'System', group: 'Widgets', label: 'Manage Widget Data Sources', description: 'Manage approved authenticated widget data-source registrations.', risk: 'high' },
 
   // ── Finance Overview + Accounts Payable ──────────────────────────────────────
   'finance.overview.view': {

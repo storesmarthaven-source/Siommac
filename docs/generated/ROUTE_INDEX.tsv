@@ -801,12 +801,12 @@ path	module	permission	guards	schema	file	line
 /api/hse/training/requirements/list	hse	hse.training.view	requirePermission	z.object({ roleName: z.string().optional(), competencyId: z.string().uuid().optional(), activeOnly: z.boolean().default(true) })	netlify/functions/routes/hseTraining.ts	272
 /api/hse/training/stats	hse	hse.training.view	requirePermission		netlify/functions/routes/hseTraining.ts	199
 /api/layout/get	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	75
-/api/layout/getInstanceLayout	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	180
-/api/layout/resetInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	230
+/api/layout/getInstanceLayout	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	196
+/api/layout/resetInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	248
 /api/layout/resetOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	122
 /api/layout/saveDefault	widgets		requireRole		netlify/functions/routes/uiPrefs.ts	90
-/api/layout/saveInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	198
-/api/layout/saveInstanceLayoutDefault	widgets	ui.layout.default.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	213
+/api/layout/saveInstanceLayout	widgets	ui.layout.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	214
+/api/layout/saveInstanceLayoutDefault	widgets	ui.layout.default.manage	requirePermission		netlify/functions/routes/uiPrefs.ts	230
 /api/layout/saveOverride	widgets		requireUser		netlify/functions/routes/uiPrefs.ts	107
 /api/listAssignableRoles	hr	employees.edit	requirePermission		netlify/functions/routes/employees.ts	291
 /api/listAttendance	hr		requireRole	ListAttendanceSchema	netlify/functions/routes/attendance.ts	255

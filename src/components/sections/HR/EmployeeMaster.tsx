@@ -228,7 +228,7 @@ export function EmployeeMaster(): VNode {
   // The v2 board persists per-user; the register lives as a PAGE-LOCAL widget so it can
   // close over the page's filter/selection/modal state. KPI + insight + workforce
   // widgets come from the global registry (browsable in the Widget Library).
-  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout());
+  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout());
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   // New widgets/previews drop at the bottom of the board (never over the stats cards).
@@ -435,7 +435,9 @@ export function EmployeeMaster(): VNode {
         <WidgetBoardToolbar
           editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
           onToggleEdit={() => setEditing(e => !e)}
-          onOpenLibrary={() => setLibOpen(true)}
+          onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
+          onSaveEditing={async () => { await saveLayout(); setEditing(false); }}
+          onCancelEditing={async () => { await cancelLayout(); setEditing(false); }}
           onReset={() => void resetLayout()}
           onSetDefault={() => void setAsDefault()}
         />

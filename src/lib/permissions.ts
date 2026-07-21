@@ -409,6 +409,10 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',
   'ui.widgets.packages.view',
   'ui.widgets.packages.manage',
+  'ui.widgets.governance.view',
+  'ui.widgets.governance.manage',
+  'ui.widgets.sources.view',
+  'ui.widgets.sources.manage',
   // ── Finance statutory configuration ─────────────────────────────────────────
   'finance.statutory.view',         // view statutory versions and NIS class tables
   'finance.statutory.manage',       // create and edit draft statutory versions

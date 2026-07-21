@@ -102,7 +102,7 @@ export function OnboardingCaseDetail({
   const isAdmin = useSessionStore(selectIsAdmin);
   const setCaseInStore = useOnboardingCaseStore(s => s.setCase);
   const clearCaseInStore = useOnboardingCaseStore(s => s.clear);
-  const { layout, addWidget, setAsDefault, resetLayout } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
+  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
   const boardItems = layout.zones[CASE_ZONE] ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
@@ -355,7 +355,9 @@ export function OnboardingCaseDetail({
         <WidgetBoardToolbar
           editing={editing} canSetDefault={isAdmin} layoutItems={boardItems}
           onToggleEdit={() => setEditing(e => !e)}
-          onOpenLibrary={() => setLibOpen(true)}
+          onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
+          onSaveEditing={async () => { await saveLayout(); setEditing(false); }}
+          onCancelEditing={async () => { await cancelLayout(); setEditing(false); }}
           onReset={() => void resetLayout()}
           onSetDefault={() => void setAsDefault()}
         />

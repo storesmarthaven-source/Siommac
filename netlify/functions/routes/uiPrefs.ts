@@ -139,12 +139,24 @@ function safeConfig(v: unknown): Record<string, unknown> {
   catch { return {}; }
 }
 
-function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<string, unknown[]> } | null {
+function safeResponsive(v: unknown): Record<string, { x: number; y: number; w: number; h: number }> | undefined {
+  if (typeof v !== 'object' || v === null || Array.isArray(v)) return undefined;
+  const out: Record<string, { x: number; y: number; w: number; h: number }> = {};
+  for (const key of ['desktop', 'tablet', 'mobile']) {
+    const p = (v as Record<string, unknown>)[key];
+    if (typeof p !== 'object' || p === null || Array.isArray(p)) continue;
+    const g = p as Record<string, unknown>;
+    out[key] = { x: clampInt(g.x, 0, 63), y: clampInt(g.y, 0, 9999), w: clampInt(g.w, 1, 64), h: clampInt(g.h, 1, 200) };
+  }
+  return Object.keys(out).length ? out : undefined;
+}
+
+function cleanInstanceLayout(v: unknown, expectedPageKey: string): { pageKey?: string; version: number; columns: number; zones: Record<string, unknown[]> } | null {
   if (typeof v !== 'object' || v === null || Array.isArray(v)) return null;
   const obj = v as Record<string, unknown>;
   const zones = obj.zones;
   if (typeof zones !== 'object' || zones === null || Array.isArray(zones)) return null;
-  const pageKey = capStr(obj.pageKey, 120);
+  const pageKey = capStr(expectedPageKey, 120);
   const outZones: Record<string, unknown[]> = {};
   let total = 0, zoneCount = 0;
   for (const [zoneId, arr] of Object.entries(zones as Record<string, unknown>)) {
@@ -156,6 +168,7 @@ function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<stri
       const w = it as Record<string, unknown>;
       const instanceId = capStr(w.instanceId, 80), widgetId = capStr(w.widgetId, 120);
       if (!instanceId || !widgetId) continue;                 // both required, non-empty after cap
+      const responsive = safeResponsive(w.responsive);
       items.push({
         instanceId, widgetId,
         pageKey: capStr(w.pageKey, 120) || pageKey,
@@ -167,14 +180,17 @@ function cleanInstanceLayout(v: unknown): { pageKey?: string; zones: Record<stri
         x: clampInt(w.x, 0, 63), y: clampInt(w.y, 0, 9999), w: clampInt(w.w, 1, 64), h: clampInt(w.h, 1, 200),
         sizeKey: capStr(w.sizeKey, 24) || 'standard',
         config: safeConfig(w.config),
+        ...(responsive ? { responsive } : {}),
         ...(typeof w.titleOverride === 'string' ? { titleOverride: capStr(w.titleOverride, 200) } : {}),
+        ...(typeof w.isHidden === 'boolean' ? { isHidden: w.isHidden } : {}),
+        ...(typeof w.lockedByAdmin === 'boolean' ? { lockedByAdmin: w.lockedByAdmin } : {}),
       });
       if (++total > 300) break;                               // cap total widgets
     }
     outZones[zId] = items;
     if (total > 300) break;
   }
-  return { pageKey: pageKey || undefined, zones: outZones };
+  return { pageKey: pageKey || undefined, version: 3, columns: 12, zones: outZones };
 }
 
 router.post('/layout/getInstanceLayout', async c => {
@@ -199,9 +215,10 @@ router.post('/layout/saveInstanceLayout', async c => {
   const user = await requirePermission(c, 'ui.layout.manage');
   const a = getArgs(c);
   const pageKey = String(a.pageKey ?? '');
-  const layout = cleanInstanceLayout(a.layout);
+  const layout = cleanInstanceLayout(a.layout, pageKey);
   if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   const err = existing
     ? (await sb.from('ui_layout').update({ layout, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
     : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: user.id, layout, updated_by: user.id })).error;
@@ -214,9 +231,10 @@ router.post('/layout/saveInstanceLayoutDefault', async c => {
   const actor = await requirePermission(c, 'ui.layout.default.manage');
   const a = getArgs(c);
   const pageKey = String(a.pageKey ?? '');
-  const layout = cleanInstanceLayout(a.layout);
+  const layout = cleanInstanceLayout(a.layout, pageKey);
   if (!pageKey || layout === null) return c.json({ success: false, message: 'pageKey and layout required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).is('user_id', null).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   const err = existing
     ? (await sb.from('ui_layout').update({ layout, updated_by: actor.id, updated_at: new Date().toISOString() }).eq('id', existing.id)).error
     : (await sb.from('ui_layout').insert({ page_key: pageKey, user_id: null, layout, updated_by: actor.id })).error;
@@ -231,7 +249,8 @@ router.post('/layout/resetInstanceLayout', async c => {
   const user = await requirePermission(c, 'ui.layout.manage');
   const pageKey = String(getArgs(c).pageKey ?? '');
   if (!pageKey) return c.json({ success: false, message: 'pageKey required' }, 400 as 200);
-  const { data: existing } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  const { data: existing, error: readError } = await sb.from('ui_layout').select('id').eq('page_key', pageKey).eq('user_id', user.id).maybeSingle();
+  if (readError) return c.json({ success: false, message: readError.message }, 500 as 200);
   if (existing) {
     const { error } = await sb.from('ui_layout').update({ layout: null, updated_by: user.id, updated_at: new Date().toISOString() }).eq('id', existing.id);
     if (error) return c.json({ success: false, message: error.message }, 500 as 200);

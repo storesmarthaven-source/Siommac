@@ -8,6 +8,7 @@
 
 import { apiPost } from '@lib/api';
 import type { BoardLayout } from '../ui/widgets/types';
+import { migrateBoardLayout } from '../ui/widgets/migration';
 
 export interface LayoutResponse {
   /** Org-wide default order (admin-set), or null if none. */
@@ -47,13 +48,20 @@ export interface InstanceLayoutResponse {
    *  can tell when the current arrangement differs from it (gates "Set as default") and restore
    *  it on Undo. */
   orgDefault: BoardLayout | null;
+  /** Client-side edit baseline; never sent by the server. */
+  persistedLayout?: BoardLayout | null;
 }
 
 /** Read the widget-library board layout: the effective layout AND the raw org default. */
 export async function getInstanceLayout(pageKey: string): Promise<InstanceLayoutResponse> {
   const res = await apiPost<{ success: boolean; message?: string; data?: { layout: BoardLayout | null; default?: BoardLayout | null } }>('layout/getInstanceLayout', { pageKey });
   if (!res.success) throw new Error(res.message ?? 'Failed to load board layout.');
-  return { layout: res.data?.layout ?? null, orgDefault: res.data?.default ?? null };
+  const layout = migrateBoardLayout(res.data?.layout, pageKey);
+  return {
+    layout,
+    orgDefault: migrateBoardLayout(res.data?.default, pageKey),
+    persistedLayout: layout,
+  };
 }
 
 /** Save the calling user's widget-library board layout for this page. */

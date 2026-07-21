@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "91b3f30c0e3cbc2b65c5f61fdb7775f5e1ef2fef",
-    "branch": "codex/hr-foundation",
-    "fingerprint": "90d39a5c509ed98a22f83a22",
-    "indexedFiles": 1493
+    "head": "643d1920c3fc41fe1c7d7e2ea354b51e2b2e8edb",
+    "branch": "codex/widget-platform-v3",
+    "fingerprint": "cfb2d82e9c13c9a422a52bb0",
+    "indexedFiles": 1501
   },
   "summary": {
-    "files": 1174,
-    "symbols": 11806,
-    "widgets": 32,
+    "files": 1181,
+    "symbols": 11849,
+    "widgets": 33,
     "routes": 918,
     "routeDefinitions": 919,
     "unmountedRoutes": 17,
     "apiCalls": 352,
     "databaseObjects": 1309,
     "e2eSuites": 75,
-    "e2eTests": 2398
+    "e2eTests": 2399
   },
   "modules": [
     {
@@ -126,8 +126,8 @@
     {
       "id": "widgets",
       "counts": {
-        "files": 49,
-        "symbols": 289,
+        "files": 56,
+        "symbols": 332,
         "widgets": 0,
         "routes": 13,
         "routeDefinitions": 13,
@@ -160,6 +160,19 @@
         "apiCalls": 0,
         "databaseObjects": 0,
         "e2eSuites": 10
+      }
+    },
+    {
+      "id": "enterprise",
+      "counts": {
+        "files": 0,
+        "symbols": 0,
+        "widgets": 1,
+        "routes": 0,
+        "routeDefinitions": 0,
+        "apiCalls": 0,
+        "databaseObjects": 0,
+        "e2eSuites": 0
       }
     }
   ],
@@ -1225,8 +1238,8 @@
       "path": "netlify/functions/lib/permissions.ts",
       "module": "security",
       "role": "backend-lib",
-      "lines": 1162,
-      "hash": "2aefaf24eb9e64dd"
+      "lines": 1166,
+      "hash": "e0b413f8d13cef85"
     },
     {
       "path": "netlify/functions/lib/photos.ts",
@@ -2135,8 +2148,8 @@
       "path": "netlify/functions/routes/uiPrefs.ts",
       "module": "widgets",
       "role": "backend-route",
-      "lines": 243,
-      "hash": "0a1187602902c24c"
+      "lines": 262,
+      "hash": "6cccde86505348bf"
     },
     {
       "path": "netlify/functions/routes/webauthn.ts",
@@ -2793,8 +2806,8 @@
       "path": "scripts/e2e/suites/widgets.mjs",
       "module": "widgets",
       "role": "e2e-suite",
-      "lines": 148,
-      "hash": "ab083d1361987f0e"
+      "lines": 156,
+      "hash": "d58375e23d8efc0d"
     },
     {
       "path": "scripts/e2e/suites/workCalendar.mjs",
@@ -3213,8 +3226,8 @@
       "path": "src/api/layout.ts",
       "module": "widgets",
       "role": "frontend-api",
-      "lines": 76,
-      "hash": "c3581bd751072d7c"
+      "lines": 84,
+      "hash": "dd85795d49aa29e1"
     },
     {
       "path": "src/api/notifications.ts",
@@ -4326,8 +4339,8 @@
       "path": "src/components/sections/Finance/PayrollCommandCenter.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 916,
-      "hash": "6bde5a48c203da8a"
+      "lines": 919,
+      "hash": "8dc62063df985b8e"
     },
     {
       "path": "src/components/sections/Finance/PayrollSetupOverview.tsx",
@@ -4389,8 +4402,8 @@
       "path": "src/components/sections/Finance/StatutoryDashboard.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 786,
-      "hash": "f2ec6d77372fee7f"
+      "lines": 788,
+      "hash": "a9279184ed8e2bde"
     },
     {
       "path": "src/components/sections/Finance/StatutoryFormsOverview.tsx",
@@ -4571,8 +4584,8 @@
       "path": "src/components/sections/HR/EmployeeMaster.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 485,
-      "hash": "346b8061a3803cf0"
+      "lines": 487,
+      "hash": "06f570baa448e5bb"
     },
     {
       "path": "src/components/sections/HR/EmployeeOnboardingSummary.tsx",
@@ -4648,8 +4661,8 @@
       "path": "src/components/sections/HR/OnboardingCaseDetail.tsx",
       "module": "hr",
       "role": "frontend-page",
-      "lines": 428,
-      "hash": "d0d2eb64a6e3cf00"
+      "lines": 430,
+      "hash": "f2624272e6cdd7c4"
     },
     {
       "path": "src/components/sections/HR/OnboardingCommandCenter.adapters.ts",
@@ -6888,8 +6901,8 @@
       "path": "src/lib/permissionMeta.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1770,
-      "hash": "37a89a6cfdeee04b"
+      "lines": 1774,
+      "hash": "72f0394326d10ee0"
     },
     {
       "path": "src/lib/permissions.test.ts",
@@ -6902,8 +6915,8 @@
       "path": "src/lib/permissions.ts",
       "module": "security",
       "role": "frontend",
-      "lines": 1488,
-      "hash": "a2985d9fe749a98c"
+      "lines": 1492,
+      "hash": "801e6216bec095ce"
     },
     {
       "path": "src/lib/popup.ts",
@@ -7763,29 +7776,29 @@
       "path": "src/ui/widgets/WidgetBoard.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 123,
-      "hash": "00ee8e9bf3ead480"
+      "lines": 125,
+      "hash": "939c15668b0cd53f"
     },
     {
       "path": "src/ui/widgets/WidgetBoardToolbar.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 103,
-      "hash": "58b5d51d23054fca"
+      "lines": 110,
+      "hash": "68ce2ad2e8d1ef50"
     },
     {
       "path": "src/ui/widgets/WidgetBoardZone.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 272,
-      "hash": "c86f431c210262d1"
+      "lines": 252,
+      "hash": "6d50f7cc4d4211d6"
     },
     {
       "path": "src/ui/widgets/WidgetCatalog.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 81,
-      "hash": "52974539e2590841"
+      "lines": 90,
+      "hash": "92689d269e3925b7"
     },
     {
       "path": "src/ui/widgets/WidgetConfigFieldRenderer.tsx",
@@ -7812,15 +7825,15 @@
       "path": "src/ui/widgets/WidgetFrame.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 80,
-      "hash": "3e67e7b00bd1c705"
+      "lines": 88,
+      "hash": "f58f27fa12a98d16"
     },
     {
       "path": "src/ui/widgets/WidgetLibraryModal.tsx",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 379,
-      "hash": "1bc73e655fdc0cb0"
+      "lines": 422,
+      "hash": "a45dcfd4c86206f6"
     },
     {
       "path": "src/ui/widgets/WidgetLivePreview.tsx",
@@ -7828,6 +7841,13 @@
       "role": "widget-platform",
       "lines": 29,
       "hash": "a2cf7e4a634cd628"
+    },
+    {
+      "path": "src/ui/widgets/WidgetPlaceholder.tsx",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 16,
+      "hash": "c04e603ed23e781e"
     },
     {
       "path": "src/ui/widgets/WidgetPreviewScaler.tsx",
@@ -7841,7 +7861,7 @@
       "module": "widgets",
       "role": "widget-platform",
       "lines": 49,
-      "hash": "4c8f88084453c068"
+      "hash": "e249b51a13c9ad0a"
     },
     {
       "path": "src/ui/widgets/WidgetSizeSelector.tsx",
@@ -7849,6 +7869,13 @@
       "role": "widget-platform",
       "lines": 25,
       "hash": "966ac83ef9cea0a8"
+    },
+    {
+      "path": "src/ui/widgets/access.ts",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 24,
+      "hash": "920fe6f991f90c77"
     },
     {
       "path": "src/ui/widgets/bundles.ts",
@@ -7877,6 +7904,13 @@
       "role": "widget-platform",
       "lines": 25,
       "hash": "ce55edb93401cfd8"
+    },
+    {
+      "path": "src/ui/widgets/dataSources.ts",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 13,
+      "hash": "b790095c6a72bc76"
     },
     {
       "path": "src/ui/widgets/declarative/DeclarativeWidgetView.tsx",
@@ -7914,11 +7948,18 @@
       "hash": "6766106dd1457279"
     },
     {
+      "path": "src/ui/widgets/governance.ts",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 13,
+      "hash": "4f65b1d4c1a2f32a"
+    },
+    {
       "path": "src/ui/widgets/index.ts",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 49,
-      "hash": "f5deedd91d5a0875"
+      "lines": 54,
+      "hash": "9ed15b2f960965a4"
     },
     {
       "path": "src/ui/widgets/inlinePrimitives.tsx",
@@ -7928,11 +7969,32 @@
       "hash": "c237fa0c93933ff8"
     },
     {
+      "path": "src/ui/widgets/migration.ts",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 43,
+      "hash": "fe3dd7a1592fe59e"
+    },
+    {
       "path": "src/ui/widgets/motion.ts",
       "module": "widgets",
       "role": "widget-platform",
       "lines": 82,
       "hash": "1049c62abddfdd32"
+    },
+    {
+      "path": "src/ui/widgets/placement.ts",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 16,
+      "hash": "8ce81356b9c0168b"
+    },
+    {
+      "path": "src/ui/widgets/platform.test.tsx",
+      "module": "widgets",
+      "role": "widget-platform",
+      "lines": 63,
+      "hash": "241ee7476ec9008a"
     },
     {
       "path": "src/ui/widgets/registry.hrOnboarding.tsx",
@@ -7953,7 +8015,7 @@
       "module": "widgets",
       "role": "widget-registry",
       "lines": 78,
-      "hash": "7bb6fcb6d331e478"
+      "hash": "688d1d9e87b4bbdd"
     },
     {
       "path": "src/ui/widgets/resolveBoardWidget.ts",
@@ -7974,7 +8036,7 @@
       "module": "widgets",
       "role": "widget-platform",
       "lines": 79,
-      "hash": "50b52176bf8f24ea"
+      "hash": "dfaee9b435171f4d"
     },
     {
       "path": "src/ui/widgets/serializeLayout.ts",
@@ -8001,15 +8063,15 @@
       "path": "src/ui/widgets/types.ts",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 257,
-      "hash": "d8938aafa78fab79"
+      "lines": 298,
+      "hash": "bd848ab648679707"
     },
     {
       "path": "src/ui/widgets/useBoardLayout.ts",
       "module": "widgets",
       "role": "widget-platform",
-      "lines": 134,
-      "hash": "fb6dff678583399c"
+      "lines": 157,
+      "hash": "389ffd0322284c00"
     },
     {
       "path": "src/ui/widgets/validation.ts",
@@ -30072,7 +30134,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 467,
+      "line": 471,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30082,7 +30144,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 476,
+      "line": 480,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30092,7 +30154,7 @@
       "name": "isCriticalGrant",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 488,
+      "line": 492,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30102,7 +30164,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 508,
+      "line": 512,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30112,7 +30174,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 517,
+      "line": 521,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30122,7 +30184,7 @@
       "name": "PermissionOverrideRow",
       "kind": "interface",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 987,
+      "line": 991,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30132,7 +30194,7 @@
       "name": "resolveWithSet",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1003,
+      "line": 1007,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30142,7 +30204,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1028,
+      "line": 1032,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30152,7 +30214,7 @@
       "name": "ROLE_CACHE_TTL_MS",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1038,
+      "line": 1042,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30162,7 +30224,7 @@
       "name": "_roleCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1039,
+      "line": 1043,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30172,7 +30234,7 @@
       "name": "invalidateRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1042,
+      "line": 1046,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30182,7 +30244,7 @@
       "name": "loadRolePermissions",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1058,
+      "line": 1062,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30192,7 +30254,7 @@
       "name": "loadRoleIsEmployee",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1093,
+      "line": 1097,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30202,7 +30264,7 @@
       "name": "RoleScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1105,
+      "line": 1109,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30212,7 +30274,7 @@
       "name": "_scopeCache",
       "kind": "variable",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1106,
+      "line": 1110,
       "module": "security",
       "exported": false,
       "container": "",
@@ -30222,7 +30284,7 @@
       "name": "invalidateRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1109,
+      "line": 1113,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30232,7 +30294,7 @@
       "name": "loadRoleScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1119,
+      "line": 1123,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30242,7 +30304,7 @@
       "name": "DeptScope",
       "kind": "type",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1132,
+      "line": 1136,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30252,7 +30314,7 @@
       "name": "deptScopeFilter",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1140,
+      "line": 1144,
       "module": "security",
       "exported": true,
       "container": "",
@@ -30262,7 +30324,7 @@
       "name": "assertInScope",
       "kind": "function",
       "file": "netlify/functions/lib/permissions.ts",
-      "line": 1151,
+      "line": 1155,
       "module": "security",
       "exported": true,
       "container": "",
@@ -41129,10 +41191,20 @@
       "tags": []
     },
     {
-      "name": "cleanInstanceLayout",
+      "name": "safeResponsive",
       "kind": "function",
       "file": "netlify/functions/routes/uiPrefs.ts",
       "line": 142,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "cleanInstanceLayout",
+      "kind": "function",
+      "file": "netlify/functions/routes/uiPrefs.ts",
+      "line": 154,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -60732,7 +60804,7 @@
       "name": "LayoutResponse",
       "kind": "interface",
       "file": "src/api/layout.ts",
-      "line": 12,
+      "line": 13,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60742,7 +60814,7 @@
       "name": "getLayout",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 19,
+      "line": 20,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60752,7 +60824,7 @@
       "name": "saveLayoutOverride",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 25,
+      "line": 26,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60762,7 +60834,7 @@
       "name": "saveLayoutDefault",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 31,
+      "line": 32,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60772,7 +60844,7 @@
       "name": "resetLayoutOverride",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 37,
+      "line": 38,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60782,7 +60854,7 @@
       "name": "InstanceLayoutResponse",
       "kind": "interface",
       "file": "src/api/layout.ts",
-      "line": 43,
+      "line": 44,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60792,7 +60864,7 @@
       "name": "getInstanceLayout",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 53,
+      "line": 56,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60802,7 +60874,7 @@
       "name": "saveInstanceLayout",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 60,
+      "line": 68,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60812,7 +60884,7 @@
       "name": "saveInstanceLayoutDefault",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 66,
+      "line": 74,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -60822,7 +60894,7 @@
       "name": "resetInstanceLayout",
       "kind": "function",
       "file": "src/api/layout.ts",
-      "line": 72,
+      "line": 80,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -78074,7 +78146,7 @@
       "name": "placeBottom",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 310,
+      "line": 311,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -78084,7 +78156,7 @@
       "name": "promoteDefault",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 312,
+      "line": 313,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -78094,7 +78166,7 @@
       "name": "runAction",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 336,
+      "line": 337,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -78104,7 +78176,7 @@
       "name": "submitRunStable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 342,
+      "line": 343,
       "module": "payroll",
       "exported": false,
       "container": "PayrollCommandCenter",
@@ -78114,7 +78186,7 @@
       "name": "PortfolioBand",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 548,
+      "line": 551,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78126,7 +78198,7 @@
       "name": "MetricsRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 609,
+      "line": 612,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78138,7 +78210,7 @@
       "name": "RunRegister",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 641,
+      "line": 644,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78150,7 +78222,7 @@
       "name": "RunRow",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 700,
+      "line": 703,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78162,7 +78234,7 @@
       "name": "ApprovalsWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 720,
+      "line": 723,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78175,7 +78247,7 @@
       "name": "DeadlinesWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 768,
+      "line": 771,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78188,7 +78260,7 @@
       "name": "dayKey",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 772,
+      "line": 775,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -78198,7 +78270,7 @@
       "name": "onDay",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 773,
+      "line": 776,
       "module": "payroll",
       "exported": false,
       "container": "DeadlinesWidget",
@@ -78208,7 +78280,7 @@
       "name": "ReadinessWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 824,
+      "line": 827,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -78221,7 +78293,7 @@
       "name": "ImpactWidget",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 881,
+      "line": 884,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -116621,7 +116693,7 @@
       "name": "PermissionKey",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 547,
+      "line": 551,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116631,7 +116703,7 @@
       "name": "CRITICAL_GRANT_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 552,
+      "line": 556,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116641,7 +116713,7 @@
       "name": "COMPLIANCE_GATED_KEYS",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 580,
+      "line": 584,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116651,7 +116723,7 @@
       "name": "EMPLOYEE_BASELINE",
       "kind": "variable",
       "file": "src/lib/permissions.ts",
-      "line": 595,
+      "line": 599,
       "module": "security",
       "exported": false,
       "container": "",
@@ -116661,7 +116733,7 @@
       "name": "ROLE_PERMISSIONS",
       "kind": "object",
       "file": "src/lib/permissions.ts",
-      "line": 621,
+      "line": 625,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116671,7 +116743,7 @@
       "name": "PermissionContext",
       "kind": "interface",
       "file": "src/lib/permissions.ts",
-      "line": 1331,
+      "line": 1335,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116681,7 +116753,7 @@
       "name": "resolvePermission",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1362,
+      "line": 1366,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116691,7 +116763,7 @@
       "name": "roleDefaultGranted",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1407,
+      "line": 1411,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116701,7 +116773,7 @@
       "name": "PermissionState",
       "kind": "type",
       "file": "src/lib/permissions.ts",
-      "line": 1413,
+      "line": 1417,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116711,7 +116783,7 @@
       "name": "permissionState",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1419,
+      "line": 1423,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116721,7 +116793,7 @@
       "name": "permissionGroups",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1429,
+      "line": 1433,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116731,7 +116803,7 @@
       "name": "can",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1449,
+      "line": 1453,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116741,7 +116813,7 @@
       "name": "useCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1465,
+      "line": 1469,
       "module": "security",
       "exported": true,
       "container": "",
@@ -116753,7 +116825,7 @@
       "name": "useAnyCan",
       "kind": "function",
       "file": "src/lib/permissions.ts",
-      "line": 1477,
+      "line": 1481,
       "module": "security",
       "exported": true,
       "container": "",
@@ -124277,6 +124349,42 @@
       "tags": []
     },
     {
+      "name": "WidgetAccessContext",
+      "kind": "interface",
+      "file": "src/ui/widgets/access.ts",
+      "line": 5,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetAccessDecision",
+      "kind": "interface",
+      "file": "src/ui/widgets/access.ts",
+      "line": 6,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "resolveWidgetAccess",
+      "kind": "function",
+      "file": "src/ui/widgets/access.ts",
+      "line": 7,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
       "name": "WidgetBundle",
       "kind": "interface",
       "file": "src/ui/widgets/bundles.ts",
@@ -124341,6 +124449,64 @@
       "kind": "function",
       "file": "src/ui/widgets/createWidgetInstance.ts",
       "line": 4,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "sources",
+      "kind": "variable",
+      "file": "src/ui/widgets/dataSources.ts",
+      "line": 3,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "registerWidgetDataSource",
+      "kind": "function",
+      "file": "src/ui/widgets/dataSources.ts",
+      "line": 4,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "findWidgetDataSource",
+      "kind": "function",
+      "file": "src/ui/widgets/dataSources.ts",
+      "line": 10,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "listWidgetDataSources",
+      "kind": "function",
+      "file": "src/ui/widgets/dataSources.ts",
+      "line": 11,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "clearWidgetDataSourcesForTests",
+      "kind": "function",
+      "file": "src/ui/widgets/dataSources.ts",
+      "line": 12,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -124670,6 +124836,76 @@
       ]
     },
     {
+      "name": "policies",
+      "kind": "variable",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 2,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "setWidgetGovernancePolicies",
+      "kind": "function",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 3,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "getWidgetGovernancePolicy",
+      "kind": "function",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 4,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "listWidgetGovernancePolicies",
+      "kind": "function",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 5,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "effectiveWidgetPolicy",
+      "kind": "function",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 6,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "isWidgetDiscoverable",
+      "kind": "function",
+      "file": "src/ui/widgets/governance.ts",
+      "line": 7,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
       "name": "ellip",
       "kind": "object",
       "file": "src/ui/widgets/inlinePrimitives.tsx",
@@ -124819,6 +125055,66 @@
       ]
     },
     {
+      "name": "sizeKeys",
+      "kind": "array",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 3,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "isSizeKey",
+      "kind": "function",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 4,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "object",
+      "kind": "function",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 5,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "integer",
+      "kind": "function",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 6,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "migrateBoardLayout",
+      "kind": "function",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 12,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "createV3Layout",
+      "kind": "function",
+      "file": "src/ui/widgets/migration.ts",
+      "line": 40,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "reducedMotion",
       "kind": "function",
       "file": "src/ui/widgets/motion.ts",
@@ -124892,6 +125188,72 @@
       "container": "",
       "tags": [
         "hook"
+      ]
+    },
+    {
+      "name": "BREAKPOINT_COLUMNS",
+      "kind": "object",
+      "file": "src/ui/widgets/placement.ts",
+      "line": 3,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "deriveResponsivePlacements",
+      "kind": "function",
+      "file": "src/ui/widgets/placement.ts",
+      "line": 5,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "derive",
+      "kind": "function",
+      "file": "src/ui/widgets/placement.ts",
+      "line": 6,
+      "module": "widgets",
+      "exported": false,
+      "container": "deriveResponsivePlacements",
+      "tags": []
+    },
+    {
+      "name": "def",
+      "kind": "function",
+      "file": "src/ui/widgets/platform.test.tsx",
+      "line": 11,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "instance",
+      "kind": "object",
+      "file": "src/ui/widgets/platform.test.tsx",
+      "line": 18,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "none",
+      "kind": "function",
+      "file": "src/ui/widgets/platform.test.tsx",
+      "line": 41,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
       ]
     },
     {
@@ -125460,17 +125822,31 @@
       "tags": []
     },
     {
-      "name": "ModuleKey",
-      "kind": "type",
+      "name": "WIDGET_CONTRACT_VERSION",
+      "kind": "variable",
       "file": "src/ui/widgets/types.ts",
       "line": 20,
       "module": "widgets",
       "exported": true,
       "container": "",
-      "tags": []
+      "tags": [
+        "ui-tile"
+      ]
     },
     {
-      "name": "WidgetSizeKey",
+      "name": "WIDGET_DESKTOP_COLUMNS",
+      "kind": "variable",
+      "file": "src/ui/widgets/types.ts",
+      "line": 21,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetContractVersion",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
       "line": 22,
@@ -125482,10 +125858,116 @@
       ]
     },
     {
-      "name": "WidgetChrome",
+      "name": "WidgetRuntimeState",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 23,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetGovernanceState",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 26,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetBreakpoint",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
       "line": 27,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetPlacement",
+      "kind": "interface",
+      "file": "src/ui/widgets/types.ts",
+      "line": 29,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetResponsivePlacements",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 30,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetGovernancePolicy",
+      "kind": "interface",
+      "file": "src/ui/widgets/types.ts",
+      "line": 32,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetDataSourceRegistration",
+      "kind": "interface",
+      "file": "src/ui/widgets/types.ts",
+      "line": 43,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "ModuleKey",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 53,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WidgetSizeKey",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 55,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "WidgetChrome",
+      "kind": "type",
+      "file": "src/ui/widgets/types.ts",
+      "line": 60,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125497,7 +125979,7 @@
       "name": "WidgetPreviewVariant",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
-      "line": 29,
+      "line": 62,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125509,7 +125991,7 @@
       "name": "WidgetLifecycleState",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
-      "line": 34,
+      "line": 67,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125521,7 +126003,7 @@
       "name": "WidgetContentPriorityRule",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 37,
+      "line": 70,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125533,7 +126015,7 @@
       "name": "WidgetDensityRules",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 46,
+      "line": 79,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125545,7 +126027,7 @@
       "name": "WidgetResponsiveContext",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 53,
+      "line": 86,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125557,7 +126039,7 @@
       "name": "WidgetPermissionSpec",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 65,
+      "line": 98,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125569,7 +126051,7 @@
       "name": "WidgetGridSize",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 70,
+      "line": 103,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125581,7 +126063,7 @@
       "name": "WidgetSizeDef",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 72,
+      "line": 105,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125593,7 +126075,7 @@
       "name": "WidgetConfigOption",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 81,
+      "line": 114,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125605,7 +126087,7 @@
       "name": "WidgetConfigFieldType",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
-      "line": 83,
+      "line": 116,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125617,7 +126099,7 @@
       "name": "WidgetConfigField",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 86,
+      "line": 119,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125629,7 +126111,7 @@
       "name": "WidgetDependencyDef",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 96,
+      "line": 129,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125641,7 +126123,7 @@
       "name": "WidgetDataSourceDef",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 104,
+      "line": 137,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125653,7 +126135,7 @@
       "name": "WidgetRenderProps",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 112,
+      "line": 145,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125665,7 +126147,7 @@
       "name": "WidgetPreviewProps",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 123,
+      "line": 156,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125677,7 +126159,7 @@
       "name": "WidgetDef",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 129,
+      "line": 162,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125689,7 +126171,7 @@
       "name": "WidgetInstance",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 190,
+      "line": 227,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125701,7 +126183,7 @@
       "name": "PreviewWidgetInstance",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 211,
+      "line": 249,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125713,7 +126195,7 @@
       "name": "BoardWidgetInstance",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
-      "line": 218,
+      "line": 256,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125725,7 +126207,7 @@
       "name": "LocalWidget",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 228,
+      "line": 266,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125737,7 +126219,7 @@
       "name": "LocalWidgetMap",
       "kind": "type",
       "file": "src/ui/widgets/types.ts",
-      "line": 246,
+      "line": 284,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125749,7 +126231,7 @@
       "name": "BoardLayout",
       "kind": "interface",
       "file": "src/ui/widgets/types.ts",
-      "line": 248,
+      "line": 286,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125759,7 +126241,7 @@
       "name": "isPreviewWidget",
       "kind": "function",
       "file": "src/ui/widgets/types.ts",
-      "line": 254,
+      "line": 295,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125771,7 +126253,7 @@
       "name": "emptyLayout",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 9,
+      "line": 10,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -125781,7 +126263,7 @@
       "name": "layoutSignature",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 17,
+      "line": 18,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -125791,7 +126273,7 @@
       "name": "layoutsEqual",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 27,
+      "line": 28,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -125801,7 +126283,7 @@
       "name": "UseBoardLayoutResult",
       "kind": "interface",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 29,
+      "line": 30,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125811,7 +126293,7 @@
       "name": "useBoardLayout",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 44,
+      "line": 50,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -125823,17 +126305,17 @@
       "name": "setCachedLayout",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 70,
+      "line": 78,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
       "tags": []
     },
     {
-      "name": "persist",
+      "name": "stage",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 74,
+      "line": 82,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125843,7 +126325,7 @@
       "name": "updateZoneLayout",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 80,
+      "line": 87,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125853,7 +126335,7 @@
       "name": "addWidget",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 83,
+      "line": 90,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125865,7 +126347,7 @@
       "name": "removeWidget",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 86,
+      "line": 93,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125874,10 +126356,30 @@
       ]
     },
     {
+      "name": "saveLayout",
+      "kind": "function",
+      "file": "src/ui/widgets/useBoardLayout.ts",
+      "line": 96,
+      "module": "widgets",
+      "exported": false,
+      "container": "useBoardLayout",
+      "tags": []
+    },
+    {
+      "name": "cancelLayout",
+      "kind": "function",
+      "file": "src/ui/widgets/useBoardLayout.ts",
+      "line": 104,
+      "module": "widgets",
+      "exported": false,
+      "container": "useBoardLayout",
+      "tags": []
+    },
+    {
       "name": "setAsDefault",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 94,
+      "line": 117,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125887,7 +126389,7 @@
       "name": "resetLayout",
       "kind": "function",
       "file": "src/ui/widgets/useBoardLayout.ts",
-      "line": 127,
+      "line": 150,
       "module": "widgets",
       "exported": false,
       "container": "useBoardLayout",
@@ -125975,7 +126477,7 @@
       "name": "WidgetBoard",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoard.tsx",
-      "line": 71,
+      "line": 73,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126000,7 +126502,7 @@
       "name": "WidgetBoardToolbar",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoardToolbar.tsx",
-      "line": 35,
+      "line": 37,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126013,7 +126515,7 @@
       "name": "confirmReset",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoardToolbar.tsx",
-      "line": 39,
+      "line": 41,
       "module": "widgets",
       "exported": false,
       "container": "WidgetBoardToolbar",
@@ -126023,7 +126525,7 @@
       "name": "copyLayout",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoardToolbar.tsx",
-      "line": 48,
+      "line": 50,
       "module": "widgets",
       "exported": false,
       "container": "WidgetBoardToolbar",
@@ -126110,7 +126612,7 @@
       "name": "canResolve",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoardZone.tsx",
-      "line": 118,
+      "line": 117,
       "module": "widgets",
       "exported": false,
       "container": "WidgetBoardZone",
@@ -126120,17 +126622,29 @@
       "name": "persist",
       "kind": "function",
       "file": "src/ui/widgets/WidgetBoardZone.tsx",
-      "line": 167,
+      "line": 160,
       "module": "widgets",
       "exported": false,
       "container": "WidgetBoardZone",
       "tags": []
     },
     {
+      "name": "STATE_LABEL",
+      "kind": "variable",
+      "file": "src/ui/widgets/WidgetCatalog.tsx",
+      "line": 10,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "VARIANT_TONE",
       "kind": "object",
       "file": "src/ui/widgets/WidgetCatalog.tsx",
-      "line": 8,
+      "line": 15,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -126140,7 +126654,7 @@
       "name": "sizeLabel",
       "kind": "function",
       "file": "src/ui/widgets/WidgetCatalog.tsx",
-      "line": 13,
+      "line": 20,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -126150,7 +126664,7 @@
       "name": "WidgetCatalog",
       "kind": "function",
       "file": "src/ui/widgets/WidgetCatalog.tsx",
-      "line": 18,
+      "line": 25,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126222,7 +126736,7 @@
       "name": "noDrag",
       "kind": "function",
       "file": "src/ui/widgets/WidgetFrame.tsx",
-      "line": 14,
+      "line": 17,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -126232,7 +126746,7 @@
       "name": "WidgetFrame",
       "kind": "function",
       "file": "src/ui/widgets/WidgetFrame.tsx",
-      "line": 16,
+      "line": 19,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126242,10 +126756,20 @@
       ]
     },
     {
+      "name": "LibraryView",
+      "kind": "type",
+      "file": "src/ui/widgets/WidgetLibraryModal.tsx",
+      "line": 26,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "BundlesSectionProps",
       "kind": "interface",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 36,
+      "line": 41,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -126255,7 +126779,7 @@
       "name": "BundlesSection",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 46,
+      "line": 51,
       "module": "widgets",
       "exported": false,
       "container": "",
@@ -126267,7 +126791,7 @@
       "name": "addBundle",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 55,
+      "line": 60,
       "module": "widgets",
       "exported": false,
       "container": "BundlesSection",
@@ -126277,7 +126801,7 @@
       "name": "WidgetLibraryModalProps",
       "kind": "interface",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 120,
+      "line": 125,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126289,7 +126813,7 @@
       "name": "WidgetLibraryModal",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 138,
+      "line": 143,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126302,7 +126826,7 @@
       "name": "onPackageFile",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 166,
+      "line": 173,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126312,7 +126836,7 @@
       "name": "onUninstall",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 182,
+      "line": 189,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126322,7 +126846,7 @@
       "name": "toggleChecked",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 206,
+      "line": 214,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126332,7 +126856,7 @@
       "name": "addCheckedWidgets",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 209,
+      "line": 217,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126344,7 +126868,7 @@
       "name": "selectWidget",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 225,
+      "line": 244,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126356,7 +126880,7 @@
       "name": "handleAdd",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 226,
+      "line": 245,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126366,7 +126890,7 @@
       "name": "handlePreview",
       "kind": "function",
       "file": "src/ui/widgets/WidgetLibraryModal.tsx",
-      "line": 231,
+      "line": 250,
       "module": "widgets",
       "exported": false,
       "container": "WidgetLibraryModal",
@@ -126377,6 +126901,29 @@
       "kind": "function",
       "file": "src/ui/widgets/WidgetLivePreview.tsx",
       "line": 8,
+      "module": "widgets",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "content",
+      "kind": "object",
+      "file": "src/ui/widgets/WidgetPlaceholder.tsx",
+      "line": 4,
+      "module": "widgets",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "WidgetPlaceholder",
+      "kind": "function",
+      "file": "src/ui/widgets/WidgetPlaceholder.tsx",
+      "line": 9,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -126424,7 +126971,7 @@
       "name": "WidgetRenderer",
       "kind": "function",
       "file": "src/ui/widgets/WidgetRenderer.tsx",
-      "line": 17,
+      "line": 18,
       "module": "widgets",
       "exported": true,
       "container": "",
@@ -132040,7 +132587,7 @@
       "kind": "local",
       "render": "() => <ApprovalsWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 462
+      "line": 463
     },
     {
       "id": "finance.payroll.deadlines",
@@ -132050,7 +132597,7 @@
       "kind": "local",
       "render": "() => <DeadlinesWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 463
+      "line": 464
     },
     {
       "id": "finance.payroll.kpi.activeRuns",
@@ -132060,7 +132607,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-layer-group\" tone=\"teal\" label=\"Active Runs\" value={kk?.activeRuns ?? 0} sub=\"In the reporting window\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 444
+      "line": 445
     },
     {
       "id": "finance.payroll.kpi.employeesDue",
@@ -132070,7 +132617,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-users\" tone=\"blue\" label=\"Employees Due\" value={kk?.employeesDue ?? 0} sub=\"Current calc population\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 447
+      "line": 448
     },
     {
       "id": "finance.payroll.kpi.grossPayroll",
@@ -132080,7 +132627,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-coins\" tone=\"green\" label=\"Gross Payroll\" value={kk ? fmtTTDc(kk.grossPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 450
+      "line": 451
     },
     {
       "id": "finance.payroll.kpi.netPayroll",
@@ -132090,7 +132637,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-wallet\" tone=\"teal\" label=\"Net Payroll\" value={kk ? fmtTTDc(kk.netPayroll.amount) : '—'} sub=\"Window total\" loading={kpiLoading}\n        link={{ label: 'View runs', onClick: () => focusRegister('all') }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 453
+      "line": 454
     },
     {
       "id": "finance.payroll.kpi.nextPay",
@@ -132100,7 +132647,7 @@
       "kind": "local",
       "render": "() => <KpiTile icon=\"fa-calendar-day\" tone=\"blue\" label=\"Next Pay Date\"\n        value={kk ? (nextPay.mon ? `${nextPay.day} ${nextPay.mon}` : '—') : '—'}\n        sub={kk?.nextPayDate.runNo ? `Run ${kk.nextPayDate.runNo}` : 'No scheduled run'} loading={kpiLoading}\n        link={{ label: kk?.nextPayDate.runNo ? 'Open run' : 'View runs', onClick: () => (kk?.nextPayDate.runId ? openRun(kk.nextPayDate.runId) : focusRegister('all')) }} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 439
+      "line": 440
     },
     {
       "id": "finance.payroll.releaseImpact",
@@ -132110,7 +132657,7 @@
       "kind": "local",
       "render": "() => <ImpactWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 465
+      "line": 466
     },
     {
       "id": "finance.payroll.releaseReadiness",
@@ -132120,7 +132667,7 @@
       "kind": "local",
       "render": "() => <ReadinessWidget data={data} onOpen={openRun} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 464
+      "line": 465
     },
     {
       "id": "finance.payroll.runRegister",
@@ -132130,7 +132677,7 @@
       "kind": "local",
       "render": "() => <RunRegister data={data} tab={tab} setTab={setTab} searchInput={searchInput} setSearchInput={setSearchInput} cursor={cursor} setCursor={setCursor} onOpen={openRun} onNewRun={() => setWizOpen(true)} />",
       "file": "src/components/sections/Finance/PayrollCommandCenter.tsx",
-      "line": 466
+      "line": 467
     },
     {
       "id": "finance.statutory.deadlines",
@@ -132351,6 +132898,16 @@
       "render": "OnbRecentActivityWidget",
       "file": "src/ui/widgets/registry.hrOnboarding.tsx",
       "line": 400
+    },
+    {
+      "id": "test.widget",
+      "title": "Test",
+      "module": "enterprise",
+      "area": "test",
+      "kind": "registry",
+      "render": "() => <div>live</div>",
+      "file": "src/ui/widgets/platform.test.tsx",
+      "line": 11
     }
   ],
   "routes": [
@@ -142800,7 +143357,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 180,
+      "line": 196,
       "module": "widgets"
     },
     {
@@ -142813,7 +143370,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 230,
+      "line": 248,
       "module": "widgets"
     },
     {
@@ -142852,7 +143409,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 198,
+      "line": 214,
       "module": "widgets"
     },
     {
@@ -142865,7 +143422,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/uiPrefs.ts",
-      "line": 213,
+      "line": 230,
       "module": "widgets"
     },
     {
@@ -146657,7 +147214,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 20,
+      "line": 21,
       "module": "widgets"
     },
     {
@@ -146665,7 +147222,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 54,
+      "line": 57,
       "module": "widgets"
     },
     {
@@ -146673,7 +147230,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 73,
+      "line": 81,
       "module": "widgets"
     },
     {
@@ -146681,7 +147238,7 @@
       "helper": "apiPost",
       "caller": "resetLayoutOverride",
       "file": "src/api/layout.ts",
-      "line": 38,
+      "line": 39,
       "module": "widgets"
     },
     {
@@ -146689,7 +147246,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 32,
+      "line": 33,
       "module": "widgets"
     },
     {
@@ -146697,7 +147254,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 61,
+      "line": 69,
       "module": "widgets"
     },
     {
@@ -146705,7 +147262,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 67,
+      "line": 75,
       "module": "widgets"
     },
     {
@@ -146713,7 +147270,7 @@
       "helper": "apiPost",
       "caller": "res",
       "file": "src/api/layout.ts",
-      "line": 26,
+      "line": 27,
       "module": "widgets"
     },
     {
@@ -167437,20 +167994,24 @@
           "line": 114
         },
         {
+          "name": "ACCESS: user without layout.manage cannot persist a board",
+          "line": 125
+        },
+        {
           "name": "PAYLOAD: oversized ids are capped server-side",
-          "line": 121
+          "line": 129
         },
         {
           "name": "ACCESS: non-admin cannot set the org default layout",
-          "line": 131
+          "line": 139
         },
         {
           "name": "saveInstanceLayoutDefault (admin) persists the org default",
-          "line": 134
+          "line": 142
         },
         {
           "name": "resetInstanceLayout clears the user override",
-          "line": 141
+          "line": 149
         }
       ],
       "apiPaths": [

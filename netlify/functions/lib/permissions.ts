@@ -329,6 +329,10 @@ export const PERMISSION_KEYS = [
   'ui.layout.default.manage',   // set the org-wide default board layout
   'ui.widgets.packages.view',   // read installed widget packages (needed to render boards)
   'ui.widgets.packages.manage', // install / uninstall widget packages (org-wide)
+  'ui.widgets.governance.view',
+  'ui.widgets.governance.manage',
+  'ui.widgets.sources.view',
+  'ui.widgets.sources.manage',
   // ── Finance statutory configuration ─────────────────────────────────────────
   'finance.statutory.view',         // view statutory versions and NIS class tables
   'finance.statutory.manage',       // create and edit draft statutory versions

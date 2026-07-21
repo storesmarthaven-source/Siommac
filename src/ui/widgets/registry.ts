@@ -1,5 +1,5 @@
 /**
- * src/ui/widgets/registry.ts — cross-module widget catalogue for the v2 widget library.
+ * src/ui/widgets/registry.ts — cross-module catalogue for Widget Platform v3.
  *
  * SELF-REGISTERING. Every widget "package" is a file `registry.<name>.tsx` (e.g.
  * registry.hr.tsx, registry.hrEmployees.tsx, future registry.hse.tsx) that does:
@@ -10,7 +10,7 @@
  * registers itself; NO edits to this aggregator. Duplicate ids are dropped with a dev
  * warning. Authoring format + scaffold: docs/WIDGET_AUTHORING_GUIDE.md.
  */
-import type { WidgetDef } from './types';
+import { WIDGET_CONTRACT_VERSION, type WidgetDef } from './types';
 import { getRuntimeWidgets } from './runtimeRegistry';
 import { validateWidgetDef } from './validation';
 
@@ -43,7 +43,7 @@ function collectWidgets(): WidgetDef[] {
       }
       if (!validation.ok) continue; // hard errors (no render/id/sizes) — excluded, same as a duplicate id
       seen.add(w.id);
-      out.push(w);
+      out.push({ ...w, contractVersion: WIDGET_CONTRACT_VERSION });
     }
   }
   return out;

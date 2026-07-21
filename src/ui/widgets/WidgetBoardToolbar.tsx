@@ -27,12 +27,14 @@ export interface WidgetBoardToolbarProps {
   onOpenLibrary: () => void;
   onReset: () => void;
   onSetDefault: () => void;
+  onSaveEditing?: () => void | Promise<void>;
+  onCancelEditing?: () => void | Promise<void>;
   /** Current board items — when provided (admin only), a "Copy layout" item appears that
    *  captures the live arrangement as ready-to-paste `defInst(...)` code. Dev tool, temporary. */
   layoutItems?: WidgetInstance[];
 }
 
-export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finishInBanner, onToggleEdit, onOpenLibrary, onReset, onSetDefault, layoutItems }: WidgetBoardToolbarProps): VNode {
+export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finishInBanner, onToggleEdit, onOpenLibrary, onReset, onSetDefault, onSaveEditing, onCancelEditing, layoutItems }: WidgetBoardToolbarProps): VNode {
   const [open, setOpen] = useState(false);
 
   // Reset wipes the user's personal arrangement — confirm first (popup system), never silently.
@@ -60,7 +62,12 @@ export function WidgetBoardToolbar({ editing, canSetDefault, defaultDirty, finis
   const items: { label: string; icon: LucideName; onClick: () => void; disabled?: boolean; disabledReason?: string }[] = [
     // Edit toggle. When the banner owns the exit (finishInBanner), don't duplicate "Finish editing"
     // here — only offer "Edit layout" to ENTER; the banner's Done finishes.
-    ...(finishInBanner
+    ...(editing && !finishInBanner && onSaveEditing
+      ? [
+          { label: 'Save layout', icon: 'Check' as LucideName, onClick: () => void onSaveEditing() },
+          { label: 'Cancel changes', icon: 'X' as LucideName, onClick: () => void onCancelEditing?.() },
+        ]
+      : finishInBanner
       ? (editing ? [] : [{ label: 'Edit layout', icon: 'Pencil' as LucideName, onClick: onToggleEdit }])
       : [{ label: editing ? 'Finish editing' : 'Edit layout', icon: (editing ? 'Check' : 'Pencil') as LucideName, onClick: onToggleEdit }]),
     { label: 'Widget Library', icon: 'LayoutGrid', onClick: onOpenLibrary },

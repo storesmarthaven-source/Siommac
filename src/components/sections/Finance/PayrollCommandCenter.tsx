@@ -297,12 +297,13 @@ export function PayrollCommandCenter(): VNode {
   const [editing, setEditing] = useState(false);
   const [libOpen, setLibOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
+  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
   // Observe the KPI board's own layout query + the installed-widget registry at the PAGE
   // level so the reveal can wait for them. Both dedupe by query key with the boards' own
   // subscriptions (WidgetBoardZone → useBoardLayout, WidgetBoard → useInstalledWidgetPackages),
   // so this adds no network cost — it only lets the page gate on their loading state.
-  const kpiLayoutLoading = useBoardLayout(KPI_PAGE_KEY, defaultKpiLayout()).isLoading;
+  const kpiBoard = useBoardLayout(KPI_PAGE_KEY, defaultKpiLayout());
+  const kpiLayoutLoading = kpiBoard.isLoading;
   const pkgQuery = useInstalledWidgetPackages();
   const [savingDefault, setSavingDefault] = useState(false);
   const boardItems = layout.zones.main ?? [];
@@ -405,7 +406,7 @@ export function PayrollCommandCenter(): VNode {
   const boardTools = canEditBoard ? (
     <WidgetBoardToolbar
       editing={editing} canSetDefault={isAdmin} defaultDirty={isDefaultDirty} finishInBanner layoutItems={boardItems}
-      onToggleEdit={() => setEditing(e => !e)} onOpenLibrary={() => setLibOpen(true)}
+      onToggleEdit={() => setEditing(e => !e)} onOpenLibrary={() => { setEditing(true); setLibOpen(true); }}
       onReset={() => void resetLayout()} onSetDefault={() => void promoteDefault()} />
   ) : null;
   const header = (
@@ -528,6 +529,8 @@ export function PayrollCommandCenter(): VNode {
             onCommitPreview={p => { void addWidget(p.zoneId, commitPreviewWidget(p)); setPreview(null); }}
             onDiscardPreview={() => { setPreview(null); setLibOpen(true); }}
             onFinishEditing={() => setEditing(false)}
+            onSaveEditing={async () => { await Promise.all([saveLayout(), kpiBoard.saveLayout()]); setEditing(false); }}
+            onCancelEditing={async () => { await Promise.all([cancelLayout(), kpiBoard.cancelLayout()]); setEditing(false); }}
             onSetDefault={() => void promoteDefault()} canSetDefault={isAdmin}
             defaultDirty={isDefaultDirty} defaultSaving={savingDefault} />
 

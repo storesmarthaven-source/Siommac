@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `90d39a5c509ed98a22f83a22`
+Source fingerprint: `cfb2d82e9c13c9a422a52bb0`
 
 Files: 194 | Symbols: 2198 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 33 | DB objects: 156 | E2E suites: 14
 
@@ -654,7 +654,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 512 |
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/CreateEmployeeWizard.tsx` | 366 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 485 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 487 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
@@ -665,7 +665,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 269 |
 | frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 94 |
 | frontend-page | `src/components/sections/HR/OnboardingBlockedBoard.tsx` | 157 |
-| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 428 |
+| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 430 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.adapters.ts` | 143 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 195 |

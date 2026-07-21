@@ -110,23 +110,16 @@ function wantsFit(widgetId: string, localWidgets?: LocalWidgetMap): boolean {
 export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaultLayout, demo, cellHeight = 88, column = 12, gap, compact = 'vertical', resizable = true, maxRows, isBounded = false, revealOnMount = true, registryReady, preview, onPreviewChange, onCommitPreview, onDiscardPreview }: WidgetBoardZoneProps): VNode {
   // Re-render when installed (declarative) widgets change so islands resolve them.
   const rtVersion = useRuntimeWidgetsVersion();
-  const { layout, updateZoneLayout, removeWidget, resetLayout } = useBoardLayout(pageKey, defaultLayout);
+  const { layout, updateZoneLayout, removeWidget } = useBoardLayout(pageKey, defaultLayout);
 
   // A widget resolves if it's a page-local renderer OR in the registry (code + installed runtime).
-  // Instances that no longer resolve (their package was uninstalled, or the id was renamed) are
-  // ORPHANS: never render them, and prune them from the saved layout once the registry is authoritative.
+  // Unresolved instances render placeholders and remain in the persisted placement model.
   const canResolve = (widgetId: string): boolean => !!localWidgets?.[widgetId] || !!findWidgetDef(widgetId);
   const rawCommitted = layout.zones[zoneId] ?? [];
-  const resolvable = rawCommitted.filter(c => canResolve(c.widgetId));
-  const committed = resolvable.map(c => clampToMinGrid(c, localWidgets));
-  const orphanCount = rawCommitted.length - resolvable.length;
-  const geometryFixed = resolvable.some(c => clampToMinGrid(c, localWidgets) !== c);
+  const committed = rawCommitted.map(c => clampToMinGrid(c, localWidgets));
+  const geometryFixed = rawCommitted.some(c => canResolve(c.widgetId) && clampToMinGrid(c, localWidgets) !== c);
   const zonePreview = preview?.zoneId === zoneId ? preview : null;
   const items: BoardWidgetInstance[] = zonePreview ? [...committed, zonePreview] : committed;
-
-  // One-shot guard so the "all widgets orphaned → revert to default" heal below can't loop
-  // (if the DEFAULT itself is all-orphan, reverting would reload the same empty set).
-  const didHealRef = useRef(false);
 
   // Size-to-content: measured row-spans for `sizeToContent` tiles (height hugs the card's natural
   // height). Keyed by instanceId. RGL has no native sizeToContent, so we measure + set `h` ourselves.
@@ -160,7 +153,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
   // Handlers read live state via a ref (RGL callbacks are created once per render but we want the
   // latest committed/preview/persisters without re-binding the grid).
   const stateRef = useRef({ committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange });
-  stateRef.current = { committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange };
+  useEffect(() => { stateRef.current = { committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange }; }, [committed, zonePreview, zoneId, updateZoneLayout, onPreviewChange]);
 
   // Persist geometry on drag/resize STOP (a user gesture) — never on programmatic layout changes
   // (mount, the fit pass), which is why we don't use onLayoutChange.
@@ -214,26 +207,12 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
     return () => { if (raf) cancelAnimationFrame(raf); ro.disconnect(); };
   }, [sig, cellHeight, vMargin, editing, demo, rtVersion, localWidgets]);
 
-  // Prune orphaned (uninstalled/renamed) widgets AND self-heal geometry saved below a widget's
-  // current minimum — only once the installed-package list has authoritatively loaded (registryReady),
-  // so a load/error state never drops live widgets.
+  // Self-heal resolvable geometry once package discovery is authoritative. Missing widgets stay put.
   useEffect(() => {
     if (!registryReady) return;
-    // ALL saved widgets were orphans (every id renamed/removed since this override was saved) →
-    // committed is now empty. Persisting that empty set as the user's override would MASK a populated
-    // org/page default (backend resolves override.layout ?? default.layout, and an empty-but-present
-    // override wins) and strand the user on a blank board forever. Revert the override instead so the
-    // default takes back over. A deliberate remove-all goes through removeWidget (creates no orphans),
-    // so intentional empties are preserved. One-shot so a broken all-orphan DEFAULT can't ping-pong.
-    if (orphanCount > 0 && committed.length === 0 && !didHealRef.current
-        && (defaultLayout?.zones[zoneId]?.length ?? 0) > 0) {
-      didHealRef.current = true;
-      void resetLayout();
-      return;
-    }
-    if (orphanCount > 0 || geometryFixed) void updateZoneLayout(zoneId, committed);
+    if (geometryFixed) void updateZoneLayout(zoneId, committed);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [registryReady, orphanCount, geometryFixed, rtVersion, zoneId]);
+  }, [registryReady, geometryFixed, rtVersion, zoneId]);
 
   return (
     <div class="wbi-zone-wrap">
@@ -261,6 +240,7 @@ export function WidgetBoardZone({ pageKey, zoneId, editing, localWidgets, defaul
                 onCommitPreview={isPrev ? () => onCommitPreview?.(it) : undefined}
                 onDiscardPreview={isPrev ? onDiscardPreview : undefined}
                 onRemove={!isPrev ? () => void removeWidget(zoneId, it.instanceId) : undefined}
+                onConfigure={!isPrev ? config => void updateZoneLayout(zoneId, committed.map(c => c.instanceId === it.instanceId ? { ...c, config } : c)) : undefined}
               />
             </div>
           );

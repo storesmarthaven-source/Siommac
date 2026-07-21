@@ -1,5 +1,5 @@
 // src/ui/widgets/WidgetBoard.tsx — renders the instance/zone board for a page: one
-// gridstack grid per zone. Preview state (the ephemeral preview-on-board widget) is
+// react-grid-layout grid per zone. Preview state (the ephemeral preview-on-board widget) is
 // owned by the host page and threaded through to whichever zone it targets.
 // Pages may supply page-local widget renderers + a default layout.
 import type { VNode } from 'preact';
@@ -57,6 +57,8 @@ export interface WidgetBoardProps {
    *  the top of the board while `editing` — so it's obvious you're editing and how to leave it.
    *  Opt-in: boards that don't pass it get no banner. */
   onFinishEditing?: () => void;
+  onSaveEditing?: () => void | Promise<void>;
+  onCancelEditing?: () => void | Promise<void>;
   /** Admin "Set as default" surfaced IN the edit banner (the contextual place to promote a
    *  freshly rearranged board). Shown when both this and `canSetDefault` are set; disabled when
    *  `defaultDirty === false` (the layout already matches the default — nothing to promote). */
@@ -68,10 +70,9 @@ export interface WidgetBoardProps {
   defaultSaving?: boolean;
 }
 
-export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSetDefault, canSetDefault, defaultDirty, defaultSaving }: WidgetBoardProps): VNode {
+export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, defaultLayout, demo, cellHeight, column, gap, compact, resizable, maxRows, isBounded, revealOnMount, preview, onPreviewChange, onCommitPreview, onDiscardPreview, onFinishEditing, onSaveEditing, onCancelEditing, onSetDefault, canSetDefault, defaultDirty, defaultSaving }: WidgetBoardProps): VNode {
   // Load installed declarative packages into the runtime registry so they resolve on the board.
-  // `isSuccess` = the installed-package list is authoritative — only THEN may a zone prune board
-  // instances whose widget no longer resolves (a transient/stale-dist error must NOT drop widgets).
+  // Package readiness changes placeholder resolution only. It never removes saved instances.
   const pkgQuery = useInstalledWidgetPackages();
   return (
     <div class="wbi-board">
@@ -98,8 +99,9 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
                   <LucideIcon name="Star" size={14} /> {defaultSaving ? 'Saving…' : 'Set as default'}
                 </button>
               )}
-              <button type="button" class="wbi-edit-banner-done" onClick={onFinishEditing}>
-                <LucideIcon name="Check" size={15} /> Done
+              {onCancelEditing && <button type="button" class="wbi-edit-banner-secondary" onClick={() => void onCancelEditing()}><LucideIcon name="X" size={14} /> Cancel</button>}
+              <button type="button" class="wbi-edit-banner-done" onClick={() => void (onSaveEditing ? onSaveEditing() : onFinishEditing())}>
+                <LucideIcon name="Check" size={15} /> Save layout
               </button>
             </span>
           </div>
