@@ -158,6 +158,33 @@ where request_type_code is null
    or response_due_at is null
    or resolution_due_at is null;
 
+-- ── Ticket-creation permission grants (idempotent) ──────────────────────────────
+-- The four granular create keys. Enforcement reads these rows via
+-- ticket_internal.user_has_permission (RPC) and requirePermission (routes). Roles
+-- don't inherit — each grant is explicit. Superadmin is allow-all elsewhere; listed
+-- here for completeness. Keep in sync with src/lib/permissions.ts + netlify BE
+-- permissions.ts role sets.
+insert into public.role_permissions (role_name, permission) values
+  -- create_self: every application role (self-service)
+  ('superadmin','tickets.create_self'), ('admin','tickets.create_self'),
+  ('manager','tickets.create_self'), ('employee','tickets.create_self'),
+  ('hr_staff','tickets.create_self'), ('hr_manager','tickets.create_self'),
+  ('hse_staff','tickets.create_self'), ('hse_manager','tickets.create_self'),
+  ('finance_staff','tickets.create_self'), ('finance_manager','tickets.create_self'),
+  ('payroll_staff','tickets.create_self'), ('operations_staff','tickets.create_self'),
+  -- create_team: manager + admin/superadmin
+  ('superadmin','tickets.create_team'), ('admin','tickets.create_team'),
+  ('manager','tickets.create_team'),
+  -- create_on_behalf: admin/superadmin only
+  ('superadmin','tickets.create_on_behalf'), ('admin','tickets.create_on_behalf'),
+  -- create_internal: admin/superadmin + module service-queue handler roles
+  ('superadmin','tickets.create_internal'), ('admin','tickets.create_internal'),
+  ('hr_staff','tickets.create_internal'), ('hr_manager','tickets.create_internal'),
+  ('hse_staff','tickets.create_internal'), ('hse_manager','tickets.create_internal'),
+  ('finance_staff','tickets.create_internal'), ('finance_manager','tickets.create_internal'),
+  ('payroll_staff','tickets.create_internal'), ('operations_staff','tickets.create_internal')
+on conflict (role_name, permission) do nothing;
+
 alter table public.tickets
   alter column request_type_code set not null,
   alter column queue_code set not null,

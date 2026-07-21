@@ -290,6 +290,10 @@ export const PERMISSION_KEYS = [
   'communications.participants.change_role',      // change a participant's role
   // ── Tickets ────────────────────────────────────────────────────────────────────
   'tickets.manage',                 // create, assign, resolve, and close support/work tickets
+  'tickets.create_self',            // raise a ticket for yourself (self-service)
+  'tickets.create_team',            // raise a ticket for an active direct report
+  'tickets.create_on_behalf',       // raise a ticket on behalf of another employee (reason required)
+  'tickets.create_internal',        // raise internal work for a service queue (no employee requester)
   // ── Account Security (admin cross-user management) ──────────────────────────────
   'auth.security.view',             // view another user's security status (MFA, passkeys, trusted devices)
   'auth.security.manage_policy',    // update the organisation-wide security policy
@@ -582,6 +586,7 @@ export const COMPLIANCE_GATED_KEYS = new Set<string>([
  */
 // Employee baseline — shared by every module-staff role (flat; no inheritance).
 const EMPLOYEE_BASELINE: ReadonlySet<PermissionKey> = new Set<PermissionKey>([
+  'tickets.create_self',            // every authenticated role may raise a self-service ticket
   'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
   'settings.own_preferences.view', 'settings.own_preferences.manage',
   'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own', 'dashboard.view',
@@ -611,6 +616,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   // ── Module staff roles (flat; employee baseline + module keys) ───────────────
   hr_staff: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
+    'tickets.create_internal',      // HR service-queue handler
     // HR Compensation — manage pay items
     'hr.compensation.view', 'hr.compensation.manage',
     // HR Overtime — view + admin manage
@@ -623,6 +629,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   hr_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
     ...EMPLOYEE_BASELINE,
+    'tickets.create_internal',      // HR service-queue handler
     // HR Compensation — full
     'hr.compensation.view', 'hr.compensation.manage', 'hr.compensation.approve',
     'hr.compensation.reports.view', 'hr.compensation.reports.export',
@@ -634,11 +641,12 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
     // HR Contract Management — full (incl. terminate + templates)
     'hr.contracts.view', 'hr.contracts.manage', 'hr.contracts.terminate', 'hr.contracts.template.manage',
   ]),
-  hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE]),
+  hse_staff: new Set<PermissionKey>([...EMPLOYEE_BASELINE, 'tickets.create_internal']),
 
   // Finance roles — mirrors 20260802000000 + 20260802000003 + 20260802000011
   finance_staff: new Set<PermissionKey>([
     ...EMPLOYEE_BASELINE,
+    'tickets.create_internal',      // Finance service-queue handler
     'finance.statutory.view',
     'finance.payroll.components.view',
     'finance.payroll.nis.view',
@@ -692,6 +700,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   finance_manager: new Set<PermissionKey>([
     'calendar.manage', 'calendar.task.assign',
     ...EMPLOYEE_BASELINE,
+    'tickets.create_internal',      // Finance/Payroll service-queue handler
     'finance.statutory.view',
     'finance.statutory.manage',
     'finance.statutory.approve',
@@ -790,6 +799,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   employee: new Set<PermissionKey>([
+    'tickets.create_self',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     // Workflow — my tasks + decide when assigned (Spec §22)
     'workflow.my_tasks.view', 'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject',
@@ -822,6 +832,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   manager: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_team',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // Workflow — run approvals + manage instances (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
@@ -881,6 +892,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   admin: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // Workflow — full except superadmin-only admin_override (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
@@ -1087,6 +1099,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, ReadonlySet<PermissionKey>> = {
   ]),
 
   superadmin: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     // Workflow — full governance incl. admin_override (Spec §22)
     'workflow.dashboard.view', 'workflow.my_tasks.view', 'workflow.register.view',
     'workflow.tasks.approve', 'workflow.tasks.return', 'workflow.tasks.reject', 'workflow.tasks.delegate',

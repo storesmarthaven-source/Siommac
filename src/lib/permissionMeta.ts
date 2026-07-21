@@ -862,6 +862,30 @@ export const PERMISSION_META: Record<PermissionKey, PermissionMeta> = {
     description: 'Create, assign, resolve, and close support or work tickets.',
     risk: 'medium',
   },
+  'tickets.create_self': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'Raise Ticket (Self)',
+    description: 'Raise a support or work ticket for yourself (self-service).',
+    risk: 'low',
+  },
+  'tickets.create_team': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'Raise Ticket (Team Member)',
+    description: 'Raise a ticket for one of your active direct reports.',
+    risk: 'low',
+  },
+  'tickets.create_on_behalf': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'Raise Ticket (On Behalf)',
+    description: 'Raise a ticket on behalf of another employee; a reason is required.',
+    risk: 'medium',
+  },
+  'tickets.create_internal': {
+    module: 'Tickets', group: 'Tickets',
+    label: 'Raise Ticket (Internal Work)',
+    description: 'Raise internal work for a service queue without impersonating an employee.',
+    risk: 'medium',
+  },
 
   // ── Account Security ──────────────────────────────────────────────────────────
   'auth.security.view': {

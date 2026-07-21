@@ -94,6 +94,10 @@ export const PERMISSION_KEYS = [
   'communications.participants.change_role',
   // ── Tickets ────────────────────────────────────────────────────────────────
   'tickets.manage',        // create, assign, resolve, and close support/work tickets
+  'tickets.create_self',        // raise a ticket for yourself (self-service)
+  'tickets.create_team',        // raise a ticket for an active direct report
+  'tickets.create_on_behalf',   // raise a ticket on behalf of another employee (reason required)
+  'tickets.create_internal',    // raise internal work for a service queue (no employee requester)
   // ── Account Security (admin cross-user management) ──────────────────────────
   'auth.security.view',          // view another user's security status (MFA, passkeys, trusted devices)
   'auth.security.manage_policy', // update the organisation-wide security policy
@@ -507,6 +511,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   // HR module staff roles (flat; employee baseline + HR keys).
   // Mirrors 20260802000007_hr_compensation_overtime_permissions.sql.
   hr_staff: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
@@ -533,6 +538,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.contracts.view', 'hr.contracts.manage',
   ]),
   hr_manager: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'dashboard.view',
@@ -563,6 +569,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   // Finance roles (flat; each carries the employee baseline + finance keys).
   // Mirrors 20260802000000_finance_roles.sql + 20260802000003_finance_statutory_permissions.sql.
   finance_staff: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     // employee baseline (same keys as employee role)
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -634,6 +641,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.ap.payment.record',
   ]),
   finance_manager: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     // employee baseline (same keys as employee role)
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
@@ -753,6 +761,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.ap.bills.import',
   ]),
   employee: new Set<PermissionKey>([
+    'tickets.create_self',
     'calendar.view', 'calendar.task.manage_own', 'calendar.activity.manage_own',
     'attendance.view_own', 'leaves.view_own', 'leaves.submit', 'payroll.view_own',
     'hr.overtime.submit',
@@ -777,6 +786,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'finance.bank_accounts.manage',
   ]),
   manager: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_team',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
@@ -824,6 +834,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
     'hr.overtime.view', 'hr.overtime.approve', 'hr.overtime.reports.view',
   ]),
   admin: new Set<PermissionKey>([
+    'tickets.create_self', 'tickets.create_team', 'tickets.create_on_behalf', 'tickets.create_internal',
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'attendance.view_all', 'attendance.edit', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve', 'leaves.delete',
