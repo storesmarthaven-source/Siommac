@@ -23,6 +23,7 @@ import {
   usePayrollMutation,
   usePopulationPreview,
   usePayGroups,
+  useReasonCodes,
   financePayrollApi,
   type PayrollRun,
   type PayrollRunType,
@@ -128,6 +129,13 @@ export function PayNewRunWizard({
   const [periodEnd, setPeriodEnd]   = useState('');
   const [payDate, setPayDate]       = useState('');
   const [cutOffDate, setCutOffDate] = useState('');
+  // Slice 1 run metadata
+  const [reasonCode, setReasonCode]                 = useState('');
+  const [internalDescription, setInternalDescription] = useState('');
+  const [otCutoffAt, setOtCutoffAt]                 = useState('');
+  const [approvalDeadlineAt, setApprovalDeadlineAt] = useState('');
+  const [fundingDate, setFundingDate]               = useState('');
+  const [releaseWindow, setReleaseWindow]           = useState('');
   const [confirms, setConfirms]     = useState<[boolean, boolean, boolean]>([false, false, false]);
   const [blocker, setBlocker]       = useState<(CreateBlocker & { code: string }) | null>(null);
 
@@ -145,6 +153,8 @@ export function PayNewRunWizard({
     queryFn:  () => financePayrollApi.listRuns({ limit: 50 }),
     enabled:  runType === 'correction',
   });
+  const reasonCodesQ = useReasonCodes(runType);
+  const reasonCodes  = reasonCodesQ.data ?? [];
 
   const createMut = usePayrollMutation(financePayrollApi.createRun);
 
@@ -190,6 +200,12 @@ export function PayNewRunWizard({
         payGroupId,
         payDate:    payDate || undefined,
         cutOffDate: cutOffDate || undefined,
+        reasonCode:          reasonCode || undefined,
+        internalDescription: internalDescription.trim() || undefined,
+        otCutoffAt:          otCutoffAt || undefined,
+        approvalDeadlineAt:  approvalDeadlineAt || undefined,
+        fundingDate:         fundingDate || undefined,
+        releaseWindow:       releaseWindow.trim() || undefined,
       });
       toast(`Payroll run ${run.runNo} created as draft.`);
       onCreated(run);
@@ -244,7 +260,7 @@ export function PayNewRunWizard({
               <div class="choice-grid">
                 {RUN_TYPES.map(rt => (
                   <label key={rt.value} class={`choice ${runType === rt.value ? 'on' : ''}`}>
-                    <input type="radio" name="run-type" checked={runType === rt.value} onChange={() => { setRunType(rt.value); setBlocker(null); }} />
+                    <input type="radio" name="run-type" checked={runType === rt.value} onChange={() => { setRunType(rt.value); setReasonCode(''); setBlocker(null); }} />
                     <span><strong>{rt.title}</strong><small>{rt.desc}</small></span>
                   </label>
                 ))}
@@ -264,6 +280,19 @@ export function PayNewRunWizard({
               <div class="field-grid">
                 <div class="field-group"><label>Run number</label><div class="ro">{runNumberHint}</div><span class="hint">Auto-allocated by the server on creation.</span></div>
                 <div class="field-group"><label>Payroll owner</label><div class="ro">You (assigned on creation)</div><span class="hint">The creator owns preparation; approval is a different Finance Manager.</span></div>
+                <div class="field-group">
+                  <label>Reason code</label>
+                  <select class="select" value={reasonCode} onChange={e => setReasonCode((e.currentTarget).value)}>
+                    <option value="">— None —</option>
+                    {reasonCodes.map(rc => <option key={rc.code} value={rc.code}>{rc.label}</option>)}
+                  </select>
+                  <span class="hint">Recorded on the run for reporting and audit.</span>
+                </div>
+                <div class="field-group"><label>Cost entity</label><div class="ro">SIOMAC Trinidad &amp; Tobago</div><span class="hint">Statutory jurisdiction (TT) — fixed for this build.</span></div>
+              </div>
+              <div class="field-group">
+                <label>Internal description</label>
+                <textarea class="textarea" value={internalDescription} onInput={e => setInternalDescription((e.currentTarget).value)} placeholder="Optional context recorded on the draft (e.g. Regular monthly payroll for salaried employees)." maxLength={2000} />
               </div>
             </div>
           </section>
@@ -335,7 +364,15 @@ export function PayNewRunWizard({
                 <div class="field-group"><label>Weeks in period</label><input class={`field ${errors.weeks ? 'err' : ''}`} type="number" min="0.5" max="5.5" step="0.001" value={weeksInPeriod} onInput={e => setWeeks((e.currentTarget).value)} />{errors.weeks ? <span class="err-msg">{errors.weeks}</span> : <span class="hint">Auto-set from frequency.</span>}</div>
                 <div class="field-group"><label>Employee-change cut-off</label><input class="field" type="date" value={cutOffDate} onInput={e => setCutOffDate((e.currentTarget).value)} /><span class="hint">Changes after this date are excluded.</span></div>
               </div>
-              <PendingBlock title="Additional cut-offs (Slice 1)" detail="Time/overtime cut-off, approval deadline, funding date and release window arrive with the run-metadata backend — not shown as fake fields until the run schema stores them." />
+              <div class="field-grid three">
+                <div class="field-group"><label>Time / overtime cut-off</label><input class="field" type="datetime-local" value={otCutoffAt} onInput={e => setOtCutoffAt((e.currentTarget).value)} /><span class="hint">Latest overtime accepted into this run.</span></div>
+                <div class="field-group"><label>Approval deadline</label><input class="field" type="datetime-local" value={approvalDeadlineAt} onInput={e => setApprovalDeadlineAt((e.currentTarget).value)} /><span class="hint">Must be on/after the overtime cut-off.</span></div>
+                <div class="field-group"><label>Payment funding date</label><input class="field" type="date" value={fundingDate} onInput={e => setFundingDate((e.currentTarget).value)} /><span class="hint">Treasury funds the payroll account by this date.</span></div>
+              </div>
+              <div class="field-group">
+                <label>Release window</label>
+                <input class="field" type="text" value={releaseWindow} onInput={e => setReleaseWindow((e.currentTarget).value)} placeholder="e.g. 30 Jul 18:00 – 31 Jul 08:00" maxLength={120} />
+              </div>
             </div>
           </section>
           <aside class="pcrw-aside">

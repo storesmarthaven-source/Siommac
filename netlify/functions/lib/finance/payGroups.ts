@@ -60,6 +60,22 @@ export async function listPayGroups(opts: { activeOnly?: boolean } = {}): Promis
   return groups;
 }
 
+// ── Slice 1: run reason codes (lookup for the create-run wizard) ────────────────
+export interface PayrollReasonCodeDto { code: string; label: string; runType: string | null; sortOrder: number }
+
+export async function listReasonCodes(runType?: string): Promise<PayrollReasonCodeDto[]> {
+  const { data, error } = await sb.from('finance_payroll_reason_codes')
+    .select('code, label, run_type, sort_order')
+    .eq('active', true)
+    .order('sort_order');
+  if (error) throw Object.assign(new Error('listReasonCodes: ' + error.message), { status: 500 });
+  let rows = ((data ?? []) as Array<{ code: string; label: string; run_type: string | null; sort_order: number }>)
+    .map(r => ({ code: r.code, label: r.label, runType: r.run_type, sortOrder: r.sort_order }));
+  // A code with a null run_type applies to every run type; a scoped code only to its own.
+  if (runType) rows = rows.filter(r => r.runType === null || r.runType === runType);
+  return rows;
+}
+
 export async function getPayGroup(id: string): Promise<PayGroupDto | null> {
   const { data, error } = await sb.from('finance_pay_groups').select('*').eq('id', id).maybeSingle<DbPayGroupRow>();
   if (error) throw Object.assign(new Error('getPayGroup: ' + error.message), { status: 500 });

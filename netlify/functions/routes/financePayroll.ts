@@ -92,6 +92,7 @@ import {
   getPayGroup,
   assignEmployee,
   listGroupMembers,
+  listReasonCodes,
 } from '../lib/finance/payGroups';
 import {
   addOverride,
@@ -271,6 +272,14 @@ router.post('/payroll/runs/create', async c => {
     payGroupId:     z.string().uuid().optional(),
     payDate:        z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
     cutOffDate:     z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    // Slice 1 run metadata
+    reasonCode:          z.string().trim().min(1).max(64).optional(),
+    payrollOwnerId:      z.string().trim().min(1).max(64).optional(),
+    otCutoffAt:          z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/).optional(),
+    approvalDeadlineAt:  z.string().regex(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}(:\d{2})?$/).optional(),
+    fundingDate:         z.string().regex(/^\d{4}-\d{2}-\d{2}$/).optional(),
+    releaseWindow:       z.string().trim().min(1).max(120).optional(),
+    internalDescription: z.string().trim().max(2000).optional(),
   }), b(c));
   if (!v.ok) return v.response;
   try {
@@ -932,6 +941,17 @@ router.post('/payroll/pay-groups/list', async c => {
   if (!v.ok) return v.response;
   try {
     const data = await listPayGroups({ activeOnly: v.data.activeOnly });
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reason-codes/list — Finance (New Run wizard, Slice 1).
+router.post('/payroll/reason-codes/list', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runType: z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']).optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listReasonCodes(v.data.runType);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });

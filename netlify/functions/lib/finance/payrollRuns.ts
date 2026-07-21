@@ -913,6 +913,14 @@ export interface CreateRunInput {
   payGroupId?: string;
   payDate?: string;
   cutOffDate?: string;
+  // Slice 1 run metadata
+  reasonCode?: string;
+  payrollOwnerId?: string;
+  otCutoffAt?: string;
+  approvalDeadlineAt?: string;
+  fundingDate?: string;
+  releaseWindow?: string;
+  internalDescription?: string;
   actorId: string;
 }
 
@@ -934,6 +942,13 @@ export async function createPayrollRun(input: CreateRunInput): Promise<PayrollRu
     payGroupId: input.payGroupId,
     payDate: input.payDate,
     cutOffDate: input.cutOffDate,
+    reasonCode: input.reasonCode,
+    payrollOwnerId: input.payrollOwnerId,
+    otCutoffAt: input.otCutoffAt,
+    approvalDeadlineAt: input.approvalDeadlineAt,
+    fundingDate: input.fundingDate,
+    releaseWindow: input.releaseWindow,
+    internalDescription: input.internalDescription,
   });
   return toRunDto(row as unknown as DbRunRow);
 }

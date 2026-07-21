@@ -324,7 +324,17 @@ export interface CreateRunArgs {
   payGroupId?: string;      // scopes the run; drives frequency + population + policy
   payDate?: string;         // YYYY-MM-DD actual payment date
   cutOffDate?: string;      // YYYY-MM-DD cut-off date for changes
+  // Slice 1 run metadata (all optional; owner defaults server-side to the creator)
+  reasonCode?: string;
+  payrollOwnerId?: string;
+  otCutoffAt?: string;          // YYYY-MM-DDTHH:MM
+  approvalDeadlineAt?: string;  // YYYY-MM-DDTHH:MM
+  fundingDate?: string;         // YYYY-MM-DD
+  releaseWindow?: string;
+  internalDescription?: string;
 }
+
+export interface PayrollReasonCode { code: string; label: string; runType: string | null; sortOrder: number }
 
 export interface PayGroup {
   id: string;
@@ -569,6 +579,7 @@ export const financePayrollApi = {
 
   // Pay groups
   listPayGroups:  (a: { activeOnly?: boolean } = {})   => call<PayGroup[]>('finance/payroll/pay-groups/list', a),
+  listReasonCodes:(a: { runType?: string } = {})       => call<PayrollReasonCode[]>('finance/payroll/reason-codes/list', a),
   createPayGroup: (a: { code: string; name: string; frequency: string; defaultPayDay?: number; defaultCutoffOffsetDays?: number }) => call<PayGroup>('finance/payroll/pay-groups/create', a),
   assignPayGroup: (a: { employeeId: string; payGroupId: string; effectiveFrom: string; effectiveTo?: string | null }) => call<{ employeeId: string; payGroupId: string }>('finance/payroll/pay-groups/assign', a),
   payGroupMembers:(a: { payGroupId: string })          => call<PayGroupMember[]>('finance/payroll/pay-groups/members', a),
@@ -712,6 +723,13 @@ export function useRunGlPreview(runId: string | null) {
 }
 export function usePayGroups(activeOnly = true) {
   return useQuery({ queryKey: ['finance', 'payroll', 'pay-groups', activeOnly], queryFn: () => financePayrollApi.listPayGroups({ activeOnly }) });
+}
+
+export function useReasonCodes(runType?: string) {
+  return useQuery({
+    queryKey: ['finance', 'payroll', 'reason-codes', runType ?? 'all'],
+    queryFn:  () => financePayrollApi.listReasonCodes(runType ? { runType } : {}),
+  });
 }
 export function usePayGroupMembers(payGroupId: string | null) {
   return useQuery({ queryKey: ['finance', 'payroll', 'pay-group-members', payGroupId ?? ''], queryFn: () => financePayrollApi.payGroupMembers({ payGroupId: payGroupId! }), enabled: !!payGroupId });

@@ -329,6 +329,53 @@ export default async function run(h) {
     expect(Number(row.data.calendar_resolution?.periodDenominator) > 0, 'pinned period denominator must be > 0');
   });
 
+  await test('T3b Slice 1 run metadata — reason codes list + persisted metadata + idempotency + validation', async () => {
+    // reason-codes list endpoint (scoped to the run type)
+    const rc = await api('finance/payroll/reason-codes/list', T.appr, { runType: 'scheduled' });
+    ok(rc, `reason-codes list: ${rc.body.message}`);
+    expect(Array.isArray(rc.body.data) && rc.body.data.some(r => r.code === 'regular_scheduled'),
+      'reason-codes list must include regular_scheduled for scheduled runs');
+
+    // create a run WITH metadata (pgCost + P2 — a free slot)
+    const metaKey = `${TAG}:run:meta`;
+    const metaCmd = (desc) => payrollRunCommand({
+      idempotencyKey: metaKey, periodStart: P2_START, periodEnd: P2_END, payGroupId: ids.pgCost, payFrequency: 'monthly',
+      reasonCode: 'regular_scheduled', payrollOwnerId: U.prep,
+      otCutoffAt: `${P2_START}T16:00`, approvalDeadlineAt: `${P2_START}T17:00`,
+      fundingDate: P2_END, releaseWindow: 'Window A', internalDescription: desc,
+    });
+    const cr = await api('finance/payroll/runs/create', T.appr, metaCmd('e2e metadata run'));
+    ok(cr, `create meta run: ${cr.body.message}`);
+    const runId = cr.body.data.id; ids.runIds.push(runId);
+
+    const row = await sb.from('finance_payroll_runs')
+      .select('reason_code, payroll_owner_id, ot_cutoff_at, approval_deadline_at, funding_date, release_window, internal_description')
+      .eq('id', runId).single();
+    expect(!row.error, `read meta run: ${row.error?.message}`);
+    expect(row.data.reason_code === 'regular_scheduled', 'reason_code persisted');
+    expect(row.data.payroll_owner_id === U.prep, 'explicit payroll_owner_id persisted');
+    expect(row.data.funding_date === P2_END, 'funding_date persisted');
+    expect(row.data.release_window === 'Window A', 'release_window persisted');
+    expect(row.data.internal_description === 'e2e metadata run', 'internal_description persisted');
+    expect(row.data.ot_cutoff_at != null && row.data.approval_deadline_at != null, 'cut-off timestamps persisted');
+
+    // idempotency: same key + SAME metadata dedupes to the same run
+    const dup = await api('finance/payroll/runs/create', T.appr, metaCmd('e2e metadata run'));
+    ok(dup, `dedupe: ${dup.body.message}`);
+    expect(dup.body.data.id === runId, 'same key + same metadata must dedupe to the same run');
+
+    // idempotency: same key + DIFFERENT metadata → 409 (metadata is part of command identity)
+    const conflict = await api('finance/payroll/runs/create', T.appr, metaCmd('CHANGED description'));
+    fails(conflict); expect(conflict.status === 409, `same key + different metadata expected 409, got ${conflict.status}`);
+
+    // invalid reason code → 422 (pgBank + P2 — fails, so leaves no row)
+    const badReason = await api('finance/payroll/runs/create', T.appr, payrollRunCommand({
+      idempotencyKey: `${TAG}:run:badreason`, periodStart: P2_START, periodEnd: P2_END, payGroupId: ids.pgBank, payFrequency: 'monthly',
+      reasonCode: 'not_a_real_code',
+    }));
+    fails(badReason); expect(badReason.status === 422, `invalid reason code expected 422, got ${badReason.status}`);
+  });
+
   await test('T4 block_input_lock (payment_destination) fails the lock with NO side effects', async () => {
     const cr = await createRun(ids.pgBank, 'bank'); ok(cr, `create bank run: ${cr.body.message}`);
     const runId = cr.body.data.id; ids.runIds.push(runId); ids.bankRunId = runId;

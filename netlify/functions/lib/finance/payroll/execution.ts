@@ -35,6 +35,14 @@ export interface CreatePayrollRunCommand {
   payGroupId?: string;
   payDate?: string;
   cutOffDate?: string;
+  // Slice 1 run metadata (all optional)
+  reasonCode?: string;
+  payrollOwnerId?: string;
+  otCutoffAt?: string;
+  approvalDeadlineAt?: string;
+  fundingDate?: string;
+  releaseWindow?: string;
+  internalDescription?: string;
 }
 
 export interface CalculationAttemptRow {
@@ -180,6 +188,14 @@ export async function createPayrollRunCommand(
     p_pay_group_id: command.payGroupId ?? null,
     p_pay_date: command.payDate ?? command.periodEnd,
     p_cut_off_date: command.cutOffDate ?? null,
+    // Slice 1 run metadata
+    p_reason_code: command.reasonCode ?? null,
+    p_payroll_owner_id: command.payrollOwnerId ?? null,
+    p_ot_cutoff_at: command.otCutoffAt ?? null,
+    p_approval_deadline_at: command.approvalDeadlineAt ?? null,
+    p_funding_date: command.fundingDate ?? null,
+    p_release_window: command.releaseWindow ?? null,
+    p_internal_description: command.internalDescription ?? null,
   });
 
   return rpcData<Record<string, unknown>>(data, error);
