@@ -5710,36 +5710,36 @@ _groupTitle	function	platform	false		src/components/nav/navCore.ts	300
 NAV_EXPAND_KEY	function	platform	false		src/components/nav/navCore.ts	305	
 loadExpandedGroups	function	platform	false		src/components/nav/navCore.ts	308	
 saveExpandedGroups	function	platform	false		src/components/nav/navCore.ts	317	
-NAV_PARENT_KEY	function	platform	false		src/components/nav/navCore.ts	322	
-loadExpandedParents	function	platform	false		src/components/nav/navCore.ts	324	
-saveExpandedParents	function	platform	false		src/components/nav/navCore.ts	332	
-_wireParentToggles	function	platform	false		src/components/nav/navCore.ts	337	
-activeSectionId	function	platform	false		src/components/nav/navCore.ts	366	
-buildSidebar	function	platform	true		src/components/nav/navCore.ts	382	
-topCount	function	platform	false		src/components/nav/navCore.ts	402	buildSidebar
-_wireGroupToggles	function	platform	false		src/components/nav/navCore.ts	458	
-buildTopTabs	function	platform	true		src/components/nav/navCore.ts	473	
-applyPalette	function	platform	true		src/components/nav/navCore.ts	490	
-renderPalettes	function	platform	true		src/components/nav/navCore.ts	503	
-applyLayout	function	platform	true		src/components/nav/navCore.ts	523	
-renderLayouts	function	platform	true		src/components/nav/navCore.ts	532	
-savePalette	function	platform	true		src/components/nav/navCore.ts	544	
-saveLayout	function	platform	true		src/components/nav/navCore.ts	567	
-showSection	function	platform	true		src/components/nav/navCore.ts	586	
-refreshSection	function	platform	true		src/components/nav/navCore.ts	645	
-setSkel	function	platform	true		src/components/nav/navCore.ts	694	
-skelStatValues	function	platform	true		src/components/nav/navCore.ts	699	
-skelTableRows	function	platform	true		src/components/nav/navCore.ts	706	
-skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	717	
-skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	724	
-skelList	function	platform	true		src/components/nav/navCore.ts	731	
-_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	740	
-setHdrBadge	function	platform	true		src/components/nav/navCore.ts	742	
-LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	764	
-_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	771	
-_setSbBadge	function	platform	false		src/components/nav/navCore.ts	773	
-setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	803	
-refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	812	
+NAV_PARENT_KEY	function	platform	false		src/components/nav/navCore.ts	325	
+loadExpandedParents	function	platform	false		src/components/nav/navCore.ts	330	
+saveExpandedParents	function	platform	false		src/components/nav/navCore.ts	339	
+_wireParentToggles	function	platform	false		src/components/nav/navCore.ts	344	
+activeSectionId	function	platform	false		src/components/nav/navCore.ts	376	
+buildSidebar	function	platform	true		src/components/nav/navCore.ts	392	
+topCount	function	platform	false		src/components/nav/navCore.ts	412	buildSidebar
+_wireGroupToggles	function	platform	false		src/components/nav/navCore.ts	471	
+buildTopTabs	function	platform	true		src/components/nav/navCore.ts	486	
+applyPalette	function	platform	true		src/components/nav/navCore.ts	503	
+renderPalettes	function	platform	true		src/components/nav/navCore.ts	516	
+applyLayout	function	platform	true		src/components/nav/navCore.ts	536	
+renderLayouts	function	platform	true		src/components/nav/navCore.ts	545	
+savePalette	function	platform	true		src/components/nav/navCore.ts	557	
+saveLayout	function	platform	true		src/components/nav/navCore.ts	580	
+showSection	function	platform	true		src/components/nav/navCore.ts	599	
+refreshSection	function	platform	true		src/components/nav/navCore.ts	658	
+setSkel	function	platform	true		src/components/nav/navCore.ts	707	
+skelStatValues	function	platform	true		src/components/nav/navCore.ts	712	
+skelTableRows	function	platform	true		src/components/nav/navCore.ts	719	
+skelStatCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	730	
+skelCards	function	platform	true	ui-tile	src/components/nav/navCore.ts	737	
+skelList	function	platform	true		src/components/nav/navCore.ts	744	
+_badgeLastCount	variable	platform	false		src/components/nav/navCore.ts	753	
+setHdrBadge	function	platform	true		src/components/nav/navCore.ts	755	
+LEAVE_SECTION_IDS	array	platform	false		src/components/nav/navCore.ts	777	
+_sbBadgeLabelByBtn	variable	platform	false		src/components/nav/navCore.ts	784	
+_setSbBadge	function	platform	false		src/components/nav/navCore.ts	786	
+setNavSectionBadge	function	platform	true		src/components/nav/navCore.ts	816	
+refreshNavBadges	function	platform	true		src/components/nav/navCore.ts	825	
 currentRole	function	platform	false		src/components/nav/NavCustomizer.tsx	38	
 rebuildSidebar	function	platform	false		src/components/nav/NavCustomizer.tsx	42	
 Svg	function	platform	false	component	src/components/nav/NavCustomizer.tsx	49	
@@ -6732,18 +6732,18 @@ OVERVIEW_ITEM	object	finance	false		src/components/sections/Finance/module.ts	16
 PAYABLES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	23	
 STATUTORY_ITEM	object	finance	false		src/components/sections/Finance/module.ts	30	
 PAYROLL_ITEM	object	finance	false		src/components/sections/Finance/module.ts	37	
-PAYROLL_RUNS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	46	
-PAYROLL_EXCEPTIONS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	54	
-PAYSLIP_BATCHES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	62	
-PAYROLL_REPORTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	71	
-PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	82	
-PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	89	
-REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	96	
-EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	103	
-BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	110	
-DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	117	
-STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	124	
-financeModule	object	finance	true		src/components/sections/Finance/module.ts	131	
+PAYROLL_RUNS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	48	
+PAYROLL_EXCEPTIONS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	56	
+PAYSLIP_BATCHES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	64	
+PAYROLL_REPORTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	73	
+PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	84	
+PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	92	
+REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	100	
+EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	107	
+BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	114	
+DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	121	
+STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	128	
+financeModule	object	finance	true		src/components/sections/Finance/module.ts	135	
 mountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	10	
 unmountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	22	
 MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	30	

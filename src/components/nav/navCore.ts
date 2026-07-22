@@ -99,7 +99,7 @@ export interface NavGlobalCatalog {
 
 /** Display label for a nav group — the flat 'overview' group carries no label. */
 function groupDisplayLabel(g: NavGroupItem): string {
-  const l = (g.label ?? '').trim();
+  const l = g.label.trim();
   if (l) return l;
   if (g.id === 'overview') return 'Overview';
   return g.id.charAt(0).toUpperCase() + g.id.slice(1);
@@ -319,14 +319,21 @@ function saveExpandedGroups(role: string, expanded: Set<string>): void {
 }
 
 // Collapsible parent (sub-menu) expansion — persisted per role, like groups.
-const NAV_PARENT_KEY = (role: string) => `siomac_nav_parents_${role}`;
+// v2: sub-menus now default to EXPANDED (was: collapsed with no default). Bumping
+// the key retires any stale v1 state so every user gets the new expanded default
+// once, then their own collapses persist under v2.
+const NAV_PARENT_KEY = (role: string) => `siomac_nav_parents_v2_${role}`;
 
-function loadExpandedParents(role: string): Set<string> {
+/** Returns null when the user has NEVER customized sub-menu state (so the caller
+ *  can default-expand parents-with-children, matching group behaviour); a Set
+ *  otherwise (including an empty Set when everything was deliberately collapsed). */
+function loadExpandedParents(role: string): Set<string> | null {
   try {
     const raw = localStorage.getItem(NAV_PARENT_KEY(role));
-    const arr = raw ? (JSON.parse(raw) as string[]) : [];
+    if (raw === null) return null;
+    const arr = JSON.parse(raw) as string[];
     return new Set(Array.isArray(arr) ? arr : []);
-  } catch { return new Set(); }
+  } catch { return null; }
 }
 
 function saveExpandedParents(role: string, expanded: Set<string>): void {
@@ -344,7 +351,10 @@ function _wireParentToggles(menu: HTMLElement, role: string): void {
       const willOpen = !li.classList.contains('open');
       li.classList.toggle('open', willOpen);
       btn.setAttribute('aria-expanded', String(willOpen));
-      const expanded = loadExpandedParents(role);
+      // Seed from the current DOM (which reflects the default-expanded state) so the
+      // first collapse persists correctly rather than resetting other sub-menus.
+      const expanded = loadExpandedParents(role)
+        ?? new Set([...menu.querySelectorAll<HTMLElement>('.sb-parent.open')].map(el => el.dataset.parent ?? ''));
       const id = li.dataset.parent ?? '';
       if (willOpen) expanded.add(id); else expanded.delete(id);
       saveExpandedParents(role, expanded);
@@ -409,9 +419,12 @@ export function buildSidebar(role: string): void {
   const activeItem = all.find(i => i.id === activeId);
   if (activeItem?.group) expanded.add(activeItem.group);
 
-  // Expanded PARENT state (collapsible sub-menus). The active child's parent is
-  // always open so the current page is visible.
-  const expandedParents = loadExpandedParents(role);
+  // Expanded PARENT state (collapsible sub-menus). Persisted, else default-expand
+  // every parent that has children — so nested pages are visible out of the box (a
+  // fresh user must not have to discover a chevron to reach them). The active child's
+  // parent is always open so the current page is visible.
+  let expandedParents = loadExpandedParents(role);
+  expandedParents ??= new Set(all.filter(i => i.parent).map(i => i.parent!));
   if (activeItem?.parent) expandedParents.add(activeItem.parent);
 
   let html = '';

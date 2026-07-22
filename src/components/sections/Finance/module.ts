@@ -41,8 +41,10 @@ const PAYROLL_ITEM: ModuleNavItem = {
   sub: 'Pay runs, calculation, approval, payslips & statutory export',
 };
 
-// F-14 — the payroll operational pages nest under the "Payroll" parent (s-finance-payroll,
-// which routes to the Command Center). "Reports" joins as a child once F-12's page lands.
+// F-14 — every payroll operational page nests under the "Payroll" parent
+// (s-finance-payroll, which routes to the Command Center): Runs, Approvals &
+// Exceptions, Payslip Batches, Reports, Payroll Setup and Payslip Designer. The
+// sub-menu is expanded by default (see navCore) so these are reachable out of the box.
 const PAYROLL_RUNS_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-runs',
   label: 'Payroll Runs',
@@ -83,6 +85,7 @@ const PAYROLL_SETUP_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-setup',
   label: 'Payroll Setup',
   icon: 'fa-sliders',
+  parent: 's-finance-payroll',
   sub: 'Pay groups (frequency & population) and overtime rules that drive the pay-run engine',
 };
 
@@ -90,6 +93,7 @@ const PAYSLIP_DESIGNER_ITEM: ModuleNavItem = {
   id: 's-finance-payslip-designer',
   label: 'Payslip Designer',
   icon: 'fa-file-invoice',
+  parent: 's-finance-payroll',
   sub: 'Design payslip layout templates (employer block, logo, sections, footer) used when rendering payslips',
 };
 

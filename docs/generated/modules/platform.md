@@ -2,7 +2,7 @@
 
 # platform Module Map
 
-Source fingerprint: `51354814bf736a2e5dbb2bea`
+Source fingerprint: `868868ca860b35cbe3d8eacb`
 
 Files: 293 | Symbols: 2654 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 296 | E2E suites: 0
 
@@ -136,8 +136,8 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `DialogContextPanel` | function / component | `src/components/common/dialogs/DialogContextPanel.tsx:28` | `-` |
 | `EnterpriseFormModal` | function / component | `src/components/common/dialogs/EnterpriseFormModal.tsx:32` | `-` |
 | `NavController` | function / component | `src/components/nav/NavController.tsx:54` | `-` |
-| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:717` | `-` |
-| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:724` | `-` |
+| `skelStatCards` | function / ui-tile | `src/components/nav/navCore.ts:730` | `-` |
+| `skelCards` | function / ui-tile | `src/components/nav/navCore.ts:737` | `-` |
 | `AccessControlSection` | function / component | `src/components/sections/AccessControl/AccessControlSection.tsx:32` | `-` |
 | `AcApprovalsPage` | function / component | `src/components/sections/AccessControl/pages/AcApprovalsPage.tsx:27` | `-` |
 | `AcAuditPage` | function / component | `src/components/sections/AccessControl/pages/AcAuditPage.tsx:17` | `-` |
