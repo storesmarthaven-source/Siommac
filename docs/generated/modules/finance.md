@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `37fc953a727c8678c8f3a7dc`
+Source fingerprint: `53693980535c7d91cbf49252`
 
 Files: 133 | Symbols: 1819 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -544,7 +544,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceExportDialog.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
-| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 103 |
+| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 628 |
 | frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 285 |

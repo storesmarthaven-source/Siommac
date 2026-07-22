@@ -240,29 +240,32 @@ function controlTotals(lines: LineRow[]): ReportControlTotals {
 // ── period runs (eligible only) ──────────────────────────────────────────────
 async function loadPeriodRuns(from: string, to: string): Promise<RunRow[]> {
   assertValidPeriod(from, to);
-  const { data, error } = await sb
+  // Paged (selectAllRows) so a period spanning >1000 runs is never truncated.
+  return selectAllRows<RunRow>(() => sb
     .from('finance_payroll_runs')
     .select('id, run_no, status, period_month, pay_group, pay_group_id, gross_total, deduction_total, net_total, nis_employer_total, employee_count, current_calculation_version_id, current_input_snapshot_id')
     .gte('period_month', monthStart(from))
     .lt('period_month', monthAfter(to))
     .in('status', ['locked', 'released', 'exported'])
-    .order('period_month');
-  if (error) throw err(500, 'loadPeriodRuns: ' + error.message);
-  return data;
+    .order('period_month'));
 }
 
 // ════════════════════════════════════════════════════════════════════════════
 // Per-report compute
 // ════════════════════════════════════════════════════════════════════════════
 
-async function computeRegister(p: Extract<ReportParams, { report: 'payroll_register' }>): Promise<Completed> {
+async function computeRegister(p: Extract<ReportParams, { report: 'payroll_register' }>, mode: ReportExecMode = 'preview'): Promise<Completed> {
   const run = await loadEligibleRun(p.runId);
   if (p.payGroupId && run.pay_group_id !== p.payGroupId) {
     throw err(422, 'The requested pay group does not match this run.');
   }
   let lines = await loadRunLines(p.runId);
   if (p.departmentId) lines = lines.filter(l => l.department_id === p.departmentId);
-  if (lines.length > PREVIEW_ROW_CAP) throw err(422, 'Preview exceeds 5,000 rows — export this report to a file instead.');
+  // The 5k cap bounds the interactive preview only; a durable file export is not
+  // capped (that is exactly what the "export instead" message tells the user to do).
+  if (mode === 'preview' && lines.length > PREVIEW_ROW_CAP) {
+    throw err(422, 'Preview exceeds 5,000 rows — export this report to a file instead.');
+  }
   const names = await resolveNames(lines.map(l => l.employee_id));
   const rows: RegisterRow[] = lines
     .map(l => ({
@@ -499,7 +502,15 @@ async function computeVariance(p: Extract<ReportParams, { report: 'variance_anal
     if (error) throw err(500, 'variance prior-run lookup: ' + error.message);
     priorRunId = prior?.id ?? null;
   } else {
-    await loadEligibleRun(priorRunId); // validate eligibility of an explicit comparison run
+    // A supplied comparison run must be eligible AND belong to the SAME pay group —
+    // comparing unrelated populations produces a meaningless variance.
+    const priorRun = await loadEligibleRun(priorRunId);
+    const samePayGroup = run.pay_group_id
+      ? priorRun.pay_group_id === run.pay_group_id
+      : (priorRun.pay_group ?? '') === (run.pay_group ?? '');
+    if (!samePayGroup) {
+      throw err(422, 'The comparison run must belong to the same pay group as the reporting run.');
+    }
   }
 
   const cur = await sumMeasures(p.runId);
@@ -603,43 +614,44 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
   interface Raw { employeeId: string; movement: PopulationMovementRow['movement']; effectiveDate: string; prior: string; current: string; impact: string; verified: boolean; deptId: string | null }
   const raws: Raw[] = [];
 
-  // Hires — employee start_date in period (employee start records).
+  // Hires — employee start_date in period (paged so it is never truncated at 1000).
   if (want === 'all' || want === 'hires_leavers') {
-    const { data, error } = await sb.from('app_users')
-      .select('id, start_date, department_id, status')
-      .gte('start_date', from).lt('start_date', toExcl);
-    if (error) throw err(500, 'population hires: ' + error.message);
-    for (const u of data as { id: string; start_date: string | null; department_id: string | null; status: string | null }[]) {
+    const hires = await selectAllRows<{ id: string; start_date: string | null; department_id: string | null; status: string | null }>(() =>
+      sb.from('app_users').select('id, start_date, department_id, status')
+        .gte('start_date', from).lt('start_date', toExcl).order('id'));
+    for (const u of hires) {
       if (!u.start_date) continue;
       raws.push({ employeeId: u.id, movement: 'hire', effectiveDate: u.start_date, prior: '—', current: '', impact: 'Added to payroll population', verified: u.status === 'active', deptId: u.department_id });
       empIds.push(u.id);
     }
   }
-  // Leavers — offboarding last working day / exit date in period.
+  // Leavers — offboarding last working day / exit date in period. Filter the effective
+  // date IN THE QUERY (not all history in JS) + page it: last_working_day in range, OR
+  // (last_working_day null AND exit_date in range).
   if (want === 'all' || want === 'hires_leavers') {
-    const { data, error } = await sb.from('hr_offboarding_cases')
-      .select('employee_id, last_working_day, exit_date, status')
-      .in('status', ['ready_for_exit', 'completed']);
-    if (error) throw err(500, 'population leavers: ' + error.message);
-    for (const o of data as { employee_id: string; last_working_day: string | null; exit_date: string | null; status: string | null }[]) {
+    const leavers = await selectAllRows<{ employee_id: string; last_working_day: string | null; exit_date: string | null; status: string | null }>(() =>
+      sb.from('hr_offboarding_cases').select('employee_id, last_working_day, exit_date, status')
+        .in('status', ['ready_for_exit', 'completed'])
+        .or(`and(last_working_day.gte.${from},last_working_day.lt.${toExcl}),and(last_working_day.is.null,exit_date.gte.${from},exit_date.lt.${toExcl})`)
+        .order('employee_id'));
+    for (const o of leavers) {
       const eff = o.last_working_day ?? o.exit_date;
       if (!eff || eff < from || eff >= toExcl) continue;
       raws.push({ employeeId: o.employee_id, movement: 'leaver', effectiveDate: eff, prior: '', current: '—', impact: 'Removed from payroll population', verified: o.status === 'completed', deptId: null });
       empIds.push(o.employee_id);
     }
   }
-  // Unpaid leave — approved leave of an unpaid type overlapping the period.
+  // Unpaid leave — approved leave of an unpaid type overlapping the period (paged).
   if (want === 'all' || want === 'leave') {
     const { data: unpaidTypes, error: typesErr } = await sb.from('hr_leave_types').select('id').eq('paid', false);
     if (typesErr) throw err(500, 'population leave types: ' + typesErr.message);
     const unpaidIds = (unpaidTypes as { id: string }[]).map(t => t.id);
     if (unpaidIds.length) {
-      const { data, error } = await sb.from('hr_leave_requests')
-        .select('employee_id, from_date, to_date, status, leave_type_id')
-        .eq('status', 'approved').in('leave_type_id', unpaidIds)
-        .lt('from_date', toExcl).gte('to_date', from);
-      if (error) throw err(500, 'population unpaid leave: ' + error.message);
-      for (const lv of data as { employee_id: string; from_date: string; to_date: string; status: string }[]) {
+      const leaves = await selectAllRows<{ employee_id: string; from_date: string; to_date: string; status: string }>(() =>
+        sb.from('hr_leave_requests').select('employee_id, from_date, to_date, status, leave_type_id')
+          .eq('status', 'approved').in('leave_type_id', unpaidIds)
+          .lt('from_date', toExcl).gte('to_date', from).order('employee_id'));
+      for (const lv of leaves) {
         raws.push({ employeeId: lv.employee_id, movement: 'unpaid_leave', effectiveDate: lv.from_date, prior: '', current: '', impact: 'Unpaid leave period', verified: true, deptId: null });
         empIds.push(lv.employee_id);
       }
@@ -732,9 +744,14 @@ async function computeNisExceptions(p: Extract<ReportParams, { report: 'nis_exce
 }
 
 // ── public dispatch ──────────────────────────────────────────────────────────
-export async function computeInteractiveReport(params: InteractiveReportParams): Promise<Completed> {
+/** Preview enforces the row cap (interactive UI); a durable file export does not. */
+export type ReportExecMode = 'preview' | 'file';
+export async function computeInteractiveReport(
+  params: InteractiveReportParams,
+  mode: ReportExecMode = 'preview',
+): Promise<Completed> {
   switch (params.report) {
-    case 'payroll_register': return computeRegister(params);
+    case 'payroll_register': return computeRegister(params, mode);
     case 'net_pay_summary': return computeNetPaySummary(params);
     case 'payroll_cost_analysis': return computeCostAnalysis(params);
     case 'gross_to_net_reconciliation': return computeReconciliation(params);

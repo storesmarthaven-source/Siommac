@@ -787,52 +787,53 @@ resolveDepartments	function	payroll	false		netlify/functions/lib/finance/payroll
 resolveCostCentres	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	216	
 controlTotals	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	229	
 loadPeriodRuns	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	241	
-computeRegister	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	258	
-computeNetPaySummary	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	289	
-keyOf	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	308	computeNetPaySummary
-Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	314	computeNetPaySummary
-computeCostAnalysis	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	348	
-TaggedLine	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	361	computeCostAnalysis
-allLines	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	362	computeCostAnalysis
-label	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	377	computeCostAnalysis
-Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	384	computeCostAnalysis
-computeReconciliation	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	430	
-src	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	439	computeReconciliation
-sumMeasures	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	471	
-computeVariance	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	481	
-mk	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	508	computeVariance
-computeOvertimeAllowance	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	532	
-Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	537	computeOvertimeAllowance
-computePopulationMovements	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	594	
-Raw	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	603	computePopulationMovements
-computeNisExceptions	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	676	
-str	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	682	computeNisExceptions
-computeInteractiveReport	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	735	
-ReportMeta	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	753	
-REPORT_META	object	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	754	
-buildReportCatalog	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	766	
-logReportPreview	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	787	
-FileFormat	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	803	
-enqueueReportJob	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	804	
-astMonthStartIso	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	827	
-tile	function	payroll	false	ui-tile	netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	831	
-TILE_NA	object	payroll	false	ui-tile	netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	832	
-computeReportSummary	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	834	
-ArtifactJoinRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	885	
-jobKey	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	892	
-purgeToStatus	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	896	
-encodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	898	
-decodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	900	
-listReportHistory	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	907	
-JobRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	950	
-ArtifactRowDb	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	957	
-toArtifactRow	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	962	
-getReportJobStatus	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	977	
-ARTIFACT_BUCKET	variable	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1014	
-DOWNLOAD_TTL_SECONDS	variable	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1016	
-DownloadArtifactRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1018	
-ReportDownloadOutcome	type	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1024	
-resolveReportDownload	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1041	
+computeRegister	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	257	
+computeNetPaySummary	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	292	
+keyOf	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	311	computeNetPaySummary
+Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	317	computeNetPaySummary
+computeCostAnalysis	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	351	
+TaggedLine	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	364	computeCostAnalysis
+allLines	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	365	computeCostAnalysis
+label	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	380	computeCostAnalysis
+Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	387	computeCostAnalysis
+computeReconciliation	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	433	
+src	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	442	computeReconciliation
+sumMeasures	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	474	
+computeVariance	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	484	
+mk	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	519	computeVariance
+computeOvertimeAllowance	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	543	
+Agg	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	548	computeOvertimeAllowance
+computePopulationMovements	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	605	
+Raw	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	614	computePopulationMovements
+computeNisExceptions	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	688	
+str	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	694	computeNisExceptions
+ReportExecMode	type	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	748	
+computeInteractiveReport	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	749	
+ReportMeta	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	770	
+REPORT_META	object	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	771	
+buildReportCatalog	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	783	
+logReportPreview	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	804	
+FileFormat	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	820	
+enqueueReportJob	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	821	
+astMonthStartIso	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	844	
+tile	function	payroll	false	ui-tile	netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	848	
+TILE_NA	object	payroll	false	ui-tile	netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	849	
+computeReportSummary	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	851	
+ArtifactJoinRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	902	
+jobKey	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	909	
+purgeToStatus	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	913	
+encodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	915	
+decodeCursor	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	917	
+listReportHistory	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	924	
+JobRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	967	
+ArtifactRowDb	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	974	
+toArtifactRow	function	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	979	
+getReportJobStatus	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	994	
+ARTIFACT_BUCKET	variable	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1031	
+DOWNLOAD_TTL_SECONDS	variable	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1033	
+DownloadArtifactRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1035	
+ReportDownloadOutcome	type	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1041	
+resolveReportDownload	function	payroll	true		netlify/functions/lib/finance/payroll/payrollReportCatalog.ts	1058	
 Completed	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportFiles.ts	14	
 Cell	type	payroll	false		netlify/functions/lib/finance/payroll/payrollReportFiles.ts	15	
 ReportTable	interface	payroll	false		netlify/functions/lib/finance/payroll/payrollReportFiles.ts	17	
@@ -3864,12 +3865,12 @@ run	function	payroll	true	test	scripts/e2e/suites/payrollPopulationRecon.mjs	21
 ruleCount	function	payroll	false	test	scripts/e2e/suites/payrollPopulationRecon.mjs	204	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollReports.mjs	9	
 run	function	payroll	true	test	scripts/e2e/suites/payrollReports.mjs	14	
-mkRun	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	90	run
-line	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	99	run
-preview	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	164	run
-dlAuditCount	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	376	run
-objectExists	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	409	run
-seedOrphan	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	415	run
+mkRun	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	91	run
+line	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	100	run
+preview	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	165	run
+dlAuditCount	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	377	run
+objectExists	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	410	run
+seedOrphan	function	payroll	false	test	scripts/e2e/suites/payrollReports.mjs	416	run
 title	variable	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	27	
 run	function	payroll	true	test	scripts/e2e/suites/payrollRunsRegister.mjs	29	
 seedRun	function	payroll	false	test	scripts/e2e/suites/payrollRunsRegister.mjs	101	run
@@ -7004,26 +7005,26 @@ errMsg	function	payroll	false		src/components/sections/Finance/PayrollReportsPag
 triggerDownload	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	42	
 buildParams	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	48	
 PayrollReportsPage	function	payroll	true	component	src/components/sections/Finance/PayrollReportsPage.tsx	65	
-loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	87	PayrollReportsPage
-pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	150	PayrollReportsPage
-run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	158	PayrollReportsPage
-runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	161	PayrollReportsPage
-tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	168	PayrollReportsPage
-ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	343	
-runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	353	ParamFields
-monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	362	ParamFields
-ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	392	
-Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	406	
-Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	412	
-RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	414	
-NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	419	
-CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	424	
-VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	429	
-OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	438	
-MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	443	
-NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	448	
-Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	453	
-ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	462	
+loadMoreHistory	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	89	PayrollReportsPage
+pick	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	152	PayrollReportsPage
+run	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	160	PayrollReportsPage
+runExport	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	163	PayrollReportsPage
+tile	function	payroll	false	ui-tile	src/components/sections/Finance/PayrollReportsPage.tsx	170	PayrollReportsPage
+ParamFields	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	345	
+runPicker	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	355	ParamFields
+monthField	function	payroll	false		src/components/sections/Finance/PayrollReportsPage.tsx	364	ParamFields
+ReportResult	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	394	
+Totals	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	408	
+Empty	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	414	
+RegisterTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	416	
+NetPayTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	421	
+CostTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	426	
+VarianceTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	431	
+OvertimeTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	440	
+MovementsTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	445	
+NisTable	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	450	
+Reconciliation	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	455	
+ChartStrip	function	payroll	false	component	src/components/sections/Finance/PayrollReportsPage.tsx	464	
 TABS	array	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	28	
 STATE_PILL	variable	payroll	false	component	src/components/sections/Finance/PayrollRunRegisterPage.tsx	37	
 pillFor	function	payroll	false		src/components/sections/Finance/PayrollRunRegisterPage.tsx	50	

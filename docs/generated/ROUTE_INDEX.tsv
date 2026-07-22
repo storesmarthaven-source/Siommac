@@ -327,9 +327,9 @@ path	module	permission	guards	schema	file	line
 /api/finance/payroll/releases/release	payroll	finance.payroll.release	requirePermission	z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })	netlify/functions/routes/financePayroll.ts	557
 /api/finance/payroll/reports/artifacts/download	payroll	finance.payroll.reports.view	requirePermission	z.object({ artifactId: z.uuid() })	netlify/functions/routes/financePayroll.ts	1803
 /api/finance/payroll/reports/catalog	payroll	finance.payroll.reports.view	requirePermission		netlify/functions/routes/financePayroll.ts	1702
-/api/finance/payroll/reports/generation/run	payroll	finance.payroll.reports.maintain	requirePermission	z.object({ limit: z.number().int().min(1).max(50).optional() })	netlify/functions/routes/financePayroll.ts	1822
+/api/finance/payroll/reports/generation/run	payroll	finance.payroll.reports.maintain	requirePermission	z.object({ limit: z.number().int().min(1).max(10).optional() })	netlify/functions/routes/financePayroll.ts	1828
 /api/finance/payroll/reports/history/list	payroll	finance.payroll.reports.view	requirePermission	z.object({     cursor:    z.string().max(500).optional(),     limit:     z.number().int().min(1).max(100).optional(),     reportKey: z.enum(PAYROLL_REPORT_KEYS).optional(),   })	netlify/functions/routes/financePayroll.ts	1770
-/api/finance/payroll/reports/purge/run	payroll	finance.payroll.reports.maintain	requirePermission	z.object({ limit: z.number().int().min(1).max(100).optional() })	netlify/functions/routes/financePayroll.ts	1836
+/api/finance/payroll/reports/purge/run	payroll	finance.payroll.reports.maintain	requirePermission	z.object({ limit: z.number().int().min(1).max(100).optional() })	netlify/functions/routes/financePayroll.ts	1842
 /api/finance/payroll/reports/run	payroll	finance.payroll.reports.view	requirePermission,userCan		netlify/functions/routes/financePayroll.ts	1721
 /api/finance/payroll/reports/status	payroll	finance.payroll.reports.view	requirePermission	z.object({ jobId: z.uuid() })	netlify/functions/routes/financePayroll.ts	1787
 /api/finance/payroll/reports/summary	payroll	finance.payroll.reports.view	requirePermission		netlify/functions/routes/financePayroll.ts	1711

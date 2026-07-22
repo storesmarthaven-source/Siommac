@@ -1819,12 +1819,18 @@ router.post('/payroll/reports/artifacts/download', async c => {
 // generation queue (the same processor the scheduled worker runs). Gated to
 // reports.maintain (system operators only) — a plain exporter must NOT drive the
 // global worker; useful for ops + drives the worker in E2E.
+// The batch is capped low (≤10) so a synchronous flush stays well under Netlify's
+// 60-second function limit; steady-state throughput comes from the every-minute
+// scheduled worker (1 job/invocation). A single very large report is bounded by the
+// lease/reap recovery model (a render that overruns loses its lease → reclaim →
+// fail after max_attempts, surfaced as a 'failed' job, never a hang); moving such
+// reports to a Netlify background function is the Phase-B path if needed.
 router.post('/payroll/reports/generation/run', async c => {
   await requirePermission(c, 'finance.payroll.reports.maintain');
-  const v = zv(c, z.object({ limit: z.number().int().min(1).max(50).optional() }), b(c));
+  const v = zv(c, z.object({ limit: z.number().int().min(1).max(10).optional() }), b(c));
   if (!v.ok) return v.response;
   try {
-    const summary = await processReportGenerationQueue('manual', v.data.limit ?? 10);
+    const summary = await processReportGenerationQueue('manual', v.data.limit ?? 5);
     return c.json({ success: true, data: summary });
   } catch (e) { return routeErr(c, e); }
 });

@@ -80,7 +80,9 @@ export function PayrollReportsPage(): VNode {
   const summaryQ = useQuery({ queryKey: ['payroll', 'reports', 'summary'], queryFn: () => financePayrollApi.reportsSummary() });
   const catalogQ = useQuery({ queryKey: ['payroll', 'reports', 'catalog'], queryFn: () => financePayrollApi.reportsCatalog() });
   const historyQ = useQuery({ queryKey: ['payroll', 'reports', 'history'], queryFn: () => financePayrollApi.reportsHistory({ limit: 25 }) });
-  const runsQ = useRunsRegister({ tab: 'all', limit: 200 });
+  // 100 is the /runs/list ceiling; the picker shows the most recent eligible runs.
+  // (A searchable/paginated picker for very old runs is Phase-B — tracked in the contract.)
+  const runsQ = useRunsRegister({ tab: 'all', limit: 100 });
 
   const historyRows = [...(historyQ.data?.rows ?? []), ...morePages];
   const historyNextCursor = moreCursor !== undefined ? moreCursor : (historyQ.data?.nextCursor ?? null);

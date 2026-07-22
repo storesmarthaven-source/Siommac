@@ -18,7 +18,7 @@ export default async function run(h) {
   const M1 = `${Y}-01`, M2 = `${Y}-02`;
 
   let fmgrT, fmgr2T, viewOnlyT, empT, empA, empB;
-  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, jobIds: [], artifactId: null, csvPath: null, orphanPaths: [] };
+  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, fmgrId: null, jobIds: [], artifactId: null, csvPath: null, orphanPaths: [], purgeArtifactId: null, purgePath: null };
   const BUCKET = 'payroll-report-artifacts';
 
   h.onCleanup(async () => {
@@ -55,6 +55,7 @@ export default async function run(h) {
     const e = await acquireActors('employee', 2);
     empA = e.actors[0].id; empB = e.actors[1].id;
     ctx.viewOnlyId = v.actors[0].id;
+    ctx.fmgrId = m.actors[0].id;
     ctx.users = [...m.createdIds, ...v.createdIds, ...e.createdIds];
     // fmgr = finance_manager + reports.maintain (drives the workers). fmgr2 = a plain
     // finance_manager: it HAS reports.export via its role but NOT maintain, so it
@@ -468,49 +469,68 @@ export default async function run(h) {
   h.section('Reports Center > Retention purge');
 
   await test('RPT-PRG-01 a retention-expired artifact is purged: ONE purged event, object gone', async () => {
-    const { error: upErr } = await sb.from('payroll_report_artifacts')
-      .update({ retention_expires_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', ctx.artifactId);
-    expect(!upErr, `backdate retention: ${upErr?.message}`);
+    // retention_expires_at is immutable after creation (append-only trigger), so seed
+    // an ALREADY-expired artifact by direct INSERT (allowed) on its own job + object.
+    const enq = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'net_pay_summary', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-purge-${TAG.slice(-8)}`,
+    });
+    ok(enq, `purge enqueue failed: ${enq.body.message}`);
+    const jobId = enq.body.data.jobId; ctx.jobIds.push(jobId);
+    const token = randomUUID();
+    const bytes = Buffer.from(`purge,${token}\n`, 'utf8');
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    ctx.purgePath = `${jobId}/${token}/${sha}.csv`;
+    const up = await sb.storage.from(BUCKET).upload(ctx.purgePath, bytes, { contentType: 'text/csv', upsert: false });
+    expect(!up.error, `seed purge object: ${up.error?.message}`);
+    const { data: art, error: insErr } = await sb.from('payroll_report_artifacts').insert({
+      job_id: jobId, storage_path: ctx.purgePath, content_type: 'text/csv', byte_size: bytes.length, sha256: sha,
+      scope: {}, scope_id: 'purge-e2e', row_count: 0, retention_class: 'standard',
+      retention_expires_at: new Date(Date.now() - 3600_000).toISOString(),
+      requires_view_all: false, requires_export: true, format: 'csv', created_by: ctx.fmgrId,
+    }).select('id').single();
+    expect(!insErr, `seed expired artifact: ${insErr?.message}`);
+    ctx.purgeArtifactId = art.id;
+
     const r = await api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 });
     ok(r, `purge/run failed: ${r.body.message}`);
     expect(r.body.data.purge.purged >= 1, `purge.purged ${JSON.stringify(r.body.data.purge)}`);
-    const { data: art } = await sb.from('payroll_report_artifacts')
-      .select('purge_state, purged_at, purge_token').eq('id', ctx.artifactId).maybeSingle();
-    expect(art && art.purge_state === 'purged' && art.purged_at, 'artifact marked purged');
-    ctx._purgeToken = art.purge_token;
+    const { data: row } = await sb.from('payroll_report_artifacts')
+      .select('purge_state, purged_at, purge_token').eq('id', ctx.purgeArtifactId).maybeSingle();
+    expect(row && row.purge_state === 'purged' && row.purged_at, 'artifact marked purged');
+    ctx._purgeToken = row.purge_token;
     const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
-      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.artifactId);
+      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.purgeArtifactId);
     expect((ev ?? 0) === 1, 'exactly one purged event');
-    expect(!(await objectExists(ctx.csvPath)), 'purged object removed from storage');
+    expect(!(await objectExists(ctx.purgePath)), 'purged object removed from storage');
   });
 
   await test('RPT-PRG-02 same-token finalize replay → duplicate, still exactly one event', async () => {
     const { data, error } = await sb.rpc('finance_payroll_report_purge_finalize', {
-      p_artifact_id: ctx.artifactId, p_purge_token: ctx._purgeToken,
+      p_artifact_id: ctx.purgeArtifactId, p_purge_token: ctx._purgeToken,
     });
     expect(!error, `same-token finalize should not error: ${error?.message}`);
     expect(data && data.duplicate === true, 'replay returns duplicate:true');
     const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
-      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.artifactId);
+      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.purgeArtifactId);
     expect((ev ?? 0) === 1, 'still exactly one purged event after retry');
   });
 
   await test('RPT-PRG-03 a stale/different purge token is rejected even after purged', async () => {
-    const fin = await sb.rpc('finance_payroll_report_purge_finalize', { p_artifact_id: ctx.artifactId, p_purge_token: randomUUID() });
+    const fin = await sb.rpc('finance_payroll_report_purge_finalize', { p_artifact_id: ctx.purgeArtifactId, p_purge_token: randomUUID() });
     expect(fin.error, 'stale-token finalize must reject');
-    const fail = await sb.rpc('finance_payroll_report_purge_fail', { p_artifact_id: ctx.artifactId, p_purge_token: randomUUID(), p_error: { code: 'x', message: 'y' } });
+    const fail = await sb.rpc('finance_payroll_report_purge_fail', { p_artifact_id: ctx.purgeArtifactId, p_purge_token: randomUUID(), p_error: { code: 'x', message: 'y' } });
     expect(fail.error, 'stale-token purge_fail must reject');
   });
 
   await test('RPT-DL-05 download of a purged artifact → 410', async () => {
-    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: ctx.artifactId });
+    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: ctx.purgeArtifactId });
     expect(r.status === 410 && !r.body.success, `expected 410, got ${r.status}`);
   });
 
   await test('RPT-HIS-03 history reflects the purged artifact status', async () => {
     const r = await api('finance/payroll/reports/history/list', fmgrT, { limit: 25 });
     ok(r, `history failed: ${r.body.message}`);
-    const row = r.body.data.rows.find(x => x.id === ctx.artifactId);
+    const row = r.body.data.rows.find(x => x.id === ctx.purgeArtifactId);
     expect(!row || row.status === 'purged', 'purged artifact shows purged status if listed');
   });
 
@@ -550,8 +570,7 @@ export default async function run(h) {
     expect((ev ?? 0) === 1, 'exactly one failed event for the reaped job');
   });
 
-  await test('APPEND-01 an artifact evidence column is immutable; retention/purge columns are not', async () => {
-    // Fresh committed artifact for this test (ctx.artifactId was purged above).
+  await test('APPEND-01 evidence AND retention are immutable; only purge columns may change', async () => {
     const enq = await api('finance/payroll/reports/run', fmgrT, {
       params: { report: 'net_pay_summary', runId: ctx.currentId }, format: 'csv', idempotencyKey: `e2e-rpt-append-${TAG.slice(-8)}`,
     });
@@ -563,10 +582,14 @@ export default async function run(h) {
     // Frozen evidence column → DB trigger rejects.
     const { error: shaErr } = await sb.from('payroll_report_artifacts').update({ sha256: 'tampered' }).eq('id', art.id);
     expect(shaErr, 'updating sha256 (frozen evidence) must be rejected by the append-only trigger');
-    // Operational column (retention) → allowed.
+    // retention_expires_at is now FROZEN too (retention is fixed at complete_tx).
     const { error: retErr } = await sb.from('payroll_report_artifacts')
       .update({ retention_expires_at: new Date(Date.now() + 86400_000).toISOString() }).eq('id', art.id);
-    expect(!retErr, `retention_expires_at should be updatable, got ${retErr?.message}`);
+    expect(retErr, 'updating retention_expires_at must be rejected by the append-only trigger');
+    // A purge-saga column IS still updatable (that is how the purge worker operates).
+    const { error: pErr } = await sb.from('payroll_report_artifacts')
+      .update({ purge_error: { code: 'e2e', message: 'probe' } }).eq('id', art.id);
+    expect(!pErr, `purge column should remain updatable, got ${pErr?.message}`);
   });
 
   await test('CSVINJ-01 a formula-leading text cell is neutralized in the CSV export', async () => {

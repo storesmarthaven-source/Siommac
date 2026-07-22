@@ -56,7 +56,7 @@ export async function processReportGenerationQueue(workerId: string, limit = 5):
 
   for (const job of jobs) {
     try {
-      const completed = await computeInteractiveReport(job.params);
+      const completed = await computeInteractiveReport(job.params, 'file');
       const file = await renderReportFile(completed, job.format);
       const sha256 = createHash('sha256').update(file.buffer).digest('hex');
       const path = `${job.id}/${job.claim_token}/${sha256}.${file.ext}`;

@@ -119,9 +119,9 @@ end
 $fn$;
 
 -- ── claim: queued or lease-expired-running, SKIP LOCKED (FSM-RPT-002) ───────
--- Only claims jobs with attempts remaining (attempts < max_attempts) so a worker
--- that is repeatedly KILLED before it can call fail_tx cannot be reclaimed forever
--- (a job at the cap is instead reaped to 'failed' by finance_payroll_report_reap).
+-- NOTE: the attempts-cap hardening lives in migration 746 (a CREATE OR REPLACE),
+-- NOT here — this file was already applied, so an already-migrated environment
+-- would never see an edit made here. 746 owns every Slice-4 function change.
 create or replace function public.finance_payroll_report_claim(
   p_worker_id     text,
   p_limit         integer default 5,
@@ -142,9 +142,8 @@ begin
          updated_at       = now()
    where j.id in (
      select c.id from public.payroll_report_jobs c
-      where (c.state = 'queued'
-             or (c.state = 'running' and c.lease_expires_at < now()))
-        and c.attempts < c.max_attempts
+      where c.state = 'queued'
+         or (c.state = 'running' and c.lease_expires_at < now())
       order by c.created_at
       for update skip locked
       limit greatest(p_limit, 1)
@@ -250,7 +249,6 @@ as $fn$
 declare
   v_job      public.payroll_report_jobs%rowtype;
   v_artifact public.payroll_report_artifacts%rowtype;
-  v_attempt  public.payroll_report_upload_attempts%rowtype;
   v_event_id uuid;
 begin
   select * into v_job from public.payroll_report_jobs where id = p_job_id for update;
@@ -281,20 +279,14 @@ begin
   end if;
 
   -- The winner path must be a registered ledger attempt for this exact token.
-  -- Lock the attempt row FOR UPDATE so this serializes with the orphan reconciler's
-  -- claim (finance_payroll_report_reconcile_claim, which also locks it): whichever
-  -- grabs the lock first wins. If the reconciler already claimed the attempt for
-  -- cleanup (last_cleanup_at set — the object is being/has been removed), REJECT the
-  -- completion so a succeeded artifact can never point at a deleted object (P0 fence).
-  select * into v_attempt from public.payroll_report_upload_attempts
-    where job_id = p_job_id and claim_token = p_claim_token and storage_path = p_storage_path
-    for update;
-  if not found then
+  -- NOTE: the P0 orphan-reconciler fence (FOR UPDATE lock + last_cleanup_at reject)
+  -- is added by migration 746 (CREATE OR REPLACE), not here — see the claim note.
+  if not exists (
+    select 1 from public.payroll_report_upload_attempts
+     where job_id = p_job_id and claim_token = p_claim_token
+       and storage_path = p_storage_path
+  ) then
     raise exception 'finance_payroll_report_complete: upload attempt was not registered for this token/path'
-      using errcode = 'PR409';
-  end if;
-  if v_attempt.last_cleanup_at is not null then
-    raise exception 'finance_payroll_report_complete: this upload attempt was reclaimed by the orphan reconciler'
       using errcode = 'PR409';
   end if;
 

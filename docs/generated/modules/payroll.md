@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `37fc953a727c8678c8f3a7dc`
+Source fingerprint: `53693980535c7d91cbf49252`
 
-Files: 175 | Symbols: 1780 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 237 | E2E suites: 24
+Files: 175 | Symbols: 1781 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 239 | E2E suites: 24
 
 ## Widgets and Tiles
 
@@ -129,9 +129,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `/api/finance/payroll/releases/release` | `finance.payroll.release` | requirePermission | `z.object({     runId: z.uuid(),     idempotencyKey: z.string().trim().min(1).max(200),   })` | `netlify/functions/routes/financePayroll.ts:557` | - | financePayroll, payrollControlCenter |
 | `/api/finance/payroll/reports/artifacts/download` | `finance.payroll.reports.view` | requirePermission | `z.object({ artifactId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1803` | - | payrollReports |
 | `/api/finance/payroll/reports/catalog` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1702` | - | financePayroll, payrollReports |
-| `/api/finance/payroll/reports/generation/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(50).optional() })` | `netlify/functions/routes/financePayroll.ts:1822` | - | payrollReports |
+| `/api/finance/payroll/reports/generation/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(10).optional() })` | `netlify/functions/routes/financePayroll.ts:1828` | - | payrollReports |
 | `/api/finance/payroll/reports/history/list` | `finance.payroll.reports.view` | requirePermission | `z.object({     cursor:    z.string().max(500).optional(),     limit:     z.number().int().min(1).max(100).optional(),     reportKey: z.enum(PAYROLL_REPORT_KEYS).optional(),   })` | `netlify/functions/routes/financePayroll.ts:1770` | - | financePayroll, payrollReports |
-| `/api/finance/payroll/reports/purge/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(100).optional() })` | `netlify/functions/routes/financePayroll.ts:1836` | - | payrollReports |
+| `/api/finance/payroll/reports/purge/run` | `finance.payroll.reports.maintain` | requirePermission | `z.object({ limit: z.number().int().min(1).max(100).optional() })` | `netlify/functions/routes/financePayroll.ts:1842` | - | payrollReports |
 | `/api/finance/payroll/reports/run` | `finance.payroll.reports.view` | requirePermission, userCan | `-` | `netlify/functions/routes/financePayroll.ts:1721` | - | financePayroll, payrollReports, payrollScale |
 | `/api/finance/payroll/reports/status` | `finance.payroll.reports.view` | requirePermission | `z.object({ jobId: z.uuid() })` | `netlify/functions/routes/financePayroll.ts:1787` | - | payrollReports |
 | `/api/finance/payroll/reports/summary` | `finance.payroll.reports.view` | requirePermission | `-` | `netlify/functions/routes/financePayroll.ts:1711` | - | financePayroll, payrollReports |
@@ -403,20 +403,22 @@ All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../COD
 | table | `public.payroll_report_artifacts` | `supabase/migrations/20260919000742_payroll_report_artifacts.sql:16` |
 | function | `public.finance_payroll_report_enqueue_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:19` |
 | function | `public.finance_payroll_report_claim` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:125` |
-| function | `public.finance_payroll_report_heartbeat` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:157` |
-| function | `public.finance_payroll_report_register_upload_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:185` |
-| function | `public.finance_payroll_report_complete_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:233` |
-| function | `public.finance_payroll_report_fail_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:357` |
-| function | `public.finance_payroll_report_log_run` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:448` |
-| function | `public.finance_payroll_report_log_download` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:474` |
-| function | `public.finance_payroll_report_purge_claim` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:497` |
-| function | `public.finance_payroll_report_purge_fail` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:527` |
-| function | `public.finance_payroll_report_purge_finalize` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:565` |
-| function | `public.finance_payroll_report_reconcile_claim` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:34` |
-| function | `public.finance_payroll_report_reap` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:70` |
-| function | `public.payroll_report_artifacts_guard` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:125` |
-| trigger | `payroll_report_artifacts_guard` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:159` |
-| function | `public.finance_payroll_report_rpc_exists` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:167` |
+| function | `public.finance_payroll_report_heartbeat` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:156` |
+| function | `public.finance_payroll_report_register_upload_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:184` |
+| function | `public.finance_payroll_report_complete_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:232` |
+| function | `public.finance_payroll_report_fail_tx` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:349` |
+| function | `public.finance_payroll_report_log_run` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:440` |
+| function | `public.finance_payroll_report_log_download` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:466` |
+| function | `public.finance_payroll_report_purge_claim` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:489` |
+| function | `public.finance_payroll_report_purge_fail` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:519` |
+| function | `public.finance_payroll_report_purge_finalize` | `supabase/migrations/20260919000744_payroll_report_rpcs.sql:557` |
+| function | `public.finance_payroll_report_reconcile_claim` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:39` |
+| function | `public.finance_payroll_report_reap` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:75` |
+| function | `public.payroll_report_artifacts_guard` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:130` |
+| trigger | `payroll_report_artifacts_guard` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:165` |
+| function | `public.finance_payroll_report_claim` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:175` |
+| function | `public.finance_payroll_report_complete_tx` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:207` |
+| function | `public.finance_payroll_report_rpc_exists` | `supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql:346` |
 
 ## E2E Suites
 
@@ -453,7 +455,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 
 | Role | Path | Lines |
 |---|---|---:|
-| backend-route | `netlify/functions/routes/financePayroll.ts` | 1848 |
+| backend-route | `netlify/functions/routes/financePayroll.ts` | 1854 |
 | backend-route | `netlify/functions/routes/financePayslipTemplates.ts` | 177 |
 | e2e-suite | `scripts/e2e/suites/financePayroll.mjs` | 3412 |
 | e2e-suite | `scripts/e2e/suites/financePayslipsEss.mjs` | 340 |
@@ -469,7 +471,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicies.mjs` | 268 |
 | e2e-suite | `scripts/e2e/suites/payrollPayPolicyRun.mjs` | 616 |
 | e2e-suite | `scripts/e2e/suites/payrollPopulationRecon.mjs` | 275 |
-| e2e-suite | `scripts/e2e/suites/payrollReports.mjs` | 637 |
+| e2e-suite | `scripts/e2e/suites/payrollReports.mjs` | 660 |
 | e2e-suite | `scripts/e2e/suites/payrollRunsRegister.mjs` | 881 |
 | e2e-suite | `scripts/e2e/suites/payrollScale.mjs` | 392 |
 | e2e-suite | `scripts/e2e/suites/payrollStatutoryForms.mjs` | 251 |
@@ -493,7 +495,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 421 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 190 |
-| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 483 |
+| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 485 |
 | frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payrollReportsContract.test.ts` | 43 |

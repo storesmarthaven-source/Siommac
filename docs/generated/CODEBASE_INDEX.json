@@ -1,20 +1,20 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "e4909ef8bf1a9926eaaf2f829e5ad07e5c2c2432",
+    "head": "f167c895564ad92bf3342e2d0838c14be0a84ea8",
     "branch": "payroll/reports-center",
-    "fingerprint": "37fc953a727c8678c8f3a7dc",
+    "fingerprint": "53693980535c7d91cbf49252",
     "indexedFiles": 1539
   },
   "summary": {
     "files": 1211,
-    "symbols": 12207,
+    "symbols": 12208,
     "widgets": 32,
     "routes": 926,
     "routeDefinitions": 927,
     "unmountedRoutes": 17,
     "apiCalls": 376,
-    "databaseObjects": 1339,
+    "databaseObjects": 1341,
     "e2eSuites": 77,
     "e2eTests": 2451
   },
@@ -36,12 +36,12 @@
       "id": "payroll",
       "counts": {
         "files": 175,
-        "symbols": 1780,
+        "symbols": 1781,
         "widgets": 10,
         "routes": 135,
         "routeDefinitions": 135,
         "apiCalls": 5,
-        "databaseObjects": 237,
+        "databaseObjects": 239,
         "e2eSuites": 24
       }
     },
@@ -491,7 +491,7 @@
       "module": "payroll",
       "role": "backend-lib",
       "lines": 438,
-      "hash": "6504a0c00eece4ea"
+      "hash": "8a894d075603efb7"
     },
     {
       "path": "netlify/functions/lib/finance/payrollRuns.ts",
@@ -560,8 +560,8 @@
       "path": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
       "module": "payroll",
       "role": "backend-lib",
-      "lines": 1075,
-      "hash": "bb7e6eb4bd1b71a4"
+      "lines": 1092,
+      "hash": "c22a5fd7a16fbe5d"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/payrollReportFiles.ts",
@@ -589,7 +589,7 @@
       "module": "payroll",
       "role": "backend-lib",
       "lines": 91,
-      "hash": "c77703f24e3972ee"
+      "hash": "8e7ff404cff44eee"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/reportPurgeWorker.ts",
@@ -1925,8 +1925,8 @@
       "path": "netlify/functions/routes/financePayroll.ts",
       "module": "payroll",
       "role": "backend-route",
-      "lines": 1848,
-      "hash": "7e890bcdc1a4b796"
+      "lines": 1854,
+      "hash": "0b47db07e074a1bc"
     },
     {
       "path": "netlify/functions/routes/financePayslipTemplates.ts",
@@ -2730,8 +2730,8 @@
       "path": "scripts/e2e/suites/payrollReports.mjs",
       "module": "payroll",
       "role": "e2e-suite",
-      "lines": 637,
-      "hash": "c63dc1b25fd9bd1b"
+      "lines": 660,
+      "hash": "90c57fab0aaf53b4"
     },
     {
       "path": "scripts/e2e/suites/payrollRunsRegister.mjs",
@@ -4431,8 +4431,8 @@
       "path": "src/components/sections/Finance/FinanceSection.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 103,
-      "hash": "54ff5c34bb68624c"
+      "lines": 108,
+      "hash": "5e07a1501ded067c"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -4522,8 +4522,8 @@
       "path": "src/components/sections/Finance/PayrollReportsPage.tsx",
       "module": "payroll",
       "role": "frontend-page",
-      "lines": 483,
-      "hash": "4a16f6079323001e"
+      "lines": 485,
+      "hash": "3e4d9ebe55aa5c1d"
     },
     {
       "path": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
@@ -16551,7 +16551,7 @@
       "name": "computeRegister",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 258,
+      "line": 257,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16561,7 +16561,7 @@
       "name": "computeNetPaySummary",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 289,
+      "line": 292,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16571,7 +16571,7 @@
       "name": "keyOf",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 308,
+      "line": 311,
       "module": "payroll",
       "exported": false,
       "container": "computeNetPaySummary",
@@ -16581,7 +16581,7 @@
       "name": "Agg",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 314,
+      "line": 317,
       "module": "payroll",
       "exported": false,
       "container": "computeNetPaySummary",
@@ -16591,7 +16591,7 @@
       "name": "computeCostAnalysis",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 348,
+      "line": 351,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16601,7 +16601,7 @@
       "name": "TaggedLine",
       "kind": "type",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 361,
+      "line": 364,
       "module": "payroll",
       "exported": false,
       "container": "computeCostAnalysis",
@@ -16611,7 +16611,7 @@
       "name": "allLines",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 362,
+      "line": 365,
       "module": "payroll",
       "exported": false,
       "container": "computeCostAnalysis",
@@ -16621,7 +16621,7 @@
       "name": "label",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 377,
+      "line": 380,
       "module": "payroll",
       "exported": false,
       "container": "computeCostAnalysis",
@@ -16631,7 +16631,7 @@
       "name": "Agg",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 384,
+      "line": 387,
       "module": "payroll",
       "exported": false,
       "container": "computeCostAnalysis",
@@ -16641,7 +16641,7 @@
       "name": "computeReconciliation",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 430,
+      "line": 433,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16651,7 +16651,7 @@
       "name": "src",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 439,
+      "line": 442,
       "module": "payroll",
       "exported": false,
       "container": "computeReconciliation",
@@ -16661,7 +16661,7 @@
       "name": "sumMeasures",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 471,
+      "line": 474,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16671,7 +16671,7 @@
       "name": "computeVariance",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 481,
+      "line": 484,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16681,7 +16681,7 @@
       "name": "mk",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 508,
+      "line": 519,
       "module": "payroll",
       "exported": false,
       "container": "computeVariance",
@@ -16691,7 +16691,7 @@
       "name": "computeOvertimeAllowance",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 532,
+      "line": 543,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16701,7 +16701,7 @@
       "name": "Agg",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 537,
+      "line": 548,
       "module": "payroll",
       "exported": false,
       "container": "computeOvertimeAllowance",
@@ -16711,7 +16711,7 @@
       "name": "computePopulationMovements",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 594,
+      "line": 605,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16721,7 +16721,7 @@
       "name": "Raw",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 603,
+      "line": 614,
       "module": "payroll",
       "exported": false,
       "container": "computePopulationMovements",
@@ -16731,7 +16731,7 @@
       "name": "computeNisExceptions",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 676,
+      "line": 688,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16741,17 +16741,27 @@
       "name": "str",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 682,
+      "line": 694,
       "module": "payroll",
       "exported": false,
       "container": "computeNisExceptions",
       "tags": []
     },
     {
+      "name": "ReportExecMode",
+      "kind": "type",
+      "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
+      "line": 748,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "computeInteractiveReport",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 735,
+      "line": 749,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16761,7 +16771,7 @@
       "name": "ReportMeta",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 753,
+      "line": 770,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16771,7 +16781,7 @@
       "name": "REPORT_META",
       "kind": "object",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 754,
+      "line": 771,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16781,7 +16791,7 @@
       "name": "buildReportCatalog",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 766,
+      "line": 783,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16791,7 +16801,7 @@
       "name": "logReportPreview",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 787,
+      "line": 804,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16801,7 +16811,7 @@
       "name": "FileFormat",
       "kind": "type",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 803,
+      "line": 820,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16811,7 +16821,7 @@
       "name": "enqueueReportJob",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 804,
+      "line": 821,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16821,7 +16831,7 @@
       "name": "astMonthStartIso",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 827,
+      "line": 844,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16831,7 +16841,7 @@
       "name": "tile",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 831,
+      "line": 848,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16843,7 +16853,7 @@
       "name": "TILE_NA",
       "kind": "object",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 832,
+      "line": 849,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16855,7 +16865,7 @@
       "name": "computeReportSummary",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 834,
+      "line": 851,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16865,7 +16875,7 @@
       "name": "ArtifactJoinRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 885,
+      "line": 902,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16875,7 +16885,7 @@
       "name": "jobKey",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 892,
+      "line": 909,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16885,7 +16895,7 @@
       "name": "purgeToStatus",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 896,
+      "line": 913,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16895,7 +16905,7 @@
       "name": "encodeCursor",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 898,
+      "line": 915,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16905,7 +16915,7 @@
       "name": "decodeCursor",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 900,
+      "line": 917,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16915,7 +16925,7 @@
       "name": "listReportHistory",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 907,
+      "line": 924,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16925,7 +16935,7 @@
       "name": "JobRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 950,
+      "line": 967,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16935,7 +16945,7 @@
       "name": "ArtifactRowDb",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 957,
+      "line": 974,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16945,7 +16955,7 @@
       "name": "toArtifactRow",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 962,
+      "line": 979,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16955,7 +16965,7 @@
       "name": "getReportJobStatus",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 977,
+      "line": 994,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -16965,7 +16975,7 @@
       "name": "ARTIFACT_BUCKET",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 1014,
+      "line": 1031,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16975,7 +16985,7 @@
       "name": "DOWNLOAD_TTL_SECONDS",
       "kind": "variable",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 1016,
+      "line": 1033,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16985,7 +16995,7 @@
       "name": "DownloadArtifactRow",
       "kind": "interface",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 1018,
+      "line": 1035,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -16995,7 +17005,7 @@
       "name": "ReportDownloadOutcome",
       "kind": "type",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 1024,
+      "line": 1041,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -17005,7 +17015,7 @@
       "name": "resolveReportDownload",
       "kind": "function",
       "file": "netlify/functions/lib/finance/payroll/payrollReportCatalog.ts",
-      "line": 1041,
+      "line": 1058,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -47851,7 +47861,7 @@
       "name": "mkRun",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 90,
+      "line": 91,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47863,7 +47873,7 @@
       "name": "line",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 99,
+      "line": 100,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47875,7 +47885,7 @@
       "name": "preview",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 164,
+      "line": 165,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47887,7 +47897,7 @@
       "name": "dlAuditCount",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 376,
+      "line": 377,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47899,7 +47909,7 @@
       "name": "objectExists",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 409,
+      "line": 410,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -47911,7 +47921,7 @@
       "name": "seedOrphan",
       "kind": "function",
       "file": "scripts/e2e/suites/payrollReports.mjs",
-      "line": 415,
+      "line": 416,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -81456,7 +81466,7 @@
       "name": "loadMoreHistory",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 87,
+      "line": 89,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81466,7 +81476,7 @@
       "name": "pick",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 150,
+      "line": 152,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81476,7 +81486,7 @@
       "name": "run",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 158,
+      "line": 160,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81486,7 +81496,7 @@
       "name": "runExport",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 161,
+      "line": 163,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81496,7 +81506,7 @@
       "name": "tile",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 168,
+      "line": 170,
       "module": "payroll",
       "exported": false,
       "container": "PayrollReportsPage",
@@ -81508,7 +81518,7 @@
       "name": "ParamFields",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 343,
+      "line": 345,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81520,7 +81530,7 @@
       "name": "runPicker",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 353,
+      "line": 355,
       "module": "payroll",
       "exported": false,
       "container": "ParamFields",
@@ -81530,7 +81540,7 @@
       "name": "monthField",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 362,
+      "line": 364,
       "module": "payroll",
       "exported": false,
       "container": "ParamFields",
@@ -81540,7 +81550,7 @@
       "name": "ReportResult",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 392,
+      "line": 394,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81552,7 +81562,7 @@
       "name": "Totals",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 406,
+      "line": 408,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81564,7 +81574,7 @@
       "name": "Empty",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 412,
+      "line": 414,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81576,7 +81586,7 @@
       "name": "RegisterTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 414,
+      "line": 416,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81588,7 +81598,7 @@
       "name": "NetPayTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 419,
+      "line": 421,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81600,7 +81610,7 @@
       "name": "CostTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 424,
+      "line": 426,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81612,7 +81622,7 @@
       "name": "VarianceTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 429,
+      "line": 431,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81624,7 +81634,7 @@
       "name": "OvertimeTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 438,
+      "line": 440,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81636,7 +81646,7 @@
       "name": "MovementsTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 443,
+      "line": 445,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81648,7 +81658,7 @@
       "name": "NisTable",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 448,
+      "line": 450,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81660,7 +81670,7 @@
       "name": "Reconciliation",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 453,
+      "line": 455,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -81672,7 +81682,7 @@
       "name": "ChartStrip",
       "kind": "function",
       "file": "src/components/sections/Finance/PayrollReportsPage.tsx",
-      "line": 462,
+      "line": 464,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -141100,9 +141110,9 @@
       "guards": [
         "requirePermission"
       ],
-      "schema": "z.object({ limit: z.number().int().min(1).max(50).optional() })",
+      "schema": "z.object({ limit: z.number().int().min(1).max(10).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1822,
+      "line": 1828,
       "module": "payroll"
     },
     {
@@ -141128,7 +141138,7 @@
       ],
       "schema": "z.object({ limit: z.number().int().min(1).max(100).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1836,
+      "line": 1842,
       "module": "payroll"
     },
     {
@@ -161387,63 +161397,63 @@
       "name": "public.finance_payroll_report_heartbeat",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 157,
+      "line": 156,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_register_upload_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 185,
+      "line": 184,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_complete_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 233,
+      "line": 232,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_fail_tx",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 357,
+      "line": 349,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_log_run",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 448,
+      "line": 440,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_log_download",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 474,
+      "line": 466,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_purge_claim",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 497,
+      "line": 489,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_purge_fail",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 527,
+      "line": 519,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_purge_finalize",
       "kind": "function",
       "file": "supabase/migrations/20260919000744_payroll_report_rpcs.sql",
-      "line": 565,
+      "line": 557,
       "module": "payroll"
     },
     {
@@ -161457,35 +161467,49 @@
       "name": "public.finance_payroll_report_reconcile_claim",
       "kind": "function",
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
-      "line": 34,
+      "line": 39,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_reap",
       "kind": "function",
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
-      "line": 70,
+      "line": 75,
       "module": "payroll"
     },
     {
       "name": "public.payroll_report_artifacts_guard",
       "kind": "function",
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
-      "line": 125,
+      "line": 130,
       "module": "payroll"
     },
     {
       "name": "payroll_report_artifacts_guard",
       "kind": "trigger",
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
-      "line": 159,
+      "line": 165,
+      "module": "payroll"
+    },
+    {
+      "name": "public.finance_payroll_report_claim",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
+      "line": 175,
+      "module": "payroll"
+    },
+    {
+      "name": "public.finance_payroll_report_complete_tx",
+      "kind": "function",
+      "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
+      "line": 207,
       "module": "payroll"
     },
     {
       "name": "public.finance_payroll_report_rpc_exists",
       "kind": "function",
       "file": "supabase/migrations/20260919000746_payroll_report_slice4_hardening.sql",
-      "line": 167,
+      "line": 346,
       "module": "payroll"
     }
   ],
@@ -169909,207 +169933,207 @@
         },
         {
           "name": "RPT-CAT-01 finance_manager sees the 9-key catalog (preview + csv/pdf; xlsx + zip deferred)",
-          "line": 133
+          "line": 134
         },
         {
           "name": "RPT-SUM-01/04 summary returns 5 tiles; materialVariances inert",
-          "line": 146
+          "line": 147
         },
         {
           "name": "AUTH-RPT-002 non-payroll employee is DENIED catalog + summary",
-          "line": 157
+          "line": 158
         },
         {
           "name": "RPT-SHP-01 payroll_register → RegisterRow[] + MoneyValue totals",
-          "line": 166
+          "line": 167
         },
         {
           "name": "RPT-SHP-02 net_pay_summary → grouped rows + readiness + totals",
-          "line": 178
+          "line": 179
         },
         {
           "name": "RPT-SHP-04 + RPT-REC-02 reconciliation EXACT (balanced iff every diff=0)",
-          "line": 187
+          "line": 188
         },
         {
           "name": "RPT-REC-01 reconciliation NOT balanced when a source differs (skew run)",
-          "line": 196
+          "line": 197
         },
         {
           "name": "RPT-SHP-05 variance_analysis → VarianceRow[] (money=MoneyValue) + chart unit",
-          "line": 204
+          "line": 205
         },
         {
           "name": "RPT-SHP-03 payroll_cost_analysis (period) → CostRow[] + chart + totals",
-          "line": 214
+          "line": 215
         },
         {
           "name": "RPT-SHP-06/07/08 overtime + movements + nis_exceptions return typed shapes",
-          "line": 223
+          "line": 224
         },
         {
           "name": "RPT-ELIG-02 draft run is ineligible (422)",
-          "line": 242
+          "line": 243
         },
         {
           "name": "RPT-ELIG-01 released run is eligible",
-          "line": 245
+          "line": 246
         },
         {
           "name": "RPT-DISC-01 params without a report discriminant → 400",
-          "line": 249
+          "line": 250
         },
         {
           "name": "RPT-FMT-01 audit-package preview → 400 (zip only)",
-          "line": 252
+          "line": 253
         },
         {
           "name": "RPT-FMT-02 the audit-package ZIP is still deferred → 400",
-          "line": 255
+          "line": 256
         },
         {
           "name": "RPT-PARAM-01 nis scope=run without runId → 422",
-          "line": 258
+          "line": 259
         },
         {
           "name": "RPT-PARAM-01b nis scope=all WITH runId → 422",
-          "line": 261
+          "line": 262
         },
         {
           "name": "RPT-PARAM-02 variance compareRunId === runId → 422",
-          "line": 264
+          "line": 265
         },
         {
           "name": "RPT-BOUND period > 24 months → 422",
-          "line": 267
+          "line": 268
         },
         {
           "name": "RPT-BOUND-02 invalid month (YYYY-99) → 400 (structural)",
-          "line": 270
+          "line": 271
         },
         {
           "name": "RPT-BOUND-03 reversed period (to < from) → 422, not an empty success",
-          "line": 274
+          "line": 275
         },
         {
           "name": "RPT-AUTH-11 reports.view + view_all runs employee-level preview",
-          "line": 282
+          "line": 283
         },
         {
           "name": "RPT-AUTH view-only (no view_all) CAN run an AGGREGATE preview",
-          "line": 286
+          "line": 287
         },
         {
           "name": "AUTH-RPT-001 view-only (no view_all) is DENIED an EMPLOYEE-level preview (403)",
-          "line": 290
+          "line": 291
         },
         {
           "name": "RPT-HIS-01 history/list returns a keyset page (empty until file exports)",
-          "line": 297
+          "line": 298
         },
         {
           "name": "FSM-RPT-001 / MUT-RPT-001 enqueue a CSV export → queued + jobId (+ event/audit)",
-          "line": 308
+          "line": 309
         },
         {
           "name": "RPT-IDEM-01 same idempotency key returns the SAME job",
-          "line": 323
+          "line": 324
         },
         {
           "name": "AUTH-RPT-003 file export requires reports.export (view-only denied)",
-          "line": 331
+          "line": 332
         },
         {
           "name": "missing/blank idempotencyKey on a file export → 400",
-          "line": 337
+          "line": 338
         },
         {
           "name": "INT-RPT-001 the worker generates the artifact; status → succeeded (checksum + audit)",
-          "line": 343
+          "line": 344
         },
         {
           "name": "RPT-HIS-02 the generated artifact now appears in history",
-          "line": 363
+          "line": 364
         },
         {
           "name": "RPT-STA-05 a non-owner basic viewer gets 404 (no leak)",
-          "line": 369
+          "line": 370
         },
         {
           "name": "RPT-DL-01 owner-with-export downloads → {url, expiresAt}; TTL ≈ 120s; +1 audit",
-          "line": 380
+          "line": 381
         },
         {
           "name": "RPT-DL-02 a fresh URL is issued per action (audit increments again)",
-          "line": 390
+          "line": 391
         },
         {
           "name": "AUTH-RPT-003b a viewer without reports.export is DENIED download (403)",
-          "line": 397
+          "line": 398
         },
         {
           "name": "RPT-DL-04 an unknown artifactId → 404",
-          "line": 402
+          "line": 403
         },
         {
           "name": "RPT-ORPH-01 reconciler removes a fresh orphan object + bumps cleanup (row kept < 24h)",
-          "line": 431
+          "line": 432
         },
         {
           "name": "RPT-ORPH-02 a COMMITTED artifact object is never removed by the reconciler",
-          "line": 443
+          "line": 444
         },
         {
           "name": "RPT-ORPH-03 concurrent reconcilers are safe (no crash, no error)",
-          "line": 448
+          "line": 449
         },
         {
           "name": "RPT-ORPH-04 an AGED orphan (>24h, cleaned once) has its ledger row deleted",
-          "line": 457
+          "line": 458
         },
         {
           "name": "RPT-PRG-01 a retention-expired artifact is purged: ONE purged event, object gone",
-          "line": 470
+          "line": 471
         },
         {
           "name": "RPT-PRG-02 same-token finalize replay → duplicate, still exactly one event",
-          "line": 487
+          "line": 507
         },
         {
           "name": "RPT-PRG-03 a stale/different purge token is rejected even after purged",
-          "line": 498
+          "line": 518
         },
         {
           "name": "RPT-DL-05 download of a purged artifact → 410",
-          "line": 505
+          "line": 525
         },
         {
           "name": "RPT-HIS-03 history reflects the purged artifact status",
-          "line": 510
+          "line": 530
         },
         {
           "name": "MAINT-01 an exporter WITHOUT reports.maintain cannot drive the workers (403)",
-          "line": 520
+          "line": 540
         },
         {
           "name": "REAP-01 a stuck running job at max attempts is reaped to failed (one failed event)",
-          "line": 531
+          "line": 551
         },
         {
-          "name": "APPEND-01 an artifact evidence column is immutable; retention/purge columns are not",
-          "line": 553
+          "name": "APPEND-01 evidence AND retention are immutable; only purge columns may change",
+          "line": 573
         },
         {
           "name": "CSVINJ-01 a formula-leading text cell is neutralized in the CSV export",
-          "line": 572
+          "line": 595
         },
         {
           "name": "FENCE-01 an attempt reclaimed by the reconciler cannot be completed (P0)",
-          "line": 590
+          "line": 613
         },
         {
           "name": "RPT-LOG-01 a preview writes exactly one audit row and NO business event",
-          "line": 623
+          "line": 646
         }
       ],
       "apiPaths": [

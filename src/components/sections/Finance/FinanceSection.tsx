@@ -85,7 +85,12 @@ export function FinanceSection(): VNode {
   if (sectionId === PAYROLL_RUNS_ID)  return <PayrollRunRegisterPage />;
   if (sectionId === PAYROLL_EXCEPTIONS_ID) return <PayrollExceptionQueuePage />;
   if (sectionId === PAYSLIP_BATCHES_ID) return <PayrollPayslipBatchesPage />;
-  if (sectionId === PAYROLL_REPORTS_ID) return <PayrollReportsPage />;
+  if (sectionId === PAYROLL_REPORTS_ID)
+    return can('finance.payroll.reports.view')
+      ? <PayrollReportsPage />
+      : <div style="padding:48px;text-align:center;color:var(--muted,#8a93ab);font-size:14px;">
+          You don't have permission to view payroll reports.
+        </div>;
   if (sectionId === PAYROLL_SETUP_ID) return <PayrollSetupOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;

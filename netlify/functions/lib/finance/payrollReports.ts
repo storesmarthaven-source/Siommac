@@ -57,7 +57,7 @@ export async function reportRegister(opts: {
   if (opts.toPeriod)   q = q.lte('period_month', opts.toPeriod);
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('reportRegister: ' + error.message), { status: 500 });
-  return result('register', (data ?? []) as ReportRow[]);
+  return result('register', data);
 }
 
 // ── Payslip register ──────────────────────────────────────────────────────────
@@ -69,7 +69,7 @@ export async function reportPayslipRegister(opts: { runId?: string; limit?: numb
   if (opts.runId) q = q.eq('run_id', opts.runId);
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('reportPayslipRegister: ' + error.message), { status: 500 });
-  return result('payslip_register', (data ?? []) as ReportRow[]);
+  return result('payslip_register', data);
 }
 
 // ── Net-pay summary ───────────────────────────────────────────────────────────
@@ -80,7 +80,7 @@ export async function reportNetPaySummary(runId: string): Promise<ReportResult> 
       .eq('run_id', runId).order('id'),
   );
   // Sort by net descending after full fetch (stable paging requires order('id'), not order('net')).
-  rows.sort((a, b) => Number(b['net'] ?? 0) - Number(a['net'] ?? 0));
+  rows.sort((a, b) => Number(b.net ?? 0) - Number(a.net ?? 0));
   return result('net_pay_summary', rows);
 }
 
@@ -121,7 +121,7 @@ export async function reportPayeSummary(runId: string): Promise<ReportResult> {
       .select('employee_id, taxable_gross, chargeable_income, paye, department_id')
       .eq('run_id', runId).order('id'),
   );
-  rows.sort((a, b) => Number(b['paye'] ?? 0) - Number(a['paye'] ?? 0));
+  rows.sort((a, b) => Number(b.paye ?? 0) - Number(a.paye ?? 0));
   return result('paye_summary', rows);
 }
 
@@ -147,14 +147,14 @@ export async function reportCostByDepartment(runId: string): Promise<ReportResul
 
   const agg = new Map<string, { gross: number; net: number; nisEmployee: number; nisEmployer: number; paye: number; hs: number; count: number }>();
   for (const row of data) {
-    const deptId = (row['department_id'] as string | null) ?? '__unassigned__';
+    const deptId = (row.department_id as string | null) ?? '__unassigned__';
     const existing = agg.get(deptId) ?? { gross: 0, net: 0, nisEmployee: 0, nisEmployer: 0, paye: 0, hs: 0, count: 0 };
-    existing.gross       += Number(row['gross'] ?? 0);
-    existing.net         += Number(row['net'] ?? 0);
-    existing.nisEmployee += Number(row['nis_employee'] ?? 0);
-    existing.nisEmployer += Number(row['nis_employer'] ?? 0);
-    existing.paye        += Number(row['paye'] ?? 0);
-    existing.hs          += Number(row['health_surcharge'] ?? 0);
+    existing.gross       += Number(row.gross ?? 0);
+    existing.net         += Number(row.net ?? 0);
+    existing.nisEmployee += Number(row.nis_employee ?? 0);
+    existing.nisEmployer += Number(row.nis_employer ?? 0);
+    existing.paye        += Number(row.paye ?? 0);
+    existing.hs          += Number(row.health_surcharge ?? 0);
     existing.count       += 1;
     agg.set(deptId, existing);
   }
@@ -176,14 +176,14 @@ export async function reportCostByCostCenter(runId: string): Promise<ReportResul
 
   const agg = new Map<string, { gross: number; net: number; nisEmployee: number; nisEmployer: number; paye: number; hs: number; count: number }>();
   for (const row of data) {
-    const ccId = (row['cost_center_id'] as string | null) ?? '__unassigned__';
+    const ccId = (row.cost_center_id as string | null) ?? '__unassigned__';
     const existing = agg.get(ccId) ?? { gross: 0, net: 0, nisEmployee: 0, nisEmployer: 0, paye: 0, hs: 0, count: 0 };
-    existing.gross       += Number(row['gross'] ?? 0);
-    existing.net         += Number(row['net'] ?? 0);
-    existing.nisEmployee += Number(row['nis_employee'] ?? 0);
-    existing.nisEmployer += Number(row['nis_employer'] ?? 0);
-    existing.paye        += Number(row['paye'] ?? 0);
-    existing.hs          += Number(row['health_surcharge'] ?? 0);
+    existing.gross       += Number(row.gross ?? 0);
+    existing.net         += Number(row.net ?? 0);
+    existing.nisEmployee += Number(row.nis_employee ?? 0);
+    existing.nisEmployer += Number(row.nis_employer ?? 0);
+    existing.paye        += Number(row.paye ?? 0);
+    existing.hs          += Number(row.health_surcharge ?? 0);
     existing.count       += 1;
     agg.set(ccId, existing);
   }
@@ -204,7 +204,7 @@ export async function reportExportAudit(opts: { runId?: string; limit?: number }
   if (opts.runId) q = q.eq('run_id', opts.runId);
   const { data, error } = await q;
   if (error) throw Object.assign(new Error('reportExportAudit: ' + error.message), { status: 500 });
-  return result('export_audit', (data ?? []) as ReportRow[]);
+  return result('export_audit', data);
 }
 
 // ── NIS Continuity Register ───────────────────────────────────────────────────
@@ -225,18 +225,18 @@ export async function reportMissingNisNumber(runId: string): Promise<ReportResul
     .eq('warning_type', 'missing_nis_number')
     .order('employee_id');
   if (error) throw Object.assign(new Error('reportMissingNisNumber: ' + error.message), { status: 500 });
-  return result('missing_nis_number', (data ?? []) as ReportRow[]);
+  return result('missing_nis_number', data);
 }
 
 // ── Unverified NIS Profiles ───────────────────────────────────────────────────
 export async function reportUnverifiedNis(): Promise<ReportResult> {
-  const { data, error } = await sb.from('hr_employee_statutory_profiles')
+  // Paged so an all-scope NIS report is never truncated at PostgREST's 1000-row cap.
+  const rows = await selectAllRows<ReportRow>(() => sb.from('hr_employee_statutory_profiles')
     .select('employee_id, jurisdiction, nis_number, nis_status, nis_applicable, previous_employer_name, verified_at, created_at')
     .neq('nis_status', 'verified')
     .eq('nis_applicable', true)
-    .order('created_at');
-  if (error) throw Object.assign(new Error('reportUnverifiedNis: ' + error.message), { status: 500 });
-  return result('unverified_nis', (data ?? []) as ReportRow[]);
+    .order('created_at'));
+  return result('unverified_nis', rows);
 }
 
 // ── New Employee NIS Onboarding ───────────────────────────────────────────────
@@ -249,7 +249,7 @@ export async function reportNewEmployeeNisOnboarding(opts: { daysBack?: number }
     .gte('created_at', since.toISOString())
     .order('created_at', { ascending: false });
   if (error) throw Object.assign(new Error('reportNewEmployeeNisOnboarding: ' + error.message), { status: 500 });
-  return result('new_employee_nis_onboarding', (data ?? []) as ReportRow[]);
+  return result('new_employee_nis_onboarding', data);
 }
 
 // ── NIS Opening Balance ───────────────────────────────────────────────────────
@@ -259,7 +259,7 @@ export async function reportNisOpeningBalance(): Promise<ReportResult> {
     .gt('opening_ytd_nis_employee', 0)
     .order('employee_id');
   if (error) throw Object.assign(new Error('reportNisOpeningBalance: ' + error.message), { status: 500 });
-  return result('nis_opening_balance', (data ?? []) as ReportRow[]);
+  return result('nis_opening_balance', data);
 }
 
 // ── NIS Exceptions (warnings with blocker/warning severity) ─────────────────
@@ -271,7 +271,7 @@ export async function reportNisExceptions(runId: string): Promise<ReportResult> 
     .order('severity')
     .order('employee_id');
   if (error) throw Object.assign(new Error('reportNisExceptions: ' + error.message), { status: 500 });
-  return result('nis_exceptions', (data ?? []) as ReportRow[]);
+  return result('nis_exceptions', data);
 }
 
 // ── Dispatch: route report key to handler ────────────────────────────────────
@@ -298,7 +298,7 @@ export type PayrollReportKey =
 
 // ── Run diff (base → compare) shared by variation + audit comparison ─────────────
 interface DiffLine { employee_id: string; gross: number; paye: number; nis_employee: number; health_surcharge: number; net: number }
-const r2 = (n: number): number => Math.round((Number(n) || 0) * 100) / 100;
+const r2 = (n: number): number => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
 
 async function diffRuns(baseRunId: string, compareRunId: string, report: string): Promise<ReportResult> {
   // Paginate both sides independently — large runs truncate at 1000 rows without this.
@@ -326,7 +326,7 @@ async function diffRuns(baseRunId: string, compareRunId: string, report: string)
       prev_net: r2(b?.net ?? 0),     net: r2(c?.net ?? 0),     net_delta: netDelta,
       prev_paye: r2(b?.paye ?? 0),   paye: r2(c?.paye ?? 0),   paye_delta: payeDelta,
       prev_nis: r2(b?.nis_employee ?? 0), nis_employee: r2(c?.nis_employee ?? 0), nis_delta: nisDelta,
-    } as ReportRow;
+    };
   });
   return result(report, rows);
 }
@@ -354,82 +354,82 @@ export async function runPayrollReport(
   switch (key) {
     case 'register':
       return reportRegister({
-        status:     typeof params['status'] === 'string' ? params['status'] : undefined,
-        fromPeriod: typeof params['fromPeriod'] === 'string' ? params['fromPeriod'] : undefined,
-        toPeriod:   typeof params['toPeriod'] === 'string' ? params['toPeriod'] : undefined,
-        limit:      typeof params['limit'] === 'number' ? params['limit'] : undefined,
+        status:     typeof params.status === 'string' ? params.status : undefined,
+        fromPeriod: typeof params.fromPeriod === 'string' ? params.fromPeriod : undefined,
+        toPeriod:   typeof params.toPeriod === 'string' ? params.toPeriod : undefined,
+        limit:      typeof params.limit === 'number' ? params.limit : undefined,
       });
 
     case 'payslip_register':
       return reportPayslipRegister({
-        runId: typeof params['runId'] === 'string' ? params['runId'] : undefined,
-        limit: typeof params['limit'] === 'number' ? params['limit'] : undefined,
+        runId: typeof params.runId === 'string' ? params.runId : undefined,
+        limit: typeof params.limit === 'number' ? params.limit : undefined,
       });
 
     case 'net_pay_summary':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for net_pay_summary.'), { status: 422 });
-      return reportNetPaySummary(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for net_pay_summary.'), { status: 422 });
+      return reportNetPaySummary(params.runId as string);
 
     case 'employer_nis_summary':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for employer_nis_summary.'), { status: 422 });
-      return reportEmployerNisSummary(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for employer_nis_summary.'), { status: 422 });
+      return reportEmployerNisSummary(params.runId as string);
 
     case 'nis_remittance':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for nis_remittance.'), { status: 422 });
-      return reportNisRemittance(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for nis_remittance.'), { status: 422 });
+      return reportNisRemittance(params.runId as string);
 
     case 'paye_summary':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for paye_summary.'), { status: 422 });
-      return reportPayeSummary(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for paye_summary.'), { status: 422 });
+      return reportPayeSummary(params.runId as string);
 
     case 'hs_summary':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for hs_summary.'), { status: 422 });
-      return reportHsSummary(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for hs_summary.'), { status: 422 });
+      return reportHsSummary(params.runId as string);
 
     case 'cost_by_department':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for cost_by_department.'), { status: 422 });
-      return reportCostByDepartment(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for cost_by_department.'), { status: 422 });
+      return reportCostByDepartment(params.runId as string);
 
     case 'cost_by_cost_center':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for cost_by_cost_center.'), { status: 422 });
-      return reportCostByCostCenter(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for cost_by_cost_center.'), { status: 422 });
+      return reportCostByCostCenter(params.runId as string);
 
     case 'export_audit':
       return reportExportAudit({
-        runId: typeof params['runId'] === 'string' ? params['runId'] : undefined,
-        limit: typeof params['limit'] === 'number' ? params['limit'] : undefined,
+        runId: typeof params.runId === 'string' ? params.runId : undefined,
+        limit: typeof params.limit === 'number' ? params.limit : undefined,
       });
 
     case 'nis_continuity':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for nis_continuity.'), { status: 422 });
-      return reportNisContinuity(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for nis_continuity.'), { status: 422 });
+      return reportNisContinuity(params.runId as string);
 
     case 'missing_nis_number':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for missing_nis_number.'), { status: 422 });
-      return reportMissingNisNumber(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for missing_nis_number.'), { status: 422 });
+      return reportMissingNisNumber(params.runId as string);
 
     case 'unverified_nis':
       return reportUnverifiedNis();
 
     case 'new_employee_nis_onboarding':
       return reportNewEmployeeNisOnboarding({
-        daysBack: typeof params['daysBack'] === 'number' ? params['daysBack'] : undefined,
+        daysBack: typeof params.daysBack === 'number' ? params.daysBack : undefined,
       });
 
     case 'nis_opening_balance':
       return reportNisOpeningBalance();
 
     case 'nis_exceptions':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for nis_exceptions.'), { status: 422 });
-      return reportNisExceptions(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for nis_exceptions.'), { status: 422 });
+      return reportNisExceptions(params.runId as string);
 
     case 'variation':
-      if (!params['runId']) throw Object.assign(new Error('runId is required for variation.'), { status: 422 });
-      return reportVariation(params['runId'] as string);
+      if (!params.runId) throw Object.assign(new Error('runId is required for variation.'), { status: 422 });
+      return reportVariation(params.runId as string);
 
     case 'audit_comparison':
-      if (!params['runId'] || !params['compareRunId']) throw Object.assign(new Error('runId and compareRunId are required for audit_comparison.'), { status: 422 });
-      return reportAuditComparison(params['runId'] as string, params['compareRunId'] as string);
+      if (!params.runId || !params.compareRunId) throw Object.assign(new Error('runId and compareRunId are required for audit_comparison.'), { status: 422 });
+      return reportAuditComparison(params.runId as string, params.compareRunId as string);
 
     default:
       throw Object.assign(new Error(`Unknown payroll report: '${key as string}'.`), { status: 422 });
