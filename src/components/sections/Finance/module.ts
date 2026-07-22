@@ -43,8 +43,9 @@ const PAYROLL_ITEM: ModuleNavItem = {
 
 // F-14 — every payroll operational page nests under the "Payroll" parent
 // (s-finance-payroll, which routes to the Command Center): Runs, Approvals &
-// Exceptions, Payslip Batches, Reports, Payroll Setup and Payslip Designer. The
-// sub-menu is expanded by default (see navCore) so these are reachable out of the box.
+// Exceptions, Payslip Batches, Reports, Payroll Setup, Payslip Designer, Bank
+// Disbursements and Statutory Forms. The sub-menu is expanded by default (see
+// navCore) so these are reachable out of the box.
 const PAYROLL_RUNS_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-runs',
   label: 'Payroll Runs',
@@ -122,6 +123,7 @@ const DISBURSEMENTS_ITEM: ModuleNavItem = {
   id: 's-finance-disbursements',
   label: 'Bank Disbursements',
   icon: 'fa-building-columns',
+  parent: 's-finance-payroll',
   sub: 'EFT bank file generation and net-pay disbursements from approved payroll runs',
 };
 
@@ -129,6 +131,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
   id: 's-finance-statutory-forms',
   label: 'Statutory Forms',
   icon: 'fa-file-contract',
+  parent: 's-finance-payroll',
   sub: 'Year-end BIR TD4 + TD4 Summary and NIBTT NI184/NI187 generated from locked payroll runs',
 };
 
