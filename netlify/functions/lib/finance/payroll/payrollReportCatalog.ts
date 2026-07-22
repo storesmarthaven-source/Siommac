@@ -800,7 +800,7 @@ export async function computeReportSummary(caller: { canViewAll: boolean; canExp
   let auditPackages: ReportKpiTile = TILE_NA;
   if (caller.canExport) {
     const { count } = await sb.from('payroll_report_artifacts')
-      .select('id, payroll_report_jobs!inner(report_key)', { count: 'exact', head: true })
+      .select('id, payroll_report_jobs!job_id!inner(report_key)', { count: 'exact', head: true })
       .gte('created_at', monthStartIso)
       .eq('payroll_report_jobs.report_key', 'export_audit_package');
     auditPackages = tile(count ?? 0);
@@ -837,8 +837,10 @@ export async function listReportHistory(
   opts: { cursor?: string; limit?: number; reportKey?: PayrollReportKey },
 ): Promise<PageResult<ReportArtifactRow>> {
   const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
+  // Disambiguate the embed: two FKs exist between artifacts and jobs
+  // (artifacts.job_id → jobs, and jobs.artifact_id → artifacts). Hint the job_id FK.
   let q = sb.from('payroll_report_artifacts')
-    .select('id, scope_id, format, byte_size, sha256, row_count, retention_class, retention_expires_at, requires_view_all, requires_export, purge_state, created_by, created_at, payroll_report_jobs!inner(report_key)')
+    .select('id, scope_id, format, byte_size, sha256, row_count, retention_class, retention_expires_at, requires_view_all, requires_export, purge_state, created_by, created_at, payroll_report_jobs!job_id!inner(report_key)')
     .order('created_at', { ascending: false }).order('id', { ascending: false })
     .limit(limit + 1);
   if (!caller.canExport) q = q.eq('requires_export', false);
