@@ -155,7 +155,7 @@ type ReportParams =
   | { report:'variance_analysis'; runId:string; compareRunId?:string /* omit ⇒ prior released; if set, ≠ runId */ }
   | { report:'overtime_allowance_analysis'; period:Period; groupBy?:'department'|'cost_centre'|'pay_group';
       thresholdMode?:'all'|'exceptions' }
-  | { report:'population_movements'; period:Period; movementType?:'all'|'hires_leavers'|'transfers'|'leave';
+  | { report:'population_movements'; period:Period; movementType?:'all'|'hires_leavers'|'leave' /* Phase-A: NO 'transfers' — DEC-RPT-034 */;
       evidenceStatus?:'all'|'missing'|'verified' }
   | { report:'nis_exceptions'; scope:'run'|'all'; runId?:string /* required iff scope='run'; forbidden iff 'all' */;
       status?:'open'|'all'; ownerId?:string }
@@ -194,7 +194,7 @@ interface VarianceRow { measure: string; value: VarianceValue; changePct: number
 interface OvertimeRow { department: string; employees: number; overtimeHours: number;
   overtimeCost: MoneyValue; allowanceCost: MoneyValue; controlStatus: 'approved'|'threshold'|'review' }
 interface PopulationMovementRow { employeeId: string; employeeName: string;
-  movement: 'hire'|'transfer'|'unpaid_leave'|'leaver'; effectiveDate: string;
+  movement: 'hire'|'unpaid_leave'|'leaver' /* Phase-A: NO 'transfer' — DEC-RPT-034 */; effectiveDate: string;
   priorAssignment: string; currentAssignment: string; payrollImpact: string; evidence: string }
 interface NisExceptionRow { employeeId: string; employeeName: string; nisNumber: string | null; nisClass: string;
   profileStatus: 'unverified'|'continuity_review'; payrollImpact: string; owner: string }
@@ -419,7 +419,11 @@ request params union frozen with `params.report` as the sole discriminant and an
 **029 VarianceValue + unit-aware ChartSeries (R5-4)** · **030 purge token checked before every state branch;
 token-checked purge_fail (R6-4)** · **031 upload-attempt ledger + 24h repeated-removal quarantine for uncommitted
 Storage objects (R6-5)** · **032 state-discriminated job status DTO (R6-6)** · **033 signed download URL TTL=120s,
-memory-only (R6-7)**.
+memory-only (R6-7)** · **034 (Phase-A scope, user-approved 2026-07-22) `population_movements` ships hires/leavers/leave
+ONLY — `transfers` is REMOVED from the DTO enum, filter options, charts, tests and catalog description because there
+is no first-class HR transfer source table. Deriving transfers from department/cost-centre change history is
+explicitly out of scope. Phase-B gap: add an HR transfer/movement model first, then re-add transfer movements +
+update the DTO enum + E2E.**
 
 **Product decision — RESOLVED (R7):** Phase A seeds **no** monetary/percentage threshold. Statutory reconciliation
 uses **exact matching (zero tolerance)** — `balanced` iff every source difference is exactly 0. The optional internal

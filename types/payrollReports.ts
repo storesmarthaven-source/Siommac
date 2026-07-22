@@ -117,7 +117,11 @@ export const reportParamsSchema = z.discriminatedUnion('report', [
   z.object({
     report: z.literal('population_movements'),
     period: Period,
-    movementType: z.enum(['all', 'hires_leavers', 'transfers', 'leave']).optional(),
+    // Phase A: hires/leavers/leave only. `transfers` is a Phase-B gap — there is
+    // no first-class HR transfer source table yet, and deriving it from
+    // department-change history is explicitly out of scope. Do NOT re-add
+    // 'transfers' here until the HR transfer model exists.
+    movementType: z.enum(['all', 'hires_leavers', 'leave']).optional(),
     evidenceStatus: z.enum(['all', 'missing', 'verified']).optional(),
   }).strict(),
   z.object({
@@ -244,7 +248,8 @@ export interface OvertimeRow {
 export interface PopulationMovementRow {
   employeeId: string;
   employeeName: string;
-  movement: 'hire' | 'transfer' | 'unpaid_leave' | 'leaver';
+  // Phase A: no 'transfer' — no first-class HR transfer source yet (Phase-B gap).
+  movement: 'hire' | 'unpaid_leave' | 'leaver';
   effectiveDate: string;
   priorAssignment: string;
   currentAssignment: string;
