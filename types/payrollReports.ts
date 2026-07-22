@@ -101,7 +101,11 @@ export const reportParamsSchema = z.discriminatedUnion('report', [
   z.object({
     report: z.literal('gross_to_net_reconciliation'),
     runId: uuid,
-    compareAgainst: z.enum(['outputs', 'gl']).optional(),
+    // Phase A: 'outputs' only (run header totals vs SUM of run lines — exact,
+    // zero-tolerance integrity check). 'gl' reconciliation is DEC-RPT-035 Phase-B
+    // (needs the confirmed component→GL-account mapping + journal-per-run linkage;
+    // not guessed). Field kept for forward-compat.
+    compareAgainst: z.literal('outputs').optional(),
   }).strict(),
   z.object({
     report: z.literal('variance_analysis'),

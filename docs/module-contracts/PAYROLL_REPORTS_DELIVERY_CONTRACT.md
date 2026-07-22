@@ -151,7 +151,7 @@ type ReportParams =
   | { report:'net_pay_summary'; runId:string; groupBy?:'pay_group'|'department'|'cost_centre' }
   | { report:'payroll_cost_analysis'; period:Period; groupBy?:'department_cost_centre'|'pay_group';
       include?:'gross_net_employer'|'gross_net' }
-  | { report:'gross_to_net_reconciliation'; runId:string; compareAgainst?:'outputs'|'gl' } /* exact match, no tolerance */
+  | { report:'gross_to_net_reconciliation'; runId:string; compareAgainst?:'outputs' /* Phase-A: 'gl' deferred, DEC-RPT-035 */ } /* exact match, no tolerance */
   | { report:'variance_analysis'; runId:string; compareRunId?:string /* omit ⇒ prior released; if set, ≠ runId */ }
   | { report:'overtime_allowance_analysis'; period:Period; groupBy?:'department'|'cost_centre'|'pay_group';
       thresholdMode?:'all'|'exceptions' }
@@ -423,7 +423,11 @@ memory-only (R6-7)** · **034 (Phase-A scope, user-approved 2026-07-22) `populat
 ONLY — `transfers` is REMOVED from the DTO enum, filter options, charts, tests and catalog description because there
 is no first-class HR transfer source table. Deriving transfers from department/cost-centre change history is
 explicitly out of scope. Phase-B gap: add an HR transfer/movement model first, then re-add transfer movements +
-update the DTO enum + E2E.**
+update the DTO enum + E2E.** · **035 (Phase-A scope, 2026-07-22) `gross_to_net_reconciliation` implements
+`compareAgainst:'outputs'` ONLY — run header totals vs SUM of run lines (exact match, zero tolerance). The
+`'gl'` comparison is deferred to Phase B: it needs the confirmed `finance_payroll_gl_mappings`
+component→account mapping + journal-per-run linkage semantics, which are NOT guessed. Field kept for
+forward-compat.**
 
 **Product decision — RESOLVED (R7):** Phase A seeds **no** monetary/percentage threshold. Statutory reconciliation
 uses **exact matching (zero tolerance)** — `balanced` iff every source difference is exactly 0. The optional internal
