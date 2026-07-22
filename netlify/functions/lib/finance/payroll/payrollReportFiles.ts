@@ -88,7 +88,7 @@ export interface RenderedFile extends FileBytes { rowCount: number }
 // so numeric values (incl. negatives like -500) are never mangled.
 const FORMULA_LEAD = /^[=+\-@\t\r]/;
 const CSV_ESCAPE = (v: Cell): string => {
-  let s = String(v ?? '');
+  let s = String(v);
   if (typeof v === 'string' && FORMULA_LEAD.test(s)) s = `'${s}`;
   return /[",\r\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
 };
@@ -116,7 +116,7 @@ function renderPdf(t: ReportTable, generatedAt: string): Promise<FileBytes> {
       const drawRow = (cells: Cell[], bold: boolean): void => {
         const y = doc.y;
         doc.font(bold ? 'Helvetica-Bold' : 'Helvetica').fontSize(8);
-        cells.forEach((c, i) => doc.text(String(c ?? ''), 36 + i * colW, y, { width: colW - 4, ellipsis: true }));
+        cells.forEach((c, i) => doc.text(String(c), 36 + i * colW, y, { width: colW - 4, ellipsis: true }));
         doc.moveDown(0.2);
         if (doc.y > doc.page.height - 48) doc.addPage();
       };
@@ -125,7 +125,7 @@ function renderPdf(t: ReportTable, generatedAt: string): Promise<FileBytes> {
       if (!t.rows.length) doc.font('Helvetica-Oblique').fontSize(9).text('No rows for this selection.');
       for (const r of t.rows) drawRow(r, false);
       doc.end();
-    } catch (e) { reject(e as Error); }
+    } catch (e) { reject(e instanceof Error ? e : new Error('PDF render failed')); }
   });
 }
 

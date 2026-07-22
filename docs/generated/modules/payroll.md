@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `35958fcd545d9471e603d121`
+Source fingerprint: `37fc953a727c8678c8f3a7dc`
 
-Files: 175 | Symbols: 1778 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 237 | E2E suites: 24
+Files: 175 | Symbols: 1780 | Widgets: 10 | Unique mounted endpoints: 135 | Route definitions: 135 mounted + 0 unmounted | API calls: 5 | DB objects: 237 | E2E suites: 24
 
 ## Widgets and Tiles
 
@@ -232,7 +232,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:274` | `-` |
 | `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:65` | `-` |
 | `PayrollPayslipBatchesPage` | function / component | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx:37` | `-` |
-| `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:62` | `-` |
+| `PayrollReportsPage` | function / component | `src/components/sections/Finance/PayrollReportsPage.tsx:65` | `-` |
 | `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:74` | `-` |
 | `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
@@ -493,7 +493,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 421 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
 | frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 190 |
-| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 480 |
+| frontend-page | `src/components/sections/Finance/PayrollReportsPage.tsx` | 483 |
 | frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payrollReportsContract.test.ts` | 43 |

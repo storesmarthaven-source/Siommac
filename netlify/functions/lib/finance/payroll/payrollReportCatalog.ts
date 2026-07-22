@@ -80,7 +80,7 @@ const ALLOWANCE_CODES = new Set(['housing_allowance', 'travel_allowance', 'meal_
 const PREVIEW_ROW_CAP = 5000;
 
 // ── small helpers ────────────────────────────────────────────────────────────
-const r2 = (n: number): number => Math.round((Number(n) || 0) * 100) / 100;
+const r2 = (n: number): number => Math.round((Number.isFinite(n) ? n : 0) * 100) / 100;
 const money = (n: number): MoneyValue => ({ amount: r2(n), currency: 'TTD' });
 const err = (status: number, message: string): Error & { status: number } =>
   Object.assign(new Error(message), { status });
@@ -190,11 +190,11 @@ async function resolveNames(ids: string[]): Promise<Map<string, string>> {
       .select('id, full_name, first_name, last_name, username')
       .in('id', c);
     if (error) throw err(500, 'resolveNames: ' + error.message);
-    for (const u of (data ?? []) as Array<{ id: string; full_name: string | null; first_name: string | null; last_name: string | null; username: string | null }>) {
+    for (const u of data as { id: string; full_name: string | null; first_name: string | null; last_name: string | null; username: string | null }[]) {
       const name =
         (u.full_name ?? '').trim() ||
         [u.first_name, u.last_name].filter(Boolean).join(' ').trim() ||
-        u.username ||
+        (u.username ?? '') ||
         u.id;
       map.set(u.id, name);
     }
@@ -207,7 +207,7 @@ async function resolveDepartments(ids: string[]): Promise<Map<string, string>> {
   for (const c of chunk(uniq, 300)) {
     const { data, error } = await sb.from('departments').select('id, name').in('id', c);
     if (error) throw err(500, 'resolveDepartments: ' + error.message);
-    for (const d of (data ?? []) as Array<{ id: string; name: string | null }>) {
+    for (const d of data as { id: string; name: string | null }[]) {
       map.set(d.id, d.name ?? d.id);
     }
   }
@@ -219,7 +219,7 @@ async function resolveCostCentres(ids: string[]): Promise<Map<string, string>> {
   for (const c of chunk(uniq, 300)) {
     const { data, error } = await sb.from('finance_cost_centers').select('id, name').in('id', c);
     if (error) throw err(500, 'resolveCostCentres: ' + error.message);
-    for (const cc of (data ?? []) as Array<{ id: string; name: string | null }>) {
+    for (const cc of data as { id: string; name: string | null }[]) {
       map.set(cc.id, cc.name ?? cc.id);
     }
   }
@@ -228,7 +228,7 @@ async function resolveCostCentres(ids: string[]): Promise<Map<string, string>> {
 
 function controlTotals(lines: LineRow[]): ReportControlTotals {
   let gross = 0, net = 0;
-  for (const l of lines) { gross += Number(l.gross ?? 0); net += Number(l.net ?? 0); }
+  for (const l of lines) { gross += (l.gross ?? 0); net += (l.net ?? 0); }
   return {
     employees: lines.length,
     gross: money(gross),
@@ -248,7 +248,7 @@ async function loadPeriodRuns(from: string, to: string): Promise<RunRow[]> {
     .in('status', ['locked', 'released', 'exported'])
     .order('period_month');
   if (error) throw err(500, 'loadPeriodRuns: ' + error.message);
-  return (data ?? []) as unknown as RunRow[];
+  return data;
 }
 
 // ════════════════════════════════════════════════════════════════════════════
@@ -269,11 +269,11 @@ async function computeRegister(p: Extract<ReportParams, { report: 'payroll_regis
       employeeId: l.employee_id,
       employeeName: names.get(l.employee_id) ?? l.employee_id,
       payGroup: run.pay_group ?? '—',
-      gross: money(Number(l.gross ?? 0)),
-      paye: money(Number(l.paye ?? 0)),
-      nis: money(Number(l.nis_employee ?? 0)),
-      other: money(Number(l.voluntary_deductions ?? 0)),
-      net: money(Number(l.net ?? 0)),
+      gross: money(l.gross ?? 0),
+      paye: money(l.paye ?? 0),
+      nis: money(l.nis_employee ?? 0),
+      other: money(l.voluntary_deductions ?? 0),
+      net: money(l.net ?? 0),
     }))
     .sort((a, b) => a.employeeId.localeCompare(b.employeeId));
   return {
@@ -316,8 +316,8 @@ async function computeNetPaySummary(p: Extract<ReportParams, { report: 'net_pay_
   for (const l of lines) {
     const k = keyOf(l);
     const g = groups.get(k) ?? { gross: 0, net: 0, employees: 0, blocker: false, warning: false };
-    g.gross += Number(l.gross ?? 0);
-    g.net += Number(l.net ?? 0);
+    g.gross += (l.gross ?? 0);
+    g.net += (l.net ?? 0);
     g.employees += 1;
     const w = worst.get(l.employee_id);
     if (w === 'blocker') g.blocker = true;
@@ -331,6 +331,7 @@ async function computeNetPaySummary(p: Extract<ReportParams, { report: 'net_pay_
       gross: money(g.gross),
       deductions: money(g.gross - g.net),
       net: money(g.net),
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- narrows the string ternary to the readiness union (tsc needs it)
       readiness: (g.blocker ? 'held' : g.warning ? 'review' : 'ready') as NetPaySummaryRow['readiness'],
     }))
     .sort((a, b) => a.group.localeCompare(b.group));
@@ -385,15 +386,15 @@ async function computeCostAnalysis(p: Extract<ReportParams, { report: 'payroll_c
   for (const l of curLines) {
     const { key, dept, cc } = label(l);
     const g = cur.get(key) ?? { dept, cc, gross: 0, employer: 0, employees: 0 };
-    g.gross += Number(l.gross ?? 0);
-    g.employer += Number(l.gross ?? 0) + (includeEmployer ? Number(l.nis_employer ?? 0) + Number(l.health_surcharge ?? 0) : 0);
+    g.gross += (l.gross ?? 0);
+    g.employer += (l.gross ?? 0) + (includeEmployer ? (l.nis_employer ?? 0) + (l.health_surcharge ?? 0) : 0);
     g.employees += 1;
     cur.set(key, g);
   }
   const priorGross = new Map<string, number>();
   for (const l of priorLines) {
     const { key } = label(l);
-    priorGross.set(key, (priorGross.get(key) ?? 0) + Number(l.gross ?? 0));
+    priorGross.set(key, (priorGross.get(key) ?? 0) + (l.gross ?? 0));
   }
 
   const rows: CostRow[] = [...cur.entries()]
@@ -431,9 +432,9 @@ async function computeReconciliation(p: Extract<ReportParams, { report: 'gross_t
   const lines = await loadRunLines(p.runId);
   let gross = 0, net = 0, nisEmployer = 0;
   for (const l of lines) {
-    gross += Number(l.gross ?? 0);
-    net += Number(l.net ?? 0);
-    nisEmployer += Number(l.nis_employer ?? 0);
+    gross += (l.gross ?? 0);
+    net += (l.net ?? 0);
+    nisEmployer += (l.nis_employer ?? 0);
   }
   const src = (source: string, register: number, summary: number): ReconciliationSource => {
     const diff = r2(register - summary);
@@ -447,10 +448,10 @@ async function computeReconciliation(p: Extract<ReportParams, { report: 'gross_t
     };
   };
   const sources: ReconciliationSource[] = [
-    src('gross', gross, Number(run.gross_total ?? 0)),
-    src('deductions', gross - net, Number(run.deduction_total ?? 0)),
-    src('net', net, Number(run.net_total ?? 0)),
-    src('nis_employer', nisEmployer, Number(run.nis_employer_total ?? 0)),
+    src('gross', gross, (run.gross_total ?? 0)),
+    src('deductions', gross - net, (run.deduction_total ?? 0)),
+    src('net', net, (run.net_total ?? 0)),
+    src('nis_employer', nisEmployer, (run.nis_employer_total ?? 0)),
   ];
   const reconciliation: ReconciliationResult = {
     scopeId: scopeIdFor({ report: 'gross_to_net_reconciliation', runId: p.runId, cv: run.current_calculation_version_id }),
@@ -471,8 +472,8 @@ async function sumMeasures(runId: string): Promise<{ gross: number; net: number;
   const lines = await loadRunLines(runId);
   let gross = 0, net = 0, paye = 0, nis = 0;
   for (const l of lines) {
-    gross += Number(l.gross ?? 0); net += Number(l.net ?? 0);
-    paye += Number(l.paye ?? 0); nis += Number(l.nis_employee ?? 0);
+    gross += (l.gross ?? 0); net += (l.net ?? 0);
+    paye += (l.paye ?? 0); nis += (l.nis_employee ?? 0);
   }
   return { gross, net, paye, nis, employees: lines.length };
 }
@@ -559,8 +560,8 @@ async function computeOvertimeAllowance(p: Extract<ReportParams, { report: 'over
       else { const id = deptOf.get(c.employee_id) ?? ''; label = deptNames.get(id) ?? (id || 'Unassigned'); key = label; }
       const g = groups.get(key) ?? { key, label, employees: new Set<string>(), otHours: 0, otCost: 0, allowCost: 0 };
       g.employees.add(c.employee_id);
-      if (c.component_code === OVERTIME_CODE) { g.otHours += Number(c.quantity ?? 0); g.otCost += Number(c.amount ?? 0); }
-      else { g.allowCost += Number(c.amount ?? 0); }
+      if (c.component_code === OVERTIME_CODE) { g.otHours += (c.quantity ?? 0); g.otCost += (c.amount ?? 0); }
+      else { g.allowCost += (c.amount ?? 0); }
       groups.set(key, g);
     }
   }
@@ -574,6 +575,7 @@ async function computeOvertimeAllowance(p: Extract<ReportParams, { report: 'over
       overtimeHours: r2(g.otHours),
       overtimeCost: money(g.otCost),
       allowanceCost: money(g.allowCost),
+      // eslint-disable-next-line @typescript-eslint/no-unnecessary-type-assertion -- pins the literal to the controlStatus union (tsc needs it)
       controlStatus: 'approved' as OvertimeRow['controlStatus'],
     }))
     .sort((a, b) => a.department.localeCompare(b.department));
@@ -607,7 +609,7 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
       .select('id, start_date, department_id, status')
       .gte('start_date', from).lt('start_date', toExcl);
     if (error) throw err(500, 'population hires: ' + error.message);
-    for (const u of (data ?? []) as Array<{ id: string; start_date: string | null; department_id: string | null; status: string | null }>) {
+    for (const u of data as { id: string; start_date: string | null; department_id: string | null; status: string | null }[]) {
       if (!u.start_date) continue;
       raws.push({ employeeId: u.id, movement: 'hire', effectiveDate: u.start_date, prior: '—', current: '', impact: 'Added to payroll population', verified: u.status === 'active', deptId: u.department_id });
       empIds.push(u.id);
@@ -619,7 +621,7 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
       .select('employee_id, last_working_day, exit_date, status')
       .in('status', ['ready_for_exit', 'completed']);
     if (error) throw err(500, 'population leavers: ' + error.message);
-    for (const o of (data ?? []) as Array<{ employee_id: string; last_working_day: string | null; exit_date: string | null; status: string | null }>) {
+    for (const o of data as { employee_id: string; last_working_day: string | null; exit_date: string | null; status: string | null }[]) {
       const eff = o.last_working_day ?? o.exit_date;
       if (!eff || eff < from || eff >= toExcl) continue;
       raws.push({ employeeId: o.employee_id, movement: 'leaver', effectiveDate: eff, prior: '', current: '—', impact: 'Removed from payroll population', verified: o.status === 'completed', deptId: null });
@@ -630,14 +632,14 @@ async function computePopulationMovements(p: Extract<ReportParams, { report: 'po
   if (want === 'all' || want === 'leave') {
     const { data: unpaidTypes, error: typesErr } = await sb.from('hr_leave_types').select('id').eq('paid', false);
     if (typesErr) throw err(500, 'population leave types: ' + typesErr.message);
-    const unpaidIds = (unpaidTypes ?? []).map((t: { id: string }) => t.id);
+    const unpaidIds = (unpaidTypes as { id: string }[]).map(t => t.id);
     if (unpaidIds.length) {
       const { data, error } = await sb.from('hr_leave_requests')
         .select('employee_id, from_date, to_date, status, leave_type_id')
         .eq('status', 'approved').in('leave_type_id', unpaidIds)
         .lt('from_date', toExcl).gte('to_date', from);
       if (error) throw err(500, 'population unpaid leave: ' + error.message);
-      for (const lv of (data ?? []) as Array<{ employee_id: string; from_date: string; to_date: string; status: string }>) {
+      for (const lv of data as { employee_id: string; from_date: string; to_date: string; status: string }[]) {
         raws.push({ employeeId: lv.employee_id, movement: 'unpaid_leave', effectiveDate: lv.from_date, prior: '', current: '', impact: 'Unpaid leave period', verified: true, deptId: null });
         empIds.push(lv.employee_id);
       }
@@ -676,40 +678,42 @@ async function computeNisExceptions(p: Extract<ReportParams, { report: 'nis_exce
   if (p.scope === 'all' && p.runId) throw err(422, 'Do not supply a run when scope is "all".');
 
   const rows: NisExceptionRow[] = [];
+  // The legacy NIS engine rows are loosely typed (unknown values); coerce safely.
+  const str = (v: unknown): string => (typeof v === 'string' ? v : '');
   if (p.scope === 'run' && p.runId) {
     const run = await loadEligibleRun(p.runId);
     const warnings = await reportNisExceptions(p.runId);
     const lines = await loadRunLines(run.id);
     const lineOf = new Map(lines.map(l => [l.employee_id, l]));
-    const empIds = warnings.rows.map(w => String(w['employee_id'] ?? '')).filter(Boolean);
+    const empIds = warnings.rows.map(w => str(w.employee_id)).filter(Boolean);
     const names = await resolveNames(empIds);
     for (const w of warnings.rows) {
-      const eid = String(w['employee_id'] ?? '');
+      const eid = str(w.employee_id);
       if (!eid) continue;
       const line = lineOf.get(eid);
-      const status = String(line?.nis_status ?? 'unverified');
+      const status = line?.nis_status ?? 'unverified';
       rows.push({
         employeeId: eid,
         employeeName: names.get(eid) ?? eid,
         nisNumber: line?.nis_number_masked ?? null,
         nisClass: line?.nis_class_no != null ? String(line.nis_class_no) : '—',
         profileStatus: status === 'continuity_review' ? 'continuity_review' : 'unverified',
-        payrollImpact: String(w['message'] ?? ''),
+        payrollImpact: str(w.message),
         owner: '',
       });
     }
   } else {
     const unverified = await reportUnverifiedNis();
-    const empIds = unverified.rows.map(r => String(r['employee_id'] ?? '')).filter(Boolean);
+    const empIds = unverified.rows.map(r => str(r.employee_id)).filter(Boolean);
     const names = await resolveNames(empIds);
     for (const r of unverified.rows) {
-      const eid = String(r['employee_id'] ?? '');
+      const eid = str(r.employee_id);
       if (!eid) continue;
-      const st = String(r['nis_status'] ?? 'unverified');
+      const st = str(r.nis_status) || 'unverified';
       rows.push({
         employeeId: eid,
         employeeName: names.get(eid) ?? eid,
-        nisNumber: (r['nis_number'] as string | null) ?? null,
+        nisNumber: (r.nis_number as string | null) ?? null,
         nisClass: '—',
         profileStatus: st === 'continuity_review' ? 'continuity_review' : 'unverified',
         payrollImpact: 'NIS profile requires verification',
@@ -803,7 +807,7 @@ export async function enqueueReportJob(input: {
   // requires_view_all / requires_export are SERVER-derived here — never client-supplied.
   const reqs = deriveReportRequirements(input.params.report, input.format);
   const scopeId = scopeIdFor({ report: input.params.report, params: input.params, format: input.format });
-  const { data, error } = await sb.rpc('finance_payroll_report_enqueue_tx', {
+  const res = await sb.rpc('finance_payroll_report_enqueue_tx', {
     p_actor_id: input.actorId,
     p_report_key: input.params.report,
     p_params: input.params,
@@ -814,8 +818,8 @@ export async function enqueueReportJob(input: {
     p_requires_export: reqs.requiresExport,
     p_idempotency_key: input.idempotencyKey,
   });
-  if (error) throw payrollRpcHttpError(error);
-  return { state: 'queued', jobId: (data as { id: string }).id };
+  if (res.error) throw payrollRpcHttpError(res.error);
+  return { state: 'queued', jobId: (res.data as { id: string }).id };
 }
 
 // ── KPI summary (§4A) ────────────────────────────────────────────────────────
@@ -918,7 +922,7 @@ export async function listReportHistory(
   if (cur) q = q.or(`created_at.lt.${cur.createdAt},and(created_at.eq.${cur.createdAt},id.lt.${cur.id})`);
   const { data, error } = await q;
   if (error) throw err(500, 'listReportHistory: ' + error.message);
-  const raw = (data ?? []) as unknown as ArtifactJoinRow[];
+  const raw = data as ArtifactJoinRow[];
   const hasMore = raw.length > limit;
   const page = raw.slice(0, limit);
   const rows: ReportArtifactRow[] = page.map(a => ({
@@ -926,7 +930,7 @@ export async function listReportHistory(
     reportKey: jobKey(a.payroll_report_jobs),
     scopeId: a.scope_id,
     format: a.format as ReportArtifactFormat,
-    byteSize: Number(a.byte_size),
+    byteSize: (a.byte_size),
     sha256: a.sha256,
     rowCount: a.row_count,
     retentionClass: a.retention_class,
@@ -938,7 +942,7 @@ export async function listReportHistory(
     createdAt: a.created_at,
   }));
   const last = page[page.length - 1];
-  const nextCursor = hasMore && last ? encodeCursor(last.created_at, last.id) : null;
+  const nextCursor = hasMore ? encodeCursor(last.created_at, last.id) : null;
   return { rows, nextCursor };
 }
 
@@ -958,7 +962,7 @@ interface ArtifactRowDb {
 function toArtifactRow(a: ArtifactRowDb, reportKey: PayrollReportKey): ReportArtifactRow {
   return {
     id: a.id, reportKey, scopeId: a.scope_id, format: a.format as ReportArtifactFormat,
-    byteSize: Number(a.byte_size), sha256: a.sha256, rowCount: a.row_count,
+    byteSize: (a.byte_size), sha256: a.sha256, rowCount: a.row_count,
     retentionClass: a.retention_class, retentionExpiresAt: a.retention_expires_at,
     requiresViewAll: a.requires_view_all, requiresExport: a.requires_export,
     status: purgeToStatus(a.purge_state), createdBy: a.created_by ?? '', createdAt: a.created_at,
@@ -1062,7 +1066,7 @@ export async function resolveReportDownload(opts: {
 
   const { data: signed, error: signErr } = await sb.storage
     .from(ARTIFACT_BUCKET).createSignedUrl(art.storage_path, DOWNLOAD_TTL_SECONDS);
-  if (signErr || !signed?.signedUrl) {
+  if (signErr || !signed.signedUrl) {
     throw err(500, 'resolveReportDownload: ' + (signErr?.message ?? 'signed URL unavailable'));
   }
   const expiresAt = new Date(Date.now() + DOWNLOAD_TTL_SECONDS * 1000).toISOString();

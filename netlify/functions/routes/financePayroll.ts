@@ -1722,12 +1722,12 @@ router.post('/payroll/reports/run', async c => {
   const actor = await requirePermission(c, 'finance.payroll.reports.view');
   const body = b(c) as Record<string, unknown>;
 
-  const parsed = reportParamsSchema.safeParse(body['params']);
+  const parsed = reportParamsSchema.safeParse(body.params);
   if (!parsed.success) {
     return c.json({ success: false, error: 'invalid_params', detail: parsed.error.issues }, 400);
   }
   const params = parsed.data;
-  const format = body['format'];
+  const format = body.format;
   // Frozen format matrix (§5A) — reject before any effect (no job/event/audit/storage).
   if (typeof format !== 'string' || !isFormatAllowed(params.report, format as ReportFormat)) {
     return c.json({ success: false, error: 'invalid_format' }, 400);
@@ -1748,7 +1748,7 @@ router.post('/payroll/reports/run', async c => {
 
   try {
     if (fmt === 'preview') {
-      if (body['idempotencyKey'] !== undefined) {
+      if (body.idempotencyKey !== undefined) {
         return c.json({ success: false, error: 'invalid_params', message: 'idempotencyKey is not allowed for a preview.' }, 400);
       }
       const data = await computeInteractiveReport(params as InteractiveReportParams);
@@ -1756,7 +1756,7 @@ router.post('/payroll/reports/run', async c => {
       return c.json({ success: true, data });
     }
     // File export — a non-blank idempotency key is required (8..128).
-    const keyParse = fileIdempotencyKey.safeParse(body['idempotencyKey']);
+    const keyParse = fileIdempotencyKey.safeParse(body.idempotencyKey);
     if (!keyParse.success) {
       return c.json({ success: false, error: 'invalid_params', message: 'A non-blank idempotencyKey (8..128 chars) is required for a file export.' }, 400);
     }

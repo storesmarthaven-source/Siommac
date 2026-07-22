@@ -35,6 +35,9 @@ const thisMonth = (): string => new Date(Date.now() - 4 * 3600_000).toISOString(
  */
 const newExportKey = (): string => crypto.randomUUID();
 
+/** Best-effort human message from an unknown thrown/mutation error. */
+const errMsg = (e: unknown): string => (e instanceof Error ? e.message : 'Something went wrong.');
+
 /** Navigate to a fresh signed URL without leaving the page (never cached). */
 function triggerDownload(url: string): void {
   const el = document.createElement('a');
@@ -89,7 +92,7 @@ export function PayrollReportsPage(): VNode {
       setMorePages(p => [...p, ...page.rows]);
       setMoreCursor(page.nextCursor);
     } catch (e) {
-      dialog.error('Couldn’t load more history', (e as Error)?.message ?? 'Please try again.');
+      void dialog.error('Couldn’t load more history', errMsg(e));
     } finally {
       setLoadingMore(false);
     }
@@ -104,7 +107,7 @@ export function PayrollReportsPage(): VNode {
   const runMut = useMutation({
     mutationFn: (params: ReportParams) => financePayrollApi.runReport({ params, format: 'preview' }),
   });
-  const result = runMut.data && runMut.data.state === 'completed' ? (runMut.data as Completed) : null;
+  const result = runMut.data?.state === 'completed' ? runMut.data : null;
 
   // File export → enqueue a durable job, then poll status until it settles. The
   // idempotency key is minted per Export click (see runExport) so a later export
@@ -116,7 +119,7 @@ export function PayrollReportsPage(): VNode {
   });
   const statusQ = useQuery({
     queryKey: ['payroll', 'reports', 'status', jobId],
-    queryFn: () => financePayrollApi.reportStatus({ jobId: jobId as string }),
+    queryFn: () => financePayrollApi.reportStatus({ jobId: jobId! }),
     enabled: !!jobId,
     refetchInterval: q => {
       const s = q.state.data;
@@ -128,15 +131,15 @@ export function PayrollReportsPage(): VNode {
   useEffect(() => {
     if (statusQ.data?.state === 'succeeded') {
       setMorePages([]); setMoreCursor(undefined);
-      qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'history'] });
-      qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'summary'] });
+      void qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'history'] });
+      void qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'summary'] });
     }
   }, [statusQ.data?.state, qc]);
 
   const downloadMut = useMutation({
     mutationFn: (artifactId: string) => financePayrollApi.reportDownload({ artifactId }),
     onSuccess: ({ url }) => triggerDownload(url),
-    onError: e => dialog.error('Download unavailable', (e as Error)?.message ?? 'The file could not be downloaded.'),
+    onError: e => dialog.error('Download unavailable', errMsg(e)),
   });
 
   const params = useMemo(
@@ -181,7 +184,7 @@ export function PayrollReportsPage(): VNode {
 
       {(summaryQ.isError || catalogQ.isError) && (
         <div class="prc-banner-err">
-          Some report data couldn’t be loaded{summaryQ.isError && catalogQ.isError ? '' : summaryQ.isError ? ' (KPIs)' : ' (catalog)'} — {((summaryQ.error ?? catalogQ.error) as Error)?.message ?? 'please retry.'}
+          Some report data couldn’t be loaded{summaryQ.isError && catalogQ.isError ? '' : summaryQ.isError ? ' (KPIs)' : ' (catalog)'} — {errMsg(summaryQ.error ?? catalogQ.error)}
         </div>
       )}
 
@@ -253,22 +256,22 @@ export function PayrollReportsPage(): VNode {
                       </button>
                     </>
                   )}
-                  {runMut.isError && <span class="prc-err">{(runMut.error as Error)?.message ?? 'Preview failed.'}</span>}
-                  {exportMut.isError && <span class="prc-err">{(exportMut.error as Error)?.message ?? 'Export failed.'}</span>}
+                  {runMut.isError && <span class="prc-err">{errMsg(runMut.error)}</span>}
+                  {exportMut.isError && <span class="prc-err">{errMsg(exportMut.error)}</span>}
                 </div>
 
-                {jobId && (status || statusQ.isError) && (
+                {jobId && (status != null || statusQ.isError) && (
                   <div class="prc-export-status">
                     {statusQ.isError && (
-                      <span class="prc-err">Couldn’t check the export status — {(statusQ.error as Error)?.message ?? 'try exporting again.'}</span>
+                      <span class="prc-err">Couldn’t check the export status — {errMsg(statusQ.error)}</span>
                     )}
                     {status && (status.state === 'queued' || status.state === 'running') && (
                       <span class="prc-export-wait">Generating {exportFmt.toUpperCase()} export… <span class="prc-pill prc-pill-purging">{status.state}</span></span>
                     )}
-                    {status && status.state === 'failed' && (
+                    {status?.state === 'failed' && (
                       <span class="prc-err">Export failed: {status.error.message}</span>
                     )}
-                    {status && status.state === 'succeeded' && succeededArtifactId && (
+                    {status?.state === 'succeeded' && succeededArtifactId && (
                       <span class="prc-export-done">
                         <span class="prc-pill prc-pill-ready">ready</span>
                         <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(succeededArtifactId)}>
@@ -297,7 +300,7 @@ export function PayrollReportsPage(): VNode {
       <div class="prc-history">
         <div class="prc-history-h">Generated report history</div>
         {historyQ.isError
-          ? <div class="prc-empty prc-pad prc-err">Couldn’t load report history — {(historyQ.error as Error)?.message ?? 'please retry.'}</div>
+          ? <div class="prc-empty prc-pad prc-err">Couldn’t load report history — {errMsg(historyQ.error)}</div>
           : historyQ.isLoading
             ? <div class="prc-empty prc-pad">Loading…</div>
             : historyRows.length === 0
@@ -324,7 +327,7 @@ export function PayrollReportsPage(): VNode {
                   </table>
                   {historyNextCursor && (
                     <div class="prc-more">
-                      <button type="button" class="prc-run-ghost prc-dl" disabled={loadingMore} onClick={loadMoreHistory}>
+                      <button type="button" class="prc-run-ghost prc-dl" disabled={loadingMore} onClick={() => void loadMoreHistory()}>
                         {loadingMore ? 'Loading…' : 'Load more'}
                       </button>
                     </div>

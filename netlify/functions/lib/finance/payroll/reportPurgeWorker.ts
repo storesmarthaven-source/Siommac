@@ -32,11 +32,11 @@ interface PurgeableArtifact { id: string; storage_path: string; purge_token: str
 
 // ── retention purge saga (§6B) ───────────────────────────────────────────────
 export async function processReportPurgeQueue(workerId: string, limit = 20): Promise<PurgeSummary> {
-  const { data, error } = await sb.rpc('finance_payroll_report_purge_claim', {
+  const claim = await sb.rpc('finance_payroll_report_purge_claim', {
     p_worker_id: workerId, p_limit: limit, p_lease_seconds: 300,
   });
-  if (error) throw Object.assign(new Error('report purge claim: ' + error.message), { status: 500 });
-  const arts = (data ?? []) as PurgeableArtifact[];
+  if (claim.error) throw Object.assign(new Error('report purge claim: ' + claim.error.message), { status: 500 });
+  const arts = (claim.data ?? []) as PurgeableArtifact[];
   let purged = 0, failed = 0;
 
   for (const a of arts) {
@@ -46,7 +46,7 @@ export async function processReportPurgeQueue(workerId: string, limit = 20): Pro
     if (rm.error) {
       const pf = await sb.rpc('finance_payroll_report_purge_fail', {
         p_artifact_id: a.id, p_purge_token: a.purge_token,
-        p_error: { code: 'storage_remove_failed', message: String(rm.error.message ?? 'remove failed').slice(0, 500) },
+        p_error: { code: 'storage_remove_failed', message: rm.error.message.slice(0, 500) },
       });
       if (pf.error) console.error(`[payroll-report-purge-worker] purge_fail failed for artifact ${a.id}: ${pf.error.message}`);
       failed++;
@@ -70,11 +70,11 @@ export async function reconcileOrphanUploadAttempts(workerId: string, limit = 50
   // SKIP LOCKED, excludes any committed-artifact path, and stamps last_cleanup_at as
   // the claim BEFORE we remove — so complete_tx (which locks the same row) rejects a
   // racing completion and can never keep a succeeded artifact for a deleted object.
-  const { data, error } = await sb.rpc('finance_payroll_report_reconcile_claim', {
+  const claim = await sb.rpc('finance_payroll_report_reconcile_claim', {
     p_worker_id: workerId, p_limit: limit,
   });
-  if (error) throw Object.assign(new Error('orphan reconcile claim: ' + error.message), { status: 500 });
-  const claimed = (data ?? []) as ClaimedOrphan[];
+  if (claim.error) throw Object.assign(new Error('orphan reconcile claim: ' + claim.error.message), { status: 500 });
+  const claimed = (claim.data ?? []) as ClaimedOrphan[];
   const now = Date.now();
   let removed = 0, deleted = 0;
 

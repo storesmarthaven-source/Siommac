@@ -36,7 +36,7 @@ async function failJob(job: ClaimedJob, code: string, message: string, retryable
   // 'running' until its lease expires — that MUST be visible, never swallowed.
   const { error } = await sb.rpc('finance_payroll_report_fail_tx', {
     p_job_id: job.id, p_claim_token: job.claim_token,
-    p_error_code: code, p_error_message: String(message ?? code).slice(0, 500), p_retryable: retryable,
+    p_error_code: code, p_error_message: message.slice(0, 500), p_retryable: retryable,
   });
   if (error) console.error(`[payroll-report-generation-worker] fail_tx failed for job ${job.id}: ${error.message}`);
 }
@@ -47,11 +47,11 @@ export async function processReportGenerationQueue(workerId: string, limit = 5):
   const reap = await sb.rpc('finance_payroll_report_reap', { p_worker_id: workerId, p_limit: Math.max(limit, 5) });
   if (reap.error) console.error(`[payroll-report-generation-worker] reap failed: ${reap.error.message}`);
 
-  const { data, error } = await sb.rpc('finance_payroll_report_claim', {
+  const claim = await sb.rpc('finance_payroll_report_claim', {
     p_worker_id: workerId, p_limit: limit, p_lease_seconds: 300,
   });
-  if (error) throw Object.assign(new Error('report claim: ' + error.message), { status: 500 });
-  const jobs = (data ?? []) as ClaimedJob[];
+  if (claim.error) throw Object.assign(new Error('report claim: ' + claim.error.message), { status: 500 });
+  const jobs = (claim.data ?? []) as ClaimedJob[];
   let succeeded = 0, failed = 0;
 
   for (const job of jobs) {
