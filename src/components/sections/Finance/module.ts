@@ -83,12 +83,6 @@ const REMITTANCES_ITEM: ModuleNavItem = {
   sub: 'PAYE/BIR, NIS/NIBTT and Health Surcharge remittances & filing',
 };
 
-const MY_PAYSLIPS_ITEM: ModuleNavItem = {
-  id: 's-finance-my-payslips',
-  label: 'My Payslips',
-  icon: 'fa-file-invoice',
-  sub: 'View and download your own payslips (employee self-service)',
-};
 const EXPENSES_ITEM: ModuleNavItem = {
   id: 's-finance-expenses',
   label: 'Expense Claims',
@@ -120,7 +114,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',

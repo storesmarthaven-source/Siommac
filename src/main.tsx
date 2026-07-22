@@ -64,6 +64,7 @@ import { mountTicketDropdown } from '@sections/Tickets';
 import '@sections/HSE';                 // self-registers the HSE module
 import '@sections/HR';                  // self-registers the HR module
 import '@sections/Finance';             // self-registers the Finance module
+import '@sections/MyPayslips';          // self-registers My Payslips (self-service, all staff)
 import '@sections/Calendar';            // self-registers the Calendar & Tasks module
 import '@sections/Tickets';             // self-registers the canonical Ticket Center
 import '@sections/AccessControl';       // self-registers the Access Control module (RBAC console)

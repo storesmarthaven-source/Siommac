@@ -804,6 +804,7 @@ const ROLE_PERMISSIONS: Record<string, ReadonlySet<PermissionKey>> = {
   ]),
   manager: new Set<PermissionKey>([
     'tickets.create_self', 'tickets.create_team',
+    'finance.payroll.view_own',   // self-service: view/print own payslips (self-scoped server-side)
     'calendar.view', 'calendar.manage', 'calendar.task.manage_own', 'calendar.task.assign', 'calendar.activity.manage_own',
     'attendance.view_own', 'attendance.view_all', 'attendance.export',
     'leaves.view_own', 'leaves.submit', 'leaves.view_all', 'leaves.approve',
