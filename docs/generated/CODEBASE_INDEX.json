@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "654a6ce20cb07b7983ff0993b711fc3374b29429",
+    "head": "a50f8ee6655356de63559b668e1a4769b4f6cec9",
     "branch": "main",
-    "fingerprint": "2cc484238100826eddc3324e",
-    "indexedFiles": 1514
+    "fingerprint": "b1fc73e0feb2c1aa382dcfa3",
+    "indexedFiles": 1517
   },
   "summary": {
-    "files": 1194,
-    "symbols": 11982,
+    "files": 1197,
+    "symbols": 12002,
     "widgets": 32,
     "routes": 919,
     "routeDefinitions": 920,
@@ -35,8 +35,8 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 158,
-        "symbols": 1557,
+        "files": 161,
+        "symbols": 1575,
         "widgets": 10,
         "routes": 128,
         "routeDefinitions": 128,
@@ -49,7 +49,7 @@
       "id": "finance",
       "counts": {
         "files": 133,
-        "symbols": 1817,
+        "symbols": 1819,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
@@ -3028,6 +3028,13 @@
       "hash": "b46f4f67ebccf85b"
     },
     {
+      "path": "src/api/finance/payrollPayslipBatches.ts",
+      "module": "payroll",
+      "role": "frontend-api",
+      "lines": 39,
+      "hash": "cda41a9c275ca87d"
+    },
+    {
       "path": "src/api/finance/payrollRunsRegister.ts",
       "module": "payroll",
       "role": "frontend-api",
@@ -4368,8 +4375,8 @@
       "path": "src/components/sections/Finance/FinanceSection.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 99,
-      "hash": "fb77589d620535a6"
+      "lines": 103,
+      "hash": "00dce23c3d16f0a9"
     },
     {
       "path": "src/components/sections/Finance/MyPayslipsOverview.tsx",
@@ -4440,6 +4447,20 @@
       "role": "frontend-page",
       "lines": 421,
       "hash": "1eb1256ace6acd83"
+    },
+    {
+      "path": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 70,
+      "hash": "a746b38eb87067da"
+    },
+    {
+      "path": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "module": "payroll",
+      "role": "frontend-page",
+      "lines": 190,
+      "hash": "277ec31be69baca7"
     },
     {
       "path": "src/components/sections/Finance/PayrollRunRegisterPage.tsx",
@@ -4571,8 +4592,8 @@
       "path": "src/components/sections/Finance/module.ts",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 128,
-      "hash": "6dd7f31ddabdabe7"
+      "lines": 135,
+      "hash": "707836db75c2eb63"
     },
     {
       "path": "src/components/sections/Finance/mount.ts",
@@ -54358,6 +54379,48 @@
     {
       "name": "post",
       "kind": "function",
+      "file": "src/api/finance/payrollPayslipBatches.ts",
+      "line": 14,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payslipBatchesKeys",
+      "kind": "object",
+      "file": "src/api/finance/payrollPayslipBatches.ts",
+      "line": 20,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "payslipBatchesApi",
+      "kind": "object",
+      "file": "src/api/finance/payrollPayslipBatches.ts",
+      "line": 25,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "usePayslipBatches",
+      "kind": "function",
+      "file": "src/api/finance/payrollPayslipBatches.ts",
+      "line": 31,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "post",
+      "kind": "function",
       "file": "src/api/finance/payrollRunsRegister.ts",
       "line": 19,
       "module": "payroll",
@@ -76746,7 +76809,7 @@
       "name": "OVERVIEW_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 29,
+      "line": 30,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76758,7 +76821,7 @@
       "name": "PAYABLES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 30,
+      "line": 31,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76770,7 +76833,7 @@
       "name": "STATUTORY_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 31,
+      "line": 32,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76782,7 +76845,7 @@
       "name": "PAYROLL_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 32,
+      "line": 33,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76794,7 +76857,7 @@
       "name": "PAYROLL_RUNS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 33,
+      "line": 34,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76806,18 +76869,6 @@
       "name": "PAYROLL_EXCEPTIONS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 34,
-      "module": "finance",
-      "exported": false,
-      "container": "",
-      "tags": [
-        "component"
-      ]
-    },
-    {
-      "name": "PAYROLL_SETUP_ID",
-      "kind": "variable",
-      "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 35,
       "module": "finance",
       "exported": false,
@@ -76827,7 +76878,7 @@
       ]
     },
     {
-      "name": "REMITTANCES_ID",
+      "name": "PAYSLIP_BATCHES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 36,
@@ -76839,7 +76890,7 @@
       ]
     },
     {
-      "name": "MY_PAYSLIPS_ID",
+      "name": "PAYROLL_SETUP_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 37,
@@ -76851,7 +76902,7 @@
       ]
     },
     {
-      "name": "EXPENSES_ID",
+      "name": "REMITTANCES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 38,
@@ -76863,7 +76914,7 @@
       ]
     },
     {
-      "name": "BUDGETS_ID",
+      "name": "MY_PAYSLIPS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 39,
@@ -76875,7 +76926,7 @@
       ]
     },
     {
-      "name": "DISBURSEMENTS_ID",
+      "name": "EXPENSES_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 40,
@@ -76887,7 +76938,7 @@
       ]
     },
     {
-      "name": "STATUTORY_FORMS_ID",
+      "name": "BUDGETS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 41,
@@ -76899,7 +76950,7 @@
       ]
     },
     {
-      "name": "PAYSLIP_DESIGNER_ID",
+      "name": "DISBURSEMENTS_ID",
       "kind": "variable",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
       "line": 42,
@@ -76911,10 +76962,34 @@
       ]
     },
     {
+      "name": "STATUTORY_FORMS_ID",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/FinanceSection.tsx",
+      "line": 43,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "PAYSLIP_DESIGNER_ID",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/FinanceSection.tsx",
+      "line": 44,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
       "name": "isFinanceSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 44,
+      "line": 46,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -76924,7 +76999,7 @@
       "name": "FinanceSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 62,
+      "line": 65,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -76936,7 +77011,7 @@
       "name": "onSection",
       "kind": "function",
       "file": "src/components/sections/Finance/FinanceSection.tsx",
-      "line": 68,
+      "line": 71,
       "module": "finance",
       "exported": false,
       "container": "FinanceSection",
@@ -77123,7 +77198,7 @@
       "tags": []
     },
     {
-      "name": "PAYROLL_SETUP_ITEM",
+      "name": "PAYSLIP_BATCHES_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 58,
@@ -77133,7 +77208,7 @@
       "tags": []
     },
     {
-      "name": "PAYSLIP_DESIGNER_ITEM",
+      "name": "PAYROLL_SETUP_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 65,
@@ -77143,7 +77218,7 @@
       "tags": []
     },
     {
-      "name": "REMITTANCES_ITEM",
+      "name": "PAYSLIP_DESIGNER_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 72,
@@ -77153,7 +77228,7 @@
       "tags": []
     },
     {
-      "name": "MY_PAYSLIPS_ITEM",
+      "name": "REMITTANCES_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 79,
@@ -77163,17 +77238,17 @@
       "tags": []
     },
     {
-      "name": "EXPENSES_ITEM",
+      "name": "MY_PAYSLIPS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
-      "line": 85,
+      "line": 86,
       "module": "finance",
       "exported": false,
       "container": "",
       "tags": []
     },
     {
-      "name": "BUDGETS_ITEM",
+      "name": "EXPENSES_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 92,
@@ -77183,7 +77258,7 @@
       "tags": []
     },
     {
-      "name": "DISBURSEMENTS_ITEM",
+      "name": "BUDGETS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 99,
@@ -77193,7 +77268,7 @@
       "tags": []
     },
     {
-      "name": "STATUTORY_FORMS_ITEM",
+      "name": "DISBURSEMENTS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 106,
@@ -77203,10 +77278,20 @@
       "tags": []
     },
     {
-      "name": "financeModule",
+      "name": "STATUTORY_FORMS_ITEM",
       "kind": "object",
       "file": "src/components/sections/Finance/module.ts",
       "line": 113,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "financeModule",
+      "kind": "object",
+      "file": "src/components/sections/Finance/module.ts",
+      "line": 120,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -79746,6 +79831,162 @@
       "exported": false,
       "container": "FindingActionModal",
       "tags": []
+    },
+    {
+      "name": "mockQ",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
+      "line": 15,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "batch",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
+      "line": 21,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "result",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
+      "line": 32,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "asQuery",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx",
+      "line": 40,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "TABS",
+      "kind": "array",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 16,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "LC_PILL",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 23,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "num",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 27,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "pct",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 28,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "fmtDate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 29,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "openRun",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 32,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayrollPayslipBatchesPage",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 37,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "changeTab",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 64,
+      "module": "payroll",
+      "exported": false,
+      "container": "PayrollPayslipBatchesPage",
+      "tags": []
+    },
+    {
+      "name": "BatchRow",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 150,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "Metric",
+      "kind": "function",
+      "file": "src/components/sections/Finance/PayrollPayslipBatchesPage.tsx",
+      "line": 179,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
     },
     {
       "name": "TABS",

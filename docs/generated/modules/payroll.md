@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `2cc484238100826eddc3324e`
+Source fingerprint: `b1fc73e0feb2c1aa382dcfa3`
 
-Files: 158 | Symbols: 1557 | Widgets: 10 | Unique mounted endpoints: 128 | Route definitions: 128 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 23
+Files: 161 | Symbols: 1575 | Widgets: 10 | Unique mounted endpoints: 128 | Route definitions: 128 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 23
 
 ## Widgets and Tiles
 
@@ -203,6 +203,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `usePayrollControlCenter` | function / hook | `src/api/finance/payroll/controlCenter.ts:118` | `-` |
 | `useWorkQueue` | function / hook | `src/api/finance/payrollExceptions.ts:61` | `-` |
 | `useWorkQueueMutations` | function / hook | `src/api/finance/payrollExceptions.ts:75` | `-` |
+| `usePayslipBatches` | function / hook | `src/api/finance/payrollPayslipBatches.ts:31` | `-` |
 | `useRunsRegister` | function / hook | `src/api/finance/payrollRunsRegister.ts:45` | `-` |
 | `useRunViews` | function / hook | `src/api/finance/payrollRunsRegister.ts:54` | `-` |
 | `useRunCalendar` | function / hook | `src/api/finance/payrollRunsRegister.ts:58` | `-` |
@@ -223,6 +224,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ResolveResultView` | function / component | `src/components/sections/Finance/payroll/setup/WorkCalendarSetup.tsx:834` | `-` |
 | `PayrollCommandCenter` | function / component | `src/components/sections/Finance/PayrollCommandCenter.tsx:274` | `-` |
 | `PayrollExceptionQueuePage` | function / component | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx:65` | `-` |
+| `PayrollPayslipBatchesPage` | function / component | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx:37` | `-` |
 | `PayrollRunRegisterPage` | function / component | `src/components/sections/Finance/PayrollRunRegisterPage.tsx:74` | `-` |
 | `PayrollSetupOverview` | function / component | `src/components/sections/Finance/PayrollSetupOverview.tsx:92` | `-` |
 | `App` | function / component | `src/components/sections/PayslipStudio/App.tsx:18` | `-` |
@@ -447,6 +449,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | e2e-suite | `scripts/e2e/suites/payslipTemplates.mjs` | 271 |
 | frontend-api | `src/api/finance/payroll.ts` | 919 |
 | frontend-api | `src/api/finance/payrollExceptions.ts` | 87 |
+| frontend-api | `src/api/finance/payrollPayslipBatches.ts` | 39 |
 | frontend-api | `src/api/finance/payrollRunsRegister.ts` | 77 |
 | frontend-api | `src/api/finance/payroll/controlCenter.ts` | 133 |
 | frontend-api | `src/api/payroll.ts` | 132 |
@@ -456,6 +459,8 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/PayrollCommandCenter.tsx` | 931 |
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.test.tsx` | 116 |
 | frontend-page | `src/components/sections/Finance/PayrollExceptionQueuePage.tsx` | 421 |
+| frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.test.tsx` | 70 |
+| frontend-page | `src/components/sections/Finance/PayrollPayslipBatchesPage.tsx` | 190 |
 | frontend-page | `src/components/sections/Finance/PayrollRunRegisterPage.tsx` | 401 |
 | frontend-page | `src/components/sections/Finance/PayrollSetupOverview.tsx` | 882 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/PayPolicySetup.tsx` | 403 |

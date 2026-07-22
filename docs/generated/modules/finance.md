@@ -2,9 +2,9 @@
 
 # finance Module Map
 
-Source fingerprint: `2cc484238100826eddc3324e`
+Source fingerprint: `b1fc73e0feb2c1aa382dcfa3`
 
-Files: 133 | Symbols: 1817 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
+Files: 133 | Symbols: 1819 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
 ## Widgets and Tiles
 
@@ -544,7 +544,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/FinanceExportDialog.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceKpiDrilldownDrawer.tsx` | 108 |
 | frontend-page | `src/components/sections/Finance/FinanceOverview.tsx` | 300 |
-| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 99 |
+| frontend-page | `src/components/sections/Finance/FinanceSection.tsx` | 103 |
 | frontend-page | `src/components/sections/Finance/PayBridgeDialog.tsx` | 185 |
 | frontend-page | `src/components/sections/Finance/PayNewRunWizard.tsx` | 628 |
 | frontend-page | `src/components/sections/Finance/PayRunDetailPage.tsx` | 285 |
@@ -566,7 +566,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
-| frontend-page | `src/components/sections/Finance/module.ts` | 128 |
+| frontend-page | `src/components/sections/Finance/module.ts` | 135 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx` | 138 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 189 |
