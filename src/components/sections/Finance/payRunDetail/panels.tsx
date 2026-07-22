@@ -179,7 +179,7 @@ export function PopulationPanel({ runId }: { runId: string }): VNode {
   const { data: lines, isLoading } = useRunLines(runId);
   const variationQ = useQuery({
     queryKey: ['finance', 'payroll', 'report', 'variation', runId],
-    queryFn:  () => financePayrollApi.runReport({ report: 'variation', params: { runId } }),
+    queryFn:  () => financePayrollApi.runVariation({ runId }),
     enabled:  !!runId,
     retry:    false,
   });

@@ -8,6 +8,16 @@
  */
 import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { apiPost } from '@lib/api';
+import type {
+  ReportCatalogEntry,
+  ReportKpiTiles,
+  ReportRunResult,
+  ReportArtifactRow,
+  ReportParams,
+  ReportFormat,
+  PayrollReportKey,
+  PageResult,
+} from '../../../types/payrollReports';
 
 // ── DTOs ──────────────────────────────────────────────────────────────────────
 
@@ -258,12 +268,6 @@ export interface PayrollExport {
   generatedAt: string;
   isCurrent: boolean;
   metadata: Record<string, unknown>;
-}
-
-export interface PayrollReportResult {
-  report: string;
-  generatedAt: string;
-  rows: Record<string, unknown>[];
 }
 
 /** Lightweight template descriptor for pickers — no design payload. */
@@ -662,11 +666,17 @@ export const financePayrollApi = {
   getPayslip:       (a: { id: string })                => call<Payslip>('finance/payroll/payslips/get', a),
   payslipSignedUrl: (a: { id: string })                => call<{ url: string }>('finance/payroll/payslips/signed-url', a),
 
-  // Reports — 'report' is the key; additional filters go inside 'params' (the route's
-  // Zod schema is z.object({ report, params?: z.record(...) }), so top-level unknown
-  // keys are stripped).  Pass { report, params: { runId, from, to, ... } }.
-  runReport:   (a: { report: string; params?: Record<string, unknown> }) => call<PayrollReportResult>('finance/payroll/reports/run', a),
-  listReports: (a: object = {})                        => call<{ key: string; label: string }[]>('finance/payroll/reports/list', a),
+  // Reports Center (F-12) — server-owned 9-key catalog. `params.report` is the sole
+  // discriminant; the shared zod/DTO contract lives in types/payrollReports.
+  reportsCatalog: (a: object = {}) => call<{ reports: ReportCatalogEntry[] }>('finance/payroll/reports/catalog', a),
+  reportsSummary: (a: object = {}) => call<ReportKpiTiles>('finance/payroll/reports/summary', a),
+  runReport:      (a: { params: ReportParams; format: ReportFormat; idempotencyKey?: string }) =>
+                    call<ReportRunResult>('finance/payroll/reports/run', a),
+  reportsHistory: (a: { cursor?: string; limit?: number; reportKey?: PayrollReportKey } = {}) =>
+                    call<PageResult<ReportArtifactRow>>('finance/payroll/reports/history/list', a),
+  // Run Workspace population panel — per-employee net variance vs the prior run.
+  runVariation: (a: { runId: string }) =>
+                    call<{ report: string; generatedAt: string; rows: Record<string, unknown>[] }>('finance/payroll/runs/variation', a),
 
   // Warning resolve
   resolveWarning: (a: { warningId: string; note?: string }) =>

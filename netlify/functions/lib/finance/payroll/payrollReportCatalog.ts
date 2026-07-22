@@ -44,6 +44,11 @@ import type {
   ReconciliationResult,
   ReconciliationSource,
   ReportCatalogEntry,
+  ReportKpiTile,
+  ReportKpiTiles,
+  ReportArtifactRow,
+  ReportArtifactFormat,
+  PageResult,
 } from '../../../../../types/payrollReports';
 import {
   PAYROLL_REPORT_KEYS,
@@ -54,6 +59,11 @@ import {
 type Completed = Extract<ReportRunResult, { state: 'completed' }>;
 
 const ELIGIBLE_STATES = new Set(['locked', 'released', 'exported']);
+// Slice 2 ships PREVIEW only. File exports (xlsx/csv/pdf/zip) require the
+// generation worker + status/download, built in Slice 3 — until then the catalog
+// advertises only what can actually be fulfilled (no accept-and-drop). Flip to
+// true in Slice 3 when the worker + reports/status + reports/artifacts/download land.
+export const REPORT_FILE_EXPORTS_ENABLED = false;
 const OVERTIME_CODE = 'overtime';
 const ALLOWANCE_CODES = new Set(['housing_allowance', 'travel_allowance', 'meal_allowance']);
 const PREVIEW_ROW_CAP = 5000;
@@ -712,6 +722,7 @@ export function buildReportCatalog(caller: { canViewAll: boolean; canExport: boo
     const employeeLevel = EMPLOYEE_LEVEL_REPORTS.has(key);
     const supportedFormats = REPORT_FORMAT_MATRIX[key].filter((f: ReportFormat) => {
       const needsExport = f !== 'preview';
+      if (needsExport && !REPORT_FILE_EXPORTS_ENABLED) return false; // Slice 2: preview only
       return (!employeeLevel || caller.canViewAll) && (!needsExport || caller.canExport);
     });
     const meta = REPORT_META[key];
@@ -726,4 +737,137 @@ export function buildReportCatalog(caller: { canViewAll: boolean; canExport: boo
       requiresExport: REPORT_FORMAT_MATRIX[key].every((f: ReportFormat) => f !== 'preview'),
     };
   });
+}
+
+// ── preview audit (single audit row, no business event) ──────────────────────
+export async function logReportPreview(
+  actorId: string,
+  params: InteractiveReportParams,
+  scopeId: string,
+): Promise<void> {
+  const { error } = await sb.rpc('finance_payroll_report_log_run', {
+    p_actor_id: actorId,
+    p_report_key: params.report,
+    p_params: params,
+    p_scope_id: scopeId,
+    p_format: 'preview',
+  });
+  if (error) throw err(500, 'logReportPreview: ' + error.message);
+}
+
+// ── KPI summary (§4A) ────────────────────────────────────────────────────────
+/** Start of the current AST (UTC-4, no DST) month as a UTC ISO instant. */
+function astMonthStartIso(): string {
+  const ast = new Date(Date.now() - 4 * 3600_000);
+  return new Date(Date.UTC(ast.getUTCFullYear(), ast.getUTCMonth(), 1, 4, 0, 0)).toISOString();
+}
+const tile = (value: number, available = true): ReportKpiTile => ({ value, available });
+const TILE_NA: ReportKpiTile = { value: null, available: false };
+
+export async function computeReportSummary(caller: { canViewAll: boolean; canExport: boolean }): Promise<ReportKpiTiles> {
+  const monthStartIso = astMonthStartIso();
+
+  // availableReports — runnable catalog keys for this caller.
+  const availableReports = tile(buildReportCatalog(caller).filter(e => e.supportedFormats.length > 0).length);
+
+  // generatedThisMonth — succeeded artifacts this AST month, gated per §4A.
+  let genQ = sb.from('payroll_report_artifacts').select('id', { count: 'exact', head: true }).gte('created_at', monthStartIso);
+  if (!caller.canExport) genQ = genQ.eq('requires_export', false);
+  if (!caller.canViewAll) genQ = genQ.eq('requires_view_all', false);
+  const { count: genCount } = await genQ;
+  const generatedThisMonth = tile(genCount ?? 0);
+
+  // nisExceptions — latest eligible run's open unverified/continuity; needs view_all.
+  let nisExceptions: ReportKpiTile = TILE_NA;
+  if (caller.canViewAll) {
+    const { data: run } = await sb.from('finance_payroll_runs')
+      .select('id').in('status', ['locked', 'released', 'exported'])
+      .order('period_month', { ascending: false }).limit(1).maybeSingle<{ id: string }>();
+    if (run) {
+      const { count } = await sb.from('finance_payroll_run_lines')
+        .select('employee_id', { count: 'exact', head: true })
+        .eq('run_id', run.id).in('nis_status', ['unverified', 'continuity_review']);
+      nisExceptions = tile(count ?? 0);
+    } else {
+      nisExceptions = tile(0);
+    }
+  }
+
+  // materialVariances — Phase A: always inert (no materiality/escalation policy, R7).
+  const materialVariances: ReportKpiTile = TILE_NA;
+
+  // auditPackages — succeeded export_audit_package this AST month; needs export.
+  let auditPackages: ReportKpiTile = TILE_NA;
+  if (caller.canExport) {
+    const { count } = await sb.from('payroll_report_artifacts')
+      .select('id, payroll_report_jobs!inner(report_key)', { count: 'exact', head: true })
+      .gte('created_at', monthStartIso)
+      .eq('payroll_report_jobs.report_key', 'export_audit_package');
+    auditPackages = tile(count ?? 0);
+  }
+
+  return { availableReports, generatedThisMonth, nisExceptions, materialVariances, auditPackages };
+}
+
+// ── history (keyset, additive-gate filtered) ─────────────────────────────────
+interface ArtifactJoinRow {
+  id: string; scope_id: string; format: string; byte_size: number; sha256: string;
+  row_count: number; retention_class: string; retention_expires_at: string;
+  requires_view_all: boolean; requires_export: boolean; purge_state: string;
+  created_by: string | null; created_at: string;
+  payroll_report_jobs: { report_key: string } | { report_key: string }[] | null;
+}
+function jobKey(j: ArtifactJoinRow['payroll_report_jobs']): PayrollReportKey {
+  const rec = Array.isArray(j) ? j[0] : j;
+  return (rec?.report_key ?? 'payroll_register') as PayrollReportKey;
+}
+const purgeToStatus = (s: string): ReportArtifactRow['status'] =>
+  s === 'purged' ? 'purged' : s === 'purging' ? 'purging' : 'ready';
+const encodeCursor = (createdAt: string, id: string): string =>
+  Buffer.from(`${createdAt}|${id}`).toString('base64url');
+function decodeCursor(cursor: string): { createdAt: string; id: string } | null {
+  try {
+    const [createdAt, id] = Buffer.from(cursor, 'base64url').toString('utf8').split('|');
+    return createdAt && id ? { createdAt, id } : null;
+  } catch { return null; }
+}
+
+export async function listReportHistory(
+  caller: { canViewAll: boolean; canExport: boolean },
+  opts: { cursor?: string; limit?: number; reportKey?: PayrollReportKey },
+): Promise<PageResult<ReportArtifactRow>> {
+  const limit = Math.min(Math.max(opts.limit ?? 25, 1), 100);
+  let q = sb.from('payroll_report_artifacts')
+    .select('id, scope_id, format, byte_size, sha256, row_count, retention_class, retention_expires_at, requires_view_all, requires_export, purge_state, created_by, created_at, payroll_report_jobs!inner(report_key)')
+    .order('created_at', { ascending: false }).order('id', { ascending: false })
+    .limit(limit + 1);
+  if (!caller.canExport) q = q.eq('requires_export', false);
+  if (!caller.canViewAll) q = q.eq('requires_view_all', false);
+  if (opts.reportKey) q = q.eq('payroll_report_jobs.report_key', opts.reportKey);
+  const cur = opts.cursor ? decodeCursor(opts.cursor) : null;
+  if (cur) q = q.or(`created_at.lt.${cur.createdAt},and(created_at.eq.${cur.createdAt},id.lt.${cur.id})`);
+  const { data, error } = await q;
+  if (error) throw err(500, 'listReportHistory: ' + error.message);
+  const raw = (data ?? []) as unknown as ArtifactJoinRow[];
+  const hasMore = raw.length > limit;
+  const page = raw.slice(0, limit);
+  const rows: ReportArtifactRow[] = page.map(a => ({
+    id: a.id,
+    reportKey: jobKey(a.payroll_report_jobs),
+    scopeId: a.scope_id,
+    format: a.format as ReportArtifactFormat,
+    byteSize: Number(a.byte_size),
+    sha256: a.sha256,
+    rowCount: a.row_count,
+    retentionClass: a.retention_class,
+    retentionExpiresAt: a.retention_expires_at,
+    requiresViewAll: a.requires_view_all,
+    requiresExport: a.requires_export,
+    status: purgeToStatus(a.purge_state),
+    createdBy: a.created_by ?? '',
+    createdAt: a.created_at,
+  }));
+  const last = page[page.length - 1];
+  const nextCursor = hasMore && last ? encodeCursor(last.created_at, last.id) : null;
+  return { rows, nextCursor };
 }

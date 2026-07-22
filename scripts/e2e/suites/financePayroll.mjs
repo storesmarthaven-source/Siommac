@@ -2864,85 +2864,75 @@ export default async function run(h) {
   h.section('Finance Payroll › Reports');
   // ═══════════════════════════════════════════════════════════════════════════
 
-  await test('finance_staff can list available report keys', async () => {
-    const r = await api('finance/payroll/reports/list', fstaff1Token, {});
-    ok(r, `reports/list failed: ${r.body.message}`);
-    expect(Array.isArray(r.body.data), 'reports list should be an array');
-    expect(r.body.data.length >= 10, `expected at least 10 report keys, got ${r.body.data.length}`);
-    const keys = r.body.data.map(d => d.key);
-    expect(keys.includes('register'),          'missing register report key');
-    expect(keys.includes('net_pay_summary'),   'missing net_pay_summary report key');
-    expect(keys.includes('nis_exceptions'),    'missing nis_exceptions report key');
+  await test('finance_staff sees the F-12 9-key report catalog', async () => {
+    const r = await api('finance/payroll/reports/catalog', fstaff1Token, {});
+    ok(r, `reports/catalog failed: ${r.body.message}`);
+    const keys = (r.body.data.reports ?? []).map(d => d.key);
+    expect(keys.length === 9, `expected 9 catalog keys, got ${keys.length}`);
+    expect(keys.includes('payroll_register'),            'missing payroll_register');
+    expect(keys.includes('gross_to_net_reconciliation'), 'missing gross_to_net_reconciliation');
+    expect(keys.includes('nis_exceptions'),              'missing nis_exceptions');
   });
 
-  await test('employee is DENIED running any payroll report', async () => {
-    const r = await api('finance/payroll/reports/run', emp1Token, { report: 'register', params: {} });
-    fails(r, 'employee should be denied payroll reports');
+  await test('report KPI summary returns tiles; materialVariances inert in Phase A', async () => {
+    const r = await api('finance/payroll/reports/summary', fstaff1Token, {});
+    ok(r, `reports/summary failed: ${r.body.message}`);
+    const t = r.body.data;
+    expect(typeof t.availableReports?.available === 'boolean', 'availableReports tile missing');
+    expect(t.materialVariances.value === null && t.materialVariances.available === false,
+      'materialVariances must be {null,false} in Phase A');
   });
 
-  await test('finance_staff can run the register report', async () => {
+  await test('employee is DENIED the reports catalog', async () => {
+    const r = await api('finance/payroll/reports/catalog', emp1Token, {});
+    fails(r, 'employee should be denied the reports catalog');
+  });
+
+  await test('finance_staff previews gross-to-net reconciliation (exact, zero-tolerance)', async () => {
     const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'register',
-      params: { status: 'released', limit: 10 },
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.runId },
+      format: 'preview',
     });
-    ok(r, `reports/run register failed: ${r.body.message}`);
-    expect(r.body.data.report === 'register', 'report key mismatch');
-    expect(r.body.data.generatedAt,           'missing generatedAt');
-    expect(Array.isArray(r.body.data.rows),   'rows should be an array');
-    // Our released run should appear.
-    const ourRun = r.body.data.rows.find(row => row.id === ctx.runId);
-    expect(ourRun, `released run ${ctx.runId} not found in register report`);
+    ok(r, `reports/run reconciliation failed: ${r.body.message}`);
+    expect(r.body.data.state === 'completed', 'expected a completed preview');
+    expect(r.body.data.report === 'gross_to_net_reconciliation', 'report key mismatch');
+    expect(r.body.data.scopeId,     'missing scopeId');
+    const rec = r.body.data.reconciliation;
+    expect(rec && Array.isArray(rec.sources) && rec.sources.length === 4, 'expected 4 reconciliation sources');
+    expect(typeof rec.balanced === 'boolean', 'missing balanced flag');
+    // EXACT match / zero tolerance: matched iff the difference is exactly 0.
+    for (const s of rec.sources) {
+      expect(s.matched === (s.difference.amount === 0), 'matched must equal difference.amount===0 (exact)');
+    }
   });
 
-  await test('finance_staff can run the net_pay_summary report for the run', async () => {
-    const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'net_pay_summary',
-      params: { runId: ctx.runId },
-    });
-    ok(r, `reports/run net_pay_summary failed: ${r.body.message}`);
-    expect(r.body.data.rows.length > 0, 'net_pay_summary should have rows');
-    const row = r.body.data.rows[0];
-    // Reports return raw snake_case DB rows (the FE renders them generically via humanize()).
-    expect('net' in row,         'net_pay_summary row missing net field');
-    expect('gross' in row,       'net_pay_summary row missing gross field');
-    expect('employee_id' in row, 'net_pay_summary row missing employee_id field');
+  await test('report history is empty until file exports ship (Slice 3)', async () => {
+    const r = await api('finance/payroll/reports/history/list', fstaff1Token, { limit: 10 });
+    ok(r, `reports/history/list failed: ${r.body.message}`);
+    expect(Array.isArray(r.body.data.rows), 'history rows should be an array');
+    expect(r.body.data.nextCursor === null, 'history nextCursor should be null when empty');
   });
 
-  await test('finance_staff can run the export_audit report', async () => {
+  await test('file-format exports are rejected in preview-only Slice 2 (400)', async () => {
     const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'export_audit',
-      params: { runId: ctx.runId },
+      params: { report: 'gross_to_net_reconciliation', runId: ctx.runId },
+      format: 'xlsx',
+      idempotencyKey: 'e2e-xlsx-not-yet-0001',
     });
-    ok(r, `reports/run export_audit failed: ${r.body.message}`);
-    expect(r.body.data.rows.length >= 2, 'export_audit should show at least 2 export artifacts');
+    expect(!r.body.success, 'file export should be rejected while file exports are gated');
   });
 
-  await test('finance_staff can run nis_exceptions report for the run', async () => {
+  await test('malformed report params are rejected (400)', async () => {
+    // No `params.report` discriminant → structural rejection.
     const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'nis_exceptions',
-      params: { runId: ctx.runId },
+      params: { report: 'not_a_real_report' },
+      format: 'preview',
     });
-    ok(r, `reports/run nis_exceptions failed: ${r.body.message}`);
-    // Our test employees have missing NIS — expect warnings
-    expect(Array.isArray(r.body.data.rows), 'nis_exceptions rows should be an array');
+    expect(!r.body.success, 'unknown report should fail');
   });
 
-  await test('unverified_nis report runs without a runId', async () => {
-    const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'unverified_nis',
-      params: {},
-    });
-    ok(r, `unverified_nis report failed: ${r.body.message}`);
-    expect(Array.isArray(r.body.data.rows), 'rows should be an array');
-  });
-
-  await test('unknown report key is rejected (422)', async () => {
-    const r = await api('finance/payroll/reports/run', fstaff1Token, {
-      report: 'not_a_real_report',
-      params: {},
-    });
-    expect(!r.body.success, 'unknown report key should fail');
-  });
+  // NOTE: comprehensive F-12 Reports Center coverage (every key, additive gates,
+  // history/status/download, worker + purge) lives in scripts/e2e/suites/payrollReports.mjs.
 
   // ═══════════════════════════════════════════════════════════════════════════
   h.section('Finance Payroll › Warning Resolve (Wave 2B)');

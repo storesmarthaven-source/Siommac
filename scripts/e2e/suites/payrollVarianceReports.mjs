@@ -60,14 +60,18 @@ export default async function run(h) {
     expect(!l2, `seed current lines failed: ${l2?.message}`);
   });
 
-  h.section('Variance reports > Variation');
+  // F-12 cutover: per-employee variation moved OFF the removed reports/run to the
+  // Run Workspace endpoint runs/variation (retained reportVariation engine fn, same
+  // shape). audit_comparison had no FE consumer and is not in the F-12 9-key scope,
+  // so it was retired with the legacy public report contract.
+  h.section('Variance reports > Variation (runs/variation)');
 
-  await test('employee is DENIED reports/run', async () => {
-    fails(await api('finance/payroll/reports/run', empT, { report: 'variation', params: { runId: ctx.currentId } }), 'employee denied reports');
+  await test('employee is DENIED runs/variation', async () => {
+    fails(await api('finance/payroll/runs/variation', empT, { runId: ctx.currentId }), 'employee denied variation');
   });
 
   await test('variation compares the current run to the prior run (deltas + added employee)', async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'variation', params: { runId: ctx.currentId } });
+    const r = await api('finance/payroll/runs/variation', fmgrT, { runId: ctx.currentId });
     ok(r, `variation failed: ${r.body.message}`);
     expect(r.body.data.report === 'variation', 'wrong report key');
     const rows = r.body.data.rows;
@@ -79,26 +83,9 @@ export default async function run(h) {
   });
 
   await test('variation with no prior run returns an empty set (not an error)', async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'variation', params: { runId: ctx.priorId } });
+    const r = await api('finance/payroll/runs/variation', fmgrT, { runId: ctx.priorId });
     ok(r, `variation(prior) failed: ${r.body.message}`);
     // Prior run may still have an earlier run somewhere; assert it returns rows array without erroring.
     expect(Array.isArray(r.body.data.rows), 'variation rows must be an array');
-  });
-
-  h.section('Variance reports > Audit comparison');
-
-  await test('audit_comparison diffs two arbitrary runs', async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'audit_comparison', params: { runId: ctx.priorId, compareRunId: ctx.currentId } });
-    ok(r, `audit_comparison failed: ${r.body.message}`);
-    const rows = r.body.data.rows;
-    const a = rows.find(x => x.employee_id === empA);
-    const bRow = rows.find(x => x.employee_id === empB);
-    expect(a && Math.abs(a.paye_delta - 300) < 0.01, `empA paye_delta ${a?.paye_delta}`);  // 800 - 500
-    expect(bRow && bRow.status === 'added', `empB status ${bRow?.status}`);
-  });
-
-  await test('audit_comparison without a second run is refused (422)', async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'audit_comparison', params: { runId: ctx.currentId } });
-    fails(r, 'audit_comparison requires compareRunId');
   });
 }

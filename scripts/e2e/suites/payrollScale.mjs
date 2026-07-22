@@ -359,25 +359,19 @@ export default async function run(h) {
 
   h.section(`Scale > Reports (no row truncation at ${N} lines, selectAllRows fix)`);
 
-  await test(`net_pay_summary report returns ${N} rows`, async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'net_pay_summary', params: { runId: ctx.runId } });
-    ok(r, `net_pay_summary failed: ${r.body.message}`);
+  // F-12 cutover: the old per-employee reports (raw net_pay_summary / nis_continuity /
+  // employer_nis_summary) were dropped from the public contract. The payroll_register
+  // preview exercises the SAME selectAllRows no-truncation path — one row per employee
+  // line — so it is the scale vehicle now (N > 1000 forces a 2nd page).
+  await test(`payroll_register preview returns ${N} rows (no truncation past 1000)`, async () => {
+    const r = await api('finance/payroll/reports/run', fmgrT, {
+      params: { report: 'payroll_register', runId: ctx.runId },
+      format: 'preview',
+    });
+    ok(r, `payroll_register preview failed: ${r.body.message}`);
+    expect(r.body.data.report === 'payroll_register', 'report key mismatch');
     expect(r.body.data.rows.length === N,
-      `expected ${N} net_pay_summary rows, got ${r.body.data.rows.length}`);
-  });
-
-  await test(`nis_continuity report returns ${N} rows (same path as TD4/NI aggregation)`, async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'nis_continuity', params: { runId: ctx.runId } });
-    ok(r, `nis_continuity failed: ${r.body.message}`);
-    expect(r.body.data.rows.length === N,
-      `expected ${N} nis_continuity rows, got ${r.body.data.rows.length}`);
-  });
-
-  await test(`employer_nis_summary report returns ${N} rows`, async () => {
-    const r = await api('finance/payroll/reports/run', fmgrT, { report: 'employer_nis_summary', params: { runId: ctx.runId } });
-    ok(r, `employer_nis_summary failed: ${r.body.message}`);
-    expect(r.body.data.rows.length === N,
-      `expected ${N} employer_nis_summary rows, got ${r.body.data.rows.length}`);
+      `expected ${N} payroll_register rows, got ${r.body.data.rows.length}`);
   });
 
   h.section(`Scale > Disbursement compute (all ${N} payslips + lines resolved, no truncation)`);

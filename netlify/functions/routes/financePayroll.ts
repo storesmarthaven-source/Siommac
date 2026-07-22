@@ -118,8 +118,23 @@ import {
   cancelLoan,
 } from '../lib/finance/loans';
 import { exportRun, listRunExports } from '../lib/finance/payrollExports';
-import { runPayrollReport } from '../lib/finance/payrollReports';
-import type { PayrollReportKey } from '../lib/finance/payrollReports';
+import {
+  computeInteractiveReport,
+  buildReportCatalog,
+  computeReportSummary,
+  listReportHistory,
+  logReportPreview,
+} from '../lib/finance/payroll/payrollReportCatalog';
+// Retained legacy engine fn for the Run Workspace population panel's per-employee
+// net-variance column (NOT part of the F-12 Reports Center public contract).
+import { reportVariation } from '../lib/finance/payrollReports';
+import {
+  reportParamsSchema,
+  isFormatAllowed,
+  deriveReportRequirements,
+  PAYROLL_REPORT_KEYS,
+} from '../../../types/payrollReports';
+import type { ReportFormat, InteractiveReportParams } from '../../../types/payrollReports';
 import type { HonoVariables } from '../../../types/api';
 
 const router = new Hono<{ Variables: HonoVariables }>();
@@ -1169,17 +1184,19 @@ router.post('/payroll/payslips/signed-url', async c => {
 // ─────────────────────────────────────────────────────────────────────────────
 
 // POST /api/finance/payroll/reports/run
-// Dispatch to any of the §18 report handlers.
-// Permission: finance.payroll.reports.view
-router.post('/payroll/reports/run', async c => {
-  await requirePermission(c, 'finance.payroll.reports.view');
-  const v = zv(c, z.object({
-    report: z.string().min(1),
-    params: z.record(z.string(), z.unknown()).optional(),
-  }), b(c));
+// Payroll Reports Center (F-12) routes are defined together near the end of this
+// file (reports/catalog, reports/summary, reports/run, reports/history/list). The
+// legacy reports/run + reports/list contract was removed at the F-12 cutover.
+
+// POST /api/finance/payroll/runs/variation — per-employee net variance vs the
+// prior run, for the Run Workspace population panel. Reuses the retained
+// reportVariation engine fn; this is workspace data, not a Reports Center report.
+router.post('/payroll/runs/variation', async c => {
+  await requirePermission(c, 'finance.payroll.view_all');
+  const v = zv(c, z.object({ runId: z.uuid() }), b(c));
   if (!v.ok) return v.response;
   try {
-    const data = await runPayrollReport(v.data.report as PayrollReportKey, v.data.params ?? {});
+    const data = await reportVariation(v.data.runId);
     return c.json({ success: true, data });
   } catch (e) { return routeErr(c, e); }
 });
@@ -1579,11 +1596,6 @@ router.post('/payroll/exports/download', async c => {
 });
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Reports
-// ─────────────────────────────────────────────────────────────────────────────
-
-// POST /api/finance/payroll/reports/list
-// ─────────────────────────────────────────────────────────────────────────────
 // Payroll Run — Saved Views (§15.2)
 // ─────────────────────────────────────────────────────────────────────────────
 
@@ -1666,30 +1678,86 @@ router.post('/payroll/runs/calendar', async c => {
   } catch (e) { return routeErr(c, e); }
 });
 
-// List available report keys (for the UI to build the report picker).
-router.post('/payroll/reports/list', async c => {
-  await requirePermission(c, 'finance.payroll.reports.view');
-  const reports: { key: string; label: string; requiresRunId: boolean; requiresCompareRunId?: boolean }[] = [
-    { key: 'register',                  label: 'Payroll Run Register',           requiresRunId: false },
-    { key: 'payslip_register',           label: 'Payslip Register',               requiresRunId: false },
-    { key: 'net_pay_summary',            label: 'Net Pay Summary',                requiresRunId: true  },
-    { key: 'employer_nis_summary',       label: 'Employer NIS Summary',           requiresRunId: true  },
-    { key: 'nis_remittance',             label: 'NIS Remittance',                 requiresRunId: true  },
-    { key: 'paye_summary',               label: 'PAYE Summary',                   requiresRunId: true  },
-    { key: 'hs_summary',                 label: 'Health Surcharge Summary',       requiresRunId: true  },
-    { key: 'cost_by_department',         label: 'Cost by Department',             requiresRunId: true  },
-    { key: 'cost_by_cost_center',        label: 'Cost by Cost Center',            requiresRunId: true  },
-    { key: 'export_audit',               label: 'Export Audit',                   requiresRunId: false },
-    { key: 'nis_continuity',             label: 'NIS Continuity Register',        requiresRunId: true  },
-    { key: 'missing_nis_number',         label: 'Missing NIS Number',             requiresRunId: true  },
-    { key: 'unverified_nis',             label: 'Unverified NIS Profiles',        requiresRunId: false },
-    { key: 'new_employee_nis_onboarding',label: 'New Employee NIS Onboarding',    requiresRunId: false },
-    { key: 'nis_opening_balance',        label: 'NIS Opening Balance',            requiresRunId: false },
-    { key: 'nis_exceptions',             label: 'Payroll NIS Exceptions',         requiresRunId: true  },
-    { key: 'variation',                  label: 'Payroll Variation (vs prior run)', requiresRunId: true },
-    { key: 'audit_comparison',           label: 'Audit Comparison (two runs)',    requiresRunId: true, requiresCompareRunId: true },
-  ];
-  return c.json({ success: true, data: reports });
+// ─────────────────────────────────────────────────────────────────────────────
+// Payroll Reports Center (F-12, Phase A) — server-owned 9-key catalog
+// ─────────────────────────────────────────────────────────────────────────────
+// Permissions reused: finance.payroll.reports.view (base) + .reports.export +
+// .view_all (additive, server-derived per report/format). Slice 2 ships preview;
+// file exports (worker + status/download) arrive in Slice 3.
+
+const reportCaller = (actor: Parameters<typeof userCan>[0]) =>
+  Promise.all([
+    userCan(actor, 'finance.payroll.view_all'),
+    userCan(actor, 'finance.payroll.reports.export'),
+  ]).then(([canViewAll, canExport]) => ({ canViewAll, canExport }));
+
+// POST /api/finance/payroll/reports/catalog — runnable reports for this caller.
+router.post('/payroll/reports/catalog', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  try {
+    const reports = buildReportCatalog(await reportCaller(actor));
+    return c.json({ success: true, data: { reports } });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/summary — 5 KPI tiles (redacted per §4A).
+router.post('/payroll/reports/summary', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  try {
+    const data = await computeReportSummary(await reportCaller(actor));
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/run — Phase-A preview branch (inline compute).
+// File formats are gated until Slice 3 (the catalog advertises preview only).
+router.post('/payroll/reports/run', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  const body = b(c) as Record<string, unknown>;
+
+  const parsed = reportParamsSchema.safeParse(body['params']);
+  if (!parsed.success) {
+    return c.json({ success: false, error: 'invalid_params', detail: parsed.error.issues }, 400);
+  }
+  const params = parsed.data;
+  const format = body['format'];
+  if (typeof format !== 'string' || !isFormatAllowed(params.report, format as ReportFormat)) {
+    return c.json({ success: false, error: 'invalid_format' }, 400);
+  }
+  if (format !== 'preview') {
+    return c.json({ success: false, error: 'file_export_unavailable', message: 'File exports are not yet available.' }, 400);
+  }
+  if (body['idempotencyKey'] !== undefined) {
+    return c.json({ success: false, error: 'invalid_params', message: 'idempotencyKey is not allowed for a preview.' }, 400);
+  }
+
+  // Additive record gate (§5C): employee-level preview requires view_all.
+  const reqs = deriveReportRequirements(params.report, 'preview');
+  if (reqs.requiresViewAll && !(await userCan(actor, 'finance.payroll.view_all'))) {
+    return c.json({ success: false, error: 'forbidden' }, 403);
+  }
+
+  try {
+    const data = await computeInteractiveReport(params as InteractiveReportParams);
+    await logReportPreview(actor.id, params as InteractiveReportParams, data.scopeId);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/history/list — artifact register (keyset).
+// Rows are filtered by every additive requirement the caller lacks (§5C).
+router.post('/payroll/reports/history/list', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  const v = zv(c, z.object({
+    cursor:    z.string().max(500).optional(),
+    limit:     z.number().int().min(1).max(100).optional(),
+    reportKey: z.enum(PAYROLL_REPORT_KEYS).optional(),
+  }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const data = await listReportHistory(await reportCaller(actor), v.data);
+    return c.json({ success: true, data });
+  } catch (e) { return routeErr(c, e); }
 });
 
 export default router;
