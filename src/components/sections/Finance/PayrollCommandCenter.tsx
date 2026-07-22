@@ -27,6 +27,7 @@ import { dialog } from '@lib/dialog';
 import { toast } from '@store';
 import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session';
 import { humanize } from './financeShared';
+import { showSection } from '@components/nav/navCore';
 import { usePayrollMutation, financePayrollApi } from '@api/finance/payroll';
 import { PayNewRunWizard } from './PayNewRunWizard';
 import { PayRunDetailPage } from './PayRunDetailPage';
@@ -466,7 +467,7 @@ export function PayrollCommandCenter(): VNode {
   const localWidgets: LocalWidgetMap = {
     // allowedSizes = resize FLOOR (min width/height). Keep min width small (3) so widgets can be
     // narrowed AND widened freely left/right; the default layout still starts them wide.
-    [W_ASSIGNED]:  { render: () => <ApprovalsWidget data={data} onOpen={openRun} />,  chrome: 'none', title: 'Approval and Activity', allowedSizes: floor('wide', 6, 12) },
+    [W_ASSIGNED]:  { render: () => <ApprovalsWidget data={data} />,  chrome: 'none', title: 'Approval and Activity', allowedSizes: floor('wide', 6, 12) },
     [W_DEADLINES]: { render: () => <DeadlinesWidget data={data} onOpen={openRun} />,   chrome: 'none', title: 'Upcoming Deadlines',   allowedSizes: floor('wide', 6, 10) },
     [W_READINESS]: { render: () => <ReadinessWidget data={data} onOpen={openRun} />,   chrome: 'none', title: 'Release Readiness',    allowedSizes: floor('standard', 6, 14) },
     [W_IMPACT]:    { render: () => <ImpactWidget data={data} onOpen={openRun} />,      chrome: 'none', title: 'Release Impact',       allowedSizes: floor('standard', 6, 10) },
@@ -724,7 +725,14 @@ function RunRow({ row, onOpen }: { row: PayrollRunRegisterItem; onOpen: (id: str
 }
 
 // ── Approvals & activity widget (mockup .pay-widget-approvals) ─────────────────
-function ApprovalsWidget({ data, onOpen }: { data?: PayrollControlCenterResponse; onOpen: (id: string) => void }): VNode {
+// Deep-link into the Approvals & Exceptions work queue (F-06/F-07), optionally scoped to
+// a tab + a search term (e.g. the run reference). The queue reads the hint on mount.
+function goToExceptions(hint?: { tab?: string; search?: string }): void {
+  try { if (hint) sessionStorage.setItem('siomac_open_payroll_exceptions', JSON.stringify(hint)); } catch { /* ignore */ }
+  showSection('s-finance-payroll-exceptions');
+}
+
+function ApprovalsWidget({ data }: { data?: PayrollControlCenterResponse }): VNode {
   const a = data?.assignedToYou;
   const activity = data?.recentActivity ?? [];
   return (
@@ -748,7 +756,7 @@ function ApprovalsWidget({ data, onOpen }: { data?: PayrollControlCenterResponse
           </div>
           <div class="approval-command">
             <div class="approval-context"><span><i class="fa-regular fa-calendar" /> {a.payDate ? `Pays ${fmtDay(a.payDate)}` : 'No pay date'}</span><span><i class="fa-solid fa-users" /> {a.employeeCount} employee{a.employeeCount !== 1 ? 's' : ''}</span></div>
-            <button type="button" class="btn primary" onClick={() => onOpen(a.runId)}><i class="fa-solid fa-user-check" /> Review <i class="fa-solid fa-arrow-right" /></button>
+            <button type="button" class="btn primary" onClick={() => goToExceptions({ tab: 'approvals', search: a.runNo })}><i class="fa-solid fa-user-check" /> Review <i class="fa-solid fa-arrow-right" /></button>
           </div>
         </div>
       ) : (

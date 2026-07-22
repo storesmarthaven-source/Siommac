@@ -48,6 +48,13 @@ const PAYROLL_RUNS_ITEM: ModuleNavItem = {
   sub: 'Operational register of every scheduled, off-cycle, correction and final-pay run + the pay-date calendar',
 };
 
+const PAYROLL_EXCEPTIONS_ITEM: ModuleNavItem = {
+  id: 's-finance-payroll-exceptions',
+  label: 'Approvals & Exceptions',
+  icon: 'fa-user-check',
+  sub: 'One work queue for payroll approvals, blocking findings and warnings across every run',
+};
+
 const PAYROLL_SETUP_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-setup',
   label: 'Payroll Setup',
@@ -106,7 +113,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, MY_PAYSLIPS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',
