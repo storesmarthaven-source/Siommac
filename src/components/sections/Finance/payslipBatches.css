@@ -1,0 +1,99 @@
+/* Payslip Batches register (F-10) — scoped .psb-* styles, Siomac standard (shared
+   palette with the runs register), re-implemented from mockups/payroll-enterprise/payslips.html. */
+
+.psb {
+  --br: #1d4ed8; --br-soft: #eaf1fd; --br-ink: #1a44b8;
+  --gn: #16a34a; --gn-soft: #e5f6ec; --gn-ink: #15803d;
+  --am: #d97706; --am-soft: #fdf1dc; --am-ink: #b45309;
+  --rd: #dc2626; --rd-soft: #fdecec;
+  --bd: #e5e9f0; --bd-soft: #eef1f6;
+  --ink: #0f172a; --ink2: #334155; --mut: #64748b; --mut2: #94a3b8;
+  --card: #fff; --radius: 12px; --shadow: 0 1px 2px rgba(15,23,42,.04), 0 1px 3px rgba(15,23,42,.06);
+  display: flex; flex-direction: column; gap: 16px; padding: 2px 2px 40px; color: var(--ink);
+}
+
+/* Lead */
+.psb-lead { display: flex; align-items: flex-start; justify-content: space-between; gap: 20px; flex-wrap: wrap; }
+.psb-crumbs { display: flex; align-items: center; gap: 9px; font-size: 13px; color: var(--mut); margin-bottom: 10px; }
+.psb-crumbs .sep { color: var(--mut2); }
+.psb-crumbs b { color: var(--br); font-weight: 600; }
+.psb-lead h1 { margin: 0 0 4px; color: #101b33; font-size: 25px; font-weight: 800; letter-spacing: -.01em; line-height: 1.2; }
+.psb-lead p { max-width: 800px; margin: 5px 0 0; color: var(--mut); font-size: 13.5px; }
+.psb-lead-actions { display: flex; align-items: center; gap: 9px; flex-shrink: 0; }
+.psb-icon-btn { width: 41px; height: 41px; border-radius: 9px; border: 1px solid var(--bd); background: #fff; color: var(--ink2); cursor: pointer; }
+.psb-icon-btn:hover { background: #f8fafc; border-color: #c5cfdd; }
+
+/* KPI strip */
+.psb-metrics { display: flex; align-items: stretch; flex-wrap: wrap; padding: 17px 6px; row-gap: 16px;
+  background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
+.psb-metric { flex: 1; display: flex; align-items: center; gap: 11px; padding: 4px 16px; border-right: 1px solid var(--bd-soft); min-width: 160px; }
+.psb-metric:last-child { border-right: none; }
+.psb-mico { width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0; }
+.psb-mico.blue { background: var(--br-soft); } .psb-mico.green { background: var(--gn-soft); } .psb-mico.red { background: var(--rd-soft); }
+.psb-mk { font-size: 12px; color: var(--mut); }
+.psb-mv { font-size: 20px; font-weight: 800; color: #101b33; font-variant-numeric: tabular-nums; margin-top: 2px; }
+
+/* Register shell */
+.psb-shell { background: var(--card); border: 1px solid var(--bd); border-radius: var(--radius); box-shadow: var(--shadow); }
+.psb-titlebar { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 16px 18px; border-bottom: 1px solid var(--bd-soft); }
+.psb-titlebar h2 { margin: 0; font-size: 16px; font-weight: 700; color: #101b33; }
+.psb-titlebar p { margin: 3px 0 0; font-size: 12.5px; color: var(--mut); }
+.psb-count { font-size: 13px; color: var(--mut); white-space: nowrap; }
+.psb-count strong { color: var(--ink); font-size: 15px; }
+
+.psb-tabs { display: flex; gap: 4px; padding: 8px 12px 0; border-bottom: 1px solid var(--bd-soft); flex-wrap: wrap; }
+.psb-tabs button { display: inline-flex; align-items: center; gap: 7px; padding: 9px 13px; border: 0; background: none; border-bottom: 2px solid transparent;
+  color: var(--mut); font-size: 13px; font-weight: 600; cursor: pointer; font-family: inherit; margin-bottom: -1px; }
+.psb-tabs button:hover { color: var(--ink2); }
+.psb-tabs button.on { color: var(--br); border-bottom-color: var(--br); }
+.psb-tabs button span { min-width: 20px; padding: 1px 7px; border-radius: 10px; background: var(--bd-soft); color: var(--mut); font-size: 11px; }
+.psb-tabs button.on span { background: var(--br-soft); color: var(--br); }
+
+.psb-toolbar { display: flex; align-items: center; gap: 12px; padding: 13px 16px; border-bottom: 1px solid var(--bd-soft); flex-wrap: wrap; }
+.psb-search { display: flex; align-items: center; gap: 9px; flex: 1; min-width: 240px; height: 39px; padding: 0 13px; border: 1px solid var(--bd); border-radius: 9px; background: #f8fafc; color: var(--mut); }
+.psb-search input { flex: 1; border: 0; background: none; outline: none; font-family: inherit; font-size: 13.5px; color: var(--ink); }
+.psb-select { height: 39px; padding: 0 12px; border: 1px solid var(--bd); border-radius: 9px; background: #fff; color: var(--ink2); font-family: inherit; font-size: 13px; cursor: pointer; }
+
+/* Table */
+.psb-table-wrap { overflow-x: auto; }
+.psb-table { width: 100%; border-collapse: collapse; min-width: 1080px; }
+.psb-table th { text-align: left; padding: 11px 16px; background: #f7f9fc; border-bottom: 1px solid var(--bd); font-size: 10px; text-transform: uppercase; letter-spacing: .5px; color: var(--mut); white-space: nowrap; }
+.psb-table th.num { text-align: right; }
+.psb-table td { height: 66px; padding: 10px 16px; border-bottom: 1px solid var(--bd-soft); vertical-align: middle; color: #26344c; font-size: 13px; }
+.psb-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+.psb-table td strong { display: block; color: #14213a; font-size: 13.5px; }
+.psb-table td small { display: block; margin-top: 2px; color: var(--mut); font-size: 11.5px; }
+.psb-table td small.cap { text-transform: capitalize; }
+.psb-table td.psb-owner { color: var(--mut); font-size: 12.5px; white-space: nowrap; }
+.psb-row { cursor: pointer; }
+.psb-row:hover { background: #f8fafc; }
+.psb-open { text-align: center; color: var(--mut2); }
+
+/* Delivery progress bar */
+.psb-bar { display: flex; height: 8px; width: 150px; border-radius: 5px; overflow: hidden; background: #eef1f6; }
+.psb-bar span { display: block; height: 100%; }
+.psb-bar .delivered { background: var(--gn); }
+.psb-bar .failed { background: var(--rd); }
+.psb-bar .pending { background: var(--br); }
+
+/* Lifecycle pill */
+.psb-pill { display: inline-flex; align-items: center; gap: 7px; padding: 4px 12px; border-radius: 15px; font-size: 12px; font-weight: 700; white-space: nowrap; }
+.psb-pill .psb-dot { width: 7px; height: 7px; border-radius: 50%; background: currentColor; }
+.psb-pill.blue { background: var(--br-soft); color: var(--br-ink); }
+.psb-pill.green { background: var(--gn-soft); color: var(--gn-ink); }
+.psb-pill.amber { background: var(--am-soft); color: var(--am-ink); }
+.psb-pill.grey { background: #eef0f4; color: var(--mut); }
+
+/* States */
+.psb-empty { text-align: center; padding: 46px 20px; color: var(--mut); }
+.psb-empty i { display: block; font-size: 26px; color: var(--mut2); margin-bottom: 8px; }
+.psb-empty strong { color: var(--ink2); font-size: 14px; }
+.psb-empty small { display: block; margin-top: 3px; font-size: 12.5px; }
+.psb-loading { padding: 16px; }
+.psb-skel { display: block; height: 200px; border-radius: 8px; background: linear-gradient(90deg,#f1f5f9,#e8eef5,#f1f5f9); background-size: 200% 100%; animation: psb-sh 1.3s infinite; }
+@keyframes psb-sh { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
+
+.psb-foot { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; font-size: 12.5px; color: var(--mut); }
+.psb-pager { display: flex; gap: 6px; }
+.psb-pager button { width: 34px; height: 34px; border-radius: 8px; border: 1px solid var(--bd); background: #fff; color: var(--ink2); cursor: pointer; }
+.psb-pager button:disabled { opacity: .45; cursor: not-allowed; }
