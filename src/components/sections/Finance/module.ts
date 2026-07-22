@@ -41,10 +41,13 @@ const PAYROLL_ITEM: ModuleNavItem = {
   sub: 'Pay runs, calculation, approval, payslips & statutory export',
 };
 
+// F-14 — the payroll operational pages nest under the "Payroll" parent (s-finance-payroll,
+// which routes to the Command Center). "Reports" joins as a child once F-12's page lands.
 const PAYROLL_RUNS_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-runs',
   label: 'Payroll Runs',
   icon: 'fa-list-check',
+  parent: 's-finance-payroll',
   sub: 'Operational register of every scheduled, off-cycle, correction and final-pay run + the pay-date calendar',
 };
 
@@ -52,6 +55,7 @@ const PAYROLL_EXCEPTIONS_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-exceptions',
   label: 'Approvals & Exceptions',
   icon: 'fa-user-check',
+  parent: 's-finance-payroll',
   sub: 'One work queue for payroll approvals, blocking findings and warnings across every run',
 };
 
@@ -59,6 +63,7 @@ const PAYSLIP_BATCHES_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-payslips',
   label: 'Payslip Batches',
   icon: 'fa-file-invoice-dollar',
+  parent: 's-finance-payroll',
   sub: 'Generation, rendering and protected delivery of payslips for every locked payroll run',
 };
 
