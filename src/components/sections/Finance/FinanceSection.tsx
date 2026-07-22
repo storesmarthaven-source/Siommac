@@ -18,6 +18,7 @@ import { PayrollCommandCenter }     from './PayrollCommandCenter';
 import { PayrollRunRegisterPage }   from './PayrollRunRegisterPage';
 import { PayrollExceptionQueuePage } from './PayrollExceptionQueuePage';
 import { PayrollPayslipBatchesPage } from './PayrollPayslipBatchesPage';
+import { PayrollReportsPage }        from './PayrollReportsPage';
 import { PayrollSetupOverview }     from './PayrollSetupOverview';
 import { RemittancesOverview }      from './RemittancesOverview';
 import { ExpensesOverview }         from './ExpensesOverview';
@@ -33,6 +34,7 @@ const PAYROLL_ID       = 's-finance-payroll';
 const PAYROLL_RUNS_ID  = 's-finance-payroll-runs';
 const PAYROLL_EXCEPTIONS_ID = 's-finance-payroll-exceptions';
 const PAYSLIP_BATCHES_ID = 's-finance-payroll-payslips';
+const PAYROLL_REPORTS_ID = 's-finance-payroll-reports';
 const PAYROLL_SETUP_ID = 's-finance-payroll-setup';
 const REMITTANCES_ID   = 's-finance-remittances';
 const EXPENSES_ID      = 's-finance-expenses';
@@ -48,6 +50,7 @@ function isFinanceSection(id: string): boolean {
     || id === PAYROLL_RUNS_ID
     || id === PAYROLL_EXCEPTIONS_ID
     || id === PAYSLIP_BATCHES_ID
+    || id === PAYROLL_REPORTS_ID
     || id === PAYROLL_SETUP_ID
     || id === REMITTANCES_ID
     || id === EXPENSES_ID
@@ -82,6 +85,7 @@ export function FinanceSection(): VNode {
   if (sectionId === PAYROLL_RUNS_ID)  return <PayrollRunRegisterPage />;
   if (sectionId === PAYROLL_EXCEPTIONS_ID) return <PayrollExceptionQueuePage />;
   if (sectionId === PAYSLIP_BATCHES_ID) return <PayrollPayslipBatchesPage />;
+  if (sectionId === PAYROLL_REPORTS_ID) return <PayrollReportsPage />;
   if (sectionId === PAYROLL_SETUP_ID) return <PayrollSetupOverview />;
   if (sectionId === REMITTANCES_ID)  return <RemittancesOverview />;
   if (sectionId === BUDGETS_ID)       return <BudgetsOverview />;

@@ -67,6 +67,15 @@ const PAYSLIP_BATCHES_ITEM: ModuleNavItem = {
   sub: 'Generation, rendering and protected delivery of payslips for every locked payroll run',
 };
 
+// F-12 — Reports Center: preview + (soon) export reports from locked, authorized runs.
+const PAYROLL_REPORTS_ITEM: ModuleNavItem = {
+  id: 's-finance-payroll-reports',
+  label: 'Reports',
+  icon: 'fa-chart-column',
+  parent: 's-finance-payroll',
+  sub: 'Payroll register, net-pay, cost, reconciliation, variance, overtime, movements & NIS reports',
+};
+
 const PAYROLL_SETUP_ITEM: ModuleNavItem = {
   id: 's-finance-payroll-setup',
   label: 'Payroll Setup',
@@ -119,7 +128,7 @@ const STATUTORY_FORMS_ITEM: ModuleNavItem = {
 export const financeModule: ModuleDefinition = {
   id: 'finance',
   navGroup: { id: 'finance', label: 'Finance' },
-  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
+  navItems: [OVERVIEW_ITEM, PAYABLES_ITEM, STATUTORY_ITEM, PAYROLL_ITEM, PAYROLL_RUNS_ITEM, PAYROLL_EXCEPTIONS_ITEM, PAYSLIP_BATCHES_ITEM, PAYROLL_REPORTS_ITEM, PAYROLL_SETUP_ITEM, PAYSLIP_DESIGNER_ITEM, REMITTANCES_ITEM, STATUTORY_FORMS_ITEM, DISBURSEMENTS_ITEM, EXPENSES_ITEM, BUDGETS_ITEM],
   roles: ['admin', 'superadmin'],
   mount: {
     sectionId: 's-finance',
