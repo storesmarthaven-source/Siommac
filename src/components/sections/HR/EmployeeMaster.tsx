@@ -38,7 +38,7 @@ import { ImportWizard } from './ImportWizard';
 import { StartOnboardingWizard } from './StartOnboardingWizard';
 import { TableSkeleton, Button } from '@ui';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
 } from '@ui/widgets';
 import { TableSearch, FilterDropdown, AdvancedFilter, ActiveFilters, useFilterDropdowns, type AdvTab } from '@ui';
@@ -47,6 +47,7 @@ import { useSessionStore, selectIsManager, selectIsAdmin } from '@store/session'
 import './HR.css';
 
 const PAGE_KEY = 'hr.employees.overview';
+const EMPLOYEE_BOARD_COLUMNS = 24;
 
 // ── toolbar ────────────────────────────────────────────────────────────────────
 
@@ -163,9 +164,10 @@ function defInst(widgetId: string, x: number, y: number, w: number, h: number, s
 function defaultEmployeeLayout(): BoardLayout {
   return {
     pageKey: PAGE_KEY,
+    columns: EMPLOYEE_BOARD_COLUMNS,
     zones: {
       main: [
-        defInst('hr.employees.register', 0, 0, 12, 9, 'hero'),
+        defInst('hr.employees.register', 0, 0, EMPLOYEE_BOARD_COLUMNS, 9, 'hero'),
       ],
     },
   };
@@ -228,7 +230,7 @@ export function EmployeeMaster(): VNode {
   // The v2 board persists per-user; the register lives as a PAGE-LOCAL widget so it can
   // close over the page's filter/selection/modal state. KPI + insight + workforce
   // widgets come from the global registry (browsable in the Widget Library).
-  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout());
+  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(PAGE_KEY, defaultEmployeeLayout(), EMPLOYEE_BOARD_COLUMNS);
   const boardItems = layout.zones.main ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   // New widgets/previews drop at the bottom of the board (never over the stats cards).
@@ -454,6 +456,7 @@ export function EmployeeMaster(): VNode {
           the employee register (page-local). Read-only unless manager/admin/superadmin. */}
       <WidgetBoard pageKey={PAGE_KEY} zones={['main']} editing={editing && canEdit}
         localWidgets={localWidgets} defaultLayout={defaultEmployeeLayout()} demo={demo}
+        column={EMPLOYEE_BOARD_COLUMNS}
         preview={preview} onPreviewChange={setPreview}
         onCommitPreview={commitPreview} onDiscardPreview={discardPreview} />
 
@@ -463,6 +466,7 @@ export function EmployeeMaster(): VNode {
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
         onAddWidget={inst => addWidget('main', placeBottom(inst))}
+        onAddWidgets={instances => updateZoneLayout('main', [...boardItems, ...placeWidgetsAtBottom(boardItems, instances)])}
         onPreviewOnBoard={p => setPreview(placeBottom(p))} />
 
       {/* Profile drawer */}

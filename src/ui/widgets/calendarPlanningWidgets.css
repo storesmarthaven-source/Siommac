@@ -1,0 +1,67 @@
+.cpw-deadlines,
+.cpw-task-planner { box-sizing:border-box; width:100%; height:100%; min-width:0; font-family:inherit; }
+.cpw-deadlines { min-height:380px; }
+.cpw-task-planner { min-height:340px; }
+.cpw-deadlines *, .cpw-task-planner * { box-sizing:border-box; }
+
+/* Statutory Upcoming Deadlines — the existing .sdb visual, made self-contained. */
+.cpw-deadlines { --sdb-card:#fff; --sdb-ink:#15213b; --sdb-ink2:#3d4863; --sdb-body:#5b6579; --sdb-muted:#8a94a8; --sdb-line:#e9edf4; --sdb-line2:#eef1f7; --sdb-primary:#2f5fe0; --sdb-primary-d:#264fc7; --sdb-blue-bg:#eaf1fe; --sdb-amber:#f59e0b; --sdb-amber-bg:#fdf3e0; display:flex; flex-direction:column; overflow:hidden; margin:0; padding:18px 20px; border:1px solid var(--sdb-line); border-radius:14px; background:var(--sdb-card); color:var(--sdb-ink2); box-shadow:0 1px 2px rgba(16,24,40,.05); }
+.cpw-deadlines .sdb-ch-hd { display:flex; align-items:center; gap:9px; margin-bottom:6px; flex:0 0 auto; }
+.cpw-deadlines .sdb-ch-hd h2 { margin:0; color:var(--sdb-ink); font-size:15.5px; font-weight:700; }
+.cpw-deadlines__icon { color:#2f5fe0; }
+.cpw-deadlines .sdb-ch-tools { display:flex; align-items:center; gap:8px; margin-left:auto; }
+.cpw-deadlines .sdb-ready-nav { display:inline-flex; align-items:center; justify-content:center; width:26px; height:26px; padding:0; border:1px solid var(--sdb-line); border-radius:8px; background:#fff; color:var(--sdb-muted); cursor:pointer; }
+.cpw-deadlines .sdb-ready-nav:hover { background:#f8fafd; color:var(--sdb-ink2); }
+.cpw-deadlines .sdb-cal-month { margin:4px 0 10px; color:var(--sdb-ink2); font-size:12px; font-weight:600; }
+.cpw-deadlines .sdb-cal-strip { display:grid; grid-template-columns:repeat(7,minmax(0,1fr)); gap:4px; }
+.cpw-deadlines .sdb-cal-day { position:relative; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; aspect-ratio:1; min-width:0; padding:0; overflow:hidden; border:1px solid var(--sdb-line); border-radius:13px; background:#fff; color:inherit; cursor:pointer; font:inherit; }
+.cpw-deadlines .sdb-cal-day:hover { background:#f4f7fc; border-color:#cdd8ea; }
+.cpw-deadlines .sdb-cal-day.is-today { border-color:var(--sdb-primary); }
+.cpw-deadlines .sdb-cal-day > span { color:var(--sdb-muted); font-size:8.5px; font-weight:600; line-height:1; letter-spacing:.02em; text-transform:uppercase; }
+.cpw-deadlines .sdb-cal-day > strong { color:var(--sdb-ink); font-size:13px; font-weight:700; line-height:1; }
+.cpw-deadlines .sdb-cal-day.is-today > strong { color:var(--sdb-primary); }
+.cpw-deadlines .sdb-cal-day.has-deadline { border-bottom-color:var(--sdb-amber); box-shadow:inset 0 -2px 0 var(--sdb-amber); }
+.cpw-deadlines .sdb-cal-day.is-on { border-color:var(--sdb-primary); background:var(--sdb-primary); }
+.cpw-deadlines .sdb-cal-day.is-on > span,.cpw-deadlines .sdb-cal-day.is-on > strong { color:#fff; }
+.cpw-deadlines .sdb-cal-day.is-on.has-deadline { border-bottom-color:#fff; box-shadow:inset 0 -2px 0 #fff; }
+.cpw-deadlines .sdb-cal-list { display:flex; flex:1 1 auto; flex-direction:column; gap:8px; min-height:0; margin-top:14px; overflow:hidden; }
+.cpw-deadlines .sdb-cal-empty { display:flex; flex-direction:column; align-items:center; gap:8px; margin:auto; padding:10px; text-align:center; }
+.cpw-deadlines .sdb-cal-empty-ic { color:#c3ccdb; }.cpw-deadlines .sdb-cal-empty-t { color:var(--sdb-ink2); font-size:13px; font-weight:650; }.cpw-deadlines .sdb-cal-empty-s { color:var(--sdb-muted); font-size:11.5px; line-height:1.35; }
+.cpw-deadline-row { display:flex; align-items:center; gap:11px; width:100%; padding:10px 12px; border:1px solid var(--sdb-line); border-radius:11px; background:#fff; color:inherit; cursor:pointer; text-align:left; }
+.cpw-deadline-row:hover { border-color:#cdd8ea; background:#fbfcff; }
+.cpw-deadlines .sdb-cal-dot { width:8px; height:8px; flex:0 0 8px; border-radius:50%; }.cpw-deadlines .sdb-cal-dot.sdb-tag--upcoming { background:#2563eb; }.cpw-deadlines .sdb-cal-dot.sdb-tag--pending { background:var(--sdb-amber); }.cpw-deadlines .sdb-cal-dot.sdb-tag--planned { background:#64748b; }
+.cpw-deadline-row__copy { display:block; flex:1; min-width:0; }.cpw-deadline-row__copy strong,.cpw-deadline-row__copy span { display:block; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }.cpw-deadline-row__copy strong { color:var(--sdb-ink); font-size:13px; font-weight:600; }.cpw-deadline-row__copy span { margin-top:2px; color:var(--sdb-muted); font-size:11.5px; }
+.cpw-deadlines .sdb-tag { height:22px; padding:0 10px; display:inline-flex; flex:0 0 auto; align-items:center; align-self:flex-start; border-radius:20px; font-size:10.5px; font-weight:700; }.cpw-deadlines .sdb-tag--upcoming { background:var(--sdb-blue-bg); color:#2563eb; }.cpw-deadlines .sdb-tag--pending { background:var(--sdb-amber-bg); color:#b7791f; }.cpw-deadlines .sdb-tag--planned { background:#f1f5f9; color:#64748b; }
+
+/* Onboarding Task Planner — copied from the existing card's dimensions and visual tokens. */
+.cpw-task-planner { display:flex; flex-direction:column; overflow:hidden; padding:13px; border:1px solid #e7edf4; border-radius:19px; background:#fafbfc; color:#172033; box-shadow:none; }
+.cpw-task-planner .obv-habit-top { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin:0 0 10px; }
+.cpw-task-planner .obv-habit-top h2 { margin:0; color:#151a24; font-size:16px; line-height:1.1; font-weight:627; letter-spacing:-.025em; }.cpw-task-planner .obv-habit-top h2 span { color:#5c6472; font-weight:514; }.cpw-task-planner .obv-habit-top p { margin:3px 0 0; color:#7b8491; font-size:10.5px; line-height:1.25; font-weight:545; }
+.cpw-task-planner .obv-add-task-btn { display:inline-flex; flex:0 0 auto; align-items:center; justify-content:center; gap:7px; height:31px; min-height:31px; padding:0 11px; border:0; border-radius:13px; background:#ef7c6a; color:#fff; cursor:pointer; font:inherit; font-size:12px; line-height:1; font-weight:618; white-space:nowrap; }
+.cpw-task-planner .obv-habit-days { display:grid; grid-template-columns:34px repeat(7,minmax(0,1fr)) 34px; align-items:center; gap:7px; margin:0 0 10px; padding:8px; border:1px solid #edf1f6; border-radius:16px; background:#fff; }
+.cpw-task-planner .obv-health-ghost-btn { display:grid; place-items:center; width:34px; height:34px; padding:0; border:0; border-radius:12px; background:#f4f6f9; color:#5f6878; cursor:pointer; }
+.cpw-task-planner .obv-habit-day { min-width:0; min-height:34px; padding:5px 2px; border:0; border-radius:12px; background:transparent; color:inherit; cursor:pointer; font:inherit; }.cpw-task-planner .obv-habit-day span { display:block; margin:0 0 3px; color:#7b8491; font-size:9px; line-height:1; font-weight:564; }.cpw-task-planner .obv-habit-day strong { display:block; color:#172033; font-size:12px; line-height:1; font-weight:627; }.cpw-task-planner .obv-habit-day.active { background:#ef7c6a; }.cpw-task-planner .obv-habit-day.active span,.cpw-task-planner .obv-habit-day.active strong { color:#fff; }
+.cpw-task-planner .obv-task-composer { margin:0 0 10px; padding:10px; border:1px solid #e7edf4; border-radius:16px; background:#fff; }.cpw-task-planner .obv-task-composer-head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-bottom:8px; }.cpw-task-planner .obv-task-composer-head strong { font-size:12px; }.cpw-task-planner .obv-task-composer-head button { display:grid; place-items:center; width:25px; height:25px; padding:0; border:0; border-radius:8px; background:#f3f5f8; color:#606a79; cursor:pointer; }
+.cpw-task-fields { display:grid; grid-template-columns:minmax(0,1fr) 120px; gap:8px; }.cpw-task-planner .obv-task-field { display:grid; gap:4px; min-width:0; }.cpw-task-planner .obv-task-field span { color:#707a89; font-size:10px; }.cpw-task-planner .obv-task-field input,.cpw-task-planner .obv-task-field select { width:100%; height:32px; min-height:32px; padding:0 9px; border:1px solid #dfe5ee; border-radius:10px; background:#fff; color:#172033; font:inherit; font-size:11px; }
+.cpw-task-planner .obv-task-composer-actions { display:flex; justify-content:flex-end; gap:6px; margin-top:8px; }.cpw-task-planner .obv-task-cancel-btn,.cpw-task-planner .obv-task-save-btn { height:30px; min-height:30px; padding:0 10px; border:1px solid #dfe5ee; border-radius:10px; background:#fff; color:#4e586a; cursor:pointer; font:inherit; font-size:11px; }.cpw-task-planner .obv-task-save-btn { border-color:#ef7c6a; background:#ef7c6a; color:#fff; }.cpw-task-planner .obv-task-save-btn:disabled { opacity:.55; cursor:not-allowed; }.cpw-task-error { margin:0 0 8px; color:#c23d36; font-size:10px; }
+.cpw-task-planner .obv-habit-grid { flex:1 1 auto; min-height:0; overflow:auto; }.cpw-task-planner .obv-habit-col { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; }
+.cpw-task-planner .obv-habit-row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:9px; min-width:0; min-height:56px; padding:8px; border:1px solid #edf1f6; border-radius:15px; background:#fff; color:inherit; }
+.cpw-task-open { display:grid; grid-template-columns:34px minmax(0,1fr); align-items:center; gap:9px; min-width:0; padding:0; border:0; background:transparent; color:inherit; cursor:pointer; text-align:left; }.cpw-task-planner .obv-habit-icon { display:grid; place-items:center; width:34px; height:34px; border-radius:12px; }.cpw-task-planner .obv-habit-icon.accent-mint { background:#e5f7ef; color:#249b67; }.cpw-task-planner .obv-habit-icon.accent-rose { background:#ffebe9; color:#db6559; }
+.cpw-task-planner .obv-habit-copy { display:grid; gap:3px; min-width:0; }.cpw-task-planner .obv-habit-copy strong { overflow:hidden; color:#172033; font-size:12px; line-height:1.12; font-weight:609; text-overflow:ellipsis; white-space:nowrap; }.cpw-task-planner .obv-habit-copy strong.struck { color:#929aa6; text-decoration:line-through; }.cpw-task-planner .obv-habit-copy span { overflow:hidden; color:#7b8491; font-size:10px; line-height:1.15; font-weight:545; text-overflow:ellipsis; white-space:nowrap; }
+.cpw-task-planner .obv-habit-done { display:inline-flex; align-items:center; justify-content:center; gap:4px; min-width:64px; height:24px; padding:0 8px; border:0; border-radius:999px; font:inherit; font-size:10px; line-height:1; font-weight:627; }.cpw-task-planner button.obv-habit-done { cursor:pointer; }.cpw-task-planner .status-pending { background:#fff0e5; color:#c86843; }.cpw-task-planner .status-ready { background:#e7f7ef; color:#27875d; }
+.cpw-task-planner .obv-habit-empty { grid-column:1 / -1; display:flex; align-items:center; justify-content:center; gap:9px; min-height:86px; padding:14px; border:1px dashed #dce5f1; border-radius:14px; background:#fff; color:#7b8491; font-size:12px; font-weight:555; text-align:center; }
+.cpw-spin { animation:cpw-spin .8s linear infinite; } @keyframes cpw-spin { to { transform:rotate(360deg); } }
+
+@container (max-width:560px) {
+  .cpw-task-planner .obv-habit-col { grid-template-columns:1fr; }
+  .cpw-task-planner .obv-habit-days { grid-template-columns:30px repeat(4,minmax(0,1fr)) 30px; gap:4px; }
+  .cpw-task-planner .obv-habit-day:nth-of-type(n+6) { display:none; }
+  .cpw-task-fields { grid-template-columns:1fr; }
+}
+@container (max-width:380px) {
+  .cpw-deadlines,.cpw-task-planner { min-height:0; padding:13px; }
+  .cpw-deadlines .sdb-cal-strip { gap:2px; }.cpw-deadlines .sdb-cal-day { border-radius:9px; }.cpw-deadlines .sdb-cal-day > span { font-size:7px; }.cpw-deadlines .sdb-cal-day > strong { font-size:11px; }
+  .cpw-task-planner .obv-habit-top p { display:none; }.cpw-task-planner .obv-add-task-btn { width:31px; padding:0; border-radius:10px; }.cpw-task-planner .obv-add-task-btn span { display:none; }
+  .cpw-task-planner .obv-habit-row { grid-template-columns:1fr; }.cpw-task-planner .obv-habit-done { justify-self:start; margin-left:43px; }
+}
+@media (prefers-reduced-motion:reduce) { .cpw-spin { animation:none; } }

@@ -102,8 +102,8 @@ export default async function run(h) {
   // ───────────────────────── BOARD LAYOUTS ─────────────────────────
   h.section('Widgets › Board layouts');
 
-  const layout = { version: 3, columns: 12, pageKey: PAGE, zones: { main: [
-    { instanceId: 'i1', widgetId: `e2e.${TAG}.w`, pageKey: PAGE, zoneId: 'main', x: 0, y: 0, w: 4, h: 3, sizeKey: 'standard', config: { metric: 'headcount' }, responsive: { mobile: { x: 0, y: 0, w: 4, h: 3 } } },
+  const layout = { version: 3, columns: 24, pageKey: PAGE, zones: { main: [
+    { instanceId: 'i1', widgetId: `e2e.${TAG}.w`, pageKey: PAGE, zoneId: 'main', x: 0, y: 0, w: 8, h: 3, sizeKey: 'standard', config: { metric: 'headcount' }, responsive: { mobile: { x: 0, y: 0, w: 4, h: 3 } } },
   ] } };
 
   await test('getInstanceLayout returns a layout field for any user', async () => {
@@ -116,7 +116,7 @@ export default async function run(h) {
     ok(r);
     const { data } = await sb.from('ui_layout').select('layout').eq('page_key', PAGE).eq('user_id', admin.id).maybeSingle();
     expect(data?.layout?.zones?.main?.length === 1, 'layout not persisted');
-    expect(data?.layout?.version === 3 && data?.layout?.columns === 12, 'v3 envelope not persisted');
+    expect(data?.layout?.version === 3 && data?.layout?.columns === 24, '24-column v3 envelope not persisted');
     const saved = data?.layout?.zones?.main?.[0];
     expect(saved?.pageKey === PAGE && saved?.zoneId === 'main', 'instance placement context missing');
     expect(saved?.config?.metric === 'headcount' && saved?.responsive?.mobile?.w === 4, 'config/responsive placement lost');

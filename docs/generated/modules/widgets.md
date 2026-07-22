@@ -2,15 +2,16 @@
 
 # widgets Module Map
 
-Source fingerprint: `cfb2d82e9c13c9a422a52bb0`
+Source fingerprint: `855d4a135f9b6b3f7fdc78cb`
 
-Files: 56 | Symbols: 332 | Widgets: 0 | Unique mounted endpoints: 13 | Route definitions: 13 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 63 | Symbols: 399 | Widgets: 2 | Unique mounted endpoints: 13 | Route definitions: 13 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| - | - | - | - | - |
+| `enterprise.calendar.taskPlanner` | Task planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:165` |
+| `enterprise.calendar.upcomingDeadlines` | Upcoming deadlines | registry | `UpcomingDeadlinesWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:164` |
 
 ## Route Definitions
 
@@ -65,10 +66,20 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetAccessContext` | interface / ui-tile | `src/ui/widgets/access.ts:5` | `-` |
 | `WidgetAccessDecision` | interface / ui-tile | `src/ui/widgets/access.ts:6` | `-` |
 | `resolveWidgetAccess` | function / ui-tile | `src/ui/widgets/access.ts:7` | `-` |
+| `WIDGET_BOARD_REVEAL_EVENT` | variable / ui-tile | `src/ui/widgets/boardReveal.ts:1` | `-` |
+| `WidgetBoardRevealDetail` | interface / ui-tile | `src/ui/widgets/boardReveal.ts:3` | `-` |
+| `requestWidgetBoardReveal` | function / ui-tile | `src/ui/widgets/boardReveal.ts:9` | `-` |
 | `WidgetBundle` | interface / ui-tile | `src/ui/widgets/bundles.ts:53` | `-` |
-| `WIDGET_BUNDLES` | array / ui-tile | `src/ui/widgets/bundles.ts:73` | `-` |
-| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:126` | `-` |
+| `WIDGET_BUNDLES` | array / ui-tile | `src/ui/widgets/bundles.ts:75` | `-` |
+| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:131` | `-` |
+| `WidgetModuleMeta` | interface / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:4` | `-` |
+| `WIDGET_MODULE_META` | variable / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:10` | `-` |
+| `widgetModuleMeta` | function / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:18` | `-` |
+| `availableWidgetModules` | function / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:23` | `-` |
+| `widgetAreas` | function / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:28` | `-` |
 | `commitPreviewWidget` | function / ui-tile | `src/ui/widgets/commitPreviewWidget.ts:5` | `-` |
+| `WidgetContentFitResult` | interface / ui-tile | `src/ui/widgets/contentFit.ts:1` | `-` |
+| `checkWidgetContentFit` | function / ui-tile | `src/ui/widgets/contentFit.ts:23` | `-` |
 | `createPreviewWidgetInstance` | function / ui-tile | `src/ui/widgets/createPreviewWidgetInstance.ts:5` | `-` |
 | `createWidgetInstance` | function / ui-tile | `src/ui/widgets/createWidgetInstance.ts:4` | `-` |
 | `registerWidgetDataSource` | function / ui-tile | `src/ui/widgets/dataSources.ts:4` | `-` |
@@ -84,7 +95,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `getWidgetGovernancePolicy` | function / ui-tile | `src/ui/widgets/governance.ts:4` | `-` |
 | `listWidgetGovernancePolicies` | function / ui-tile | `src/ui/widgets/governance.ts:5` | `-` |
 | `effectiveWidgetPolicy` | function / ui-tile | `src/ui/widgets/governance.ts:6` | `-` |
-| `isWidgetDiscoverable` | function / ui-tile | `src/ui/widgets/governance.ts:7` | `-` |
+| `isWidgetDiscoverable` | function / ui-tile | `src/ui/widgets/governance.ts:9` | `-` |
 | `Empty` | function / component | `src/ui/widgets/inlinePrimitives.tsx:17` | `-` |
 | `ListRow` | function / component | `src/ui/widgets/inlinePrimitives.tsx:25` | `-` |
 | `WidgetList` | function / component, ui-tile | `src/ui/widgets/inlinePrimitives.tsx:43` | `-` |
@@ -95,7 +106,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useMountReveal` | function / hook | `src/ui/widgets/motion.ts:34` | `-` |
 | `useValuePulse` | function / hook | `src/ui/widgets/motion.ts:51` | `-` |
 | `useStaggerReveal` | function / hook | `src/ui/widgets/motion.ts:66` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrOnboarding.tsx:252` | `-` |
+| `placeWidgetsAtBottom` | function / ui-tile | `src/ui/widgets/placement.ts:5` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:163` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:272` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:53` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:56` | `-` |
 | `getWidgetDef` | function / ui-tile | `src/ui/widgets/registry.ts:61` | `-` |
@@ -115,35 +128,38 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetContractVersion` | type / ui-tile | `src/ui/widgets/types.ts:22` | `-` |
 | `WidgetRuntimeState` | type / ui-tile | `src/ui/widgets/types.ts:23` | `-` |
 | `WidgetGovernanceState` | type / ui-tile | `src/ui/widgets/types.ts:26` | `-` |
-| `WidgetBreakpoint` | type / ui-tile | `src/ui/widgets/types.ts:27` | `-` |
-| `WidgetPlacement` | interface / ui-tile | `src/ui/widgets/types.ts:29` | `-` |
-| `WidgetResponsivePlacements` | type / ui-tile | `src/ui/widgets/types.ts:30` | `-` |
-| `WidgetGovernancePolicy` | interface / ui-tile | `src/ui/widgets/types.ts:32` | `-` |
-| `WidgetDataSourceRegistration` | interface / ui-tile | `src/ui/widgets/types.ts:43` | `-` |
-| `WidgetSizeKey` | type / ui-tile | `src/ui/widgets/types.ts:55` | `-` |
-| `WidgetChrome` | type / ui-tile | `src/ui/widgets/types.ts:60` | `-` |
-| `WidgetPreviewVariant` | type / ui-tile | `src/ui/widgets/types.ts:62` | `-` |
-| `WidgetLifecycleState` | type / ui-tile | `src/ui/widgets/types.ts:67` | `-` |
-| `WidgetContentPriorityRule` | interface / ui-tile | `src/ui/widgets/types.ts:70` | `-` |
-| `WidgetDensityRules` | interface / ui-tile | `src/ui/widgets/types.ts:79` | `-` |
-| `WidgetResponsiveContext` | interface / ui-tile | `src/ui/widgets/types.ts:86` | `-` |
-| `WidgetPermissionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:98` | `-` |
-| `WidgetGridSize` | interface / ui-tile | `src/ui/widgets/types.ts:103` | `-` |
-| `WidgetSizeDef` | interface / ui-tile | `src/ui/widgets/types.ts:105` | `-` |
-| `WidgetConfigOption` | interface / ui-tile | `src/ui/widgets/types.ts:114` | `-` |
-| `WidgetConfigFieldType` | type / ui-tile | `src/ui/widgets/types.ts:116` | `-` |
-| `WidgetConfigField` | interface / ui-tile | `src/ui/widgets/types.ts:119` | `-` |
-| `WidgetDependencyDef` | interface / ui-tile | `src/ui/widgets/types.ts:129` | `-` |
-| `WidgetDataSourceDef` | interface / ui-tile | `src/ui/widgets/types.ts:137` | `-` |
-| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:145` | `-` |
-| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:156` | `-` |
-| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:162` | `-` |
-| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:227` | `-` |
-| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:249` | `-` |
-| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:256` | `-` |
-| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:266` | `-` |
-| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:284` | `-` |
-| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:295` | `-` |
+| `WidgetMotionKind` | type / ui-tile | `src/ui/widgets/types.ts:27` | `-` |
+| `WidgetBreakpoint` | type / ui-tile | `src/ui/widgets/types.ts:28` | `-` |
+| `WidgetPlacement` | interface / ui-tile | `src/ui/widgets/types.ts:30` | `-` |
+| `WidgetResponsivePlacements` | type / ui-tile | `src/ui/widgets/types.ts:31` | `-` |
+| `WidgetGovernancePolicy` | interface / ui-tile | `src/ui/widgets/types.ts:33` | `-` |
+| `WidgetMotionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:44` | `-` |
+| `WidgetDataSourceRegistration` | interface / ui-tile | `src/ui/widgets/types.ts:51` | `-` |
+| `WidgetSizeKey` | type / ui-tile | `src/ui/widgets/types.ts:63` | `-` |
+| `WidgetChrome` | type / ui-tile | `src/ui/widgets/types.ts:68` | `-` |
+| `WidgetPreviewVariant` | type / ui-tile | `src/ui/widgets/types.ts:70` | `-` |
+| `WidgetLifecycleState` | type / ui-tile | `src/ui/widgets/types.ts:75` | `-` |
+| `WidgetContentPriorityRule` | interface / ui-tile | `src/ui/widgets/types.ts:78` | `-` |
+| `WidgetDensityRules` | interface / ui-tile | `src/ui/widgets/types.ts:87` | `-` |
+| `WidgetResponsiveContext` | interface / ui-tile | `src/ui/widgets/types.ts:94` | `-` |
+| `WidgetPermissionSpec` | interface / ui-tile | `src/ui/widgets/types.ts:106` | `-` |
+| `WidgetGridSize` | interface / ui-tile | `src/ui/widgets/types.ts:111` | `-` |
+| `WidgetSizeConstraints` | interface / ui-tile | `src/ui/widgets/types.ts:113` | `-` |
+| `WidgetSizeDef` | interface / ui-tile | `src/ui/widgets/types.ts:123` | `-` |
+| `WidgetConfigOption` | interface / ui-tile | `src/ui/widgets/types.ts:132` | `-` |
+| `WidgetConfigFieldType` | type / ui-tile | `src/ui/widgets/types.ts:134` | `-` |
+| `WidgetConfigField` | interface / ui-tile | `src/ui/widgets/types.ts:137` | `-` |
+| `WidgetDependencyDef` | interface / ui-tile | `src/ui/widgets/types.ts:147` | `-` |
+| `WidgetDataSourceDef` | interface / ui-tile | `src/ui/widgets/types.ts:155` | `-` |
+| `WidgetRenderProps` | interface / ui-tile | `src/ui/widgets/types.ts:163` | `-` |
+| `WidgetPreviewProps` | interface / ui-tile | `src/ui/widgets/types.ts:174` | `-` |
+| `WidgetDef` | interface / ui-tile | `src/ui/widgets/types.ts:180` | `-` |
+| `WidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:253` | `-` |
+| `PreviewWidgetInstance` | interface / ui-tile | `src/ui/widgets/types.ts:275` | `-` |
+| `BoardWidgetInstance` | type / ui-tile | `src/ui/widgets/types.ts:282` | `-` |
+| `LocalWidget` | interface / ui-tile | `src/ui/widgets/types.ts:292` | `-` |
+| `LocalWidgetMap` | type / ui-tile | `src/ui/widgets/types.ts:311` | `-` |
+| `isPreviewWidget` | function / ui-tile | `src/ui/widgets/types.ts:322` | `-` |
 | `useBoardLayout` | function / hook | `src/ui/widgets/useBoardLayout.ts:50` | `-` |
 | `WidgetValidationIssue` | interface / ui-tile | `src/ui/widgets/validation.ts:13` | `-` |
 | `WidgetValidationResult` | interface / ui-tile | `src/ui/widgets/validation.ts:19` | `-` |
@@ -152,20 +168,22 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `WidgetBoard` | function / component, ui-tile | `src/ui/widgets/WidgetBoard.tsx:73` | `-` |
 | `WidgetBoardToolbarProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardToolbar.tsx:16` | `-` |
 | `WidgetBoardToolbar` | function / component, ui-tile | `src/ui/widgets/WidgetBoardToolbar.tsx:37` | `-` |
-| `WidgetBoardZoneProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:32` | `-` |
-| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:110` | `-` |
-| `WidgetCatalog` | function / component, ui-tile | `src/ui/widgets/WidgetCatalog.tsx:25` | `-` |
+| `WidgetBoardZoneProps` | interface / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:33` | `-` |
+| `widgetMinGrid` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:80` | `-` |
+| `clampWidgetInstanceToMinimum` | function / ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:120` | `-` |
+| `WidgetBoardZone` | function / component, ui-tile | `src/ui/widgets/WidgetBoardZone.tsx:134` | `-` |
+| `WidgetCatalog` | function / component, ui-tile | `src/ui/widgets/WidgetCatalog.tsx:92` | `-` |
 | `WidgetConfigFieldRenderer` | function / component, ui-tile | `src/ui/widgets/WidgetConfigFieldRenderer.tsx:7` | `-` |
 | `WidgetConfigureModal` | function / component, ui-tile | `src/ui/widgets/WidgetConfigureModal.tsx:11` | `-` |
-| `WidgetDetailPanel` | function / component, ui-tile | `src/ui/widgets/WidgetDetailPanel.tsx:17` | `-` |
+| `WidgetDetailPanel` | function / component, ui-tile | `src/ui/widgets/WidgetDetailPanel.tsx:18` | `-` |
 | `WidgetFrame` | function / component, ui-tile | `src/ui/widgets/WidgetFrame.tsx:19` | `-` |
-| `WidgetLibraryModalProps` | interface / ui-tile | `src/ui/widgets/WidgetLibraryModal.tsx:125` | `-` |
-| `WidgetLibraryModal` | function / component, ui-tile | `src/ui/widgets/WidgetLibraryModal.tsx:143` | `-` |
+| `WidgetLibraryModalProps` | interface / ui-tile | `src/ui/widgets/WidgetLibraryModal.tsx:133` | `-` |
+| `WidgetLibraryModal` | function / component, ui-tile | `src/ui/widgets/WidgetLibraryModal.tsx:152` | `-` |
 | `WidgetLivePreview` | function / component, ui-tile | `src/ui/widgets/WidgetLivePreview.tsx:8` | `-` |
 | `WidgetPlaceholder` | function / component, ui-tile | `src/ui/widgets/WidgetPlaceholder.tsx:9` | `-` |
-| `WidgetPreviewScaler` | function / component, ui-tile | `src/ui/widgets/WidgetPreviewScaler.tsx:11` | `-` |
+| `widgetPreviewCanvas` | function / ui-tile | `src/ui/widgets/WidgetPreviewScaler.tsx:12` | `-` |
+| `WidgetPreviewScaler` | function / component, ui-tile | `src/ui/widgets/WidgetPreviewScaler.tsx:18` | `-` |
 | `WidgetRenderer` | function / component, ui-tile | `src/ui/widgets/WidgetRenderer.tsx:18` | `-` |
-| `WidgetSizeSelector` | function / component, ui-tile | `src/ui/widgets/WidgetSizeSelector.tsx:5` | `-` |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 
@@ -203,21 +221,27 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/offboardingWidgets.tsx` | 378 |
 | widget-platform | `src/ui/widgets/WidgetBoard.tsx` | 125 |
 | widget-platform | `src/ui/widgets/WidgetBoardToolbar.tsx` | 110 |
-| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 252 |
-| widget-platform | `src/ui/widgets/WidgetCatalog.tsx` | 90 |
+| widget-platform | `src/ui/widgets/WidgetBoardZone.tsx` | 409 |
+| widget-platform | `src/ui/widgets/WidgetCatalog.test.tsx` | 77 |
+| widget-platform | `src/ui/widgets/WidgetCatalog.tsx` | 156 |
 | widget-platform | `src/ui/widgets/WidgetConfigFieldRenderer.tsx` | 41 |
 | widget-platform | `src/ui/widgets/WidgetConfigureModal.tsx` | 37 |
-| widget-platform | `src/ui/widgets/WidgetDetailPanel.tsx` | 123 |
+| widget-platform | `src/ui/widgets/WidgetDetailPanel.tsx` | 97 |
 | widget-platform | `src/ui/widgets/WidgetFrame.tsx` | 88 |
-| widget-platform | `src/ui/widgets/WidgetLibraryModal.tsx` | 422 |
+| widget-platform | `src/ui/widgets/WidgetLibraryModal.tsx` | 459 |
 | widget-platform | `src/ui/widgets/WidgetLivePreview.tsx` | 29 |
 | widget-platform | `src/ui/widgets/WidgetPlaceholder.tsx` | 16 |
-| widget-platform | `src/ui/widgets/WidgetPreviewScaler.tsx` | 35 |
+| widget-platform | `src/ui/widgets/WidgetPreviewScaler.tsx` | 44 |
 | widget-platform | `src/ui/widgets/WidgetRenderer.tsx` | 49 |
-| widget-platform | `src/ui/widgets/WidgetSizeSelector.tsx` | 25 |
 | widget-platform | `src/ui/widgets/access.ts` | 24 |
-| widget-platform | `src/ui/widgets/bundles.ts` | 130 |
+| widget-platform | `src/ui/widgets/boardReveal.test.ts` | 26 |
+| widget-platform | `src/ui/widgets/boardReveal.ts` | 34 |
+| widget-platform | `src/ui/widgets/bundles.ts` | 135 |
+| widget-platform | `src/ui/widgets/calendarPlanningWidgets.test.tsx` | 87 |
+| widget-platform | `src/ui/widgets/catalogueTaxonomy.ts` | 36 |
 | widget-platform | `src/ui/widgets/commitPreviewWidget.ts` | 16 |
+| widget-platform | `src/ui/widgets/contentFit.test.ts` | 69 |
+| widget-platform | `src/ui/widgets/contentFit.ts` | 84 |
 | widget-platform | `src/ui/widgets/createPreviewWidgetInstance.ts` | 30 |
 | widget-platform | `src/ui/widgets/createWidgetInstance.ts` | 25 |
 | widget-platform | `src/ui/widgets/dataSources.ts` | 13 |
@@ -226,15 +250,16 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/declarative/parsePackageFile.ts` | 124 |
 | widget-platform | `src/ui/widgets/declarative/types.ts` | 44 |
 | widget-platform | `src/ui/widgets/defineWidget.ts` | 23 |
-| widget-platform | `src/ui/widgets/governance.ts` | 13 |
-| widget-platform | `src/ui/widgets/index.ts` | 54 |
+| widget-platform | `src/ui/widgets/governance.ts` | 15 |
+| widget-platform | `src/ui/widgets/index.ts` | 53 |
 | widget-platform | `src/ui/widgets/inlinePrimitives.tsx` | 120 |
-| widget-platform | `src/ui/widgets/migration.ts` | 43 |
+| widget-platform | `src/ui/widgets/migration.ts` | 76 |
 | widget-platform | `src/ui/widgets/motion.ts` | 82 |
-| widget-platform | `src/ui/widgets/placement.ts` | 16 |
-| widget-platform | `src/ui/widgets/platform.test.tsx` | 63 |
-| widget-registry | `src/ui/widgets/registry.hrOnboarding.tsx` | 435 |
-| widget-registry | `src/ui/widgets/registry.test.ts` | 50 |
+| widget-platform | `src/ui/widgets/placement.ts` | 25 |
+| widget-platform | `src/ui/widgets/platform.test.tsx` | 116 |
+| widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 167 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 283 |
+| widget-registry | `src/ui/widgets/registry.test.ts` | 150 |
 | widget-registry | `src/ui/widgets/registry.ts` | 78 |
 | widget-platform | `src/ui/widgets/resolveBoardWidget.ts` | 20 |
 | widget-platform | `src/ui/widgets/responsive.ts` | 67 |
@@ -242,7 +267,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/serializeLayout.ts` | 16 |
 | widget-platform | `src/ui/widgets/size.ts` | 20 |
 | widget-platform | `src/ui/widgets/splitCommittedAndPreview.ts` | 18 |
-| widget-platform | `src/ui/widgets/types.ts` | 298 |
-| widget-platform | `src/ui/widgets/useBoardLayout.ts` | 157 |
+| widget-platform | `src/ui/widgets/types.ts` | 325 |
+| widget-platform | `src/ui/widgets/useBoardLayout.ts` | 161 |
 | widget-platform | `src/ui/widgets/validation.ts` | 46 |
 

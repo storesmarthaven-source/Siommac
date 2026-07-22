@@ -40,3 +40,36 @@ export function migrateBoardLayout(value: unknown, expectedPageKey: string): Boa
 export function createV3Layout(pageKey: string, zones: BoardLayout['zones'] = {}): BoardLayout {
   return { version: WIDGET_CONTRACT_VERSION, columns: WIDGET_DESKTOP_COLUMNS, pageKey, zones };
 }
+
+/** Rebase desktop geometry when a page deliberately changes its canonical board width.
+ * Instance identity, vertical placement, configuration and non-desktop responsive overrides are
+ * preserved. This is safe to call repeatedly because an already-targeted layout is returned as-is. */
+export function rebaseBoardLayoutColumns(layout: BoardLayout, targetColumns: number): BoardLayout {
+  const columns = Math.max(1, Math.trunc(targetColumns));
+  const declaredColumns = Math.max(1, Math.trunc(layout.columns ?? WIDGET_DESKTOP_COLUMNS));
+  // Older API sanitization always wrote `columns: 12`, even for 24-column boards. Recover that
+  // metadata loss when placement extents prove the geometry already uses a wider grid; otherwise
+  // a subsequent load would scale an already-converted layout a second time.
+  const placementExtent = Math.max(1, ...Object.values(layout.zones).flatMap(items => items.map(item => item.x + item.w)));
+  const sourceColumns = Math.min(columns, Math.max(declaredColumns, placementExtent));
+  if (sourceColumns === columns) return declaredColumns === columns ? layout : { ...layout, columns };
+  const scale = columns / sourceColumns;
+  const scalePlacement = <T extends { x: number; w: number }>(placement: T): T => {
+    const w = Math.max(1, Math.min(columns, Math.round(placement.w * scale)));
+    const x = Math.max(0, Math.min(columns - w, Math.round(placement.x * scale)));
+    return { ...placement, x, w };
+  };
+  return {
+    ...layout,
+    columns,
+    zones: Object.fromEntries(Object.entries(layout.zones).map(([zoneId, items]) => [
+      zoneId,
+      items.map(item => ({
+        ...scalePlacement(item),
+        responsive: item.responsive?.desktop
+          ? { ...item.responsive, desktop: scalePlacement(item.responsive.desktop) }
+          : item.responsive,
+      })),
+    ])),
+  };
+}

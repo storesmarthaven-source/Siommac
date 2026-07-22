@@ -18,7 +18,7 @@ import { useMemo, useState, useEffect, useRef, useCallback } from 'preact/hooks'
 import { Chart, DoughnutController, ArcElement, Tooltip } from 'chart.js';
 import {
   WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, useInstalledWidgetPackages,
-  WIDGET_REGISTRY, commitPreviewWidget,
+  WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeDef, type WidgetSizeKey,
 } from '@ui/widgets';
 import { PageHeader, KpiTile } from '@ui';
@@ -297,7 +297,7 @@ export function PayrollCommandCenter(): VNode {
   const [editing, setEditing] = useState(false);
   const [libOpen, setLibOpen] = useState(false);
   const [preview, setPreview] = useState<PreviewWidgetInstance | null>(null);
-  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
+  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout, isDefaultDirty, isLoading: mainLayoutLoading } = useBoardLayout(PAGE_KEY, defaultLayout());
   // Observe the KPI board's own layout query + the installed-widget registry at the PAGE
   // level so the reveal can wait for them. Both dedupe by query key with the boards' own
   // subscriptions (WidgetBoardZone → useBoardLayout, WidgetBoard → useInstalledWidgetPackages),
@@ -538,6 +538,7 @@ export function PayrollCommandCenter(): VNode {
             placedWidgetIds={placedWidgetIds} userPermissions={userPermissions}
             canManagePackages={isAdmin} onClose={() => setLibOpen(false)}
             onAddWidget={inst => addWidget('main', placeBottom(inst))}
+            onAddWidgets={instances => updateZoneLayout('main', [...boardItems, ...placeWidgetsAtBottom(boardItems, instances)])}
             onPreviewOnBoard={p => setPreview(placeBottom(p))} />
         </>
       )}

@@ -75,7 +75,7 @@ export function WidgetBoard({ pageKey, zones = ['main'], editing, localWidgets, 
   // Package readiness changes placeholder resolution only. It never removes saved instances.
   const pkgQuery = useInstalledWidgetPackages();
   return (
-    <div class="wbi-board">
+    <div class={`wbi-board${editing ? ' is-editing' : ''}`}>
       {/* Edit-mode banner (opt-in) — the clear "you're editing / click Done to finish" affordance.
           Hidden while previewing a widget, when the host's own preview banner takes over.
           The wrapper stays MOUNTED so entering/leaving edit mode animates the banner's space

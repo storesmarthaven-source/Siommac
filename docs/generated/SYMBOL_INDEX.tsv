@@ -6713,16 +6713,16 @@ placeBottom	function	payroll	false		src/components/sections/Finance/PayrollComma
 promoteDefault	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	313	PayrollCommandCenter
 runAction	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	337	PayrollCommandCenter
 submitRunStable	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	343	PayrollCommandCenter
-PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	551	
-MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	612	
-RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	644	
-RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	703	
-ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	723	
-DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	771	
-dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	775	DeadlinesWidget
-onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	776	DeadlinesWidget
-ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	827	
-ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	884	
+PortfolioBand	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	552	
+MetricsRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	613	
+RunRegister	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	645	
+RunRow	function	payroll	false	component	src/components/sections/Finance/PayrollCommandCenter.tsx	704	
+ApprovalsWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	724	
+DeadlinesWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	772	
+dayKey	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	776	DeadlinesWidget
+onDay	function	payroll	false		src/components/sections/Finance/PayrollCommandCenter.tsx	777	DeadlinesWidget
+ReadinessWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	828	
+ImpactWidget	function	payroll	false	component,ui-tile	src/components/sections/Finance/PayrollCommandCenter.tsx	885	
 empName	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	56	
 todayIso	function	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	59	
 FREQUENCIES	array	payroll	false		src/components/sections/Finance/PayrollSetupOverview.tsx	61	
@@ -6997,53 +6997,51 @@ SvdSteps	function	finance	false	component	src/components/sections/Finance/Statut
 SvdRail	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1436	
 StatEditVersionDialog	function	finance	false	component	src/components/sections/Finance/StatutoryConfigOverview.tsx	1467	
 submit	function	finance	false		src/components/sections/Finance/StatutoryConfigOverview.tsx	1491	StatEditVersionDialog
-MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	67	
-TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	69	
-PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	85	
-KPI_PAGE_KEY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	86	
-W_KPI_ACTIVE	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	87	
-W_KPI_DRAFTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	88	
-W_KPI_COMPONENTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	89	
-W_KPI_NIS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	90	
-W_KPI_VERIFY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	91	
-W_KPI_APPROVALS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	92	
-W_CHART	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	93	
-W_READY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	94	
-W_DEADLINES	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	95	
-W_REGISTER	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	96	
-defInst	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	98	
-defaultStatutoryLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	104	
-defaultKpiLayout	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	122	
-StatutoryDashboardProps	interface	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	138	
-GAUGE_SEGMENTS	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	170	
-HalfGauge	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	171	
-StatutoryDashboard	function	finance	true	component	src/components/sections/Finance/StatutoryDashboard.tsx	201	
-sameDay	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	220	StatutoryDashboard
-deadlinesOn	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	222	StatutoryDashboard
-shiftWeek	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	234	StatutoryDashboard
-setPct	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	274	StatutoryDashboard
-step	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	285	StatutoryDashboard
-beforeDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	332	revealPlugin
-afterDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	346	revealPlugin
-easeOutCubic	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	420	StatutoryDashboard
-tick	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	422	StatutoryDashboard
-promotePageDefault	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	456	StatutoryDashboard
-resetPageLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	464	StatutoryDashboard
-placeBottom	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	467	StatutoryDashboard
-discardPreview	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	475	StatutoryDashboard
-commitPreview	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	476	StatutoryDashboard
-goToRegisterTab	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	481	StatutoryDashboard
-renderKpiActive	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	491	StatutoryDashboard
-renderKpiDrafts	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	498	StatutoryDashboard
-renderKpiComponents	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	504	StatutoryDashboard
-renderKpiNis	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	509	StatutoryDashboard
-renderKpiVerify	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	517	StatutoryDashboard
-renderKpiApprovals	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	523	StatutoryDashboard
-renderChart	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	533	StatutoryDashboard
-renderRegister	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	596	StatutoryDashboard
-renderReadiness	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	627	StatutoryDashboard
-renderDeadlines	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	658	StatutoryDashboard
-floor	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	710	StatutoryDashboard
+MainTab	type	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	68	
+TABS	array	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	70	
+statutoryDeadlinesOn	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	79	
+PAGE_KEY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	98	
+KPI_PAGE_KEY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	99	
+W_KPI_ACTIVE	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	100	
+W_KPI_DRAFTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	101	
+W_KPI_COMPONENTS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	102	
+W_KPI_NIS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	103	
+W_KPI_VERIFY	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	104	
+W_KPI_APPROVALS	variable	finance	false	component,ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	105	
+W_CHART	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	106	
+W_READY	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	107	
+W_DEADLINES	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	108	
+W_REGISTER	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	109	
+defInst	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	111	
+defaultStatutoryLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	117	
+defaultKpiLayout	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	135	
+StatutoryDashboardProps	interface	finance	true		src/components/sections/Finance/StatutoryDashboard.tsx	151	
+GAUGE_SEGMENTS	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	183	
+HalfGauge	variable	finance	false	component	src/components/sections/Finance/StatutoryDashboard.tsx	184	
+StatutoryDashboard	function	finance	true	component	src/components/sections/Finance/StatutoryDashboard.tsx	214	
+setPct	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	259	StatutoryDashboard
+step	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	270	StatutoryDashboard
+beforeDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	317	revealPlugin
+afterDatasetsDraw	method	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	331	revealPlugin
+easeOutCubic	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	405	StatutoryDashboard
+tick	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	407	StatutoryDashboard
+promotePageDefault	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	441	StatutoryDashboard
+resetPageLayout	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	449	StatutoryDashboard
+placeBottom	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	452	StatutoryDashboard
+discardPreview	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	460	StatutoryDashboard
+commitPreview	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	461	StatutoryDashboard
+goToRegisterTab	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	466	StatutoryDashboard
+renderKpiActive	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	476	StatutoryDashboard
+renderKpiDrafts	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	483	StatutoryDashboard
+renderKpiComponents	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	489	StatutoryDashboard
+renderKpiNis	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	494	StatutoryDashboard
+renderKpiVerify	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	502	StatutoryDashboard
+renderKpiApprovals	function	finance	false	ui-tile	src/components/sections/Finance/StatutoryDashboard.tsx	508	StatutoryDashboard
+renderChart	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	518	StatutoryDashboard
+renderRegister	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	581	StatutoryDashboard
+renderReadiness	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	612	StatutoryDashboard
+renderDeadlines	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	643	StatutoryDashboard
+floor	function	finance	false		src/components/sections/Finance/StatutoryDashboard.tsx	648	StatutoryDashboard
 CURRENT_YEAR	variable	finance	false	component	src/components/sections/Finance/StatutoryFormsOverview.tsx	25	
 fmtDate	function	finance	false		src/components/sections/Finance/StatutoryFormsOverview.tsx	26	
 FORM_LABEL	object	finance	false		src/components/sections/Finance/StatutoryFormsOverview.tsx	29	
@@ -7167,29 +7165,30 @@ Field	function	hr	false	component	src/components/sections/HR/CreateEmployeeWizar
 Sel	function	hr	false	component	src/components/sections/HR/CreateEmployeeWizard.tsx	345	
 Check	function	hr	false	component	src/components/sections/HR/CreateEmployeeWizard.tsx	361	
 PAGE_KEY	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	49	
-Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	55	
-EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	56	
-ColDef	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	60	
-TABLE_COLS	array	hr	false		src/components/sections/HR/EmployeeMaster.tsx	61	
-EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	74	
-activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	85	EmployeeRow
-pageWindow	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	144	
-defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	157	
-defaultEmployeeLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	163	
-EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	176	
-toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	204	EmployeeMaster
-placeBottom	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	235	EmployeeMaster
-discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	240	EmployeeMaster
-commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	244	EmployeeMaster
-onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	253	EmployeeMaster
-onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	257	EmployeeMaster
-deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	265	EmployeeMaster
-notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	269	EmployeeMaster
-openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	270	EmployeeMaster
-setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	285	EmployeeMaster
-trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	294	EmployeeMaster
-clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	310	EmployeeMaster
-renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	314	EmployeeMaster
+EMPLOYEE_BOARD_COLUMNS	variable	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	50	
+Filters	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	56	
+EMPTY_FILTERS	object	hr	false		src/components/sections/HR/EmployeeMaster.tsx	57	
+ColDef	interface	hr	false		src/components/sections/HR/EmployeeMaster.tsx	61	
+TABLE_COLS	array	hr	false		src/components/sections/HR/EmployeeMaster.tsx	62	
+EmployeeRow	function	hr	false	component	src/components/sections/HR/EmployeeMaster.tsx	75	
+activate	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	86	EmployeeRow
+pageWindow	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	145	
+defInst	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	158	
+defaultEmployeeLayout	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	164	
+EmployeeMaster	function	hr	true	component	src/components/sections/HR/EmployeeMaster.tsx	178	
+toggleSort	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	206	EmployeeMaster
+placeBottom	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	237	EmployeeMaster
+discardPreview	function	hr	false	ui-tile	src/components/sections/HR/EmployeeMaster.tsx	242	EmployeeMaster
+commitPreview	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	246	EmployeeMaster
+onRowHover	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	255	EmployeeMaster
+onRowHoverEnd	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	259	EmployeeMaster
+deptLabelFn	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	267	EmployeeMaster
+notify	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	271	EmployeeMaster
+openAction	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	272	EmployeeMaster
+setFiltersReset	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	287	EmployeeMaster
+trainingLabel	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	296	EmployeeMaster
+clearAdvanced	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	312	EmployeeMaster
+renderRegister	function	hr	false		src/components/sections/HR/EmployeeMaster.tsx	316	EmployeeMaster
 fmtDate	function	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	21	
 relativeTime	function	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	27	
 STATUS_TONE	object	hr	false		src/components/sections/HR/EmployeeOnboardingSummary.tsx	37	
@@ -9928,6 +9927,12 @@ h	function	workflow	false		src/components/shared/orchestration/ActivityTimeline.
 setType	function	workflow	false		src/components/shared/orchestration/ActivityTimeline.tsx	89	ActivityTimeline
 SpinnerProps	interface	platform	true		src/components/shared/Spinner.tsx	18	
 Spinner	function	platform	true	component	src/components/shared/Spinner.tsx	30	
+UpcomingDeadlineCardItem	interface	platform	true	ui-tile	src/components/shared/UpcomingDeadlinesCard.tsx	5	
+UpcomingDeadlinesCardProps	interface	platform	true	ui-tile	src/components/shared/UpcomingDeadlinesCard.tsx	14	
+startOfToday	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	23	
+sameDay	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	28	
+UpcomingDeadlinesCard	function	platform	true	component,ui-tile	src/components/shared/UpcomingDeadlinesCard.tsx	34	
+shiftWeek	function	platform	false		src/components/shared/UpcomingDeadlinesCard.tsx	54	UpcomingDeadlinesCard
 openSearch	function	platform	false		src/components/shared/UserPill.tsx	22	
 openAI	function	platform	false		src/components/shared/UserPill.tsx	26	
 UserPillProps	interface	platform	true		src/components/shared/UserPill.tsx	32	
@@ -11075,10 +11080,26 @@ ToastRecord	interface	platform	true		src/ui/toast/toastTypes.ts	63
 WidgetAccessContext	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	5	
 WidgetAccessDecision	interface	widgets	true	ui-tile	src/ui/widgets/access.ts	6	
 resolveWidgetAccess	function	widgets	true	ui-tile	src/ui/widgets/access.ts	7	
+WIDGET_BOARD_REVEAL_EVENT	variable	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	1	
+WidgetBoardRevealDetail	interface	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	3	
+requestWidgetBoardReveal	function	widgets	true	ui-tile	src/ui/widgets/boardReveal.ts	9	
 WidgetBundle	interface	widgets	true	ui-tile	src/ui/widgets/bundles.ts	53	
-WIDGET_BUNDLES	array	widgets	true	ui-tile	src/ui/widgets/bundles.ts	73	
-resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	126	
+WIDGET_BUNDLES	array	widgets	true	ui-tile	src/ui/widgets/bundles.ts	75	
+resolveBundleWidgets	function	widgets	true	ui-tile	src/ui/widgets/bundles.ts	131	
+H	variable	widgets	false	component,test	src/ui/widgets/calendarPlanningWidgets.test.tsx	4	
+props	object	widgets	false	test	src/ui/widgets/calendarPlanningWidgets.test.tsx	22	
+WidgetModuleMeta	interface	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	4	
+WIDGET_MODULE_META	variable	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	10	
+widgetModuleMeta	function	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	18	
+availableWidgetModules	function	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	23	
+widgetAreas	function	widgets	true	ui-tile	src/ui/widgets/catalogueTaxonomy.ts	28	
 commitPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/commitPreviewWidget.ts	5	
+dimensions	function	widgets	false	test	src/ui/widgets/contentFit.test.ts	4	
+WidgetContentFitResult	interface	widgets	true	ui-tile	src/ui/widgets/contentFit.ts	1	
+TOLERANCE	variable	widgets	false		src/ui/widgets/contentFit.ts	8	
+overflows	function	widgets	false		src/ui/widgets/contentFit.ts	10	
+intersects	function	widgets	false		src/ui/widgets/contentFit.ts	15	
+checkWidgetContentFit	function	widgets	true	ui-tile	src/ui/widgets/contentFit.ts	23	
 createPreviewWidgetInstance	function	widgets	true	ui-tile	src/ui/widgets/createPreviewWidgetInstance.ts	5	
 createWidgetInstance	function	widgets	true	ui-tile	src/ui/widgets/createWidgetInstance.ts	4	
 sources	variable	widgets	false		src/ui/widgets/dataSources.ts	3	
@@ -11122,7 +11143,7 @@ setWidgetGovernancePolicies	function	widgets	true	ui-tile	src/ui/widgets/governa
 getWidgetGovernancePolicy	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	4	
 listWidgetGovernancePolicies	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	5	
 effectiveWidgetPolicy	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	6	
-isWidgetDiscoverable	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	7	
+isWidgetDiscoverable	function	widgets	true	ui-tile	src/ui/widgets/governance.ts	9	
 ellip	object	widgets	true		src/ui/widgets/inlinePrimitives.tsx	11	
 humanize	function	widgets	true		src/ui/widgets/inlinePrimitives.tsx	14	
 Empty	function	widgets	true	component	src/ui/widgets/inlinePrimitives.tsx	17	
@@ -11142,6 +11163,8 @@ object	function	widgets	false		src/ui/widgets/migration.ts	5
 integer	function	widgets	false		src/ui/widgets/migration.ts	6	
 migrateBoardLayout	function	widgets	true		src/ui/widgets/migration.ts	12	
 createV3Layout	function	widgets	true		src/ui/widgets/migration.ts	40	
+rebaseBoardLayoutColumns	function	widgets	true		src/ui/widgets/migration.ts	47	
+scalePlacement	function	widgets	false		src/ui/widgets/migration.ts	57	rebaseBoardLayoutColumns
 reducedMotion	function	widgets	true		src/ui/widgets/motion.ts	19	
 Stoppable	interface	widgets	false		src/ui/widgets/motion.ts	24	
 stop	function	widgets	false		src/ui/widgets/motion.ts	25	
@@ -11150,31 +11173,57 @@ useMountReveal	function	widgets	true	hook	src/ui/widgets/motion.ts	34
 useValuePulse	function	widgets	true	hook	src/ui/widgets/motion.ts	51	
 useStaggerReveal	function	widgets	true	hook	src/ui/widgets/motion.ts	66	
 BREAKPOINT_COLUMNS	object	widgets	true		src/ui/widgets/placement.ts	3	
-deriveResponsivePlacements	function	widgets	true		src/ui/widgets/placement.ts	5	
-derive	function	widgets	false		src/ui/widgets/placement.ts	6	deriveResponsivePlacements
-def	function	widgets	false	test	src/ui/widgets/platform.test.tsx	11	
-instance	object	widgets	false	test	src/ui/widgets/platform.test.tsx	18	
-none	function	widgets	false	test	src/ui/widgets/platform.test.tsx	41	
-ONB_PAGES	array	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	18	
-ONB_ZONES	array	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	19	
-ONB_SOURCE	object	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	20	
-KPI_SIZES	array	widgets	false	ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	22	
-LIST_SIZES	array	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	26	
-timeAgo	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	32	
-humanizeAction	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	41	
-sparkPath	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	47	
-Spark	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	57	
-Growth	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	75	
-Ring	function	widgets	false	component	src/ui/widgets/registry.hrOnboarding.tsx	83	
-pctChange	function	widgets	false		src/ui/widgets/registry.hrOnboarding.tsx	95	
-OnbActiveCasesWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	102	
-OnbDueThisWeekWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	123	
-OnbBlockedCasesWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	143	
-OnbActivationReadinessWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	162	
-OnbHealthWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	181	
-OnbPackageReadinessWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	204	
-OnbRecentActivityWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	226	
-widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrOnboarding.tsx	252	
+placeWidgetsAtBottom	function	widgets	true	ui-tile	src/ui/widgets/placement.ts	5	
+deriveResponsivePlacements	function	widgets	true		src/ui/widgets/placement.ts	14	
+derive	function	widgets	false		src/ui/widgets/placement.ts	15	deriveResponsivePlacements
+def	function	widgets	false	test	src/ui/widgets/platform.test.tsx	14	
+instance	object	widgets	false	test	src/ui/widgets/platform.test.tsx	21	
+none	function	widgets	false	test	src/ui/widgets/platform.test.tsx	94	
+PAGE	variable	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	13	
+PLANNING_SIZES	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	14	
+DEADLINE_SIZES	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	19	
+TASK_SIZES	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	24	
+CALENDAR_SOURCE	object	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	29	
+startOfDay	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	47	
+addDays	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	50	
+dateKey	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	55	
+itemDateKey	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	61	
+sameDay	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	64	
+weekDays	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	67	
+sourceTag	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	70	
+UpcomingDeadlinesView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	76	
+deadlinesOn	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	77	UpcomingDeadlinesView
+UpcomingDeadlinesWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	95	
+previewDeadlines	array	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	102	
+UpcomingDeadlinesPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	105	
+TaskPlannerView	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	107	
+shift	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	122	TaskPlannerView
+save	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	123	TaskPlannerView
+complete	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	132	TaskPlannerView
+TaskPlannerWidget	function	widgets	false	component,ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	146	
+TaskPlannerPreview	function	widgets	false	component	src/ui/widgets/registry.calendarPlanning.tsx	153	
+item	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	155	TaskPlannerPreview
+liveDefinition	function	widgets	false		src/ui/widgets/registry.calendarPlanning.tsx	159	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.calendarPlanning.tsx	163	
+PAGE	variable	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	7	
+SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	8	
+DESIGN_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	13	
+RISK_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	18	
+HEALTH_SIZES	array	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	23	
+PREVIEW_SOURCE	object	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	28	
+Header	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	34	
+WeeklyEmployeeActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	43	
+DataChangeTrend	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	71	
+LifecycleActivity	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	96	
+WorkloadRing	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	126	
+MasterDataWorkload	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	130	
+BlockedEmployeeActions	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	143	
+TeamReadinessGoal	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	169	
+EmployeeQuickContact	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	185	
+RecordHealth	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	203	
+RecordRiskMonitor	function	widgets	false	component	src/ui/widgets/registry.hrEmployeeMaster.tsx	230	
+previewDefinition	function	widgets	false		src/ui/widgets/registry.hrEmployeeMaster.tsx	252	
+widgets	array	widgets	true	ui-tile	src/ui/widgets/registry.hrEmployeeMaster.tsx	272	
 packages	variable	widgets	false		src/ui/widgets/registry.ts	21	
 collectWidgets	function	widgets	false	ui-tile	src/ui/widgets/registry.ts	23	
 WIDGET_REGISTRY	variable	widgets	true	ui-tile	src/ui/widgets/registry.ts	53	
@@ -11210,51 +11259,55 @@ WIDGET_DESKTOP_COLUMNS	variable	widgets	true	ui-tile	src/ui/widgets/types.ts	21
 WidgetContractVersion	type	widgets	true	ui-tile	src/ui/widgets/types.ts	22	
 WidgetRuntimeState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	23	
 WidgetGovernanceState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	26	
-WidgetBreakpoint	type	widgets	true	ui-tile	src/ui/widgets/types.ts	27	
-WidgetPlacement	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	29	
-WidgetResponsivePlacements	type	widgets	true	ui-tile	src/ui/widgets/types.ts	30	
-WidgetGovernancePolicy	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	32	
-WidgetDataSourceRegistration	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	43	
-ModuleKey	type	widgets	true		src/ui/widgets/types.ts	53	
-WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	55	
-WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	60	
-WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	62	
-WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	67	
-WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	70	
-WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	79	
-WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	86	
-WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	98	
-WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	103	
-WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	105	
-WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	114	
-WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	116	
-WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	119	
-WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	129	
-WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	137	
-WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	145	
-WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	156	
-WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	162	
-WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	227	
-PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	249	
-BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	256	
-LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	266	
-LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	284	
-BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	286	
-isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	295	
+WidgetMotionKind	type	widgets	true	ui-tile	src/ui/widgets/types.ts	27	
+WidgetBreakpoint	type	widgets	true	ui-tile	src/ui/widgets/types.ts	28	
+WidgetPlacement	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	30	
+WidgetResponsivePlacements	type	widgets	true	ui-tile	src/ui/widgets/types.ts	31	
+WidgetGovernancePolicy	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	33	
+WidgetMotionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	44	
+WidgetDataSourceRegistration	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	51	
+ModuleKey	type	widgets	true		src/ui/widgets/types.ts	61	
+WidgetSizeKey	type	widgets	true	ui-tile	src/ui/widgets/types.ts	63	
+WidgetChrome	type	widgets	true	ui-tile	src/ui/widgets/types.ts	68	
+WidgetPreviewVariant	type	widgets	true	ui-tile	src/ui/widgets/types.ts	70	
+WidgetLifecycleState	type	widgets	true	ui-tile	src/ui/widgets/types.ts	75	
+WidgetContentPriorityRule	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	78	
+WidgetDensityRules	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	87	
+WidgetResponsiveContext	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	94	
+WidgetPermissionSpec	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	106	
+WidgetGridSize	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	111	
+WidgetSizeConstraints	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	113	
+WidgetSizeDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	123	
+WidgetConfigOption	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	132	
+WidgetConfigFieldType	type	widgets	true	ui-tile	src/ui/widgets/types.ts	134	
+WidgetConfigField	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	137	
+WidgetDependencyDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	147	
+WidgetDataSourceDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	155	
+WidgetRenderProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	163	
+WidgetPreviewProps	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	174	
+WidgetDef	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	180	
+WidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	253	
+PreviewWidgetInstance	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	275	
+BoardWidgetInstance	type	widgets	true	ui-tile	src/ui/widgets/types.ts	282	
+LocalWidget	interface	widgets	true	ui-tile	src/ui/widgets/types.ts	292	
+LocalWidgetMap	type	widgets	true	ui-tile	src/ui/widgets/types.ts	311	
+BoardLayout	interface	widgets	true		src/ui/widgets/types.ts	313	
+isPreviewWidget	function	widgets	true	ui-tile	src/ui/widgets/types.ts	322	
 emptyLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	10	
 layoutSignature	function	widgets	false		src/ui/widgets/useBoardLayout.ts	18	
 layoutsEqual	function	widgets	false		src/ui/widgets/useBoardLayout.ts	28	
 UseBoardLayoutResult	interface	widgets	true		src/ui/widgets/useBoardLayout.ts	30	
 useBoardLayout	function	widgets	true	hook	src/ui/widgets/useBoardLayout.ts	50	
-setCachedLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	78	useBoardLayout
-stage	function	widgets	false		src/ui/widgets/useBoardLayout.ts	82	useBoardLayout
-updateZoneLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	87	useBoardLayout
-addWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	90	useBoardLayout
-removeWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	93	useBoardLayout
-saveLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	96	useBoardLayout
-cancelLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	104	useBoardLayout
-setAsDefault	function	widgets	false		src/ui/widgets/useBoardLayout.ts	117	useBoardLayout
-resetLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	150	useBoardLayout
+normalizeColumns	function	widgets	false		src/ui/widgets/useBoardLayout.ts	67	useBoardLayout
+setCachedLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	82	useBoardLayout
+stage	function	widgets	false		src/ui/widgets/useBoardLayout.ts	86	useBoardLayout
+updateZoneLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	91	useBoardLayout
+addWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	94	useBoardLayout
+removeWidget	function	widgets	false	ui-tile	src/ui/widgets/useBoardLayout.ts	97	useBoardLayout
+saveLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	100	useBoardLayout
+cancelLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	108	useBoardLayout
+setAsDefault	function	widgets	false		src/ui/widgets/useBoardLayout.ts	121	useBoardLayout
+resetLayout	function	widgets	false		src/ui/widgets/useBoardLayout.ts	154	useBoardLayout
 WidgetValidationIssue	interface	widgets	true	ui-tile	src/ui/widgets/validation.ts	13	
 WidgetValidationResult	interface	widgets	true	ui-tile	src/ui/widgets/validation.ts	19	
 ID_PATTERN	variable	widgets	false		src/ui/widgets/validation.ts	26	
@@ -11267,47 +11320,66 @@ WidgetBoardToolbarProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoar
 WidgetBoardToolbar	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardToolbar.tsx	37	
 confirmReset	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	41	WidgetBoardToolbar
 copyLayout	function	widgets	false		src/ui/widgets/WidgetBoardToolbar.tsx	50	WidgetBoardToolbar
-ReactGridLayout	variable	widgets	false	component	src/ui/widgets/WidgetBoardZone.tsx	30	
-WidgetBoardZoneProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoardZone.tsx	32	
-itemInteractive	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	72	
-minGridFor	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	79	
-clampToMinGrid	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	96	
-wantsFit	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	106	
-WidgetBoardZone	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardZone.tsx	110	
-canResolve	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	117	WidgetBoardZone
-persist	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	160	WidgetBoardZone
+ReactGridLayout	variable	widgets	false	component	src/ui/widgets/WidgetBoardZone.tsx	31	
+WidgetBoardZoneProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetBoardZone.tsx	33	
+itemInteractive	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	73	
+widgetMinGrid	function	widgets	true	ui-tile	src/ui/widgets/WidgetBoardZone.tsx	80	
+sizeConstraintsFor	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	90	
+resizeGridElement	function	widgets	true		src/ui/widgets/WidgetBoardZone.tsx	94	
+isResizeProgressTowardFit	function	widgets	true		src/ui/widgets/WidgetBoardZone.tsx	98	
+clampWidgetInstanceToMinimum	function	widgets	true	ui-tile	src/ui/widgets/WidgetBoardZone.tsx	120	
+wantsFit	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	130	
+WidgetBoardZone	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetBoardZone.tsx	134	
+canResolve	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	141	WidgetBoardZone
+persist	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	185	WidgetBoardZone
+onResizeStart	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	201	WidgetBoardZone
+validateResize	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	209	WidgetBoardZone
+onResizeStop	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	256	WidgetBoardZone
+schedule	function	widgets	false		src/ui/widgets/WidgetBoardZone.tsx	315	WidgetBoardZone
+catalogueWidget	function	widgets	false	ui-tile,test	src/ui/widgets/WidgetCatalog.test.tsx	6	
+widgets	array	widgets	false	ui-tile,test	src/ui/widgets/WidgetCatalog.test.tsx	17	
 STATE_LABEL	variable	widgets	false	component	src/ui/widgets/WidgetCatalog.tsx	10	
-VARIANT_TONE	object	widgets	false		src/ui/widgets/WidgetCatalog.tsx	15	
-sizeLabel	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	20	
-WidgetCatalog	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	25	
+stateTone	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	15	
+defaultGridArea	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	22	
+catalogueFootprint	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	27	
+slug	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	33	
+WidgetTile	function	widgets	false	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	35	
+activate	function	widgets	false		src/ui/widgets/WidgetCatalog.tsx	52	WidgetTile
+WidgetCatalog	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetCatalog.tsx	92	
 WidgetConfigFieldRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigFieldRenderer.tsx	7	
 WidgetConfigureModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetConfigureModal.tsx	11	
-formatRefresh	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	12	
-WidgetDetailPanel	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	17	
-togglePkgMenu	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	30	WidgetDetailPanel
+WIDGET_ICONS	object	widgets	false	ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	8	
+formatRefresh	function	widgets	false		src/ui/widgets/WidgetDetailPanel.tsx	13	
+WidgetDetailPanel	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetDetailPanel.tsx	18	
 noDrag	function	widgets	false		src/ui/widgets/WidgetFrame.tsx	17	
 WidgetFrame	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetFrame.tsx	19	
-LibraryView	type	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	26	
-BundlesSectionProps	interface	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	41	
-BundlesSection	function	widgets	false	component	src/ui/widgets/WidgetLibraryModal.tsx	51	
-addBundle	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	60	BundlesSection
-WidgetLibraryModalProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	125	
-WidgetLibraryModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	143	
-onPackageFile	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	173	WidgetLibraryModal
-onUninstall	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	189	WidgetLibraryModal
-toggleChecked	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	214	WidgetLibraryModal
-addCheckedWidgets	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	217	WidgetLibraryModal
-selectWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	244	WidgetLibraryModal
-handleAdd	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	245	WidgetLibraryModal
-handlePreview	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	250	WidgetLibraryModal
+LibraryView	type	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	32	
+BundlesSectionProps	interface	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	47	
+BundlesSection	function	widgets	false	component	src/ui/widgets/WidgetLibraryModal.tsx	57	
+addBundle	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	66	BundlesSection
+WidgetLibraryModalProps	interface	widgets	true	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	133	
+WidgetLibraryModal	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	152	
+onPackageFile	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	182	WidgetLibraryModal
+onUninstall	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	198	WidgetLibraryModal
+clearFilters	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	237	WidgetLibraryModal
+selectWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	259	WidgetLibraryModal
+toggleMultiWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	260	WidgetLibraryModal
+leaveMultiSelect	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	264	WidgetLibraryModal
+requestClose	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	265	WidgetLibraryModal
+addSingle	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	273	WidgetLibraryModal
+previewWidget	function	widgets	false	ui-tile	src/ui/widgets/WidgetLibraryModal.tsx	280	WidgetLibraryModal
+addBatch	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	287	WidgetLibraryModal
+handleAddSelected	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	294	WidgetLibraryModal
+handleAdd	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	300	WidgetLibraryModal
+handlePreview	function	widgets	false		src/ui/widgets/WidgetLibraryModal.tsx	304	WidgetLibraryModal
 WidgetLivePreview	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetLivePreview.tsx	8	
 content	object	widgets	false		src/ui/widgets/WidgetPlaceholder.tsx	4	
 WidgetPlaceholder	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetPlaceholder.tsx	9	
-CANVAS_W	variable	widgets	false	component	src/ui/widgets/WidgetPreviewScaler.tsx	9	
-WidgetPreviewScaler	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetPreviewScaler.tsx	11	
-apply	function	widgets	false		src/ui/widgets/WidgetPreviewScaler.tsx	20	WidgetPreviewScaler
+CANVAS_H	variable	widgets	false	component	src/ui/widgets/WidgetPreviewScaler.tsx	10	
+widgetPreviewCanvas	function	widgets	true	ui-tile	src/ui/widgets/WidgetPreviewScaler.tsx	12	
+WidgetPreviewScaler	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetPreviewScaler.tsx	18	
+apply	function	widgets	false		src/ui/widgets/WidgetPreviewScaler.tsx	29	WidgetPreviewScaler
 WidgetRenderer	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetRenderer.tsx	18	
-WidgetSizeSelector	function	widgets	true	component,ui-tile	src/ui/widgets/WidgetSizeSelector.tsx	5	
 ImportMetaEnv	interface	platform	false		src/vite-env.d.ts	14	
 ImportMeta	interface	platform	false		src/vite-env.d.ts	28	
 mockRpcResult	function	testing	false	test	tests/integration/ratelimit.test.js	18	

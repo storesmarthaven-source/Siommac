@@ -2,26 +2,22 @@
 
 # hr Module Map
 
-Source fingerprint: `cfb2d82e9c13c9a422a52bb0`
+Source fingerprint: `855d4a135f9b6b3f7fdc78cb`
 
-Files: 194 | Symbols: 2198 | Widgets: 12 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 33 | DB objects: 156 | E2E suites: 14
+Files: 194 | Symbols: 2199 | Widgets: 8 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 33 | DB objects: 156 | E2E suites: 14
 
 ## Widgets and Tiles
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:411` |
-| `hr.onboarding.activationReadiness` | Activation Readiness | registry | `OnbActivationReadinessWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:326` |
-| `hr.onboarding.activeCases` | Active Cases | registry | `OnbActiveCasesWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:254` |
-| `hr.onboarding.blockedCases` | Blocked Cases | registry | `OnbBlockedCasesWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:302` |
+| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:103` |
+| `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
+| `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:413` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:317` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:318` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:320` |
 | `hr.onboarding.case.handoffsTable` | Handoffs | local | `() => wcard('Handoffs', 'fa-arrow-right-arrow-left', handoffsBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:319` |
-| `hr.onboarding.dueThisWeek` | Due This Week | registry | `OnbDueThisWeekWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:278` |
-| `hr.onboarding.health` | Onboarding Health | registry | `OnbHealthWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:350` |
-| `hr.onboarding.packageReadiness` | Package Readiness | registry | `OnbPackageReadinessWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:373` |
-| `hr.onboarding.recentActivity` | Recent Activity | registry | `OnbRecentActivityWidget` | `src/ui/widgets/registry.hrOnboarding.tsx:400` |
 
 ## Route Definitions
 
@@ -654,7 +650,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 512 |
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/CreateEmployeeWizard.tsx` | 366 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 487 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 491 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
@@ -665,7 +661,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/OffboardingOverview.tsx` | 269 |
 | frontend-page | `src/components/sections/HR/OnboardingAddTaskModal.tsx` | 94 |
 | frontend-page | `src/components/sections/HR/OnboardingBlockedBoard.tsx` | 157 |
-| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 430 |
+| frontend-page | `src/components/sections/HR/OnboardingCaseDetail.tsx` | 431 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.adapters.ts` | 143 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.helpers.ts` | 196 |
 | frontend-page | `src/components/sections/HR/OnboardingCommandCenter.tsx` | 195 |

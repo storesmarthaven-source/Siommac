@@ -24,6 +24,7 @@ export type WidgetRuntimeState =
   | 'live-api' | 'static-preview' | 'restricted' | 'action-gated'
   | 'disabled' | 'missing';
 export type WidgetGovernanceState = 'enabled' | 'disabled' | 'preview';
+export type WidgetMotionKind = 'none' | 'count-up' | 'progress' | 'chart-draw' | 'pulse' | 'sequence';
 export type WidgetBreakpoint = 'desktop' | 'tablet' | 'mobile';
 
 export interface WidgetPlacement { x: number; y: number; w: number; h: number }
@@ -38,6 +39,13 @@ export interface WidgetGovernancePolicy {
   allowedPages?: string[];
   requiredCapabilities?: string[];
   packageId?: string;
+}
+
+export interface WidgetMotionSpec {
+  kind: WidgetMotionKind;
+  durationMs?: number;
+  /** Motion always resolves to a static end-state when reduced motion is requested. */
+  reducedMotion: 'static';
 }
 
 export interface WidgetDataSourceRegistration {
@@ -101,6 +109,16 @@ export interface WidgetPermissionSpec {
 }
 
 export interface WidgetGridSize { w: number; h: number }
+
+export interface WidgetSizeConstraints {
+  defaultColumns: number;
+  defaultRows: number;
+  minColumns: number;
+  minRows: number;
+  minWidth?: number;
+  minHeight?: number;
+  resizeStrategy: 'fixed-minimum' | 'content-measured';
+}
 
 export interface WidgetSizeDef {
   key: WidgetSizeKey;
@@ -191,6 +209,9 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
 
   defaultSize: WidgetSizeKey;
   allowedSizes: WidgetSizeDef[];
+  /** Content-safe board floor. Grid constraints stop the handle; pixel constraints and the
+   * runtime fit validator protect typography, charts, legends, actions, and dynamic content. */
+  sizeConstraints?: WidgetSizeConstraints;
 
   /** Library-preview hint for widgets that size with viewport/relative units (HTML design widgets):
    *  the thumbnail is rendered at a board-like canvas of this width/height ratio, then scaled down
@@ -202,6 +223,11 @@ export interface WidgetDef<TConfig = Record<string, unknown>> {
   configSchema: WidgetConfigField[];
 
   dataSource: WidgetDataSourceDef;
+
+  /** Package-owned catalogue defaults. Runtime governance may override these values. */
+  governance?: Omit<WidgetGovernancePolicy, 'widgetId'>;
+  /** Optional presentation motion. It never controls data refresh or authorization. */
+  motion?: WidgetMotionSpec;
 
   /** Optional adaptive-content contract — see WidgetContentPriorityRule/WidgetDensityRules.
    *  Omitting these is fine; the widget just renders the same content at every size. */
@@ -272,6 +298,7 @@ export interface LocalWidget {
    *  (see WidgetBoardZone.gridNode). Omit for content that reflows safely at any size
    *  (tables, lists) — those keep the generic 2-cell floor. */
   allowedSizes?: WidgetSizeDef[];
+  sizeConstraints?: WidgetSizeConstraints;
   /** Same as `WidgetDef.sizeToContent` — tile height auto-fits the rendered card. */
   sizeToContent?: boolean;
   /** Set false for a FIXED-size tile the user can move but never resize (e.g. KPI cards
@@ -286,7 +313,7 @@ export type LocalWidgetMap = Record<string, LocalWidget>;
 export interface BoardLayout {
   version?: WidgetContractVersion;
   pageKey: string;
-  /** New boards use 12. A legacy non-12 value is retained during migration to avoid geometry loss. */
+  /** Desktop grid width for this page. Most boards use 12; selected dense workspaces may use 24. */
   columns?: number;
   zones: Record<string, WidgetInstance[]>;
   updatedAt?: string;

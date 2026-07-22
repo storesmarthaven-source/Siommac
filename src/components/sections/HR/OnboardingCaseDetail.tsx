@@ -18,7 +18,7 @@ import { useEffect, useMemo, useState } from 'preact/hooks';
 import { openActionModal, toActionRecord, statusBadge } from '@/components/common/actions';
 import { PageHeader, Modal, Field, FormGrid, TextInput, SelectInput } from '@ui';
 import {
-  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget,
+  WidgetBoard, WidgetBoardToolbar, WidgetLibraryModal, useBoardLayout, WIDGET_REGISTRY, commitPreviewWidget, placeWidgetsAtBottom,
   type BoardLayout, type LocalWidgetMap, type PreviewWidgetInstance, type WidgetInstance, type WidgetSizeKey,
 } from '@ui/widgets';
 import { can } from '@lib/permissions';
@@ -102,7 +102,7 @@ export function OnboardingCaseDetail({
   const isAdmin = useSessionStore(selectIsAdmin);
   const setCaseInStore = useOnboardingCaseStore(s => s.setCase);
   const clearCaseInStore = useOnboardingCaseStore(s => s.clear);
-  const { layout, addWidget, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
+  const { layout, addWidget, updateZoneLayout, saveLayout, cancelLayout, setAsDefault, resetLayout } = useBoardLayout(CASE_PAGE_KEY, defaultCaseLayout());
   const boardItems = layout.zones[CASE_ZONE] ?? [];
   const placedWidgetIds = boardItems.map(w => w.widgetId);
   const placeBottom = <T extends { x: number; y: number }>(w: T): T => ({ ...w, x: 0, y: Math.max(0, ...boardItems.map(i => i.y + i.h)) });
@@ -384,6 +384,7 @@ export function OnboardingCaseDetail({
         canManagePackages={isAdmin}
         onClose={() => setLibOpen(false)}
         onAddWidget={inst => addWidget(CASE_ZONE, placeBottom(inst))}
+        onAddWidgets={instances => updateZoneLayout(CASE_ZONE, [...boardItems, ...placeWidgetsAtBottom(boardItems, instances)])}
         onPreviewOnBoard={p => setPreview(placeBottom(p))}
       />
 

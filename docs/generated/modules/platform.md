@@ -2,9 +2,9 @@
 
 # platform Module Map
 
-Source fingerprint: `cfb2d82e9c13c9a422a52bb0`
+Source fingerprint: `855d4a135f9b6b3f7fdc78cb`
 
-Files: 293 | Symbols: 2653 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
+Files: 294 | Symbols: 2659 | Widgets: 0 | Unique mounted endpoints: 31 | Route definitions: 31 mounted + 15 unmounted | API calls: 47 | DB objects: 295 | E2E suites: 0
 
 ## Widgets and Tiles
 
@@ -189,6 +189,9 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `ErrorBoundary` | class / component | `src/components/shared/ErrorBoundary.tsx:65` | `-` |
 | `Modal` | function / component | `src/components/shared/Modal.tsx:110` | `-` |
 | `Spinner` | function / component | `src/components/shared/Spinner.tsx:30` | `-` |
+| `UpcomingDeadlineCardItem` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:5` | `-` |
+| `UpcomingDeadlinesCardProps` | interface / ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:14` | `-` |
+| `UpcomingDeadlinesCard` | function / component, ui-tile | `src/components/shared/UpcomingDeadlinesCard.tsx:34` | `-` |
 | `UserPill` | function / component | `src/components/shared/UserPill.tsx:50` | `-` |
 | `useHeaderModalOpen` | function / hook | `src/hooks/useHeaderModalOpen.ts:21` | `-` |
 | `StepUpProvider` | function / component | `src/hooks/useStepUp.tsx:47` | `-` |
@@ -278,10 +281,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `SparkCard` | function / component, ui-tile | `src/ui/components/SparkCard.tsx:28` | `-` |
 | `Spinner` | function / component | `src/ui/components/Spinner.tsx:23` | `-` |
 | `StatsCardProps` | interface / ui-tile | `src/ui/components/StatsCard.tsx:37` | `-` |
-| `StatsCard` | function / component, ui-tile | `src/ui/components/StatsCard.tsx:70` | `-` |
-| `StatusPill` | function / component | `src/ui/components/StatusPill.tsx:24` | `-` |
-| `Stepper` | function / component | `src/ui/components/Stepper.tsx:37` | `-` |
-| ... | 44 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
+| ... | 47 additional indexed symbols | Search `../SYMBOL_INDEX.tsv` | - |
 
 All named functions and private helpers are in `../SYMBOL_INDEX.tsv` and `../CODEBASE_INDEX.json`.
 

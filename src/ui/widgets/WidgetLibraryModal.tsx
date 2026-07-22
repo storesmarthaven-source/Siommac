@@ -6,7 +6,7 @@
 import './widgetLibrary.css';
 import { useRef, useState } from 'preact/hooks';
 import type { VNode, TargetedEvent } from 'preact';
-import type { PreviewWidgetInstance, WidgetDef, WidgetInstance, WidgetSizeKey } from './types';
+import type { ModuleKey, PreviewWidgetInstance, WidgetDef, WidgetInstance, WidgetSizeKey } from './types';
 import { allWidgets } from './registry';
 import { useRuntimeWidgetsVersion, useInstalledWidgetPackages, useRefreshInstalledPackages } from './runtimeRegistry';
 import { createWidgetInstance } from './createWidgetInstance';
@@ -22,6 +22,12 @@ import { WIDGET_BUNDLES, resolveBundleWidgets } from './bundles';
 import { can } from '@lib/permissions';
 import { effectiveWidgetPolicy, isWidgetDiscoverable } from './governance';
 import { listWidgetDataSources } from './dataSources';
+import { availableWidgetModules, widgetAreas } from './catalogueTaxonomy';
+import { requestWidgetBoardReveal } from './boardReveal';
+import {
+  ActiveFilters, FilterDropdown, LucideIcon, TableSearch, useFilterDropdowns,
+  type LucideName,
+} from '@ui';
 
 type LibraryView = 'catalogue' | 'recommended' | 'bundles' | 'layouts' | 'packages' | 'governance' | 'sources';
 
@@ -45,35 +51,37 @@ interface BundlesSectionProps {
   lockedIds: Set<string>;
   pageKey: string;
   zoneId: string;
-  onAddWidget: (instance: WidgetInstance) => void | Promise<void>;
+  onAddWidgets: (instances: WidgetInstance[]) => void | Promise<void>;
 }
 
-function BundlesSection({ widgetDefs, placedIds, lockedIds, pageKey, zoneId, onAddWidget }: BundlesSectionProps): VNode | null {
+function BundlesSection({ widgetDefs, placedIds, lockedIds, pageKey, zoneId, onAddWidgets }: BundlesSectionProps): VNode | null {
   const registeredIds = widgetDefs.map(d => d.id);
 
   // Only show bundles that have at least one currently registered widget id.
   // Bundles whose every member is a forward-reference (not yet shipped) are hidden
   // rather than shown disabled — they add no value to the UI yet.
-  const visibleBundles = WIDGET_BUNDLES.filter(b => resolveBundleWidgets(b, registeredIds).length > 0);
+  const visibleBundles = WIDGET_BUNDLES.filter(b => b.supportedPages.includes(pageKey) && resolveBundleWidgets(b, registeredIds).length > 0);
   if (visibleBundles.length === 0) return null;
 
   function addBundle(bundleId: string): void {
     const bundle = WIDGET_BUNDLES.find(b => b.id === bundleId);
     if (!bundle) return;
     // Resolve the member defs: registered + not placed + not locked.
+    const instances: WidgetInstance[] = [];
     for (const id of resolveBundleWidgets(bundle, registeredIds)) {
       if (placedIds.has(id) || lockedIds.has(id)) continue;
       const def = widgetDefs.find(d => d.id === id);
       if (!def) continue;
-      void onAddWidget(createWidgetInstance({ widget: def, pageKey, zoneId, sizeKey: def.defaultSize, config: def.defaultConfig }));
+      instances.push(createWidgetInstance({ widget: def, pageKey, zoneId, sizeKey: def.defaultSize, config: def.defaultConfig }));
     }
+    if (instances.length) void onAddWidgets(instances);
   }
 
   return (
     <section class="wlib-section wlib-bundles">
       <div class="wlib-section-head">
         <div>
-          <h3>Bundles</h3>
+          <h3>Recommended for this page</h3>
           <p>Curated first-party sets — add several related widgets in one click.</p>
         </div>
         <span class="wlib-section-count">{visibleBundles.length} bundle{visibleBundles.length === 1 ? '' : 's'}</span>
@@ -86,7 +94,7 @@ function BundlesSection({ widgetDefs, placedIds, lockedIds, pageKey, zoneId, onA
           return (
             <article key={bundle.id} class={`wlib-bundle-card${disabled ? ' disabled' : ''}`}>
               <div class="wlib-bundle-top">
-                <span class="wlib-bundle-icon"><i class={`fas ${bundle.icon}`} /></span>
+                <span class="wlib-bundle-icon"><LucideIcon name="Layers3" size={18} /></span>
                 <div class="wlib-bundle-copy">
                   <h4>{bundle.title}</h4>
                   <p>{bundle.description}</p>
@@ -108,7 +116,7 @@ function BundlesSection({ widgetDefs, placedIds, lockedIds, pageKey, zoneId, onA
                       : `Add ${addable.length} widget${addable.length === 1 ? '' : 's'}`
                   }
                 >
-                  <i class="fas fa-circle-plus" />
+                  <LucideIcon name="CirclePlus" size={15} />
                   {disabled ? 'Added' : `Add ${addable.length} widget${addable.length === 1 ? '' : 's'}`}
                 </button>
               </div>
@@ -137,12 +145,13 @@ export interface WidgetLibraryModalProps {
   canManagePackages?: boolean;
   onClose: () => void;
   onAddWidget: (instance: WidgetInstance) => void | Promise<void>;
+  onAddWidgets: (instances: WidgetInstance[]) => void | Promise<void>;
   onPreviewOnBoard: (preview: PreviewWidgetInstance) => void;
 }
 
 export function WidgetLibraryModal({
-  open, pageKey, zoneId, placedWidgetIds = [], userPermissions, demo, onToggleDemo,
-  onClose, onAddWidget, onPreviewOnBoard,
+  open, pageKey, zoneId, placedWidgetIds = [], userPermissions,
+  onClose, onAddWidget, onAddWidgets, onPreviewOnBoard,
 }: WidgetLibraryModalProps): VNode | null {
   // ONE library across all pages — every registered widget is available everywhere;
   // `recommendedFor`/`supportedPages` only drives the "Recommended for this page" section.
@@ -150,23 +159,23 @@ export function WidgetLibraryModal({
   useRuntimeWidgetsVersion();
   const widgets = allWidgets();
   const [query, setQuery] = useState('');
-  const [moduleF, setModuleF] = useState('');
-  const [categoryF, setCategoryF] = useState('');
+  const [categoryFilters, setCategoryFilters] = useState<string[]>([]);
+  const { openId: filterOpenId, setOpenId: setFilterOpenId } = useFilterDropdowns();
+  const [activeModule, setActiveModule] = useState<ModuleKey | null>(null);
+  const [activeArea, setActiveArea] = useState<string | null>(null);
+  const [expandedModules, setExpandedModules] = useState<ModuleKey[]>(() => availableWidgetModules(widgets).map(module => module.key));
+  const [multiSelect, setMultiSelect] = useState(false);
+  const [multiSelectedIds, setMultiSelectedIds] = useState<string[]>([]);
   const [selectedId, setSelectedId] = useState<string | null>(widgets[0]?.id ?? null);
   const [sizeKey, setSizeKey] = useState<WidgetSizeKey>(widgets[0]?.defaultSize ?? 'standard');
   const [config, setConfig] = useState<Record<string, unknown>>(widgets[0]?.defaultConfig ?? {});
-  const [livePreview, setLivePreview] = useState(true);
   const [activeView, setActiveView] = useState<LibraryView>('catalogue');
   const packageManager = can('ui.widgets.packages.manage');
-  // Multi-select: check several widgets, then "Add N widgets" in one action.
-  const [checked, setChecked] = useState<Set<string>>(new Set());
+  const packageViewer = packageManager || can('ui.widgets.packages.view');
   const shellRef = useMountReveal({ y: 14, duration: 0.26 });
-  // Info popup shown after a widget is added.
-  const [addedInfo, setAddedInfo] = useState<{ widget: WidgetDef } | null>(null);
   // Package install/manage state (admin).
   const fileRef = useRef<HTMLInputElement>(null);
   const [installBusy, setInstallBusy] = useState(false);
-  const [manageOpen, setManageOpen] = useState(false);
   const packagesQuery = useInstalledWidgetPackages();
   const refreshPackages = useRefreshInstalledPackages();
 
@@ -209,212 +218,240 @@ export function WidgetLibraryModal({
   const selectedAdded = selected ? placedIds.has(selected.id) : false;
   const canPlaceSelected = !!selected && !lockedIds.has(selected.id) && !selectedAdded;
 
-  // Multi-select: only widgets that are checked AND actually addable (not already placed, not locked).
-  const addable = [...checked].filter(id => !placedIds.has(id) && !lockedIds.has(id));
-  function toggleChecked(id: string): void {
-    setChecked(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
-  }
-  function addCheckedWidgets(): void {
-    for (const id of addable) {
-      const w = widgets.find(x => x.id === id);
-      if (w) void onAddWidget(createWidgetInstance({ widget: w, pageKey, zoneId, sizeKey: w.defaultSize, config: w.defaultConfig }));
-    }
-    setChecked(new Set());
-  }
-
   const q = query.trim().toLowerCase();
   const filtered = widgets.filter(w => {
     const qOk = !q || [w.title, w.description, w.dataSource.label, ...w.tags].some(s => s.toLowerCase().includes(q));
     const viewOk = activeView === 'recommended' ? (w.recommendedFor?.includes(pageKey) ?? w.supportedPages.includes(pageKey))
       : activeView === 'layouts' ? placedIds.has(w.id) : true;
-    return isWidgetDiscoverable(w, pageKey, can) && viewOk && qOk && (!moduleF || w.module === moduleF) && (!categoryF || w.category === categoryF);
+    return isWidgetDiscoverable(w, pageKey, can) && viewOk && qOk
+      && (!activeModule || w.module === activeModule)
+      && (!activeArea || w.area === activeArea)
+      && (!categoryFilters.length || categoryFilters.includes(w.category));
   });
   const categories = Array.from(new Set(widgets.map(w => w.category)));
-  const modules = Array.from(new Set(widgets.map(w => w.module)));
-  const navigation: { id: LibraryView; label: string; icon: string }[] = [
-    { id: 'catalogue', label: 'Catalogue', icon: 'fa-table-cells-large' },
-    { id: 'recommended', label: 'Recommended', icon: 'fa-wand-magic-sparkles' },
-    { id: 'bundles', label: 'Bundles', icon: 'fa-layer-group' },
-    { id: 'layouts', label: 'My layouts', icon: 'fa-user-gear' },
-    ...(packageManager ? [{ id: 'packages' as const, label: 'Packages', icon: 'fa-box-open' }] : []),
-    ...(can('ui.widgets.governance.view') ? [{ id: 'governance' as const, label: 'Governance', icon: 'fa-shield-halved' }] : []),
-    ...(can('ui.widgets.sources.view') ? [{ id: 'sources' as const, label: 'Data Sources', icon: 'fa-database' }] : []),
+  const discoverableWidgets = widgets.filter(widget => isWidgetDiscoverable(widget, pageKey, can));
+  const browseModules = availableWidgetModules(discoverableWidgets);
+  const activeFilterChips = [
+    ...categoryFilters.map(value => ({ label: value, onRemove: () => setCategoryFilters(categoryFilters.filter(item => item !== value)) })),
   ];
+  const clearFilters = (): void => setCategoryFilters([]);
+  const navigation: { id: LibraryView; label: string; icon: LucideName }[] = [
+    { id: 'catalogue', label: 'Catalogue', icon: 'LayoutGrid' },
+    { id: 'recommended', label: 'Recommended', icon: 'Sparkles' },
+    { id: 'bundles', label: 'Bundles', icon: 'Layers3' },
+    { id: 'layouts', label: 'My layouts', icon: 'PanelTop' },
+    ...(packageViewer ? [{ id: 'packages' as const, label: 'Installed packages', icon: 'PackageOpen' as const }] : []),
+    ...(can('ui.widgets.governance.view') ? [{ id: 'governance' as const, label: 'Governance', icon: 'ShieldCheck' as const }] : []),
+    ...(can('ui.widgets.sources.view') ? [{ id: 'sources' as const, label: 'Data Sources', icon: 'Database' as const }] : []),
+  ];
+  const pageLabel = pageKey.split(/[./:_-]+/).filter(Boolean).map(part => part.charAt(0).toUpperCase() + part.slice(1)).join(' ');
+  const navGroups = [
+    { label: 'Discover', ids: ['catalogue', 'recommended', 'bundles'] as LibraryView[] },
+    { label: 'Manage', ids: ['layouts', 'packages'] as LibraryView[] },
+    { label: 'Administration', ids: ['governance', 'sources'] as LibraryView[] },
+  ];
+  const governanceRows = widgets.map(widget => ({ widget, policy: effectiveWidgetPolicy(widget) }));
+  const governanceEnabled = governanceRows.filter(row => row.policy.state === 'enabled').length;
+  const governanceRestricted = governanceRows.filter(row => (row.policy.requiredCapabilities?.length ?? 0) > 0 || row.policy.hidden).length;
+  const governanceReview = governanceRows.filter(row => row.policy.state === 'preview').length;
+  const registeredSources = listWidgetDataSources();
 
   function selectWidget(w: WidgetDef): void { setSelectedId(w.id); setSizeKey(w.defaultSize); setConfig({ ...w.defaultConfig }); }
+  function toggleMultiWidget(widget: WidgetDef): void {
+    if (lockedIds.has(widget.id) || placedIds.has(widget.id)) return;
+    setMultiSelectedIds(current => current.includes(widget.id) ? current.filter(id => id !== widget.id) : [...current, widget.id]);
+  }
+  function leaveMultiSelect(): void { setMultiSelect(false); setMultiSelectedIds([]); }
+  async function requestClose(): Promise<void> {
+    if (multiSelect && multiSelectedIds.length) {
+      const discard = await dialog.confirm({ title: 'Discard widget selection?', text: `${multiSelectedIds.length} selected widget${multiSelectedIds.length === 1 ? '' : 's'} have not been added.`, confirmText: 'Discard selection', danger: false });
+      if (!discard) return;
+    }
+    leaveMultiSelect();
+    onClose();
+  }
+  async function addSingle(widget: WidgetDef, nextSize = widget.defaultSize, nextConfig = widget.defaultConfig): Promise<void> {
+    if (lockedIds.has(widget.id) || placedIds.has(widget.id)) return;
+    const instance = createWidgetInstance({ widget, pageKey, zoneId, sizeKey: nextSize, config: nextConfig });
+    await onAddWidget(instance);
+    onClose();
+    requestAnimationFrame(() => requestWidgetBoardReveal({ pageKey, zoneId, instanceIds: [instance.instanceId] }));
+  }
+  function previewWidget(widget: WidgetDef, nextSize = widget.defaultSize, nextConfig = widget.defaultConfig): void {
+    if (lockedIds.has(widget.id) || placedIds.has(widget.id)) return;
+    const instance = createPreviewWidgetInstance({ widget, pageKey, zoneId, sizeKey: nextSize, config: nextConfig });
+    onPreviewOnBoard(instance);
+    onClose();
+    requestAnimationFrame(() => requestWidgetBoardReveal({ pageKey, zoneId, instanceIds: [instance.instanceId] }));
+  }
+  async function addBatch(instances: WidgetInstance[]): Promise<void> {
+    if (!instances.length) return;
+    await onAddWidgets(instances);
+    leaveMultiSelect();
+    onClose();
+    requestAnimationFrame(() => requestWidgetBoardReveal({ pageKey, zoneId, instanceIds: instances.map(instance => instance.instanceId) }));
+  }
+  async function handleAddSelected(): Promise<void> {
+    const selectedWidgets = widgets.filter(widget => multiSelectedIds.includes(widget.id) && !lockedIds.has(widget.id) && !placedIds.has(widget.id));
+    if (!selectedWidgets.length) return;
+    const instances = selectedWidgets.map(widget => createWidgetInstance({ widget, pageKey, zoneId, sizeKey: widget.defaultSize, config: widget.defaultConfig }));
+    await addBatch(instances);
+  }
   function handleAdd(): void {
     if (!canPlaceSelected) return;
-    void onAddWidget(createWidgetInstance({ widget: selected, pageKey, zoneId, sizeKey, config }));
-    setAddedInfo({ widget: selected });
+    void addSingle(selected, sizeKey, config);
   }
-  function handlePreview(): void { if (canPlaceSelected) { onPreviewOnBoard(createPreviewWidgetInstance({ widget: selected, pageKey, zoneId, sizeKey, config })); onClose(); } }
+  function handlePreview(): void { if (canPlaceSelected) previewWidget(selected, sizeKey, config); }
 
   return (
-    <div class="wlib-backdrop" onClick={e => { if (e.target === e.currentTarget) onClose(); }}>
+    <div class="wlib-backdrop" onClick={e => { if (e.target === e.currentTarget) void requestClose(); }}>
       <div ref={shellRef} class="wlib-shell" role="dialog" aria-modal="true" aria-label="Widget Library">
         <header class="wlib-head">
-          <span class="wlib-head-icon"><i class="fas fa-table-cells-large" /></span>
-          <div class="wlib-head-copy"><h2>Widget Library</h2><p>Add, preview, size, and configure dashboard widgets.</p></div>
+          <span class="wlib-head-icon"><LucideIcon name="LayoutDashboard" size={18} strokeWidth={1.8} /></span>
+          <div class="wlib-head-copy">
+            <div class="wlib-title-line"><h2>Widget Library</h2></div>
+            <p>Add approved widgets to {pageLabel || pageKey}.</p>
+          </div>
           <div class="wlib-head-actions">
             {/* Install/Manage live in the Add-widget dropdown; this hidden input is its file picker. */}
             {packageManager ? <input ref={fileRef} type="file" accept=".html,.htm,.zip,.json,.siowidget" style={{ display: 'none' }} onChange={e => void onPackageFile(e)} /> : null}
-            <button type="button" class="wlib-btn wlib-btn-secondary" onClick={handlePreview}
-              disabled={!canPlaceSelected}>
-              <i class="fas fa-chart-line" /> Board preview
-            </button>
-            <button class="wlib-close" onClick={onClose} aria-label="Close"><i class="fas fa-xmark" /></button>
+            <button class="wlib-close" onClick={() => void requestClose()} aria-label="Close"><LucideIcon name="X" size={18} /></button>
           </div>
         </header>
-
-        <div class="wlib-filters">
-          <div class="wlib-filters-top">
-            <label class="wlib-control wlib-search">
-              <i class="fas fa-magnifying-glass" />
-              <input type="search" placeholder="Search widgets, data source, or tag..." value={query} onInput={e => setQuery((e.target as HTMLInputElement).value)} />
-            </label>
-            <div class="wlib-toggles">
-              <button type="button" class={`wlib-toggle-chip${livePreview ? ' on' : ''}`} onClick={() => setLivePreview(v => !v)} aria-pressed={livePreview}>
-                Live preview <span class="wlib-toggle-switch" aria-hidden="true" />
-              </button>
-              {onToggleDemo ? (
-                <button type="button" class={`wlib-toggle-chip${demo ? ' on' : ''}`} onClick={onToggleDemo} aria-pressed={demo}
-                  title="Temporarily fill every widget on the board with demo data">
-                  Demo data <span class="wlib-toggle-switch" aria-hidden="true" />
-                </button>
-              ) : null}
-            </div>
-          </div>
-          <div class="wlib-chips" role="group" aria-label="Filter widgets by module and category">
-            <button type="button" class={`wlib-chip${!moduleF && !categoryF ? ' on' : ''}`} onClick={() => { setModuleF(''); setCategoryF(''); }}>All</button>
-            {modules.map(m => (
-              <button type="button" key={m} class={`wlib-chip${moduleF === m ? ' on' : ''}`} onClick={() => setModuleF(moduleF === m ? '' : m)}>{m.toUpperCase()}</button>
-            ))}
-            {categories.length ? <span class="wlib-chip-sep" aria-hidden="true" /> : null}
-            {categories.map(c => (
-              <button type="button" key={c} class={`wlib-chip${categoryF === c ? ' on' : ''}`} onClick={() => setCategoryF(categoryF === c ? '' : c)}>{c}</button>
-            ))}
-          </div>
-        </div>
 
         {/* Left-pane column: bundles section (first-party) then per-category catalog tiles. */}
         <div class="wlib-body wlib-body-v3">
           <nav class="wlib-nav" aria-label="Widget library sections">
-            <div class="wlib-page-context"><small>Adding to</small><strong>{pageKey}</strong><span>{zoneId}</span></div>
-            {navigation.map(item => <button key={item.id} type="button" class={activeView === item.id ? 'active' : ''} aria-current={activeView === item.id ? 'page' : undefined} onClick={() => setActiveView(item.id)}><i class={`fas ${item.icon}`} /> {item.label}</button>)}
+            {navGroups.map(group => {
+              const items = navigation.filter(item => group.ids.includes(item.id));
+              return items.length ? <div class="wlib-nav-group" key={group.label}>
+                <div class="wlib-nav-label">{group.label}</div>
+                {items.map(item => <button key={item.id} type="button" class={activeView === item.id ? 'active' : ''} aria-current={activeView === item.id ? 'page' : undefined} onClick={() => setActiveView(item.id)}>
+                  <LucideIcon name={item.icon} size={17} strokeWidth={1.8} /><span>{item.label}</span>
+                  {item.id === 'catalogue' ? <b>{widgets.length}</b> : item.id === 'recommended' ? <b>{widgets.filter(w => w.recommendedFor?.includes(pageKey)).length}</b> : item.id === 'bundles' ? <b>{WIDGET_BUNDLES.length}</b> : null}
+                </button>)}
+              </div> : null;
+            })}
+            {(['catalogue', 'recommended', 'bundles'] as LibraryView[]).includes(activeView) ? <div class="wlib-taxonomy">
+              <div class="wlib-nav-label">Browse widgets</div>
+              <button type="button" class={!activeModule && !activeArea ? 'active' : ''} onClick={() => { setActiveModule(null); setActiveArea(null); setCategoryFilters([]); }}>
+                <LucideIcon name="Boxes" size={17} /><span>All widgets</span><b>{discoverableWidgets.length}</b>
+              </button>
+              {browseModules.map(module => {
+                const expanded = expandedModules.includes(module.key);
+                const areas = widgetAreas(discoverableWidgets, module.key);
+                const moduleCount = discoverableWidgets.filter(widget => widget.module === module.key).length;
+                return <div class="wlib-taxonomy-module" key={module.key}>
+                  <div class="wlib-taxonomy-row">
+                    <button type="button" class={activeModule === module.key && !activeArea ? 'active' : ''} onClick={() => { setActiveModule(module.key); setActiveArea(null); setExpandedModules(current => current.includes(module.key) ? current : [...current, module.key]); }}>
+                      <LucideIcon name={module.icon} size={17} /><span>{module.label}</span><b>{moduleCount}</b>
+                    </button>
+                    <button type="button" class="wlib-taxonomy-toggle" aria-label={`${expanded ? 'Collapse' : 'Expand'} ${module.label}`} aria-expanded={expanded} onClick={() => setExpandedModules(current => current.includes(module.key) ? current.filter(key => key !== module.key) : [...current, module.key])}>
+                      <LucideIcon name={expanded ? 'ChevronUp' : 'ChevronDown'} size={14} />
+                    </button>
+                  </div>
+                  {expanded ? <div class="wlib-subcategories">
+                    <button type="button" class={activeModule === module.key && !activeArea ? 'active' : ''} onClick={() => { setActiveModule(module.key); setActiveArea(null); }}>All {module.label}</button>
+                    {areas.map(({ area, count }) => <button type="button" key={area} class={activeModule === module.key && activeArea === area ? 'active' : ''} onClick={() => { setActiveModule(module.key); setActiveArea(area); }}><span>{area}</span><b>{count}</b></button>)}
+                  </div> : null}
+                </div>;
+              })}
+            </div> : null}
+            <div class="wlib-nav-note"><LucideIcon name="ShieldCheck" size={18} /><strong>Permission-aware</strong><span>The catalogue never grants data access. Every widget is filtered and mounted using effective permissions.</span></div>
           </nav>
-          {activeView === 'governance' ? (
+          {activeView === 'layouts' ? (
+            <section class="wlib-admin-panel" aria-label="My layouts">
+              <div class="wlib-admin-heading"><div><h3>My layouts</h3><p>Personal arrangements saved per page. Organization defaults remain unchanged.</p></div><span class="wlib-admin-mode"><LucideIcon name="UserRound" size={15} /> Personal</span></div>
+              <div class="wlib-metric-row"><article><span>Customized pages</span><strong>{placedIds.size ? 1 : 0}</strong></article><article><span>Widgets placed</span><strong>{placedIds.size}</strong></article><article><span>Storage</span><strong class="text">ui_layout</strong></article></div>
+              <div class="wlib-table-card"><table class="wlib-manage-table"><thead><tr><th>Page</th><th>Zone</th><th>Widgets</th><th>Based on</th><th>State</th></tr></thead><tbody><tr><td><strong>{pageLabel || pageKey}</strong><small>{pageKey}</small></td><td>{zoneId}</td><td>{placedIds.size}</td><td>Authorized organization default</td><td><span class="wlib-pill green">Current</span></td></tr></tbody></table></div>
+            </section>
+          ) : activeView === 'governance' ? (
             <section class="wlib-admin-panel" aria-label="Widget governance">
-              <h3>Widget governance</h3><p>Enablement and discoverability are separate from business-data authorization.</p>
-              <div class="wlib-admin-list">{widgets.map(w => { const policy = effectiveWidgetPolicy(w); return <article key={w.id}><strong>{w.title}</strong><span>{policy.state} · {policy.discoverable ? 'discoverable' : 'hidden'}{policy.mandatory ? ' · mandatory' : ''}</span></article>; })}</div>
-              {can('ui.widgets.governance.manage') ? <small>Policies are declared by the owning first-party module or installed package.</small> : null}
+              <div class="wlib-admin-heading"><div><h3>Widget governance</h3><p>Control availability without changing the permissions that protect underlying data.</p></div>{can('ui.widgets.governance.manage') ? <span class="wlib-admin-mode"><LucideIcon name="ShieldCheck" size={15} /> Manage capability</span> : null}</div>
+              <div class="wlib-metric-row">
+                <article><span>Enabled widgets</span><strong>{governanceEnabled}</strong></article>
+                <article><span>Restricted</span><strong>{governanceRestricted}</strong></article>
+                <article><span>Needs review</span><strong class="warning">{governanceReview}</strong></article>
+              </div>
+              <div class="wlib-table-card">
+                <table class="wlib-manage-table">
+                  <thead><tr><th>Subject</th><th>Scope</th><th>Required capabilities</th><th>Catalogue</th><th>Policy state</th></tr></thead>
+                  <tbody>{governanceRows.map(({ widget, policy }) => <tr key={widget.id}>
+                    <td><strong>{widget.title}</strong><small>{widget.module.toUpperCase()} · {widget.category}</small></td>
+                    <td>{(policy.allowedPages?.length ? policy.allowedPages : widget.supportedPages).join(' · ') || 'Application-wide'}</td>
+                    <td>{(policy.requiredCapabilities?.length ? policy.requiredCapabilities : widget.permissions?.requiredPermissions ?? widget.dataSource.permissions).join(', ') || 'Page access'}</td>
+                    <td>{policy.hidden || !policy.discoverable ? <span class="wlib-pill">Hidden</span> : policy.state === 'preview' ? <span class="wlib-pill warning">Preview only</span> : <span class="wlib-pill success">Visible when permitted</span>}</td>
+                    <td><span class={`wlib-pill ${policy.state === 'enabled' ? 'success' : policy.state === 'preview' ? 'warning' : 'danger'}`}>{policy.state}</span>{policy.mandatory ? <small>Mandatory</small> : null}</td>
+                  </tr>)}</tbody>
+                </table>
+              </div>
+              <p class="wlib-admin-note">Policies are owned by first-party modules or installed packages. Governance controls discovery and placement; business-data authorization remains server-enforced.</p>
             </section>
           ) : activeView === 'sources' ? (
             <section class="wlib-admin-panel" aria-label="Approved widget data sources">
-              <h3>Approved data sources</h3><p>JWT-authenticated APIs only. Realtime signals invalidate authorized queries; they never authorize records.</p>
-              <div class="wlib-admin-list">{listWidgetDataSources().map(source => <article key={source.key}><strong>{source.label}</strong><span>{source.endpoint} · {source.permission} · {source.scope} · {source.refresh.mode}</span></article>)}</div>
-              {listWidgetDataSources().length === 0 ? <div class="wlib-empty-panel">No generic sources registered. Existing first-party widgets continue to use their module TanStack hooks.</div> : null}
+              <div class="wlib-admin-heading"><div><h3>Approved data sources</h3><p>Server-controlled sources available to first-party and declarative live widgets.</p></div><span class="wlib-admin-mode"><LucideIcon name="LockKeyhole" size={15} /> JWT APIs only</span></div>
+              <div class="wlib-source-table">
+                {registeredSources.map(source => <article class="wlib-source-card" key={source.key}>
+                  <span class="wlib-source-icon"><LucideIcon name="Database" size={19} /></span>
+                  <div><h4>{source.label}</h4><p>{source.endpoint} · {source.permission}</p><small>{source.scope} scope · {source.refresh.mode === 'interval' && source.refresh.intervalMs ? `every ${Math.round(source.refresh.intervalMs / 60000)} min` : source.refresh.mode.replace('-', ' ')}</small></div>
+                  <span class="wlib-pill success">Available</span>
+                </article>)}
+                {registeredSources.length === 0 ? <article class="wlib-source-card empty"><span class="wlib-source-icon warning"><LucideIcon name="Info" size={19} /></span><div><h4>No registry sources configured</h4><p>Existing first-party widgets continue to use their authenticated module TanStack hooks.</p><small>Register an approved /api/ source before a declarative live widget can bind to it.</small></div><span class="wlib-pill warning">Registry empty</span></article> : null}
+              </div>
+              <p class="wlib-admin-note">Realtime signals may invalidate and refetch these sources. They never authorize a user or widen server-side record scope.</p>
             </section>
           ) : activeView === 'packages' ? (
             <section class="wlib-admin-panel" aria-label="Installed widget packages">
-              <h3>Installed packages</h3><p>Package administration does not grant access to widget data.</p>
-              <div class="wlib-admin-list">{(packagesQuery.data ?? []).map(pkg => <article key={pkg.id}><strong>{pkg.name}</strong><span>v{pkg.version ?? '1.0.0'} · {pkg.widgets.length} widgets</span></article>)}</div>
-              {(packagesQuery.data ?? []).length === 0 ? <div class="wlib-empty-panel">No packages installed.</div> : null}
+              <div class="wlib-admin-heading"><div><h3>Installed packages</h3><p>Approved packages available to this organization. Package administration never grants access to widget data.</p></div>{packageManager ? <button type="button" class="wlib-btn wlib-btn-primary" onClick={() => fileRef.current?.click()}><LucideIcon name="Upload" size={16} /> Install package</button> : null}</div>
+              <div class="wlib-metric-row"><article><span>Packages</span><strong>{(packagesQuery.data ?? []).length}</strong></article><article><span>Package widgets</span><strong>{(packagesQuery.data ?? []).reduce((sum, item) => sum + item.widgets.length, 0)}</strong></article><article><span>Registry widgets</span><strong>{widgets.length}</strong></article></div>
+              {(packagesQuery.data ?? []).length ? <div class="wlib-table-card"><table class="wlib-manage-table"><thead><tr><th>Package</th><th>Version</th><th>State</th><th>Widgets</th><th>Administration</th></tr></thead><tbody>{(packagesQuery.data ?? []).map(pkg => <tr key={pkg.id}><td><strong>{pkg.name}</strong><small>{pkg.id}</small></td><td>{pkg.version ?? '1.0.0'}</td><td><span class="wlib-pill green">Installed</span></td><td>{pkg.widgets.length}</td><td>{packageManager ? <button type="button" class="wlib-text-action" onClick={() => void onUninstall(pkg.id, pkg.name)}>Uninstall</button> : 'View only'}</td></tr>)}</tbody></table></div> : <div class="wlib-empty-panel">No packages installed.</div>}
             </section>
           ) : <>
           <div class="wlib-catalog-col">
-            {(activeView === 'catalogue' || activeView === 'bundles') && <BundlesSection
+            <div class="wlib-filters">
+              <div class="wlib-filters-top">
+                <TableSearch value={query} onChange={setQuery} placeholder="Search widgets, sources, permissions or tags…" ariaLabel="Search widgets" />
+                <FilterDropdown id="widget-category-filter" label="Category" options={categories} selected={categoryFilters} onChange={setCategoryFilters} openId={filterOpenId} setOpenId={setFilterOpenId} />
+                <button type="button" class="wlib-btn wlib-multi-trigger" onClick={() => multiSelect ? leaveMultiSelect() : setMultiSelect(true)}><LucideIcon name={multiSelect ? 'X' : 'ListChecks'} size={15} /> {multiSelect ? 'Cancel' : 'Select multiple'}</button>
+              </div>
+              <ActiveFilters chips={activeFilterChips} onClearAll={clearFilters} />
+            </div>
+            {multiSelect ? <div class="wlib-multi-toolbar" role="status" aria-live="polite">
+              <div><strong>{multiSelectedIds.length} selected</strong><span>Choose widgets, then add them to the board together.</span></div>
+              <div><button type="button" class="wlib-btn" onClick={leaveMultiSelect}>Cancel selection</button><button type="button" class="wlib-btn primary" disabled={!multiSelectedIds.length} onClick={() => void handleAddSelected()}><LucideIcon name="Plus" size={15} /> Add selected widgets</button></div>
+            </div> : null}
+            {!multiSelect && (activeView === 'catalogue' || activeView === 'bundles') && <BundlesSection
               widgetDefs={widgets}
               placedIds={placedIds}
               lockedIds={lockedIds}
               pageKey={pageKey}
               zoneId={zoneId}
-              onAddWidget={onAddWidget}
+              onAddWidgets={instances => void addBatch(instances)}
             />}
-            <WidgetCatalog widgets={filtered} pageKey={pageKey} selectedWidgetId={selectedId} placedIds={placedIds} lockedIds={lockedIds} onSelect={selectWidget} checkedIds={checked} onToggleCheck={toggleChecked} />
+            {activeView === 'recommended' ? <section class="wlib-recommended-intro" aria-label="Recommended widget guidance">
+              <span class="wlib-recommended-icon"><LucideIcon name="Sparkles" size={19} /></span>
+              <div><strong>Recommended starting set</strong><p>A balanced activity and workload view for the Employee Master page.</p></div>
+              <b>{filtered.length} curated</b>
+            </section> : null}
+            <WidgetCatalog widgets={filtered} pageKey={pageKey}
+              heading={activeView === 'recommended' ? `Recommended for ${pageLabel || pageKey}` : 'Approved widgets'}
+              subheading={activeView === 'recommended' ? 'Based on this page, your permissions, and the organization’s approved catalogue.' : undefined}
+              selectedWidgetId={selectedId} placedIds={placedIds} lockedIds={lockedIds}
+              multiSelect={multiSelect} multiSelectedIds={new Set(multiSelectedIds)} onToggleMulti={toggleMultiWidget}
+              onSelect={selectWidget} onPreview={previewWidget} onAdd={widget => void addSingle(widget)} />
           </div>
-          <WidgetDetailPanel
-            widget={selected} pageKey={pageKey} zoneId={zoneId} selectedSizeKey={sizeKey} config={config}
-            locked={selected ? lockedIds.has(selected.id) : false} added={selectedAdded} livePreview={livePreview}
-            canManagePackages={packageManager} installBusy={installBusy}
-            onSizeChange={setSizeKey} onConfigChange={setConfig} onAddWidget={handleAdd}
-            onInstallPackage={() => fileRef.current?.click()} onManagePackages={() => setManageOpen(true)}
-          />
+          {multiSelect ? <aside class="wlib-inspector empty wlib-multi-inspector" aria-label="Multi-select guidance">
+            <LucideIcon name="ListChecks" size={30} />
+            <h2>Select widgets</h2>
+            <p>Choose widgets in the catalogue, then add the batch from the selection bar.</p>
+            <span class="wlib-pill gray">{multiSelectedIds.length} selected</span>
+          </aside> : <WidgetDetailPanel
+              widget={selected} pageKey={pageKey} zoneId={zoneId} selectedSizeKey={sizeKey} config={config}
+              locked={selected ? lockedIds.has(selected.id) : false} added={selectedAdded} livePreview
+              onSizeChange={setSizeKey} onConfigChange={setConfig} onAddWidget={handleAdd} onPreviewOnBoard={handlePreview}
+            />}
           </>}
         </div>
-
-        <footer class="wlib-foot">
-          <div class="wlib-foot-left">
-            <span class="wlib-foot-dot" />
-            {widgets.length} widget{widgets.length === 1 ? '' : 's'} available · {placedIds.size} on this page · layout saved to ui_layout
-          </div>
-          <div class="wlib-foot-right">
-            {addable.length > 0 ? (
-              <button type="button" class="wlib-btn wlib-btn-primary wlib-btn-multi" onClick={addCheckedWidgets}>
-                <i class="fas fa-circle-plus" /> Add {addable.length} widget{addable.length === 1 ? '' : 's'}
-              </button>
-            ) : null}
-            <button type="button" class="wlib-btn wlib-btn-ghost" onClick={onClose}>Cancel</button>
-            <button type="button" class={`wlib-btn ${addable.length > 0 ? 'wlib-btn-secondary' : 'wlib-btn-primary'}`} onClick={onClose}>Done</button>
-          </div>
-        </footer>
-
-        {addedInfo ? (
-          <div class="wlib-added-backdrop" onClick={e => { if (e.target === e.currentTarget) setAddedInfo(null); }}>
-            <div class="wlib-added-pop" role="dialog" aria-modal="true">
-              <header class="wlib-added-head">
-                <span class="wlib-added-check"><i class="fas fa-circle-check" /></span>
-                <span class="wlib-added-title">Widget added to the board</span>
-                <button class="wlib-close" onClick={() => setAddedInfo(null)} aria-label="Close"><i class="fas fa-xmark" /></button>
-              </header>
-              <div class="wlib-added-body">
-                <article class="wlib-added-card">
-                  <div class="wlib-tile-top">
-                    <span class="wlib-tile-icon"><i class={`fas ${addedInfo.widget.icon}`} /></span>
-                    <div class="wlib-tile-title"><h3>{addedInfo.widget.title}</h3><p>{addedInfo.widget.description}</p></div>
-                  </div>
-                  <div class="wlib-tile-badges"><span class="wlib-pill primary">{addedInfo.widget.category}</span></div>
-                </article>
-              </div>
-              <footer class="wlib-added-foot">
-                <button type="button" class="wlib-btn wlib-btn-primary" onClick={() => setAddedInfo(null)}>Done</button>
-              </footer>
-            </div>
-          </div>
-        ) : null}
-
-        {manageOpen ? (
-          <div class="wlib-added-backdrop" onClick={e => { if (e.target === e.currentTarget) setManageOpen(false); }}>
-            <div class="wlib-added-pop" role="dialog" aria-modal="true">
-              <header class="wlib-added-head">
-                <span class="wlib-added-check"><i class="fas fa-box-open" /></span>
-                <span class="wlib-added-title">Installed packages</span>
-                <button class="wlib-close" onClick={() => setManageOpen(false)} aria-label="Close"><i class="fas fa-xmark" /></button>
-              </header>
-              <div class="wlib-added-body">
-                {(packagesQuery.data ?? []).length === 0 ? (
-                  <p style={{ color: 'var(--wlib-muted)', fontSize: '13px', margin: 0 }}>No packages installed. Use "Install package" to add a .zip or .json widget file.</p>
-                ) : (
-                  <div class="wlib-pkg-list">
-                    {(packagesQuery.data ?? []).map(pkg => (
-                      <div key={pkg.id} class="wlib-pkg-row">
-                        <div class="wlib-pkg-meta">
-                          <strong>{pkg.name}</strong>
-                          <small>v{pkg.version ?? '1.0.0'} · {pkg.widgets.length} widget{pkg.widgets.length === 1 ? '' : 's'}</small>
-                        </div>
-                        <button type="button" class="wlib-btn wlib-btn-ghost" onClick={() => void onUninstall(pkg.id, pkg.name)}>
-                          <i class="fas fa-trash-can" /> Uninstall
-                        </button>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              <footer class="wlib-added-foot">
-                <button type="button" class="wlib-btn wlib-btn-primary" onClick={() => setManageOpen(false)}>Done</button>
-              </footer>
-            </div>
-          </div>
-        ) : null}
       </div>
     </div>
   );

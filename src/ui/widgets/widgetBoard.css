@@ -42,6 +42,10 @@
 
 .wbi-zone-wrap { position: relative; }
 .wbi-zone.react-grid-layout { background: transparent; }
+/* The last tile otherwise sits exactly at the scroll boundary, pinning its southeast handle to
+   the viewport edge. Reserve gesture space only while editing so every final-row widget can be
+   scrolled upward and enlarged vertically; normal/read-only boards keep their compact height. */
+.wbi-board.is-editing .wbi-zone-wrap { padding-bottom: clamp(180px, 35vh, 320px); }
 
 /* Each RGL cell (`.react-grid-item`, absolutely positioned + sized inline by RGL) hosts one
    `.wbi-item` wrapper → one WidgetFrame. The frame owns the visuals; the wrapper just fills the
@@ -63,10 +67,11 @@
    WidgetBoardZone tags these `.wbi-fit`, measures the card's NATURAL height (ResizeObserver on
    the card) and sets the tile's RGL row-span to hug it. For the measurement to work BOTH ways
    (grow AND shrink) the wrapper chain must be natural-height — height:100% would lock the
-   measured height to the current tile height, so a tile could never shrink — and the tile clips
-   (no transient scrollbar during the one-frame refit). */
-.wbi-item.wbi-fit { overflow: hidden; }
-.wbi-item.wbi-fit > *,
+   measured height to the current tile height, so a tile could never shrink. The grid wrapper stays
+   visible so it never clips required content or the southeast resize handle; the widget card owns
+   its own intentional overflow treatment. */
+.wbi-item.wbi-fit { overflow: visible; }
+.wbi-item.wbi-fit > :not(.react-resizable-handle),
 .wbi-item.wbi-fit .wbi-bare,
 .wbi-item.wbi-fit .wbi-bare-body,
 .wbi-item.wbi-fit .wbi-bare-body > * { height: auto; }
@@ -174,6 +179,12 @@
 .wbi-zone .react-resizable-handle { z-index: 3; opacity: 0; transition: opacity .12s ease; }
 .wbi-zone .react-grid-item:hover > .react-resizable-handle,
 .wbi-zone .react-grid-item.resizing > .react-resizable-handle { opacity: .85; }
+.wbi-zone .react-grid-item[data-widget-minimum-reached="true"]::after {
+  content:"Minimum widget size reached"; position:absolute; right:10px; bottom:10px; z-index:8;
+  padding:5px 8px; border:1px solid #cbd5e1; border-radius:7px; background:rgba(255,255,255,.96);
+  color:#475569; font-size:10px; font-weight:600; box-shadow:0 4px 14px rgba(15,23,42,.12); pointer-events:none;
+}
+.wbi-item[data-widget-revealed="true"] { box-shadow:0 0 0 3px rgba(100,116,139,.2); border-radius:var(--wbi-radius); }
 
 /* Drag/resize TARGET placeholder — RGL's default is a translucent red box (reads as an error);
    restyle it as a soft dashed drop-zone in the accent colour, rounded like the cards it stands

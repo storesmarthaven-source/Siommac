@@ -190,7 +190,7 @@ function cleanInstanceLayout(v: unknown, expectedPageKey: string): { pageKey?: s
     outZones[zId] = items;
     if (total > 300) break;
   }
-  return { pageKey: pageKey || undefined, version: 3, columns: 12, zones: outZones };
+  return { pageKey: pageKey || undefined, version: 3, columns: clampInt(obj.columns ?? 12, 1, 64), zones: outZones };
 }
 
 router.post('/layout/getInstanceLayout', async c => {

@@ -10,6 +10,8 @@ Data flow: live first-party widgets keep using authenticated `/api/` module hook
 
 Migration and persistence: historical `ui_layout.layout` values are normalized in memory to v3 without dropping unknown fields, instances, config, or legacy geometry. Drag, resize, add, remove, and configure are staged; Save writes the v3 envelope, Cancel restores the persisted baseline, and Reset returns to the organization/page default. Missing, disabled, restricted, or uninstalled widgets retain their placement as placeholders.
 
-Verification completed in the dedicated worktree: backend/frontend TypeScript checks passed; production build passed; 46 frontend files / 429 tests passed; all 30 backend suites / 835 assertions passed after building the generated backend required by `helpers.test.js`; focused changed-file frontend lint passed; and the generated repository index check passed. The repository-wide lint command remains red on 4,042 pre-existing findings outside this slice. Live `widgets` E2E is implemented but could not execute because this isolated worktree has no `.env` or `.env.local`; credentials were not read from the prohibited worktrees.
+The Employee Master catalogue now includes the approved A, D, E, F, H, and L-O design previews. Calendar-backed Upcoming Deadlines and Task Planner widgets use authenticated TanStack hooks; the deadlines presentation is shared with Statutory Configuration so the two surfaces cannot drift. These catalogue previews are platform consumers, not a new Employee Master business-data implementation.
 
-Employee Master widgets are the next consumer pack, but their new implementation has not started.
+Verification completed in the dedicated worktree: backend and frontend TypeScript checks passed; 50 frontend files / 456 tests passed; all 30 backend suites / 835 assertions passed; and the live `widgets` E2E passed 18/18, including negative access, exact response contracts, persistence, package collision handling, audit rows, and app events. The generated repository index was regenerated and its check passed.
+
+Employee Master production improvements are next. Their new business-data implementation has not started.

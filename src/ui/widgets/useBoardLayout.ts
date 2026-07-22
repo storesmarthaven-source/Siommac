@@ -5,7 +5,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { getInstanceLayout, saveInstanceLayout, saveInstanceLayoutDefault, resetInstanceLayout, type InstanceLayoutResponse } from '@api/layout';
 import { toast } from '@store';
 import type { BoardLayout, WidgetInstance } from './types';
-import { createV3Layout, migrateBoardLayout } from './migration';
+import { createV3Layout, migrateBoardLayout, rebaseBoardLayoutColumns } from './migration';
 
 const emptyLayout = (pageKey: string): BoardLayout => createV3Layout(pageKey);
 
@@ -47,7 +47,7 @@ export interface UseBoardLayoutResult {
   resetLayout: () => Promise<void>;
 }
 
-export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout): UseBoardLayoutResult {
+export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout, targetColumns?: number): UseBoardLayoutResult {
   const qc = useQueryClient();
   const key = ['ui-instance-layout', pageKey] as const;
 
@@ -61,15 +61,19 @@ export function useBoardLayout(pageKey: string, defaultLayout?: BoardLayout): Us
   // otherwise a user with a saved layout sees the full default flash in, then collapse to their
   // saved arrangement. Gating on isLoading gives one clean transition; placeholderData keeps prior
   // data across refetches, so this only affects the very first paint.
-  const fallback = migrateBoardLayout(defaultLayout, pageKey) ?? emptyLayout(pageKey);
-  const layout: BoardLayout = data?.layout ?? (query.isLoading ? emptyLayout(pageKey) : fallback);
-  const orgDefault = data?.orgDefault ?? null;
+  const rawFallback = migrateBoardLayout(defaultLayout, pageKey) ?? emptyLayout(pageKey);
+  const rawLayout = data?.layout ?? (query.isLoading ? emptyLayout(pageKey) : rawFallback);
+  const requestedColumns = Math.max(1, Math.trunc(targetColumns ?? defaultLayout?.columns ?? rawLayout.columns ?? 12));
+  const normalizeColumns = (value: BoardLayout): BoardLayout => rebaseBoardLayoutColumns(value, requestedColumns);
+  const fallback = normalizeColumns(rawFallback);
+  const layout: BoardLayout = normalizeColumns(rawLayout);
+  const orgDefault = data?.orgDefault ? normalizeColumns(data.orgDefault) : null;
   // Baseline for "dirty" = the org default if one is set, else the page's code default (what users
   // see when no admin default exists). "Set as default" is meaningful only when the effective
   // layout differs from this baseline.
-  const baseline = orgDefault ?? defaultLayout ?? emptyLayout(pageKey);
+  const baseline = orgDefault ?? fallback;
   const isDefaultDirty = !query.isLoading && !layoutsEqual(layout, baseline);
-  const serverLayout = data?.persistedLayout ?? fallback;
+  const serverLayout = data?.persistedLayout ? normalizeColumns(data.persistedLayout) : fallback;
   const isDirty = !query.isLoading && JSON.stringify(layout) !== JSON.stringify(serverLayout);
 
   const mutation = useMutation({ mutationFn: (next: BoardLayout) => saveInstanceLayout(pageKey, next) });

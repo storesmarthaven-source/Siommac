@@ -61,6 +61,8 @@ export interface WidgetBundle {
   icon: string;
   /** Owning module — for future filter alignment. */
   module: ModuleKey;
+  /** Pages where this bundle is relevant. */
+  supportedPages: string[];
   /** Member widget ids. May include forward-references to widgets not yet
    *  registered; `resolveBundleWidgets` filters them out at runtime. */
   widgetIds: string[];
@@ -77,6 +79,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Key onboarding metrics, readiness gates, active-case pipeline, and task health — everything a manager needs at a glance.',
     icon: 'fa-user-plus',
     module: 'hr',
+    supportedPages: ['hr.onboarding.case'],
     widgetIds: [
       'hr.onboarding.readinessGates',   // ✅ registered — registry.hrOnboarding.tsx
       'hr.onboarding.activeCases',      // forward-ref — Phase 5 rebuild
@@ -90,6 +93,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Headcount overview, department breakdown, and active-employee insights for the HR Employee Master board.',
     icon: 'fa-users',
     module: 'hr',
+    supportedPages: ['hr.employees.overview'],
     widgetIds: [
       'hr.employees.headcount',         // forward-ref — Employee Master Phase 5
       'hr.employees.departments',        // forward-ref — Employee Master Phase 5
@@ -102,6 +106,7 @@ export const WIDGET_BUNDLES: WidgetBundle[] = [
     description: 'Daily attendance status, pending leave requests, and overtime highlights for shift and operations teams.',
     icon: 'fa-clock',
     module: 'hr',
+    supportedPages: ['hr.attendance.overview', 'hr.leave.overview'],
     widgetIds: [
       'hr.attendance.todayStatus',      // forward-ref — HR Attendance Phase 5
       'hr.leave.pendingApprovals',       // forward-ref — HR Leave Phase 5

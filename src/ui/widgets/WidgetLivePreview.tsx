@@ -5,8 +5,8 @@ import type { VNode } from 'preact';
 import type { WidgetDef, WidgetSizeKey } from './types';
 import { WidgetPreviewScaler } from './WidgetPreviewScaler';
 
-export function WidgetLivePreview({ widget, config, sizeKey, pageKey, zoneId, live }: {
-  widget: WidgetDef; config: Record<string, unknown>; sizeKey: WidgetSizeKey; pageKey: string; zoneId: string; live: boolean;
+export function WidgetLivePreview({ widget, config, sizeKey, pageKey, zoneId, live, showHeader = true }: {
+  widget: WidgetDef; config: Record<string, unknown>; sizeKey: WidgetSizeKey; pageKey: string; zoneId: string; live: boolean; showHeader?: boolean;
 }): VNode {
   const Live = widget.render;
   const merged = { ...widget.defaultConfig, ...config };
@@ -15,13 +15,13 @@ export function WidgetLivePreview({ widget, config, sizeKey, pageKey, zoneId, li
     : (widget.renderPreview ? widget.renderPreview({ widgetId: widget.id, sizeKey, config: merged }) : null);
   return (
     <div class="wlib-live">
-      <div class="wlib-live-top">
+      {showHeader ? <div class="wlib-live-top">
         <h4>{live ? 'Live preview' : 'Preview'}</h4>
         <span class="wlib-pill primary">{sizeKey}</span>
-      </div>
-      <div class="wlib-live-body">
+      </div> : null}
+      <div class={`wlib-live-body${showHeader ? '' : ' no-heading'}`}>
         {/* Viewport-unit (HTML) widgets are rendered at a board-like canvas and scaled to fit. */}
-        {widget.previewAspect && node ? <WidgetPreviewScaler aspect={widget.previewAspect}>{node}</WidgetPreviewScaler> : node}
+        {widget.previewAspect && node ? <WidgetPreviewScaler aspect={widget.previewAspect} constraints={widget.sizeConstraints}>{node}</WidgetPreviewScaler> : node}
       </div>
     </div>
   );
