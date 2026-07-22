@@ -1,22 +1,22 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "72ca5c3899b518b854aed7125c7ac1b3ce2e38c2",
+    "head": "654a6ce20cb07b7983ff0993b711fc3374b29429",
     "branch": "main",
-    "fingerprint": "88993f5f5e52f0f5f160be84",
-    "indexedFiles": 1511
+    "fingerprint": "2cc484238100826eddc3324e",
+    "indexedFiles": 1514
   },
   "summary": {
-    "files": 1191,
-    "symbols": 11963,
+    "files": 1194,
+    "symbols": 11982,
     "widgets": 32,
-    "routes": 918,
-    "routeDefinitions": 919,
+    "routes": 919,
+    "routeDefinitions": 920,
     "unmountedRoutes": 17,
     "apiCalls": 376,
     "databaseObjects": 1310,
-    "e2eSuites": 75,
-    "e2eTests": 2400
+    "e2eSuites": 76,
+    "e2eTests": 2404
   },
   "modules": [
     {
@@ -35,14 +35,14 @@
     {
       "id": "payroll",
       "counts": {
-        "files": 155,
-        "symbols": 1538,
+        "files": 158,
+        "symbols": 1557,
         "widgets": 10,
-        "routes": 127,
-        "routeDefinitions": 127,
+        "routes": 128,
+        "routeDefinitions": 128,
         "apiCalls": 5,
         "databaseObjects": 208,
-        "e2eSuites": 22
+        "e2eSuites": 23
       }
     },
     {
@@ -555,6 +555,13 @@
       "role": "backend-lib",
       "lines": 233,
       "hash": "8a72df930eb4d2db"
+    },
+    {
+      "path": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "module": "payroll",
+      "role": "backend-lib",
+      "lines": 208,
+      "hash": "1a273683f6dab980"
     },
     {
       "path": "netlify/functions/lib/finance/payroll/releases.ts",
@@ -1876,8 +1883,8 @@
       "path": "netlify/functions/routes/financePayroll.ts",
       "module": "payroll",
       "role": "backend-route",
-      "lines": 1671,
-      "hash": "0e267da7ddc8aa2d"
+      "lines": 1696,
+      "hash": "2a1a484ebbf74907"
     },
     {
       "path": "netlify/functions/routes/financePayslipTemplates.ts",
@@ -2711,6 +2718,13 @@
       "role": "e2e-suite",
       "lines": 105,
       "hash": "1346a2f3c3f83f08"
+    },
+    {
+      "path": "scripts/e2e/suites/payslipBatches.mjs",
+      "module": "payroll",
+      "role": "e2e-suite",
+      "lines": 171,
+      "hash": "f3b77d199518ed86"
     },
     {
       "path": "scripts/e2e/suites/payslipRender.mjs",
@@ -8479,6 +8493,13 @@
       "role": "shared-types",
       "lines": 106,
       "hash": "3ed203150456b685"
+    },
+    {
+      "path": "types/payrollPayslipBatches.ts",
+      "module": "payroll",
+      "role": "shared-types",
+      "lines": 68,
+      "hash": "048eeb3e62824357"
     },
     {
       "path": "types/payrollRuns.ts",
@@ -16135,6 +16156,96 @@
       "module": "payroll",
       "exported": true,
       "container": "",
+      "tags": []
+    },
+    {
+      "name": "BATCH_RUN_STATUSES",
+      "kind": "array",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 23,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "RunRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 25,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "lifecycleOf",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 40,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "matchesTab",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 48,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "CHUNK",
+      "kind": "variable",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 58,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "inChunks",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 59,
+      "module": "payroll",
+      "exported": false,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "listPayslipBatches",
+      "kind": "function",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 65,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PsRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 93,
+      "module": "payroll",
+      "exported": false,
+      "container": "listPayslipBatches",
+      "tags": []
+    },
+    {
+      "name": "DelRow",
+      "kind": "interface",
+      "file": "netlify/functions/lib/finance/payroll/payslipBatches.ts",
+      "line": 110,
+      "module": "payroll",
+      "exported": false,
+      "container": "listPayslipBatches",
       "tags": []
     },
     {
@@ -37741,7 +37852,7 @@
       "name": "router",
       "kind": "variable",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 124,
+      "line": 125,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -37751,7 +37862,7 @@
       "name": "b",
       "kind": "function",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 127,
+      "line": 128,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -37761,7 +37872,7 @@
       "name": "routeErr",
       "kind": "function",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 131,
+      "line": 132,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -46822,6 +46933,42 @@
       "kind": "function",
       "file": "scripts/e2e/suites/payrollVarianceReports.mjs",
       "line": 56,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "run",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payslipBatches.mjs",
+      "line": 21,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "listBatches",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payslipBatches.mjs",
+      "line": 110,
+      "module": "payroll",
+      "exported": false,
+      "container": "run",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "findBatch",
+      "kind": "function",
+      "file": "scripts/e2e/suites/payslipBatches.mjs",
+      "line": 111,
       "module": "payroll",
       "exported": false,
       "container": "run",
@@ -133403,6 +133550,76 @@
       "tags": []
     },
     {
+      "name": "PayslipBatchLifecycle",
+      "kind": "type",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 14,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchTab",
+      "kind": "type",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 15,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchCounts",
+      "kind": "interface",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 18,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchListItem",
+      "kind": "interface",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 25,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchAggregates",
+      "kind": "interface",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 44,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchListRequest",
+      "kind": "interface",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 51,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
+      "name": "PayslipBatchListResult",
+      "kind": "interface",
+      "file": "types/payrollPayslipBatches.ts",
+      "line": 61,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PayrollRunState",
       "kind": "type",
       "file": "types/payrollRuns.ts",
@@ -137122,7 +137339,7 @@
       ],
       "schema": "z.object({\n    currentRunId: z.uuid(),\n    employeeId: z.string().min(1),\n    fromPeriodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    correctedPeriodBase: z.number().positive(),\n    reason: z.string().min(1).max(500),\n    // When the salary correction became effective (YYYY-MM-DD).\n    // Defaults to fromPeriodMonth when omitted (backward-compatible).\n    effectiveDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 873,
+      "line": 898,
       "module": "payroll"
     },
     {
@@ -137135,7 +137352,7 @@
       ],
       "schema": "z.object({\n    currentRunId: z.uuid(),\n    employeeId: z.string().min(1),\n    fromPeriodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    correctedPeriodBase: z.number().positive(),\n    // When the salary correction became effective (YYYY-MM-DD).\n    // Defaults to fromPeriodMonth when omitted (backward-compatible).\n    effectiveDate: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 853,
+      "line": 878,
       "module": "payroll"
     },
     {
@@ -137148,7 +137365,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1211,
+      "line": 1236,
       "module": "payroll"
     },
     {
@@ -137161,7 +137378,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    limit: z.number().int().min(1).max(200).optional(),\n    offset: z.number().int().min(0).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1197,
+      "line": 1222,
       "module": "payroll"
     },
     {
@@ -137174,7 +137391,7 @@
       ],
       "schema": "z.object({\n    fromVersionId: z.uuid(),\n    toVersionId: z.uuid(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1247,
+      "line": 1272,
       "module": "payroll"
     },
     {
@@ -137187,7 +137404,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1234,
+      "line": 1259,
       "module": "payroll"
     },
     {
@@ -137200,7 +137417,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1224,
+      "line": 1249,
       "module": "payroll"
     },
     {
@@ -137305,7 +137522,7 @@
       ],
       "schema": "z.object({\n    window: z.object({\n      from: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n      to:   z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    })\n      .refine(w => w.from <= w.to, { message: 'window.from must be on or before window.to' })\n      .refine(w => (Date.parse(w.to) - Date.parse(w.from)) <= 366 * 86_400_000, {\n        message: 'window may not exceed 366 days',\n      }),\n    payGroupIds: z.array(z.uuid()).max(25).optional(),\n    register: z.object({\n      tab:    z.enum(['all', 'attention', 'approval', 'ready', 'released']).optional(),\n      search: z.string().trim().max(100).optional(),\n      cursor: z.string().max(1000).optional(),\n      limit:  z.number().int().min(1).max(25).optional(),\n    }).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 177,
+      "line": 202,
       "module": "payroll"
     },
     {
@@ -137318,7 +137535,7 @@
       ],
       "schema": "z.object({\n    exportId: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1539,
+      "line": 1564,
       "module": "payroll"
     },
     {
@@ -137331,7 +137548,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 605,
+      "line": 630,
       "module": "payroll"
     },
     {
@@ -137344,7 +137561,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    assigneeId: z.string().min(1).max(200),\n    note: z.string().trim().max(1000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1276,
+      "line": 1301,
       "module": "payroll"
     },
     {
@@ -137357,7 +137574,7 @@
       ],
       "schema": "z.object({\n    findingId:       z.uuid(),\n    idempotencyKey:  z.string().trim().min(1).max(200),\n    body:            z.string().trim().min(1).max(4000),\n    expectedVersion: z.number().int().positive().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1455,
+      "line": 1480,
       "module": "payroll"
     },
     {
@@ -137370,7 +137587,7 @@
       ],
       "schema": "z.object({\n    findingId:     z.uuid(),\n    activityCursor: z.string().max(200).optional(),\n    activityLimit: z.number().int().min(1).max(100).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1409,
+      "line": 1434,
       "module": "payroll"
     },
     {
@@ -137383,7 +137600,7 @@
       ],
       "schema": "z.object({\n    findingId:       z.uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey:  z.string().trim().min(1).max(200),\n    assigneeId:      z.string().min(1).max(200),\n    note:            z.string().trim().max(1000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1429,
+      "line": 1454,
       "module": "payroll"
     },
     {
@@ -137396,7 +137613,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1263,
+      "line": 1288,
       "module": "payroll"
     },
     {
@@ -137409,7 +137626,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    calculationVersionId: z.uuid().optional(),\n    state: z.enum(['open', 'in_progress', 'resolved', 'waived']).optional(),\n    severity: z.enum(['info', 'warning', 'blocker']).optional(),\n    limit: z.number().int().min(1).max(200).optional(),\n    offset: z.number().int().min(0).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1170,
+      "line": 1195,
       "module": "payroll"
     },
     {
@@ -137422,7 +137639,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    reason: z.string().trim().min(1).max(2000),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1348,
+      "line": 1373,
       "module": "payroll"
     },
     {
@@ -137435,7 +137652,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    note: z.string().trim().min(1).max(2000),\n    evidence: z.record(z.string(), z.unknown()),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1300,
+      "line": 1325,
       "module": "payroll"
     },
     {
@@ -137448,7 +137665,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    expectedVersion: z.number().int().positive(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    reason: z.string().trim().min(1).max(2000),\n    expiresAt: z.iso.datetime().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1324,
+      "line": 1349,
       "module": "payroll"
     },
     {
@@ -137461,7 +137678,7 @@
       ],
       "schema": "z.object({\n    cursor:        z.string().max(200).optional(),\n    limit:         z.number().int().min(1).max(100).default(25),\n    tab:           z.enum(['all', 'approvals', 'blockers', 'warnings', 'resolved']).optional(),\n    kinds:         z.array(z.enum(['approval', 'blocker', 'warning'])).optional(),\n    severities:    z.array(z.enum(['critical', 'high', 'medium', 'low'])).optional(),\n    states:        z.array(z.enum(['open', 'in_progress', 'resolved', 'waived'])).optional(),\n    runIds:        z.array(z.uuid()).optional(),\n    ownerId:       z.string().max(200).optional(),\n    search:        z.string().trim().max(200).optional(),\n    selectedId:    z.string().max(220).optional(),\n    activityCursor: z.string().max(200).optional(),\n    activityLimit: z.number().int().min(1).max(100).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1376,
+      "line": 1401,
       "module": "payroll"
     },
     {
@@ -137474,7 +137691,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1076,
+      "line": 1101,
       "module": "payroll"
     },
     {
@@ -137487,7 +137704,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1035,
+      "line": 1060,
       "module": "payroll"
     },
     {
@@ -137500,7 +137717,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1021,
+      "line": 1046,
       "module": "payroll"
     },
     {
@@ -137513,7 +137730,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    reason: z.string().min(1),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1055,
+      "line": 1080,
       "module": "payroll"
     },
     {
@@ -137526,7 +137743,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 328,
+      "line": 353,
       "module": "payroll"
     },
     {
@@ -137539,7 +137756,7 @@
       ],
       "schema": "z.object({ id: z.uuid(), reason: z.string().max(500).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 818,
+      "line": 843,
       "module": "payroll"
     },
     {
@@ -137552,7 +137769,7 @@
       ],
       "schema": "z.object({\n    employeeId:        z.string().min(1),\n    loanType:          z.enum(['loan', 'advance']),\n    principal:         z.number().positive(),\n    interestAmount:    z.number().nonnegative().optional(),\n    installmentAmount: z.number().positive(),\n    startPeriod:       z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n    reason:            z.string().max(500).nullable().optional(),\n    notes:             z.string().max(1000).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 776,
+      "line": 801,
       "module": "payroll"
     },
     {
@@ -137565,7 +137782,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 764,
+      "line": 789,
       "module": "payroll"
     },
     {
@@ -137578,7 +137795,7 @@
       ],
       "schema": "z.object({ employeeId: z.string().optional(), status: z.string().optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 753,
+      "line": 778,
       "module": "payroll"
     },
     {
@@ -137591,7 +137808,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 807,
+      "line": 832,
       "module": "payroll"
     },
     {
@@ -137604,7 +137821,7 @@
       ],
       "schema": "z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 796,
+      "line": 821,
       "module": "payroll"
     },
     {
@@ -137669,7 +137886,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    employeeId: z.string().min(1),\n    label: z.string().min(1).max(80),\n    amount: z.number().positive(),\n    kind: z.enum(['earning', 'deduction']),\n    isTaxable: z.boolean().optional(),\n    reducesChargeable: z.boolean().optional(),\n    reason: z.string().min(1).max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 832,
+      "line": 857,
       "module": "payroll"
     },
     {
@@ -137682,7 +137899,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    employeeIds: z.array(z.string().min(1)).min(1).max(BULK_OVERRIDE_MAX),\n    label: z.string().min(1).max(80),\n    amount: z.number().positive(),\n    kind: z.enum(['earning', 'deduction']),\n    isTaxable: z.boolean().optional(),\n    reducesChargeable: z.boolean().optional(),\n    reason: z.string().min(1).max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 894,
+      "line": 919,
       "module": "payroll"
     },
     {
@@ -137695,7 +137912,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 925,
+      "line": 950,
       "module": "payroll"
     },
     {
@@ -137708,7 +137925,7 @@
       ],
       "schema": "z.object({ overrideId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 914,
+      "line": 939,
       "module": "payroll"
     },
     {
@@ -137721,7 +137938,7 @@
       ],
       "schema": "z.object({\n    code: z.string().min(1).max(20),\n    eventType: z.enum(['regular_overtime', 'public_holiday', 'rest_day', 'callout', 'night_shift']),\n    multiplier: z.number().positive(),\n    minimumHours: z.number().positive().nullable().optional(),\n    effectiveFrom: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    effectiveTo: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 722,
+      "line": 747,
       "module": "payroll"
     },
     {
@@ -137734,7 +137951,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 713,
+      "line": 738,
       "module": "payroll"
     },
     {
@@ -137747,7 +137964,7 @@
       ],
       "schema": "z.object({ id: z.uuid(), active: z.boolean() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 740,
+      "line": 765,
       "module": "payroll"
     },
     {
@@ -137760,7 +137977,7 @@
       ],
       "schema": "z.object({\n    employeeId: z.string().min(1),\n    payGroupId: z.uuid(),\n    effectiveFrom: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    effectiveTo: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 990,
+      "line": 1015,
       "module": "payroll"
     },
     {
@@ -137773,7 +137990,7 @@
       ],
       "schema": "z.object({\n    code: z.string().min(1).max(20),\n    name: z.string().min(1).max(120),\n    frequency: z.enum(['weekly', 'fortnightly', 'semi_monthly', 'monthly']),\n    defaultPayDay: z.number().int().optional(),\n    defaultCutoffOffsetDays: z.number().int().optional(),\n    statutoryCountry: z.string().max(4).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 972,
+      "line": 997,
       "module": "payroll"
     },
     {
@@ -137786,7 +138003,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 960,
+      "line": 985,
       "module": "payroll"
     },
     {
@@ -137799,7 +138016,7 @@
       ],
       "schema": "z.object({ activeOnly: z.boolean().optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 938,
+      "line": 963,
       "module": "payroll"
     },
     {
@@ -137812,7 +138029,20 @@
       ],
       "schema": "z.object({ payGroupId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1006,
+      "line": 1031,
+      "module": "payroll"
+    },
+    {
+      "path": "/api/finance/payroll/payslip-batches/list",
+      "localPath": "/payroll/payslip-batches/list",
+      "router": "router",
+      "permission": "finance.payroll.view_all",
+      "guards": [
+        "requirePermission"
+      ],
+      "schema": "z.object({\n    limit:       z.number().int().min(1).max(100).optional(),\n    offset:      z.number().int().min(0).optional(),\n    tab:         z.enum(['all','active','attention','scheduled','completed']).optional(),\n    search:      z.string().trim().max(200).optional(),\n    periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),\n    periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),\n    payGroupIds: z.array(z.uuid()).max(50).optional(),\n  }).refine(d => !d.periodFrom || !d.periodTo || d.periodFrom <= d.periodTo, {\n    message: 'periodFrom must not be after periodTo',\n  })",
+      "file": "netlify/functions/routes/financePayroll.ts",
+      "line": 177,
       "module": "payroll"
     },
     {
@@ -137981,7 +138211,7 @@
       ],
       "schema": "z.object({ payslipId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 688,
+      "line": 713,
       "module": "payroll"
     },
     {
@@ -137994,7 +138224,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 676,
+      "line": 701,
       "module": "payroll"
     },
     {
@@ -138007,7 +138237,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 700,
+      "line": 725,
       "module": "payroll"
     },
     {
@@ -138020,7 +138250,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 636,
+      "line": 661,
       "module": "payroll"
     },
     {
@@ -138034,7 +138264,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1111,
+      "line": 1136,
       "module": "payroll"
     },
     {
@@ -138047,7 +138277,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1088,
+      "line": 1113,
       "module": "payroll"
     },
     {
@@ -138060,7 +138290,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1101,
+      "line": 1126,
       "module": "payroll"
     },
     {
@@ -138073,7 +138303,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 623,
+      "line": 648,
       "module": "payroll"
     },
     {
@@ -138086,7 +138316,7 @@
       ],
       "schema": "z.object({ payslipId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 663,
+      "line": 688,
       "module": "payroll"
     },
     {
@@ -138099,7 +138329,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 650,
+      "line": 675,
       "module": "payroll"
     },
     {
@@ -138113,7 +138343,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1130,
+      "line": 1155,
       "module": "payroll"
     },
     {
@@ -138334,7 +138564,7 @@
       ],
       "schema": "z.object({ runType: z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 949,
+      "line": 974,
       "module": "payroll"
     },
     {
@@ -138347,7 +138577,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    confirmedAmount: z.number().nonnegative(),\n    confirmationReference: z.string().trim().min(1).max(200),\n    accountReference: z.string().trim().min(1).max(100).optional(),\n    note: z.string().trim().max(2000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 488,
+      "line": 513,
       "module": "payroll"
     },
     {
@@ -138360,7 +138590,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 527,
+      "line": 552,
       "module": "payroll"
     },
     {
@@ -138373,7 +138603,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 476,
+      "line": 501,
       "module": "payroll"
     },
     {
@@ -138386,7 +138616,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 510,
+      "line": 535,
       "module": "payroll"
     },
     {
@@ -138399,7 +138629,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1645,
+      "line": 1670,
       "module": "payroll"
     },
     {
@@ -138412,7 +138642,7 @@
       ],
       "schema": "z.object({\n    report: z.string().min(1),\n    params: z.record(z.string(), z.unknown()).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1149,
+      "line": 1174,
       "module": "payroll"
     },
     {
@@ -138425,7 +138655,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 343,
+      "line": 368,
       "module": "payroll"
     },
     {
@@ -138439,7 +138669,7 @@
       ],
       "schema": "z.object({\n    name:    z.string().trim().min(1).max(80),\n    scope:   z.enum(['personal', 'team']),\n    filters: z.record(z.string(), z.unknown()).optional().default({}),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1577,
+      "line": 1602,
       "module": "payroll"
     },
     {
@@ -138453,7 +138683,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1611,
+      "line": 1636,
       "module": "payroll"
     },
     {
@@ -138466,7 +138696,7 @@
       ],
       "schema": "",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1567,
+      "line": 1592,
       "module": "payroll"
     },
     {
@@ -138480,7 +138710,7 @@
       ],
       "schema": "z.object({\n    id:      z.uuid(),\n    name:    z.string().trim().min(1).max(80).optional(),\n    filters: z.record(z.string(), z.unknown()).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1594,
+      "line": 1619,
       "module": "payroll"
     },
     {
@@ -138493,7 +138723,7 @@
       ],
       "schema": "z.object({ id: z.uuid(), comment: z.string().max(2000).optional() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 430,
+      "line": 455,
       "module": "payroll"
     },
     {
@@ -138506,7 +138736,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 371,
+      "line": 396,
       "module": "payroll"
     },
     {
@@ -138519,7 +138749,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 310,
+      "line": 335,
       "module": "payroll"
     },
     {
@@ -138532,7 +138762,7 @@
       ],
       "schema": "z.object({\n    from:        z.string().regex(DATE, 'from must be YYYY-MM-DD'),\n    to:          z.string().regex(DATE, 'to must be YYYY-MM-DD'),\n    payGroupIds: z.array(z.uuid()).max(50).optional(),\n  }).refine(d => d.from <= d.to, { message: 'from must not be after to' })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1629,
+      "line": 1654,
       "module": "payroll"
     },
     {
@@ -138545,7 +138775,7 @@
       ],
       "schema": "z.object({\n    runId: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    attestations: z.object({\n      populationReconciled: z.literal(true),\n      inputsReviewed: z.literal(true),\n      statutoryReviewed: z.literal(true),\n      variancesReviewed: z.literal(true),\n      paymentReadinessReviewed: z.literal(true),\n      glReadinessReviewed: z.literal(true),\n    }),\n    note: z.string().trim().max(2000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 387,
+      "line": 412,
       "module": "payroll"
     },
     {
@@ -138558,7 +138788,7 @@
       ],
       "schema": "z.object({\n    idempotencyKey: z.string().trim().min(1).max(200),\n    runType:        z.enum(['scheduled', 'off_cycle', 'correction', 'final_pay']),\n    periodStart:    z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    periodEnd:      z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/),\n    sequenceNo:     z.number().int().positive().optional(),\n    sourceRunId:    z.uuid().optional(),\n    payFrequency:   z.enum(['monthly', 'weekly', 'fortnightly', 'semi_monthly']).optional(),\n    weeksInPeriod:  z.number().positive().optional(),\n    payGroupId:     z.uuid().optional(),\n    payDate:        z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n    cutOffDate:     z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n    // Slice 1 run metadata\n    reasonCode:          z.string().trim().min(1).max(64).optional(),\n    payrollOwnerId:      z.string().trim().min(1).max(64).optional(),\n    otCutoffAt:          z.string().regex(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$/).optional(),\n    approvalDeadlineAt:  z.string().regex(/^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}(:\\d{2})?$/).optional(),\n    fundingDate:         z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n    releaseWindow:       z.string().trim().min(1).max(120).optional(),\n    internalDescription: z.string().trim().max(2000).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 261,
+      "line": 286,
       "module": "payroll"
     },
     {
@@ -138571,7 +138801,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n    format: z.enum(['csv', 'json']).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 581,
+      "line": 606,
       "module": "payroll"
     },
     {
@@ -138584,7 +138814,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 231,
+      "line": 256,
       "module": "payroll"
     },
     {
@@ -138597,7 +138827,7 @@
       ],
       "schema": "z.object({\n    payGroupId:  z.uuid(),\n    periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),\n    periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),\n  }).refine(d => d.periodStart <= d.periodEnd, {\n    message: 'periodStart must not be after periodEnd', path: ['periodEnd'],\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1516,
+      "line": 1541,
       "module": "payroll"
     },
     {
@@ -138610,7 +138840,7 @@
       ],
       "schema": "z.object({\n    cursor:      z.string().max(2000).optional(),\n    limit:       z.number().int().min(1).max(100).optional(),\n    search:      z.string().trim().max(200).optional(),\n    states:      z.array(z.enum([\n      'draft','input_locked','calculation_failed','calculated',\n      'pending_approval','returned','approved','locked','released','exported','cancelled',\n    ])).optional(),\n    runTypes:    z.array(z.enum(['scheduled','off_cycle','correction','final_pay'])).optional(),\n    payGroupIds: z.array(z.uuid()).max(50).optional(),\n    periodFrom:  z.string().regex(DATE, 'periodFrom must be YYYY-MM-DD').optional(),\n    periodTo:    z.string().regex(DATE, 'periodTo must be YYYY-MM-DD').optional(),\n    sort:        z.enum(['pay_date_desc','pay_date_asc','updated_desc']).optional(),\n    tab:         z.enum(['all','in_progress','approval','attention','released']).optional(),\n  }).refine(d => !d.periodFrom || !d.periodTo || d.periodFrom <= d.periodTo, {\n    message: 'periodFrom must not be after periodTo',\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 146,
+      "line": 147,
       "module": "payroll"
     },
     {
@@ -138623,7 +138853,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 461,
+      "line": 486,
       "module": "payroll"
     },
     {
@@ -138636,7 +138866,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 292,
+      "line": 317,
       "module": "payroll"
     },
     {
@@ -138649,7 +138879,7 @@
       ],
       "schema": "z.object({\n    runId:           z.uuid(),\n    inputSnapshotId: z.uuid().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 247,
+      "line": 272,
       "module": "payroll"
     },
     {
@@ -138662,7 +138892,7 @@
       ],
       "schema": "z.object({\n    periodMonth: z.string().regex(/^\\d{4}-\\d{2}-\\d{2}$/).optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1481,
+      "line": 1506,
       "module": "payroll"
     },
     {
@@ -138675,7 +138905,7 @@
       ],
       "schema": "z.object({\n    payGroupId:  z.uuid(),\n    periodStart: z.string().regex(DATE, 'periodStart must be YYYY-MM-DD'),\n    periodEnd:   z.string().regex(DATE, 'periodEnd must be YYYY-MM-DD'),\n  }).refine(d => d.periodStart <= d.periodEnd, {\n    message: 'periodStart must not be after periodEnd', path: ['periodEnd'],\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1496,
+      "line": 1521,
       "module": "payroll"
     },
     {
@@ -138688,7 +138918,7 @@
       ],
       "schema": "z.object({\n    id:     z.uuid(),\n    reason: z.string().min(1, 'Reason is required').max(500),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 445,
+      "line": 470,
       "module": "payroll"
     },
     {
@@ -138701,7 +138931,7 @@
       ],
       "schema": "z.object({\n    id: z.uuid(),\n    reason: z.string().trim().min(1, 'Reason is required'),\n    idempotencyKey: z.string().trim().min(1).max(200),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 547,
+      "line": 572,
       "module": "payroll"
     },
     {
@@ -138714,7 +138944,7 @@
       ],
       "schema": "z.object({\n    runId:      z.uuid(),\n    templateId: z.uuid().nullable().optional(),\n  })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 565,
+      "line": 590,
       "module": "payroll"
     },
     {
@@ -138727,7 +138957,7 @@
       ],
       "schema": "z.object({ id: z.uuid(), idempotencyKey: z.string().min(1).max(200) })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 415,
+      "line": 440,
       "module": "payroll"
     },
     {
@@ -138740,7 +138970,7 @@
       ],
       "schema": "z.object({ id: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 1187,
+      "line": 1212,
       "module": "payroll"
     },
     {
@@ -138753,7 +138983,7 @@
       ],
       "schema": "z.object({ runId: z.uuid() })",
       "file": "netlify/functions/routes/financePayroll.ts",
-      "line": 358,
+      "line": 383,
       "module": "payroll"
     },
     {
@@ -167357,6 +167587,33 @@
       ],
       "apiPaths": [
         "/api/finance/payroll/reports/run"
+      ]
+    },
+    {
+      "name": "payslipBatches",
+      "title": "payslipBatches",
+      "module": "payroll",
+      "file": "scripts/e2e/suites/payslipBatches.mjs",
+      "tests": [
+        {
+          "name": "payslip-batches/list — 403 for employee role",
+          "line": 116
+        },
+        {
+          "name": "payslip-batches/list — response shape (items + tabCounts + aggregates)",
+          "line": 125
+        },
+        {
+          "name": "payslip-batches/list — batch shows correct counts + lifecycle",
+          "line": 141
+        },
+        {
+          "name": "payslip-batches/list — tab=attention includes the batch, tab=completed excludes it",
+          "line": 161
+        }
+      ],
+      "apiPaths": [
+        "/api/finance/payroll/payslip-batches/list"
       ]
     },
     {

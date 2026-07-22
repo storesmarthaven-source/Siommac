@@ -760,6 +760,15 @@ allowedActionsFor	function	payroll	false		netlify/functions/lib/finance/payroll/
 getPayrollFindingDetail	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	125	
 nameOf	function	payroll	false		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	144	getPayrollFindingDetail
 commentPayrollFinding	function	payroll	true		netlify/functions/lib/finance/payroll/findingsWorkQueue.ts	182	
+BATCH_RUN_STATUSES	array	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	23	
+RunRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	25	
+lifecycleOf	function	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	40	
+matchesTab	function	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	48	
+CHUNK	variable	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	58	
+inChunks	function	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	59	
+listPayslipBatches	function	payroll	true		netlify/functions/lib/finance/payroll/payslipBatches.ts	65	
+PsRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	93	listPayslipBatches
+DelRow	interface	payroll	false		netlify/functions/lib/finance/payroll/payslipBatches.ts	110	listPayslipBatches
 PayrollCertification	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	4	
 PayrollFundingConfirmation	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	20	
 PayrollReleaseCertificate	interface	payroll	true		netlify/functions/lib/finance/payroll/releases.ts	37	
@@ -2920,9 +2929,9 @@ requestKey	variable	finance	false		netlify/functions/routes/financePayPolicies.t
 component	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	22	
 sourceRule	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	45	
 draft	variable	finance	false		netlify/functions/routes/financePayPolicies.ts	54	
-router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	124	
-b	function	payroll	false		netlify/functions/routes/financePayroll.ts	127	
-routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	131	
+router	variable	payroll	false		netlify/functions/routes/financePayroll.ts	125	
+b	function	payroll	false		netlify/functions/routes/financePayroll.ts	128	
+routeErr	function	payroll	false		netlify/functions/routes/financePayroll.ts	132	
 router	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	18	
 b	function	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	19	
 P	variable	payroll	false		netlify/functions/routes/financePayslipTemplates.ts	22	
@@ -3772,6 +3781,9 @@ title	variable	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	6
 run	function	payroll	true	test	scripts/e2e/suites/payrollVarianceReports.mjs	10	
 mkRun	function	payroll	false	test	scripts/e2e/suites/payrollVarianceReports.mjs	44	run
 line	function	payroll	false	test	scripts/e2e/suites/payrollVarianceReports.mjs	56	run
+run	function	payroll	true	test	scripts/e2e/suites/payslipBatches.mjs	21	
+listBatches	function	payroll	false	test	scripts/e2e/suites/payslipBatches.mjs	110	run
+findBatch	function	payroll	false	test	scripts/e2e/suites/payslipBatches.mjs	111	run
 title	variable	payroll	true	test	scripts/e2e/suites/payslipRender.mjs	47	
 tokenDesign	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	59	
 seedDateFromTag	function	payroll	false	test	scripts/e2e/suites/payslipRender.mjs	127	
@@ -11918,6 +11930,13 @@ PayPolicySummary	interface	payroll	true		types/payrollPayPolicies.ts	48
 PayPolicyVersionDto	interface	payroll	true		types/payrollPayPolicies.ts	63	
 PayPolicyPreflight	interface	payroll	true		types/payrollPayPolicies.ts	88	
 PayPolicyWorkspace	interface	payroll	true		types/payrollPayPolicies.ts	97	
+PayslipBatchLifecycle	type	payroll	true		types/payrollPayslipBatches.ts	14	
+PayslipBatchTab	type	payroll	true		types/payrollPayslipBatches.ts	15	
+PayslipBatchCounts	interface	payroll	true		types/payrollPayslipBatches.ts	18	
+PayslipBatchListItem	interface	payroll	true		types/payrollPayslipBatches.ts	25	
+PayslipBatchAggregates	interface	payroll	true		types/payrollPayslipBatches.ts	44	
+PayslipBatchListRequest	interface	payroll	true		types/payrollPayslipBatches.ts	51	
+PayslipBatchListResult	interface	payroll	true		types/payrollPayslipBatches.ts	61	
 PayrollRunState	type	payroll	true		types/payrollRuns.ts	24	
 PageRequest	interface	payroll	true		types/payrollRuns.ts	39	
 PageResult	interface	payroll	true		types/payrollRuns.ts	46	
