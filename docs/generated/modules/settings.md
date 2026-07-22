@@ -2,7 +2,7 @@
 
 # settings Module Map
 
-Source fingerprint: `c197d8e5c68483c22baa10de`
+Source fingerprint: `f3408a67a7d60a0835b32859`
 
 Files: 42 | Symbols: 246 | Widgets: 0 | Unique mounted endpoints: 26 | Route definitions: 26 mounted + 0 unmounted | API calls: 18 | DB objects: 21 | E2E suites: 2
 

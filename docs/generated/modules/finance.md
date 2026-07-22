@@ -2,7 +2,7 @@
 
 # finance Module Map
 
-Source fingerprint: `c197d8e5c68483c22baa10de`
+Source fingerprint: `f3408a67a7d60a0835b32859`
 
 Files: 133 | Symbols: 1817 | Widgets: 10 | Unique mounted endpoints: 156 | Route definitions: 156 mounted + 0 unmounted | API calls: 4 | DB objects: 202 | E2E suites: 9
 
@@ -566,7 +566,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/financeShared.ts` | 70 |
 | frontend-page | `src/components/sections/Finance/hrfinFormat.ts` | 38 |
 | frontend-page | `src/components/sections/Finance/index.ts` | 11 |
-| frontend-page | `src/components/sections/Finance/module.ts` | 129 |
+| frontend-page | `src/components/sections/Finance/module.ts` | 134 |
 | frontend-page | `src/components/sections/Finance/mount.ts` | 25 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.test.tsx` | 138 |
 | frontend-page | `src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx` | 189 |
