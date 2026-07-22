@@ -56,12 +56,17 @@ create index if not exists payroll_report_artifacts_history_idx
 
 alter table public.payroll_report_artifacts enable row level security;
 revoke all on public.payroll_report_artifacts from public, anon, authenticated;
--- Append-only base: SELECT + INSERT + DELETE (retention/sweeper), NO blanket
--- UPDATE. The immutable identity/checksum/retention/auth columns can never be
--- rewritten. DELETE stays so the sweeper + job CASCADE can clean up.
+-- Append-only base: SELECT + INSERT + DELETE (retention/sweeper), NO table-level
+-- UPDATE. DELETE stays so the sweeper + job CASCADE can clean up.
 grant select, insert, delete on public.payroll_report_artifacts to service_role;
--- The purge worker mutates ONLY these six columns (active → purging → purged,
--- lease/token/attempts/error). Column-level grant = no other field is writable.
+-- Column-level UPDATE grant for the purge worker (active → purging → purged,
+-- lease/token/attempts/error). NOTE: on this Supabase project service_role holds
+-- blanket table privileges, so this column grant does not by itself constrain
+-- service_role (same as every table here); base-column immutability is enforced
+-- by RPC discipline (no route/RPC ever rewrites identity/checksum/retention/auth).
+-- The grant IS the real boundary for anon/authenticated (both fully revoked above)
+-- and is contract-mandated defense-in-depth. An immutability trigger was avoided
+-- deliberately: it would block the created_by ON DELETE SET NULL cascade.
 grant update (
   purge_state,
   purged_at,
@@ -73,5 +78,6 @@ grant update (
 
 comment on table public.payroll_report_artifacts is
   'Payroll Reports Center (F-12) generated file artifacts. Append-only base '
-  '(GRANT-enforced); only the purge-saga columns are UPDATE-grantable. One per '
-  'job; downloads gate on requires_view_all/requires_export. service_role only.';
+  '(RPC-discipline enforced; anon/authenticated fully revoked; column UPDATE '
+  'grant scoped to the purge-saga columns). One per job; downloads gate on '
+  'requires_view_all/requires_export. service_role only.';

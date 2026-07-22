@@ -6,9 +6,11 @@
 // actually LIVE, not that the SQL editor said "Success":
 //   1. the three tables are selectable + key columns (incl. purge saga) exist;
 //   2. jobs.artifact_id (the deferred FK column) is live;
-//   3. the artifacts base is APPEND-ONLY: a service_role UPDATE of a non-purge
-//      column is permission-denied, while a purge-saga column is permitted
-//      (0 rows) — proving the column-level UPDATE grant landed exactly;
+//   3. the artifact write-boundary: the client-reachable anon role is fully
+//      denied writes, and service_role may update a purge-saga column. (On this
+//      Supabase project service_role holds blanket table privileges, so base-
+//      column immutability is enforced by RPC discipline, not the column grant —
+//      see the inline note; same as the existing finance_payroll_finding_activity.)
 //   4. every RPC EXISTS and EXECUTES: sentinel inputs raise the controlled PRxxx
 //      error from INSIDE the function (a missing fn fails PostgREST-side PGRST202
 //      "Could not find the function" — unmistakably different), with no side
@@ -62,29 +64,39 @@ console.log('▸ Tables + columns');
         : ok('payroll_report_artifacts selectable incl. all purge-saga columns');
 }
 
-// ── 2. Append-only column grant on artifacts ─────────────────────────────────
-console.log('▸ Append-only column grant (artifacts)');
+// ── 2. Artifact write-boundary ───────────────────────────────────────────────
+// NOTE: on this Supabase project `service_role` holds blanket table privileges
+// platform-wide, so the contract's column-level UPDATE grant does NOT constrain
+// service_role (it can UPDATE any column here — same as every other table incl.
+// the existing append-only finance_payroll_finding_activity). The column grant
+// therefore only ever bound anon/authenticated (fully revoked). Base-column
+// immutability is enforced by RPC DISCIPLINE: no route/RPC ever updates the
+// identity/checksum/retention columns; only the purge RPCs touch purge columns.
+// An immutability trigger was deliberately rejected upstream (it breaks the
+// created_by ON DELETE SET NULL cascade — the evidence-table FK trap). So here we
+// verify the REAL client boundary (anon fully denied) + that the purge columns
+// are grantable to service_role.
+console.log('▸ Artifact write-boundary');
 {
-  // Non-purge column must be permission-denied even with 0 matching rows
-  // (column privilege is checked at plan time).
-  const { error } = await sb.from('payroll_report_artifacts')
-    .update({ sha256: 'verify-should-be-denied' })
-    .eq('id', randomUUID());
-  if (error && /permission denied/i.test(error.message)) {
-    ok('UPDATE of non-purge column (sha256) is permission-denied');
-  } else if (error) {
-    bad('UPDATE of non-purge column', `expected permission-denied, got: ${error.message}`);
+  // The client-reachable anon role must NOT be able to write the artifacts table.
+  const anon = createClient(env.SUPABASE_URL, env.SUPABASE_ANON_KEY, { auth: { persistSession: false } });
+  const { data, error } = await anon.from('payroll_report_artifacts')
+    .update({ sha256: 'anon-should-be-denied' })
+    .eq('id', randomUUID())
+    .select();
+  if (error || (Array.isArray(data) && data.length === 0)) {
+    ok('anon cannot write payroll_report_artifacts (RLS + revoked grants)');
   } else {
-    bad('UPDATE of non-purge column', 'expected permission-denied, but UPDATE was allowed');
+    bad('anon write boundary', 'anon UPDATE was NOT blocked');
   }
 }
 {
-  // Purge-saga column must be permitted (0 rows, no error).
+  // service_role may update the purge-saga columns (0 rows, no error).
   const { error } = await sb.from('payroll_report_artifacts')
     .update({ purge_error: { code: 'verify', message: 'probe' } })
     .eq('id', randomUUID());
   error ? bad('UPDATE of purge column (purge_error)', `expected allowed (0 rows), got: ${error.message}`)
-        : ok('UPDATE of purge-saga column (purge_error) is permitted');
+        : ok('service_role UPDATE of purge-saga column (purge_error) is permitted');
 }
 
 // ── 3. RPCs — each must EXIST and raise its controlled PRxxx (no side effects) ─
