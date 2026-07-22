@@ -42,7 +42,7 @@ if (!findWidgetDataSource(SOURCE.sourceKey)) {
 }
 
 const KPI_SIZES: WidgetSizeDef[] = [
-  { key: 'compact', label: 'Fixed', grid: { w: 6, h: 2 }, min: { w: 6, h: 2 }, max: { w: 6, h: 2 }, description: 'Uniform Employee Master KPI tile' },
+  { key: 'compact', label: 'Fixed', grid: { w: 4, h: 1 }, min: { w: 4, h: 1 }, max: { w: 4, h: 1 }, description: 'Statutory-size Employee Master KPI tile' },
 ];
 const CHART_SIZES: WidgetSizeDef[] = [
   { key: 'standard', label: 'Standard', grid: { w: 10, h: 4 }, min: { w: 8, h: 4 }, description: 'Focused chart' },
@@ -53,6 +53,10 @@ const OPERATIONS_SIZES: WidgetSizeDef[] = [
   { key: 'standard', label: 'Standard', grid: { w: 6, h: 5 }, min: { w: 5, h: 4 }, description: 'Compact work queue' },
   { key: 'wide', label: 'Wide', grid: { w: 9, h: 5 }, min: { w: 5, h: 4 }, description: 'Expanded queue detail' },
   { key: 'large', label: 'Large', grid: { w: 12, h: 5 }, min: { w: 5, h: 4 }, description: 'Full operational detail' },
+];
+const QUALITY_SIZES: WidgetSizeDef[] = [
+  { key: 'standard', label: 'Standard', grid: { w: 7, h: 5 }, min: { w: 6, h: 4 }, description: 'Focused record-quality scorecard' },
+  { key: 'large', label: 'Large', grid: { w: 10, h: 6 }, min: { w: 6, h: 4 }, description: 'Expanded quality detail' },
 ];
 
 const PREVIEW: HrDashboardStats = {
@@ -84,25 +88,83 @@ function withLiveData(View: (props: { stats: HrDashboardStats }) => VNode): (_pr
   };
 }
 
-function KpiCard({ title, value, detail, icon, tone = 'blue' }: { title: string; value: number | string; detail: string; icon: string; tone?: KpiTone }): VNode {
-  return <div class="hrew-kpi-shell" data-widget-content-root><KpiTile icon={icon} tone={tone} label={title} value={value} sub={detail} /></div>;
+function focusEmployeeRegister(): void {
+  document.querySelector<HTMLElement>('[data-testid="employee-register"]')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+function KpiCard({ title, value, detail, icon, linkLabel, tone = 'blue' }: { title: string; value: number | string; detail: string; icon: string; linkLabel: string; tone?: KpiTone }): VNode {
+  return <div class="hrew-kpi-shell" data-widget-content-root><KpiTile icon={icon} tone={tone} label={title} value={value} sub={detail} link={{ label: linkLabel, onClick: focusEmployeeRegister }} /></div>;
 }
 
 function ActiveWorkforce({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.active_workforce;
-  return <KpiCard title="Active workforce" value={s.total} detail={`${s.employees} employees · ${s.contractors} contractors`} icon="fa-users" />;
+  return <KpiCard title="Active workforce" value={s.total} detail={`${s.employees} employees · ${s.contractors} contractors`} icon="fa-users" linkLabel="View employees" />;
 }
 function RecordReadiness({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.readiness;
-  return <KpiCard title="Record readiness" value={`${s.percent}%`} detail={`${s.blocked} people currently blocked`} icon="fa-shield-check" tone="green" />;
+  return <KpiCard title="Record readiness" value={`${s.percent}%`} detail={`${s.blocked} people currently blocked`} icon="fa-shield-check" linkLabel="Review readiness" tone="green" />;
 }
 function HrWorkQueue({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.hr_work_queue;
-  return <KpiCard title="HR work queue" value={s.total} detail={`${s.urgent} urgent · oldest ${s.oldest_days ?? 0}d`} icon="fa-list-check" tone="amber" />;
+  return <KpiCard title="HR work queue" value={s.total} detail={`${s.urgent} urgent · oldest ${s.oldest_days ?? 0}d`} icon="fa-list-check" linkLabel="View work queue" tone="amber" />;
 }
 function Exceptions({ stats }: { stats: HrDashboardStats }): VNode {
   const s = stats.exceptions;
-  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No current exceptions'} icon="fa-circle-exclamation" tone="neutral" />;
+  return <KpiCard title="Exceptions" value={s.total} detail={s.items.slice(0, 2).map(x => `${x.type} ${x.count}`).join(' · ') || 'No current exceptions'} icon="fa-circle-exclamation" linkLabel="Review exceptions" tone="neutral" />;
+}
+
+function focusLifecycleMovement(): void {
+  document.querySelector<HTMLElement>('.hrew-lifecycle[data-widget-content-root]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+function LifecyclePulse({ stats, metric, title, accent }: { stats: HrDashboardStats; metric: 'hires' | 'exits'; title: string; accent: 'blue' | 'coral' }): VNode {
+  const periods = stats.lifecycle.periods.slice(-4);
+  const latest = periods.at(-1)?.[metric] ?? 0;
+  const previous = periods.at(-2)?.[metric] ?? 0;
+  const delta = latest - previous;
+  const peak = Math.max(1, ...periods.map(period => period[metric]));
+  const previousPeriod = periods.at(-2)?.period ?? 'prior month';
+  return <article class={`hrew-pulse hrew-pulse--${accent}`} data-widget-content-root>
+    <div class="hrew-pulse-copy">
+      <header><h3>{title}</h3><button type="button" aria-label={`View ${title.toLowerCase()} lifecycle details`} onClick={focusLifecycleMovement}><LucideIcon name="ChevronRight" size={17} /></button></header>
+      <strong>{latest}</strong>
+      <p>{delta === 0 ? 'No change' : <b>{delta > 0 ? '+' : ''}{delta}</b>} <span>vs {previousPeriod}</span></p>
+    </div>
+    <div class="hrew-pulse-chart" aria-label={`${title} over the last four months`}>
+      {periods.map((period, index) => <span key={period.period} class={index === periods.length - 1 ? 'current' : ''}>
+        <i style={`height:${Math.max(18, period[metric] / peak * 100)}%`} title={`${period.period}: ${period[metric]}`} />
+        <small>{period.period}</small>
+      </span>)}
+    </div>
+  </article>;
+}
+
+function NewStarters({ stats }: { stats: HrDashboardStats }): VNode {
+  return <LifecyclePulse stats={stats} metric="hires" title="New starters" accent="blue" />;
+}
+
+function Departures({ stats }: { stats: HrDashboardStats }): VNode {
+  return <LifecyclePulse stats={stats} metric="exits" title="Departures" accent="coral" />;
+}
+
+function RecordQuality({ stats }: { stats: HrDashboardStats }): VNode {
+  const total = Math.max(1, stats.active_workforce.total);
+  const readiness = stats.readiness;
+  const measures = [
+    { label: 'Assignment', count: readiness.assignment_complete, percent: Math.round(readiness.assignment_complete / total * 100), tone: 'purple' },
+    { label: 'Payroll', count: readiness.payroll_ready, percent: Math.round(readiness.payroll_ready / total * 100), tone: 'blue' },
+    { label: 'Training', count: readiness.training_current, percent: Math.round(readiness.training_current / total * 100), tone: 'cyan' },
+  ];
+  const status = readiness.percent >= 85 ? 'Good records' : readiness.percent >= 70 ? 'Needs review' : 'At risk';
+  return <article class="hrew-quality" data-widget-content-root>
+    <header><div><h3>Record quality</h3><p>Active workforce</p></div><span class="hrew-quality-icon"><LucideIcon name="ShieldCheck" size={25} /></span></header>
+    <div class="hrew-quality-score"><strong>{readiness.percent}</strong><span>/100</span><b>{status}</b></div>
+    <div class="hrew-quality-band" aria-label="Record quality dimensions">{measures.map(measure => <i key={measure.label} class={`is-${measure.tone}`} title={`${measure.label}: ${measure.percent}%`} />)}</div>
+    <div class="hrew-quality-measures">{measures.map(measure => <div key={measure.label}>
+      <span><i class={`is-${measure.tone}`} />{measure.label}</span><strong>{measure.count}</strong><small>{measure.percent}%</small>
+    </div>)}</div>
+    <footer><span>Ready records</span><strong>{readiness.assignment_complete} of {stats.active_workforce.total}</strong></footer>
+  </article>;
 }
 
 function WorkforceTrend({ stats }: { stats: HrDashboardStats }): VNode {
@@ -212,8 +274,8 @@ function liveDefinition(input: { id: string; title: string; description: string;
     longDescription: `${input.description} Uses the authenticated Employee Master dashboard API and server-scoped workforce records.`,
     icon: input.icon, category: input.category, tags: ['hr', 'employee master', 'live api'], previewVariant: input.previewVariant,
     chrome: 'none', sizeToContent: false, resizable: input.fixed !== true, supportedPages: [PAGE], supportedZones: ['main'], defaultSize: input.defaultSize,
-    allowedSizes: input.sizes, sizeConstraints: { defaultColumns: defaultGrid.w, defaultRows: defaultGrid.h, minColumns: input.sizes[0]?.min?.w ?? 5, minRows: input.sizes[0]?.min?.h ?? 2, minWidth: input.sizes === KPI_SIZES ? 220 : 300, minHeight: input.sizes === KPI_SIZES ? 140 : 320, resizeStrategy: input.fixed ? 'fixed-minimum' : 'content-measured' },
-    previewAspect: input.sizes === KPI_SIZES ? 1.45 : input.sizes === CHART_SIZES ? 1.55 : 1.1,
+    allowedSizes: input.sizes, sizeConstraints: { defaultColumns: defaultGrid.w, defaultRows: defaultGrid.h, minColumns: input.sizes[0]?.min?.w ?? 5, minRows: input.sizes[0]?.min?.h ?? 2, minWidth: input.sizes === KPI_SIZES ? 180 : input.sizes === QUALITY_SIZES ? 280 : 300, minHeight: input.sizes === KPI_SIZES ? 84 : input.sizes === QUALITY_SIZES ? 360 : 320, resizeStrategy: input.fixed ? 'fixed-minimum' : 'content-measured' },
+    ...(input.sizes === KPI_SIZES ? {} : { previewAspect: input.sizes === CHART_SIZES ? 1.55 : input.sizes === QUALITY_SIZES ? .78 : 1.1 }),
     defaultConfig: {}, configSchema: [], dataSource: SOURCE, dataSourceKey: SOURCE.sourceKey,
     governance: { state: 'enabled', discoverable: true, allowedPages: [PAGE], requiredCapabilities: ['hr.employees.view'] },
     permissions: { requiredPermissions: ['hr.employees.view'] }, runtimeState: 'live-api', recommendedFor: [PAGE], motion: input.motion,
@@ -226,6 +288,9 @@ export const widgets: WidgetDef[] = [
   liveDefinition({ id: 'hr.employeeMaster.recordReadiness', title: 'Record readiness', description: 'Assignment, payroll, and training readiness across active workers.', icon: 'fa-shield-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, fixed: true, render: RecordReadiness, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 620, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.hrWorkQueue', title: 'HR work queue', description: 'Open and urgent Employee Master change requests.', icon: 'fa-list-check', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, fixed: true, render: HrWorkQueue, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.exceptions', title: 'Exceptions', description: 'Current assignment, payroll, and training gaps.', icon: 'fa-circle-exclamation', category: 'Key metrics', defaultSize: 'compact', sizes: KPI_SIZES, fixed: true, render: Exceptions, previewVariant: 'metric', motion: { kind: 'count-up', durationMs: 520, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.newStarters', title: 'New starters', description: 'Recent employee starts with month-over-month movement.', icon: 'fa-user-plus', category: 'Workforce pulse', defaultSize: 'compact', sizes: KPI_SIZES, fixed: true, render: NewStarters, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.departures', title: 'Departures', description: 'Recent employee departures with month-over-month movement.', icon: 'fa-user-minus', category: 'Workforce pulse', defaultSize: 'compact', sizes: KPI_SIZES, fixed: true, render: Departures, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 620, reducedMotion: 'static' } }),
+  liveDefinition({ id: 'hr.employeeMaster.recordQuality', title: 'Record quality', description: 'Workforce record quality across assignment, payroll, and training readiness.', icon: 'fa-shield-check', category: 'Health & readiness', defaultSize: 'standard', sizes: QUALITY_SIZES, render: RecordQuality, previewVariant: 'metric', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.workforceTrend', title: 'Workforce trend', description: 'Six-month active workforce movement.', icon: 'fa-chart-line', category: 'Activity & trends', defaultSize: 'wide', sizes: CHART_SIZES, render: WorkforceTrend, previewVariant: 'trend', motion: { kind: 'chart-draw', durationMs: 760, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.workforceDistribution', title: 'Workforce distribution', description: 'Active workforce concentration by department.', icon: 'fa-chart-pie', category: 'Workforce overview', defaultSize: 'wide', sizes: CHART_SIZES, render: WorkforceDistribution, previewVariant: 'donut', motion: { kind: 'progress', durationMs: 680, reducedMotion: 'static' } }),
   liveDefinition({ id: 'hr.employeeMaster.lifecycleMovement', title: 'Lifecycle movement', description: 'Hires, exits, transfers, and promotions over six months.', icon: 'fa-arrow-right-arrow-left', category: 'Activity & trends', defaultSize: 'wide', sizes: CHART_SIZES, render: LifecycleMovement, previewVariant: 'trend', motion: { kind: 'sequence', durationMs: 720, reducedMotion: 'static' } }),

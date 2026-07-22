@@ -56,7 +56,7 @@ export function WidgetDetailPanel({ widget, pageKey, zoneId, selectedSizeKey, co
         {activeTab === 'overview' ? <>
           <section class="wlib-preview-card">
             <div class="wlib-preview-card-top"><span>{showLiveData ? 'Live preview' : 'Static preview'}</span><span class={`wlib-pill ${accessTone}`}>{accessLabel}</span></div>
-            <div class="wlib-inspector-preview"><WidgetLivePreview widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId} live={showLiveData} showHeader={false} /></div>
+            <div class={`wlib-inspector-preview${widget.previewAspect ? '' : ' natural-size'}`}><WidgetLivePreview widget={widget} config={config} sizeKey={selectedSizeKey} pageKey={pageKey} zoneId={zoneId} live={showLiveData} showHeader={false} /></div>
           </section>
           <section class="wlib-panel"><h3>Widget information</h3><div class="wlib-detail-list">
             <div><span>Data source</span><strong>{widget.dataSource.label}</strong></div>

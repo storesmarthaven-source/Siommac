@@ -70,7 +70,7 @@ describe('Widget Platform v3 layout contract', () => {
   it('restores code-owned geometry for a fixed global widget in both directions', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.activeWorkforce')!;
     expect(widget.resizable).toBe(false);
-    expect(clampWidgetInstanceToMinimum({ ...instance, widgetId: widget.id, w: 11, h: 7 })).toMatchObject({ w: 6, h: 2 });
+    expect(clampWidgetInstanceToMinimum({ ...instance, widgetId: widget.id, w: 11, h: 7 })).toMatchObject({ w: 4, h: 1 });
   });
   it('uses the board pixel floor when constructing library preview canvases', () => {
     const widget = WIDGET_REGISTRY.find(candidate => candidate.id === 'hr.employeeMaster.changeTrend')!;

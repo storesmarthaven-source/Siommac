@@ -2,7 +2,7 @@
 
 # hr Module Map
 
-Source fingerprint: `bc31b60449b1808b14fb11d3`
+Source fingerprint: `f3d3e8da4ba18e73c53fe1b5`
 
 Files: 201 | Symbols: 2220 | Widgets: 8 | Unique mounted endpoints: 249 | Route definitions: 249 mounted + 0 unmounted | API calls: 33 | DB objects: 156 | E2E suites: 14
 
@@ -10,10 +10,10 @@ Files: 201 | Symbols: 2220 | Widgets: 8 | Unique mounted endpoints: 249 | Route 
 
 | ID | Title | Kind | Render | Location |
 |---|---|---|---|---|
-| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:109` |
+| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | `` | `src/ui/widgets/bundles.ts:112` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | `` | `src/ui/widgets/bundles.ts:76` |
-| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:475` |
+| `hr.employees.register` | Employee Register | local | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:477` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:317` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:318` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:320` |
@@ -650,7 +650,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/AttendanceOverview.tsx` | 512 |
 | frontend-page | `src/components/sections/HR/CompensationOverview.tsx` | 347 |
 | frontend-page | `src/components/sections/HR/CreateEmployeeWizard.tsx` | 366 |
-| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 572 |
+| frontend-page | `src/components/sections/HR/EmployeeMaster.tsx` | 574 |
 | frontend-page | `src/components/sections/HR/EmployeeOnboardingSummary.tsx` | 97 |
 | frontend-page | `src/components/sections/HR/HRDocumentsOverview.tsx` | 728 |
 | frontend-page | `src/components/sections/HR/HRQueryState.tsx` | 52 |
@@ -678,7 +678,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/HR/TransfersOverview.tsx` | 405 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.test.ts` | 72 |
 | frontend-page | `src/components/sections/HR/employeeMasterAccess.ts` | 59 |
-| frontend-page | `src/components/sections/HR/employeeMasterWorkspace.test.ts` | 35 |
+| frontend-page | `src/components/sections/HR/employeeMasterWorkspace.test.ts` | 42 |
 | frontend-page | `src/components/sections/HR/employeeRegisterColumns.test.ts` | 40 |
 | frontend-page | `src/components/sections/HR/employeeRegisterColumns.ts` | 71 |
 | frontend-page | `src/components/sections/HR/employeeRegisterPresentation.test.ts` | 30 |

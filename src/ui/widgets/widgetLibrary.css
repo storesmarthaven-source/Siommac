@@ -184,6 +184,7 @@
 .wlib-preview-card { padding:15px; border:1px solid var(--wlib-border); border-radius:15px; background:#fff; box-shadow:0 8px 22px rgba(19,42,75,.06); }
 .wlib-preview-card-top { display:flex; justify-content:space-between; align-items:center; color:var(--wlib-muted); font-size:10px; }
 .wlib-inspector-preview { min-height:150px; margin-top:12px; display:grid; align-items:center; overflow:hidden; }
+.wlib-inspector-preview.natural-size { min-height:0; align-items:start; }
 .wlib-panel { overflow:hidden; border:1px solid var(--wlib-border); border-radius:13px; background:#fff; }
 .wlib-panel > h3 { margin:0; padding:11px 13px; border-bottom:1px solid var(--wlib-border-soft); font-size:11px; font-weight:600; }
 .wlib-detail-list { display:grid; }

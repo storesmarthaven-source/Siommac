@@ -2,8 +2,8 @@
 
 # SIOMAC Codebase Index
 
-Source HEAD: `5d2d207d6572f95afded7da33cae82a11f7de7b0`  
-Source fingerprint: `bc31b60449b1808b14fb11d3`  
+Source HEAD: `9f876da68f4d907906510e813eac9995d9a9de62`  
+Source fingerprint: `f3d3e8da4ba18e73c53fe1b5`  
 Generator version: `1`
 
 ## Use
@@ -19,7 +19,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | Files | Named symbols | Widgets/tiles | Unique mounted endpoints | Mounted definitions | Unmounted definitions | Frontend API calls | Database objects | E2E suites | E2E tests |
 |---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|
-| 1199 | 11975 | 39 | 920 | 921 | 17 | 354 | 1313 | 75 | 2404 |
+| 1199 | 11982 | 42 | 920 | 921 | 17 | 354 | 1313 | 75 | 2404 |
 
 ## Modules
 
@@ -33,7 +33,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | workflow | 47 | 321 | 0 | 40 | 40 | 8 | 128 | 3 | [open](modules/workflow.md) |
 | security | 45 | 379 | 0 | 51 | 51 | 31 | 65 | 4 | [open](modules/security.md) |
 | settings | 42 | 246 | 0 | 26 | 26 | 18 | 21 | 2 | [open](modules/settings.md) |
-| widgets | 64 | 423 | 10 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
+| widgets | 64 | 430 | 13 | 15 | 15 | 11 | 14 | 1 | [open](modules/widgets.md) |
 | platform | 296 | 2668 | 0 | 31 | 46 | 49 | 299 | 0 | [open](modules/platform.md) |
 | testing | 26 | 158 | 0 | 0 | 0 | 0 | 0 | 10 | [open](modules/testing.md) |
 | enterprise | 0 | 0 | 1 | 0 | 0 | 0 | 0 | 0 | [open](modules/enterprise.md) |
@@ -42,7 +42,7 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 
 | ID | Title | Kind | Module/area | Render | Location |
 |---|---|---|---|---|---|
-| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:109` |
+| `bundle.hr.attendance.ops` | Attendance & Leave Ops | registry | hr | `` | `src/ui/widgets/bundles.ts:112` |
 | `bundle.hr.employees.essentials` | Employee Master Essentials | registry | hr | `` | `src/ui/widgets/bundles.ts:90` |
 | `bundle.hr.onboarding.manager` | Onboarding Manager Pack | registry | hr | `` | `src/ui/widgets/bundles.ts:76` |
 | `enterprise.calendar.taskPlanner` | Task planner | registry | widgets | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:165` |
@@ -67,15 +67,18 @@ Regenerate with `npm run repo:index`; verify with `npm run repo:index:check`.
 | `finance.statutory.nisChart` | NIS Contribution Schedule | local | finance | `renderChart` | `src/components/sections/Finance/StatutoryDashboard.tsx:651` |
 | `finance.statutory.readiness` | Statutory Readiness | local | finance | `renderReadiness` | `src/components/sections/Finance/StatutoryDashboard.tsx:652` |
 | `finance.statutory.register` | Statutory Register | local | finance | `renderRegister` | `src/components/sections/Finance/StatutoryDashboard.tsx:654` |
-| `hr.employeeMaster.activeWorkforce` | Active workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:225` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:228` |
-| `hr.employeeMaster.hrWorkQueue` | HR work queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:227` |
-| `hr.employeeMaster.lifecycleMovement` | Lifecycle movement | registry | widgets | `LifecycleMovement` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:231` |
-| `hr.employeeMaster.masterDataWorkload` | Master data workload | registry | widgets | `MasterDataWorkload` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:232` |
-| `hr.employeeMaster.recordReadiness` | Record readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:226` |
-| `hr.employeeMaster.workforceDistribution` | Workforce distribution | registry | widgets | `WorkforceDistribution` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:230` |
-| `hr.employeeMaster.workforceTrend` | Workforce trend | registry | widgets | `WorkforceTrend` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:229` |
-| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:475` |
+| `hr.employeeMaster.activeWorkforce` | Active workforce | registry | widgets | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:287` |
+| `hr.employeeMaster.departures` | Departures | registry | widgets | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:292` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | widgets | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:290` |
+| `hr.employeeMaster.hrWorkQueue` | HR work queue | registry | widgets | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:289` |
+| `hr.employeeMaster.lifecycleMovement` | Lifecycle movement | registry | widgets | `LifecycleMovement` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:296` |
+| `hr.employeeMaster.masterDataWorkload` | Master data workload | registry | widgets | `MasterDataWorkload` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:297` |
+| `hr.employeeMaster.newStarters` | New starters | registry | widgets | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:291` |
+| `hr.employeeMaster.recordQuality` | Record quality | registry | widgets | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:293` |
+| `hr.employeeMaster.recordReadiness` | Record readiness | registry | widgets | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:288` |
+| `hr.employeeMaster.workforceDistribution` | Workforce distribution | registry | widgets | `WorkforceDistribution` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:295` |
+| `hr.employeeMaster.workforceTrend` | Workforce trend | registry | widgets | `WorkforceTrend` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:294` |
+| `hr.employees.register` | Employee Register | local | hr | `renderRegister` | `src/components/sections/HR/EmployeeMaster.tsx:477` |
 | `hr.onboarding.case.activeTasks` | Active Tasks | local | hr | `() => wcard('Active Tasks', 'fa-list-check', tasksBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddTask}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:317` |
 | `hr.onboarding.case.blockersTable` | Blockers | local | hr | `() => wcard('Blockers', 'fa-triangle-exclamation', blockersBody())` | `src/components/sections/HR/OnboardingCaseDetail.tsx:318` |
 | `hr.onboarding.case.customActions` | Custom Actions | local | hr | `() => wcard('Custom Actions', 'fa-bolt', actionsBody(), <button class="obx-btn primary obx-btn-sm" onClick={openAddAction}>+ Add</button>)` | `src/components/sections/HR/OnboardingCaseDetail.tsx:320` |

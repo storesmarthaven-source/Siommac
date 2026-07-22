@@ -24,7 +24,7 @@ Audit date: 2026-07-21. Scope: the existing `src/ui/widgets` engine and its auth
 
 ## Follow-on approved after this audit
 
-- The user subsequently approved Employee Master production improvements. Eight live widgets now consume one authenticated, server-scoped dashboard contract; this is a follow-on consumer of the platform rather than a second widget engine.
+- The user subsequently approved Employee Master production improvements. Eleven live widgets now consume one authenticated, server-scoped dashboard contract; this is a follow-on consumer of the platform rather than a second widget engine.
 - Employee register column visibility is persisted per user through a typed JWT API and a service-only, RLS-enabled `ui_user_preferences` table. No direct browser database access was introduced.
 
 ## Still deferred by scope

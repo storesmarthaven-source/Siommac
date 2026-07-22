@@ -2,9 +2,9 @@
 
 # widgets Module Map
 
-Source fingerprint: `bc31b60449b1808b14fb11d3`
+Source fingerprint: `f3d3e8da4ba18e73c53fe1b5`
 
-Files: 64 | Symbols: 423 | Widgets: 10 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
+Files: 64 | Symbols: 430 | Widgets: 13 | Unique mounted endpoints: 15 | Route definitions: 15 mounted + 0 unmounted | API calls: 11 | DB objects: 14 | E2E suites: 1
 
 ## Widgets and Tiles
 
@@ -12,14 +12,17 @@ Files: 64 | Symbols: 423 | Widgets: 10 | Unique mounted endpoints: 15 | Route de
 |---|---|---|---|---|
 | `enterprise.calendar.taskPlanner` | Task planner | registry | `TaskPlannerWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:165` |
 | `enterprise.calendar.upcomingDeadlines` | Upcoming deadlines | registry | `UpcomingDeadlinesWidget` | `src/ui/widgets/registry.calendarPlanning.tsx:164` |
-| `hr.employeeMaster.activeWorkforce` | Active workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:225` |
-| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:228` |
-| `hr.employeeMaster.hrWorkQueue` | HR work queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:227` |
-| `hr.employeeMaster.lifecycleMovement` | Lifecycle movement | registry | `LifecycleMovement` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:231` |
-| `hr.employeeMaster.masterDataWorkload` | Master data workload | registry | `MasterDataWorkload` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:232` |
-| `hr.employeeMaster.recordReadiness` | Record readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:226` |
-| `hr.employeeMaster.workforceDistribution` | Workforce distribution | registry | `WorkforceDistribution` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:230` |
-| `hr.employeeMaster.workforceTrend` | Workforce trend | registry | `WorkforceTrend` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:229` |
+| `hr.employeeMaster.activeWorkforce` | Active workforce | registry | `ActiveWorkforce` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:287` |
+| `hr.employeeMaster.departures` | Departures | registry | `Departures` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:292` |
+| `hr.employeeMaster.exceptions` | Exceptions | registry | `Exceptions` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:290` |
+| `hr.employeeMaster.hrWorkQueue` | HR work queue | registry | `HrWorkQueue` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:289` |
+| `hr.employeeMaster.lifecycleMovement` | Lifecycle movement | registry | `LifecycleMovement` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:296` |
+| `hr.employeeMaster.masterDataWorkload` | Master data workload | registry | `MasterDataWorkload` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:297` |
+| `hr.employeeMaster.newStarters` | New starters | registry | `NewStarters` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:291` |
+| `hr.employeeMaster.recordQuality` | Record quality | registry | `RecordQuality` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:293` |
+| `hr.employeeMaster.recordReadiness` | Record readiness | registry | `RecordReadiness` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:288` |
+| `hr.employeeMaster.workforceDistribution` | Workforce distribution | registry | `WorkforceDistribution` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:295` |
+| `hr.employeeMaster.workforceTrend` | Workforce trend | registry | `WorkforceTrend` | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:294` |
 
 ## Route Definitions
 
@@ -81,7 +84,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `requestWidgetBoardReveal` | function / ui-tile | `src/ui/widgets/boardReveal.ts:9` | `-` |
 | `WidgetBundle` | interface / ui-tile | `src/ui/widgets/bundles.ts:53` | `-` |
 | `WIDGET_BUNDLES` | array / ui-tile | `src/ui/widgets/bundles.ts:75` | `-` |
-| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:137` | `-` |
+| `resolveBundleWidgets` | function / ui-tile | `src/ui/widgets/bundles.ts:140` | `-` |
 | `WidgetModuleMeta` | interface / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:4` | `-` |
 | `WIDGET_MODULE_META` | variable / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:10` | `-` |
 | `widgetModuleMeta` | function / ui-tile | `src/ui/widgets/catalogueTaxonomy.ts:18` | `-` |
@@ -118,7 +121,7 @@ Includes intentionally unmounted source routes so retired or deferred surfaces a
 | `useStaggerReveal` | function / hook | `src/ui/widgets/motion.ts:66` | `-` |
 | `placeWidgetsAtBottom` | function / ui-tile | `src/ui/widgets/placement.ts:5` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.calendarPlanning.tsx:163` | `-` |
-| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:224` | `-` |
+| `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeDashboard.tsx:286` | `-` |
 | `widgets` | array / ui-tile | `src/ui/widgets/registry.hrEmployeeMaster.tsx:272` | `-` |
 | `WIDGET_REGISTRY` | variable / ui-tile | `src/ui/widgets/registry.ts:53` | `-` |
 | `allWidgets` | function / ui-tile | `src/ui/widgets/registry.ts:56` | `-` |
@@ -247,7 +250,7 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/access.ts` | 24 |
 | widget-platform | `src/ui/widgets/boardReveal.test.ts` | 26 |
 | widget-platform | `src/ui/widgets/boardReveal.ts` | 34 |
-| widget-platform | `src/ui/widgets/bundles.ts` | 141 |
+| widget-platform | `src/ui/widgets/bundles.ts` | 144 |
 | widget-platform | `src/ui/widgets/calendarPlanningWidgets.test.tsx` | 87 |
 | widget-platform | `src/ui/widgets/catalogueTaxonomy.ts` | 36 |
 | widget-platform | `src/ui/widgets/commitPreviewWidget.ts` | 16 |
@@ -269,9 +272,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | widget-platform | `src/ui/widgets/placement.ts` | 25 |
 | widget-platform | `src/ui/widgets/platform.test.tsx` | 121 |
 | widget-registry | `src/ui/widgets/registry.calendarPlanning.tsx` | 167 |
-| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 234 |
+| widget-registry | `src/ui/widgets/registry.hrEmployeeDashboard.tsx` | 299 |
 | widget-registry | `src/ui/widgets/registry.hrEmployeeMaster.tsx` | 283 |
-| widget-registry | `src/ui/widgets/registry.test.ts` | 191 |
+| widget-registry | `src/ui/widgets/registry.test.ts` | 241 |
 | widget-registry | `src/ui/widgets/registry.ts` | 78 |
 | widget-platform | `src/ui/widgets/resolveBoardWidget.ts` | 20 |
 | widget-platform | `src/ui/widgets/responsive.ts` | 67 |
