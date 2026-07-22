@@ -4399,39 +4399,41 @@ PayrollFindingSummary	interface	payroll	true		src/api/finance/payroll.ts	516
 PayrollControlFinding	interface	payroll	true		src/api/finance/payroll.ts	520	
 PayrollRunWorkspace	interface	payroll	true		src/api/finance/payroll.ts	530	
 PayrollReleasePreflight	interface	payroll	true		src/api/finance/payroll.ts	539	
-PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	550	
-call	function	payroll	false		src/api/finance/payroll.ts	559	
-financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	567	
-financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	698	
-usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	713	
-useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	716	
-usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	720	
-useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	729	
-useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	737	
-useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	745	
-useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	753	
-useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	760	
-useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	763	
-useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	766	
-usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	769	
-useReasonCodes	function	payroll	true	hook	src/api/finance/payroll.ts	773	
-usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	779	
-useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	782	
-useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	785	
-useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	788	
-useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	791	
-useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	794	
-useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	797	
-useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	800	
-usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	807	
-usePopulationReconciliation	function	payroll	true	hook	src/api/finance/payroll.ts	813	
-useInputReadiness	function	payroll	true	hook	src/api/finance/payroll.ts	823	
-usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	836	
-useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	847	
-useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	856	
-payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	864	
-usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	874	
-useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	885	
+PayrollReleaseCertificate	interface	payroll	true		src/api/finance/payroll.ts	551	
+PayrollCalculationComparison	interface	payroll	true		src/api/finance/payroll.ts	559	
+call	function	payroll	false		src/api/finance/payroll.ts	568	
+financePayrollApi	object	payroll	true		src/api/finance/payroll.ts	576	
+financePayrollKeys	object	payroll	true		src/api/finance/payroll.ts	712	
+usePayrollRun	function	payroll	true	hook	src/api/finance/payroll.ts	727	
+useRunLines	function	payroll	true	hook	src/api/finance/payroll.ts	730	
+usePolicyEvidence	function	payroll	true	hook	src/api/finance/payroll.ts	734	
+useRunWorkspace	function	payroll	true	hook	src/api/finance/payroll.ts	743	
+useReleasePreflight	function	payroll	true	hook	src/api/finance/payroll.ts	751	
+useReleaseCertificate	function	payroll	true	hook	src/api/finance/payroll.ts	760	
+useCalculationVersions	function	payroll	true	hook	src/api/finance/payroll.ts	769	
+useCalculationComparison	function	payroll	true	hook	src/api/finance/payroll.ts	777	
+useRunWarnings	function	payroll	true	hook	src/api/finance/payroll.ts	784	
+useRunPayslips	function	payroll	true	hook	src/api/finance/payroll.ts	787	
+useRunGlPreview	function	payroll	true	hook	src/api/finance/payroll.ts	790	
+usePayGroups	function	payroll	true	hook	src/api/finance/payroll.ts	793	
+useReasonCodes	function	payroll	true	hook	src/api/finance/payroll.ts	797	
+usePayGroupMembers	function	payroll	true	hook	src/api/finance/payroll.ts	803	
+useOvertimeRules	function	payroll	true	hook	src/api/finance/payroll.ts	806	
+useEmployeeLoans	function	payroll	true	hook	src/api/finance/payroll.ts	809	
+useRunOverrides	function	payroll	true	hook	src/api/finance/payroll.ts	812	
+useRunExports	function	payroll	true	hook	src/api/finance/payroll.ts	815	
+useRunInputs	function	payroll	true	hook	src/api/finance/payroll.ts	818	
+useNisProfiles	function	payroll	true	hook	src/api/finance/payroll.ts	821	
+useRunAuditLog	function	payroll	true	hook	src/api/finance/payroll.ts	824	
+usePopulationPreview	function	payroll	true	hook	src/api/finance/payroll.ts	831	
+usePopulationReconciliation	function	payroll	true	hook	src/api/finance/payroll.ts	837	
+useInputReadiness	function	payroll	true	hook	src/api/finance/payroll.ts	847	
+usePayrollMutation	function	payroll	true	hook	src/api/finance/payroll.ts	860	
+useResolveWarning	function	payroll	true	hook	src/api/finance/payroll.ts	871	
+useExportDownload	function	payroll	true	hook	src/api/finance/payroll.ts	880	
+payslipTemplateKeys	object	payroll	true		src/api/finance/payroll.ts	888	
+usePayslipTemplates	function	payroll	true	hook	src/api/finance/payroll.ts	898	
+useSetRunTemplate	function	payroll	true	hook	src/api/finance/payroll.ts	909	
 PayrollControlCenterParams	interface	payroll	true		src/api/finance/payroll/controlCenter.ts	42	
 defaultControlCenterWindow	function	payroll	true		src/api/finance/payroll/controlCenter.ts	54	
 iso	function	payroll	false		src/api/finance/payroll/controlCenter.ts	55	defaultControlCenterWindow
@@ -6901,6 +6903,17 @@ failedAttemptOf	function	finance	false		src/components/sections/Finance/payRunDe
 CalcFailurePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	43	
 copyCorrelation	function	finance	false		src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	55	CalcFailurePanel
 RecoveryStep	function	finance	false	component	src/components/sections/Finance/payRunDetail/CalcFailurePanel.tsx	178	
+mockCert	variable	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	17	
+makeRun	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	26	
+preflight	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	38	
+renderCard	function	finance	false	ui-tile,test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	47	
+issueBtn	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	51	
+isDisabled	function	finance	false	test	src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx	52	
+RELEASED	variable	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	25	
+CloseReleaseCard	function	finance	true	component,ui-tile	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	27	
+invalidate	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	41	CloseReleaseCard
+ConfirmFundingModal	function	finance	false	component	src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	156	
+submit	function	finance	false		src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx	175	ConfirmFundingModal
 runStatusTone	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	44	
 fmtDateTime	function	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	63	
 PayRunDrawerActions	interface	finance	true		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	72	
@@ -6944,22 +6957,22 @@ ExportsTab	function	finance	true	component	src/components/sections/Finance/payRu
 handleDownload	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1003	ExportsTab
 handleRegenerate	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1018	ExportsTab
 copyId	function	finance	false		src/components/sections/Finance/payRunDetail/interactiveTabs.tsx	1028	ExportsTab
-Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	31	
-SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	35	
-Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	45	
-Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	53	
-deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	55	
-SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	91	
-VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	175	
-PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	177	
-ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	239	
-ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	301	
-decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	317	ApprovalsPanel
-AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	366	
-InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	394	
-PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	421	
-ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	522	
-ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	563	
+Pill	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	32	
+SecHead	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	36	
+Empty	function	finance	false	component	src/components/sections/Finance/payRunDetail/panels.tsx	46	
+Gate	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	54	
+deriveGates	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	56	
+SummaryPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	92	
+VariationRow	interface	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	176	
+PopulationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	178	
+ReconciliationPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	240	
+ApprovalsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	302	
+decisionChip	function	finance	false		src/components/sections/Finance/payRunDetail/panels.tsx	318	ApprovalsPanel
+AuditPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	367	
+InputsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	395	
+PolicyEvidencePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	422	
+ExceptionsPanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	523	
+ReleasePanel	function	finance	true	component	src/components/sections/Finance/payRunDetail/panels.tsx	564	
 fmtCompact	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	15	
 initials	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	22	
 monthLabel	function	finance	true		src/components/sections/Finance/payRunDetail/parts.tsx	30	

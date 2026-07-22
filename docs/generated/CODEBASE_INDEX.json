@@ -1,14 +1,14 @@
 {
   "formatVersion": 1,
   "source": {
-    "head": "1767b301b34f532c61cbf7b4cca04e6e457124b0",
+    "head": "72ca5c3899b518b854aed7125c7ac1b3ce2e38c2",
     "branch": "main",
-    "fingerprint": "74c6f965825f14175523b664",
-    "indexedFiles": 1509
+    "fingerprint": "88993f5f5e52f0f5f160be84",
+    "indexedFiles": 1511
   },
   "summary": {
-    "files": 1189,
-    "symbols": 11950,
+    "files": 1191,
+    "symbols": 11963,
     "widgets": 32,
     "routes": 918,
     "routeDefinitions": 919,
@@ -36,7 +36,7 @@
       "id": "payroll",
       "counts": {
         "files": 155,
-        "symbols": 1536,
+        "symbols": 1538,
         "widgets": 10,
         "routes": 127,
         "routeDefinitions": 127,
@@ -48,8 +48,8 @@
     {
       "id": "finance",
       "counts": {
-        "files": 131,
-        "symbols": 1806,
+        "files": 133,
+        "symbols": 1817,
         "widgets": 10,
         "routes": 156,
         "routeDefinitions": 156,
@@ -3003,8 +3003,8 @@
       "path": "src/api/finance/payroll.ts",
       "module": "payroll",
       "role": "frontend-api",
-      "lines": 895,
-      "hash": "06f65ae73bd79126"
+      "lines": 919,
+      "hash": "92f347690752f75c"
     },
     {
       "path": "src/api/finance/payrollExceptions.ts",
@@ -4582,6 +4582,20 @@
       "hash": "f56ef0a9cfd11f4b"
     },
     {
+      "path": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "module": "finance",
+      "role": "frontend-page",
+      "lines": 89,
+      "hash": "82a678d0e1e0ce67"
+    },
+    {
+      "path": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "module": "finance",
+      "role": "frontend-page",
+      "lines": 203,
+      "hash": "6de048478d97a770"
+    },
+    {
       "path": "src/components/sections/Finance/payRunDetail/interactiveTabs.tsx",
       "module": "finance",
       "role": "frontend-page",
@@ -4592,8 +4606,8 @@
       "path": "src/components/sections/Finance/payRunDetail/panels.tsx",
       "module": "finance",
       "role": "frontend-page",
-      "lines": 640,
-      "hash": "1d9141d56e9e0691"
+      "lines": 644,
+      "hash": "2f905b97744034fe"
     },
     {
       "path": "src/components/sections/Finance/payRunDetail/parts.tsx",
@@ -53581,10 +53595,20 @@
       "tags": []
     },
     {
+      "name": "PayrollReleaseCertificate",
+      "kind": "interface",
+      "file": "src/api/finance/payroll.ts",
+      "line": 551,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": []
+    },
+    {
       "name": "PayrollCalculationComparison",
       "kind": "interface",
       "file": "src/api/finance/payroll.ts",
-      "line": 550,
+      "line": 559,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53594,7 +53618,7 @@
       "name": "call",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 559,
+      "line": 568,
       "module": "payroll",
       "exported": false,
       "container": "",
@@ -53604,7 +53628,7 @@
       "name": "financePayrollApi",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 567,
+      "line": 576,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53614,7 +53638,7 @@
       "name": "financePayrollKeys",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 698,
+      "line": 712,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53624,7 +53648,7 @@
       "name": "usePayrollRun",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 713,
+      "line": 727,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53636,7 +53660,7 @@
       "name": "useRunLines",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 716,
+      "line": 730,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53648,7 +53672,7 @@
       "name": "usePolicyEvidence",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 720,
+      "line": 734,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53660,7 +53684,7 @@
       "name": "useRunWorkspace",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 729,
+      "line": 743,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53672,7 +53696,7 @@
       "name": "useReleasePreflight",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 737,
+      "line": 751,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53681,31 +53705,7 @@
       ]
     },
     {
-      "name": "useCalculationVersions",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 745,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useCalculationComparison",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 753,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useRunWarnings",
+      "name": "useReleaseCertificate",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
       "line": 760,
@@ -53717,31 +53717,7 @@
       ]
     },
     {
-      "name": "useRunPayslips",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 763,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useRunGlPreview",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 766,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "usePayGroups",
+      "name": "useCalculationVersions",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
       "line": 769,
@@ -53753,91 +53729,67 @@
       ]
     },
     {
+      "name": "useCalculationComparison",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 777,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunWarnings",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 784,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunPayslips",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 787,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunGlPreview",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 790,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "usePayGroups",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 793,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "useReasonCodes",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 773,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "usePayGroupMembers",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 779,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useOvertimeRules",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 782,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useEmployeeLoans",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 785,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useRunOverrides",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 788,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useRunExports",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 791,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useRunInputs",
-      "kind": "function",
-      "file": "src/api/finance/payroll.ts",
-      "line": 794,
-      "module": "payroll",
-      "exported": true,
-      "container": "",
-      "tags": [
-        "hook"
-      ]
-    },
-    {
-      "name": "useNisProfiles",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
       "line": 797,
@@ -53849,10 +53801,94 @@
       ]
     },
     {
+      "name": "usePayGroupMembers",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 803,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useOvertimeRules",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 806,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useEmployeeLoans",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 809,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunOverrides",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 812,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunExports",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 815,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useRunInputs",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 818,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
+      "name": "useNisProfiles",
+      "kind": "function",
+      "file": "src/api/finance/payroll.ts",
+      "line": 821,
+      "module": "payroll",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "hook"
+      ]
+    },
+    {
       "name": "useRunAuditLog",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 800,
+      "line": 824,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53864,7 +53900,7 @@
       "name": "usePopulationPreview",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 807,
+      "line": 831,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53876,7 +53912,7 @@
       "name": "usePopulationReconciliation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 813,
+      "line": 837,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53888,7 +53924,7 @@
       "name": "useInputReadiness",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 823,
+      "line": 847,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53900,7 +53936,7 @@
       "name": "usePayrollMutation",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 836,
+      "line": 860,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53912,7 +53948,7 @@
       "name": "useResolveWarning",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 847,
+      "line": 871,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53924,7 +53960,7 @@
       "name": "useExportDownload",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 856,
+      "line": 880,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53936,7 +53972,7 @@
       "name": "payslipTemplateKeys",
       "kind": "object",
       "file": "src/api/finance/payroll.ts",
-      "line": 864,
+      "line": 888,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53946,7 +53982,7 @@
       "name": "usePayslipTemplates",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 874,
+      "line": 898,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -53958,7 +53994,7 @@
       "name": "useSetRunTemplate",
       "kind": "function",
       "file": "src/api/finance/payroll.ts",
-      "line": 885,
+      "line": 909,
       "module": "payroll",
       "exported": true,
       "container": "",
@@ -80255,6 +80291,136 @@
       ]
     },
     {
+      "name": "mockCert",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 17,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "makeRun",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 26,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "preflight",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 38,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "renderCard",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 47,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "ui-tile",
+        "test"
+      ]
+    },
+    {
+      "name": "issueBtn",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 51,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "isDisabled",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.test.tsx",
+      "line": 52,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "test"
+      ]
+    },
+    {
+      "name": "RELEASED",
+      "kind": "variable",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "line": 25,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "CloseReleaseCard",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "line": 27,
+      "module": "finance",
+      "exported": true,
+      "container": "",
+      "tags": [
+        "component",
+        "ui-tile"
+      ]
+    },
+    {
+      "name": "invalidate",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "line": 41,
+      "module": "finance",
+      "exported": false,
+      "container": "CloseReleaseCard",
+      "tags": []
+    },
+    {
+      "name": "ConfirmFundingModal",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "line": 156,
+      "module": "finance",
+      "exported": false,
+      "container": "",
+      "tags": [
+        "component"
+      ]
+    },
+    {
+      "name": "submit",
+      "kind": "function",
+      "file": "src/components/sections/Finance/payRunDetail/CloseReleaseCard.tsx",
+      "line": 175,
+      "module": "finance",
+      "exported": false,
+      "container": "ConfirmFundingModal",
+      "tags": []
+    },
+    {
       "name": "runStatusTone",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/interactiveTabs.tsx",
@@ -80708,7 +80874,7 @@
       "name": "Pill",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 31,
+      "line": 32,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80720,7 +80886,7 @@
       "name": "SecHead",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 35,
+      "line": 36,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80732,7 +80898,7 @@
       "name": "Empty",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 45,
+      "line": 46,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80744,7 +80910,7 @@
       "name": "Gate",
       "kind": "interface",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 53,
+      "line": 54,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80754,7 +80920,7 @@
       "name": "deriveGates",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 55,
+      "line": 56,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80764,7 +80930,7 @@
       "name": "SummaryPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 91,
+      "line": 92,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80776,7 +80942,7 @@
       "name": "VariationRow",
       "kind": "interface",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 175,
+      "line": 176,
       "module": "finance",
       "exported": false,
       "container": "",
@@ -80786,7 +80952,7 @@
       "name": "PopulationPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 177,
+      "line": 178,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80798,7 +80964,7 @@
       "name": "ReconciliationPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 239,
+      "line": 240,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80810,7 +80976,7 @@
       "name": "ApprovalsPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 301,
+      "line": 302,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80822,7 +80988,7 @@
       "name": "decisionChip",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 317,
+      "line": 318,
       "module": "finance",
       "exported": false,
       "container": "ApprovalsPanel",
@@ -80832,7 +80998,7 @@
       "name": "AuditPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 366,
+      "line": 367,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80844,7 +81010,7 @@
       "name": "InputsPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 394,
+      "line": 395,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80856,7 +81022,7 @@
       "name": "PolicyEvidencePanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 421,
+      "line": 422,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80868,7 +81034,7 @@
       "name": "ExceptionsPanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 522,
+      "line": 523,
       "module": "finance",
       "exported": true,
       "container": "",
@@ -80880,7 +81046,7 @@
       "name": "ReleasePanel",
       "kind": "function",
       "file": "src/components/sections/Finance/payRunDetail/panels.tsx",
-      "line": 563,
+      "line": 564,
       "module": "finance",
       "exported": true,
       "container": "",
