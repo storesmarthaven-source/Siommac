@@ -2184,21 +2184,21 @@ CRITICAL_GRANT_KEYS	variable	security	true		netlify/functions/lib/permissions.ts
 isCriticalGrant	function	security	true		netlify/functions/lib/permissions.ts	488	
 COMPLIANCE_GATED_KEYS	variable	security	true		netlify/functions/lib/permissions.ts	508	
 ROLE_PERMISSIONS	object	security	false		netlify/functions/lib/permissions.ts	517	
-PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	987	
-resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1007	
-resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1032	
-ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1042	
-_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1043	
-invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1046	
-loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1062	
-loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1097	
-RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1109	
-_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1110	
-invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1113	
-loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1123	
-DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1136	
-deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1144	
-assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1155	
+PermissionOverrideRow	interface	security	true		netlify/functions/lib/permissions.ts	988	
+resolveWithSet	function	security	true		netlify/functions/lib/permissions.ts	1008	
+resolvePermission	function	security	true		netlify/functions/lib/permissions.ts	1033	
+ROLE_CACHE_TTL_MS	variable	security	false		netlify/functions/lib/permissions.ts	1043	
+_roleCache	variable	security	false		netlify/functions/lib/permissions.ts	1044	
+invalidateRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1047	
+loadRolePermissions	function	security	true		netlify/functions/lib/permissions.ts	1063	
+loadRoleIsEmployee	function	security	true		netlify/functions/lib/permissions.ts	1098	
+RoleScope	type	security	true		netlify/functions/lib/permissions.ts	1110	
+_scopeCache	variable	security	false		netlify/functions/lib/permissions.ts	1111	
+invalidateRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1114	
+loadRoleScope	function	security	true		netlify/functions/lib/permissions.ts	1124	
+DeptScope	type	security	true		netlify/functions/lib/permissions.ts	1137	
+deptScopeFilter	function	security	true		netlify/functions/lib/permissions.ts	1145	
+assertInScope	function	security	true		netlify/functions/lib/permissions.ts	1156	
 SIGNED_TTL	variable	platform	false		netlify/functions/lib/photos.ts	7	
 SIGNED_REFRESH_BEFORE	variable	platform	false		netlify/functions/lib/photos.ts	8	
 SIGNED_CACHE_TTL_MS	variable	platform	false		netlify/functions/lib/photos.ts	9	
@@ -6575,24 +6575,23 @@ FinanceKpiDrilldownDrawer	function	finance	true	component,ui-tile	src/components
 go	function	finance	false		src/components/sections/Finance/FinanceOverview.tsx	27	
 TYPE_ROUTE	object	finance	false		src/components/sections/Finance/FinanceOverview.tsx	28	
 FinanceOverview	function	finance	true	component	src/components/sections/Finance/FinanceOverview.tsx	32	
-OVERVIEW_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
-PAYABLES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
-STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
-PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	33	
-PAYROLL_RUNS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	34	
-PAYROLL_EXCEPTIONS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	35	
-PAYSLIP_BATCHES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	36	
-PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	37	
-REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	38	
-MY_PAYSLIPS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	39	
-EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	40	
-BUDGETS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	41	
-DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	42	
-STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	43	
-PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	44	
-isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	46	
-FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	65	
-onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	71	FinanceSection
+OVERVIEW_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	29	
+PAYABLES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	30	
+STATUTORY_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	31	
+PAYROLL_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	32	
+PAYROLL_RUNS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	33	
+PAYROLL_EXCEPTIONS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	34	
+PAYSLIP_BATCHES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	35	
+PAYROLL_SETUP_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	36	
+REMITTANCES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	37	
+EXPENSES_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	38	
+BUDGETS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	39	
+DISBURSEMENTS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	40	
+STATUTORY_FORMS_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	41	
+PAYSLIP_DESIGNER_ID	variable	finance	false	component	src/components/sections/Finance/FinanceSection.tsx	42	
+isFinanceSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	44	
+FinanceSection	function	finance	true	component	src/components/sections/Finance/FinanceSection.tsx	62	
+onSection	function	finance	false		src/components/sections/Finance/FinanceSection.tsx	68	FinanceSection
 MONEY	variable	finance	false		src/components/sections/Finance/financeShared.ts	9	
 fmtMoney	function	finance	true		src/components/sections/Finance/financeShared.ts	11	
 fmtPercent	function	finance	true		src/components/sections/Finance/financeShared.ts	16	
@@ -6615,12 +6614,11 @@ PAYSLIP_BATCHES_ITEM	object	finance	false		src/components/sections/Finance/modul
 PAYROLL_SETUP_ITEM	object	finance	false		src/components/sections/Finance/module.ts	65	
 PAYSLIP_DESIGNER_ITEM	object	finance	false		src/components/sections/Finance/module.ts	72	
 REMITTANCES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	79	
-MY_PAYSLIPS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	86	
-EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	92	
-BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	99	
-DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	106	
-STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	113	
-financeModule	object	finance	true		src/components/sections/Finance/module.ts	120	
+EXPENSES_ITEM	object	finance	false		src/components/sections/Finance/module.ts	86	
+BUDGETS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	93	
+DISBURSEMENTS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	100	
+STATUTORY_FORMS_ITEM	object	finance	false		src/components/sections/Finance/module.ts	107	
+financeModule	object	finance	true		src/components/sections/Finance/module.ts	114	
 mountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	10	
 unmountFinanceSection	function	finance	true		src/components/sections/Finance/mount.ts	22	
 MY_PAYSLIPS_KEY	variable	payroll	false	component	src/components/sections/Finance/MyPayslipsOverview.tsx	30	
@@ -9257,6 +9255,10 @@ ParticipantLike	interface	communications	true		src/components/sections/Messages/
 otherParticipants	function	communications	true		src/components/sections/Messages/threadDisplay.ts	23	
 threadAvatarParticipant	function	communications	true		src/components/sections/Messages/threadDisplay.ts	29	
 threadTitle	function	communications	true		src/components/sections/Messages/threadDisplay.ts	36	
+MY_PAYSLIPS_ROOT_ID	variable	payroll	false		src/components/sections/MyPayslips/module.ts	16	
+myPayslipsModule	object	payroll	true		src/components/sections/MyPayslips/module.ts	18	
+mountMyPayslips	function	payroll	true		src/components/sections/MyPayslips/mount.ts	14	
+unmountMyPayslips	function	payroll	true		src/components/sections/MyPayslips/mount.ts	26	
 AUDIENCE	variable	communications	false	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	14	
 BroadcastComposer	function	communications	true	component	src/components/sections/NotificationCenter/BroadcastComposer.tsx	21	
 reset	function	communications	false		src/components/sections/NotificationCenter/BroadcastComposer.tsx	33	BroadcastComposer
@@ -10540,14 +10542,14 @@ CRITICAL_GRANT_KEYS	variable	security	true		src/lib/permissions.ts	552
 COMPLIANCE_GATED_KEYS	variable	security	true		src/lib/permissions.ts	580	
 EMPLOYEE_BASELINE	variable	security	false		src/lib/permissions.ts	595	
 ROLE_PERMISSIONS	object	security	true		src/lib/permissions.ts	621	
-PermissionContext	interface	security	true		src/lib/permissions.ts	1331	
-resolvePermission	function	security	true		src/lib/permissions.ts	1362	
-roleDefaultGranted	function	security	true		src/lib/permissions.ts	1407	
-PermissionState	type	security	true		src/lib/permissions.ts	1413	
-permissionState	function	security	true		src/lib/permissions.ts	1419	
-permissionGroups	function	security	true		src/lib/permissions.ts	1429	
-can	function	security	true		src/lib/permissions.ts	1449	
-useCan	function	security	true	hook	src/lib/permissions.ts	1465	
+PermissionContext	interface	security	true		src/lib/permissions.ts	1332	
+resolvePermission	function	security	true		src/lib/permissions.ts	1363	
+roleDefaultGranted	function	security	true		src/lib/permissions.ts	1408	
+PermissionState	type	security	true		src/lib/permissions.ts	1414	
+permissionState	function	security	true		src/lib/permissions.ts	1420	
+permissionGroups	function	security	true		src/lib/permissions.ts	1430	
+can	function	security	true		src/lib/permissions.ts	1450	
+useCan	function	security	true	hook	src/lib/permissions.ts	1466	
 ICONS	object	platform	false		src/lib/popup.ts	22	
 _svg	function	platform	false		src/lib/popup.ts	30	
 _ready	variable	platform	false		src/lib/popup.ts	36	
@@ -10711,12 +10713,12 @@ SubmitWorkflowInput	interface	workflow	true		src/lib/workflow/types.ts	186
 DEMO_ACTOR	object	workflow	false		src/lib/workflow/useWorkflow.ts	19	
 UseWorkflow	interface	workflow	true		src/lib/workflow/useWorkflow.ts	21	
 useWorkflow	function	workflow	true	hook	src/lib/workflow/useWorkflow.ts	36	
-queryClient	variable	platform	false		src/main.tsx	95	
-SCRIPTS	array	platform	false		src/main.tsx	105	
-loadScript	function	platform	false		src/main.tsx	127	
-loadScripts	function	platform	false		src/main.tsx	137	
-bootApp	function	platform	false		src/main.tsx	146	
-_mountEmp	function	platform	false		src/main.tsx	327	bootApp
+queryClient	variable	platform	false		src/main.tsx	96	
+SCRIPTS	array	platform	false		src/main.tsx	106	
+loadScript	function	platform	false		src/main.tsx	128	
+loadScripts	function	platform	false		src/main.tsx	138	
+bootApp	function	platform	false		src/main.tsx	147	
+_mountEmp	function	platform	false		src/main.tsx	328	bootApp
 CommsBridgeInner	function	platform	false	component	src/shell/AppShell.tsx	51	
 CommsBridge	function	platform	false	component	src/shell/AppShell.tsx	64	
 ThemeBridge	function	platform	false	component	src/shell/AppShell.tsx	74	

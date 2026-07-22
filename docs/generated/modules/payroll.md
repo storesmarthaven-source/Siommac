@@ -2,9 +2,9 @@
 
 # payroll Module Map
 
-Source fingerprint: `b1fc73e0feb2c1aa382dcfa3`
+Source fingerprint: `c197d8e5c68483c22baa10de`
 
-Files: 161 | Symbols: 1575 | Widgets: 10 | Unique mounted endpoints: 128 | Route definitions: 128 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 23
+Files: 164 | Symbols: 1579 | Widgets: 10 | Unique mounted endpoints: 128 | Route definitions: 128 mounted + 0 unmounted | API calls: 5 | DB objects: 208 | E2E suites: 23
 
 ## Widgets and Tiles
 
@@ -470,6 +470,9 @@ Entry surfaces only. Search `../SYMBOL_INDEX.tsv` or `../CODEBASE_INDEX.json` fo
 | frontend-page | `src/components/sections/Finance/payroll/setup/payPolicyRules.ts` | 26 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/workCalendarRules.test.ts` | 123 |
 | frontend-page | `src/components/sections/Finance/payroll/setup/workCalendarRules.ts` | 172 |
+| frontend-page | `src/components/sections/MyPayslips/index.ts` | 8 |
+| frontend-page | `src/components/sections/MyPayslips/module.ts` | 38 |
+| frontend-page | `src/components/sections/MyPayslips/mount.ts` | 29 |
 | frontend-page | `src/components/sections/PayslipStudio/App.tsx` | 33 |
 | frontend-page | `src/components/sections/PayslipStudio/PayslipStudioSection.tsx` | 136 |
 | frontend-page | `src/components/sections/PayslipStudio/components/DesignsMenu.tsx` | 385 |
