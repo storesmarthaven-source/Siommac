@@ -8,6 +8,7 @@
  */
 export const title = 'Payroll — Reports Center (F-12, preview)';
 
+import { randomUUID, createHash } from 'node:crypto';
 import { payrollPeriodYear, payrollRunSeed } from '../helpers/payrollRun.mjs';
 
 export default async function run(h) {
@@ -17,7 +18,7 @@ export default async function run(h) {
   const M1 = `${Y}-01`, M2 = `${Y}-02`;
 
   let fmgrT, viewOnlyT, empT, empA, empB;
-  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, jobIds: [] };
+  const ctx = { versionId: null, priorId: null, currentId: null, draftId: null, skewId: null, users: [], viewOnlyId: null, jobIds: [], artifactId: null, csvPath: null, orphanPaths: [] };
   const BUCKET = 'payroll-report-artifacts';
 
   h.onCleanup(async () => {
@@ -31,6 +32,11 @@ export default async function run(h) {
         if (paths.length) await sb.storage.from(BUCKET).remove(paths);
       } catch {}
       try { await sb.from('payroll_report_jobs').delete().in('id', ctx.jobIds); } catch {}
+    }
+    // Orphan-reconciler test objects + any ledger rows keyed to them.
+    if (ctx.orphanPaths.length) {
+      try { await sb.storage.from(BUCKET).remove(ctx.orphanPaths); } catch {}
+      try { await sb.from('payroll_report_upload_attempts').delete().in('storage_path', ctx.orphanPaths); } catch {}
     }
     const runIds = [ctx.priorId, ctx.currentId, ctx.draftId, ctx.skewId].filter(Boolean);
     try { if (runIds.length) await sb.from('finance_payroll_run_warnings').delete().in('run_id', runIds); } catch {}
@@ -329,9 +335,13 @@ export default async function run(h) {
     const a = s.body.data.artifact;
     expect(a && a.format === 'csv' && a.byteSize > 0 && /^[0-9a-f]{64}$/.test(a.sha256), 'artifact checksum + bytes');
     expect(a.reportKey === 'gross_to_net_reconciliation', 'artifact report key');
+    ctx.artifactId = a.id;
     const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
       .eq('event_type', 'finance.payroll.report.completed').eq('source_entity_id', a.id);
     expect((ev ?? 0) === 1, 'exactly one completed event');
+    // Remember the committed object's path (proves committed-path-safety later).
+    const { data: art } = await sb.from('payroll_report_artifacts').select('storage_path').eq('id', a.id).maybeSingle();
+    ctx.csvPath = art?.storage_path ?? null;
   });
 
   await test('RPT-HIS-02 the generated artifact now appears in history', async () => {
@@ -343,6 +353,149 @@ export default async function run(h) {
   await test('RPT-STA-05 a non-owner basic viewer gets 404 (no leak)', async () => {
     const r = await api('finance/payroll/reports/status', viewOnlyT, { jobId: ctx.jobIds[0] });
     expect(r.status === 404 || !r.body.success, `expected 404 for non-owner non-reviewer, got ${r.status}`);
+  });
+
+  // ── Download (§6A / API-RPT-006) ─────────────────────────────────────────────
+  h.section('Reports Center > Download');
+  const dlAuditCount = async () => (await sb.from('hr_audit_log')
+    .select('id', { count: 'exact', head: true })
+    .eq('action', 'payroll_report.downloaded').eq('record_id', ctx.artifactId)).count ?? 0;
+
+  await test('RPT-DL-01 owner-with-export downloads → {url, expiresAt}; TTL ≈ 120s; +1 audit', async () => {
+    const before = await dlAuditCount();
+    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: ctx.artifactId });
+    ok(r, `download failed: ${r.body.message}`);
+    expect(typeof r.body.data.url === 'string' && r.body.data.url.length > 0, 'expected a signed url');
+    const ttl = (new Date(r.body.data.expiresAt).getTime() - Date.now()) / 1000;
+    expect(ttl > 116 && ttl <= 121, `TTL must be ~120s, got ${ttl.toFixed(1)}s`);
+    expect((await dlAuditCount()) === before + 1, 'exactly one download audit row per action');
+  });
+
+  await test('RPT-DL-02 a fresh URL is issued per action (audit increments again)', async () => {
+    const before = await dlAuditCount();
+    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: ctx.artifactId });
+    ok(r, `second download failed: ${r.body.message}`);
+    expect((await dlAuditCount()) === before + 1, 'a second action re-issues (a second audit row)');
+  });
+
+  await test('AUTH-RPT-003b a viewer without reports.export is DENIED download (403)', async () => {
+    const r = await api('finance/payroll/reports/artifacts/download', viewOnlyT, { artifactId: ctx.artifactId });
+    expect(r.status === 403 && !r.body.success, `expected 403, got ${r.status}`);
+  });
+
+  await test('RPT-DL-04 an unknown artifactId → 404', async () => {
+    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: randomUUID() });
+    expect(r.status === 404 && !r.body.success, `expected 404, got ${r.status}`);
+  });
+
+  // ── Orphan-object reconciler (§6A) ───────────────────────────────────────────
+  h.section('Reports Center > Orphan reconciler');
+  const objectExists = async (path) => {
+    const dl = await sb.storage.from(BUCKET).download(path);
+    return !dl.error && !!dl.data;
+  };
+  // Seed an uncommitted upload attempt (stale token vs the succeeded job) + a real
+  // Storage object at its immutable path — exactly the shape a crashed worker leaves.
+  const seedOrphan = async (ageMs = 0, cleanupAttempts = 0) => {
+    const token = randomUUID();
+    const bytes = Buffer.from(`orphan,${token}\n`, 'utf8');
+    const sha = createHash('sha256').update(bytes).digest('hex');
+    const path = `${ctx.jobIds[0]}/${token}/${sha}.csv`;
+    ctx.orphanPaths.push(path);
+    const up = await sb.storage.from(BUCKET).upload(path, bytes, { contentType: 'text/csv', upsert: false });
+    if (up.error) throw new Error(`seed upload: ${up.error.message}`);
+    const { data, error } = await sb.from('payroll_report_upload_attempts').insert({
+      job_id: ctx.jobIds[0], claim_token: token, storage_path: path, sha256: sha, byte_size: bytes.length,
+      committed_at: null, cleanup_attempts: cleanupAttempts, created_at: new Date(Date.now() - ageMs).toISOString(),
+    }).select('id').single();
+    if (error) throw new Error(`seed attempt: ${error.message}`);
+    return { id: data.id, path };
+  };
+
+  await test('RPT-ORPH-01 reconciler removes a fresh orphan object + bumps cleanup (row kept < 24h)', async () => {
+    const o = await seedOrphan(0, 0);
+    expect(await objectExists(o.path), 'seed object should exist');
+    const r = await api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 });
+    ok(r, `purge/run failed: ${r.body.message}`);
+    expect(r.body.data.reconcile.removed >= 1, `reconcile.removed ${JSON.stringify(r.body.data.reconcile)}`);
+    expect(!(await objectExists(o.path)), 'orphan object must be removed');
+    const { data: row } = await sb.from('payroll_report_upload_attempts')
+      .select('cleanup_attempts, committed_at').eq('id', o.id).maybeSingle();
+    expect(row && row.committed_at === null && row.cleanup_attempts >= 1, 'row kept (quarantine) with cleanup bumped');
+  });
+
+  await test('RPT-ORPH-02 a COMMITTED artifact object is never removed by the reconciler', async () => {
+    expect(ctx.csvPath, 'committed csv path known');
+    expect(await objectExists(ctx.csvPath), 'committed object must survive reconcile');
+  });
+
+  await test('RPT-ORPH-03 concurrent reconcilers are safe (no crash, no error)', async () => {
+    const [a, b] = await Promise.all([
+      api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 }),
+      api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 }),
+    ]);
+    ok(a, `concurrent purge A: ${a.body.message}`);
+    ok(b, `concurrent purge B: ${b.body.message}`);
+  });
+
+  await test('RPT-ORPH-04 an AGED orphan (>24h, cleaned once) has its ledger row deleted', async () => {
+    const o = await seedOrphan(25 * 3600 * 1000, 1);
+    const r = await api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 });
+    ok(r, `purge/run failed: ${r.body.message}`);
+    expect(r.body.data.reconcile.deleted >= 1, `reconcile.deleted ${JSON.stringify(r.body.data.reconcile)}`);
+    const { data: row } = await sb.from('payroll_report_upload_attempts').select('id').eq('id', o.id).maybeSingle();
+    expect(!row, 'aged orphan ledger row must be deleted');
+    expect(!(await objectExists(o.path)), 'aged orphan object removed');
+  });
+
+  // ── Retention purge saga (§6B) ───────────────────────────────────────────────
+  h.section('Reports Center > Retention purge');
+
+  await test('RPT-PRG-01 a retention-expired artifact is purged: ONE purged event, object gone', async () => {
+    const { error: upErr } = await sb.from('payroll_report_artifacts')
+      .update({ retention_expires_at: new Date(Date.now() - 3600_000).toISOString() }).eq('id', ctx.artifactId);
+    expect(!upErr, `backdate retention: ${upErr?.message}`);
+    const r = await api('finance/payroll/reports/purge/run', fmgrT, { limit: 50 });
+    ok(r, `purge/run failed: ${r.body.message}`);
+    expect(r.body.data.purge.purged >= 1, `purge.purged ${JSON.stringify(r.body.data.purge)}`);
+    const { data: art } = await sb.from('payroll_report_artifacts')
+      .select('purge_state, purged_at, purge_token').eq('id', ctx.artifactId).maybeSingle();
+    expect(art && art.purge_state === 'purged' && art.purged_at, 'artifact marked purged');
+    ctx._purgeToken = art.purge_token;
+    const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.artifactId);
+    expect((ev ?? 0) === 1, 'exactly one purged event');
+    expect(!(await objectExists(ctx.csvPath)), 'purged object removed from storage');
+  });
+
+  await test('RPT-PRG-02 same-token finalize replay → duplicate, still exactly one event', async () => {
+    const { data, error } = await sb.rpc('finance_payroll_report_purge_finalize', {
+      p_artifact_id: ctx.artifactId, p_purge_token: ctx._purgeToken,
+    });
+    expect(!error, `same-token finalize should not error: ${error?.message}`);
+    expect(data && data.duplicate === true, 'replay returns duplicate:true');
+    const { count: ev } = await sb.from('app_events').select('id', { count: 'exact', head: true })
+      .eq('event_type', 'finance.payroll.report.purged').eq('source_entity_id', ctx.artifactId);
+    expect((ev ?? 0) === 1, 'still exactly one purged event after retry');
+  });
+
+  await test('RPT-PRG-03 a stale/different purge token is rejected even after purged', async () => {
+    const fin = await sb.rpc('finance_payroll_report_purge_finalize', { p_artifact_id: ctx.artifactId, p_purge_token: randomUUID() });
+    expect(fin.error, 'stale-token finalize must reject');
+    const fail = await sb.rpc('finance_payroll_report_purge_fail', { p_artifact_id: ctx.artifactId, p_purge_token: randomUUID(), p_error: { code: 'x', message: 'y' } });
+    expect(fail.error, 'stale-token purge_fail must reject');
+  });
+
+  await test('RPT-DL-05 download of a purged artifact → 410', async () => {
+    const r = await api('finance/payroll/reports/artifacts/download', fmgrT, { artifactId: ctx.artifactId });
+    expect(r.status === 410 && !r.body.success, `expected 410, got ${r.status}`);
+  });
+
+  await test('RPT-HIS-03 history reflects the purged artifact status', async () => {
+    const r = await api('finance/payroll/reports/history/list', fmgrT, { limit: 25 });
+    ok(r, `history failed: ${r.body.message}`);
+    const row = r.body.data.rows.find(x => x.id === ctx.artifactId);
+    expect(!row || row.status === 'purged', 'purged artifact shows purged status if listed');
   });
 
   // ── Side-effects (§2): preview writes ONE audit row, NO business event ───────

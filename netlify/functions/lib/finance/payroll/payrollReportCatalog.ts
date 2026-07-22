@@ -966,3 +966,64 @@ export async function getReportJobStatus(opts: {
       return null;
   }
 }
+
+// ── artifact download (§6A / API-RPT-006) ────────────────────────────────────
+const ARTIFACT_BUCKET = 'payroll-report-artifacts';
+/** Frozen artifact signed-URL lifetime (R6-7). expiresAt = issue + 120s. */
+const DOWNLOAD_TTL_SECONDS = 120;
+
+interface DownloadArtifactRow {
+  id: string; storage_path: string; requires_view_all: boolean; requires_export: boolean;
+  purge_state: string; retention_expires_at: string;
+}
+
+/** Outcome of a download request — a fresh URL, or a terminal HTTP status. */
+export type ReportDownloadOutcome =
+  | { ok: true; url: string; expiresAt: string }
+  | { ok: false; status: 403 | 404 | 410 };
+
+/**
+ * Resolve an artifact download. Reads committed artifact metadata only (a job's
+ * uncommitted upload attempt is never an artifact row), enforces the additive
+ * gates AFTER the lookup (§5C — 403 when a stored requirement is absent), denies
+ * with 410 when the artifact is purging/purged or retention-expired (§6A), then
+ * writes the download audit (MUT-RPT-005) and mints a fresh 120-second signed URL.
+ * The URL is memory-only and re-issued for every download action — never cached.
+ *
+ * The 410 boundary (`now >= retention_expires_at`) is the same clock condition the
+ * purge worker claims on, so a live download and a purge can never both act on the
+ * same artifact at one instant; the worst case at the exact boundary is a signed
+ * URL to an object the purge then removes, which simply 404s on fetch (no leak).
+ */
+export async function resolveReportDownload(opts: {
+  artifactId: string; actorId: string; canViewAll: boolean; canExport: boolean;
+}): Promise<ReportDownloadOutcome> {
+  const { data: art } = await sb.from('payroll_report_artifacts')
+    .select('id, storage_path, requires_view_all, requires_export, purge_state, retention_expires_at')
+    .eq('id', opts.artifactId).maybeSingle<DownloadArtifactRow>();
+  if (!art) return { ok: false, status: 404 };
+
+  // Additive gates (§5C) — export is required for every file; view_all additionally
+  // for employee-level artifacts. A missing gate is 403 (not a no-leak 404): the
+  // artifact's existence is not sensitive, only its bytes are gated.
+  if (art.requires_export && !opts.canExport) return { ok: false, status: 403 };
+  if (art.requires_view_all && !opts.canViewAll) return { ok: false, status: 403 };
+
+  const expired = Date.now() >= new Date(art.retention_expires_at).getTime();
+  if (art.purge_state === 'purging' || art.purge_state === 'purged' || expired) {
+    return { ok: false, status: 410 };
+  }
+
+  const logged = await sb.rpc('finance_payroll_report_log_download', {
+    p_actor_id: opts.actorId, p_artifact_id: art.id,
+  });
+  if (logged.error) throw payrollRpcHttpError(logged.error);
+
+  const { data: signed, error: signErr } = await sb.storage
+    .from(ARTIFACT_BUCKET).createSignedUrl(art.storage_path, DOWNLOAD_TTL_SECONDS);
+  if (signErr || !signed?.signedUrl) {
+    throw err(500, 'resolveReportDownload: ' + (signErr?.message ?? 'signed URL unavailable'));
+  }
+  const expiresAt = new Date(Date.now() + DOWNLOAD_TTL_SECONDS * 1000).toISOString();
+  return { ok: true, url: signed.signedUrl, expiresAt };
+}

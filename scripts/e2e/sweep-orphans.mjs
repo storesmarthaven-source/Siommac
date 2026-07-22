@@ -149,6 +149,9 @@ const TEXT_PATTERNS = [
   ['ui_widget_packages', 'name'], ['hr_org_change_requests', 'change_no'],
   ['project_sites', 'name'], ['module_mutation_runs', 'idempotency_key'],
   ['message_attachments', 'file_name'],
+  // Payroll Reports Center (F-12): jobs are tagged via their idempotency_key; the
+  // artifact + upload-attempt ledger rows CASCADE on job delete (migs 741/742).
+  ['payroll_report_jobs', 'idempotency_key'],
 ];
 
 /**

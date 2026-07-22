@@ -13,6 +13,8 @@ import type {
   ReportKpiTiles,
   ReportRunResult,
   ReportArtifactRow,
+  ReportJobStatus,
+  ReportDownloadResponse,
   ReportParams,
   ReportFormat,
   PayrollReportKey,
@@ -674,6 +676,11 @@ export const financePayrollApi = {
                     call<ReportRunResult>('finance/payroll/reports/run', a),
   reportsHistory: (a: { cursor?: string; limit?: number; reportKey?: PayrollReportKey } = {}) =>
                     call<PageResult<ReportArtifactRow>>('finance/payroll/reports/history/list', a),
+  reportStatus:   (a: { jobId: string }) => call<ReportJobStatus>('finance/payroll/reports/status', a),
+  // Fresh 120-second signed URL for a committed artifact — never cached; requested
+  // again for every download action (§6A).
+  reportDownload: (a: { artifactId: string }) =>
+                    call<ReportDownloadResponse>('finance/payroll/reports/artifacts/download', a),
   // Run Workspace population panel — per-employee net variance vs the prior run.
   runVariation: (a: { runId: string }) =>
                     call<{ report: string; generatedAt: string; rows: Record<string, unknown>[] }>('finance/payroll/runs/variation', a),

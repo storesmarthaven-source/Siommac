@@ -127,11 +127,13 @@ import {
   enqueueReportJob,
   isFormatEnabled,
   getReportJobStatus,
+  resolveReportDownload,
 } from '../lib/finance/payroll/payrollReportCatalog';
 // Retained legacy engine fn for the Run Workspace population panel's per-employee
 // net-variance column (NOT part of the F-12 Reports Center public contract).
 import { reportVariation } from '../lib/finance/payrollReports';
 import { processReportGenerationQueue } from '../lib/finance/payroll/reportGenerationWorker';
+import { processReportPurgeQueue, reconcileOrphanUploadAttempts } from '../lib/finance/payroll/reportPurgeWorker';
 import {
   reportParamsSchema,
   isFormatAllowed,
@@ -1794,6 +1796,25 @@ router.post('/payroll/reports/status', async c => {
   } catch (e) { return routeErr(c, e); }
 });
 
+// POST /api/finance/payroll/reports/artifacts/download — fresh 120-second signed
+// URL for a committed artifact. Enforces the additive gates after the lookup
+// (403), denies purging/purged/retention-expired artifacts (410), writes the
+// download audit, and never caches the URL (re-issued per action). §6A.
+router.post('/payroll/reports/artifacts/download', async c => {
+  const actor = await requirePermission(c, 'finance.payroll.reports.view');
+  const v = zv(c, z.object({ artifactId: z.uuid() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const { canViewAll, canExport } = await reportCaller(actor);
+    const out = await resolveReportDownload({ artifactId: v.data.artifactId, actorId: actor.id, canViewAll, canExport });
+    if (!out.ok) {
+      const error = out.status === 404 ? 'not_found' : out.status === 410 ? 'gone' : 'forbidden';
+      return c.json({ success: false, error }, out.status);
+    }
+    return c.json({ success: true, data: { url: out.url, expiresAt: out.expiresAt } });
+  } catch (e) { return routeErr(c, e); }
+});
+
 // POST /api/finance/payroll/reports/generation/run — manual flush of the report
 // generation queue (the same processor the scheduled worker runs). Gated to
 // reports.export; useful for ops + drives the worker in E2E.
@@ -1804,6 +1825,20 @@ router.post('/payroll/reports/generation/run', async c => {
   try {
     const summary = await processReportGenerationQueue('manual', v.data.limit ?? 10);
     return c.json({ success: true, data: summary });
+  } catch (e) { return routeErr(c, e); }
+});
+
+// POST /api/finance/payroll/reports/purge/run — manual flush of the retention
+// purge saga + orphan-attempt reconciler (the same processors the scheduled purge
+// worker runs). Gated to reports.export; useful for ops + drives the worker in E2E.
+router.post('/payroll/reports/purge/run', async c => {
+  await requirePermission(c, 'finance.payroll.reports.export');
+  const v = zv(c, z.object({ limit: z.number().int().min(1).max(100).optional() }), b(c));
+  if (!v.ok) return v.response;
+  try {
+    const purge = await processReportPurgeQueue('manual', v.data.limit ?? 20);
+    const reconcile = await reconcileOrphanUploadAttempts('manual', v.data.limit ?? 50);
+    return c.json({ success: true, data: { purge, reconcile } });
   } catch (e) { return routeErr(c, e); }
 });
 

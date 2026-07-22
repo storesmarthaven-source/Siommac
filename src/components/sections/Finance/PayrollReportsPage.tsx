@@ -3,13 +3,14 @@
 // (reports/catalog, reports/summary, reports/run preview, reports/history/list).
 // Slice 2 ships PREVIEW only; file exports (worker + download) arrive in Slice 3.
 
-import { useMemo, useState } from 'preact/hooks';
+import { useEffect, useMemo, useState } from 'preact/hooks';
 import type { VNode } from 'preact';
-import { useQuery, useMutation } from '@tanstack/preact-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/preact-query';
 import { financePayrollApi } from '@api/finance/payroll';
 import { useRunsRegister } from '@api/finance/payrollRunsRegister';
+import { dialog } from '@lib/dialog';
 import type {
-  MoneyValue, PayrollReportKey, ReportParams, ReportCatalogEntry, ReportRunResult,
+  MoneyValue, PayrollReportKey, ReportParams, ReportFormat, ReportCatalogEntry, ReportRunResult,
   RegisterRow, NetPaySummaryRow, CostRow, VarianceRow, OvertimeRow,
   PopulationMovementRow, NisExceptionRow, ReconciliationResult, ReportChart,
 } from '../../../../types/payrollReports';
@@ -25,6 +26,30 @@ const fmtDate = (d: string): string =>
   d ? new Date(`${d}T00:00:00`).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : '—';
 /** Current YYYY-MM. */
 const thisMonth = (): string => new Date().toISOString().slice(0, 7);
+
+/**
+ * Deterministic idempotency key per (params, format) — a re-click of the same
+ * export dedupes to the same job (never a duplicate). 64-bit FNV-1a keeps the
+ * collision risk negligible while staying stable (no clock / randomness). 8..128.
+ */
+function exportIdemKey(params: ReportParams, format: ReportFormat): string {
+  const s = JSON.stringify({ p: params, f: format });
+  let a = 0x811c9dc5, b = 0x811c9dc5 ^ 0x5bd1e995;
+  for (let i = 0; i < s.length; i++) {
+    const ch = s.charCodeAt(i);
+    a = Math.imul(a ^ ch, 0x01000193);
+    b = Math.imul(b ^ ch, 0x01000193);
+  }
+  const hex = (a >>> 0).toString(16).padStart(8, '0') + (b >>> 0).toString(16).padStart(8, '0');
+  return `rpt-${format}-${hex}`;
+}
+
+/** Navigate to a fresh signed URL without leaving the page (never cached). */
+function triggerDownload(url: string): void {
+  const el = document.createElement('a');
+  el.href = url; el.rel = 'noopener'; el.target = '_blank';
+  document.body.appendChild(el); el.click(); el.remove();
+}
 
 function buildParams(
   key: PayrollReportKey,
@@ -50,7 +75,10 @@ export function PayrollReportsPage(): VNode {
   const [from, setFrom] = useState(thisMonth());
   const [to, setTo] = useState(thisMonth());
   const [scope, setScope] = useState<'run' | 'all'>('run');
+  const [exportFmt, setExportFmt] = useState<ReportFormat | ''>('');
+  const [jobId, setJobId] = useState<string | null>(null);
 
+  const qc = useQueryClient();
   const summaryQ = useQuery({ queryKey: ['payroll', 'reports', 'summary'], queryFn: () => financePayrollApi.reportsSummary() });
   const catalogQ = useQuery({ queryKey: ['payroll', 'reports', 'catalog'], queryFn: () => financePayrollApi.reportsCatalog() });
   const historyQ = useQuery({ queryKey: ['payroll', 'reports', 'history'], queryFn: () => financePayrollApi.reportsHistory({ limit: 25 }) });
@@ -59,11 +87,42 @@ export function PayrollReportsPage(): VNode {
   const catalog = catalogQ.data?.reports ?? [];
   const entry = useMemo(() => catalog.find(c => c.key === selected) ?? null, [catalog, selected]);
   const eligibleRuns = (runsQ.data?.items ?? []).filter(r => ELIGIBLE.has(r.state));
+  const fileFormats = (entry?.supportedFormats ?? []).filter((f): f is ReportFormat => f !== 'preview');
+  const canPreview = (entry?.supportedFormats ?? []).includes('preview');
 
   const runMut = useMutation({
     mutationFn: (params: ReportParams) => financePayrollApi.runReport({ params, format: 'preview' }),
   });
   const result = runMut.data && runMut.data.state === 'completed' ? (runMut.data as Completed) : null;
+
+  // File export → enqueue a durable job, then poll status until it settles.
+  const exportMut = useMutation({
+    mutationFn: (a: { params: ReportParams; format: ReportFormat }) =>
+      financePayrollApi.runReport({ params: a.params, format: a.format, idempotencyKey: exportIdemKey(a.params, a.format) }),
+    onSuccess: r => { if (r.state === 'queued') setJobId(r.jobId); },
+  });
+  const statusQ = useQuery({
+    queryKey: ['payroll', 'reports', 'status', jobId],
+    queryFn: () => financePayrollApi.reportStatus({ jobId: jobId as string }),
+    enabled: !!jobId,
+    refetchInterval: q => {
+      const s = q.state.data;
+      return s && (s.state === 'succeeded' || s.state === 'failed') ? false : 1500;
+    },
+  });
+  // A finished export lands a new artifact — refresh history + KPI once.
+  useEffect(() => {
+    if (statusQ.data?.state === 'succeeded') {
+      qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'history'] });
+      qc.invalidateQueries({ queryKey: ['payroll', 'reports', 'summary'] });
+    }
+  }, [statusQ.data?.state, qc]);
+
+  const downloadMut = useMutation({
+    mutationFn: (artifactId: string) => financePayrollApi.reportDownload({ artifactId }),
+    onSuccess: ({ url }) => triggerDownload(url),
+    onError: e => dialog.error('Download unavailable', (e as Error)?.message ?? 'The file could not be downloaded.'),
+  });
 
   const params = useMemo(
     () => (selected ? buildParams(selected, { runId, compareRunId, from, to, scope }) : null),
@@ -73,10 +132,19 @@ export function PayrollReportsPage(): VNode {
   function pick(key: PayrollReportKey): void {
     setSelected(key);
     runMut.reset();
+    exportMut.reset();
+    setJobId(null);
+    const next = (catalog.find(c => c.key === key)?.supportedFormats ?? []).filter(f => f !== 'preview');
+    setExportFmt(next.length ? (next[0] as ReportFormat) : '');
   }
   function run(): void {
     if (params) runMut.mutate(params);
   }
+  function runExport(): void {
+    if (params && exportFmt) { setJobId(null); exportMut.mutate({ params, format: exportFmt }); }
+  }
+  const status = statusQ.data;
+  const succeededArtifactId = status?.state === 'succeeded' ? status.artifact.id : null;
 
   const tiles = summaryQ.data;
   const tile = (label: string, t?: { value: number | null; available: boolean }): VNode => (
@@ -92,7 +160,7 @@ export function PayrollReportsPage(): VNode {
         <div>
           <div class="prc-crumbs"><span>Payroll</span><span class="sep">›</span><b>Reports</b></div>
           <h1>Payroll Reports</h1>
-          <p>Preview and (soon) export tamper-evident reports from locked, authorized payroll runs. Currency TTD.</p>
+          <p>Preview and export tamper-evident reports from locked, authorized payroll runs. Currency TTD.</p>
         </div>
       </header>
 
@@ -140,11 +208,51 @@ export function PayrollReportsPage(): VNode {
                   set={{ setRunId, setCompareRunId, setFrom, setTo, setScope }}
                 />
                 <div class="prc-run-row">
-                  <button type="button" class="prc-run" disabled={!params || runMut.isPending} onClick={run}>
-                    {runMut.isPending ? 'Running…' : 'Run preview'}
-                  </button>
+                  {canPreview && (
+                    <button type="button" class="prc-run" disabled={!params || runMut.isPending} onClick={run}>
+                      {runMut.isPending ? 'Running…' : 'Run preview'}
+                    </button>
+                  )}
+                  {fileFormats.length > 0 && (
+                    <>
+                      <label class="prc-fmt">
+                        <span>Format</span>
+                        <select value={exportFmt} onChange={e => setExportFmt((e.target as HTMLSelectElement).value as ReportFormat)}>
+                          {fileFormats.map(f => <option key={f} value={f}>{f.toUpperCase()}</option>)}
+                        </select>
+                      </label>
+                      <button
+                        type="button"
+                        class="prc-run prc-run-ghost"
+                        disabled={!params || !exportFmt || exportMut.isPending || (!!jobId && status?.state !== 'succeeded' && status?.state !== 'failed')}
+                        onClick={runExport}
+                      >
+                        {exportMut.isPending ? 'Queuing…' : 'Export file'}
+                      </button>
+                    </>
+                  )}
                   {runMut.isError && <span class="prc-err">{(runMut.error as Error)?.message ?? 'Preview failed.'}</span>}
+                  {exportMut.isError && <span class="prc-err">{(exportMut.error as Error)?.message ?? 'Export failed.'}</span>}
                 </div>
+
+                {jobId && status && (
+                  <div class="prc-export-status">
+                    {(status.state === 'queued' || status.state === 'running') && (
+                      <span class="prc-export-wait">Generating {exportFmt.toUpperCase()} export… <span class="prc-pill prc-pill-purging">{status.state}</span></span>
+                    )}
+                    {status.state === 'failed' && (
+                      <span class="prc-err">Export failed: {status.error.message}</span>
+                    )}
+                    {status.state === 'succeeded' && succeededArtifactId && (
+                      <span class="prc-export-done">
+                        <span class="prc-pill prc-pill-ready">ready</span>
+                        <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(succeededArtifactId)}>
+                          {downloadMut.isPending ? 'Preparing…' : `Download ${status.artifact.format.toUpperCase()}`}
+                        </button>
+                      </span>
+                    )}
+                  </div>
+                )}
               </div>
 
               {result && (
@@ -164,10 +272,10 @@ export function PayrollReportsPage(): VNode {
       <div class="prc-history">
         <div class="prc-history-h">Generated report history</div>
         {(historyQ.data?.rows.length ?? 0) === 0
-          ? <div class="prc-empty prc-pad">No generated report files yet. File exports arrive in a later release.</div>
+          ? <div class="prc-empty prc-pad">No generated report files yet. Run an export above to generate one.</div>
           : (
             <table class="prc-table">
-              <thead><tr><th>Report</th><th>Format</th><th class="num">Rows</th><th class="num">Size</th><th>Created</th><th>Status</th></tr></thead>
+              <thead><tr><th>Report</th><th>Format</th><th class="num">Rows</th><th class="num">Size</th><th>Created</th><th>Status</th><th class="prc-actions-h">Actions</th></tr></thead>
               <tbody>
                 {historyQ.data!.rows.map(a => (
                   <tr key={a.id}>
@@ -175,6 +283,11 @@ export function PayrollReportsPage(): VNode {
                     <td class="num">{num(a.rowCount)}</td><td class="num">{(a.byteSize / 1024).toFixed(1)} KB</td>
                     <td>{new Date(a.createdAt).toLocaleString('en-GB')}</td>
                     <td><span class={`prc-pill prc-pill-${a.status}`}>{a.status}</span></td>
+                    <td class="prc-actions">
+                      {a.status === 'ready'
+                        ? <button type="button" class="prc-dl" disabled={downloadMut.isPending} onClick={() => downloadMut.mutate(a.id)}>Download</button>
+                        : <span class="prc-muted">{a.status === 'purged' ? 'expired' : '—'}</span>}
+                    </td>
                   </tr>
                 ))}
               </tbody>
