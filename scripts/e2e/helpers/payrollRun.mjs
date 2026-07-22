@@ -258,6 +258,7 @@ export const PAYROLL_PERIOD_YEAR_BANDS = Object.freeze({
   payrollScale:            Object.freeze([2350, 2499]),
   payrollBackPay:          Object.freeze([2500, 2899]),
   payrollVarianceReports:  Object.freeze([2900, 2989]),
+  payrollReports:          Object.freeze([2990, 3079]),
 });
 
 function yearOfDayOffset(dayOffset) {
